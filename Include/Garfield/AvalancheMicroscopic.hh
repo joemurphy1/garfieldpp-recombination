@@ -161,6 +161,7 @@ class AvalancheMicroscopic {
                            double& y1, double& z1, double& t1, double& e1,
                            double& dx1, double& dy1, double& dz1,
                            int& status) const;
+  double GetElectronPathLength(const size_t i) const;
   size_t GetNumberOfElectronDriftLinePoints(const size_t i = 0) const;
   size_t GetNumberOfHoleDriftLinePoints(const size_t i = 0) const;
   void GetElectronDriftLinePoint(double& x, double& y, double& z, double& t,

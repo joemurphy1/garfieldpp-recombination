@@ -233,9 +233,7 @@ void AvalancheMicroscopic::GetElectronEndpoint(const size_t i,
     int& status) const {
   if (i >= m_endpointsElectrons.size()) {
     std::cerr << m_className << "::GetElectronEndpoint: Index out of range.\n";
-    x0 = y0 = z0 = t0 = e0 = 0.;
-    x1 = y1 = z1 = t1 = e1 = 0.;
-    status = 0;
+    status = -3;
     return;
   }
 
@@ -258,27 +256,16 @@ void AvalancheMicroscopic::GetElectronEndpoint(const size_t i,
     double& dx1, double& dy1, double& dz1, int& status) const {
   if (i >= m_endpointsElectrons.size()) {
     std::cerr << m_className << "::GetElectronEndpoint: Index out of range.\n";
-    x0 = y0 = z0 = t0 = e0 = 0.;
-    x1 = y1 = z1 = t1 = e1 = 0.;
-    dx1 = dy1 = dz1 = 0.;
-    status = 0;
+    status = -3;
     return;
   }
 
-  x0 = m_endpointsElectrons[i].x0;
-  y0 = m_endpointsElectrons[i].y0;
-  z0 = m_endpointsElectrons[i].z0;
-  t0 = m_endpointsElectrons[i].t0;
-  e0 = m_endpointsElectrons[i].e0;
-  x1 = m_endpointsElectrons[i].x;
-  y1 = m_endpointsElectrons[i].y;
-  z1 = m_endpointsElectrons[i].z;
-  t1 = m_endpointsElectrons[i].t;
-  e1 = m_endpointsElectrons[i].energy;
   dx1 = m_endpointsElectrons[i].kx;
   dy1 = m_endpointsElectrons[i].ky;
   dz1 = m_endpointsElectrons[i].kz;
   status = m_endpointsElectrons[i].status;
+  return GetElectronEndpoint(i, x0, y0, z0, t0, e0, 
+                                x1, y1, z1, t1, e1, status);
 }
 
 void AvalancheMicroscopic::GetHoleEndpoint(const size_t i, 
@@ -287,9 +274,7 @@ void AvalancheMicroscopic::GetHoleEndpoint(const size_t i,
     int& status) const {
   if (i >= m_endpointsHoles.size()) {
     std::cerr << m_className << "::GetHoleEndpoint: Index out of range.\n";
-    x0 = y0 = z0 = t0 = e0 = 0.;
-    x1 = y1 = z1 = t1 = e1 = 0.;
-    status = 0;
+    status = -3;
     return;
   }
 
@@ -304,6 +289,22 @@ void AvalancheMicroscopic::GetHoleEndpoint(const size_t i,
   t1 = m_endpointsHoles[i].t;
   e1 = m_endpointsHoles[i].energy;
   status = m_endpointsHoles[i].status;
+}
+
+double AvalancheMicroscopic::GetElectronPathLength(const size_t i) const {
+
+  if (i >= m_endpointsElectrons.size()) return 0.;
+  const size_t nP = GetNumberOfElectronDriftLinePoints(i);
+  if (nP < 2) return 0.;
+  double s = 0.;
+  for (size_t j = 0; j < nP - 1; ++j) {
+    double x0 = 0., y0 = 0., z0 = 0., t0 = 0.;
+    GetElectronDriftLinePoint(x0, y0, z0, t0, j, i);
+    double x1 = 0., y1 = 0., z1 = 0., t1 = 0.;
+    GetElectronDriftLinePoint(x1, y1, z1, t1, j + 1, i);
+    s += Mag(x1 - x0, y1 - y0, z1 - z0);
+  }
+  return s; 
 }
 
 size_t AvalancheMicroscopic::GetNumberOfElectronDriftLinePoints(
