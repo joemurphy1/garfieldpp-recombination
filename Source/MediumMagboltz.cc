@@ -1250,8 +1250,8 @@ int MediumMagboltz::GetGasNumberMagboltz(const std::string& input) {
 
 bool MediumMagboltz::Update(const bool verbose) {
 
-  std::lock_guard<std::mutex> guard(m_mutex);
   if (!m_isChanged) return true;
+  std::lock_guard<std::mutex> guard(m_mutex);
   if (!Mixer(verbose)) {
     std::cerr << m_className 
               << "::Update: Error calculating the collision rates table.\n";
