@@ -350,11 +350,10 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
   }
 
   // Tell how many lines read.
-  std::cout << m_className << "::Initialise:\n"
-            << "    Read " << m_elements.size() << " elements from file "
-            << elist << ",\n"
-            << "    highest node number: " << highestnode << ",\n"
-            << "    background elements skipped: " << nbackground << "\n";
+  std::cout << "    Read " << m_elements.size() << " elements from file "
+            << elist << ".\n"
+            << "    Highest node number: " << highestnode << "\n"
+            << "    Background elements skipped: " << nbackground << "\n";
   // Check the value of the unit
   double funit = ScalingFactor(unit);
   if (funit <= 0.) {
@@ -428,7 +427,6 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
     }
     // Store the point coordinates
     Node node;
-    node.w.clear();
     node.x = xnode * funit;
     node.y = ynode * funit;
     node.z = znode * funit;
@@ -439,8 +437,7 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
   if (!ok) return false;
 
   // Tell how many lines read.
-  std::cout << m_className << "::Initialise:\n"
-            << "    Read " << m_nodes.size() << " nodes from file " 
+  std::cout << "    Read " << m_nodes.size() << " nodes from file " 
             << nlist << ".\n";
   // Check number of nodes
   if ((int)m_nodes.size() != highestnode) {
@@ -451,15 +448,32 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
     return false;
   }
 
+  if (!LoadPotentials(prnsol, m_pot)) return false;
+
+  m_ready = true;
+  Prepare();
+  return true;
+}
+
+bool ComponentAnsys123::LoadPotentials(const std::string prnsol,
+                                       std::vector<double>& pot) { 
   // Open the voltage list.
   std::ifstream fprnsol(prnsol);
   if (!fprnsol) {
-    PrintCouldNotOpen("Initialise", prnsol);
+    PrintCouldNotOpen("LoadPotentials", prnsol);
     return false;
   }
 
+  pot.resize(m_nodes.size());
+
+  // Buffer for reading
+  constexpr int size = 100;
+  char line[size];
+
   // Read the voltage list.
-  il = 0;
+  bool ok = true;
+  long il = 0;
+  bool readerror = false;
   unsigned int nread = 0;
   while (fprnsol.getline(line, size, '\n')) {
     il++;
@@ -487,27 +501,27 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
       continue;
     }
     // Read the node number and potential.
-    int inode = ReadInteger(token, -1, readerror);
+    size_t inode = ReadInteger(token, -1, readerror);
     token = strtok(nullptr, " ");
     double volt = ReadDouble(token, -1, readerror);
     // Check syntax
     if (readerror) {
-      std::cerr << m_className << "::Initialise:\n"
+      std::cerr << m_className << "::LoadPotentials:\n"
                 << "    Error reading file " << prnsol << " (line << " << il
                 << ").\n";
       fprnsol.close();
       return false;
     }
     // Check node number and store if OK.
-    if (inode < 1 || inode > highestnode) {
-      std::cerr << m_className << "::Initialise:\n"
+    if (inode < 1 || inode > m_nodes.size()) {
+      std::cerr << m_className << "::LoadPotentials:\n"
                 << "    Node number " << inode << " out of range\n"
                 << "    on potential file " << prnsol << " (line " << il
                 << ").\n";
       ok = false;
       break;
     } else {
-      m_nodes[inode - 1].v = volt;
+      pot[inode - 1] = volt;
       nread++;
     }
   }
@@ -516,20 +530,16 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
   if (!ok) return false;
 
   // Tell how many lines read
-  std::cout << m_className << "::Initialise:\n    Read "
-            << nread << " potentials from file " << prnsol << ".\n";
+  std::cout << "    Read " << nread << " potentials from file " 
+            << prnsol << ".\n";
   // Check number of nodes
   if (nread != m_nodes.size()) {
-    std::cerr << m_className << "::Initialise:\n"
+    std::cerr << m_className << "::LoadPotentials:\n"
               << "    Number of nodes read (" << nread << ") on potential file "
               << prnsol << "\n"
               << "    does not match the node list (" << m_nodes.size() << ").\n";
     return false;
   }
-
-  // Set the ready flag.
-  m_ready = true;
-  Prepare();
   return true;
 }
 
@@ -541,98 +551,17 @@ bool ComponentAnsys123::SetWeightingField(const std::string& prnsol,
     return false;
   }
 
-  // Open the voltage list.
-  std::ifstream fprnsol(prnsol);
-  if (!fprnsol) {
-    PrintCouldNotOpen("SetWeightingField", prnsol);
-    return false;
-  }
-
-  // Check if a weighting field with the same label already exists.
-  const size_t iw = GetOrCreateWeightingFieldIndex(label);
-  if (iw + 1 != m_wfields.size()) {
-    std::cout << m_className << "::SetWeightingField:\n"
-              << "    Replacing existing weighting field " << label << ".\n";
-  }
-  m_wfieldsOk[iw] = false;
-
-  // Buffer for reading
-  constexpr int size = 100;
-  char line[size];
-
-  bool ok = true;
-  // Read the voltage list.
-  int il = 0;
-  unsigned int nread = 0;
-  bool readerror = false;
-  while (fprnsol.getline(line, size, '\n')) {
-    il++;
-    // Skip page feed.
-    if (strcmp(line, "1") == 0) {
-      for (size_t k = 0; k < 5; ++k) fprnsol.getline(line, size, '\n');
-      il += 5;
-      continue;
-    }
-    // Skip page feed (Ansys > v15.x).
-    if (strstr(line, "***") != nullptr) {
-      for (size_t k = 0; k < 3; ++k) fprnsol.getline(line, size, '\n');
-      il += 3;
-      continue;
-    }
-    // Split the line in tokens.
-    char* token = strtok(line, " ");
-    // Skip blank lines and headers.
-    if (!token || strcmp(token, " ") == 0 || strcmp(token, "\n") == 0 ||
-        int(token[0]) == 10 || int(token[0]) == 13 ||
-        strcmp(token, "PRINT") == 0 || strcmp(token, "*****") == 0 ||
-        strcmp(token, "LOAD") == 0 || strcmp(token, "TIME=") == 0 ||
-        strcmp(token, "MAXIMUM") == 0 || strcmp(token, "VALUE") == 0 ||
-        strcmp(token, "NODE") == 0) {
-      continue;
-    }
-    // Read the node number and potential.
-    int inode = ReadInteger(token, -1, readerror);
-    token = strtok(nullptr, " ");
-    double volt = ReadDouble(token, -1, readerror);
-    // Check the syntax.
-    if (readerror) {
-      std::cerr << m_className << "::SetWeightingField:\n"
-                << "    Error reading file " << prnsol << " (line "
-                << il << ").\n";
-      fprnsol.close();
-      return false;
-    }
-    // Check node number and store if OK.
-    if (inode < 1 || inode > (int)m_nodes.size()) {
-      std::cerr << m_className << "::SetWeightingField:\n"
-                << "    Node number " << inode << " out of range\n"
-                << "    on potential file " << prnsol << " (line " << il
-                << ").\n";
-      ok = false;
-      break;
-    } else {
-      m_nodes[inode - 1].w[iw] = volt;
-      nread++;
-    }
-  }
-  // Close the file.
-  fprnsol.close();
-  if (!ok) return false;
-
   std::cout << m_className << "::SetWeightingField:\n"
-            << "    Read " << nread << " potentials from file "
-            << prnsol << ".\n";
-  // Check the number of nodes.
-  if (nread != m_nodes.size()) {
-    std::cerr << m_className << "::SetWeightingField:\n"
-              << "    Number of nodes read from potential file " << prnsol 
-              << " (" << nread << ")\n    does not match the node list ("
-              << m_nodes.size() << ").\n";
-    return false;
+            << "    Loading field map for electrode " << label << ".\n";
+  // Check if a weighting field with the same label already exists.
+  if (m_wpot.count(label) > 0) {
+    std::cout << "    Replacing existing weighting field.\n";
+    m_wpot[label].clear();
   }
 
-  // Set the ready flag.
-  m_wfieldsOk[iw] = true;
+  std::vector<double> pot(m_nodes.size(), 0.);
+  if (!LoadPotentials(prnsol, pot)) return false;
+  m_wpot[label] = std::move(pot);
   return true;
 }
 

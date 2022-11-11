@@ -673,21 +673,8 @@ bool ComponentCST::SetWeightingField(std::string prnsol, std::string label,
     std::cout << m_className << "::SetWeightingField:" << std::endl;
     std::cout << "    Replacing existing weighting field " << label << "."
               << std::endl;
-  } else {
-    m_wfields.push_back(label);
-    m_wfieldsOk.push_back(false);
   }
 
-  if (std::distance(m_weightingFields.begin(), it) !=
-      std::distance(m_wfields.begin(),
-                    find(m_wfields.begin(), m_wfields.end(), label))) {
-    std::cerr << m_className << "::SetWeightingField:" << std::endl;
-    std::cerr << "    Indices of the weighting fields and the weighting field "
-                 "counter are not equal!"
-              << std::endl;
-    return false;
-  }
-  unsigned int iField = std::distance(m_weightingFields.begin(), it);
   int nread = 0;
   bool ok = true;
 
@@ -793,9 +780,6 @@ bool ComponentCST::SetWeightingField(std::string prnsol, std::string label,
   }
 
   m_weightingFields[label] = potentials;
-
-  // Set the ready flag.
-  m_wfieldsOk[iField] = ok;
   return true;
 }
 
@@ -845,7 +829,7 @@ void ComponentCST::WeightingField(const double xin, const double yin,
   }
 
   // Check if the weighting field is properly initialised.
-  if (!m_wfieldsOk[std::distance(m_weightingFields.begin(), it)]) return;
+  if (m_weightingFields[label].empty()) return;
 
   // Copy the coordinates
   double x = xin, y = yin, z = zin;
@@ -899,7 +883,7 @@ double ComponentCST::WeightingPotential(const double xin, const double yin,
   }
 
   // Check if the weighting field is properly initialised.
-  if (!m_wfieldsOk[std::distance(m_weightingFields.begin(), it)]) return 0.;
+  if (m_weightingFields[label].empty()) return 0.;
 
   // Copy the coordinates
   double x = xin, y = yin, z = zin;

@@ -51,22 +51,17 @@ bool ComponentElmer::Initialise(const std::string& header,
     return false;
   }
 
-  // Temporary variables for use in file reading
-  char* token = nullptr;
-  bool readerror = false;
-  bool readstop = false;
-  int il = 0;
-
   // Read the header to get the number of nodes and elements.
   fheader.getline(line, size, '\n');
-  token = strtok(line, " ");
+  char* token = strtok(line, " ");
+  bool readerror = false;
   const int nNodes = ReadInteger(token, 0, readerror);
   token = strtok(nullptr, " ");
   const int nElements = ReadInteger(token, 0, readerror);
   std::cout << hdr << "\n    Read " << nNodes << " nodes and " << nElements
             << " elements from file " << header << ".\n";
   if (readerror) {
-    PrintErrorReadingFile(hdr, header, il);
+    PrintErrorReadingFile(hdr, header, 0);
     fheader.close();
     return false;
   }
@@ -90,7 +85,7 @@ bool ComponentElmer::Initialise(const std::string& header,
   if (m_debug) std::cout << hdr << " Unit scaling factor = " << funit << ".\n";
 
   // Read the nodes from the file.
-  for (il = 0; il < nNodes; il++) {
+  for (int il = 0; il < nNodes; il++) {
     // Get a line from the nodes file.
     fnodes.getline(line, size, '\n');
 
@@ -113,64 +108,17 @@ bool ComponentElmer::Initialise(const std::string& header,
 
     // Set up and create a new node.
     Node node;
-    node.w.clear();
     node.x = xnode * funit;
     node.y = ynode * funit;
     node.z = znode * funit;
-    node.v = 0.;
     m_nodes.push_back(std::move(node));
   }
 
   // Close the nodes file.
   fnodes.close();
 
-  // Open the potential file.
-  std::ifstream fvolt(volt);
-  if (!fvolt) {
-    PrintCouldNotOpen("Initialise", volt);
-    return false;
-  }
-
-  // Reset the line counter.
-  il = 1;
-
-  // Read past the header.
-  while (!readstop && fvolt.getline(line, size, '\n')) {
-    token = strtok(line, " ");
-    if (strcmp(token, "Perm:") == 0) readstop = true;
-    il++;
-  }
-
-  // Should have stopped: if not, print error message.
-  if (!readstop) {
-    std::cerr << hdr << "\n    Error reading past header of potentials file "
-              << volt << ".\n";
-    fvolt.close();
-    return false;
-  }
-
-  // Read past the permutation map (number of lines = nNodes).
-  for (int tl = 0; tl < nNodes; tl++) {
-    fvolt.getline(line, size, '\n');
-    il++;
-  }
-
   // Read the potentials.
-  for (int tl = 0; tl < nNodes; tl++) {
-    fvolt.getline(line, size, '\n');
-    token = strtok(line, " ");
-    double v = ReadDouble(token, -1, readerror);
-    if (readerror) {
-      PrintErrorReadingFile(hdr, volt, il);
-      fvolt.close();
-      return false;
-    }
-    // Place the voltage in its appropriate node.
-    m_nodes[tl].v = v;
-  }
-
-  // Close the potentials file.
-  fvolt.close();
+  if (!LoadPotentials(volt, m_pot)) return false;
 
   // Open the materials file.
   std::ifstream fmplist(mplist);
@@ -195,7 +143,7 @@ bool ComponentElmer::Initialise(const std::string& header,
     material.eps = -1;
     material.medium = nullptr;
   }
-  for (il = 2; il < ((int)nMaterials + 2); il++) {
+  for (int il = 2; il < ((int)nMaterials + 2); il++) {
     fmplist.getline(line, size, '\n');
     token = strtok(line, " ");
     ReadInteger(token, -1, readerror);
@@ -207,7 +155,7 @@ bool ComponentElmer::Initialise(const std::string& header,
       return false;
     }
     m_materials[il - 2].eps = dc;
-    std::cout << hdr << "\n    Set material " << il - 2 << " of "
+    std::cout << "    Set material " << il - 2 << " of "
               << nMaterials << " to eps " << dc << ".\n";
   }
 
@@ -225,7 +173,7 @@ bool ComponentElmer::Initialise(const std::string& header,
   }
 
   // Read the elements and their material indices.
-  for (il = 0; il < nElements; il++) {
+  for (int il = 0; il < nElements; il++) {
     // Get a line
     felems.getline(line, size, '\n');
 
@@ -341,72 +289,76 @@ bool ComponentElmer::SetWeightingField(const std::string& wvolt,
     return false;
   }
 
+  std::cout << m_className << "::SetWeightingField:\n"
+            << "    Loading field map for electrode " << label << ".\n";
+  if (m_wpot.count(label) > 0) {
+    std::cout << "    Replacing existing weighting field.\n";
+    m_wpot[label].clear();
+  }
+  std::vector<double> pot(m_nodes.size(), 0.);
+  if (!LoadPotentials(wvolt, pot)) return false;
+  m_wpot[label] = std::move(pot);
+  return true;
+}
+
+bool ComponentElmer::LoadPotentials(const std::string& volt,
+                                    std::vector<double>& pot) {
+
   // Open the voltage list.
-  std::ifstream fwvolt(wvolt);
-  if (!fwvolt) {
-    PrintCouldNotOpen("SetWeightingField", wvolt);
+  std::ifstream fvolt(volt);
+  if (!fvolt) {
+    PrintCouldNotOpen("LoadPotentials", volt);
     return false;
   }
+  pot.assign(m_nodes.size(), 0.);
 
-  // Check if a weighting field with the same label already exists.
-  const size_t iw = GetOrCreateWeightingFieldIndex(label);
-  if (iw + 1 != m_wfields.size()) {
-    std::cout << m_className << "::SetWeightingField:\n"
-              << "    Replacing existing weighting field " << label << ".\n";
-  }
-  m_wfieldsOk[iw] = false;
-
-  // Temporary variables for use in file reading
+  // Buffer for reading.
   constexpr int size = 100;
   char line[size];
-  char* token = nullptr;
-  bool readerror = false;
+
   bool readstop = false;
   int il = 1;
-
   // Read past the header.
-  while (!readstop && fwvolt.getline(line, size, '\n')) {
-    token = strtok(line, " ");
+  while (!readstop && fvolt.getline(line, size, '\n')) {
+    char* token = strtok(line, " ");
     if (strcmp(token, "Perm:") == 0) readstop = true;
     il++;
   }
 
   // Should have stopped: if not, print error message.
   if (!readstop) {
-    std::cerr << hdr << "\n    Error reading past header of potentials file "
-              << wvolt << ".\n";
-    fwvolt.close();
+    std::cerr << m_className << "::LoadPotentials:\n"
+              << "    Error reading past header of potentials file "
+              << volt << ".\n";
+    fvolt.close();
     return false;
   }
 
   // Read past the permutation map (number of lines = nNodes).
-  const int nNodes = m_nodes.size();
-  for (int tl = 0; tl < nNodes; tl++) {
-    fwvolt.getline(line, size, '\n');
+  const auto nNodes = m_nodes.size();
+  for (size_t j = 0; j < nNodes; ++j) {
+    fvolt.getline(line, size, '\n');
     il++;
   }
 
   // Read the potentials.
-  for (int tl = 0; tl < nNodes; tl++) {
-    double v;
-    fwvolt.getline(line, size, '\n');
-    token = strtok(line, " ");
-    v = ReadDouble(token, -1, readerror);
+  for (size_t j = 0; j < nNodes; ++j) {
+    fvolt.getline(line, size, '\n');
+    char* token = strtok(line, " ");
+    bool readerror = false;
+    double v = ReadDouble(token, -1, readerror);
     if (readerror) {
-      PrintErrorReadingFile(hdr, wvolt, il);
-      fwvolt.close();
+      PrintErrorReadingFile(m_className + "::LoadPotentials", volt, il);
+      fvolt.close();
       return false;
     }
-    // Place the weighting potential at its appropriate node and index.
-    m_nodes[tl].w[iw] = v;
+    // Place the potential at its appropriate index.
+    pot[j] = v;
   }
 
-  // Close the potentials file.
-  fwvolt.close();
-  std::cout << hdr << "\n    Read potentials from file " << wvolt << ".\n";
-
-  // Set the ready flag.
-  m_wfieldsOk[iw] = true;
+  // Close the file.
+  fvolt.close();
+  std::cout << "    Read potentials from file " << volt << ".\n";
   return true;
 }
 
