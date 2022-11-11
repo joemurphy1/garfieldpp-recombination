@@ -131,6 +131,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
     }
   } while (!ends_with(line, "# number of mesh points") &&
            !ends_with(line, "# number of mesh vertices"));
+
   const int nNodes = readInt(line);
   int nInRange = 0;
   std::cout << m_className << "::Initialise: " << nNodes << " nodes.\n";
@@ -143,23 +144,23 @@ bool ComponentComsol::Initialise(const std::string &mesh,
     }
   } while (line.find("# Mesh point coordinates") == std::string::npos &&
            line.find("# Mesh vertex coordinates") == std::string::npos);
-  for (int i = 0; i < nNodes; ++i) {
-    Node newNode;
-    fmesh >> newNode.x >> newNode.y >> newNode.z;
-    newNode.x *= m_unit;
-    newNode.y *= m_unit;
-    newNode.z *= m_unit;
 
+  std::vector<Node> allNodes;
+  for (int i = 0; i < nNodes; ++i) {
+    Node node;
+    fmesh >> node.x >> node.y >> node.z;
+    node.x *= m_unit;
+    node.y *= m_unit;
+    node.z *= m_unit;
     if (m_range.set) {
-      m_nodesHolder.push_back(std::move(newNode));
-      if (CheckInRange(newNode.x, newNode.y, newNode.z)) nInRange++;
+      allNodes.push_back(std::move(node));
+      if (CheckInRange(node.x, node.y, node.z)) nInRange++;
     } else {
-      m_nodes.push_back(std::move(newNode));
+      m_nodes.push_back(std::move(node));
     }
   }
 
-  std::vector<Element> elementsHolder;
-
+  m_elements.clear();
   do {
     if (!std::getline(fmesh, line)) {
       std::cerr << m_className << "::Initialise:\n"
@@ -176,20 +177,21 @@ bool ComponentComsol::Initialise(const std::string &mesh,
       return false;
     }
   } while (!ends_with(line, "# number of elements"));
+
   const int nElements = readInt(line);
-  m_elements.clear();
   std::cout << m_className << "::Initialise: " << nElements << " elements.\n";
   std::getline(fmesh, line);
+  std::vector<Element> allElements;
   // Elements 6 & 7 are swapped due to differences in COMSOL and ANSYS
   // representation
   int perm[10] = {0, 1, 2, 3, 4, 5, 7, 6, 8, 9};
   for (int i = 0; i < nElements; ++i) {
-    Element newElement;
-    newElement.degenerate = false;
+    Element element;
+    element.degenerate = false;
     for (int j = 0; j < 10; ++j) {
-      fmesh >> newElement.emap[perm[j]];
+      fmesh >> element.emap[perm[j]];
     }
-    elementsHolder.push_back(std::move(newElement));
+    allElements.push_back(std::move(element));
   }
 
   do {
@@ -200,7 +202,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
       return false;
     }
   } while (line.find("# Geometric entity indices") == std::string::npos);
-  for (auto &element : elementsHolder) {
+  for (auto& element : allElements) {
     int domain;
     fmesh >> domain;
     element.matmap = domain2material.count(domain) ? domain2material[domain]
@@ -208,36 +210,33 @@ bool ComponentComsol::Initialise(const std::string &mesh,
   }
   fmesh.close();
 
-  for (auto &takeElement : elementsHolder) {
-    if (ElementInRange(takeElement)) {
+  for (auto& element : allElements) {
+    if (ElementInRange(element, allNodes)) {
       for (int j = 0; j < 10; j++) {
-        nodeIndices.push_back(takeElement.emap[j]);
+        nodeIndices.push_back(element.emap[j]);
       }
-      m_elements.push_back(std::move(takeElement));
+      m_elements.push_back(std::move(element));
     }
   }
 
   if (m_range.set) {
-    std::vector<int> m_nodeMap(nNodes, -1);
-    // Rearange nodeIndices and delete duplicates
-    sort(nodeIndices.begin(), nodeIndices.end());
+    std::vector<int> nodeMap(nNodes, -1);
+    // Rearrange node indices and delete duplicates.
+    std::sort(nodeIndices.begin(), nodeIndices.end());
     nodeIndices.erase(std::unique(nodeIndices.begin(), nodeIndices.end()),
                       nodeIndices.end());
-    // Go over nodeIndices and add the corresponding m_nodesHolder node to
-    // m_nodes
-    for (int &i : nodeIndices) {
-      m_nodes.push_back(m_nodesHolder[i]);
-      // Update m_nodeMap to get correct node idex.
-      m_nodeMap[i] = m_nodes.size() - 1;
+    // Go over node indices and add the corresponding nodes to m_nodes.
+    for (int i : nodeIndices) {
+      m_nodes.push_back(allNodes[i]);
+      // Update map to get correct node index.
+      nodeMap[i] = m_nodes.size() - 1;
     }
-    // Go over m_elements and update the node idex using the map you just
-    // created
-    for (Element &takeElement : m_elements) {
+    // Go over the elements and update the node indices 
+    // using the map you just created.
+    for (Element& element : m_elements) {
       for (int j = 0; j < 10; ++j) {
-        takeElement.emap[j] = m_nodeMap[takeElement.emap[j]];
-        if (takeElement.emap[j] == -1) {
-          return false;
-        }
+        element.emap[j] = nodeMap[element.emap[j]];
+        if (element.emap[j] == -1) return false;
       }
     }
   }
@@ -247,7 +246,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
     PrintCouldNotOpen("Initialise", field);
     return false;
   }
-
+  m_pot.resize(m_nodes.size());
   const std::string hdr1 =
       "% x                       y                        z                    "
       "    V (V)";
@@ -271,16 +270,15 @@ bool ComponentComsol::Initialise(const std::string &mesh,
   sline >> token;  // z
   sline >> token;  // V
   sline >> token;  // (V)
-  m_wfields.clear();
-  m_wfieldsOk.clear();
+  std::vector<std::string> wfields;
   while (sline >> token) {
     std::cout << m_className << "::Initialise:\n"
               << "    Reading data for weighting field " << token << ".\n";
-    m_wfields.push_back(token);
-    m_wfieldsOk.push_back(true);
+    wfields.push_back(token);
+    m_wpot[token] = std::vector<double>(m_nodes.size(), 0.);
     sline >> token;  // (V)
   }
-  const size_t nWeightingFields = m_wfields.size();
+  const size_t nWeightingFields = wfields.size();
 
   const unsigned int nPrint =
       std::pow(10, static_cast<unsigned int>(
@@ -288,7 +286,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
   std::cout << m_className << "::Initialise: Reading potentials.\n";
   PrintProgress(0.);
   // Build a k-d tree from the node coordinates.
-  std::vector<std::vector<double>> points;
+  std::vector<std::vector<double> > points;
   for (const auto &node : m_nodes) {
     std::vector<double> point = {node.x, node.y, node.z};
     points.push_back(std::move(point));
@@ -309,22 +307,23 @@ bool ComponentComsol::Initialise(const std::string &mesh,
       ffield >> p;
       w.push_back(p);
     }
-    const std::vector<double> pt = {x, y, z};
+    if (!CheckInRange(x, y, z)) continue;
     std::vector<KDTreeResult> res;
-    kdtree.n_nearest(pt, 1, res);
+    kdtree.n_nearest({x, y, z}, 1, res);
     if (res.empty()) {
-      std::cerr << std::endl
-                << m_className << "::Initialise:\n"
-                << "    Could not find a matching mesh node for point (" << x
-                << ", " << y << ", " << z << ")\n.";
+      std::cerr << m_className << "::Initialise:\n"
+                << "    Could not find a matching mesh node for point (" 
+                << x << ", " << y << ", " << z << ")\n.";
       ffield.close();
       return false;
     }
-    if (!CheckInRange(x, y, z) && res[0].dis > maxNodeDistance) continue;
+    if (res[0].dis > MaxNodeDistance) continue;
     const size_t k = res[0].idx;
     used[k] = true;
-    m_nodes[k].v = v;
-    m_nodes[k].w = w;
+    m_pot[k] = v;
+    for (size_t j = 0; j < nWeightingFields; ++j) {
+      m_wpot[wfields[j]][k] = w[j];
+    } 
     if ((i + 1) % nPrint == 0) PrintProgress(double(i + 1) / nNodes);
   }
   PrintProgress(1.);
@@ -332,8 +331,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
   auto nMissing = std::count(used.begin(), used.end(), false);
   if (m_range.set) nMissing = nMissing - m_nodes.size() + nInRange;
   if (nMissing > 0) {
-    std::cerr << std::endl
-              << m_className << "::Initialise:\n"
+    std::cerr << m_className << "::Initialise:\n"
               << "    Missing potentials for " << nMissing << " nodes.\n";
     // return false;
   }
@@ -353,33 +351,36 @@ bool ComponentComsol::SetWeightingPotential(const std::string &field,
     return false;
   }
 
-  double x, y, z;
-
-  // Open the voltage list.
-  std::ifstream ffield(field);
-  if (!ffield) {
-    PrintCouldNotOpen("SetWeightingPotential", field);
-    return false;
-  }
+  std::cout << m_className << "::SetWeightingPotential:\n"
+            << "    Reading field map for electrode " << label << ".\n";
 
   // Check if a weighting field with the same label already exists.
-  const size_t iw = GetOrCreateWeightingFieldIndex(label);
-
-  if (iw + 1 != m_wfields.size()) {
-    std::cout << m_className << "::SetWeightingPotential:\n"
-              << "    Replacing existing weighting field " << label << ".\n";
+  if (m_wpot.count(label) > 0) {
+    std::cout << "    Replacing existing weighting field.\n";
+    m_wpot[label].clear();
   }
+  
+  std::vector<double> pot(m_nodes.size(), 0.);
+  if (!LoadPotentials(field, pot)) return false;
+  m_wpot[label] = pot;
+  return true;
+}
 
-  m_wfieldsOk[iw] = false;
+bool ComponentComsol::LoadPotentials(const std::string& field,
+                                     std::vector<double>& pot) {
 
+  // Open the file.
+  std::ifstream ffield(field);
+  if (!ffield) {
+    PrintCouldNotOpen("LoadPotentials", field);
+    return false;
+  }
   // Build a k-d tree from the node coordinates.
-
-  std::vector<std::vector<double>> points;
-  for (const auto &node : m_nodes) {
+  std::vector<std::vector<double> > points;
+  for (const auto& node : m_nodes) {
     std::vector<double> point = {node.x, node.y, node.z};
     points.push_back(std::move(point));
   }
-
   KDTree kdtree(points);
 
   std::string line;
@@ -388,43 +389,38 @@ bool ComponentComsol::SetWeightingPotential(const std::string &field,
   const unsigned int nPrint =
       std::pow(10, static_cast<unsigned int>(
                        std::max(std::floor(std::log10(nNodes)) - 1, 1.)));
-  std::cout << m_className << "::SetWeightingPotential:\n"
-            << "    Reading weighting potentials for " << label << ".\n";
   PrintProgress(0.);
 
   while (std::getline(ffield, line)) {
     // Skip empty lines.
     if (line.empty()) continue;
-    // Skip lines that are not comments.
+    // Skip comments.
     if (isComment(line)) continue;
 
     std::vector<double> pvect;
 
     std::istringstream data(line);
+    double x = 0., y = 0., z = 0.;
     data >> x >> y >> z;
     x *= m_unit;
     y *= m_unit;
     z *= m_unit;
     if (!CheckInRange(x, y, z)) continue;
-    const std::vector<double> pt = {x, y, z};
     std::vector<KDTreeResult> res;
-    kdtree.n_nearest(pt, 1, res);
-    if (!CheckInRange(x, y, z) && res[0].dis > maxNodeDistance) {
-      continue;
-    }
+    kdtree.n_nearest({x, y, z}, 1, res);
     if (res.empty()) {
-      std::cerr << m_className << "::SetWeightingPotential:\n"
-                << "    Could not find a matching mesh node for point (" << x
-                << ", " << y << ", " << z << ")\n.";
+      std::cerr << m_className << "::LoadPotentials:\n"
+                << "    Could not find a matching mesh node for point (" 
+                << x << ", " << y << ", " << z << ")\n.";
       ffield.close();
       return false;
     }
+    if (res[0].dis > MaxNodeDistance) continue;
 
     double p = 0.;
     data >> p;
     const size_t k = res[0].idx;
-    m_nodes[k].w[iw] = p;
-    m_wfieldsOk[iw] = true;
+    pot[k] = p;
 
     if ((nLines + 1) % nPrint == 0) {
       PrintProgress(double(nLines + 1) / nNodes);
@@ -433,7 +429,6 @@ bool ComponentComsol::SetWeightingPotential(const std::string &field,
   }
 
   PrintProgress(1.);
-  std::cout << std::endl << m_className << "::SetWeightingPotential: Done.\n";
   ffield.close();
   return true;
 }
@@ -441,7 +436,7 @@ bool ComponentComsol::SetWeightingPotential(const std::string &field,
 bool ComponentComsol::SetDynamicWeightingPotential(const std::string &field,
                                                    const std::string &label) {
   if (!m_ready) {
-    std::cerr << m_className << "::SetDelayedWeightingPotential:\n"
+    std::cerr << m_className << "::SetDynamicWeightingPotential:\n"
               << "    No valid field map is present.\n"
               << "    Weighting fields cannot be added.\n";
     return false;
@@ -450,7 +445,7 @@ bool ComponentComsol::SetDynamicWeightingPotential(const std::string &field,
   if (!m_timeset && !GetTimeInterval(field)) return false;
 
   if (!m_timeset) {
-    std::cerr << m_className << "::SetDelayedWeightingPotential:\n"
+    std::cerr << m_className << "::SetDynamicWeightingPotential:\n"
               << "    No valid times slices of potential set.\n"
               << "    Please add the time slices.\n";
     return false;
@@ -458,33 +453,32 @@ bool ComponentComsol::SetDynamicWeightingPotential(const std::string &field,
 
   const int T = m_wdtimes.size();
 
-  double x, y, z;
-
   // Open the voltage list.
   std::ifstream ffield(field);
   if (!ffield) {
-    PrintCouldNotOpen("SetDelayedWeightingPotential", field);
+    PrintCouldNotOpen("SetDynamicWeightingPotential", field);
     return false;
   }
 
   // Check if a weighting field with the same label already exists.
-  const size_t iw = GetOrCreateWeightingFieldIndex(label);
-
-  if (iw + 1 != m_wfields.size()) {
-    std::cout << m_className << "::SetDelayedWeightingPotential:\n"
+  if (m_wpot.count(label) > 0) {
+    std::cout << m_className << "::SetDynamicWeightingPotential:\n"
               << "    Replacing existing weighting field " << label << ".\n";
+    m_wpot[label].clear();
+  }
+  if (m_dwpot.count(label) > 0) {
+    m_dwpot[label].clear();
   }
 
-  m_wfieldsOk[iw] = false;
+  std::vector<double> pot(m_nodes.size(), 0.);
+  std::vector<std::vector<double> > dpot(m_nodes.size());
 
   // Build a k-d tree from the node coordinates.
-
-  std::vector<std::vector<double>> points;
+  std::vector<std::vector<double> > points;
   for (const auto &node : m_nodes) {
     std::vector<double> point = {node.x, node.y, node.z};
     points.push_back(std::move(point));
   }
-
   KDTree kdtree(points);
 
   std::string line;
@@ -493,49 +487,45 @@ bool ComponentComsol::SetDynamicWeightingPotential(const std::string &field,
   const unsigned int nPrint =
       std::pow(10, static_cast<unsigned int>(
                        std::max(std::floor(std::log10(nNodes)) - 1, 1.)));
-  std::cout << m_className << "::SetDelayedWeightingPotential:\n"
+  std::cout << m_className << "::SetDynamicWeightingPotential:\n"
             << "    Reading weighting potentials for " << label << ".\n";
   PrintProgress(0.);
 
   while (std::getline(ffield, line)) {
     // Skip empty lines.
     if (line.empty()) continue;
-    // Skip lines that are not comments.
+    // Skip comments.
     if (isComment(line)) continue;
 
-    std::vector<double> pvect;
-
     std::istringstream data(line);
+    double x = 0., y = 0., z = 0.;
     data >> x >> y >> z;
     x *= m_unit;
     y *= m_unit;
     z *= m_unit;
     if (!CheckInRange(x, y, z)) continue;
-    const std::vector<double> pt = {x, y, z};
     std::vector<KDTreeResult> res;
-    kdtree.n_nearest(pt, 1, res);
-    if (!CheckInRange(x, y, z) && res[0].dis > maxNodeDistance) {
-      continue;
-    }
+    kdtree.n_nearest({x, y, z}, 1, res);
     if (res.empty()) {
-      std::cerr << m_className << "::SetDelayedWeightingPotential:\n"
-                << "    Could not find a matching mesh node for point (" << x
-                << ", " << y << ", " << z << ")\n.";
+      std::cerr << m_className << "::SetDynamicWeightingPotential:\n"
+                << "    Could not find a matching mesh node for point (" 
+                << x << ", " << y << ", " << z << ")\n.";
       ffield.close();
       return false;
     }
+    if (res[0].dis > MaxNodeDistance) continue;
 
     double p = 0.;
     double p0 = 0.;
+    std::vector<double> pvect;
     for (int i = 0; i < T; i++) {
       data >> p;
       if (i == 0) p0 = p;
       pvect.push_back(p - p0);
     }
     const size_t k = res[0].idx;
-    m_nodes[k].dw[iw] = pvect;
-    m_nodes[k].w[iw] = p0;
-    m_wfieldsOk[iw] = true;
+    dpot[k] = pvect;
+    pot[k] = p0;
 
     if ((nLines + 1) % nPrint == 0) {
       PrintProgress(double(nLines + 1) / nNodes);
@@ -545,8 +535,10 @@ bool ComponentComsol::SetDynamicWeightingPotential(const std::string &field,
 
   PrintProgress(1.);
   std::cout << std::endl
-            << m_className << "::SetDelayedWeightingPotential: Done.\n";
+            << m_className << "::SetDynamicWeightingPotential: Done.\n";
   ffield.close();
+  m_wpot[label] = std::move(pot);
+  m_dwpot[label] = std::move(dpot);
   return true;
 }
 

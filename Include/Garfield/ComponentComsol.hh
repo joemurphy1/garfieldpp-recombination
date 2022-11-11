@@ -40,8 +40,11 @@ class ComponentComsol : public ComponentFieldMap {
                   const std::string &field = "field.txt",
                   const std::string &unit = "m");
 
-  /// Import the  weighting potential maps.
+  /// Import the weighting potential maps.
   bool SetWeightingPotential(const std::string &file, const std::string &label);
+  bool SetWeightingField(const std::string &file, const std::string &label) {
+    return SetWeightingPotential(file, label);
+  }
   /// Import the time-dependent weighting field maps.
   bool SetDynamicWeightingPotential(const std::string &file,
                                     const std::string &label);
@@ -52,9 +55,7 @@ class ComponentComsol : public ComponentFieldMap {
  private:
   double m_unit = 100.;
   bool m_timeset = false;
-  const double maxNodeDistance = 1e-08;
-
-  std::vector<Node> m_nodesHolder;
+  static constexpr double MaxNodeDistance = 1.e-8;
 
   bool GetTimeInterval(const std::string &file);
 
@@ -73,7 +74,7 @@ class ComponentComsol : public ComponentFieldMap {
 
   Range m_range;
 
-  bool CheckInRange(const double x, const double y, const double z) {
+  bool CheckInRange(const double x, const double y, const double z) const {
     if (!m_range.set) return true;
 
     if (x < m_range.xmin || x > m_range.xmax || y < m_range.ymin ||
@@ -83,17 +84,19 @@ class ComponentComsol : public ComponentFieldMap {
     return true;
   }
 
-  bool ElementInRange(Element &newElement) {
+  bool ElementInRange(const Element& element,
+                      const std::vector<Node>& nodes) const {
     if (m_range.set) {
-      for (int i = 0; i < 10; i++) {
-        Node nodeCheck = m_nodesHolder[newElement.emap[i]];
-        if (!CheckInRange(nodeCheck.x, nodeCheck.y, nodeCheck.z)) return false;
+      for (size_t i = 0; i < 10; i++) {
+        const Node& node = nodes[element.emap[i]];
+        if (!CheckInRange(node.x, node.y, node.z)) return false;
       }
     }
-
-    if (m_materials[newElement.matmap].eps != 1) return false;
-
+    if (m_materials[element.matmap].eps != 1) return false;
     return true;
   }
+  bool LoadPotentials(const std::string& field, 
+                      std::vector<double>& pot);
+
 };
 }  // namespace Garfield

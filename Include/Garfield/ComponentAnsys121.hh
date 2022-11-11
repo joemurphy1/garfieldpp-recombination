@@ -26,11 +26,17 @@ class ComponentAnsys121 : public ComponentFieldMap {
                   const std::string& mplist = "MPLIST.lis",
                   const std::string& prnsol = "PRNSOL.lis", 
                   const std::string& unit = "cm");
-  /// Import a weighting field map.
+  /// Import weighting potentials.
+  bool SetWeightingPotential(const std::string& prnsol, 
+                             const std::string& label) {
+    return SetWeightingField(prnsol, label);
+  } 
   bool SetWeightingField(const std::string& prnsol, const std::string& label);
   /// Set the limits of the active region along z.
   void SetRangeZ(const double zmin, const double zmax);
 
+ private:
+  bool LoadPotentials(const std::string& prnsol, std::vector<double>& pot);
 };
 }
 

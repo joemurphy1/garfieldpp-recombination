@@ -1,16 +1,15 @@
 #ifndef G_COMPONENT_FIELD_MAP_H
 #define G_COMPONENT_FIELD_MAP_H
 
-#include <TMatrix.h>
-#include <TVector.h>
-
 #include <array>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <vector>
 
 #include "Component.hh"
 #include "TMatrixD.h"
+#include "TVectorD.h"
 #include "TetrahedralTree.hh"
 
 namespace Garfield {
@@ -162,14 +161,15 @@ class ComponentFieldMap : public Component {
   struct Node {
     // Coordinates
     double x, y, z;
-    // Potential
-    double v;
-    // Weighting potentials
-    std::vector<double> w;
-    // Delayed weighting potentials
-    std::vector<std::vector<double>> dw;
   };
   std::vector<Node> m_nodes;
+
+  // Potentials.
+  std::vector<double> m_pot;
+  // Weighting potentials.
+  std::map<std::string, std::vector<double> > m_wpot;
+  // Delayed weighting potentials.
+  std::map<std::string, std::vector<std::vector<double> > > m_dwpot;
 
   // Materials
   struct Material {
@@ -183,22 +183,16 @@ class ComponentFieldMap : public Component {
   };
   std::vector<Material> m_materials;
 
-  std::vector<std::string> m_wfields;
-  std::vector<bool> m_wfieldsOk;
-  std::vector<bool> m_dwfieldsOk;
-
   // Weighting potential copy
   struct WeightingFieldCopy {
-    // Name
-    std::string name;
     // Source
-    size_t iSource;
-    TMatrix rotMatrix;
-    TVector transVector;
+    std::string source;
+    TMatrixD rot;
+    TVectorD trans;
   };
 
-  // Weighting potential copies
-  std::vector<WeightingFieldCopy> m_wfieldCopies;
+  // Weighting potential copies.
+  std::map<std::string, WeightingFieldCopy> m_wfieldCopies;
 
   std::vector<double> m_wdtimes;
 
@@ -253,6 +247,13 @@ class ComponentFieldMap : public Component {
   /// Find lowest epsilon, check for eps = 0, set default drift media flags.
   bool SetDefaultDriftMedium();
 
+  /// Compute the electric/weighting field.
+  int Field(const double x, const double y, const double z,
+            double& fx, double& fy, double& fz, int& iel, 
+            const std::vector<double>& potentials) const;
+  /// Compute the electrostatic/weighting potential.
+  double Potential(const double x, const double y, const double z,
+                   const std::vector<double>& potentials) const;
   /// Interpolate the potential in a triangle.
   static double Potential3(const std::array<double, 6>& v,
                            const std::array<double, 3>& t);
@@ -275,7 +276,7 @@ class ComponentFieldMap : public Component {
                       const std::array<double, 4>& t, double jac[4][4],
                       const double det, double& ex, double& ey, double& ez);
   /// Find the element for a point in curved quadratic quadrilaterals.
-  int FindElement5(const double x, const double y, const double z, double& t1,
+  int FindElement5(const double x, const double y, double& t1,
                    double& t2, double& t3, double& t4, double jac[4][4],
                    double& det) const;
   /// Find the element for a point in curved quadratic tetrahedra.
@@ -303,9 +304,6 @@ class ComponentFieldMap : public Component {
   virtual double GetElementVolume(const size_t i) const;
   virtual void GetAspectRatio(const size_t i, double& dmin, double& dmax) const;
 
-  size_t GetWeightingFieldIndex(const std::string& label) const;
-  size_t GetOrCreateWeightingFieldIndex(const std::string& label);
-
   void PrintWarning(const std::string& header);
   void PrintNotReady(const std::string& header) const;
   void PrintCouldNotOpen(const std::string& header,
@@ -313,7 +311,7 @@ class ComponentFieldMap : public Component {
   void PrintElement(const std::string& header, const double x, const double y,
                     const double z, const double t1, const double t2,
                     const double t3, const double t4, const Element& element,
-                    const unsigned int n, const int iw = -1) const;
+                    const std::vector<double>& potential) const;
   /// Interpolation of potential between two time slices.
   void TimeInterpolation(const double t, double& f0, double& f1, int& i0,
                          int& i1);
@@ -330,40 +328,48 @@ class ComponentFieldMap : public Component {
   bool m_cacheElemBoundingBoxes = false;
 
   /// Calculate local coordinates for curved quadratic triangles.
-  int Coordinates3(double x, double y, double z, double& t1, double& t2,
-                   double& t3, double& t4, double jac[4][4], double& det,
-                   const Element& element) const;
+  int Coordinates3(const double x, const double y,  
+                   double& t1, double& t2, double& t3, double& t4, 
+                   double jac[4][4], double& det,
+                   const std::vector<std::array<double, 2> >& nodes) const;
   /// Calculate local coordinates for linear quadrilaterals.
-  int Coordinates4(const double x, const double y, const double z, double& t1,
-                   double& t2, double& t3, double& t4, double& det,
-                   const Element& element) const;
+  int Coordinates4(const double x, const double y,  
+                   double& t1, double& t2, double& t3, double& t4, 
+                   double& det,
+                   const std::vector<std::array<double, 2> >& nodes) const;
   /// Calculate local coordinates for curved quadratic quadrilaterals.
-  int Coordinates5(const double x, const double y, const double z, double& t1,
-                   double& t2, double& t3, double& t4, double jac[4][4],
-                   double& det, const Element& element) const;
+  int Coordinates5(const double x, const double y,  
+                   double& t1, double& t2, double& t3, double& t4, 
+                   double jac[4][4], double& det, 
+                   const std::vector<std::array<double, 2> >& nodes) const;
   /// Calculate local coordinates in linear tetrahedra.
-  void Coordinates12(const double x, const double y, const double z, double& t1,
-                     double& t2, double& t3, double& t4,
-                     const Element& element) const;
+  void Coordinates12(const double x, const double y, const double z,
+                     double& t1, double& t2, double& t3, double& t4,
+                     const std::vector<std::array<double, 3> >& nodes) const;
+
   /// Calculate local coordinates for curved quadratic tetrahedra.
-  int Coordinates13(const double x, const double y, const double z, double& t1,
-                    double& t2, double& t3, double& t4, double jac[4][4],
-                    double& det, const Element& element) const;
+  int Coordinates13(const double x, const double y, const double z, 
+                    double& t1, double& t2, double& t3, double& t4, 
+                    double jac[4][4], double& det, 
+                    const std::vector<std::array<double, 3> >& nodes) const;
   /// Calculate local coordinates for a cube.
   int CoordinatesCube(const double x, const double y, const double z,
                       double& t1, double& t2, double& t3, TMatrixD*& jac,
                       std::vector<TMatrixD*>& dN, const Element& element) const;
 
   /// Calculate Jacobian for curved quadratic triangles.
-  void Jacobian3(const Element& element, const double u, const double v,
-                 const double w, double& det, double jac[4][4]) const;
+  static void Jacobian3(const std::vector<std::array<double, 2 > >& nodes, 
+                        const double u, const double v, const double w,
+                        double& det, double jac[4][4]);
   /// Calculate Jacobian for curved quadratic quadrilaterals.
-  void Jacobian5(const Element& element, const double u, const double v,
-                 double& det, double jac[4][4]) const;
+  static void Jacobian5(const std::vector<std::array<double, 2> >& nodes,
+                        const double u, const double v,
+                        double& det, double jac[4][4]);
   /// Calculate Jacobian for curved quadratic tetrahedra.
-  void Jacobian13(const Element& element, const double t, const double u,
-                  const double v, const double w, double& det,
-                  double jac[4][4]) const;
+  static void Jacobian13(const std::vector<std::array<double, 3> >& nodes,
+                         const double t, const double u,
+                         const double v, const double w, double& det,
+                         double jac[4][4]);
   /// Calculate Jacobian for a cube.
   void JacobianCube(const Element& element, const double t1, const double t2,
                     const double t3, TMatrixD*& jac,
@@ -375,19 +381,6 @@ class ComponentFieldMap : public Component {
   /// Initialize the tetrahedral tree.
   bool InitializeTetrahedralTree();
 
-  /// Coordinate transformation matrix calculator.
-  void CoordinateTransformMatrix(TMatrix& rotMatrix, TVector& transVector,
-                                 const double x = 0, const double y = 0,
-                                 const double z = 0, const double alpha = 0,
-                                 const double beta = 0, const double gamma = 0);
-
-  /// Get index of copy of weighting potential structure.
-  size_t GetCopyWeightingPotential(const std::string& label);
-
-  /// Transfor to coordinate system to find weighting potential value of the
-  /// source field.
-  void FromCopyToSourceWeightingPotential(const size_t& iwc, double& x,
-                                          double& y, double& z);
 };
 }  // namespace Garfield
 

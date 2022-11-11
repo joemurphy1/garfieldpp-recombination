@@ -33,9 +33,14 @@ class ComponentElmer : public ComponentFieldMap {
                   const std::string& mplist = "dielectrics.dat",
                   const std::string& volt = "out.result",
                   const std::string& unit = "cm");
-  /// Import a list of voltages to be used as weighting field.
+  /// Import a list of voltages to be used as weighting potentials. 
+  bool SetWeightingPotential(const std::string& prnsol,
+                             const std::string& label) {
+    return SetWeightingField(prnsol, label);
+  }
   bool SetWeightingField(const std::string& prnsol, const std::string& label);
-
+ private:
+  bool LoadPotentials(const std::string& prnsol, std::vector<double>& pot);
 };
 }
 #endif
