@@ -180,7 +180,7 @@ Medium *Sensor::GetMedium(const double x, const double y, const double z) {
   return nullptr;
 }
 
-bool Sensor::SetArea() {
+bool Sensor::SetArea(const bool verbose) {
   std::lock_guard<std::mutex> guard(m_mutex);
   if (!GetBoundingBox(m_xMinUser, m_yMinUser, m_zMinUser, m_xMaxUser,
                       m_yMaxUser, m_zMaxUser)) {
@@ -188,10 +188,12 @@ bool Sensor::SetArea() {
     return false;
   }
 
-  std::cout << m_className << "::SetArea:\n"
-            << "    " << m_xMinUser << " < x [cm] < " << m_xMaxUser << "\n"
-            << "    " << m_yMinUser << " < y [cm] < " << m_yMaxUser << "\n"
-            << "    " << m_zMinUser << " < z [cm] < " << m_zMaxUser << "\n";
+  if (verbose || m_debug) {
+    std::cout << m_className << "::SetArea:\n"
+              << "    " << m_xMinUser << " < x [cm] < " << m_xMaxUser << "\n"
+              << "    " << m_yMinUser << " < y [cm] < " << m_yMaxUser << "\n"
+              << "    " << m_zMinUser << " < z [cm] < " << m_zMaxUser << "\n";
+  }
   if (std::isinf(m_xMinUser) || std::isinf(m_xMaxUser)) {
     std::cerr << m_className << "::SetArea: Warning. Infinite x-range.\n";
   }

@@ -74,7 +74,7 @@ class Sensor {
   void EnableDebugging(const bool on = true) { m_debug = on; }
 
   /// Set the user area to the default.
-  bool SetArea();
+  bool SetArea(const bool verbose = false);
   /// Set the user area explicitly.
   bool SetArea(const double xmin, const double ymin, const double zmin,
                const double xmax, const double ymax, const double zmax);
