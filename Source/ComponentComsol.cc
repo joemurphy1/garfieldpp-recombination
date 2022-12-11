@@ -23,13 +23,6 @@ bool isComment(const std::string &line) {
   return false;
 }
 
-int readInt(std::string s) {
-  std::istringstream iss(s);
-  int ret;
-  iss >> ret;
-  return ret;
-}
-
 void PrintProgress(const double f) {
   if (f < 0.) return;
   constexpr unsigned int width = 70;
@@ -132,7 +125,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
   } while (!ends_with(line, "# number of mesh points") &&
            !ends_with(line, "# number of mesh vertices"));
 
-  const int nNodes = readInt(line);
+  const int nNodes = std::stoi(line);
   int nInRange = 0;
   std::cout << m_className << "::Initialise: " << nNodes << " nodes.\n";
   do {
@@ -178,7 +171,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
     }
   } while (!ends_with(line, "# number of elements"));
 
-  const int nElements = readInt(line);
+  const int nElements = std::stoi(line);
   std::cout << m_className << "::Initialise: " << nElements << " elements.\n";
   std::getline(fmesh, line);
   std::vector<Element> allElements;
