@@ -244,27 +244,6 @@ void ViewMedium::Draw() {
     }
   }
   TGraph graph;
-  TLatex latex;
-  double xsize = 0., ysize = 0.;
-  for (const auto& label : labels) {
-    latex.SetText(0, 0, label.c_str());
-    xsize = std::max(xsize, latex.GetXsize());
-    ysize = std::max(ysize, latex.GetYsize());
-  }
-  // Convert to NDC.
-  xsize /= (gPad->GetX2() - gPad->GetX1());
-  ysize /= (gPad->GetY2() - gPad->GetY1());
-
-  const double lm = gPad->GetLeftMargin();
-  const double rm = 1. - gPad->GetRightMargin();
-  const double tm = 1. - gPad->GetTopMargin();
-  const double bm = gPad->GetBottomMargin();
-  double xLabel = lm + 0.1 * (rm - lm);
-  if (m_par[0] == Parameter::LongitudinalDiffusion ||
-      m_par[0] == Parameter::TransverseDiffusion) {
-    xLabel = rm - 0.1 * (rm - lm) - xsize; 
-  }
-  double yLabel = tm - 0.1 * (tm - bm);
   const double colrange = gStyle->GetNumberOfColors() / double(nPlots);
   for (size_t i = 0; i < nPlots; ++i) {
     int col = cols[i] > 0 ? cols[i] : gStyle->GetColorPalette(i * colrange);
@@ -278,10 +257,6 @@ void ViewMedium::Draw() {
                       m_xGraph[i].data(), m_yGraph[i].data(), "P");
 
     }
-    if (labels[i].empty()) continue;
-    latex.SetTextColor(col);
-    latex.DrawLatexNDC(xLabel, yLabel, labels[i].c_str());
-    yLabel -= 1.5 * ysize;
   }
   if (m_logX && xmin > 0.) {
     canvas->SetLogx(1);
@@ -293,6 +268,47 @@ void ViewMedium::Draw() {
   } else {
     canvas->SetLogy(0);
   }
+  gPad->Update();
+
+  TLatex latex;
+  double xSize = 0., ySize = 0.;
+  size_t nLabels = 0;
+  for (const auto& label : labels) {
+    latex.SetText(0, 0, label.c_str());
+    xSize = std::max(xSize, latex.GetXsize());
+    ySize = std::max(ySize, latex.GetYsize());
+    if (!label.empty()) ++nLabels;
+  }
+  // Convert to NDC.
+  const double xSizeNDC = xSize / (gPad->GetX2() - gPad->GetX1());
+  const double ySizeNDC = ySize / (gPad->GetY2() - gPad->GetY1());
+
+  double xLabel = 0., yLabel = 1.;
+  if (!gPad->PlaceBox(&latex, xSizeNDC, nLabels * ySizeNDC, xLabel, yLabel)) {
+    std::cout << "AUTO PLACEMENT FAILED!\n";
+    const double lm = gPad->GetLeftMargin();
+    const double rm = 1. - gPad->GetRightMargin();
+    const double tm = 1. - gPad->GetTopMargin();
+    const double bm = gPad->GetBottomMargin();
+    if (m_par[0] == Parameter::LongitudinalDiffusion ||
+        m_par[0] == Parameter::TransverseDiffusion) {
+      xLabel = rm - 0.1 * (rm - lm) - xSizeNDC;
+    } else {
+      xLabel = lm + 0.1 * (rm - lm);
+    }
+    yLabel = tm - 0.1 * (tm - bm);
+  } else if (nLabels > 0) {
+    std::cout << labels.front() << ": X = " << xLabel << ", Y = " << yLabel << "\n";
+  }
+
+  for (size_t i = 0; i < nPlots; ++i) {
+    int col = cols[i] > 0 ? cols[i] : gStyle->GetColorPalette(i * colrange);
+    if (labels[i].empty()) continue;
+    latex.SetTextColor(col);
+    latex.DrawLatexNDC(xLabel, yLabel, labels[i].c_str());
+    yLabel -= 1.5 * ySizeNDC;
+  }
+
   gPad->Update();
   if (!m_outfile.empty()) Export();
 }
