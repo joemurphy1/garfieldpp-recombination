@@ -2016,7 +2016,7 @@ void MediumMagboltz::ComputeDeexcitationTable(const bool verbose) {
   
   std::string filename = path + "OscillatorStrengths_Ar.txt";
   std::ifstream infile(filename);
-  if (!infile.is_open()) {
+  if (!infile) {
     std::cerr << m_className << "::ComputeDeexcitationTable:\n"
               << "    Could not open " << filename << ".\n";
     return;

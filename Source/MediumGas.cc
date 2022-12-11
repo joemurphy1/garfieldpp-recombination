@@ -329,7 +329,7 @@ bool MediumGas::LoadGasFile(const std::string& filename,
   // Open the file.
   std::ifstream gasfile(filename);
   // Make sure the file could be opened.
-  if (!gasfile.is_open()) {
+  if (!gasfile) {
     std::cerr << m_className << "::LoadGasFile:\n"
               << "    Cannot open file " << filename << ".\n";
     return false;
@@ -959,7 +959,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
   // Open the file.
   std::ifstream gasfile(filename);
   // Make sure the file could be opened.
-  if (!gasfile.is_open()) {
+  if (!gasfile) {
     std::cerr << m_className << "::MergeGasFile:\n"
               << "    Cannot open file " << filename << ".\n";
     return false;
@@ -1797,9 +1797,8 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
               << "    Writing gas tables to file " << filename << "\n";
   }
 
-  std::ofstream outfile;
-  outfile.open(filename, std::ios::out);
-  if (!outfile.is_open()) {
+  std::ofstream outfile(filename, std::ios::out);
+  if (!outfile) {
     std::cerr << m_className << "::WriteGasFile:\n"
               << "    Cannot open file " << filename << ".\n";
     outfile.close();
