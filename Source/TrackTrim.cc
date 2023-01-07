@@ -87,8 +87,7 @@ double Speed(const double ekin, const double mass) {
 
 namespace Garfield {
 
-TrackTrim::TrackTrim() : Track() { 
-  m_className = "TrackTrim";
+TrackTrim::TrackTrim() : Track("Trim") { 
   m_q = 1.;
 }
 

@@ -11,7 +11,7 @@
 
 namespace Garfield {
 
-TrackPAI::TrackPAI() : Track() { m_className = "TrackPAI"; }
+TrackPAI::TrackPAI() : Track("PAI") { }
 
 bool TrackPAI::NewTrack(const double x0, const double y0, const double z0,
                         const double t0, const double dx0, const double dy0,

@@ -8,7 +8,7 @@
 
 namespace Garfield {
 
-TrackSimple::TrackSimple() : Track() { m_className = "TrackSimple"; }
+TrackSimple::TrackSimple() : Track("Simple") {}
 
 void TrackSimple::SetClusterDensity(const double d) {
   if (d < Small) {

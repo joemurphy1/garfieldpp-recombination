@@ -22,6 +22,7 @@ class ElElasticScatLowSigma;
 class PairProd;
 class HeedDeltaElectronCS;
 class HeedFieldMap;
+class HeedPhoton;
 }
 
 namespace Garfield {
@@ -41,21 +42,21 @@ class TrackHeed : public Track {
   bool NewTrack(const double x0, const double y0, const double z0,
                 const double t0, const double dx0, const double dy0,
                 const double dz0) override;
-  bool GetCluster(double& xcls, double& ycls, double& zcls, double& tcls,
-                  int& n, double& e, double& extra) override;
-  bool GetCluster(double& xcls, double& ycls, double& zcls, double& tcls,
-                  int& ne, int& ni, double& e, double& extra);
+  bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc,
+                  double& ec, double& extra) override;
+  bool GetCluster(double& xc, double& yc, double& zc, double& tc,
+                  int& ne, int& ni, double& ec, double& extra);
   /** Get the next "cluster" (ionising collision of the charged particle).
-    * \param xcls,ycls,zcls coordinates of the collision
-    * \param tcls time of the collision
+    * \param xc,yc,zc coordinates of the collision
+    * \param tc time of the collision
     * \param ne number of electrons
     * \param ni number of ions
     * \param np number of fluorescence photons
-    * \param e deposited energy
+    * \param ec deposited energy
     * \param extra additional information (not always implemented)
     */
-  bool GetCluster(double& xcls, double& ycls, double& zcls, double& tcls,
-                  int& ne, int& ni, int& np, double& e, double& extra);
+  bool GetCluster(double& xc, double& yc, double& zc, double& tc,
+                  int& ne, int& ni, int& np, double& ec, double& extra);
   /** Retrieve the properties of a conduction or delta electron
     * in the current cluster.
     * \param i index of the electron
@@ -236,22 +237,30 @@ class TrackHeed : public Track {
 
   bool m_doPhotonReabsorption = true;
   struct SimplifiedParticle {
-    double x, y, z, t;
-    double e;
-    double dx, dy, dz;
+    double x = 0.;
+    double y = 0.;
+    double z = 0.;
+    double t = 0.;
+    double e = 0.;
+    double dx = 0.;
+    double dy = 0.;
+    double dz = 0.;
   };
-  typedef SimplifiedParticle Photon;
-  std::vector<Photon> m_photons;
 
   bool m_coulombScattering = false;
-
   bool m_useBfieldAuto = true;
-
   bool m_doDeltaTransport = true;
-  typedef SimplifiedParticle DeltaElectron;
-  std::vector<DeltaElectron> m_deltaElectrons;
-  std::vector<Heed::HeedCondElectron> m_conductionElectrons;
-  std::vector<Heed::HeedCondElectron> m_conductionIons;
+
+  struct Cluster {
+    double x, y, z, t;
+    double energy;
+    double extra;
+    std::vector<SimplifiedParticle> photons;
+    std::vector<SimplifiedParticle> electrons;
+    std::vector<SimplifiedParticle> ions;
+  };
+  std::vector<Cluster> m_clusters;
+  size_t m_cluster = 0;
 
   // Particle properties
   std::unique_ptr<Heed::particle_def> m_particle_def; 
@@ -291,13 +300,14 @@ class TrackHeed : public Track {
   /// Angular step for curved lines.
   double m_stepAngleCurved = 0.2;
 
-  std::vector<Heed::gparticle*> m_particleBank;
-  std::vector<Heed::gparticle*>::iterator m_bankIterator;
-
   bool SetupGas(Medium* medium);
   bool SetupMaterial(Medium* medium);
   bool SetupDelta(const std::string& databasePath);
-  void ClearParticleBank();
+  bool AddCluster(Heed::HeedPhoton* virtualPhoton,
+                  std::vector<Cluster>& clusters);
+  void AddElectrons(
+    const std::vector<Heed::HeedCondElectron>& conductionElectrons,
+    std::vector<SimplifiedParticle>& electrons); 
   bool IsInside(const double x, const double y, const double z);
   bool UpdateBoundingBox(bool& update);
 };
