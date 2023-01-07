@@ -10,7 +10,10 @@
 
 namespace Garfield {
 
-Track::Track() : m_mass(MuonMass) { SetBetaGamma(3.); }
+Track::Track(const std::string& name) : m_mass(MuonMass) {
+  m_className = "Track" + name;
+  SetBetaGamma(3.);
+}
 
 void Track::SetParticle(const std::string& part) {
   std::string id = part;

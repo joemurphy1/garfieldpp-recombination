@@ -33,6 +33,23 @@ void ClearBank(std::vector<Heed::gparticle*>& bank) {
   bank.clear();
 }
 
+Heed::vec NormaliseDirection(const double dx0, const double dy0, 
+                             const double dz0) {
+  double dx = dx0, dy = dy0, dz = dz0;
+  const double d = sqrt(dx * dx + dy * dy + dz * dz);
+  if (d < Garfield::Small) {
+    // Null vector. Sample the direction isotropically.
+    Garfield::RndmDirection(dx, dy, dz);
+  } else {
+    // Normalise the direction vector.
+    const double scale = 1. / d;
+    dx *= scale;
+    dy *= scale;
+    dz *= scale;
+  }
+  return Heed::vec(dx, dy, dz); 
+}
+
 Heed::MolecPhotoAbsCS makeMPACS(const std::string& atom, const int n,
                                 const double w = 0.) {
   return Heed::MolecPhotoAbsCS(Heed::PhotoAbsCSLib::getAPACS(atom), n, w);
@@ -60,11 +77,7 @@ Heed::MolecPhotoAbsCS makeMPACS(const std::string& atom1, const int n1,
 
 namespace Garfield {
 
-TrackHeed::TrackHeed() : Track() {
-  m_className = "TrackHeed";
-  m_conductionElectrons.reserve(1000);
-  m_conductionIons.reserve(1000);
-
+TrackHeed::TrackHeed() : Track("Heed") {
   m_fieldMap.reset(new Heed::HeedFieldMap());
 }
 
@@ -74,7 +87,6 @@ bool TrackHeed::NewTrack(const double x0, const double y0, const double z0,
                          const double t0, const double dx0, const double dy0,
                          const double dz0) {
   m_hasActiveTrack = false;
-  m_ready = false;
 
   // Make sure the sensor has been set.
   if (!m_sensor) {
@@ -87,13 +99,9 @@ bool TrackHeed::NewTrack(const double x0, const double y0, const double z0,
 
   // Make sure the initial position is inside an ionisable medium.
   Medium* medium = m_sensor->GetMedium(x0, y0, z0);
-  if (!medium) {
+  if (!medium || !medium->IsIonisable()) {
     std::cerr << m_className << "::NewTrack:\n"
-              << "    No medium at initial position.\n";
-    return false;
-  } else if (!medium->IsIonisable()) {
-    std::cerr << m_className << "::NewTrack:\n"
-              << "    Medium at initial position is not ionisable.\n";
+              << "    No ionisable medium at initial position.\n";
     return false;
   }
 
@@ -112,36 +120,17 @@ bool TrackHeed::NewTrack(const double x0, const double y0, const double z0,
     m_mediumDensity = medium->GetMassDensity();
   }
 
-  ClearParticleBank();
-  m_photons.clear();
-  m_deltaElectrons.clear();
-  m_conductionElectrons.clear();
-  m_conductionIons.clear();
+  // Reset the list of clusters.
+  m_clusters.clear();
+  m_cluster = 0;
 
-  // Check the direction vector.
-  double dx = dx0, dy = dy0, dz = dz0;
-  const double d = sqrt(dx * dx + dy * dy + dz * dz);
-  if (d < Small) {
-    if (m_debug) {
-      std::cout << m_className << "::NewTrack:\n"
-                << "    Direction vector has zero norm.\n"
-                << "    Initial direction is randomized.\n";
-    }
-    // Null vector. Sample the direction isotropically.
-    RndmDirection(dx, dy, dz);
-  } else {
-    // Normalise the direction vector.
-    dx /= d;
-    dy /= d;
-    dz /= d;
-  }
-  Heed::vec velocity(dx, dy, dz);
+  // Set the velocity vector.
+  Heed::vec velocity = NormaliseDirection(dx0, dy0, dz0);
   velocity = velocity * Heed::CLHEP::c_light * GetBeta();
 
   if (m_debug) {
     std::cout << m_className << "::NewTrack:\n    Track starts at (" << x0
-              << ", " << y0 << ", " << z0 << ") at time " << t0 << "\n"
-              << "    Direction: (" << dx << ", " << dy << ", " << dz << ")\n";
+              << ", " << y0 << ", " << z0 << ") at time " << t0 << "\n";
   }
 
   // Initial position (shift with respect to bounding box center and
@@ -200,18 +189,42 @@ bool TrackHeed::NewTrack(const double x0, const double y0, const double z0,
                            m_stepAngleStraight * Heed::CLHEP::rad,
                            m_stepAngleCurved * Heed::CLHEP::rad);
   // Transport the particle.
+  std::vector<Heed::gparticle*> particleBank;
   if (m_oneStepFly) {
-    particle.fly(m_particleBank, true);
+    particle.fly(particleBank, true);
   } else {
-    particle.fly(m_particleBank);
+    particle.fly(particleBank);
   }
 
-  m_bankIterator = m_particleBank.begin();
-  m_hasActiveTrack = true;
-  m_ready = true;
+  // Sort the clusters by time.
+  std::sort(particleBank.begin(), particleBank.end(), 
+      [](Heed::gparticle* p1, Heed::gparticle* p2) { 
+        return p1->time() < p2->time(); });
+  // Loop over the clusters (virtual photons) created by the particle.
+  for (auto gp : particleBank) {
+    // Convert the particle to a (virtual) photon.
+    Heed::HeedPhoton* virtualPhoton = dynamic_cast<Heed::HeedPhoton*>(gp);
+    if (!virtualPhoton) {
+      std::cerr << m_className << "::NewTrack:\n"
+                << "    Particle is not a virtual photon. Program bug!\n";
+      // Skip this one.
+      continue;
+    }
+    if (!AddCluster(virtualPhoton, m_clusters)) break;
+  }
+  ClearBank(particleBank);
+  Heed::gparticle::reset_counter();
+  m_cluster = m_clusters.size() + 2; 
 
-  // Plot the new track.
-  if (m_viewer) PlotNewTrack(x0, y0, z0);
+  m_hasActiveTrack = true;
+
+  // Plot the track, if requested.
+  if (m_viewer) {
+    PlotNewTrack(x0, y0, z0);
+    for (const auto& cluster : m_clusters) {
+      PlotCluster(cluster.x, cluster.y, cluster.z);
+    }
+  }
   return true;
 }
 
@@ -222,7 +235,6 @@ double TrackHeed::GetClusterDensity() {
               << "    Ionisation cross-section is not available.\n";
     return 0.;
   }
-
   return m_transferCs->quanC;
 }
 
@@ -233,92 +245,49 @@ double TrackHeed::GetStoppingPower() {
               << "    Ionisation cross-section is not available.\n";
     return 0.;
   }
-
   return m_transferCs->meanC1 * 1.e6;
 }
 
-bool TrackHeed::GetCluster(double& xcls, double& ycls, double& zcls,
-                           double& tcls, int& n, double& e, double& extra) {
-  int ni = 0, np = 0;
-  return GetCluster(xcls, ycls, zcls, tcls, n, ni, np, e, extra);
-}
+bool TrackHeed::AddCluster(Heed::HeedPhoton* virtualPhoton,
+                           std::vector<Cluster>& clusters) {
 
-bool TrackHeed::GetCluster(double& xcls, double& ycls, double& zcls,
-                           double& tcls, int& ne, int& ni, double& e, 
-                           double& extra) {
-  int np = 0;
-  return GetCluster(xcls, ycls, zcls, tcls, ne, ni, np, e, extra);
-}
+  // Get the location of the interaction (convert from mm to cm
+  // and shift with respect to bounding box center).
+  const double xc = virtualPhoton->position().x * 0.1 + m_cX;
+  const double yc = virtualPhoton->position().y * 0.1 + m_cY;
+  const double zc = virtualPhoton->position().z * 0.1 + m_cZ;
+  const double tc = virtualPhoton->time();
 
-bool TrackHeed::GetCluster(double& xcls, double& ycls, double& zcls,
-                           double& tcls, int& ne, int& ni, int& np, 
-                           double& e, double& extra) {
-  // Initialise and reset.
-  xcls = ycls = zcls = tcls = 0.;
-  extra = 0.;
-  ne = ni = np = 0;
-  e = 0.;
-  m_photons.clear();
-  m_deltaElectrons.clear();
-  m_conductionElectrons.clear();
-  m_conductionIons.clear();
+  // Make sure the clusters is inside the drift area and active medium.
+  if (!IsInside(xc, yc, zc)) return false;
 
-  // Make sure NewTrack has been called successfully.
-  if (!m_ready) {
-    std::cerr << m_className << "::GetCluster:\n"
-              << "    Track has not been initialized. Call NewTrack first.\n";
-    return false;
-  }
-
-  if (m_particleBank.empty()) return false;
-  std::vector<Heed::gparticle*>::const_iterator end = m_particleBank.end();
-  if (m_bankIterator == end) return false;
-
-  // Look for the next cluster (i. e. virtual photon) in the list.
-  Heed::HeedPhoton* virtualPhoton = nullptr;
-  for (; m_bankIterator != end; ++m_bankIterator) {
-    // Convert the particle to a (virtual) photon.
-    virtualPhoton = dynamic_cast<Heed::HeedPhoton*>(*m_bankIterator);
-    if (!virtualPhoton) {
-      std::cerr << m_className << "::GetCluster:\n"
-                << "    Particle is not a virtual photon. Program bug!\n";
-      // Try the next element.
-      continue;
-    }
-    // Get the location of the interaction (convert from mm to cm
-    // and shift with respect to bounding box center).
-    xcls = virtualPhoton->position().x * 0.1 + m_cX;
-    ycls = virtualPhoton->position().y * 0.1 + m_cY;
-    zcls = virtualPhoton->position().z * 0.1 + m_cZ;
-    tcls = virtualPhoton->time();
-    // Skip clusters outside the drift area or outside the active medium.
-    if (!IsInside(xcls, ycls, zcls)) continue;
-    // Add the first ion (at the position of the cluster).
-    m_conductionIons.emplace_back(
-        Heed::HeedCondElectron(Heed::point(virtualPhoton->position()), tcls));
-    ++m_bankIterator;
-    break;
-  }
-
-  // Stop if we did not find a virtual photon.
-  if (!virtualPhoton) return false;
-  // Plot the cluster, if requested.
-  if (m_viewer) PlotCluster(xcls, ycls, zcls);
-
-  std::vector<Heed::gparticle*> secondaries;
-  // Transport the virtual photon.
-  virtualPhoton->fly(secondaries);
+  Cluster cluster;
+  cluster.x = xc;
+  cluster.y = yc;
+  cluster.z = zc;
+  cluster.t = tc;
   // Get the transferred energy (convert from MeV to eV).
-  e = virtualPhoton->m_energy * 1.e6;
+  cluster.energy = virtualPhoton->m_energy * 1.e6;
+  cluster.extra = 0.;
+  // Add the first ion (at the position of the cluster).
+  SimplifiedParticle ion;
+  ion.x = xc;
+  ion.y = yc;
+  ion.z = zc;
+  ion.t = tc;
+  cluster.ions.push_back(std::move(ion));
 
+  // Transport the virtual photon.
+  std::vector<Heed::gparticle*> secondaries;
+  virtualPhoton->fly(secondaries);
   while (!secondaries.empty()) {
     std::vector<Heed::gparticle*> newSecondaries;
     // Loop over the secondaries.
     for (auto secondary : secondaries) {
-      // Check if it is a delta electron.
+      // Is the secondary a delta electron?
       auto delta = dynamic_cast<Heed::HeedDeltaElectron*>(secondary);
       if (delta) {
-        extra += delta->kinetic_energy() * 1.e6;
+        cluster.extra += delta->kinetic_energy() * 1.e6;
         const double x = delta->position().x * 0.1 + m_cX;
         const double y = delta->position().y * 0.1 + m_cY;
         const double z = delta->position().z * 0.1 + m_cZ;
@@ -327,15 +296,11 @@ bool TrackHeed::GetCluster(double& xcls, double& ycls, double& zcls,
           // Transport the delta electron.
           delta->fly(newSecondaries);
           // Add the conduction electrons and ions to the list.
-          m_conductionElectrons.insert(m_conductionElectrons.end(),
-                                       delta->conduction_electrons.begin(),
-                                       delta->conduction_electrons.end());
-          m_conductionIons.insert(m_conductionIons.end(),
-                                  delta->conduction_ions.begin(),
-                                  delta->conduction_ions.end());
+          AddElectrons(delta->conduction_electrons, cluster.electrons);
+          AddElectrons(delta->conduction_ions, cluster.ions);
         } else {
           // Add the delta electron to the list, for later use.
-          DeltaElectron deltaElectron;
+          SimplifiedParticle deltaElectron;
           deltaElectron.x = delta->position().x * 0.1 + m_cX;
           deltaElectron.y = delta->position().y * 0.1 + m_cY;
           deltaElectron.z = delta->position().z * 0.1 + m_cZ;
@@ -344,18 +309,18 @@ bool TrackHeed::GetCluster(double& xcls, double& ycls, double& zcls,
           deltaElectron.dx = delta->direction().x;
           deltaElectron.dy = delta->direction().y;
           deltaElectron.dz = delta->direction().z;
-          m_deltaElectrons.push_back(std::move(deltaElectron));
+          cluster.electrons.push_back(std::move(deltaElectron));
         }
         continue;
       }
-      // Check if it is a real photon.
+      // Is the secondary a real photon?
       auto photon = dynamic_cast<Heed::HeedPhoton*>(secondary);
       if (!photon) {
-        std::cerr << m_className << "::GetCluster:\n"
+        std::cerr << m_className << "::AddCluster:\n"
                   << "    Particle is neither an electron nor a photon.\n";
         continue;
       }
-      extra += photon->m_energy * 1.e6;
+      cluster.extra += photon->m_energy * 1.e6;
       const double x = photon->position().x * 0.1 + m_cX;
       const double y = photon->position().y * 0.1 + m_cY;
       const double z = photon->position().z * 0.1 + m_cZ;
@@ -364,7 +329,7 @@ bool TrackHeed::GetCluster(double& xcls, double& ycls, double& zcls,
       if (m_doPhotonReabsorption) {
         photon->fly(newSecondaries);
       } else {
-        Photon unabsorbedPhoton;
+        SimplifiedParticle unabsorbedPhoton;
         unabsorbedPhoton.x = photon->position().x * 0.1 + m_cX;
         unabsorbedPhoton.y = photon->position().y * 0.1 + m_cY;
         unabsorbedPhoton.z = photon->position().z * 0.1 + m_cZ;
@@ -373,7 +338,7 @@ bool TrackHeed::GetCluster(double& xcls, double& ycls, double& zcls,
         unabsorbedPhoton.dx = photon->direction().x;
         unabsorbedPhoton.dy = photon->direction().y;
         unabsorbedPhoton.dz = photon->direction().z;
-        m_photons.push_back(std::move(unabsorbedPhoton));
+        cluster.photons.push_back(std::move(unabsorbedPhoton));
       }
     }
     for (auto secondary : secondaries)
@@ -381,90 +346,122 @@ bool TrackHeed::GetCluster(double& xcls, double& ycls, double& zcls,
     secondaries.clear();
     secondaries.swap(newSecondaries);
   }
-  // Get the total number of electrons produced in this step.
-  ne = m_doDeltaTransport ? m_conductionElectrons.size()
-                          : m_deltaElectrons.size();
-  ni = m_conductionIons.size();
-  np = m_photons.size();
+  clusters.push_back(std::move(cluster));
+  return true;
+}
+
+void TrackHeed::AddElectrons(
+    const std::vector<Heed::HeedCondElectron>& conductionElectrons,
+    std::vector<SimplifiedParticle>& electrons) {
+
+  for (const auto& conductionElectron : conductionElectrons) {
+    SimplifiedParticle electron;
+    electron.x = conductionElectron.x * 0.1 + m_cX;
+    electron.y = conductionElectron.y * 0.1 + m_cY;
+    electron.z = conductionElectron.z * 0.1 + m_cZ;
+    electron.t = conductionElectron.time;
+    electrons.push_back(std::move(electron));
+  }
+}
+
+bool TrackHeed::GetCluster(double& xc, double& yc, double& zc,
+                           double& tc, int& ne, 
+                           double& ec, double& extra) {
+  int ni = 0, np = 0;
+  return GetCluster(xc, yc, zc, tc, ne, ni, np, ec, extra);
+}
+
+bool TrackHeed::GetCluster(double& xc, double& yc, double& zc, 
+                           double& tc, int& ne, int& ni, 
+                           double& ec, double& extra) {
+  int np = 0;
+  return GetCluster(xc, yc, zc, tc, ne, ni, np, ec, extra);
+}
+
+bool TrackHeed::GetCluster(double& xc, double& yc, double& zc,
+                           double& tc, int& ne, int& ni, int& np, 
+                           double& ec, double& extra) {
+  // Initialise.
+  xc = yc = zc = tc = ec = extra = 0.;
+  ne = ni = np = 0;
+
+  if (m_clusters.empty()) return false;
+  // Increment the cluster index.
+  if (m_cluster < m_clusters.size()) {
+    ++m_cluster;
+  } else if (m_cluster > m_clusters.size()) {
+    m_cluster = 0;
+  } 
+  if (m_cluster >= m_clusters.size()) return false;
+
+  ne = m_clusters[m_cluster].electrons.size();
+  ni = m_clusters[m_cluster].ions.size();
+  np = m_clusters[m_cluster].photons.size();
+  xc = m_clusters[m_cluster].x;
+  yc = m_clusters[m_cluster].y;
+  zc = m_clusters[m_cluster].z;
+  tc = m_clusters[m_cluster].t;
+  ec = m_clusters[m_cluster].energy;
+  extra = m_clusters[m_cluster].extra;
   return true;
 }
 
 bool TrackHeed::GetElectron(const unsigned int i, double& x, double& y,
                             double& z, double& t, double& e, double& dx,
                             double& dy, double& dz) {
-  // Make sure NewTrack has successfully been called.
-  if (!m_ready) {
-    std::cerr << m_className << "::GetElectron:\n"
-              << "    Track has not been initialized. Call NewTrack first.\n";
+
+  if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
+  // Make sure an electron with this number exists.
+  if (i >= m_clusters[m_cluster].electrons.size()) {
+    std::cerr << m_className << "::GetElectron: Index out of range.\n";
     return false;
   }
-
-  if (m_doDeltaTransport) {
-    // Make sure an electron with this number exists.
-    if (i >= m_conductionElectrons.size()) {
-      std::cerr << m_className << "::GetElectron: Index out of range.\n";
-      return false;
-    }
-
-    x = m_conductionElectrons[i].x * 0.1 + m_cX;
-    y = m_conductionElectrons[i].y * 0.1 + m_cY;
-    z = m_conductionElectrons[i].z * 0.1 + m_cZ;
-    t = m_conductionElectrons[i].time;
-    e = 0.;
-    dx = dy = dz = 0.;
-
-  } else {
-    // Make sure a delta electron with this number exists.
-    if (i >= m_deltaElectrons.size()) {
-      std::cerr << m_className << "::GetElectron:\n"
-                << "    Delta electron number out of range.\n";
-      return false;
-    }
-
-    x = m_deltaElectrons[i].x;
-    y = m_deltaElectrons[i].y;
-    z = m_deltaElectrons[i].z;
-    t = m_deltaElectrons[i].t;
-    e = m_deltaElectrons[i].e;
-    dx = m_deltaElectrons[i].dx;
-    dy = m_deltaElectrons[i].dy;
-    dz = m_deltaElectrons[i].dz;
-  }
+  const auto& electron = m_clusters[m_cluster].electrons[i];
+  x = electron.x;
+  y = electron.y;
+  z = electron.z;
+  t = electron.t;
+  e = electron.e;
+  dx = electron.dx;
+  dy = electron.dy;
+  dz = electron.dz;
   return true;
 }
 
 bool TrackHeed::GetIon(const unsigned int i, double& x, double& y, double& z,
                        double& t) const {
-  // Make sure a "conduction" ion with this number exists.
-  if (i >= m_conductionIons.size()) {
+  if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
+  // Make sure an ion with this index exists.
+  if (i >= m_clusters[m_cluster].ions.size()) {
     std::cerr << m_className << "::GetIon: Index out of range.\n";
     return false;
   }
-
-  x = m_conductionIons[i].x * 0.1 + m_cX;
-  y = m_conductionIons[i].y * 0.1 + m_cY;
-  z = m_conductionIons[i].z * 0.1 + m_cZ;
-  t = m_conductionIons[i].time;
+  const auto& ion = m_clusters[m_cluster].ions[i];
+  x = ion.x;
+  y = ion.y;
+  z = ion.z;
+  t = ion.t;
   return true;
 }
 
 bool TrackHeed::GetPhoton(const unsigned int i, double& x, double& y,
                           double& z, double& t, double& e, double& dx,
                           double& dy, double& dz) const {
-  // Make sure a photon with this number exists.
-  if (i >= m_photons.size()) {
+  if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
+  // Make sure a photon with this index exists.
+  if (i >= m_clusters[m_cluster].photons.size()) {
     std::cerr << m_className << "::GetPhoton: Index out of range.\n";
     return false;
   }
-
-  x = m_photons[i].x;
-  y = m_photons[i].y;
-  z = m_photons[i].z;
-  t = m_photons[i].t;
-  e = m_photons[i].e;
-  dx = m_photons[i].dx;
-  dy = m_photons[i].dy;
-  dz = m_photons[i].dz;
+  const auto& photon = m_clusters[m_cluster].photons[i];
+  x = photon.x;
+  y = photon.y;
+  z = photon.z;
+  t = photon.t;
+  e = photon.e;
+  dx = photon.dx;
+  dy = photon.dy;
+  dz = photon.dz;
   return true;
 }
 
@@ -472,19 +469,17 @@ void TrackHeed::TransportDeltaElectron(const double x0, const double y0,
                                        const double z0, const double t0,
                                        const double e0, const double dx0,
                                        const double dy0, const double dz0,
-                                       int& nel) {
+                                       int& ne) {
   int ni = 0;
-  return TransportDeltaElectron(x0, y0, z0, t0, e0, dx0, dy0, dz0, nel, ni);
+  return TransportDeltaElectron(x0, y0, z0, t0, e0, dx0, dy0, dz0, ne, ni);
 }
 
 void TrackHeed::TransportDeltaElectron(const double x0, const double y0,
                                        const double z0, const double t0,
                                        const double e0, const double dx0,
                                        const double dy0, const double dz0,
-                                       int& nel, int& ni) {
-  nel = 0;
-  ni = 0;
-
+                                       int& ne, int& ni) {
+  ne = ni = 0;
   // Check if delta electron transport was disabled.
   if (!m_doDeltaTransport) {
     std::cerr << m_className << "::TransportDeltaElectron:\n"
@@ -496,7 +491,6 @@ void TrackHeed::TransportDeltaElectron(const double x0, const double y0,
   if (!m_sensor) {
     std::cerr << m_className << "::TransportDeltaElectron:\n"
               << "    Sensor is not defined.\n";
-    m_ready = false;
     return;
   }
 
@@ -505,14 +499,9 @@ void TrackHeed::TransportDeltaElectron(const double x0, const double y0,
 
   // Make sure the initial position is inside an ionisable medium.
   Medium* medium = m_sensor->GetMedium(x0, y0, z0);
-  if (!medium) {
+  if (!medium || !medium->IsIonisable()) {
     std::cerr << m_className << "::TransportDeltaElectron:\n"
-              << "    No medium at initial position.\n";
-    return;
-  } else if (!medium->IsIonisable()) {
-    std::cerr << "TrackHeed:TransportDeltaElectron:\n"
-              << "    Medium at initial position is not ionisable.\n";
-    m_ready = false;
+              << "    No ionisable medium at initial position.\n";
     return;
   }
 
@@ -521,53 +510,43 @@ void TrackHeed::TransportDeltaElectron(const double x0, const double y0,
       fabs(medium->GetMassDensity() - m_mediumDensity) > 1.e-9) {
     m_isChanged = true;
     update = true;
-    m_ready = false;
     m_hasActiveTrack = false;
   }
 
   // If medium or bounding box have changed, update the "chamber".
   if (update) {
     if (!Initialise(medium)) return;
-    m_ready = true;
     m_mediumName = medium->GetName();
     m_mediumDensity = medium->GetMassDensity();
   }
-  m_photons.clear();
-  m_deltaElectrons.clear();
-  m_conductionElectrons.clear();
-  m_conductionIons.clear();
+  m_clusters.clear();
+  m_cluster = 0;
 
   // Initial position (shift with respect to bounding box center and
   // convert from cm to mm).
   Heed::point p0((x0 - m_cX) * 10., (y0 - m_cY) * 10., (z0 - m_cZ) * 10.);
 
+  Cluster cluster;
   // Make sure the kinetic energy is positive.
   if (e0 <= 0.) {
     // Just create a conduction electron on the spot.
-    m_conductionElectrons.emplace_back(Heed::HeedCondElectron(p0, t0));
-    nel = 1;
+    SimplifiedParticle electron;
+    electron.x = x0;
+    electron.y = y0;
+    electron.z = z0;
+    electron.t = t0;
+    cluster.electrons.push_back(std::move(electron));
+    m_clusters.push_back(std::move(cluster));
+    ne = 1;
     return;
   }
-
-  // Check the direction vector.
-  double dx = dx0, dy = dy0, dz = dz0;
-  const double d = sqrt(dx * dx + dy * dy + dz * dz);
-  if (d <= 0.) {
-    // Null vector. Sample the direction isotropically.
-    RndmDirection(dx, dy, dz);
-  } else {
-    // Normalise the direction vector.
-    dx /= d;
-    dy /= d;
-    dz /= d;
-  }
-  Heed::vec velocity(dx, dy, dz);
 
   // Calculate the speed for the given kinetic energy.
   const double gamma = 1. + e0 / ElectronMass;
   const double beta = sqrt(1. - 1. / (gamma * gamma));
-  double speed = Heed::CLHEP::c_light * beta;
-  velocity = velocity * speed;
+  const double speed = Heed::CLHEP::c_light * beta;
+  // Set the velocity vector.
+  Heed::vec velocity = NormaliseDirection(dx0, dy0, dz0) * speed;
 
   // Transport the electron.
   std::vector<Heed::gparticle*> secondaries;
@@ -576,10 +555,11 @@ void TrackHeed::TransportDeltaElectron(const double x0, const double y0,
   delta.fly(secondaries);
   ClearBank(secondaries);
 
-  m_conductionElectrons.swap(delta.conduction_electrons);
-  m_conductionIons.swap(delta.conduction_ions);
-  nel = m_conductionElectrons.size();
-  ni = m_conductionIons.size();
+  AddElectrons(delta.conduction_electrons, cluster.electrons);
+  AddElectrons(delta.conduction_ions, cluster.ions);
+  ne = cluster.electrons.size();
+  ni = cluster.ions.size();
+  m_clusters.push_back(std::move(cluster));
 }
 
 void TrackHeed::TransportPhoton(const double x0, const double y0,
@@ -604,10 +584,7 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
                                 const double e0, const double dx0,
                                 const double dy0, const double dz0, int& ne,
                                 int& ni, int& np) {
-  ne = 0;
-  ni = 0;
-  np = 0;
-
+  ne = ni = np = 0;
   // Make sure the energy is positive.
   if (e0 <= 0.) {
     std::cerr << m_className << "::TransportPhoton:\n"
@@ -618,7 +595,6 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
   // Make sure the sensor has been set.
   if (!m_sensor) {
     std::cerr << m_className << "::TransportPhoton: Sensor is not defined.\n";
-    m_ready = false;
     return;
   }
 
@@ -627,14 +603,9 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
 
   // Make sure the initial position is inside an ionisable medium.
   Medium* medium = m_sensor->GetMedium(x0, y0, z0);
-  if (!medium) {
+  if (!medium || !medium->IsIonisable()) {
     std::cerr << m_className << "::TransportPhoton:\n"
-              << "    No medium at initial position.\n";
-    return;
-  } else if (!medium->IsIonisable()) {
-    std::cerr << "TrackHeed:TransportPhoton:\n"
-              << "    Medium at initial position is not ionisable.\n";
-    m_ready = false;
+              << "    No ionisable medium at initial position.\n";
     return;
   }
 
@@ -643,39 +614,23 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
       fabs(medium->GetMassDensity() - m_mediumDensity) > 1.e-9) {
     m_isChanged = true;
     update = true;
-    m_ready = false;
   }
 
   // If medium or bounding box have changed, update the "chamber".
   if (update) {
     if (!Initialise(medium)) return;
-    m_ready = true;
     m_mediumName = medium->GetName();
     m_mediumDensity = medium->GetMassDensity();
   }
 
-  // Delete the particle bank.
   // Clusters from the current track will be lost.
   m_hasActiveTrack = false;
-  ClearParticleBank();
-  m_photons.clear();
-  m_deltaElectrons.clear();
-  m_conductionElectrons.clear();
-  m_conductionIons.clear();
+  m_clusters.clear();
+  m_cluster = 0;
+  Cluster cluster;
 
-  // Check the direction vector.
-  double dx = dx0, dy = dy0, dz = dz0;
-  const double d = sqrt(dx * dx + dy * dy + dz * dz);
-  if (d <= 0.) {
-    // Null vector. Sample the direction isotropically.
-    RndmDirection(dx, dy, dz);
-  } else {
-    // Normalise the direction vector.
-    dx /= d;
-    dy /= d;
-    dz /= d;
-  }
-  Heed::vec velocity(dx, dy, dz);
+  // Set the direction vector.
+  Heed::vec velocity = NormaliseDirection(dx0, dy0, dz0);
   velocity = velocity * Heed::CLHEP::c_light;
 
   // Initial position (shift with respect to bounding box center and
@@ -688,7 +643,7 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
   std::vector<Heed::gparticle*> secondaries;
   photon.fly(secondaries);
   if (secondaries.empty()) {
-    Photon unabsorbedPhoton;
+    SimplifiedParticle unabsorbedPhoton;
     unabsorbedPhoton.x = photon.position().x * 0.1 + m_cX;
     unabsorbedPhoton.y = photon.position().y * 0.1 + m_cY;
     unabsorbedPhoton.z = photon.position().z * 0.1 + m_cZ;
@@ -697,30 +652,25 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
     unabsorbedPhoton.dx = photon.direction().x;
     unabsorbedPhoton.dy = photon.direction().y;
     unabsorbedPhoton.dz = photon.direction().z;
-    m_photons.push_back(std::move(unabsorbedPhoton));
+    cluster.photons.push_back(std::move(unabsorbedPhoton));
   }
 
   while (!secondaries.empty()) {
     std::vector<Heed::gparticle*> newSecondaries;
     // Loop over the particle bank and look for daughter particles.
-    std::vector<Heed::gparticle*>::iterator it;
-    for (it = secondaries.begin(); it != secondaries.end(); ++it) {
-      // Check if it is a delta electron.
-      auto delta = dynamic_cast<Heed::HeedDeltaElectron*>(*it);
+    for (auto gp : secondaries) {
+      // Is it a delta electron?
+      auto delta = dynamic_cast<Heed::HeedDeltaElectron*>(gp);
       if (delta) {
         if (m_doDeltaTransport) {
           // Transport the delta electron.
           delta->fly(newSecondaries);
-          // Add the conduction electrons to the list.
-          m_conductionElectrons.insert(m_conductionElectrons.end(),
-                                       delta->conduction_electrons.begin(),
-                                       delta->conduction_electrons.end());
-          m_conductionIons.insert(m_conductionIons.end(),
-                                  delta->conduction_ions.begin(),
-                                  delta->conduction_ions.end());
+          // Add the conduction electrons and ions to the list.
+          AddElectrons(delta->conduction_electrons, cluster.electrons);
+          AddElectrons(delta->conduction_ions, cluster.ions);
         } else {
           // Add the delta electron to the list, for later use.
-          DeltaElectron deltaElectron;
+          SimplifiedParticle deltaElectron;
           deltaElectron.x = delta->position().x * 0.1 + m_cX;
           deltaElectron.y = delta->position().y * 0.1 + m_cY;
           deltaElectron.z = delta->position().z * 0.1 + m_cZ;
@@ -729,12 +679,12 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
           deltaElectron.dx = delta->direction().x;
           deltaElectron.dy = delta->direction().y;
           deltaElectron.dz = delta->direction().z;
-          m_deltaElectrons.push_back(std::move(deltaElectron));
+          cluster.electrons.push_back(std::move(deltaElectron));
         }
         continue;
       }
       // Check if it is a fluorescence photon.
-      auto fluorescencePhoton = dynamic_cast<Heed::HeedPhoton*>(*it);
+      auto fluorescencePhoton = dynamic_cast<Heed::HeedPhoton*>(gp);
       if (!fluorescencePhoton) {
         std::cerr << m_className << "::TransportPhoton:\n"
                   << "    Unknown secondary particle.\n";
@@ -745,7 +695,7 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
       if (m_doPhotonReabsorption) {
         fluorescencePhoton->fly(newSecondaries);
       } else {
-        Photon unabsorbedPhoton;
+        SimplifiedParticle unabsorbedPhoton;
         unabsorbedPhoton.x = fluorescencePhoton->position().x * 0.1 + m_cX;
         unabsorbedPhoton.y = fluorescencePhoton->position().y * 0.1 + m_cY;
         unabsorbedPhoton.z = fluorescencePhoton->position().z * 0.1 + m_cZ;
@@ -754,18 +704,16 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
         unabsorbedPhoton.dx = fluorescencePhoton->direction().x;
         unabsorbedPhoton.dy = fluorescencePhoton->direction().y;
         unabsorbedPhoton.dz = fluorescencePhoton->direction().z;
-        m_photons.push_back(std::move(unabsorbedPhoton));
+        cluster.photons.push_back(std::move(unabsorbedPhoton));
       }
     }
     secondaries.swap(newSecondaries);
     ClearBank(newSecondaries);
   }
   ClearBank(secondaries);
-  // Get the total number of electrons produced in this step.
-  ne = m_doDeltaTransport ? m_conductionElectrons.size()
-                          : m_deltaElectrons.size();
-  ni = m_conductionIons.size();
-  np = m_photons.size();
+  ne = cluster.electrons.size();
+  ni = cluster.ions.size();
+  np = cluster.photons.size();
 }
 
 void TrackHeed::EnableElectricField() { m_fieldMap->UseEfield(true); }
@@ -796,10 +744,8 @@ void TrackHeed::SetEnergyMesh(const double e0, const double e1,
     return;
   }
 
-  m_emin = std::min(e0, e1);
-  m_emax = std::max(e0, e1);
-  m_emin *= 1.e-6;
-  m_emax *= 1.e-6;
+  m_emin = 1.e-6 * std::min(e0, e1);
+  m_emax = 1.e-6 * std::max(e0, e1);
   m_nEnergyIntervals = nsteps;
 }
 
@@ -855,7 +801,7 @@ bool TrackHeed::Initialise(Medium* medium, const bool verbose) {
               << "    Database path: " << databasePath << "\n";
   }
 
-  // Check once more that the medium exists.
+  // Make sure the medium exists.
   if (!medium) {
     std::cerr << m_className << "::Initialise: Null pointer.\n";
     return false;
@@ -1190,12 +1136,6 @@ double TrackHeed::GetPhotoAbsorptionCrossSection(const double en) const {
   return cs * 1.e-18;
 }
 
-void TrackHeed::ClearParticleBank() {
-  Heed::gparticle::reset_counter();
-  ClearBank(m_particleBank);
-  m_bankIterator = m_particleBank.end();
-}
-
 bool TrackHeed::IsInside(const double x, const double y, const double z) {
   // Check if the point is inside the drift area.
   if (!m_sensor->IsInArea(x, y, z)) return false;
@@ -1217,7 +1157,6 @@ bool TrackHeed::UpdateBoundingBox(bool& update) {
   double xmax = 0., ymax = 0., zmax = 0.;
   if (!m_sensor->GetArea(xmin, ymin, zmin, xmax, ymax, zmax)) {
     std::cerr << m_className << "::UpdateBoundingBox: Drift area is not set.\n";
-    m_ready = false;
     return false;
   }
   // Check if the bounding box has changed.

@@ -9,8 +9,7 @@
 
 namespace Garfield {
 
-TrackElectron::TrackElectron() : Track() {
-  m_className = "TrackElectron";
+TrackElectron::TrackElectron() : Track("Electron") {
 
   // Setup the particle properties.
   m_q = -1;
