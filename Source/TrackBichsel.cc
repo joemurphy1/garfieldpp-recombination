@@ -186,7 +186,7 @@ bool TrackBichsel::ComputeCrossSection() {
     std::cerr << m_className << "::ComputeCrossSection: Not initialised.\n";
     return false;
   }
-  m_ready = false;
+
   const double bg = GetBetaGamma();
   if (m_debug) {
     std::cerr << m_className << "::ComputeCrossSection:\n"
@@ -346,22 +346,25 @@ bool TrackBichsel::ComputeCrossSection() {
     const double f1 = 1. - f0;
     m_tab[i] = f0 * y0 + f1 * y1;
   } 
-  m_ready = true;
   return true;
 }
 
 bool TrackBichsel::NewTrack(const double x0, const double y0, const double z0,
                             const double t0, const double dx0, const double dy0,
                             const double dz0) {
+
+  // Reset the list of clusters.
+  m_clusters.clear();
+  m_cluster = 0;
+
   // Make sure a sensor has been defined.
   if (!m_sensor) {
     std::cerr << m_className << "::NewTrack: Sensor is not defined.\n";
-    m_isInMedium = false;
     return false;
   }
 
   // If not yet done, compute the cross-section table.
-  if (!m_ready || m_isChanged) {
+  if (m_isChanged) {
     if (!ComputeCrossSection()) {
       std::cerr << m_className << "::NewTrack:\n"
                 << "    Could not calculate cross-section table.\n";
@@ -372,90 +375,92 @@ bool TrackBichsel::NewTrack(const double x0, const double y0, const double z0,
 
   // Make sure we are inside a medium.
   Medium* medium = m_sensor->GetMedium(x0, y0, z0);
-  if (!medium) {
-    std::cerr << m_className << "::NewTrack: No medium at initial position.\n";
-    m_isInMedium = false;
+  if (!medium || !medium->IsIonisable()) {
+    std::cerr << m_className << "::NewTrack:\n"
+              << "    No ionisable medium at initial position.\n";
     return false;
   }
 
   // Check if the medium is silicon.
   if (medium->GetName() != "Si") {
     std::cerr << m_className << "::NewTrack: Medium is not silicon.\n";
-    m_isInMedium = false;
     return false;
   }
-
-  // Check if primary ionisation has been enabled.
-  if (!medium->IsIonisable()) {
-    std::cerr << m_className << "::NewTrack: Medium is not ionisable.\n";
-    m_isInMedium = false;
-    return false;
-  }
-
-  m_isInMedium = true;
-  m_x = x0;
-  m_y = y0;
-  m_z = z0;
-  m_t = t0;
 
   // Normalise the direction vector.
+  double dx = dx0, dy = dy0, dz = dz0;
   const double d = sqrt(dx0 * dx0 + dy0 * dy0 + dz0 * dz0);
   if (d < Small) {
     // In case of a null vector, choose a random direction.
-    RndmDirection(m_dx, m_dy, m_dz);
+    RndmDirection(dx, dy, dz);
   } else {
-    m_dx = dx0 / d;
-    m_dy = dy0 / d;
-    m_dz = dz0 / d;
+    dx = dx0 / d;
+    dy = dy0 / d;
+    dz = dz0 / d;
   }
+  const double dt = m_speed > 0. ? 1. / m_speed : 0.;
+
+  double x = x0;
+  double y = y0;
+  double z = z0;
+  double t = t0;
+  const double mfp = 1. / m_imfp;
+  double ekin = GetKineticEnergy();
+  while (ekin > 0.) {
+    const double step = -log(RndmUniformPos()) * mfp;
+    x += dx * step;
+    y += dy * step;
+    z += dz * step;
+    t += dt * step;
+
+    medium = m_sensor->GetMedium(x, y, z);
+    if (!medium || !medium->IsIonisable() || medium->GetName() != "Si") {
+      if (m_debug) {
+        std::cout << m_className << "::NewTrack: Particle left the medium.\n";
+      }
+      break;
+    }
+
+    Cluster cluster;
+    cluster.x = x;
+    cluster.y = y;
+    cluster.z = z;
+    cluster.t = t;
+    const double u = NCdfBins * RndmUniform();
+    const size_t j = static_cast<size_t>(std::floor(u));
+    if (j == 0) {
+      cluster.energy = u * m_tab.front();
+    } else if (j >= NCdfBins) {
+      cluster.energy = m_tab.back();
+    } else {
+      cluster.energy = m_tab[j - 1] + (u - j) * (m_tab[j] - m_tab[j - 1]);
+    }
+    ekin -= cluster.energy;
+    m_clusters.push_back(std::move(cluster));
+  }
+  m_cluster = m_clusters.size() + 2; 
   return true;
 }
 
-bool TrackBichsel::GetCluster(double& xcls, double& ycls, double& zcls,
-                              double& tcls, int& n, double& e, double& extra) {
-  if (!m_ready || !m_isInMedium) return false;
+bool TrackBichsel::GetCluster(double& xc, double& yc, double& zc,
+                              double& tc, int& ne, double& ec, double& extra) {
+  xc = yc = zc = tc = ec = extra = 0.;
+  ne = 0;
+  if (m_clusters.empty()) return false;
+  // Increment the cluster index.
+  if (m_cluster < m_clusters.size()) {
+    ++m_cluster;
+  } else if (m_cluster > m_clusters.size()) {
+    m_cluster = 0;
+  } 
+  if (m_cluster >= m_clusters.size()) return false;
 
-  const double d = -log(RndmUniformPos()) / m_imfp;
-  m_x += m_dx * d;
-  m_y += m_dy * d;
-  m_z += m_dz * d;
-  m_t += d / m_speed;
-
-  xcls = m_x;
-  ycls = m_y;
-  zcls = m_z;
-  tcls = m_t;
-  n = 0;
-  e = 0.;
+  xc = m_clusters[m_cluster].x;
+  yc = m_clusters[m_cluster].y;
+  zc = m_clusters[m_cluster].z;
+  tc = m_clusters[m_cluster].t;
+  ec = m_clusters[m_cluster].energy;
   extra = 0.;
-
-  Medium* medium = m_sensor->GetMedium(m_x, m_y, m_z);
-  if (!medium) {
-    m_isInMedium = false;
-    if (m_debug) {
-      std::cout << m_className << "::GetCluster: Particle left the medium.\n";
-    }
-    return false;
-  }
-
-  if (medium->GetName() != "Si" || !medium->IsIonisable()) {
-    m_isInMedium = false;
-    if (m_debug) {
-      std::cout << m_className << "::GetCluster: Particle left the medium.\n";
-    }
-    return false;
-  }
-
-  const double u = NCdfBins * RndmUniform();
-  const size_t j = static_cast<size_t>(std::floor(u));
-  if (j == 0) {
-    e = 0. + u * m_tab.front();
-  } else if (j >= NCdfBins) {
-    e = m_tab.back();
-  } else {
-    e = m_tab[j - 1] + (u - j) * (m_tab[j] - m_tab[j - 1]);
-  }
-
   return true;
 }
 

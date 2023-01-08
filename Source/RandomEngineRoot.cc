@@ -11,8 +11,7 @@ RandomEngineRoot::~RandomEngineRoot() {}
 
 void RandomEngineRoot::Seed(const unsigned int s) {
   m_rng.SetSeed(s);
-  std::cout << "RandomEngineRoot::Seed:\n"
-            << "    Seed: " << m_rng.GetSeed() << "\n";
+  std::cout << "RandomEngineRoot::Seed: " << m_rng.GetSeed() << "\n";
 }
 
 void RandomEngineRoot::Print() {
