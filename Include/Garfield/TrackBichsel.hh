@@ -57,7 +57,6 @@ class TrackBichsel : public Track {
   double m_conv = 0.0092456;
   
   bool m_initialised = false;
-  bool m_ready = false;
 
   /// Inverse mean free path [cm-1].
   double m_imfp = 0.;
@@ -67,11 +66,12 @@ class TrackBichsel : public Track {
   /// Particle speed
   double m_speed = SpeedOfLight;
 
-  // Particle position and direction
-  double m_x = 0., m_y = 0., m_z = 0., m_t = 0.;
-  double m_dx = 0., m_dy = 0., m_dz = 1.;
-
-  bool m_isInMedium = false;
+  struct Cluster {
+    double x, y, z, t;
+    double energy;
+  };
+  std::vector<Cluster> m_clusters;
+  size_t m_cluster = 0;
 };
 }
 
