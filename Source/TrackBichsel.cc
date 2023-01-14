@@ -460,7 +460,6 @@ bool TrackBichsel::GetCluster(double& xc, double& yc, double& zc,
   zc = m_clusters[m_cluster].z;
   tc = m_clusters[m_cluster].t;
   ec = m_clusters[m_cluster].energy;
-  extra = 0.;
   return true;
 }
 

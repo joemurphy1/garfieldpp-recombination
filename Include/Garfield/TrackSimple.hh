@@ -29,21 +29,23 @@ class TrackSimple : public Track {
   virtual bool NewTrack(const double x0, const double y0, const double z0,
                         const double t0, const double dx0, const double dy0,
                         const double dz0);
-  virtual bool GetCluster(double& xcls, double& ycls, double& zcls,
-                          double& tcls, int& n, double& e, double& extra);
+  virtual bool GetCluster(double& xc, double& yc, double& zc,
+                          double& tc, int& ne, double& ec, double& extra);
 
  protected:
-  bool m_isReady = false;
-
-  // Particle position, time and direction
-  double m_x = 0., m_y = 0., m_z = 0., m_t = 0.;
-  double m_dx = 0., m_dy = 0., m_dz = 0.;
   // Mean free path (mean spacing between adjacent clusters)
   double m_mfp = 0.04;
   // Average energy per cluster
   double m_eloss = 2530.;
 
   bool m_useEqualSpacing = false;
+
+  struct Cluster {
+    double x, y, z, t;
+    double energy;
+  };
+  std::vector<Cluster> m_clusters;
+  size_t m_cluster = 0;
 };
 }
 

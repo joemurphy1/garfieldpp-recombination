@@ -11,28 +11,24 @@
 
 namespace Garfield {
 
-TrackPAI::TrackPAI() : Track("PAI") { }
+TrackPAI::TrackPAI() : Track("PAI") {}
 
 bool TrackPAI::NewTrack(const double x0, const double y0, const double z0,
                         const double t0, const double dx0, const double dy0,
                         const double dz0) {
-  m_ready = false;
-
+  m_clusters.clear();
+  m_cluster = 0;
   // Make sure the sensor has been set.
   if (!m_sensor) {
     std::cerr << m_className << "::NewTrack: Sensor is not defined.\n";
     return false;
   }
 
-  // Get the medium at this location and check if it is "ionisable".
+  // Make sure there is an "ionisable" medium at this location.
   Medium* medium = m_sensor->GetMedium(x0, y0, z0);
-  if (!medium) {
-    std::cerr << m_className << "::NewTrack: No medium at initial position.\n";
-    return false;
-  }
-  if (!medium->IsIonisable()) {
+  if (!medium || !medium->IsIonisable()) {
     std::cerr << m_className << "::NewTrack:\n"
-              << "    Medium at initial position is not ionisable.\n";
+              << "    No ionisable medium at initial position.\n";
     return false;
   }
 
@@ -48,126 +44,96 @@ bool TrackPAI::NewTrack(const double x0, const double y0, const double z0,
     m_mediumDensity = medium->GetNumberDensity();
   }
 
-  m_ready = true;
-
   if (m_isChanged) {
     if (!SetupCrossSectionTable()) {
       std::cerr << m_className << "::NewTrack:\n"
                 << "    Calculation of ionisation cross-section failed.\n";
-      m_ready = false;
       return false;
     }
     m_isChanged = false;
   }
 
-  m_x = x0;
-  m_y = y0;
-  m_z = z0;
-  m_t = t0;
-  const double d = sqrt(dx0 * dx0 + dy0 * dy0 + dz0 * dz0);
+  double x = x0;
+  double y = y0;
+  double z = z0;
+  double t = t0;
+  double dx = dx0;
+  double dy = dy0;
+  double dz = dz0;
+  const double d = sqrt(dx * dx + dy * dy + dz * dz);
   if (d < Small) {
-    if (m_debug) {
-      std::cout << m_className << "::NewTrack:\n"
-                << "    Direction vector has zero norm.\n"
-                << "    Initial direction is randomized.\n";
-    }
-    RndmDirection(m_dx, m_dy, m_dz);
+    // Null vector. Choose a random direction.
+    RndmDirection(dx, dy, dz);
   } else {
     // Normalize the direction vector.
-    m_dx = dx0 / d;
-    m_dy = dy0 / d;
-    m_dz = dz0 / d;
+    const double scale = 1. / d;
+    dx *= scale;
+    dy *= scale;
+    dz *= scale;
   }
-  return true;
-}
+  double ekin = GetKineticEnergy();
+  while (ekin > 0.) {
+    // Draw a step length and propagate the particle.
+    const double step = -m_imfp * log(RndmUniformPos());
+    x += step * dx;
+    y += step * dy;
+    z += step * dz;
+    t += step / m_speed;
 
-bool TrackPAI::GetCluster(double& xcls, double& ycls, double& zcls,
-                          double& tcls, int& ncls, double& edep,
-                          double& extra) {
-  ncls = 0;
-  edep = extra = 0.;
-
-  // Clear the stack.
-  m_electrons.clear();
-  m_holes.clear();
-
-  if (!m_ready) {
-    std::cerr << m_className << "::GetCluster:\n";
-    std::cerr << "    Track not initialized. Call NewTrack first.\n";
-    return false;
-  }
-
-  if (m_isChanged) {
-    if (SetupCrossSectionTable()) {
-      m_isChanged = false;
-    } else {
-      std::cerr << m_className << "::GetCluster:\n";
-      std::cerr << "    Calculation of ionisation cross-section failed.\n";
-      return false;
+    medium = m_sensor->GetMedium(x, y, z);
+    if (!medium || !medium->IsIonisable() || 
+        medium->GetName() != m_mediumName ||
+        medium->GetNumberDensity() != m_mediumDensity) {
+      break;
     }
-  }
 
-  // Draw a step length and propagate the particle.
-  const double d = -m_imfp * log(RndmUniformPos());
-  m_x += d * m_dx;
-  m_y += d * m_dy;
-  m_z += d * m_dz;
-  m_t += d / m_speed;
+    // Sample the energy deposit.
+    std::pair<double, double> edep = SampleEnergyDeposit(RndmUniform());
+    // Update the particle energy.
+    ekin -= edep.first;
 
-  // Check the medium at this location.
-  Medium* medium = m_sensor->GetMedium(m_x, m_y, m_z);
-  if (!medium) {
-    m_ready = false;
-    return false;
-  }
-  if (medium->GetName() != m_mediumName ||
-      medium->GetNumberDensity() != m_mediumDensity || !medium->IsIonisable()) {
-    m_ready = false;
-    return false;
-  }
-
-  // Check if the particle is still inside the drift area.
-  if (!m_sensor->IsInArea(m_x, m_y, m_z)) {
-    m_ready = false;
-    return false;
-  }
-
-  xcls = m_x;
-  ycls = m_y;
-  zcls = m_z;
-  tcls = m_t;
-
-  // Sample the energy deposition.
-  double f = 0.;
-  edep = SampleEnergyDeposit(RndmUniform(), f);
-  // Update the particle energy.
-  m_e -= edep;
-
-  // Number of electron/hole (or electron/ion pairs) produced.
-  ncls = 1;
-
-  if (m_debug) {
-    std::cout << m_className << "::GetCluster:\n";
-    std::cout << "   Fraction of Rutherford scattering: " << f << "\n";
+    Cluster cluster;
+    cluster.x = x;
+    cluster.y = y;
+    cluster.z = z;
+    cluster.t = t;
+    cluster.energy = edep.first;
+    m_clusters.push_back(std::move(cluster));
   }
   return true;
 }
 
-double TrackPAI::SampleEnergyDeposit(const double u, double& f) const {
+bool TrackPAI::GetCluster(double& xc, double& yc, double& zc,
+                          double& tc, int& nc, double& ec, double& extra) {
+  nc = 0;
+  xc = yc = zc = tc = ec = extra = 0.;
+  if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
+  const auto& cluster = m_clusters[m_cluster];
+  xc = cluster.x;
+  yc = cluster.y;
+  zc = cluster.z;
+  tc = cluster.t;
+  ec = cluster.energy;
+  nc = 1;
+
+  ++m_cluster; 
+  return true;
+}
+
+std::pair<double, double> TrackPAI::SampleEnergyDeposit(const double u) const {
   if (u > m_cdf.back()) {
     // Use the free-electron differential cross-section.
-    f = 1.;
-    return SampleAsymptoticCs(u);
+    return std::make_pair(SampleAsymptoticCs(u), 1.);
   }
 
-  if (u <= m_cdf[0]) return m_energies[0];
-  if (u >= 1.) return m_energies.back();
+  if (u <= m_cdf[0]) return std::make_pair(m_energies[0], 0.);
+  if (u >= 1.) return std::make_pair(m_energies.back(), 0.);
 
   // Find the energy loss by interpolation
   // from the cumulative distribution table.
   const auto begin = m_cdf.cbegin();
   const auto it1 = std::upper_bound(begin, m_cdf.cend(), u);
-  if (it1 == m_cdf.cbegin()) return m_energies[0];
+  if (it1 == m_cdf.cbegin()) return std::make_pair(m_energies[0], 0.);
   const auto it0 = std::prev(it1);
   const double c0 = *it0;
   const double c1 = *it1;
@@ -176,18 +142,18 @@ double TrackPAI::SampleEnergyDeposit(const double u, double& f) const {
   const double r0 = m_rutherford[it0 - begin];
   const double r1 = m_rutherford[it1 - begin];
   if (e0 < 100.) {
-    const double edep = e0 + (u - c0) * (e1 - e0) / (c1 - c0);
-    f = r0 + (edep - e0) * (r1 - r0) / (e1 - e0);
-    return edep;
+    const double f1 = (u - c0) / (c1 - c0);
+    const double f0 = 1. - f1; 
+    return std::make_pair(f0 * e0 + f1 * e1, f0 * r0 + f1 * r1);
   }
   const double loge0 = log(e0);
   const double loge1 = log(e1);
   const double logc0 = log(c0);
   const double logc1 = log(c1);
-  double edep = loge0 + (log(u) - logc0) * (loge1 - loge0) / (logc1 - logc0);
-  f = r0 + (log(edep) - loge0) * (r1 - r0) / (loge1 - loge0);
-  edep = exp(edep);
-  return edep;
+  const double f1 = (log(u) - logc0) / (logc1 - logc0);
+  const double f0 = 1. - f1;
+  const double edep = exp(f0 * loge0 + f1 * loge1);
+  return std::make_pair(edep, f0 * r0 + f1 * r1);
 }
 
 bool TrackPAI::SetupMedium(Medium* medium) {
@@ -219,39 +185,37 @@ bool TrackPAI::SetupMedium(Medium* medium) {
   if (emin < Small) emin = Small;
 
   // Reset the arrays.
-  m_energies.clear();
-  m_opticalDataTable.clear();
-  opticalData newEpsilon;
+  m_energies.fill(0.);
+  m_eps1.fill(0.);
+  m_eps2.fill(0.);
+  m_epsInt.fill(0.);
 
   // Use logarithmically spaced energy steps.
   const double r = pow(emax / emin, 1. / double(m_nSteps));
-  double eps1, eps2;
-
   double eC = 0.5 * emin * (1. + r);
-  for (int i = 0; i < m_nSteps; ++i) {
+  for (size_t i = 0; i < m_nSteps; ++i) {
+    double eps1 = 0., eps2 = 0.;
     medium->GetDielectricFunction(eC, eps1, eps2);
-    newEpsilon.eps1 = eps1;
-    newEpsilon.eps2 = eps2;
-    m_opticalDataTable.push_back(newEpsilon);
-    m_energies.push_back(eC);
+    m_eps1[i] = eps1;
+    m_eps2[i] = eps2;
+    m_energies[i] = eC;
     eC *= r;
   }
 
   // Compute the integral of loss function times energy.
-  m_opticalDataTable[0].integral = 0.;
+  m_epsInt[0] = 0.;
   double integral = 0.;
-  double f1 = m_energies[0] * LossFunction(m_opticalDataTable[0].eps1,
-                                           m_opticalDataTable[0].eps2);
+  double f1 = m_energies[0] * LossFunction(m_eps1[0], m_eps2[0]);
   double f2 = f1;
-  for (int i = 1; i < m_nSteps; ++i) {
-    f2 = m_energies[i] *
-         LossFunction(m_opticalDataTable[i].eps1, m_opticalDataTable[i].eps2);
+  for (size_t i = 1; i < m_nSteps; ++i) {
+    f2 = m_energies[i] * LossFunction(m_eps1[i], m_eps2[i]);
     const double eM = 0.5 * (m_energies[i - 1] + m_energies[i]);
+    double eps1 = 0., eps2 = 0.;
     medium->GetDielectricFunction(eM, eps1, eps2);
     const double fM = eM * LossFunction(eps1, eps2);
     // Simpson's rule
     integral += (f1 + 4 * fM + f2) * (m_energies[i] - m_energies[i - 1]) / 6.;
-    m_opticalDataTable[i].integral = integral;
+    m_epsInt[i] = integral;
     f1 = f2;
   }
 
@@ -259,21 +223,14 @@ bool TrackPAI::SetupMedium(Medium* medium) {
   const double trk = 2 * Pi2 * FineStructureConstant * pow(HbarC, 3) *
                      m_electronDensity / ElectronMass;
   if (fabs(integral - trk) > 0.2 * trk) {
-    std::cerr << m_className << "::SetupMedium:\n";
-    std::cerr << "    Deviation from Thomas-Reiche-Kuhn sum rule by > 20%.\n";
-    std::cerr << "    Optical data are probably incomplete or erroneous!\n";
+    std::cerr << m_className << "::SetupMedium:\n"
+              << "    Deviation from Thomas-Reiche-Kuhn sum rule by > 20%.\n"
+              << "    Optical data are probably incomplete or erroneous!\n";
   }
-
   return true;
 }
 
 double TrackPAI::GetClusterDensity() {
-  if (!m_ready) {
-    std::cerr << m_className << "::GetClusterDensity:\n";
-    std::cerr << "    Track has not been initialized.\n";
-    return 0.;
-  }
-
   if (m_isChanged) {
     if (SetupCrossSectionTable()) {
       m_isChanged = false;
@@ -283,16 +240,10 @@ double TrackPAI::GetClusterDensity() {
       return 0.;
     }
   }
-
   return 1. / m_imfp;
 }
 
 double TrackPAI::GetStoppingPower() {
-  if (!m_ready) {
-    std::cerr << m_className << "::GetStoppingPower:\n";
-    std::cerr << "    Track has not been initialised.\n";
-    return 0.;
-  }
 
   if (m_isChanged) {
     if (SetupCrossSectionTable()) {
@@ -303,17 +254,18 @@ double TrackPAI::GetStoppingPower() {
       return 0.;
     }
   }
-
   return m_dedx;
 }
 
 bool TrackPAI::SetupCrossSectionTable() {
+  // TODO!
+  /*
   if (!m_ready) {
     std::cerr << m_className << "::SetupCrossSectionTable:\n"
               << "    Medium not set up.\n";
     return false;
   }
-
+  */
   const double c1 = 2. * Pi2 * FineStructureConstant * pow(HbarC, 3) *
                     m_electronDensity / ElectronMass;
   const double c2 = m_q * m_q * FineStructureConstant / (m_beta2 * Pi * HbarC);
@@ -326,14 +278,13 @@ bool TrackPAI::SetupCrossSectionTable() {
 
   // Compute the differential cross-section.
   std::vector<double> dcs;
-  m_rutherford.clear();
-
-  for (int i = 0; i < m_nSteps; ++i) {
+  m_rutherford.fill(0.);
+  for (size_t i = 0; i < m_nSteps; ++i) {
     // Define shorthand variables for photon energy and dielectric function.
     const double egamma = m_energies[i];
-    const double eps1 = m_opticalDataTable[i].eps1;
-    const double eps2 = m_opticalDataTable[i].eps2;
-    const double integral = m_opticalDataTable[i].integral;
+    const double eps1 = m_eps1[i];
+    const double eps2 = m_eps2[i];
+    const double integral = m_epsInt[i];
 
     // First, calculate the distant-collision terms.
     double dcsLog = 0., dcsDensity = 0., dcsCher = 0.;
@@ -346,7 +297,7 @@ bool TrackPAI::SetupCrossSectionTable() {
       const double u = 1. - m_beta2 * eps1;
       const double v = m_beta2 * eps2;
       dcsDensity = -0.5 * lf * log(u * u + v * v);
-      // "Cerenkov" term
+      // "Cherenkov" term
       dcsCher = (m_beta2 - eps1 / (eps1 * eps1 + eps2 * eps2)) *
                 (HalfPi - atan(u / v));
     } else if (eps1 > 1. / m_beta2) {
@@ -361,7 +312,7 @@ bool TrackPAI::SetupCrossSectionTable() {
       dcsRuth = integral / (egamma * egamma);
       f = dcsRuth / (dcsLog + dcsDensity + dcsCher);
     }
-    m_rutherford.push_back(f);
+    m_rutherford[i] = f;
     dcs.push_back(dcsLog + dcsDensity + dcsCher + dcsRuth);
     // If requested, write the cross-section terms to file.
     if (m_debug) {
@@ -374,18 +325,17 @@ bool TrackPAI::SetupCrossSectionTable() {
 
   // Compute the cumulative distribution,
   // total cross-section and stopping power.
-  m_cdf.clear();
-  m_cdf.push_back(0.);
+  m_cdf.fill(0.);
   m_dedx = 0.;
   double cs = 0.;
-  for (int i = 1; i < m_nSteps; ++i) {
+  for (size_t i = 1; i < m_nSteps; ++i) {
     const double e0 = m_energies[i - 1];
     const double e1 = m_energies[i];
     const double de = e1 - e0;
     const double dcs0 = dcs[i - 1];
     const double dcs1 = dcs[i];
     cs += 0.5 * (dcs0 + dcs1) * de;
-    m_cdf.push_back(cs);
+    m_cdf[i] = cs;
     m_dedx += 0.5 * (dcs0 * e0 + dcs1 * e1) * de;
   }
 
@@ -407,7 +357,7 @@ bool TrackPAI::SetupCrossSectionTable() {
   }
 
   // Normalise the cumulative distribution.
-  for (int i = m_nSteps; i--;) m_cdf[i] /= cs;
+  for (size_t i = 0; i < m_nSteps; ++i) m_cdf[i] /= cs;
 
   cs *= c2;
   m_dedx *= c2;

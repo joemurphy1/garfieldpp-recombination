@@ -2,7 +2,7 @@
 #define G_TRACK_PAI
 
 #include <string>
-#include <vector>
+#include <array>
 
 #include "Track.hh"
 
@@ -17,24 +17,18 @@ class TrackPAI : public Track {
   // Destructor
   virtual ~TrackPAI() {}
 
-  virtual bool NewTrack(const double x0, const double y0, const double z0,
-                        const double t0, const double dx0, const double dy0,
-                        const double dz0);
+  bool NewTrack(const double x0, const double y0, const double z0,
+                const double t0, const double dx0, const double dy0,
+                const double dz0) override;
 
-  virtual bool GetCluster(double& xcls, double& ycls, double& zcls,
-                          double& tcls, int& ncls, double& ecls, double& extra);
+  bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc,
+                  double& ec, double& extra) override;
 
-  virtual double GetClusterDensity();
-  virtual double GetStoppingPower();
+  double GetClusterDensity() override;
+  double GetStoppingPower() override;
 
  private:
-  bool m_ready = false;
-
-  // Particle coordinates and direction
-  double m_x = 0., m_y = 0., m_z = 0., m_t = 0.;
-  double m_dx = 0., m_dy = 0., m_dz = 0.;
-  // Particle energy and speed
-  double m_e = 0.;
+  // Particle speed.
   double m_speed = 0.;
   // Max. energy transfer in a collision
   double m_emax = 0.;
@@ -45,28 +39,22 @@ class TrackPAI : public Track {
   double m_dedx = 0.;
 
   // Dielectric function
-  int m_nSteps = 1000;
-  struct opticalData {
-    double eps1, eps2;
-    double integral;
-  };
-  std::vector<opticalData> m_opticalDataTable;
+  static constexpr size_t m_nSteps = 1000;
+  std::array<double, m_nSteps> m_eps1;
+  std::array<double, m_nSteps> m_eps2;
+  std::array<double, m_nSteps> m_epsInt;
 
   // Tables for interpolation of cumulative distribution functions
-  std::vector<double> m_energies;
-  std::vector<double> m_cdf;
-  std::vector<double> m_rutherford;
+  std::array<double, m_nSteps> m_energies;
+  std::array<double, m_nSteps> m_cdf;
+  std::array<double, m_nSteps> m_rutherford;
 
-  struct electron {
-    // Direction
-    double dx, dy, dz;
-    // Energy
+  struct Cluster {
+    double x, y, z, t;
     double energy;
-    // Type (electron, hole)
-    int type;
   };
-  std::vector<electron> m_electrons;
-  std::vector<electron> m_holes;
+  std::vector<Cluster> m_clusters;
+  size_t m_cluster = 0;
 
   // Medium properties
   std::string m_mediumName = "";
@@ -81,7 +69,7 @@ class TrackPAI : public Track {
   double ComputeCsTail(const double emin, const double emax);
   double ComputeDeDxTail(const double emin, const double emax);
 
-  double SampleEnergyDeposit(const double u, double& f) const;
+  std::pair<double, double> SampleEnergyDeposit(const double u) const;
   double SampleAsymptoticCs(double u) const;
   double SampleAsymptoticCsSpinZero(const double emin, double u) const;
   double SampleAsymptoticCsSpinHalf(const double emin, double u) const;

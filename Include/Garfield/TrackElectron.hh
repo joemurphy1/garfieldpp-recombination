@@ -17,61 +17,57 @@ class TrackElectron : public Track {
   // Destructor
   virtual ~TrackElectron() {}
 
-  virtual void SetParticle(const std::string& particle);
+  void SetParticle(const std::string& particle) override;
 
-  virtual bool NewTrack(const double x0, const double y0, const double z0,
-                        const double t0, const double dx0, const double dy0,
-                        const double dz0);
+  bool NewTrack(const double x0, const double y0, const double z0,
+                const double t0, const double dx0, const double dy0,
+                const double dz0) override;
 
-  virtual bool GetCluster(double& xcls, double& ycls, double& zcls,
-                          double& tcls, int& ncls, double& ecls, double& extra);
+  bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc,
+                  double& ec, double& extra) override;
 
-  virtual double GetClusterDensity();
-  virtual double GetStoppingPower();
+  double GetClusterDensity() override;
+  double GetStoppingPower() override;
 
  private:
-  bool m_ready = false;
 
-  // Particle coordinates and direction
-  double m_x = 0., m_y = 0., m_z = 0., m_t = 0.;
-  double m_dx = 0., m_dy = 0., m_dz = 1.;
-
-  // Parameters in ionization cross-section
-  struct component {
-    double fraction;
+  struct Parameters {
     // Dipole moment
-    double m2Ion;
-    // Constant
+    double m2;
+    // Constant in ionisation cross-section
     double cIon;
     // Density correction term
-    double x0Dens, x1Dens;
+    double x0;
+    double x1;
     double cDens;
-    double aDens, mDens;
+    double aDens;
+    double mDens;
     // Opal-Beaty-Peterson splitting factor
     double wSplit;
     // Ionisation threshold
     double ethr;
-    // Relative cross-section
-    double p;
   };
-  std::vector<component> m_components;
 
-  // Secondary electrons
-  struct electron {
-    double x, y, z;
-    double energy;
+  struct Cluster {
+    double x, y, z, t;
+    double esec;
   };
-  std::vector<electron> m_electrons;
+  std::vector<Cluster> m_clusters;
+  size_t m_cluster = 0;
 
-  // Medium name
-  std::string m_mediumName = "";
-  // Atomic density
-  double m_mediumDensity = 0.;
   // Mean free path
   double m_mfp = 0.;
+  // Stopping power
+  double m_dedx = 0.;
 
-  bool SetupGas(Medium* gas);
-  bool UpdateCrossSection();
+  static bool Setup(Medium* gas, std::vector<Parameters>& par,
+                    std::vector<double>& frac);
+  static bool Update(const double density, const double beta2,
+                     const std::vector<Parameters>& par,
+                     const std::vector<double>& frac, 
+                     std::vector<double>& prob, double& mfp, double& dedx);
+  static double Delta(const double x, const Parameters& par);
+  static double Esec(const double e0, const Parameters& par);
 };
 }
 
