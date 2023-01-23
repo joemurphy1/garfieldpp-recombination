@@ -31,6 +31,11 @@ inline std::vector<std::string> tokenize(const std::string& line) {
   return words;
 }
 
+inline bool startsWith(const std::string& line, 
+                       const std::string& s) {
+  return (line.rfind(s, 0) == 0);
+}
+
 }
 
 #endif

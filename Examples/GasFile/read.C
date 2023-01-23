@@ -41,6 +41,10 @@ int main(int argc, char * argv[]) {
   view.SetCanvas(&cA);
   view.PlotElectronAttachment();
 
+  TCanvas cI("cI", "", 600, 600);
+  view.SetCanvas(&cI);
+  view.PlotIonVelocity();
+
   app.Run(true);
 
 }

@@ -285,7 +285,7 @@ void ViewMedium::Draw() {
 
   double xLabel = 0., yLabel = 1.;
   if (!gPad->PlaceBox(&latex, xSizeNDC, nLabels * ySizeNDC, xLabel, yLabel)) {
-    std::cout << "AUTO PLACEMENT FAILED!\n";
+    // Auto-placement failed.
     const double lm = gPad->GetLeftMargin();
     const double rm = 1. - gPad->GetRightMargin();
     const double tm = 1. - gPad->GetTopMargin();
@@ -297,9 +297,7 @@ void ViewMedium::Draw() {
       xLabel = lm + 0.1 * (rm - lm);
     }
     yLabel = tm - 0.1 * (tm - bm);
-  } else if (nLabels > 0) {
-    std::cout << labels.front() << ": X = " << xLabel << ", Y = " << yLabel << "\n";
-  }
+  } 
 
   for (size_t i = 0; i < nPlots; ++i) {
     int col = cols[i] > 0 ? cols[i] : gStyle->GetColorPalette(i * colrange);

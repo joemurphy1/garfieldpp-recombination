@@ -2243,7 +2243,7 @@ bool MediumGas::LoadMobility(const std::string& filename,
   // Make sure the file could actually be opened.
   if (!infile) {
     std::cerr << m_className << "::LoadMobility:\n"
-              << "    Error opening file " << filename << ".\n";
+              << "    Cannot open file " << filename << ".\n";
     return false;
   } else if (m_debug) {
     std::cout << m_className << "::LoadMobility: Opened " << filename 
@@ -2253,25 +2253,19 @@ bool MediumGas::LoadMobility(const std::string& filename,
   std::vector<std::pair<double, double> > data;
   // Read the file line by line.
   int i = 0;
-  constexpr size_t size = 100;
-  char line[size];
-  while (infile.getline(line, size)) {
+  for (std::string line; std::getline(infile, line);) {
     ++i;
-    char* token = strtok(line, " ,\t");
-    if (!token) break;
-    if (strcmp(token, "#") == 0 || strcmp(token, "*") == 0 ||
-               strcmp(token, "//") == 0) {
+    if (line.empty()) continue;
+    // Skip comments.
+    if (startsWith(line, "//") || startsWith(line, "#")) continue;
+    auto words = tokenize(line);
+    if (words.size() < 2) {
+      std::cout << m_className << "::LoadMobility: Skipping line " 
+                << i << ".\n";
       continue;
     }
-    double field = atof(token);
-    token = strtok(NULL, " ,\t");
-    if (!token) {
-      std::cerr << m_className << "::LoadMobility:\n"
-                << "    Found E/N but no mobility before the end-of-line.\n"
-                << "    Skipping line " << i << ".\n";
-      continue;
-    }
-    double mu = atof(token);
+    const double field = std::stod(words[0]);
+    const double mu = std::stod(words[1]);
     if (m_debug) {
       std::cout << "    E/N = " << field << " Td: mu = " << mu << " cm2/(Vs)\n";
     }
@@ -2294,11 +2288,12 @@ bool MediumGas::LoadMobility(const std::string& filename,
   // Sort by electric field.
   std::sort(data.begin(), data.end());
 
+  const double pr = m_pressureTable / AtmosphericPressure;
+  const double tr = m_temperatureTable / ZeroCelsius;
   // The E/N values in the file are supposed to be in Td (10^-17 V cm2).
-  const double scaleField = 1.e-17 * GetNumberDensity();
+  const double scaleField = 1.e-17 * LoschmidtNumber * pr / tr;
   // The reduced mobilities in the file are supposed to be in cm2/(V s).
-  const double scaleMobility = 1.e-9 * (AtmosphericPressure / m_pressure) *
-                               (m_temperature / ZeroCelsius);
+  const double scaleMobility = 1.e-9 * tr / pr;
 
   const size_t ne = data.size();
   std::vector<double> efields(ne, 0.);
