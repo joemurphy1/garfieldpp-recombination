@@ -89,25 +89,9 @@ nTracks = 1
 for j in range(nTracks):
   sensor.ClearSignal()
   track.NewTrack(x0, y0, 0, 0, 0, 1, 0)
-  xc = ctypes.c_double(0.)
-  yc = ctypes.c_double(0.)
-  zc = ctypes.c_double(0.)
-  tc = ctypes.c_double(0.)
-  ec = ctypes.c_double(0.)
-  extra = ctypes.c_double(0.)
-  nc = ctypes.c_int(0)
-  while track.GetCluster(xc, yc, zc, tc, nc, ec, extra):
-    for k in range(nc.value):
-      xe = ctypes.c_double(0.)
-      ye = ctypes.c_double(0.)
-      ze = ctypes.c_double(0.)
-      te = ctypes.c_double(0.)
-      ee = ctypes.c_double(0.)
-      dx = ctypes.c_double(0.)
-      dy = ctypes.c_double(0.)
-      dz = ctypes.c_double(0.)
-      track.GetElectron(k, xe, ye, ze, te, ee, dx, dy, dz)
-      drift.DriftElectron(xe.value, ye.value, ze.value, te.value)
+  for cluster in track.GetClusters():
+    for electron in cluster.electrons:
+      drift.DriftElectron(electron.x, electron.y, electron.z, electron.t)
     if plotDrift:
       driftView.GetCanvas().Clear()
       cellView.Plot2d()

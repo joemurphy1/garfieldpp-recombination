@@ -897,33 +897,33 @@ bool TrackSrim::NewTrack(const double x0, const double y0, const double z0,
     cluster.t = t;
     if (fano < Small) {
       // No fluctuations.
-      cluster.electrons = int((eloss + epool) / (1.e-6 * w));
-      cluster.ec = w * cluster.electrons;
+      cluster.n = int((eloss + epool) / (1.e-6 * w));
+      cluster.energy = w * cluster.n;
     } else {
       double ecl = 1.e6 * (eloss + epool);
-      cluster.electrons = 0;
-      cluster.ec = 0.0;
+      cluster.n = 0;
+      cluster.energy = 0.0;
       while (true) {
-        // if (cluster.ec < 100) printf("ec = %g\n", cluster.ec);
+        // if (cluster.energy < 100) printf("ec = %g\n", cluster.energy);
         const double ernd1 = RndmHeedWF(w, fano);
         if (ernd1 > ecl) break;
-        cluster.electrons++;
-        cluster.ec += ernd1;
+        cluster.n++;
+        cluster.energy += ernd1;
         ecl -= ernd1;
       }
       if (m_debug) {
         std::cout << "    EM + pool: " << 1.e6 * (eloss + epool)
                   << " eV, W: " << w
                   << " eV, E/w: " << (eloss + epool) / (1.e-6 * w)
-                  << ", n: " << cluster.electrons << ".\n";
+                  << ", n: " << cluster.n << ".\n";
       }
     }
     cluster.kinetic = ekin;
-    epool += eloss - 1.e-6 * cluster.ec;
+    epool += eloss - 1.e-6 * cluster.energy;
     if (m_debug) {
       std::cout << "    Adding cluster " << m_clusters.size() << " at ("
                 << cluster.x << ", " << cluster.y << ", " << cluster.z
-                << "), e = " << cluster.ec << ", n = " << cluster.electrons
+                << "), e = " << cluster.energy << ", n = " << cluster.n
                 << ".\n"
                 << "    Pool = " << epool << " MeV.\n";
     }
@@ -1336,8 +1336,8 @@ bool TrackSrim::GetCluster(double& xcls, double& ycls, double& zcls,
   zcls = cluster.z;
   tcls = cluster.t;
 
-  n = cluster.electrons;
-  e = cluster.ec;
+  n = cluster.n;
+  e = cluster.energy;
   extra = cluster.kinetic;
   // Move to next cluster
   ++m_currcluster;

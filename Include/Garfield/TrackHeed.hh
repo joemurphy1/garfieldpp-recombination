@@ -34,6 +34,26 @@ class Medium;
 
 class TrackHeed : public Track {
  public:
+  struct SimplifiedParticle {
+    double x = 0.;
+    double y = 0.;
+    double z = 0.;
+    double t = 0.;
+    double e = 0.;
+    double dx = 0.;
+    double dy = 0.;
+    double dz = 0.;
+  };
+
+  struct Cluster {
+    double x, y, z, t;
+    double energy;
+    double extra;
+    std::vector<SimplifiedParticle> photons;
+    std::vector<SimplifiedParticle> electrons;
+    std::vector<SimplifiedParticle> ions;
+  };
+
   /// Constructor
   TrackHeed();
   /// Destructor
@@ -44,6 +64,9 @@ class TrackHeed : public Track {
                 const double dz0) override;
   bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc,
                   double& ec, double& extra) override;
+  const std::vector<Cluster>& GetClusters() const {
+    return m_clusters;
+  }
   bool GetCluster(double& xc, double& yc, double& zc, double& tc,
                   int& ne, int& ni, double& ec, double& extra);
   /** Get the next "cluster" (ionising collision of the charged particle).
@@ -236,29 +259,10 @@ class TrackHeed : public Track {
   bool m_usePacsOutput = false;
 
   bool m_doPhotonReabsorption = true;
-  struct SimplifiedParticle {
-    double x = 0.;
-    double y = 0.;
-    double z = 0.;
-    double t = 0.;
-    double e = 0.;
-    double dx = 0.;
-    double dy = 0.;
-    double dz = 0.;
-  };
-
   bool m_coulombScattering = false;
   bool m_useBfieldAuto = true;
   bool m_doDeltaTransport = true;
 
-  struct Cluster {
-    double x, y, z, t;
-    double energy;
-    double extra;
-    std::vector<SimplifiedParticle> photons;
-    std::vector<SimplifiedParticle> electrons;
-    std::vector<SimplifiedParticle> ions;
-  };
   std::vector<Cluster> m_clusters;
   size_t m_cluster = 0;
 

@@ -82,11 +82,19 @@ class TrackSrim : public Track {
     m_useLongStraggle = on; 
   }
 
+  struct Cluster {
+    double x, y, z, t;  ///< Cluster location and time
+    double energy;      ///< Energy spent to make the cluster
+    double kinetic;     ///< Ion energy when cluster was created
+    int n;              ///< Number of electrons in this cluster
+  };
+
   bool NewTrack(const double x0, const double y0, const double z0,
                 const double t0, const double dx0, const double dy0,
                 const double dz0) override;
   bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc, 
                   double& ec, double& extra) override;
+  const std::vector<Cluster>& GetClusters() const { return m_clusters; }
 
  protected:
   /// Include transverse straggling
@@ -135,12 +143,6 @@ class TrackSrim : public Track {
   unsigned int m_model = 4;
   /// Targeted cluster size
   int m_nsize = -1;
-  struct Cluster {
-    double x, y, z, t;  ///< Cluster location and time
-    double ec;          ///< Energy spent to make the cluster
-    double kinetic;     ///< Ion energy when cluster was created
-    int electrons;      ///< Number of electrons in this cluster
-  };
   std::vector<Cluster> m_clusters;
 
   double Xi(const double x, const double beta2, const double edens) const;

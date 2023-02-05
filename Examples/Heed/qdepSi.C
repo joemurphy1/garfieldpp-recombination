@@ -48,13 +48,10 @@ int main(int argc, char * argv[]) {
   for (unsigned int i = 0; i < nTracks; ++i) {
     if (i % 1000 == 0) std::cout << "Track " << i << "\n";
     track.NewTrack(0., 0., 0., 0., 0., 0., 1.);
-    double x = 0., y = 0., z = 0., t = 0.;
-    int n = 0;
-    double e = 0., dummy = 0.;
     unsigned int nsum = 0;
     unsigned int ncls = 0;
-    while (track.GetCluster(x, y, z, t, n, e, dummy)) {
-      nsum += n;
+    for (const auto& cluster : track.GetClusters()) {
+      nsum += cluster.electrons.size();
       ++ncls;
     }
     hNe.Fill(nsum);

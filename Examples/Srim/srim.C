@@ -75,21 +75,16 @@ int main(int argc, char *argv[]) {
       continue;
     }
     // Retrieve the clusters.
+    const auto& clusters = tr.GetClusters();
+    if (clusters.empty()) continue;
+    // Count the total number of electrons.
     unsigned int netot = 0;
-    double xc, yc, zc, tc, ec, ekin;
-    while (true) {
-      int ne = 0;
-      const bool done = !tr.GetCluster(xc, yc, zc, tc, ne, ec, ekin);
-      if (done) {
-        hX->Fill(xc);
-        hY->Fill(yc);
-        hZ->Fill(zc);
-        hNe->Fill(netot);
-        break;
-      }
-      // Count the total number of electrons.
-      netot += ne;
-    }
+    for (const auto& cluster : clusters) netot += cluster.n;
+    const auto& last = clusters.back();
+    hX->Fill(last.x);
+    hY->Fill(last.y);
+    hZ->Fill(last.z);
+    hNe->Fill(netot);
   }
 
   // Plot the histograms.

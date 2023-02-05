@@ -16,6 +16,11 @@ namespace Garfield {
 
 class TrackBichsel : public Track {
  public:
+  struct Cluster {
+    double x, y, z, t;
+    double energy;
+  };
+
   /// Constructor
   TrackBichsel();
   /// Destructor
@@ -26,6 +31,7 @@ class TrackBichsel : public Track {
                 const double dz0) override;
   bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc, 
                   double& ec, double& extra) override;
+  const std::vector<Cluster>& GetClusters() const { return m_clusters; }
 
   double GetClusterDensity() override;
   double GetStoppingPower() override;
@@ -66,10 +72,6 @@ class TrackBichsel : public Track {
   /// Particle speed
   double m_speed = SpeedOfLight;
 
-  struct Cluster {
-    double x, y, z, t;
-    double energy;
-  };
   std::vector<Cluster> m_clusters;
   size_t m_cluster = 0;
 };

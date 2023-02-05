@@ -53,21 +53,10 @@ int main(int argc, char * argv[]) {
     double x0 = 0., y0 = 0., z0 = 0., t0 = 0.;
     double dx0 = 1., dy0 = 0., dz0 = 0.; 
     track.NewTrack(x0, y0, z0, t0, dx0, dy0, dz0);
-    // Cluster coordinates
-    double xc = 0., yc = 0., zc = 0., tc = 0.;
-    // Number of electrons produced in a collision
-    int nc = 0;
-    // Energy loss in a collision
-    double ec = 0.;
-    // Dummy variable (not used at present)
-    double extra = 0.;
-    // Total energy loss along the track
-    double esum = 0.;
-    // Total number of electrons produced along the track
-    int nsum = 0;
     // Loop over the clusters.
-    while (track.GetCluster(xc, yc, zc, tc, nc, ec, extra)) {
-      esum += ec;
+    double esum = 0.;
+    for (const auto& cluster : track.GetClusters()) {
+      esum += cluster.energy;
     }
     hEdep.Fill(esum * 1.e-3);
   }

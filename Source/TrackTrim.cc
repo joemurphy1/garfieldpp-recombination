@@ -348,37 +348,39 @@ bool TrackTrim::NewTrack(const double x0, const double y0, const double z0,
         m_sensor->MagneticField(x[0], x[1], x[2], bx, by, bz, status);
         d = StepBfield(dt, qoverm, vmag, bx, by, bz, v);
       }
-      cluster.x = {x[0] + d[0], x[1] + d[1], x[2] + d[2]};
+      cluster.x = x[0] + d[0];
+      cluster.y = x[1] + d[1];
+      cluster.z = x[2] + d[2];
       cluster.t = t + dt;
-      x = cluster.x;
+      x = {cluster.x, cluster.y, cluster.z};
       t = cluster.t;
       // Is this point inside an ionisable medium?
-      medium = m_sensor->GetMedium(cluster.x[0], cluster.x[1], cluster.x[2]);
+      medium = m_sensor->GetMedium(cluster.x, cluster.y, cluster.z);
       if (!medium || !medium->IsIonisable()) continue;
       if (m_work < Small) w = medium->GetW();
       if (w < Small) continue;
       if (fano < Small) {
         // No fluctuations.
-        cluster.ne = int((eloss + epool) / w);
-        cluster.ec = w * cluster.ne;
+        cluster.n = int((eloss + epool) / w);
+        cluster.energy = w * cluster.n;
       } else {
         double ec = eloss + epool;
-        cluster.ne = 0;
-        cluster.ec = 0.0;
+        cluster.n = 0;
+        cluster.energy = 0.0;
         while (true) {
           const double er = RndmHeedWF(w, fano);
           if (er > ec) break;
-          cluster.ne++;
-          cluster.ec += er;
+          cluster.n++;
+          cluster.energy += er;
           ec -= er;
         }
       }
       // TODO
       cluster.ekin = i < nPoints - 1 ? path[i + 1][5] : ekin;
-      epool += eloss - cluster.ec;
-      if (cluster.ne == 0) continue;
+      epool += eloss - cluster.energy;
+      if (cluster.n == 0) continue;
       m_clusters.push_back(std::move(cluster));
-      if (m_viewer) PlotCluster(cluster.x[0], cluster.x[1], cluster.x[2]);
+      if (m_viewer) PlotCluster(cluster.x, cluster.y, cluster.z);
     } 
   }
   // Move to the next ion in the list.
@@ -396,13 +398,13 @@ bool TrackTrim::GetCluster(double& xcls, double& ycls, double& zcls,
   if (m_cluster >= m_clusters.size()) return false;
 
   const auto& cluster = m_clusters[m_cluster];
-  xcls = cluster.x[0];
-  ycls = cluster.x[1];
-  zcls = cluster.x[2];
+  xcls = cluster.x;
+  ycls = cluster.y;
+  zcls = cluster.z;
   tcls = cluster.t;
 
-  n = cluster.ne;
-  e = cluster.ec;
+  n = cluster.n;
+  e = cluster.energy;
   extra = cluster.ekin;
   // Move to the next cluster.
   ++m_cluster;

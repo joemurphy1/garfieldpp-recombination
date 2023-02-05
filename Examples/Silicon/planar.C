@@ -161,22 +161,17 @@ int main(int argc, char * argv[]) {
     double xt = 0.;
     if (smearx) xt = -0.5 * pitch + RndmUniform() * pitch;
     track.NewTrack(xt, 0, 0, 0, 0, 1, 0);
-    double xc = 0., yc = 0., zc = 0., tc = 0., ec = 0., extra = 0.;
-    int ne = 0;
     // Retrieve the clusters along the track.
-    while (track.GetCluster(xc, yc, zc, tc, ne, ec, extra)) {
+    for (const auto& cluster : track.GetClusters()) {
       // Loop over the electrons in the cluster.
-      for (int j = 0; j < ne; ++j) {
-        double xe = 0., ye = 0., ze = 0., te = 0., ee = 0.;
-        double dxe = 0., dye = 0., dze = 0.;
-        track.GetElectron(j, xe, ye, ze, te, ee, dxe, dye, dze);
+      for (const auto& electron : cluster.electrons) {
         // Simulate the electron and hole drift lines.
         if (plotDrift) {
           drift.DisablePlotting();
           if (RndmUniform() < 0.01) drift.EnablePlotting(driftView); 
         }
-        drift.DriftElectron(xe, ye, ze, te);
-        drift.DriftHole(xe, ye, ze, te);
+        drift.DriftElectron(electron.x, electron.y, electron.z, electron.t);
+        drift.DriftHole(electron.x, electron.y, electron.z, electron.t);
       }
     }
     if (plotSignal) {

@@ -39,11 +39,6 @@ int main(int argc, char * argv[]) {
 
   constexpr double z0 = -10.;
   track.NewTrack(0., 0., z0, 0., 0., 0., 1.);
-  double xc = 0., yc = 0., zc = 0., tc = 0., ec = 0., extra = 0.;
-  int nc = 0;
-  while (track.GetCluster(xc, yc, zc, tc, nc, ec, extra)) {
-
-  }
   view.Plot();
   app.Run();
   return 0;
