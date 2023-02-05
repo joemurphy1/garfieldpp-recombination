@@ -60,13 +60,10 @@ int main(int argc, char *argv[]) {
       std::cerr << "Generating clusters failed; skipping this track.\n";
       continue;
     }
+    // Count the total number of electrons.
     unsigned int netot = 0; 
-    // Retrieve the clusters.
-    double xc, yc, zc, tc, ec, ekin;
-    int ne = 0;
-    while (tr.GetCluster(xc, yc, zc, tc, ne, ec, ekin)) {
-      // Count the total number of electrons.
-      netot += ne;
+    for (const auto& cluster : tr.GetClusters()) {
+      netot += cluster.n;
     }
   }
   driftView.SetArea(-10.e-4, 0., 10.e-4, 50.e-4);

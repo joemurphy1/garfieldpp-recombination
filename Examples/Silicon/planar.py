@@ -104,39 +104,23 @@ if plotDrift:
 smearx = True
 nEvents = 10
 for i in range(nEvents):
-  print i, '/', nEvents
+  print(i, '/', nEvents)
   if plotDrift: driftView.Clear()
   # Simulate a charged-particle track.
   xt = 0.;
   if smearx: xt = -0.5 * pitch + ROOT.Garfield.RndmUniform() * pitch
   track.NewTrack(xt, 0, 0, 0, 0, 1, 0)
-  xc = ctypes.c_double(0.)
-  yc = ctypes.c_double(0.)
-  zc = ctypes.c_double(0.)
-  tc = ctypes.c_double(0.)
-  ec = ctypes.c_double(0.)
-  extra = ctypes.c_double(0.)
-  ne = ctypes.c_int(0)
   # Retrieve the clusters along the track.
-  while track.GetCluster(xc, yc, zc, tc, ne, ec, extra):
+  for cluster in track.GetClusters():
     # Loop over the electrons in the cluster.
-    for j in range(ne.value):
-      xe = ctypes.c_double(0.)
-      ye = ctypes.c_double(0.)
-      ze = ctypes.c_double(0.)
-      te = ctypes.c_double(0.)
-      ee = ctypes.c_double(0.)
-      dx = ctypes.c_double(0.)
-      dy = ctypes.c_double(0.)
-      dz = ctypes.c_double(0.)
-      track.GetElectron(j, xe, ye, ze, te, ee, dx, dy, dz)
+    for electron in cluster.electrons:
       # Simulate the electron and hole drift lines.
       if plotDrift:
         drift.DisablePlotting()
         if ROOT.Garfield.RndmUniform() < 0.01:
           drift.EnablePlotting(driftView)
-      drift.DriftElectron(xe.value, ye.value, ze.value, te.value)
-      drift.DriftHole(xe.value, ye.value, ze.value, te.value)
+      drift.DriftElectron(electron.x, electron.y, electron.z, electron.t)
+      drift.DriftHole(electron.x, electron.y, electron.z, electron.t)
   if plotSignal:
     signalView.PlotSignal(label)
     signalView.GetCanvas().Update()

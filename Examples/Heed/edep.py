@@ -54,26 +54,16 @@ for i in range(nEvents):
   dy0 = 0.
   dz0 = 0.
   track.NewTrack(x0, y0, z0, t0, dx0, dy0, dz0)
-  # Cluster coordinates
-  xc = ctypes.c_double(0.)
-  yc = ctypes.c_double(0.)
-  zc = ctypes.c_double(0.)
-  tc = ctypes.c_double(0.)
-  # Energy loss in a collision
-  ec = ctypes.c_double(0.)
-  # Dummy variable (not used at present)
-  extra = ctypes.c_double(0.)
-  # Number of electrons produced in a collision
-  nc = ctypes.c_int(0)
   # Total energy loss along the track
   esum = 0.
   # Total number of electrons produced along the track
   nsum = 0
   # Loop over the clusters.
-  while track.GetCluster(xc, yc, zc, tc, nc, ec, extra):
-    esum += ec.value
-    nsum += nc.value
-    hClusterSize.Fill(nc.value)
+  for cluster in track.GetClusters():
+    esum += cluster.energy
+    nc = cluster.electrons.size()
+    nsum += nc
+    hClusterSize.Fill(nc)
   hElectrons.Fill(nsum)
   hEdep.Fill(esum * 1.e-3);
  

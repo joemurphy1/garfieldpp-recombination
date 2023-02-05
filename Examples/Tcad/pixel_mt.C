@@ -109,20 +109,14 @@ int main(int argc, char * argv[]) {
     const double x0 = 0.5 * width + (RndmUniform() - 0.5) * pitch;
     const double t0 = 0.1; 
     track.NewTrack(x0, 0., 0., t0, 0., 1., 0.);
-    double xc = 0., yc = 0., zc = 0., tc = 0., ec = 0., dummy = 0.;
-    int ne = 0, nh = 0;
     std::vector<std::array<double, 4> > electrons;
     std::vector<std::array<double, 4> > holes;
-    while (track.GetCluster(xc, yc, zc, tc, ne, nh, ec, dummy)) {
-      for (int i = 0; i < ne; ++i) {
-        double xe, ye, ze, te, ee, dxe, dye, dze;
-        track.GetElectron(i, xe, ye, ze, te, ee, dxe, dye, dze);
-        electrons.push_back({xe, ye, ze, te});
+    for (const auto& cluster : track.GetClusters()) {
+      for (const auto& electron : cluster.electrons) {
+        electrons.push_back({electron.x, electron.y, electron.z, electron.t});
       }
-      for (int i = 0; i < nh; ++i) {
-        double xh, yh, zh, th;
-        track.GetIon(i, xh, yh, zh, th);
-        holes.push_back({xh, yh, zh, th});
+      for (const auto& hole : cluster.ions) {
+        holes.push_back({hole.x, hole.y, hole.z, hole.t});
       }
     }
     const auto nesum = electrons.size();

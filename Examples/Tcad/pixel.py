@@ -101,43 +101,17 @@ for i in range(nEvents):
   x0 = hw + (ROOT.Garfield.RndmUniform() - 0.5) * pitch
   t0 = 0.1
   track.NewTrack(x0, 0, 0, t0, 0, 1, 0)
-  xc = ctypes.c_double(0.)
-  yc = ctypes.c_double(0.)
-  zc = ctypes.c_double(0.)
-  tc = ctypes.c_double(0.)
-  ec = ctypes.c_double(0.)
-  extra = ctypes.c_double(0.)
-  ne = ctypes.c_int(0)
-  nh = ctypes.c_int(0)
-  nc = 0
-  nesum = 0
   # Retrieve the clusters along the track.
-  while track.GetCluster(xc, yc, zc, tc, ne, nh, ec, extra):
-    nc += 1
-    nesum += ne.value
+  for cluster in track.GetClusters():
     drift.DisablePlotting()
     if plotDrift and ROOT.Garfield.RndmUniform() < 0.05:
       drift.EnablePlotting(vDrift)
     # Loop over the electrons in the cluster.
-    for j in range(ne.value):
-      xe = ctypes.c_double(0.)
-      ye = ctypes.c_double(0.)
-      ze = ctypes.c_double(0.)
-      te = ctypes.c_double(0.)
-      ee = ctypes.c_double(0.)
-      dx = ctypes.c_double(0.)
-      dy = ctypes.c_double(0.)
-      dz = ctypes.c_double(0.)
-      track.GetElectron(j, xe, ye, ze, te, ee, dx, dy, dz)
-      drift.DriftElectron(xe.value, ye.value, ze.value, te.value)
+    for electron in cluster.electrons:
+      drift.DriftElectron(electron.x, electron.y, electron.z, electron.t)
     # Loop over the holes in the cluster.
-    for j in range(nh.value):
-      xh = ctypes.c_double(0.)
-      yh = ctypes.c_double(0.)
-      zh = ctypes.c_double(0.)
-      th = ctypes.c_double(0.)
-      track.GetIon(j, xh, yh, zh, th)
-      drift.DriftHole(xh.value, yh.value, zh.value, th.value)
+    for hole in cluster.ions:
+      drift.DriftHole(hole.x, hole.y, hole.z, hole.t)
 
   # Convolute the signal with the transfer function.
   sensor.ConvoluteSignals()

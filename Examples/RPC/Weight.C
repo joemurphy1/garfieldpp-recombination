@@ -141,18 +141,14 @@ int main(int argc, char* argv[]) {
 
   // Simulate a charged-particle track.
   track.NewTrack(0, 0, gap, 0, 0, 0, -1);
-  double xc = 0., yc = 0., zc = 0., tc = 0., ec = 0., extra = 0.;
-  int ne = 0;
   // Retrieve the clusters along the track.
-  while (track.GetCluster(xc, yc, zc, tc, ne, ec, extra)) {
+  for (const auto& cluster : track.GetClusters()) {
     // Loop over the electrons in the cluster.
-    for (int j = 0; j < ne; ++j) {
-      double xe = 0., ye = 0., ze = 0., te = 0., ee = 0.;
-      double dxe = 0., dye = 0., dze = 0.;
-      track.GetElectron(j, xe, ye, ze, te, ee, dxe, dye, dze);
+    for (const auto& electron : cluster.electrons) {
       // Simulate the electron and hole drift lines.
       if (plotDrift) aval.EnablePlotting(driftView);
-      aval.AvalancheElectron(xe, ye, ze, te, ee, dxe, dye, dze);
+      aval.AvalancheElectron(electron.x, electron.y, electron.z, 
+                             electron.t, 0.1, 0., 0., 0.);
       // Stops calculation after tMaxWindow ns.
       avalgrid.GetElectronsFromAvalancheMicroscopic();
     }

@@ -115,27 +115,21 @@ int main(int argc, char * argv[]) {
     const double x0 = 0.5 * width + (RndmUniform() - 0.5) * pitch;
     const double t0 = 0.1; 
     track.NewTrack(x0, 0., 0., t0, 0., 1., 0.);
-    double xc = 0., yc = 0., zc = 0., tc = 0., ec = 0., dummy = 0.;
-    int ne = 0, nh = 0;
-    unsigned int nc = 0;
     unsigned int nesum = 0;
-    while (track.GetCluster(xc, yc, zc, tc, ne, nh, ec, dummy)) {
+    unsigned int nc = 0;
+    for (const auto& cluster : track.GetClusters()) {
       ++nc;
-      nesum += ne;
+      nesum += cluster.electrons.size();
       if (nc % 100 == 0) std::cout << "    Cluster " << nc << "\n";
       drift.DisablePlotting();
       if (plotDrift && RndmUniform() < 0.05) {
         drift.EnablePlotting(&vDrift);
       }
-      double xe, ye, ze, te, ee, dxe, dye, dze;
-      for (int i = 0; i < ne; ++i) {
-        track.GetElectron(i, xe, ye, ze, te, ee, dxe, dye, dze);
-        drift.DriftElectron(xe, ye, ze, te);
+      for (const auto& electron : cluster.electrons) {
+        drift.DriftElectron(electron.x, electron.y, electron.z, electron.t);
       }
-      double xh, yh, zh, th;
-      for (int i = 0; i < nh; ++i) {
-        track.GetIon(i, xh, yh, zh, th);
-        drift.DriftHole(xh, yh, zh, th);
+      for (const auto& hole : cluster.ions) {
+        drift.DriftHole(hole.x, hole.y, hole.z, hole.t);
       }
     }
     std::cout << nesum << " electrons, " 

@@ -52,11 +52,22 @@ class TrackTrim : public Track {
  
   void SetParticle(const std::string& part) override;
 
+  struct Cluster {
+    double x, y, z;          ///< Location
+    double t;                ///< Time
+    double energy;           ///< Energy spent to make the cluster
+    double ekin;             ///< Ion energy when cluster was created
+    int n;                   ///< Number of electrons in this cluster
+  };
+
   bool NewTrack(const double x0, const double y0, const double z0,
                 const double t0, const double dx0, const double dy0,
                 const double dz0) override;
   bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc,
                   double& ec, double& extra) override;
+  const std::vector<Cluster>& GetClusters() const {
+    return m_clusters;
+  }
 
  protected:
   /// Work function [eV] of the target.
@@ -73,13 +84,6 @@ class TrackTrim : public Track {
   /// Index of the current track.
   size_t m_ion = 0;
 
-  struct Cluster {
-    std::array<double, 3> x; ///< Location
-    double t;                ///< Time
-    double ec;               ///< Energy spent to make the cluster
-    double ekin;             ///< Ion energy when cluster was created
-    int ne;                  ///< Number of electrons in this cluster
-  };
   /// Clusters on the current track.
   std::vector<Cluster> m_clusters;
   /// Index of the next cluster to be returned.

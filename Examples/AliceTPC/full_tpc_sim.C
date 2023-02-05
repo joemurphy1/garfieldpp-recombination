@@ -141,20 +141,16 @@ int main(int argc, char * argv[]) {
   const double xt = xmin;
   const double yt = 0.5 * yHV;
   track.NewTrack(xt, yt, 0., 0., 1., 0., 0.);
-
   // Retrieve the clusters. 
-  double xcl = 0., ycl = 0., zcl = 0., tcl = 0., ecl = 0., extra = 0.;
-  int ncl = 0;
-  while (track.GetCluster(xcl, ycl, zcl, tcl, ncl, ecl, extra)) {
+  for (const auto& cluster : track.GetClusters()) {
     // Retrieve the electrons of the cluster.
-    for (int i = 0; i < ncl; ++i) {
-      double x0, y0, z0, t0, e0, dx0, dy0, dz0;
-      track.GetElectron(i, x0, y0, z0, t0, e0, dx0, dy0, dz0);
+    for (const auto& electron : cluster.electrons) {
+      const double y0 = electron.y;
       // Smear the coordinates to account for the drift up to the ROC.
       constexpr double dT = 0.0198;
       const double sigma = dT * sqrt(std::max(y0, 1.2) - 1.2);
-      x0 += RndmGaussian() * sigma;
-      z0 += RndmGaussian() * sigma;
+      const double x0 = electron.x + RndmGaussian() * sigma;
+      const double z0 = electron.z + RndmGaussian() * sigma;
       sensor.EnableComponent(0, true);
       sensor.EnableComponent(1, false);
       if (x0 < xmin || x0 > xmax) continue;

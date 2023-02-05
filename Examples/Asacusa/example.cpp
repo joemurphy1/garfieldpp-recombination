@@ -117,14 +117,11 @@ int main(int argc, char * argv[]){
   // Now simulate a track.
   track.NewTrack(xt, yt, zt, 0, 0, -1, 0);
   // Loop over the clusters.
-  double xc, yc, zc, tc, ec, extra;
-  int nc;
-  while (track.GetCluster(xc, yc, zc, tc, nc, ec, extra)) {
-    for (int j = 0; j < nc; ++j) {
-      double xe, ye, ze, te, ee, dxe, dye, dze;
-      track.GetElectron(j, xe, ye, ze, te, ee, dxe, dye, dze);
+  for (const auto& cluster : track.GetClusters()) {
+    for (const auto& electron : cluster.electrons) {
       // Simulate the drift/avalanche of this electron.
-      aval.AvalancheElectron(xe, ye, ze, te, 0.1, dxe, dye, dze);
+      aval.AvalancheElectron(electron.x, electron.y, electron.z, 
+                             electron.t, 0.1, 0., 0., 0.);
       // Move electrons that hit the mesh plane into the amplification gap.
       double x0, y0, z0, t0, e0;
       double x1, y1, z1, t1, e1;

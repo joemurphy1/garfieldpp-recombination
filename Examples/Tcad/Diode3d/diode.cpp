@@ -69,18 +69,14 @@ int main(int argc, char * argv[]) {
   const double y0 = (RndmUniform() - 0.5) * 40.e-4;
   track.NewTrack(x0, y0, 0., 0., sin(theta), 0., cos(theta));
   // Retrieve the clusters along the track.
-  double xc, yc, zc, tc, ec, dummy;
-  int ne;
-  while (track.GetCluster(xc, yc, zc, tc, ne, ec, dummy)) {
+  for (const auto& cluster : track.GetClusters()) {
     // Retrieve the electrons in the cluster.
-    for (int i = 0; i < ne; ++i) {
-      double xe, ye, ze, te, ee, dxe, dye, dze;
-      track.GetElectron(i, xe, ye, ze, te, ee, dxe, dye, dze);
+    for (const auto& electron : cluster.electrons) {
       // Simulate and plot only a small fraction of the drift lines.
       constexpr double fPlot = 0.01;
       if (RndmUniform() > fPlot) continue;
-      drift.DriftElectron(xe, ye, ze, te);
-      drift.DriftHole(xe, ye, ze, te);
+      drift.DriftElectron(electron.x, electron.y, electron.z, electron.t);
+      drift.DriftHole(electron.x, electron.y, electron.z, electron.t);
     }
   }
   driftView.SetPlaneXZ();  

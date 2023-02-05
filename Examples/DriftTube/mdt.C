@@ -127,14 +127,9 @@ int main(int argc, char * argv[]) {
   for (unsigned int j = 0; j < nTracks; ++j) {
     sensor.ClearSignal();
     track.NewTrack(x0, y0, 0, 0, 0, 1, 0);
-    double xc = 0., yc = 0., zc = 0., tc = 0., ec = 0., extra = 0.;
-    int nc = 0;
-    while (track.GetCluster(xc, yc, zc, tc, nc, ec, extra)) {
-      for (int k = 0; k < nc; ++k) {
-        double xe = 0., ye = 0., ze = 0., te = 0., ee = 0.;
-        double dx = 0., dy = 0., dz = 0.;
-        track.GetElectron(k, xe, ye, ze, te, ee, dx, dy, dz);
-        drift.DriftElectron(xe, ye, ze, te);
+    for (const auto& cluster : track.GetClusters()) {
+      for (const auto& electron : cluster.electrons) {
+        drift.DriftElectron(electron.x, electron.y, electron.z, electron.t);
       }
     }
     if (plotDrift) {
