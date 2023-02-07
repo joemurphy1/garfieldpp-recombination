@@ -9,6 +9,11 @@ namespace Garfield {
 
 class TrackSimple : public Track {
  public:
+  struct Cluster {
+    double x, y, z, t;
+    double energy;
+  };
+
   /// Constructor
   TrackSimple();
   /// Destructor
@@ -31,6 +36,7 @@ class TrackSimple : public Track {
                         const double dz0);
   virtual bool GetCluster(double& xc, double& yc, double& zc,
                           double& tc, int& ne, double& ec, double& extra);
+  const std::vector<Cluster>& GetClusters() const { return m_clusters; }
 
  protected:
   // Mean free path (mean spacing between adjacent clusters)
@@ -40,10 +46,6 @@ class TrackSimple : public Track {
 
   bool m_useEqualSpacing = false;
 
-  struct Cluster {
-    double x, y, z, t;
-    double energy;
-  };
   std::vector<Cluster> m_clusters;
   size_t m_cluster = 0;
 };

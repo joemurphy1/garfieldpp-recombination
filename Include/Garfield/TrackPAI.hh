@@ -12,6 +12,11 @@ namespace Garfield {
 
 class TrackPAI : public Track {
  public:
+  struct Cluster {
+    double x, y, z, t;
+    double energy;
+  };
+
   // Constructor
   TrackPAI();
   // Destructor
@@ -23,6 +28,7 @@ class TrackPAI : public Track {
 
   bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc,
                   double& ec, double& extra) override;
+  const std::vector<Cluster>& GetClusters() const { return m_clusters; }
 
   double GetClusterDensity() override;
   double GetStoppingPower() override;
@@ -49,10 +55,6 @@ class TrackPAI : public Track {
   std::array<double, m_nSteps> m_cdf;
   std::array<double, m_nSteps> m_rutherford;
 
-  struct Cluster {
-    double x, y, z, t;
-    double energy;
-  };
   std::vector<Cluster> m_clusters;
   size_t m_cluster = 0;
 

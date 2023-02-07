@@ -34,7 +34,18 @@ class Medium;
 
 class TrackHeed : public Track {
  public:
-  struct SimplifiedParticle {
+  struct Electron {
+    double x = 0.;
+    double y = 0.;
+    double z = 0.;
+    double t = 0.;
+    double e = 0.;
+    double dx = 0.;
+    double dy = 0.;
+    double dz = 0.;
+  };
+
+  struct Photon {
     double x = 0.;
     double y = 0.;
     double z = 0.;
@@ -49,9 +60,9 @@ class TrackHeed : public Track {
     double x, y, z, t;
     double energy;
     double extra;
-    std::vector<SimplifiedParticle> photons;
-    std::vector<SimplifiedParticle> electrons;
-    std::vector<SimplifiedParticle> ions;
+    std::vector<Photon> photons;
+    std::vector<Electron> electrons;
+    std::vector<Electron> ions;
   };
 
   /// Constructor
@@ -311,7 +322,7 @@ class TrackHeed : public Track {
                   std::vector<Cluster>& clusters);
   void AddElectrons(
     const std::vector<Heed::HeedCondElectron>& conductionElectrons,
-    std::vector<SimplifiedParticle>& electrons); 
+    std::vector<Electron>& electrons); 
   bool IsInside(const double x, const double y, const double z);
   bool UpdateBoundingBox(bool& update);
 };

@@ -8,13 +8,18 @@
 
 namespace Garfield {
 
-/// Ionization calculation based on MIP program (S. Biagi).
+/// [WIP] Ionization calculation based on MIP program (S. Biagi). 
 
 class TrackElectron : public Track {
  public:
-  // Constructor
+  struct Cluster {
+    double x, y, z, t;
+    double esec;
+  };
+
+  /// Constructor
   TrackElectron();
-  // Destructor
+  /// Destructor
   virtual ~TrackElectron() {}
 
   void SetParticle(const std::string& particle) override;
@@ -25,6 +30,7 @@ class TrackElectron : public Track {
 
   bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc,
                   double& ec, double& extra) override;
+  const std::vector<Cluster>& GetClusters() const { return m_clusters; }
 
   double GetClusterDensity() override;
   double GetStoppingPower() override;
@@ -48,10 +54,6 @@ class TrackElectron : public Track {
     double ethr;
   };
 
-  struct Cluster {
-    double x, y, z, t;
-    double esec;
-  };
   std::vector<Cluster> m_clusters;
   size_t m_cluster = 0;
 
