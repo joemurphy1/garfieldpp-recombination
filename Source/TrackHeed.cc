@@ -270,7 +270,7 @@ bool TrackHeed::AddCluster(Heed::HeedPhoton* virtualPhoton,
   cluster.energy = virtualPhoton->m_energy * 1.e6;
   cluster.extra = 0.;
   // Add the first ion (at the position of the cluster).
-  SimplifiedParticle ion;
+  Electron ion;
   ion.x = xc;
   ion.y = yc;
   ion.z = zc;
@@ -300,7 +300,7 @@ bool TrackHeed::AddCluster(Heed::HeedPhoton* virtualPhoton,
           AddElectrons(delta->conduction_ions, cluster.ions);
         } else {
           // Add the delta electron to the list, for later use.
-          SimplifiedParticle deltaElectron;
+          Electron deltaElectron;
           deltaElectron.x = delta->position().x * 0.1 + m_cX;
           deltaElectron.y = delta->position().y * 0.1 + m_cY;
           deltaElectron.z = delta->position().z * 0.1 + m_cZ;
@@ -329,7 +329,7 @@ bool TrackHeed::AddCluster(Heed::HeedPhoton* virtualPhoton,
       if (m_doPhotonReabsorption) {
         photon->fly(newSecondaries);
       } else {
-        SimplifiedParticle unabsorbedPhoton;
+        Photon unabsorbedPhoton;
         unabsorbedPhoton.x = photon->position().x * 0.1 + m_cX;
         unabsorbedPhoton.y = photon->position().y * 0.1 + m_cY;
         unabsorbedPhoton.z = photon->position().z * 0.1 + m_cZ;
@@ -352,10 +352,10 @@ bool TrackHeed::AddCluster(Heed::HeedPhoton* virtualPhoton,
 
 void TrackHeed::AddElectrons(
     const std::vector<Heed::HeedCondElectron>& conductionElectrons,
-    std::vector<SimplifiedParticle>& electrons) {
+    std::vector<Electron>& electrons) {
 
   for (const auto& conductionElectron : conductionElectrons) {
-    SimplifiedParticle electron;
+    Electron electron;
     electron.x = conductionElectron.x * 0.1 + m_cX;
     electron.y = conductionElectron.y * 0.1 + m_cY;
     electron.z = conductionElectron.z * 0.1 + m_cZ;
@@ -530,7 +530,7 @@ void TrackHeed::TransportDeltaElectron(const double x0, const double y0,
   // Make sure the kinetic energy is positive.
   if (e0 <= 0.) {
     // Just create a conduction electron on the spot.
-    SimplifiedParticle electron;
+    Electron electron;
     electron.x = x0;
     electron.y = y0;
     electron.z = z0;
@@ -643,7 +643,7 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
   std::vector<Heed::gparticle*> secondaries;
   photon.fly(secondaries);
   if (secondaries.empty()) {
-    SimplifiedParticle unabsorbedPhoton;
+    Photon unabsorbedPhoton;
     unabsorbedPhoton.x = photon.position().x * 0.1 + m_cX;
     unabsorbedPhoton.y = photon.position().y * 0.1 + m_cY;
     unabsorbedPhoton.z = photon.position().z * 0.1 + m_cZ;
@@ -670,7 +670,7 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
           AddElectrons(delta->conduction_ions, cluster.ions);
         } else {
           // Add the delta electron to the list, for later use.
-          SimplifiedParticle deltaElectron;
+          Electron deltaElectron;
           deltaElectron.x = delta->position().x * 0.1 + m_cX;
           deltaElectron.y = delta->position().y * 0.1 + m_cY;
           deltaElectron.z = delta->position().z * 0.1 + m_cZ;
@@ -695,7 +695,7 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
       if (m_doPhotonReabsorption) {
         fluorescencePhoton->fly(newSecondaries);
       } else {
-        SimplifiedParticle unabsorbedPhoton;
+        Photon unabsorbedPhoton;
         unabsorbedPhoton.x = fluorescencePhoton->position().x * 0.1 + m_cX;
         unabsorbedPhoton.y = fluorescencePhoton->position().y * 0.1 + m_cY;
         unabsorbedPhoton.z = fluorescencePhoton->position().z * 0.1 + m_cZ;
