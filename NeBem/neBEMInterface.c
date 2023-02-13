@@ -360,7 +360,7 @@ int neBEMReadGeometry(void) {
   PrimOriginX = dvector(1, NbPrimitives);
   PrimOriginY = dvector(1, NbPrimitives);
   PrimOriginZ = dvector(1, NbPrimitives);
-  PrimDC = (DirnCosn3D *)malloc(NbPrimitives * sizeof(DirnCosn3D));
+  PrimDC = (DirnCosn3D *)malloc((NbPrimitives + 1) * sizeof(DirnCosn3D));
   VolRef1 = ivector(1, NbPrimitives);
   VolRef2 = ivector(1, NbPrimitives);
   NbSurfSegX = ivector(1, NbPrimitives);
