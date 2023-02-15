@@ -66,8 +66,9 @@ int main(int argc, char * argv[]) {
   // Histogram
   const int nBins = 500;
   TH1::StatOverflows(true);
-  TH1F hElectrons("hElectrons", "Number of electrons", nBins, -0.5, nBins - 0.5);
-  const int nEvents = 100000;
+  TH1F hElectrons("hElectrons", ";Number of electrons;", 
+                  nBins, -0.5, nBins - 0.5);
+  const unsigned int nEvents = 100000;
   for (unsigned int i = 0; i < nEvents; ++i) {
     if (i % 1000 == 0) std::cout << i << "/" << nEvents << "\n";
     // Initial coordinates of the photon.
