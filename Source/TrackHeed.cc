@@ -714,6 +714,7 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
   ne = cluster.electrons.size();
   ni = cluster.ions.size();
   np = cluster.photons.size();
+  m_clusters.push_back(std::move(cluster));
 }
 
 void TrackHeed::EnableElectricField() { m_fieldMap->UseEfield(true); }
