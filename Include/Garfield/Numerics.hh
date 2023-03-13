@@ -6,6 +6,8 @@
 #include <complex>
 #include <vector>
 
+#include "Garfield/FundamentalConstants.hh"
+
 namespace Garfield {
 
 /// Collection of numerical routines.
@@ -193,7 +195,7 @@ inline double BesselI1S(const double xx) {
 inline double BesselK0S(const double xx) {
   const double y = xx / 2.;
   const double y2 = y * y;
-  return -log(y) * BesselI0S(xx) - 0.57721566 +
+  return -log(y) * BesselI0S(xx) - Gamma +
          0.42278420 * y2 + 0.23069756 * y2 * y2 +
          0.03488590 * pow(y2, 3) + 0.00262698 * pow(y2, 4) +
          0.00010750 * pow(y2, 5) + 0.00000740 * pow(y2, 6);

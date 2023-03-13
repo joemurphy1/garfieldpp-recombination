@@ -88,7 +88,9 @@ int ComponentFieldMap::Field(const double xin, const double yin,
   }
 
   // Find the element that contains this point.
-  double t1, t2, t3, t4, jac[4][4], det;
+  double t1 = 0., t2 = 0., t3 = 0., t4 = 0.;
+  double jac[4][4];
+  double det = 0.;
   imap = -1;
   if (m_elementType == ElementType::Serendipity) {
     imap = FindElement5(x, y, t1, t2, t3, t4, jac, det);
@@ -151,7 +153,9 @@ double ComponentFieldMap::Potential(const double xin, const double yin,
   }
 
   // Find the element that contains this point.
-  double t1, t2, t3, t4, jac[4][4], det;
+  double t1 = 0., t2 = 0., t3 = 0., t4 = 0.;
+  double jac[4][4];
+  double det = 0.;
   int imap = -1;
   if (m_elementType == ElementType::Serendipity) {
     imap = FindElement5(x, y, t1, t2, t3, t4, jac, det);
@@ -300,14 +304,15 @@ double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,
       }
       dp0 = Potential3(v0, {t1, t2, t3});
       dp1 = Potential3(v1, {t1, t2, t3});
+    } else {
+      std::array<double, 8> v0, v1;
+      for (size_t i = 0; i < 8; ++i) {
+        v0[i] = m_dwpot[label][element.emap[i]][i0];
+        v1[i] = m_dwpot[label][element.emap[i]][i1];
+      }
+      dp0 = Potential5(v0, {t1, t2});
+      dp1 = Potential5(v1, {t1, t2});
     }
-    std::array<double, 8> v0, v1;
-    for (size_t i = 0; i < 8; ++i) {
-      v0[i] = m_dwpot[label][element.emap[i]][i0];
-      v1[i] = m_dwpot[label][element.emap[i]][i1];
-    }
-    dp0 = Potential5(v0, {t1, t2});
-    dp1 = Potential5(v1, {t1, t2});
   } else if (m_elementType == ElementType::CurvedTetrahedron) {
     std::array<double, 10> v0, v1;
     for (size_t i = 0; i < 10; ++i) {
@@ -346,7 +351,9 @@ Medium* ComponentFieldMap::GetMedium(const double xin, const double yin,
   if (m_warning) PrintWarning("GetMedium");
 
   // Find the element that contains this point.
-  double t1, t2, t3, t4, jac[4][4], det;
+  double t1 = 0., t2 = 0., t3 = 0., t4 = 0.;
+  double jac[4][4];
+  double det = 0.;
   int imap = -1;
   if (m_elementType == ElementType::Serendipity) {
     imap = FindElement5(x, y, t1, t2, t3, t4, jac, det);
@@ -2048,9 +2055,6 @@ int ComponentFieldMap::CoordinatesCube(const double x, const double y,
  v x
  */
 
-  // Failure flag
-  int ifail = 1;
-
   const Node& n0 = m_nodes[element.emap[0]];
   const Node& n2 = m_nodes[element.emap[2]];
   const Node& n3 = m_nodes[element.emap[3]];
@@ -2100,8 +2104,7 @@ int ComponentFieldMap::CoordinatesCube(const double x, const double y,
   }
   if (jac != 0) JacobianCube(element, t1, t2, t3, jac, dN);
   // This should always work.
-  ifail = 0;
-  return ifail;
+  return 0;
 }
 
 void ComponentFieldMap::Reset() {
@@ -2548,10 +2551,9 @@ void ComponentFieldMap::MapCoordinates(double& xpos, double& ypos, double& zpos,
 }
 
 void ComponentFieldMap::UnmapFields(double& ex, double& ey, double& ez,
-                                    double& xpos, double& ypos, double& zpos,
-                                    bool& xmirrored, bool& ymirrored,
-                                    bool& zmirrored, double& rcoordinate,
-                                    double& rotation) const {
+    const double xpos, const double ypos, const double zpos,
+    const bool xmirrored, const bool ymirrored, const bool zmirrored, 
+    const double rcoordinate, const double rotation) const {
   // Apply mirror imaging.
   if (xmirrored) ex = -ex;
   if (ymirrored) ey = -ey;

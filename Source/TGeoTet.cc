@@ -80,10 +80,8 @@ TBuffer3D *TGeoTet::MakeBuffer3D() const {
   // Number of polygons.
   constexpr int np = 4;
   auto buff = new TBuffer3D(TBuffer3DTypes::kGeneric, nv, 3 * nv, ns, 3 * ns, np, 5 * np);
-  if (buff) {
-    SetPoints(buff->fPnts);
-    SetSegsAndPols(*buff);
-  }
+  SetPoints(buff->fPnts);
+  SetSegsAndPols(*buff);
   return buff;
 }
 

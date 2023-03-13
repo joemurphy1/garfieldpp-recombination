@@ -2149,7 +2149,8 @@ bool LeastSquaresFit(
     std::cout << "  Comparison between input and fit:\n"
               << "            X            Y      F(X)\n";
     for (unsigned int i = 0; i < m; ++i) {
-      std::printf(" %5u %15.8e %15.8e %15.8e\n", i, x[i], y[i], f(x[i], par));
+      const double fit = f(x[i], par);
+      std::printf(" %5u %15.8e %15.8e %15.8e\n", i, x[i], y[i], fit);
     }
   }
   if (verbose) {

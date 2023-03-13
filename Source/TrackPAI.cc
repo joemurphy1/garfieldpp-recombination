@@ -388,7 +388,7 @@ double TrackPAI::ComputeCsTail(const double emin, const double emax) {
     const double ek = m_energy - m_mass;
     return 1. / emin - 1. / emax - 2 * emin / (ek * ek) -
            emin * emin / ((ek - emin) * ek * ek);
-  } else if (m_mass == ElectronMass) {
+  } else if (fabs(m_mass - ElectronMass) < 0.1) {
     // Positrons
     const double ek = m_energy - m_mass;
     return 1. / emin - 1. / emax + 3 * (emax - emin) / (ek * ek) -
@@ -430,7 +430,7 @@ double TrackPAI::ComputeDeDxTail(const double emin, const double emax) {
                (-4 * pow(emin, 3) + 4 * emin * emin * ek +
                 emin * ek * ek * (17. - 16. * CLog2) +
                 pow(ek, 3) * (-9. + 16. * CLog2));
-  } else if (m_mass == ElectronMass) {
+  } else if (fabs(m_mass - ElectronMass) < 0.1) {
     // Positron
     const double ek = m_energy - m_mass;
     return log(ek / emin) -
@@ -471,7 +471,7 @@ double TrackPAI::SampleAsymptoticCs(double u) const {
 
   if (m_isElectron) {
     return SampleAsymptoticCsElectron(emin, u);
-  } else if (m_mass == ElectronMass) {
+  } else if (fabs(m_mass - ElectronMass) < 0.1) {
     return SampleAsymptoticCsPositron(emin, u);
   }
 

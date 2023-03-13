@@ -278,6 +278,7 @@ bool TrackTrim::NewTrack(const double x0, const double y0, const double z0,
   Medium* medium = m_sensor->GetMedium(x0, y0, z0);
   if (!medium) {
     std::cerr << m_className << "::NewTrack: No medium at initial point.\n";
+    return false;
   }
   double w = m_work > 0. ? m_work : medium->GetW();
   // Warn if the W value is not defined.

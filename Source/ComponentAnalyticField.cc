@@ -400,7 +400,7 @@ void ComponentAnalyticField::PrintCell() {
         dw *= xw;
       }
       std::printf(
-          "%4d %9.2f %9.4f %9.4f %9.3f %12.4f %9.2f %9.2f %9.2f \"%s\"\n", i,
+          "%4u %9.2f %9.4f %9.4f %9.3f %12.4f %9.2f %9.2f %9.2f \"%s\"\n", i,
           1.e4 * dw, xw, yw, w.v, w.e * TwoPiEpsilon0 * 1.e-3, w.tension,
           w.u, w.density, w.type.c_str());
     }
@@ -2316,7 +2316,7 @@ bool ComponentAnalyticField::WireDisplacement(
     std::cout << "    Sag profile for wire " << iw << ".\n"
               << " Point     z [cm]   x-sag [um]   y-sag [um]\n";
     for (unsigned int i = 0; i < nSag; ++i) {
-      std::printf(" %3d   %10.4f  %10.4f  %10.4f\n", 
+      std::printf(" %3u   %10.4f  %10.4f  %10.4f\n", 
                   i, csag[i], xsag[i] * 1.e4, ysag[i] * 1.e4);
     }
     std::printf("    Average sag in x and y: %10.4f and %10.4f micron\n",
@@ -2832,7 +2832,7 @@ bool ComponentAnalyticField::CellCheck() {
 
   // Check that there is no voltage conflict of crossing planes.
   for (int i = 0; i < 2; ++i) {
-    for (int j = 2; j < 3; ++j) {
+    for (int j = 2; j < 4; ++j) {
       if (m_ynplan[i] && m_ynplan[j] && m_vtplan[i] != m_vtplan[j]) {
         const std::string yp = m_polar ? "phi" : "y";
         std::cerr << m_className << "::CellCheck:\n"
@@ -6503,14 +6503,14 @@ bool ComponentAnalyticField::SetupPlaneSignals() {
         std::cout << "    Charges for currents induced in the tube:\n"
                   << "    Wire\n";
         for (unsigned int i = 0; i < m_nWires; ++i) {
-          std::printf("   %5d  %15.8f\n", i, m_qplane[k][4][i]);
+          std::printf("   %5u  %15.8f\n", i, m_qplane[k][4][i]);
         }
       } else {
         std::cout << "    Charges for currents induced in the planes:\n"
                   << "    Wire        x-Plane 1        x-Plane 2"
                   << "        y-Plane 1        y-Plane 2\n";
         for (unsigned int i = 0; i < m_nWires; ++i) {
-          std::printf("   %5d  %15.8f  %15.8f  %15.8f  %15.8f\n", i,
+          std::printf("   %5u  %15.8f  %15.8f  %15.8f  %15.8f\n", i,
                       m_qplane[k][0][i], m_qplane[k][1][i], 
                       m_qplane[k][2][i], m_qplane[k][3][i]);
         }
@@ -9577,7 +9577,7 @@ bool ComponentAnalyticField::SagDetailed(
   // Intermediate points, both position and derivative.
   for (unsigned int i = 1; i <= m_nShots; ++i) {
     // Position along the wire.
-    const double z = -0.5 * wire.u + i * m_nSteps * h;
+    const double z = -0.5 * wire.u + double(i) * m_nSteps * h;
     const unsigned int k = 4 * i - 2;
     // Deflection.
     const double f = 1. - 4 * z * z / u2;
@@ -9789,7 +9789,7 @@ bool ComponentAnalyticField::FindZeroes(
               << "    Initial function norm:     " << sqrt(fnorml) << "\n"
               << " Parameter        Value     Function\n";
     for (unsigned int i = 0; i < n; ++i) {
-      std::printf(" %9d %12.5e %12.5e\n", i, x[i], fold[i]);
+      std::printf(" %9u %12.5e %12.5e\n", i, x[i], fold[i]);
     }
   }
   // Derivative matrix.
@@ -9946,7 +9946,7 @@ bool ComponentAnalyticField::FindZeroes(
     std::cout << "    Final values:\n"
               << " Parameter        Value     Function\n";
     for (unsigned int i = 0; i < n; ++i) {
-      std::printf(" %9d %12.5e %12.5e\n", i, x[i], f[i]);
+      std::printf(" %9u %12.5e %12.5e\n", i, x[i], f[i]);
     }
     std::cout << "    Total number of function calls: " << nCalls << "\n";
   }
@@ -10061,7 +10061,7 @@ bool ComponentAnalyticField::SetupDipoleTerms() {
       phit2[iw] = phidip;
       ampt2[iw] = ampdip * r;
       if (m_debug) {
-        std::printf(" %3d  %10.3f  %12.5e\n", 
+        std::printf(" %3u  %10.3f  %12.5e\n", 
                     iw, RadToDegree * phit2[iw], ampt2[iw]);
       }
     }
@@ -10086,7 +10086,7 @@ bool ComponentAnalyticField::SetupDipoleTerms() {
       const double c1 = m_cosph2[iw] * m_amp2[iw] + cos(phit2[iw]) * ampt2[iw];
       m_amp2[iw] = sqrt(s1 * s1 + c1 * c1);
       if (m_debug) {
-        std::printf(" %3d  %10.3f  %12.5e %s\n",
+        std::printf(" %3u  %10.3f  %12.5e %s\n",
                     iw, RadToDegree * phi2[iw], m_amp2[iw], 
                     converged ? "CONVERGED" : "");
       }

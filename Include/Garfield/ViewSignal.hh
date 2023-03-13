@@ -80,9 +80,9 @@ class ViewSignal : public ViewBase {
   void SetColourTotal(const short col) { m_colTotal = col; }
   /// Set the (ROOT) colour with which to draw the electron component.
   void SetColourElectrons(const short col) { m_colElectrons = col; }
-  /// Set the (ROOT) colour with hich to draw the hole/ion component.
+  /// Set the (ROOT) colour with which to draw the hole/ion component.
   void SetColourIons(const short col) { m_colIons = col; }
-  /// Set the (ROOT) colour with hich to draw the hole/ion component.
+  /// Set the (ROOT) colour with which to draw the hole/ion component.
   void SetColourHoles(const short col) { m_colIons = col; }
 
   /// Set the (ROOT) colours with which to draw the delayed signal(s).

@@ -12,12 +12,12 @@ MediumDiamond::MediumDiamond() : Medium() {
 
   SetTemperature(300.);
   SetDielectricConstant(5.7);
-  SetAtomicNumber(6);
-  SetAtomicWeight(12.01);
-  SetMassDensity(3.51);
+  Medium::SetAtomicNumber(6);
+  Medium::SetAtomicWeight(12.01);
+  Medium::SetMassDensity(3.51);
 
-  EnableDrift();
-  EnablePrimaryIonisation();
+  m_driftable = true;
+  m_ionisable = true;
   m_microscopic = false;
 
   m_w = 13.6;

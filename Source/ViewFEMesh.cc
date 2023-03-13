@@ -738,7 +738,8 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
   const double fx = m_plane[0];
   const double fy = m_plane[1];
   const double fz = m_plane[2];
-  if (fx == 0 && fy == 0 && fz == 1) {
+  constexpr double eps = 1.e-8;
+  if (fabs(fx) < eps && fabs(fy) < eps && fabs(fz - 1.) < eps) {
     // xy view
     std::cout << m_className << "::DrawCST: Creating x-y mesh view.\n";
     // Calculate the z position.
@@ -785,7 +786,7 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
         elements.push_back(std::move(tmp_info));
       }
     }
-  } else if (fx == 0 && fy == -1 && fz == 0) {
+  } else if (fabs(fx) < eps && fabs(fy + 1.) < eps && fabs(fz) < eps) {
     // xz-view
     std::cout << m_className << "::DrawCST: Creating x-z mesh view.\n";
     // Calculate the y position.
@@ -833,7 +834,7 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
         elements.push_back(std::move(tmp_info));
       }
     }
-  } else if (fx == -1 && fy == 0 && fz == 0) {
+  } else if (fabs(fx + 1.) < eps && fabs(fy) < eps && fabs(fz) < eps) {
     // yz-view
     std::cout << m_className << "::DrawCST: Creating z-y mesh view.\n";
     // Calculate the x position.

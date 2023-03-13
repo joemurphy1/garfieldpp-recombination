@@ -105,16 +105,18 @@ bool TrackSrim::ReadFile(const std::string& file) {
   }
 
   // Identify the ion
-  char* token = NULL;
+  char* token = nullptr;
   token = strtok(line, " []=");
-  token = strtok(NULL, " []=");
-  token = strtok(NULL, " []=");
+  token = strtok(nullptr, " []=");
+  token = strtok(nullptr, " []=");
   // Set the ion charge.
-  m_qion = std::atof(token);
-  m_chargeset = true;
-  token = strtok(NULL, " []=");
-  token = strtok(NULL, " []=");
-  token = strtok(NULL, " []=");
+  if (token) {
+    m_qion = std::atof(token);
+    m_chargeset = true;
+  }
+  token = strtok(nullptr, " []=");
+  token = strtok(nullptr, " []=");
+  token = strtok(nullptr, " []=");
   // Set the ion mass (convert amu to eV).
   m_mion = std::atof(token) * AtomicMassUnitElectronVolt;
 
@@ -504,7 +506,7 @@ bool TrackSrim::PreciseLoss(const double step, const double estart,
       e4 -= (de41 + de44) / 6. + (de42 + de43) / 3.;
     }
     if (m_debug) {
-      printf("    Iteration %u has %d division(s). Losses:\n", iter, ndiv);
+      printf("    Iteration %u has %u division(s). Losses:\n", iter, ndiv);
       printf("      de4 = %12g, de2 = %12g MeV\n", estart - e2, estart - e4);
       printf("      em4 = %12g, hd4 = %12g MeV\n", deem, dehd);
     }

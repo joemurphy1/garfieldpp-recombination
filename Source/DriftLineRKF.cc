@@ -147,9 +147,10 @@ bool DriftLineRKF::DriftElectron(const double x0, const double y0,
   int status = 0;
   const bool ok = DriftLine({x0, y0, z0}, t0, Particle::Electron, 
                             t, x, status);
-  std::vector<double> ne(t.size(), 1.);
-  std::vector<double> ni(t.size(), 0.);
-  std::vector<double> nn(t.size(), 0.);
+  const size_t nPoints = t.size();
+  std::vector<double> ne(nPoints, 1.);
+  std::vector<double> ni(nPoints, 0.);
+  std::vector<double> nn(nPoints, 0.);
   double scale = 1.;
   if (ok) {
     if (m_doAvalanche) Avalanche(Particle::Electron, x, ne, ni, nn, scale);
@@ -724,7 +725,7 @@ bool DriftLineRKF::Avalanche(const Particle particle,
               << "Charge scaling factor:     " << scale << "\n    "
               << "Avalanche development:\n Step      Electrons     Ions\n";
     for (unsigned int i = 0; i < nPoints; ++i) {
-      std::printf("%6d %15.7f %15.7f\n", i, scale * ne[i], scale * ni[i]);
+      std::printf("%6u %15.7f %15.7f\n", i, scale * ne[i], scale * ni[i]);
     }
   }
   return true;
@@ -1261,7 +1262,7 @@ void DriftLineRKF::PrintDriftLine() const {
             << "x [cm]          y [cm]          z [cm]\n";
   const unsigned int nPoints = m_x.size();
   for (unsigned int i = 0; i < nPoints; ++i) {
-    std::printf("%6d %15.7f %15.7f %15.7f %15.7f\n", 
+    std::printf("%6u %15.7f %15.7f %15.7f %15.7f\n", 
                 i, m_t[i], m_x[i][0], m_x[i][1], m_x[i][2]);
   }
  

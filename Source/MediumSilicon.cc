@@ -22,12 +22,12 @@ MediumSilicon::MediumSilicon()
 
   SetTemperature(300.);
   SetDielectricConstant(11.9);
-  SetAtomicNumber(14.);
-  SetAtomicWeight(28.0855);
-  SetMassDensity(2.329);
+  Medium::SetAtomicNumber(14.);
+  Medium::SetAtomicWeight(28.0855);
+  Medium::SetMassDensity(2.329);
 
-  EnableDrift();
-  EnablePrimaryIonisation();
+  m_driftable = true;
+  m_ionisable = true;
   m_microscopic = true;
 
   m_w = 3.6;
@@ -1419,7 +1419,7 @@ void MediumSilicon::UpdateImpactIonisation() {
       m_hImpactB0 = gamma * 2.036e6;
       m_hImpactA1 = gamma * 6.71e5;
       m_hImpactB1 = gamma * 1.693e6;
-    } else if (m_impactIonisationModel == ImpactIonisation::Grant) {
+    } else {
       // W. N. Grant, Solid State Electronics 16 (1973), 1189
       // Sentaurus Device User Guide (2007)
       m_eImpactA0 = 2.60e6 * gamma;

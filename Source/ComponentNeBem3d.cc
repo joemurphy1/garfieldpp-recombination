@@ -2129,7 +2129,7 @@ bool ComponentNeBem3d::EliminateOverlaps(const Panel& panel1,
                 << " No Type            x            y        Q   links\n";
       const unsigned int n = xl[j].size();
       for (unsigned int i = 0; i < n; ++i) {
-        printf("        %3d %5d %13.6f %13.6f %5.3f %3d\n", i, flags[j][i],
+        printf("        %3u %5d %13.6f %13.6f %5.3f %3d\n", i, flags[j][i],
                xl[j][i], yl[j][i], qs[j][i], links[j][i]);
       }
     }

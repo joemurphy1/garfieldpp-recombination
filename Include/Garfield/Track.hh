@@ -107,7 +107,7 @@ class Track {
   int m_spin = 1;
   double m_mass;
   double m_energy = 0.;
-  double m_beta2;
+  double m_beta2 = 1.;
   bool m_isElectron = false;
   std::string m_particleName = "mu-";
 

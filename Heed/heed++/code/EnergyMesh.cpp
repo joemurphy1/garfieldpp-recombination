@@ -21,7 +21,7 @@ EnergyMesh::EnergyMesh(double femin, double femax, long fq)
 }
 
 EnergyMesh::EnergyMesh(const std::vector<double>& fec) : q(fec.size()) {
-  mfunname("std::vector< double > fec");
+  mfunname("EnergyMesh::EnergyMesh(std::vector<double> fec");
   check_econd21(q, < 0 ||, > pqener - 1, mcerr);
   check_econd11(q, != 1, mcerr);  // otherwise problems with emin/emax
   if (q <= 0) {

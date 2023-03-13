@@ -36,7 +36,7 @@ public:
   // Reference to the underlying data to be included in the tree.
   const KDTreeArray& m_data;   
 
-  size_t m_dim;
+  size_t m_dim = 3;
   bool sort_results = false;
 
 public:

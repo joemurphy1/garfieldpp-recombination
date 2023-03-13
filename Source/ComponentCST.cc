@@ -360,6 +360,7 @@ bool ComponentCST::Initialise(std::string elist, std::string nlist,
     // Read the element
     int ielem = ReadInteger(token, -1, readerror);
     token = strtok(nullptr, " ");
+    if (!token) continue;
     unsigned char imat = atoi(token);
     // construct node numbers
     std::vector<int> node_nb;
@@ -500,7 +501,7 @@ bool ComponentCST::Initialise(std::string dataFile, std::string unit) {
   int nMaterials = 0;
   if (!ReadHeader(f, fileSize, m_debug, nLinesX, nLinesY, nLinesZ,
                   nNS, nES, nEM, nMaterials)) {
-    if (f) fclose(f);
+    fclose(f);
     return false;
   } 
   m_nx = nLinesX;
@@ -697,7 +698,7 @@ bool ComponentCST::SetWeightingField(std::string prnsol, std::string label,
     int nMaterials = 0;
     if (!ReadHeader(f, fileSize, m_debug, nLinesX, nLinesY, nLinesZ,
                     nread, nES, nEM, nMaterials)) {
-      if (f) fclose(f);
+      fclose(f);
       return false;
     } 
     // Skip everything, but the potential

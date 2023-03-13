@@ -610,6 +610,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     fgpPrim = fopen(gpPrim, "w");
     if (fgpPrim == NULL) {
       neBEMMessage("DiscretizeWire - OutgpPrim");
+      fclose(fPrim);
       return -1;
     }
     fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[0], yvert[0], zvert[0]);
@@ -973,6 +974,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     fgpPrim = fopen(gpPrim, "w");
     if (fgpPrim == NULL) {
       neBEMMessage("DiscretizeTriangle - OutgpPrim");
+      fclose(fPrim);
       return -1;
     }
     fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[0], yvert[0], zvert[0]);
@@ -1726,6 +1728,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     fgpPrim = fopen(gpPrim, "w");
     if (fgpPrim == NULL) {
       neBEMMessage("DiscretizeRectangle - OutgpPrim");
+      fclose(fPrim);
       return -1;
     }
     fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[0], yvert[0], zvert[0]);
@@ -2283,6 +2286,7 @@ int InitKnownCharges(void) {
           FILE *fptrPointKnChFile = fopen(PointKnChFile, "r");
           if (fptrPointKnChFile == NULL) {
             neBEMMessage("PointKnCh file absent ... returning\n");
+            fclose(KnChInpFile);
             return -10;
           }
 
@@ -2549,7 +2553,6 @@ int InitChargingUp(void) {
         char ChargingUpIFile[256];
         double LScaleFactor;
         double ChUpFactor;
-        int *NbChUpEonEle, *NbChUpIonEle;
 
         fscanf(ChargingUpInpFile, "ChargingUpEFile: %s\n", ChargingUpEFile);
         fscanf(ChargingUpInpFile, "ChargingUpIFile: %s\n", ChargingUpIFile);
@@ -2566,18 +2569,20 @@ int InitChargingUp(void) {
           FILE *fptrChargingUpEFile = fopen(ChargingUpEFile, "r");
           if (fptrChargingUpEFile == NULL) {
             neBEMMessage("ChargingUpE file absent ... returning\n");
+            fclose(ChargingUpInpFile);
             return -10;
           }
           int NbOfE = neBEMGetNbOfLines(ChargingUpEFile);
           if (NbOfE <= 1) {
             neBEMMessage("Too few lines in ChargingUpE ... returning\n");
+            fclose(fptrChargingUpEFile);
             return -11;
-          } else {  // initialize
-            NbChUpEonEle = (int *)malloc((NbElements + 1) * sizeof(int));
-            for (int ele = 0; ele <= NbElements; ++ele) {  
-              // CHECK!!! ele limits start from 0, but all else from 1 to ...
-              NbChUpEonEle[ele] = 0;
-            }
+          } 
+          // initialize
+          int* NbChUpEonEle = (int *)malloc((NbElements + 1) * sizeof(int));
+          for (int ele = 0; ele <= NbElements; ++ele) {  
+            // CHECK!!! ele limits start from 0, but all else from 1 to ...
+            NbChUpEonEle[ele] = 0;
           }
 
           // read the header line
@@ -2591,11 +2596,13 @@ int InitChargingUp(void) {
           FILE *ftmpEF = fopen(tmpEFile, "w");
           if (ftmpEF == NULL) {
             printf("cannot open temporary output file ... returning ...\n");
+            free(NbChUpEonEle);
             return -100;
           }
           FILE *fPtEChUpMap = fopen("PtEChUpMap.out", "w");
           if (fPtEChUpMap == NULL) {
             printf("cannot open PtEChUpMap.out file for writing ...\n");
+            fclose(ftmpEF);
             return 110;
           }
 
@@ -2902,6 +2909,7 @@ int InitChargingUp(void) {
                     if (!nvert) {
                       neBEMMessage(
                           "no vertex in element! ... neBEMKnownCharges ...\n");
+                      fclose(fPtEChUpMap);
                       return -20;
                     }
 
@@ -3327,13 +3335,14 @@ int InitChargingUp(void) {
           int NbOfI = neBEMGetNbOfLines(ChargingUpIFile);
           if (NbOfI <= 1) {
             neBEMMessage("Too few lines in ChargingUpI ... returning\n");
+            fclose(fptrChargingUpIFile);
             return -11;
-          } else {  // initialize
-            NbChUpIonEle = (int *)malloc((NbElements + 1) * sizeof(int));
-            for (int ele = 0; ele <= NbElements; ++ele) {  
-              // CHECK!!! ele limit starts from 0 but all other from 1 to ...
-              NbChUpIonEle[ele] = 0;
-            }
+          }
+          // initialize
+          int* NbChUpIonEle = (int *)malloc((NbElements + 1) * sizeof(int));
+          for (int ele = 0; ele <= NbElements; ++ele) {  
+            // CHECK!!! ele limit starts from 0 but all other from 1 to ...
+            NbChUpIonEle[ele] = 0;
           }
 
           // read the header line
@@ -3347,11 +3356,13 @@ int InitChargingUp(void) {
           FILE *ftmpIF = fopen(tmpIFile, "w");
           if (ftmpIF == NULL) {
             printf("cannot open temporary ion output file ... returning ...\n");
+            free(NbChUpIonEle);
             return -100;
           }
           FILE *fPtIChUpMap = fopen("PtIChUpMap.out", "w");
           if (fPtIChUpMap == NULL) {
             printf("cannot open PtIChUpMap.out file for writing ...\n");
+            fclose(ftmpIF);
             return 110;
           }
 
@@ -3654,6 +3665,7 @@ int InitChargingUp(void) {
                   if (!nvert) {
                     neBEMMessage(
                         "no vertex in element! ... neBEMKnownCharges ...\n");
+                    fclose(fPtIChUpMap);
                     return -20;
                   }
 
