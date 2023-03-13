@@ -12,12 +12,12 @@ MediumCdTe::MediumCdTe() : Medium() {
 
   SetTemperature(300.);
   SetDielectricConstant(10.9);
-  SetAtomicNumber(48.52);
-  SetAtomicWeight(240.01);
-  SetMassDensity(5.85);
+  Medium::SetAtomicNumber(48.52);
+  Medium::SetAtomicWeight(240.01);
+  Medium::SetMassDensity(5.85);
 
-  EnableDrift();
-  EnablePrimaryIonisation();
+  m_driftable = true;
+  m_ionisable = true;
   m_microscopic = false;
 
   m_w = 4.43;

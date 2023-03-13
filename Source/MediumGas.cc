@@ -131,8 +131,8 @@ MediumGas::MediumGas()
 
   m_isChanged = true;
 
-  EnableDrift();
-  EnablePrimaryIonisation();
+  m_driftable = true;
+  m_ionisable = true;
 }
 
 bool MediumGas::SetComposition(const std::string& gas1, const double f1,
@@ -614,6 +614,11 @@ bool MediumGas::ReadHeader(std::ifstream& gasfile, int& version,
     while (token) {
       if (strcmp(token, "Version") == 0) {
         token = strtok(NULL, " :,%");
+        if (!token) {
+          std::cerr << m_className << "::ReadHeader:\n"
+                    << "    Cannot read version number.\n";
+          return false;
+        }
         version = atoi(token);
         // Check the version number.
         if (version != 10 && version != 11 && version != 12) {

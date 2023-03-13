@@ -1162,6 +1162,8 @@ int neBEMReadGeometry(void) {
             printf(
                 "error opening RmPrims.info file in write mode ... "
                 "returning\n");
+
+            fclose(rmprimFile);
             return (-1);
           }
           // Note that some of the original primitives have already been removed
@@ -2180,22 +2182,21 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
     printf("Computed weighting field solution\n");
   }
 
-  if (!fstatus) {  // estimate primitive related avrg wt field charge densities
-    // OMPCheck - may be parallelized
-    for (int prim = 1; prim <= NbPrimitives; ++prim) {
-      double area = 0.0;  // need area of the primitive as well!
-      AvWtChDen[IdWtField][prim] = 0.0;
+  // estimate primitive related avrg wt field charge densities
+  // OMPCheck - may be parallelized
+  for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    double area = 0.0;  // need area of the primitive as well!
+    AvWtChDen[IdWtField][prim] = 0.0;
 
-      for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim]; ++ele) {
-        area += (EleArr + ele - 1)->G.dA;
-        AvWtChDen[IdWtField][prim] +=
-            WtFieldChDen[IdWtField][ele] * (EleArr + ele - 1)->G.dA;
-      }
-
-      AvWtChDen[IdWtField][prim] /= area;
+    for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim]; ++ele) {
+      area += (EleArr + ele - 1)->G.dA;
+      AvWtChDen[IdWtField][prim] +=
+          WtFieldChDen[IdWtField][ele] * (EleArr + ele - 1)->G.dA;
     }
-    printf("Computed primitive-averaged weighting field solutions\n");
-  }  // if status flag not raised
+
+    AvWtChDen[IdWtField][prim] /= area;
+  }
+  printf("Computed primitive-averaged weighting field solutions\n");
 
   // stringify the integer
   char strIdWtField[5];
@@ -3108,7 +3109,6 @@ int ReadPrimitives(void) {
 
 int ReadElements(void) {
   char ElementFile[256];
-
   strcpy(ElementFile, MeshOutDir);
   strcat(ElementFile, "/Elements/StoreElems.out");
 
@@ -3136,6 +3136,7 @@ int ReadElements(void) {
       } else {
         free(EleArr);
         printf("neBEMDiscretize: Re-allocating EleArr failed.\n");
+        fclose(fStrEle);
         return (1);
       }
       printf("neBEMDiscretize: Re-allocated EleArr.\n");

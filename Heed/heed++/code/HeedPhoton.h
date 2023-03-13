@@ -38,9 +38,9 @@ class HeedPhoton : public gparticle {
   /// Used in physics_after_new_speed.
   bool m_photon_absorbed = false;
   /// Index of absorbing atom.
-  long m_na_absorbing;
+  long m_na_absorbing = 0;
   /// Index of absorbing shell
-  long m_ns_absorbing;
+  long m_ns_absorbing = 0;
 
 #ifdef SFER_PHOTOEL
   int s_sfer_photoel;

@@ -246,6 +246,7 @@ bool ComponentTcad3d::GetElement(const size_t i, double& vol,
   }
 
   const Element& element = m_elements[i];
+  type = element.type;
   if (element.type == 2) {
     // Triangle
     const auto& v0 = m_vertices[element.vertex[0]];
@@ -297,7 +298,7 @@ bool ComponentTcad3d::GetElement(const size_t i, double& vol,
     }
   } else {
     std::cerr << m_className << "::GetElement:\n"
-              << "    Unexpected element type (" << type << ").\n";
+              << "    Unexpected element type (" << element.type << ").\n";
     return false;
   }
   const size_t nVertices = ElementVertices(element);

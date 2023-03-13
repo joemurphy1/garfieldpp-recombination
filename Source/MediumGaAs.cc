@@ -17,12 +17,12 @@ MediumGaAs::MediumGaAs() : Medium() {
 
   SetTemperature(300.);
   SetDielectricConstant(12.9);
-  SetAtomicNumber(32);
-  SetAtomicWeight(72.32);
-  SetMassDensity(5.317);
+  Medium::SetAtomicNumber(32);
+  Medium::SetAtomicWeight(72.32);
+  Medium::SetMassDensity(5.317);
 
-  EnableDrift();
-  EnablePrimaryIonisation();
+  m_driftable = true;
+  m_ionisable = true;
   m_microscopic = false;
 
   m_w = 4.35;

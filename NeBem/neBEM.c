@@ -1598,12 +1598,11 @@ int ReadInvertedMatrix(void) {
   //     If at all, it should be removed manually.
 
   if (OptFormattedFile) {
-    FILE *fInv;  // can be a very large file - change to raw and zipped format
-
+    // can be a very large file - change to raw and zipped format
     char InvMFile[256];
     strcpy(InvMFile, MeshOutDir);
     strcat(InvMFile, "/InvMat.out");
-    fInv = fopen(InvMFile, "r");
+    FILE *fInv = fopen(InvMFile, "r");
     // assert(fInv != NULL);
     if (fInv == NULL) {
       neBEMMessage("ReadInvertedMatrix - inverted matrix not found.");
@@ -1620,6 +1619,7 @@ int ReadInvertedMatrix(void) {
     if ((chkNbEqns != NbEqns) || (chkNbUnknowns != NbUnknowns)) {
       neBEMMessage(
           "ReadInvertedMatrix - inverted matrix imension do not match!");
+      fclose(fInv);
       return (-1);
     }
 
@@ -1975,14 +1975,13 @@ Two functions to be tried later */
 // Check the note in neBEMInterface.c regarding these two functions.
 int RHVector(void) {
   double value, valueKnCh, valueChUp;
-  char outfile[256];
-  FILE *fout;
 
   if (TimeStep == 1) RHS = dvector(1, NbEqns);
 
+  char outfile[256];
   strcpy(outfile, BCOutDir);
   strcat(outfile, "/BCondns.out");
-  fout = fopen(outfile, "w");
+  FILE *fout = fopen(outfile, "w");
   fprintf(fout, "#BCondn Vector\n");
   fprintf(fout, "#elefld\tAssigned\tBC\tKnCh\tChUp\tRHValue\n");
 
@@ -2012,6 +2011,7 @@ int RHVector(void) {
         break;
       case 2:  // Conducting surfaces with known charge
         printf("Conducting surface with charge not implemented.\n");
+        fclose(fout);
         return -1;
         break;  // NOTE: no RHVector
       case 3:   // Floating conducting surfaces
@@ -2950,6 +2950,7 @@ int Solve(void) {
           fscanf(fInf, "%d %d\n", &chkNbEqns, &chkNbUnknowns);
           if ((chkNbEqns != NbEqns) || (chkNbUnknowns != NbUnknowns)) {
             neBEMMessage("Solve - matrix dimension do not match!");
+            fclose(fInf);
             return (-1);
           }
 
@@ -3979,6 +3980,7 @@ int ReadSolution(void) {
     // assert(ele == itmp);
     if (ele != itmp) {
       neBEMMessage("ReadSolution - ele_itmp in ReadSolution");
+      fclose(fSoln);
       return -1;
     }
     (EleArr + ele - 1)->Solution = sol;

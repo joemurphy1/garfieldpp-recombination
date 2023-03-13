@@ -237,6 +237,7 @@ bool ComponentTcad2d::GetElement(const size_t i, double& vol,
   }
 
   const Element& element = m_elements[i];
+  type = element.type;
   if (element.type == 0) {
     dmin = dmax = vol = 0;
   } else if (element.type == 1) {
@@ -244,7 +245,7 @@ bool ComponentTcad2d::GetElement(const size_t i, double& vol,
     const auto& v1 = m_vertices[element.vertex[1]];
     const double d = std::hypot(v1[0] - v0[0], v1[1] - v0[1]);
     dmin = dmax = vol = d;
-  } else if (m_elements[i].type == 2) {
+  } else if (element.type == 2) {
     const auto& v0 = m_vertices[element.vertex[0]];
     const auto& v1 = m_vertices[element.vertex[1]];
     const auto& v2 = m_vertices[element.vertex[2]];
@@ -255,7 +256,7 @@ bool ComponentTcad2d::GetElement(const size_t i, double& vol,
     const double c = std::hypot(v1[0] - v2[0], v1[1] - v2[1]);
     dmin = std::min({a, b, c});
     dmax = std::max({a, b, c});
-  } else if (m_elements[i].type == 3) {
+  } else if (element.type == 3) {
     const auto& v0 = m_vertices[element.vertex[0]];
     const auto& v1 = m_vertices[element.vertex[1]];
     const auto& v3 = m_vertices[element.vertex[3]];
@@ -266,7 +267,7 @@ bool ComponentTcad2d::GetElement(const size_t i, double& vol,
     dmax = sqrt(a * a + b * b);
   } else {
     std::cerr << m_className << "::GetElement:\n"
-              << "    Unexpected element type (" << type << ")\n";
+              << "    Unexpected element type (" << element.type << ")\n";
     return false;
   }
   const size_t nVertices = ElementVertices(element);

@@ -57,7 +57,7 @@ bool ViewCell::Plot(const bool twod) {
       std::cerr << m_className << "::Plot: Component is not ready.\n";
       return false;
     }
-  } else {
+  } else if (m_nebem) {
     if (!m_nebem->GetVoltageRange(pmin, pmax)) {
       std::cerr << m_className << "::Plot: Component is not ready.\n";
       return false;

@@ -191,15 +191,14 @@ bool AvalancheGrid::SnapToGrid(Grid &av, const double x, const double y,
   if (!alreadyExists)
     m_activeNodes.push_back(newNode);
 
-  if (m_debug)
+  if (m_debug) {
     std::cerr << m_className << "::SnapToGrid: n from 1 to " << nholder
-              << ".\n";
-
-  if (m_debug)
-    std::cerr << m_className << "::SnapToGrid: Snapped to (x,y,z) = (" << x
+              << ".\n"
+              << "    Snapped to (x,y,z) = (" << x
               << " -> " << av.xgrid[indexX] << ", " << y << " -> "
               << av.ygrid[indexY] << ", " << z << " -> " << av.zgrid[indexZ]
               << ").\n";
+  }
   return true;
 }
 
@@ -500,30 +499,25 @@ bool AvalancheGrid::GetParameters(AvalancheNode &node) {
     node.stepSize = m_avgrid.zStepSize;
   }
 
-  if (m_debug)
-    std::cerr << m_className
-              << "::GetParametersFromSensor::stepSize = " << node.stepSize
-              << "[cm].\n";
-
-  if (m_debug)
-    std::cerr << m_className << "::GetParametersFromSensor::velNormal = ("
+  if (m_debug) {
+    std::cerr << m_className << "::GetParametersFromSensor:\n"
+              << "    stepSize = " << node.stepSize << " [cm].\n"
+              << "    velNormal = ("
               << node.velNormal[0] << ", " << node.velNormal[1] << ", "
               << node.velNormal[2] << ") [1].\n";
-
+  }
   node.dt = std::abs(node.stepSize / node.velocity);
 
   // print
-  if (m_debug || !m_printPar)
-    std::cerr << m_className << "::GetParametersFromSensor::Electric field = ("
-              << e[0] / 1000 << ", " << e[1] / 1000 << ", " << e[2] / 1000
-              << ") [kV/cm].\n";
-
-  if (m_debug || !m_printPar)
-    std::cerr << m_className
-              << "::GetParametersFromSensor::Townsend = " << node.townsend
+  if (m_debug || !m_printPar) {
+    std::cerr << m_className << "::GetParametersFromSensor:\n"
+              << "    Electric field = ("
+              << 1.e-3 * e[0] << ", " << 1.e-3 * e[1] << ", " << 1.e-3 * e[2]
+              << ") [kV/cm].\n"
+              << "  Townsend = " << node.townsend
               << " [1/cm], Attachment = " << node.attachment
               << " [1/cm], Velocity = " << node.velocity << " [cm/ns].\n";
-
+  }
   if (m_debug)
     std::cerr << m_className << "::StartGridAvalanche::Time steps per loop "
               << node.dt << " ns.\n";

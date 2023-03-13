@@ -58,8 +58,13 @@ bool TrackBichsel::Initialise() {
 
   // Read in the complex dielectric function (epsilon). This is used 
   // for the cross section of small momentum transfer excitations.
-  std::string path = std::getenv("GARFIELD_INSTALL");
-  if (!path.empty()) path += "/share/Garfield/Data/";
+  std::string path = "";
+  auto installdir = std::getenv("GARFIELD_INSTALL");
+  if (!installdir) {
+    std::cerr << "    Environment variable GARFIELD_INSTALL not set.\n";
+  } else {
+    path = std::string(installdir) + "/share/Garfield/Data/";
+  }
   std::ifstream infile;
   std::cout << "    Reading dielectric function.\n";
   infile.open(path + "heps.tab", std::ios::in);

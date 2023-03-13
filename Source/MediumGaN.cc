@@ -22,12 +22,12 @@ MediumGaN::MediumGaN() : Medium() {
 
   SetTemperature(300.);
   SetDielectricConstant(8.9);
-  SetAtomicNumber(19);
-  SetAtomicWeight(41.865);
-  SetMassDensity(6.15);
+  Medium::SetAtomicNumber(19);
+  Medium::SetAtomicWeight(41.865);
+  Medium::SetMassDensity(6.15);
 
-  EnableDrift();
-  EnablePrimaryIonisation();
+  m_driftable = true;
+  m_ionisable = true;
   m_microscopic = false;
 
   m_w = 8.9;

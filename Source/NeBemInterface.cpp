@@ -139,8 +139,8 @@ int ReadInitFile(char filename[]) {
 
   fprintf(stdout, "MinNbElementsOnLength: %d\n", MinNbElementsOnLength);
   fprintf(stdout, "MaxNbElementsOnLength: %d\n", MaxNbElementsOnLength);
-  fprintf(stdout, "ElementLengthRqstd: %le\n", ElementLengthRqstd);
-  fprintf(stdout, "LengthScale: %le\n", LengthScale);
+  fprintf(stdout, "ElementLengthRqstd: %e\n", ElementLengthRqstd);
+  fprintf(stdout, "LengthScale: %e\n", LengthScale);
 
   fprintf(stdout, "NewModel: %d\n", NewModel);
   fprintf(stdout, "NewMesh: %d\n", NewMesh);
@@ -383,9 +383,9 @@ int neBEMVolumeDescription(int vol, int* shape, int* material,
   if (!Garfield::gComponentNeBem3d->GetVolume(vol, *shape, *material, 
                                               *epsilon, *potential, *charge,
                                               *boundarytype)) {
-    return false;
+    return 0;
   }
-  return true; 
+  return 1;
 }
 
 /// Return the volume in which a point is located.

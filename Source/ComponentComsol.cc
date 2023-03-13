@@ -57,7 +57,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
                                  const std::string &mplist,
                                  const std::string &field,
                                  const std::string &unit) {
-  Reset();
+  ComponentFieldMap::Reset();
 
   std::vector<int> nodeIndices;
 
@@ -98,9 +98,9 @@ bool ComponentComsol::Initialise(const std::string &mesh,
   int d2msize;
   fmplist >> d2msize;
   for (int i = 0; i < d2msize; ++i) {
-    int domain;
-    fmplist >> domain;
-    fmplist >> domain2material[domain];
+    int domain, mat;
+    fmplist >> domain >> mat;
+    domain2material[domain] = mat;
   }
   fmplist.close();
 
@@ -198,8 +198,11 @@ bool ComponentComsol::Initialise(const std::string &mesh,
   for (auto& element : allElements) {
     int domain;
     fmesh >> domain;
-    element.matmap = domain2material.count(domain) ? domain2material[domain]
-                                                   : nMaterials - 1;
+    if (domain2material.count(domain) > 0) {
+      element.matmap = domain2material[domain];
+    } else {
+      element.matmap = nMaterials - 1;
+    }
   }
   fmesh.close();
 
@@ -268,7 +271,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
     std::cout << m_className << "::Initialise:\n"
               << "    Reading data for weighting field " << token << ".\n";
     wfields.push_back(token);
-    m_wpot[token] = std::vector<double>(m_nodes.size(), 0.);
+    m_wpot.emplace(token, std::vector<double>(m_nodes.size(), 0.));
     sline >> token;  // (V)
   }
   const size_t nWeightingFields = wfields.size();

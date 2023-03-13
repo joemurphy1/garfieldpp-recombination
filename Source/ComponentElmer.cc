@@ -35,7 +35,7 @@ bool ComponentElmer::Initialise(const std::string& header,
                                 const std::string& volt,
                                 const std::string& unit) {
   const std::string hdr = m_className + "::Initialise:";
-  Reset();
+  ComponentFieldMap::Reset();
 
   // Keep track of the success.
   bool ok = true;
@@ -321,7 +321,7 @@ bool ComponentElmer::LoadPotentials(const std::string& volt,
   // Read past the header.
   while (!readstop && fvolt.getline(line, size, '\n')) {
     char* token = strtok(line, " ");
-    if (strcmp(token, "Perm:") == 0) readstop = true;
+    if (token && strcmp(token, "Perm:") == 0) readstop = true;
     il++;
   }
 

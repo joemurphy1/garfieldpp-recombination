@@ -1101,12 +1101,18 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
       return false;
     }
     int nElementsRegion;
-    int iElement;
     data.str(line);
     data >> nElementsRegion;
     data.clear();
     for (int j = 0; j < nElementsRegion; ++j) {
+      size_t iElement = 0;
       gridfile >> iElement;
+      if (iElement >= m_elements.size()) {
+        std::cerr << m_className << "::LoadGrid:\n"
+                  << "    Error reading element indices for region " 
+                  << name << ".\n";
+        return false;
+      }
       m_elements[iElement].region = index;
     }
   }

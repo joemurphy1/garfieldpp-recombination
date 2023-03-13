@@ -293,10 +293,11 @@ class ComponentFieldMap : public Component {
                       bool& ymirrored, bool& zmirrored, double& rcoordinate,
                       double& rotation) const;
   /// Move (ex, ey, ez) to global coordinates.
-  void UnmapFields(double& ex, double& ey, double& ez, double& xpos,
-                   double& ypos, double& zpos, bool& xmirrored, bool& ymirrored,
-                   bool& zmirrored, double& rcoordinate,
-                   double& rotation) const;
+  void UnmapFields(double& ex, double& ey, double& ez, 
+                   const double xpos, const double ypos, const double zpos,
+                   const bool xmirrored, const bool ymirrored,
+                   const bool zmirrored, const double rcoordinate,
+                   const double rotation) const;
 
   static int ReadInteger(char* token, int def, bool& error);
   static double ReadDouble(char* token, double def, bool& error);

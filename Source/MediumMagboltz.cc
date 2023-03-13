@@ -121,8 +121,8 @@ MediumMagboltz::MediumMagboltz()
 
   m_isChanged = true;
 
-  EnableDrift();
-  EnablePrimaryIonisation();
+  m_driftable = true;
+  m_ionisable = true;
   m_microscopic = true;
 
   m_scaleExc.fill(1.);
@@ -1979,7 +1979,7 @@ void MediumMagboltz::ComputeDeexcitationTable(const bool verbose) {
     }
     
     lvl[level] = m_deexcitations.size();
-    m_iDeexcitation[i] = m_deexcitations.size();
+    m_iDeexcitation[i] = lvl[level];
 
     Deexcitation dxc;
     dxc.gas = ngas;
@@ -2843,7 +2843,7 @@ void MediumMagboltz::GenerateGasTable(const int numColl, const bool verbose) {
         m_eDifT[j][k][i] = dift;
         m_eLor[j][k][i] = lor;
         m_eAlp[j][k][i] = alpha > 0. ? log(alpha) : -30.;
-        m_eAlp0[j][k][i] = alpha > 0. ? log(alpha) : -30.;
+        m_eAlp0[j][k][i] = m_eAlp[j][k][i];
         m_eAtt[j][k][i] = eta > 0. ? log(eta) : -30.;
         for (unsigned int l = 0; l < 6; ++l) {
           m_eDifM[l][j][k][i] = difftens[l];
