@@ -262,7 +262,7 @@ G4VPhysicalVolume* GarfieldDetectorConstruction::DefineVolumes() {
   //
   // Visualization attributes
   //
-  worldLV->SetVisAttributes(G4VisAttributes::Invisible);
+  worldLV->SetVisAttributes(G4VisAttributes::GetInvisible());
 
   G4VisAttributes* VisAttBlue = new G4VisAttributes(G4Colour(0.0, 0.0, 1.0));
   G4VisAttributes* VisAttGreen = new G4VisAttributes(G4Colour(0.0, 1.0, 0.0));
