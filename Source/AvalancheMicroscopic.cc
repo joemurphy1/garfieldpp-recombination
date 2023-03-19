@@ -93,8 +93,8 @@ void PrintStatus(const std::string& hdr, const std::string& status,
 namespace Garfield {
 
 AvalancheMicroscopic::AvalancheMicroscopic() {
-  m_endpointsElectrons.reserve(10000);
-  m_endpointsHoles.reserve(10000);
+  m_electrons.reserve(10000);
+  m_holes.reserve(10000);
   m_photons.reserve(1000);
 }
 
@@ -231,69 +231,59 @@ void AvalancheMicroscopic::GetElectronEndpoint(const size_t i,
     double& x0, double& y0, double& z0, double& t0, double& e0,
     double& x1, double& y1, double& z1, double& t1, double& e1, 
     int& status) const {
-  if (i >= m_endpointsElectrons.size()) {
+  if (i >= m_electrons.size()) {
     std::cerr << m_className << "::GetElectronEndpoint: Index out of range.\n";
     status = -3;
     return;
   }
-
-  x0 = m_endpointsElectrons[i].x0;
-  y0 = m_endpointsElectrons[i].y0;
-  z0 = m_endpointsElectrons[i].z0;
-  t0 = m_endpointsElectrons[i].t0;
-  e0 = m_endpointsElectrons[i].e0;
-  x1 = m_endpointsElectrons[i].x;
-  y1 = m_endpointsElectrons[i].y;
-  z1 = m_endpointsElectrons[i].z;
-  t1 = m_endpointsElectrons[i].t;
-  e1 = m_endpointsElectrons[i].energy;
-  status = m_endpointsElectrons[i].status;
-}
-
-void AvalancheMicroscopic::GetElectronEndpoint(const size_t i, 
-    double& x0, double& y0, double& z0, double& t0, double& e0, 
-    double& x1, double& y1, double& z1, double& t1, double& e1,
-    double& dx1, double& dy1, double& dz1, int& status) const {
-  if (i >= m_endpointsElectrons.size()) {
-    std::cerr << m_className << "::GetElectronEndpoint: Index out of range.\n";
+  if (m_electrons[i].path.empty()) {
+    std::cerr << m_className << "::GetElectronEndpoint: Empty drift line.\n";
     status = -3;
     return;
   }
-
-  dx1 = m_endpointsElectrons[i].kx;
-  dy1 = m_endpointsElectrons[i].ky;
-  dz1 = m_endpointsElectrons[i].kz;
-  status = m_endpointsElectrons[i].status;
-  return GetElectronEndpoint(i, x0, y0, z0, t0, e0, 
-                                x1, y1, z1, t1, e1, status);
+  x0 = m_electrons[i].path[0].x;
+  y0 = m_electrons[i].path[0].y;
+  z0 = m_electrons[i].path[0].z;
+  t0 = m_electrons[i].path[0].t;
+  e0 = m_electrons[i].path[0].energy;
+  x1 = m_electrons[i].path.back().x;
+  y1 = m_electrons[i].path.back().y;
+  z1 = m_electrons[i].path.back().z;
+  t1 = m_electrons[i].path.back().t;
+  e1 = m_electrons[i].path.back().energy;
+  status = m_electrons[i].status;
 }
 
 void AvalancheMicroscopic::GetHoleEndpoint(const size_t i, 
     double& x0, double& y0, double& z0, double& t0, double& e0, 
     double& x1, double& y1, double& z1, double& t1, double& e1,
     int& status) const {
-  if (i >= m_endpointsHoles.size()) {
+  if (i >= m_holes.size()) {
     std::cerr << m_className << "::GetHoleEndpoint: Index out of range.\n";
     status = -3;
     return;
   }
-
-  x0 = m_endpointsHoles[i].x0;
-  y0 = m_endpointsHoles[i].y0;
-  z0 = m_endpointsHoles[i].z0;
-  t0 = m_endpointsHoles[i].t0;
-  e0 = m_endpointsHoles[i].e0;
-  x1 = m_endpointsHoles[i].x;
-  y1 = m_endpointsHoles[i].y;
-  z1 = m_endpointsHoles[i].z;
-  t1 = m_endpointsHoles[i].t;
-  e1 = m_endpointsHoles[i].energy;
-  status = m_endpointsHoles[i].status;
+  if (m_electrons[i].path.empty()) {
+    std::cerr << m_className << "::GetHoleEndpoint: Empty drift line.\n";
+    status = -3;
+    return;
+  }
+  x0 = m_holes[i].path[0].x;
+  y0 = m_holes[i].path[0].y;
+  z0 = m_holes[i].path[0].z;
+  t0 = m_holes[i].path[0].t;
+  e0 = m_holes[i].path[0].energy;
+  x1 = m_holes[i].path.back().x;
+  y1 = m_holes[i].path.back().y;
+  z1 = m_holes[i].path.back().z;
+  t1 = m_holes[i].path.back().t;
+  e1 = m_holes[i].path.back().energy;
+  status = m_holes[i].status;
 }
 
 double AvalancheMicroscopic::GetElectronPathLength(const size_t i) const {
 
-  if (i >= m_endpointsElectrons.size()) return 0.;
+  if (i >= m_electrons.size()) return 0.;
   const size_t nP = GetNumberOfElectronDriftLinePoints(i);
   if (nP < 2) return 0.;
   double s = 0.;
@@ -309,93 +299,61 @@ double AvalancheMicroscopic::GetElectronPathLength(const size_t i) const {
 
 size_t AvalancheMicroscopic::GetNumberOfElectronDriftLinePoints(
     const size_t i) const {
-  if (i >= m_endpointsElectrons.size()) {
+  if (i >= m_electrons.size()) {
     std::cerr << m_className << "::GetNumberOfElectronDriftLinePoints: "
               << "Index out of range.\n";
     return 0;
   }
-
-  if (!m_storeDriftLines) return 2;
-
-  return m_endpointsElectrons[i].driftLine.size() + 2;
+  return m_electrons[i].path.size();
 }
 
 size_t AvalancheMicroscopic::GetNumberOfHoleDriftLinePoints(
     const size_t i) const {
-  if (i >= m_endpointsHoles.size()) {
+  if (i >= m_holes.size()) {
     std::cerr << m_className << "::GetNumberOfHoleDriftLinePoints: "
               << "Index out of range.\n";
     return 0;
   }
-
-  if (!m_storeDriftLines) return 2;
-
-  return m_endpointsHoles[i].driftLine.size() + 2;
+  return m_holes[i].path.size();
 }
 
 void AvalancheMicroscopic::GetElectronDriftLinePoint(
-    double& x, double& y, double& z, double& t, const int ip,
-    const unsigned int iel) const {
-  if (iel >= m_endpointsElectrons.size()) {
-    std::cerr << m_className << "::GetElectronDriftLinePoint:\n";
-    std::cerr << "    Endpoint index (" << iel << ") out of range.\n";
+    double& x, double& y, double& z, double& t, const size_t ip,
+    const size_t ie) const {
+  if (ie >= m_electrons.size()) {
+    std::cerr << m_className << "::GetElectronDriftLinePoint:\n"
+              << "    Endpoint index (" << ie << ") out of range.\n";
     return;
   }
-
-  if (ip <= 0) {
-    x = m_endpointsElectrons[iel].x0;
-    y = m_endpointsElectrons[iel].y0;
-    z = m_endpointsElectrons[iel].z0;
-    t = m_endpointsElectrons[iel].t0;
+  if (ip >= m_electrons[ie].path.size()) {
+    std::cerr << m_className << "::GetElectronDriftLinePoint:\n"
+              << "    Drift line point index (" << ip << ") out of range.\n";
     return;
   }
-
-  const int np = m_endpointsElectrons[iel].driftLine.size();
-  if (ip > np) {
-    x = m_endpointsElectrons[iel].x;
-    y = m_endpointsElectrons[iel].y;
-    z = m_endpointsElectrons[iel].z;
-    t = m_endpointsElectrons[iel].t;
-    return;
-  }
-
-  x = m_endpointsElectrons[iel].driftLine[ip - 1][0];
-  y = m_endpointsElectrons[iel].driftLine[ip - 1][1];
-  z = m_endpointsElectrons[iel].driftLine[ip - 1][2];
-  t = m_endpointsElectrons[iel].driftLine[ip - 1][3];
+  x = m_electrons[ie].path[ip].x;
+  y = m_electrons[ie].path[ip].y;
+  z = m_electrons[ie].path[ip].z;
+  t = m_electrons[ie].path[ip].t;
 }
 
 void AvalancheMicroscopic::GetHoleDriftLinePoint(double& x, double& y,
                                                  double& z, double& t,
-                                                 const int ip,
-                                                 const unsigned int ih) const {
-  if (ih >= m_endpointsHoles.size()) {
-    std::cerr << m_className << "::GetHoleDriftLinePoint:\n";
-    std::cerr << "    Endpoint index (" << ih << ") out of range.\n";
+                                                 const size_t ip,
+                                                 const size_t ih) const {
+  if (ih >= m_holes.size()) {
+    std::cerr << m_className << "::GetHoleDriftLinePoint:\n"
+              << "    Endpoint index (" << ih << ") out of range.\n";
     return;
   }
-
-  if (ip <= 0) {
-    x = m_endpointsHoles[ih].x0;
-    y = m_endpointsHoles[ih].y0;
-    z = m_endpointsHoles[ih].z0;
-    t = m_endpointsHoles[ih].t0;
+  if (ip >= m_holes[ih].path.size()) {
+    std::cerr << m_className << "::GetHoleDriftLinePoint:\n"
+              << "    Drift line point index (" << ip << ") out of range.\n";
     return;
   }
-
-  const int np = m_endpointsHoles[ih].driftLine.size();
-  if (ip > np) {
-    x = m_endpointsHoles[ih].x;
-    y = m_endpointsHoles[ih].y;
-    z = m_endpointsHoles[ih].z;
-    t = m_endpointsHoles[ih].t;
-    return;
-  }
-
-  x = m_endpointsHoles[ih].driftLine[ip - 1][0];
-  y = m_endpointsHoles[ih].driftLine[ip - 1][1];
-  z = m_endpointsHoles[ih].driftLine[ip - 1][2];
-  t = m_endpointsHoles[ih].driftLine[ip - 1][3];
+  x = m_holes[ih].path[ip].x;
+  y = m_holes[ih].path[ip].y;
+  z = m_holes[ih].path[ip].z;
+  t = m_holes[ih].path[ip].t;
 }
 
 void AvalancheMicroscopic::GetPhoton(const size_t i, double& e,
@@ -469,20 +427,20 @@ bool AvalancheMicroscopic::AvalancheElectron(
 void AvalancheMicroscopic::AddElectron(
     const double x, const double y, const double z, const double t,
     const double e, const double dx, const double dy, const double dz) {
-  AddToStack(x, y, z, t, e, dx, dy, dz, 0, false, m_endpointsElectrons);
+  AddToStack(x, y, z, t, e, dx, dy, dz, 0, false, m_electrons);
 }
 
 bool AvalancheMicroscopic::ResumeAvalanche() {
   std::vector<Electron> stack;
-  for (const auto& p : m_endpointsElectrons) {
+  for (const auto& p : m_electrons) {
     if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) { 
-      AddToStack(p.x, p.y, p.z, p.t, p.energy, 
+      AddToStack(p.path.back().x, p.path.back().y, p.path.back().z, p.path.back().t, p.path.back().energy, 
                  p.kx, p.ky, p.kz, p.band, false, stack);
     }
   }
-  for (const auto& p : m_endpointsHoles) {
+  for (const auto& p : m_holes) {
     if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) { 
-      AddToStack(p.x, p.y, p.z, p.t, p.energy, 
+      AddToStack(p.path.back().x, p.path.back().y, p.path.back().z, p.path.back().t, p.path.back().energy, 
                  p.kx, p.ky, p.kz, p.band, true, stack);
     }
   }
@@ -493,8 +451,8 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Electron>& stack,
                                               const bool aval) {
 
   // Clear the list of electrons, holes and photons.
-  m_endpointsElectrons.clear();
-  m_endpointsHoles.clear();
+  m_electrons.clear();
+  m_holes.clear();
   m_photons.clear();
 
   // Reset the particle counters.
@@ -513,13 +471,20 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Electron>& stack,
 
   // Loop over the initial set of electrons/holes.
   for (auto& p : stack) {
+    if (p.path.empty()) {
+      std::cerr << hdr << "Empty drift line.\n";
+      return false;
+    }
     // Make sure that the starting point is inside the active area.
-    if (!m_sensor->IsInArea(p.x0, p.y0, p.z0)) {
+    const double x0 = p.path[0].x;
+    const double y0 = p.path[0].y;
+    const double z0 = p.path[0].z;
+    if (!m_sensor->IsInArea(x0, y0, z0)) {
       std::cerr << hdr << "No valid field at initial position.\n";
       return false;
     }
     // Make sure that the starting point is inside a medium.
-    Medium* medium = m_sensor->GetMedium(p.x0, p.y0, p.z0);
+    Medium* medium = m_sensor->GetMedium(x0, y0, z0);
     if (!medium) {
       std::cerr << hdr << "No medium at initial position.\n";
       return false;
@@ -530,11 +495,11 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Electron>& stack,
       return false;
     }
     // Make sure the initial energy is positive.
-    p.e0 = std::max(p.e0, Small);
+    const double e0 = std::max(p.path[0].energy, Small);
     if (medium->IsSemiconductor() && m_useBandStructure) {
       if (p.band < 0) {
         // Sample the initial momentum and band.
-        medium->GetElectronMomentum(p.e0, p.kx, p.ky, p.kz, p.band);
+        medium->GetElectronMomentum(e0, p.kx, p.ky, p.kz, p.band);
       }
     } else {
       p.band = 0;
@@ -586,11 +551,11 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Electron>& stack,
     // Loop over all electrons/holes in the avalanche.
     for (auto it = stack.begin(), end = stack.end(); it != end; ++it) {
       // Get an electron/hole from the stack.
-      double x = (*it).x;
-      double y = (*it).y;
-      double z = (*it).z;
-      double t = (*it).t;
-      double en = (*it).energy;
+      double x = (*it).path.back().x;
+      double y = (*it).path.back().y;
+      double z = (*it).path.back().z;
+      double t = (*it).path.back().t;
+      double en = (*it).path.back().energy;
       int band = (*it).band;
       double kx = (*it).kx;
       double ky = (*it).ky;
@@ -1089,10 +1054,10 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Electron>& stack,
             Update(it, x, y, z, t, en, kx1, ky1, kz1, band);
             (*it).status = StatusAttached;
             if (hole) {
-              m_endpointsHoles.push_back(*it);
+              m_holes.push_back(*it);
               --m_nHoles;
             } else {
-              m_endpointsElectrons.push_back(*it);
+              m_electrons.push_back(*it);
               --m_nElectrons;
             }
             ok = false;
@@ -1218,35 +1183,44 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Electron>& stack,
         ky *= scale;
         kz *= scale;
       }
-      // Update the stack.
-      Update(it, x, y, z, t, en, kx, ky, kz, band);
       // Add a new point to the drift line (if enabled).
       if (m_storeDriftLines) {
-        (*it).driftLine.push_back({x, y, z, t});
+        Point point;
+        point.x = x;
+        point.y = y;
+        point.z = z;
+        point.t = t;
+        point.energy = en;
+        (*it).path.push_back(std::move(point));
       }
+      // Update the stack.
+      Update(it, x, y, z, t, en, kx, ky, kz, band);
     }
   }
 
   // Calculate the induced charge.
   if (m_doInducedCharge) {
-    for (const auto& ep : m_endpointsElectrons) {
-      m_sensor->AddInducedCharge(-1, ep.x0, ep.y0, ep.z0, ep.x, ep.y, ep.z);
+    for (const auto& ep : m_electrons) {
+      m_sensor->AddInducedCharge(-1, ep.path[0].x, ep.path[0].y, ep.path[0].z, 
+                                 ep.path.back().x, ep.path.back().y, ep.path.back().z);
     }
-    for (const auto& ep : m_endpointsHoles) {
-      m_sensor->AddInducedCharge(+1, ep.x0, ep.y0, ep.z0, ep.x, ep.y, ep.z);
+    for (const auto& ep : m_holes) {
+      m_sensor->AddInducedCharge(+1, ep.path[0].x, ep.path[0].y, ep.path[0].z, 
+                                 ep.path.back().x, ep.path.back().y, ep.path.back().z);
     }
   }
 
   // Plot the drift paths and photon tracks.
   if (m_viewer) {
     // Electrons
-    const size_t nElectronEndpoints = m_endpointsElectrons.size();
+    const size_t nElectronEndpoints = m_electrons.size();
     for (size_t i = 0; i < nElectronEndpoints; ++i) {
       const size_t np = GetNumberOfElectronDriftLinePoints(i);
       if (np <= 0) continue;
       size_t k;
-      const Electron& p = m_endpointsElectrons[i];
-      m_viewer->NewDriftLine(Particle::Electron, np, k, p.x0, p.y0, p.z0);
+      const Electron& p = m_electrons[i];
+      m_viewer->NewDriftLine(Particle::Electron, np, k, 
+                             p.path[0].x, p.path[0].y, p.path[0].z);
       for (size_t j = 0; j < np; ++j) {
         double x = 0., y = 0., z = 0., t = 0.;
         GetElectronDriftLinePoint(x, y, z, t, j, i);
@@ -1254,13 +1228,14 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Electron>& stack,
       }
     }
     // Holes
-    const size_t nHoleEndpoints = m_endpointsHoles.size();
+    const size_t nHoleEndpoints = m_holes.size();
     for (size_t i = 0; i < nHoleEndpoints; ++i) {
       const size_t np = GetNumberOfHoleDriftLinePoints(i);
       if (np <= 0) continue;
       size_t k;
-      const Electron& p = m_endpointsHoles[i];
-      m_viewer->NewDriftLine(Particle::Hole, np, k, p.x0, p.y0, p.z0);
+      const Electron& p = m_holes[i];
+      m_viewer->NewDriftLine(Particle::Hole, np, k, 
+                             p.path[0].x, p.path[0].y, p.path[0].z);
       for (size_t j = 0; j < np; ++j) {
         double x = 0., y = 0., z = 0., t = 0.;
         GetHoleDriftLinePoint(x, y, z, t, j, i);
@@ -1440,11 +1415,11 @@ void AvalancheMicroscopic::Update(std::vector<Electron>::iterator it,
                                   const double energy, const double kx,
                                   const double ky, const double kz,
                                   const int band) {
-  (*it).x = x;
-  (*it).y = y;
-  (*it).z = z;
-  (*it).t = t;
-  (*it).energy = energy;
+  (*it).path.back().x = x;
+  (*it).path.back().y = y;
+  (*it).path.back().z = z;
+  (*it).path.back().t = t;
+  (*it).path.back().energy = energy;
   (*it).kx = kx;
   (*it).ky = ky;
   (*it).kz = kz;
@@ -1470,16 +1445,6 @@ void AvalancheMicroscopic::AddToStack(const double x, const double y,
   Electron electron;
   electron.status = 0;
   electron.hole = hole;
-  electron.x0 = x;
-  electron.y0 = y;
-  electron.z0 = z;
-  electron.t0 = t;
-  electron.e0 = energy;
-  electron.x = x;
-  electron.y = y;
-  electron.z = z;
-  electron.t = t;
-  electron.energy = energy;
   electron.kx = dx;
   electron.ky = dy;
   electron.kz = dz;
@@ -1488,7 +1453,21 @@ void AvalancheMicroscopic::AddToStack(const double x, const double y,
   electron.xLast = x;
   electron.yLast = y;
   electron.zLast = z;
-  electron.driftLine.reserve(1000);
+  electron.path.reserve(1000);
+  Point p0;
+  p0.x = x;
+  p0.y = y;
+  p0.z = z;
+  p0.t = t;
+  p0.energy = energy;
+  electron.path.push_back(std::move(p0));
+  Point p1;
+  p1.x = x;
+  p1.y = y;
+  p1.z = z;
+  p1.t = t;
+  p1.energy = energy;
+  electron.path.push_back(std::move(p1));
   container.push_back(std::move(electron));
 }
 

@@ -139,10 +139,27 @@ class AvalancheMicroscopic {
     ni = m_nIons;
   }
 
+  struct Point {
+    double x, y, z;    ///< Coordinates.
+    double t;          ///< Time.
+    double energy;     ///< Kinetic energy.
+  };
+
+  struct Electron {
+    int status;                    ///< Status.
+    bool hole;                     ///< Electron or hole.
+    int band;                      ///< Band.
+    double kx, ky, kz; ///< Direction/wave vector.
+    std::vector<Point> path;       ///< Drift line.
+    double xLast, yLast, zLast;    ///< Previous position.
+  };
+
+  const std::vector<Electron>& GetElectrons() const { return m_electrons; }
+  const std::vector<Electron>& GetHoles() const { return m_holes; }
   /** Return the number of electron trajectories in the last
    * simulated avalanche (including captured electrons). */
   size_t GetNumberOfElectronEndpoints() const {
-    return m_endpointsElectrons.size();
+    return m_electrons.size();
   }
   /** Return the coordinates and time of start and end point of a given
    * electron drift line.
@@ -165,12 +182,11 @@ class AvalancheMicroscopic {
   size_t GetNumberOfElectronDriftLinePoints(const size_t i = 0) const;
   size_t GetNumberOfHoleDriftLinePoints(const size_t i = 0) const;
   void GetElectronDriftLinePoint(double& x, double& y, double& z, double& t,
-                                 const int ip,
-                                 const unsigned int iel = 0) const;
+                                 const size_t ip, const size_t ie = 0) const;
   void GetHoleDriftLinePoint(double& x, double& y, double& z, double& t,
-                             const int ip, const unsigned int iel = 0) const;
+                             const size_t ip, const size_t ih = 0) const;
 
-  size_t GetNumberOfHoleEndpoints() const { return m_endpointsHoles.size(); }
+  size_t GetNumberOfHoleEndpoints() const { return m_holes.size(); }
   void GetHoleEndpoint(const size_t i, double& x0, double& y0, double& z0,
                        double& t0, double& e0, double& x1, double& y1,
                        double& z1, double& t1, double& e1, int& status) const;
@@ -245,20 +261,8 @@ class AvalancheMicroscopic {
 
   Sensor* m_sensor = nullptr;
 
-  struct Electron {
-    int status;                    ///< Status.
-    bool hole;                     ///< Electron or hole.
-    double x0, y0, z0, t0;         ///< Starting point and time.
-    double e0;                     ///< Initial kinetic energy.
-    int band;                      ///< Band.
-    double x, y, z, t;             ///< Current position and time.
-    double kx, ky, kz;             ///< Current direction/wave vector.
-    double energy;                 ///< Current kinetic energy.
-    std::vector<std::array<double, 4 > > driftLine;  ///< Drift line.
-    double xLast, yLast, zLast;    ///< Previous position.
-  };
-  std::vector<Electron> m_endpointsElectrons;
-  std::vector<Electron> m_endpointsHoles;
+  std::vector<Electron> m_electrons;
+  std::vector<Electron> m_holes;
 
   struct photon {
     int status;             ///< Status
@@ -330,7 +334,8 @@ class AvalancheMicroscopic {
   // Switch on/off debugging messages
   bool m_debug = false;
 
-  bool TransportElectrons(std::vector<Electron>& stack, const bool aval);
+  bool TransportElectrons(std::vector<Electron>& stack, 
+                          const bool aval);
   void TransportPhoton(const double x, const double y, const double z,
                        const double t, const double e,
                        std::vector<Electron>& stack);
@@ -348,10 +353,13 @@ class AvalancheMicroscopic {
               const double energy, const double kx, const double ky,
               const double kz, const int band);
   void AddToEndPoints(const Electron& item, const bool hole) {
+    Electron electron;
+    electron.status = item.status;
+    electron.path = item.path;
     if (hole) {
-      m_endpointsHoles.push_back(item);
+      m_holes.push_back(std::move(electron));
     } else {
-      m_endpointsElectrons.push_back(item);
+      m_electrons.push_back(std::move(electron));
     }
   }
 
@@ -363,7 +371,8 @@ class AvalancheMicroscopic {
   void AddToStack(const double x, const double y, const double z,
                   const double t, const double energy, const double dx,
                   const double dy, const double dz, const int band,
-                  const bool hole, std::vector<Electron>& container) const;
+                  const bool hole, 
+                  std::vector<Electron>& container) const;
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
                  double& y1, double& z1, double& t1);
 };
