@@ -89,7 +89,8 @@ int main(int argc, char * argv[]) {
   ViewDrift driftView;
   constexpr bool plotDrift = true;
   if (plotDrift) {
-    aval.EnablePlotting(&driftView);
+    // Plot every tenth collision.
+    aval.EnablePlotting(&driftView, 10);
     drift.EnablePlotting(&driftView);
   }
 
