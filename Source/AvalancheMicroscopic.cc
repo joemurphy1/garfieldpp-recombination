@@ -14,6 +14,16 @@ double Mag(const double x, const double y, const double z) {
   return sqrt(x * x + y * y + z * z);
 }
 
+void Normalise(double& x, double& y, double& z) {
+  const double d = Mag(x, y, z);
+  if (d > 0.) {
+    const double scale = 1. / d;
+    x *= scale;
+    y *= scale;
+    z *= scale;
+  }
+}
+
 void ToLocal(const std::array<std::array<double, 3>, 3>& rot, const double xg,
              const double yg, const double zg, double& xl, double& yl,
              double& zl) {
@@ -81,13 +91,33 @@ void RotationMatrix(double bx, double by, double bz, const double bmag,
   }
 }
 
-void PrintStatus(const std::string& hdr, const std::string& status,
-                 const double x, const double y, const double z,
-                 const bool hole) {
-  const std::string eh = hole ? "Hole " : "Electron ";
-  std::cout << hdr << eh << status << " at " << x << ", " << y << ", " << z
-            << "\n";
+Garfield::AvalancheMicroscopic::Point MakePoint(
+    const double x, const double y, const double z,  const double t, 
+    const double energy, const double dx, const double dy, const double dz,
+    const int band) {
+
+  Garfield::AvalancheMicroscopic::Point p;
+  p.x = x;
+  p.y = y;
+  p.z = z;
+  p.t = t;
+  p.energy = energy;
+  p.kx = dx;
+  p.ky = dy;
+  p.kz = dz;
+  p.band = band;
+  return p;
 }
+
+Garfield::AvalancheMicroscopic::Point MakePoint(
+    const double x, const double y, const double z,  const double t, 
+    const double energy) {
+  // Randomise the direction.
+  double dx = 0., dy = 0., dz = 1.;
+  Garfield::RndmDirection(dx, dy, dz);
+  return MakePoint(x, y, z, t, energy, dx, dy, dz, 0);
+}
+
 }  // namespace
 
 namespace Garfield {
@@ -106,18 +136,14 @@ void AvalancheMicroscopic::SetSensor(Sensor* s) {
   m_sensor = s;
 }
 
-void AvalancheMicroscopic::EnablePlotting(ViewDrift* view) {
+void AvalancheMicroscopic::EnablePlotting(ViewDrift* view,
+                                          const size_t nColl) {
   if (!view) {
     std::cerr << m_className << "::EnablePlotting: Null pointer.\n";
     return;
   }
-
   m_viewer = view;
-  if (!m_storeDriftLines) {
-    std::cout << m_className << "::EnablePlotting:\n"
-              << "    Enabling storage of drift line.\n";
-    EnableDriftLines();
-  }
+  m_nCollPlot = std::max(nColl, 1ul);
 }
 
 void AvalancheMicroscopic::EnableElectronEnergyHistogramming(TH1* histo) {
@@ -411,44 +437,49 @@ void AvalancheMicroscopic::SetUserHandleIonisation(void (*f)(
 bool AvalancheMicroscopic::DriftElectron(
     const double x, const double y, const double z, const double t,
     const double e, const double dx, const double dy, const double dz) {
-  std::vector<Electron> stack;
-  AddToStack(x, y, z, t, e, dx, dy, dz, 0, false, stack);
-  return TransportElectrons(stack, false);
+  std::vector<std::pair<Point, bool> > particles;
+  Point p = MakePoint(x, y, z, t, e, dx, dy, dz, 0);
+  particles.emplace_back(std::make_pair(std::move(p), false));
+  return TransportElectrons(particles, false);
 }
 
 bool AvalancheMicroscopic::AvalancheElectron(
     const double x, const double y, const double z, const double t,
     const double e, const double dx, const double dy, const double dz) {
-  std::vector<Electron> stack;
-  AddToStack(x, y, z, t, e, dx, dy, dz, 0, false, stack);
-  return TransportElectrons(stack, true);
+
+  std::vector<std::pair<Point, bool> > particles;
+  Point p = MakePoint(x, y, z, t, e, dx, dy, dz, 0);
+  particles.emplace_back(std::make_pair(std::move(p), false));
+  return TransportElectrons(particles, true);
 }
 
 void AvalancheMicroscopic::AddElectron(
     const double x, const double y, const double z, const double t,
     const double e, const double dx, const double dy, const double dz) {
-  AddToStack(x, y, z, t, e, dx, dy, dz, 0, false, m_electrons);
+
+  Electron electron;
+  electron.status = StatusAlive;
+  electron.path.emplace_back(MakePoint(x, y, z, t, e, dx, dy, dz, 0));
+  m_electrons.push_back(std::move(electron));
 }
 
 bool AvalancheMicroscopic::ResumeAvalanche() {
-  std::vector<Electron> stack;
+  std::vector<std::pair<Point, bool> > particles;
   for (const auto& p : m_electrons) {
     if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) { 
-      AddToStack(p.path.back().x, p.path.back().y, p.path.back().z, p.path.back().t, p.path.back().energy, 
-                 p.kx, p.ky, p.kz, p.band, false, stack);
+      particles.emplace_back(std::make_pair(p.path.back(), false));
     }
   }
   for (const auto& p : m_holes) {
     if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) { 
-      AddToStack(p.path.back().x, p.path.back().y, p.path.back().z, p.path.back().t, p.path.back().energy, 
-                 p.kx, p.ky, p.kz, p.band, true, stack);
+      particles.emplace_back(std::make_pair(p.path.back(), true));
     }
   }
-  return TransportElectrons(stack, true);
+  return TransportElectrons(particles, true);
 }
 
-bool AvalancheMicroscopic::TransportElectrons(std::vector<Electron>& stack,
-                                              const bool aval) {
+bool AvalancheMicroscopic::TransportElectrons(
+    std::vector<std::pair<Point, bool> >& particles, const bool aval) {
 
   // Clear the list of electrons, holes and photons.
   m_electrons.clear();
@@ -458,10 +489,10 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Electron>& stack,
   // Reset the particle counters.
   m_nElectrons = m_nHoles = m_nIons = 0;
 
-  const std::string hdr = m_className + "::TransportElectrons: ";
   // Make sure that the sensor is defined.
   if (!m_sensor) {
-    std::cerr << hdr << "Sensor is not defined.\n";
+    std::cerr << m_className 
+              << "::TransportElectrons: Sensor is not defined.\n";
     return false;
   }
 
@@ -470,54 +501,125 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Electron>& stack,
                          m_useBfield;
 
   // Loop over the initial set of electrons/holes.
-  for (auto& p : stack) {
-    if (p.path.empty()) {
-      std::cerr << hdr << "Empty drift line.\n";
-      return false;
-    }
+  for (auto& p : particles) {
     // Make sure that the starting point is inside the active area.
-    const double x0 = p.path[0].x;
-    const double y0 = p.path[0].y;
-    const double z0 = p.path[0].z;
+    const double x0 = p.first.x;
+    const double y0 = p.first.y;
+    const double z0 = p.first.z;
     if (!m_sensor->IsInArea(x0, y0, z0)) {
-      std::cerr << hdr << "No valid field at initial position.\n";
+      std::cerr << m_className << "::TransportElectrons: "
+                << "Starting point is outside the active area.\n";
       return false;
     }
-    // Make sure that the starting point is inside a medium.
+    // Make sure that the starting point is inside a "driftable" 
+    // microscopic medium.
     Medium* medium = m_sensor->GetMedium(x0, y0, z0);
-    if (!medium) {
-      std::cerr << hdr << "No medium at initial position.\n";
+    if (!medium || !medium->IsDriftable() || !medium->IsMicroscopic()) {
+      std::cerr << m_className << "::TransportElectrons: "
+                << "Starting point is not in a valid medium.\n";
       return false;
     } 
-    // Make sure that the medium is "driftable" and microscopic.
-    if (!medium->IsDriftable() || !medium->IsMicroscopic()) {
-      std::cerr << hdr << "Medium does not have cross-section data.\n";
-      return false;
-    }
     // Make sure the initial energy is positive.
-    const double e0 = std::max(p.path[0].energy, Small);
+    const double e0 = std::max(p.first.energy, Small);
     if (medium->IsSemiconductor() && m_useBandStructure) {
-      if (p.band < 0) {
+      if (p.first.band < 0) {
         // Sample the initial momentum and band.
-        medium->GetElectronMomentum(e0, p.kx, p.ky, p.kz, p.band);
+        medium->GetElectronMomentum(e0, p.first.kx, p.first.ky, p.first.kz,
+                                    p.first.band);
       }
     } else {
-      p.band = 0;
-      const double kmag = Mag(p.kx, p.ky, p.kz);
+      p.first.band = 0;
+      const double kmag = Mag(p.first.kx, p.first.ky, p.first.kz);
       if (fabs(kmag) < Small) {
         // Direction has zero norm, draw a random direction.
-        RndmDirection(p.kx, p.ky, p.kz);
+        RndmDirection(p.first.kx, p.first.ky, p.first.kz);
       } else {
         // Normalise the direction to 1.
-        p.kx /= kmag;
-        p.ky /= kmag;
-        p.kz /= kmag;
+        const double scale = 1. / kmag;
+        p.first.kx *= scale;
+        p.first.ky *= scale;
+        p.first.kz *= scale;
       }
     }
-    if (p.hole) {
+    if (p.second) {
       ++m_nHoles;
     } else {
       ++m_nElectrons;
+    }
+  }
+
+  std::vector<std::pair<Point, bool> > newParticles;
+  if (aval) newParticles.reserve(1000);
+  while (!particles.empty()) {
+    newParticles.clear();
+    // Loop over the electrons/holes in the avalanche.
+    for (const auto& particle : particles) {
+      const bool isHole = particle.second;
+      if (aval && m_sizeCut > 0) {
+        const size_t nH = m_holes.size();
+        const size_t nE = m_electrons.size();
+        if (nH >= m_sizeCut && nE >= m_sizeCut) {
+          break;
+        } else if (isHole) {
+          if (nH >= m_sizeCut) continue;
+        } else {
+          if (nE >= m_sizeCut) continue; 
+        } 
+      }
+      std::vector<Point> path;
+      const int status = TransportElectron(particle.first, isHole, 
+                                           useBfield, aval, path,
+                                           newParticles);
+      if (isHole) {
+        Electron hole;
+        hole.status = status;
+        hole.path = std::move(path);
+        m_holes.push_back(std::move(hole));
+      } else {
+        Electron electron;
+        electron.status = status;
+        electron.path = std::move(path);
+        m_electrons.push_back(std::move(electron));
+      }
+    }
+    particles.swap(newParticles);
+  }
+
+  // Calculate the induced charge.
+  if (m_doInducedCharge) {
+    for (const auto& p : m_electrons) {
+      m_sensor->AddInducedCharge(-1, p.path[0].x, p.path[0].y, p.path[0].z, 
+                                 p.path.back().x, p.path.back().y, p.path.back().z);
+    }
+    for (const auto& p : m_holes) {
+      m_sensor->AddInducedCharge(+1, p.path[0].x, p.path[0].y, p.path[0].z, 
+                                 p.path.back().x, p.path.back().y, p.path.back().z);
+    }
+  }
+  return true;
+}
+
+int AvalancheMicroscopic::TransportElectron(const Point& p0,
+  const bool hole, const bool useBfield, const bool aval, 
+  std::vector<Point>& path, 
+  std::vector<std::pair<Point, bool> >& newParticles) {
+
+  double x = p0.x;
+  double y = p0.y;
+  double z = p0.z;
+  double t = p0.t;
+  double en = p0.energy;
+  int band = p0.band;
+  double kx = p0.kx;
+  double ky = p0.ky;
+  double kz = p0.kz;
+  path.push_back(p0);
+  size_t did = 0;
+  if (m_viewer) {
+    if (hole) {
+      m_viewer->NewDriftLine(Particle::Hole, 1, did, x, y, z); 
+    } else { 
+      m_viewer->NewDriftLine(Particle::Electron, 1, did, x, y, z);
     }
   }
 
@@ -525,735 +627,593 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Electron>& stack,
   const double c1 = SpeedOfLight * sqrt(2. / ElectronMass);
   const double c2 = 0.25 * c1 * c1;
 
-  std::vector<Electron> stackNew;
-  stackNew.reserve(1000);
-  std::vector<std::pair<double, double> > stackPhotons;
+  // Get the local electric field and medium.
+  double ex = 0., ey = 0., ez = 0.;
+  Medium* medium = nullptr;
+  int status = 0;
+  m_sensor->ElectricField(x, y, z, ex, ey, ez, medium, status);
+  // Sign change for electrons.
+  if (!hole) {
+    ex = -ex;
+    ey = -ey;
+    ez = -ez;
+  }
+  if (m_debug) {
+    std::cout << "    Drift line starts at (" 
+              << x << ", " << y << ", " << z << ").\n"
+              << "    Status: " << status << "\n";
+    if (medium) std::cout << "    Medium: " << medium->GetName() << "\n";
+  }
+
+  if (status != 0 || !medium || !medium->IsDriftable() || 
+      !medium->IsMicroscopic()) {
+    if (m_debug) std::cout << "    Not in a valid medium.\n";
+    return StatusLeftDriftMedium;
+  }
+  // Get the id number of the drift medium.
+  auto mid = medium->GetId();
+  bool sc = (medium->IsSemiconductor() && m_useBandStructure);
+  // Get the null-collision rate.
+  double fLim = medium->GetElectronNullCollisionRate(band);
+  if (fLim <= 0.) {
+    std::cerr << m_className 
+              << "::TransportElectron: Got null-collision rate <= 0.\n";
+    return StatusCalculationAbandoned;
+  }
+  double tLim = 1. / fLim;
+
+  // If switched on, get the local magnetic field.
+  double bx = 0., by = 0., bz = 0.;
+  // Cyclotron frequency.
+  double omega = 0.;
+  // Ratio of transverse electric field component and magnetic field.
+  double ezovb = 0.;
+  std::array<std::array<double, 3>, 3> rot;
+  if (useBfield) {
+    m_sensor->MagneticField(x, y, z, bx, by, bz, status);
+    const double scale = hole ? Tesla2Internal : -Tesla2Internal;
+    bx *= scale;
+    by *= scale;
+    bz *= scale;
+    const double bmag = Mag(bx, by, bz);
+    // Calculate the rotation matrix to a local coordinate system
+    // with B along x and E in the x-z plane.
+    RotationMatrix(bx, by, bz, bmag, ex, ey, ez, rot);
+    // Calculate the cyclotron frequency.
+    omega = OmegaCyclotronOverB * bmag;
+    // Calculate the electric field in the local frame.
+    ToLocal(rot, ex, ey, ez, ex, ey, ez);
+    ezovb = bmag > Small ? ez / bmag : 0.;
+  }
+
   std::vector<std::pair<Particle, double> > secondaries;
-
-  while (true) {
-    // Remove all inactive items from the stack.
-    stack.erase(std::remove_if(stack.begin(), stack.end(), IsInactive),
-                stack.end());
-    // Add the secondaries produced in the last iteration.
-    if (aval && m_sizeCut > 0) {
-      // If needed, reduce the number of electrons to add.
-      if (stack.size() > m_sizeCut) {
-        stackNew.clear();
-      } else if (stack.size() + stackNew.size() > m_sizeCut) {
-        stackNew.resize(m_sizeCut - stack.size());
-      }
+  // Keep track of the previous coordinates for distance histogramming.
+  double xLast = x;
+  double yLast = y;
+  double zLast = z;
+  // Trace the electron/hole.
+  size_t nColl = 0;
+  size_t nCollPlot = 0;
+  while (1) {
+    // Make sure the kinetic energy exceeds the transport cut.
+    if (en < m_deltaCut) {
+      if (m_debug) std::cout << "    Kinetic energy below transport cut.\n";
+      status = StatusBelowTransportCut;
+      break;
     }
-    stack.insert(stack.end(), std::make_move_iterator(stackNew.begin()),
-                 std::make_move_iterator(stackNew.end()));
-    stackNew.clear();
-    // If the list of electrons/holes is exhausted, we're done.
-    if (stack.empty()) break;
-    // Loop over all electrons/holes in the avalanche.
-    for (auto it = stack.begin(), end = stack.end(); it != end; ++it) {
-      // Get an electron/hole from the stack.
-      double x = (*it).path.back().x;
-      double y = (*it).path.back().y;
-      double z = (*it).path.back().z;
-      double t = (*it).path.back().t;
-      double en = (*it).path.back().energy;
-      int band = (*it).band;
-      double kx = (*it).kx;
-      double ky = (*it).ky;
-      double kz = (*it).kz;
-      bool hole = (*it).hole;
 
-      bool ok = true;
+    // Fill the energy distribution histogram.
+    if (hole) {
+      if (m_histHoleEnergy) m_histHoleEnergy->Fill(en);
+    } else {
+      if (m_histElectronEnergy) m_histElectronEnergy->Fill(en);
+    }
 
-      // Count number of collisions between updates.
-      unsigned int nCollTemp = 0;
+    // Make sure the particle is within the specified time window.
+    if (m_hasTimeWindow && (t < m_tMin || t > m_tMax)) {
+      if (m_debug) std::cout << "    Outside the time window.\n";
+      status = StatusOutsideTimeWindow;
+      break;
+    }
 
-      // Get the local electric field and medium.
-      double ex = 0., ey = 0., ez = 0.;
-      Medium* medium = nullptr;
-      int status = 0;
-      m_sensor->ElectricField(x, y, z, ex, ey, ez, medium, status);
-      // Sign change for electrons.
-      if (!hole) {
-        ex = -ex;
-        ey = -ey;
-        ez = -ez;
+    if (medium->GetId() != mid) {
+      // Medium has changed.
+      if (!medium->IsMicroscopic()) {
+        // Electron/hole has left the microscopic drift medium.
+        if (m_debug) std::cout << "    Not in a microscopic medium.\n";
+        status = StatusLeftDriftMedium;
+        break;
       }
-      if (m_debug) {
-        const std::string eh = hole ? "hole " : "electron ";
-        std::cout << hdr + "Drifting " + eh << it - stack.begin() << ".\n"
-                  << "    Field [V/cm] at (" << x << ", " << y << ", " << z
-                  << "): " << ex << ", " << ey << ", " << ez
-                  << "\n    Status: " << status << "\n";
-        if (medium) std::cout << "    Medium: " << medium->GetName() << "\n";
+      mid = medium->GetId();
+      sc = (medium->IsSemiconductor() && m_useBandStructure);
+      // Update the null-collision rate.
+      fLim = medium->GetElectronNullCollisionRate(band);
+      if (fLim <= 0.) {
+        std::cerr << m_className 
+                  << "::TransportElectron: Got null-collision rate <= 0.\n";
+        status = StatusCalculationAbandoned;
+        break;
       }
+      tLim = 1. / fLim;
+    }
 
-      if (status != 0 || !medium || !medium->IsDriftable() || 
-          !medium->IsMicroscopic()) {
-        // Electron is not inside a microscopic drift medium.
-        Update(it, x, y, z, t, en, kx, ky, kz, band);
-        (*it).status = StatusLeftDriftMedium;
-        AddToEndPoints(*it, hole);
-        if (m_debug) PrintStatus(hdr, "left the drift medium", x, y, z, hole);
+    double a1 = 0., a2 = 0.;
+    // Initial velocity.
+    double vx = 0., vy = 0., vz = 0.;
+    if (useBfield) {
+      // Calculate the velocity vector in the local frame.
+      const double vmag = c1 * sqrt(en);
+      ToLocal(rot, vmag * kx, vmag * ky, vmag * kz, vx, vy, vz);
+      a1 = vx * ex;
+      a2 = c2 * ex * ex;
+      if (omega > Small) {
+        vy -= ezovb;
+      } else {
+        a1 += vz * ez;
+        a2 += c2 * ez * ez;
+      }
+    } else if (sc) {
+      en = medium->GetElectronEnergy(kx, ky, kz, vx, vy, vz, band);
+    } else {
+      // No band structure, no magnetic field.
+      // Calculate the velocity vector.
+      const double vmag = c1 * sqrt(en);
+      vx = vmag * kx;
+      vy = vmag * ky;
+      vz = vmag * kz;
+      a1 = vx * ex + vy * ey + vz * ez;
+      a2 = c2 * (ex * ex + ey * ey + ez * ez);
+    }
+
+    if (m_userHandleStep) {
+      m_userHandleStep(x, y, z, t, en, kx, ky, kz, hole);
+    }
+
+    // Energy after the step.
+    double en1 = en;
+    // Determine the timestep.
+    double dt = 0.;
+    // Parameters for B-field stepping.
+    double cphi = 1., sphi = 0.;
+    double a3 = 0., a4 = 0.;
+    bool isNullCollision = true;
+    while (isNullCollision) {
+      // Sample the flight time.
+      const double r = RndmUniformPos();
+      dt += -log(r) * tLim;
+      // Calculate the energy after the proposed step.
+      if (useBfield) {
+        en1 = en + (a1 + a2 * dt) * dt;
+        if (omega > Small) {
+          cphi = cos(omega * dt);
+          sphi = sin(omega * dt);
+          a3 = sphi / omega;
+          a4 = (1. - cphi) / omega;
+          en1 += ez * (vz * a3 - vy * a4);
+        }
+      } else if (sc) {
+        const double cdt = dt * SpeedOfLight;
+        const double kx1 = kx + ex * cdt;
+        const double ky1 = ky + ey * cdt;
+        const double kz1 = kz + ez * cdt;
+        double vx1 = 0., vy1 = 0., vz1 = 0.;
+        en1 = medium->GetElectronEnergy(kx1, ky1, kz1, vx1, vy1, vz1, band);
+      } else {
+        en1 = en + (a1 + a2 * dt) * dt;
+      }
+      en1 = std::max(en1, Small);
+      // Get the real collision rate at the updated energy.
+      const double fReal = medium->GetElectronCollisionRate(en1, band);
+      if (fReal <= 0.) {
+        std::cerr << m_className << "::TransportElectron:\n"
+                  << "    Got collision rate <= 0 at " << en1
+                  << " eV (band " << band << ").\n";
+        path.emplace_back(MakePoint(x, y, z, t, en1, kx, ky, kz, band));
+        return StatusCalculationAbandoned;
+      }
+      if (fReal > fLim) {
+        // Real collision rate is higher than null-collision rate.
+        dt += log(r) * tLim;
+        // Increase the null collision rate and try again.
+        std::cerr << m_className << "::TransportElectron:"
+                  << "Increasing null-collision rate by 5%.\n";
+        if (sc) std::cerr << "    Band " << band << "\n";
+        fLim *= 1.05;
+        tLim = 1. / fLim;
         continue;
       }
-      // Get the id number of the drift medium.
-      auto id = medium->GetId();
-      bool sc = (medium->IsSemiconductor() && m_useBandStructure);
-      // Get the null-collision rate.
-      double fLim = medium->GetElectronNullCollisionRate(band);
-      if (fLim <= 0.) {
-        std::cerr << hdr << "Got null-collision rate <= 0.\n";
-        return false;
+      if (m_useNullCollisionSteps) break;
+      // Check for real or null collision.
+      if (RndmUniform() <= fReal * tLim) isNullCollision = false;
+    }
+
+    // Increase the collision counters.
+    ++nColl;
+    ++nCollPlot;
+
+    // Calculate the direction at the instant before the collision
+    // and the proposed new position.
+    double kx1 = 0., ky1 = 0., kz1 = 0.;
+    double dx = 0., dy = 0., dz = 0.;
+    if (useBfield) {
+      // Calculate the new velocity.
+      double vx1 = vx + 2. * c2 * ex * dt;
+      double vy1 = vy * cphi + vz * sphi + ezovb;
+      double vz1 = vz * cphi - vy * sphi;
+      if (omega < Small) vz1 += 2. * c2 * ez * dt;
+      // Rotate back to the global frame and normalise.
+      ToGlobal(rot, vx1, vy1, vz1, kx1, ky1, kz1);
+      Normalise(kx1, ky1, kz1);
+      // Calculate the step in coordinate space.
+      dx = vx * dt + c2 * ex * dt * dt;
+      if (omega > Small) {
+        dy = vy * a3 + vz * a4 + ezovb * dt;
+        dz = vz * a3 - vy * a4;
+      } else {
+        dy = vy * dt;
+        dz = vz * dt + c2 * ez * dt * dt;
       }
-      double fInv = 1. / fLim;
+      // Rotate back to the global frame.
+      ToGlobal(rot, dx, dy, dz, dx, dy, dz);
+    } else if (sc) {
+      // Update the wave-vector.
+      const double cdt = dt * SpeedOfLight;
+      kx1 = kx + ex * cdt;
+      ky1 = ky + ey * cdt;
+      kz1 = kz + ez * cdt;
+      double vx1 = 0., vy1 = 0, vz1 = 0.;
+      en1 = medium->GetElectronEnergy(kx1, ky1, kz1, vx1, vy1, vz1, band);
+      dx = 0.5 * (vx + vx1) * dt;
+      dy = 0.5 * (vy + vy1) * dt;
+      dz = 0.5 * (vz + vz1) * dt;
+    } else {
+      // Update the direction.
+      const double b1 = sqrt(en / en1);
+      const double b2 = 0.5 * c1 * dt / sqrt(en1);
+      kx1 = kx * b1 + ex * b2;
+      ky1 = ky * b1 + ey * b2;
+      kz1 = kz * b1 + ez * b2;
 
-      // If switched on, get the local magnetic field.
-      double bx = 0., by = 0., bz = 0.;
-      // Cyclotron frequency.
-      double omega = 0.;
-      // Ratio of transverse electric field component and magnetic field.
-      double ezovb = 0.;
-      std::array<std::array<double, 3>, 3> rot;
-      if (useBfield) {
-        m_sensor->MagneticField(x, y, z, bx, by, bz, status);
-        const double scale = hole ? Tesla2Internal : -Tesla2Internal;
-        bx *= scale;
-        by *= scale;
-        bz *= scale;
-        const double bmag = Mag(bx, by, bz);
-        // Calculate the rotation matrix to a local coordinate system
-        // with B along x and E in the x-z plane.
-        RotationMatrix(bx, by, bz, bmag, ex, ey, ez, rot);
-        // Calculate the cyclotron frequency.
-        omega = OmegaCyclotronOverB * bmag;
-        // Calculate the electric field in the local frame.
-        ToLocal(rot, ex, ey, ez, ex, ey, ez);
-        ezovb = bmag > Small ? ez / bmag : 0.;
+      // Calculate the step in coordinate space.
+      const double b3 = dt * dt * c2;
+      dx = vx * dt + ex * b3;
+      dy = vy * dt + ey * b3;
+      dz = vz * dt + ez * b3;
+    }
+    double x1 = x + dx;
+    double y1 = y + dy;
+    double z1 = z + dz;
+    double t1 = t + dt;
+    // Get the electric field and medium at the proposed new position.
+    m_sensor->ElectricField(x1, y1, z1, ex, ey, ez, medium, status);
+    if (!hole) {
+      ex = -ex;
+      ey = -ey;
+      ez = -ez;
+    }
+
+    double xc = x, yc = y, zc = z, rc = 0.;
+    // Is the particle still inside a drift medium/the drift area?
+    if (status != 0) {
+      // Try to terminate the drift line close to the boundary (endpoint
+      // outside the drift medium/drift area) using iterative bisection.
+      Terminate(x, y, z, t, x1, y1, z1, t1);
+      if (m_debug) std::cout << "    Left the drift medium.\n";
+      status = StatusLeftDriftMedium;
+    } else if (!m_sensor->IsInArea(x1, y1, z1)) {
+      Terminate(x, y, z, t, x1, y1, z1, t1);
+      if (m_debug) std::cout << "    Left the drift area.\n";
+      status = StatusLeftDriftArea;
+    } else if (m_sensor->CrossedWire(x, y, z, x1, y1, z1, 
+                                     xc, yc, zc, false, rc)) {
+      t1 = t + dt * Mag(xc - x, yc - y, zc - z) / Mag(dx, dy, dz);
+      x1 = xc;
+      y1 = yc;
+      z1 = zc;
+      if (m_debug) std::cout << "    Hit a wire.\n";
+      status = StatusLeftDriftMedium;
+    } else if (m_sensor->CrossedPlane(x, y, z, x1, y1, z1, xc, yc, zc)) {
+      t1 = t + dt * Mag(xc - x, yc - y, zc - z) / Mag(dx, dy, dz);
+      x1 = xc;
+      y1 = yc;
+      z1 = zc;
+      if (m_debug) std::cout << "    Hit a plane.\n";
+      status = StatusHitPlane;
+    }
+
+    // If switched on, calculate the induced signal.
+    if (m_doSignal) AddSignal(x, y, z, t, x1, y1, z1, t1, hole);
+
+    // Update the coordinates.
+    x = x1;
+    y = y1;
+    z = z1;
+    t = t1;
+
+    if (status != 0) {
+      en = en1;
+      kx = kx1;
+      ky = ky1;
+      kz = kz1;
+      break;
+    }
+
+    if (useBfield) {
+      // Get the magnetic field at the new location.
+      m_sensor->MagneticField(x, y, z, bx, by, bz, status);
+      const double scale = hole ? Tesla2Internal : -Tesla2Internal;
+      bx *= scale;
+      by *= scale;
+      bz *= scale;
+      const double bmag = Mag(bx, by, bz);
+      // Update the rotation matrix.
+      RotationMatrix(bx, by, bz, bmag, ex, ey, ez, rot);
+      omega = OmegaCyclotronOverB * bmag;
+      // Calculate the electric field in the local frame.
+      ToLocal(rot, ex, ey, ez, ex, ey, ez);
+      ezovb = bmag > Small ? ez / bmag : 0.;
+    }
+
+    if (isNullCollision) {
+      en = en1;
+      kx = kx1;
+      ky = ky1;
+      kz = kz1;
+      continue;
+    }
+
+    // Get the collision type and parameters.
+    int cstype = 0;
+    int level = 0;
+    int ndxc = 0;
+    medium->ElectronCollision(en1, cstype, level, en, kx1, ky1, kz1,
+                              secondaries, ndxc, band);
+
+    if (m_debug) std::cout << "    Collision type " << cstype << ".\n";
+    // If activated, histogram the distance with respect to the
+    // last collision.
+    if (m_histDistance && !m_distanceHistogramType.empty()) {
+      for (const auto& htype : m_distanceHistogramType) {
+        if (htype != cstype) continue;
+        if (m_debug) std::cout << "    Filling distance histogram.\n";
+        switch (m_distanceOption) {
+          case 'x':
+            m_histDistance->Fill(xLast - x);
+            break;
+          case 'y':
+            m_histDistance->Fill(yLast - y);
+            break;
+          case 'z':
+            m_histDistance->Fill(zLast - z);
+            break;
+          case 'r':
+            m_histDistance->Fill(Mag(xLast - x, yLast - y, zLast - z));
+            break;
+        }
+        xLast = x;
+        yLast = y;
+        zLast = z;
+        break;
       }
+    }
 
-      // Trace the electron/hole.
-      while (1) {
-        bool isNullCollision = false;
-
-        // Make sure the electron energy exceeds the transport cut.
-        if (en < m_deltaCut) {
-          Update(it, x, y, z, t, en, kx, ky, kz, band);
-          (*it).status = StatusBelowTransportCut;
-          AddToEndPoints(*it, hole);
-          if (m_debug) {
-            std::cout << hdr << "Kinetic energy (" << en
-                      << ") below transport cut.\n";
-          }
-          ok = false;
-          break;
+    if (m_userHandleCollision) {
+      m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx,
+                            ky, kz, kx1, ky1, kz1);
+    }
+    switch (cstype) {
+      // Elastic collision
+      case ElectronCollisionTypeElastic:
+        break;
+      // Ionising collision
+      case ElectronCollisionTypeIonisation:
+        if (m_viewer && m_plotIonisations) {
+          m_viewer->AddIonisation(x, y, z);
+          m_viewer->AddDriftLinePoint(did, x, y, z);
+          nCollPlot = 0;
         }
-
-        // Fill the energy distribution histogram.
-        if (hole && m_histHoleEnergy) {
-          m_histHoleEnergy->Fill(en);
-        } else if (!hole && m_histElectronEnergy) {
-          m_histElectronEnergy->Fill(en);
+        if (m_userHandleIonisation) {
+          m_userHandleIonisation(x, y, z, t, cstype, level, medium);
         }
-
-        // Check if the electron is within the specified time window.
-        if (m_hasTimeWindow && (t < m_tMin || t > m_tMax)) {
-          Update(it, x, y, z, t, en, kx, ky, kz, band);
-          (*it).status = StatusOutsideTimeWindow;
-          AddToEndPoints(*it, hole);
-          if (m_debug) PrintStatus(hdr, "left the time window", x, y, z, hole);
-          ok = false;
-          break;
-        }
-
-        if (medium->GetId() != id) {
-          // Medium has changed.
-          if (!medium->IsMicroscopic()) {
-            // Electron/hole has left the microscopic drift medium.
-            Update(it, x, y, z, t, en, kx, ky, kz, band);
-            (*it).status = StatusLeftDriftMedium;
-            AddToEndPoints(*it, hole);
-            ok = false;
-            if (m_debug) {
-              std::cout << hdr << "\n    Medium at " << x << ", " << y << ", "
-                        << z << " does not have cross-section data.\n";
-            }
-            break;
-          }
-          id = medium->GetId();
-          sc = (medium->IsSemiconductor() && m_useBandStructure);
-          // Update the null-collision rate.
-          fLim = medium->GetElectronNullCollisionRate(band);
-          if (fLim <= 0.) {
-            std::cerr << hdr << "Got null-collision rate <= 0.\n";
-            return false;
-          }
-          fInv = 1. / fLim;
-        }
-
-        double a1 = 0., a2 = 0.;
-        // Initial velocity.
-        double vx = 0., vy = 0., vz = 0.;
-        if (useBfield) {
-          // Calculate the velocity vector in the local frame.
-          const double vmag = c1 * sqrt(en);
-          ToLocal(rot, vmag * kx, vmag * ky, vmag * kz, vx, vy, vz);
-          a1 = vx * ex;
-          a2 = c2 * ex * ex;
-          if (omega > Small) {
-            vy -= ezovb;
-          } else {
-            a1 += vz * ez;
-            a2 += c2 * ez * ez;
-          }
-        } else if (sc) {
-          en = medium->GetElectronEnergy(kx, ky, kz, vx, vy, vz, band);
-        } else {
-          // No band structure, no magnetic field.
-          // Calculate the velocity vector.
-          const double vmag = c1 * sqrt(en);
-          vx = vmag * kx;
-          vy = vmag * ky;
-          vz = vmag * kz;
-          a1 = vx * ex + vy * ey + vz * ez;
-          a2 = c2 * (ex * ex + ey * ey + ez * ez);
-        }
-
-        if (m_userHandleStep) {
-          m_userHandleStep(x, y, z, t, en, kx, ky, kz, hole);
-        }
-
-        // Energy after the step.
-        double en1 = en;
-        // Determine the timestep.
-        double dt = 0.;
-        // Parameters for B-field stepping.
-        double cphi = 1., sphi = 0.;
-        double a3 = 0., a4 = 0.;
-        while (1) {
-          // Sample the flight time.
-          const double r = RndmUniformPos();
-          dt += -log(r) * fInv;
-          // Calculate the energy after the proposed step.
-          if (useBfield) {
-            en1 = en + (a1 + a2 * dt) * dt;
-            if (omega > Small) {
-              cphi = cos(omega * dt);
-              sphi = sin(omega * dt);
-              a3 = sphi / omega;
-              a4 = (1. - cphi) / omega;
-              en1 += ez * (vz * a3 - vy * a4);
-            }
-          } else if (sc) {
-            const double cdt = dt * SpeedOfLight;
-            const double kx1 = kx + ex * cdt;
-            const double ky1 = ky + ey * cdt;
-            const double kz1 = kz + ez * cdt;
-            double vx1 = 0., vy1 = 0., vz1 = 0.;
-            en1 = medium->GetElectronEnergy(kx1, ky1, kz1, vx1, vy1, vz1, band);
-          } else {
-            en1 = en + (a1 + a2 * dt) * dt;
-          }
-          en1 = std::max(en1, Small);
-          // Get the real collision rate at the updated energy.
-          double fReal = medium->GetElectronCollisionRate(en1, band);
-          if (fReal <= 0.) {
-            std::cerr << hdr << "Got collision rate <= 0 at " << en1
-                      << " eV (band " << band << ").\n";
-            return false;
-          }
-          if (fReal > fLim) {
-            // Real collision rate is higher than null-collision rate.
-            dt += log(r) * fInv;
-            // Increase the null collision rate and try again.
-            std::cerr << hdr << "Increasing null-collision rate by 5%.\n";
-            if (sc) std::cerr << "    Band " << band << "\n";
-            fLim *= 1.05;
-            fInv = 1. / fLim;
-            continue;
-          }
-          // Check for real or null collision.
-          if (RndmUniform() <= fReal * fInv) break;
-          if (m_useNullCollisionSteps) {
-            isNullCollision = true;
-            break;
-          }
-        }
-        if (!ok) break;
-
-        // Increase the collision counter.
-        ++nCollTemp;
-
-        // Calculate the direction at the instant before the collision
-        // and the proposed new position.
-        double kx1 = 0., ky1 = 0., kz1 = 0.;
-        double dx = 0., dy = 0., dz = 0.;
-        if (useBfield) {
-          // Calculate the new velocity.
-          double vx1 = vx + 2. * c2 * ex * dt;
-          double vy1 = vy * cphi + vz * sphi + ezovb;
-          double vz1 = vz * cphi - vy * sphi;
-          if (omega < Small) vz1 += 2. * c2 * ez * dt;
-          // Rotate back to the global frame and normalise.
-          ToGlobal(rot, vx1, vy1, vz1, kx1, ky1, kz1);
-          const double scale = 1. / Mag(kx1, ky1, kz1);
-          kx1 *= scale;
-          ky1 *= scale;
-          kz1 *= scale;
-          // Calculate the step in coordinate space.
-          dx = vx * dt + c2 * ex * dt * dt;
-          if (omega > Small) {
-            dy = vy * a3 + vz * a4 + ezovb * dt;
-            dz = vz * a3 - vy * a4;
-          } else {
-            dy = vy * dt;
-            dz = vz * dt + c2 * ez * dt * dt;
-          }
-          // Rotate back to the global frame.
-          ToGlobal(rot, dx, dy, dz, dx, dy, dz);
-        } else if (sc) {
-          // Update the wave-vector.
-          const double cdt = dt * SpeedOfLight;
-          kx1 = kx + ex * cdt;
-          ky1 = ky + ey * cdt;
-          kz1 = kz + ez * cdt;
-          double vx1 = 0., vy1 = 0, vz1 = 0.;
-          en1 = medium->GetElectronEnergy(kx1, ky1, kz1, vx1, vy1, vz1, band);
-          dx = 0.5 * (vx + vx1) * dt;
-          dy = 0.5 * (vy + vy1) * dt;
-          dz = 0.5 * (vz + vz1) * dt;
-        } else {
-          // Update the direction.
-          const double b1 = sqrt(en / en1);
-          const double b2 = 0.5 * c1 * dt / sqrt(en1);
-          kx1 = kx * b1 + ex * b2;
-          ky1 = ky * b1 + ey * b2;
-          kz1 = kz * b1 + ez * b2;
-
-          // Calculate the step in coordinate space.
-          const double b3 = dt * dt * c2;
-          dx = vx * dt + ex * b3;
-          dy = vy * dt + ey * b3;
-          dz = vz * dt + ez * b3;
-        }
-        double x1 = x + dx;
-        double y1 = y + dy;
-        double z1 = z + dz;
-        double t1 = t + dt;
-        // Get the electric field and medium at the proposed new position.
-        m_sensor->ElectricField(x1, y1, z1, ex, ey, ez, medium, status);
-        if (!hole) {
-          ex = -ex;
-          ey = -ey;
-          ez = -ez;
-        }
-        // Check if the electron is still inside a drift medium/the drift area.
-        if (status != 0 || !m_sensor->IsInArea(x1, y1, z1)) {
-          // Try to terminate the drift line close to the boundary (endpoint
-          // outside the drift medium/drift area) using iterative bisection.
-          Terminate(x, y, z, t, x1, y1, z1, t1);
-          if (m_doSignal) {
-            const int q = hole ? 1 : -1;
-            m_sensor->AddSignal(q, t, t1, x, y, z, x1, y1, z1,
-                                m_integrateWeightingField,
-                                m_useWeightingPotential);
-          }
-          Update(it, x1, y1, z1, t1, en, kx1, ky1, kz1, band);
-          if (status != 0) {
-            (*it).status = StatusLeftDriftMedium;
-            if (m_debug)
-              PrintStatus(hdr, "left the drift medium", x1, y1, z1, hole);
-          } else {
-            (*it).status = StatusLeftDriftArea;
-            if (m_debug)
-              PrintStatus(hdr, "left the drift area", x1, y1, z1, hole);
-          }
-          AddToEndPoints(*it, hole);
-          ok = false;
-          break;
-        }
-
-        // Check if the electron/hole has crossed a wire.
-        double xc = x, yc = y, zc = z;
-        double rc = 0.;
-        if (m_sensor->CrossedWire(x, y, z, x1, y1, z1, xc, yc, zc, false,
-                                  rc)) {
-          const double dc = Mag(xc - x, yc - y, zc - z);
-          const double tc = t + dt * dc / Mag(dx, dy, dz);
-          // If switched on, calculated the induced signal over this step.
-          if (m_doSignal) {
-            const int q = hole ? 1 : -1;
-            m_sensor->AddSignal(q, t, tc, x, y, z, xc, yc, zc,
-                                m_integrateWeightingField,
-                                m_useWeightingPotential);
-          }
-          Update(it, xc, yc, zc, tc, en, kx1, ky1, kz1, band);
-          (*it).status = StatusLeftDriftMedium;
-          AddToEndPoints(*it, hole);
-          ok = false;
-          if (m_debug) PrintStatus(hdr, "hit a wire", x, y, z, hole);
-          break;
-        }
-        // Check if the electron/hole has crossed a plane.
-        if (m_sensor->CrossedPlane(x, y, z, x1, y1, z1, xc, yc, zc)) {
-          const double dc = Mag(xc - x, yc - y, zc - z);
-          const double tc = t + dt * dc / Mag(dx, dy, dz);
-          // If switched on, calculated the induced signal over this step.
-          if (m_doSignal) {
-            const int q = hole ? 1 : -1;
-            m_sensor->AddSignal(q, t, tc, x, y, z, xc, yc, zc,
-                                m_integrateWeightingField,
-                                m_useWeightingPotential);
-          }
-          Update(it, xc, yc, zc, tc, en, kx1, ky1, kz1, band);
-          (*it).status = StatusHitPlane;
-          AddToEndPoints(*it, hole);
-          ok = false;
-          if (m_debug) PrintStatus(hdr, "hit a plane", x, y, z, hole);
-          break;
-        }
-
-        // If switched on, calculate the induced signal.
-        if (m_doSignal) {
-          const int q = hole ? 1 : -1;
-          m_sensor->AddSignal(q, t, t + dt, x, y, z, x1, y1, z1,
-                              m_integrateWeightingField,
-                              m_useWeightingPotential);
-        }
-
-        // Update the coordinates.
-        x = x1;
-        y = y1;
-        z = z1;
-        t = t1;
-
-        // If switched on, get the magnetic field at the new location.
-        if (useBfield) {
-          m_sensor->MagneticField(x, y, z, bx, by, bz, status);
-          const double scale = hole ? Tesla2Internal : -Tesla2Internal;
-          bx *= scale;
-          by *= scale;
-          bz *= scale;
-          const double bmag = Mag(bx, by, bz);
-          // Update the rotation matrix.
-          RotationMatrix(bx, by, bz, bmag, ex, ey, ez, rot);
-          omega = OmegaCyclotronOverB * bmag;
-          // Calculate the electric field in the local frame.
-          ToLocal(rot, ex, ey, ez, ex, ey, ez);
-          ezovb = bmag > Small ? ez / bmag : 0.;
-        }
-
-        if (isNullCollision) {
-          en = en1;
-          kx = kx1;
-          ky = ky1;
-          kz = kz1;
-          continue;
-        }
-
-        // Get the collision type and parameters.
-        int cstype = 0;
-        int level = 0;
-        int ndxc = 0;
-        medium->ElectronCollision(en1, cstype, level, en, kx1, ky1, kz1,
-                                  secondaries, ndxc, band);
-        // If activated, histogram the distance with respect to the
-        // last collision.
-        if (m_histDistance && !m_distanceHistogramType.empty()) {
-          for (const auto& htype : m_distanceHistogramType) {
-            if (htype != cstype) continue;
-            if (m_debug) {
-              std::cout << hdr << "Collision type "
-                        << cstype << ". Fill distance histogram.\n";
-              getchar();
-            }
-            switch (m_distanceOption) {
-              case 'x':
-                m_histDistance->Fill((*it).xLast - x);
-                break;
-              case 'y':
-                m_histDistance->Fill((*it).yLast - y);
-                break;
-              case 'z':
-                m_histDistance->Fill((*it).zLast - z);
-                break;
-              case 'r':
-                m_histDistance->Fill(
-                    Mag((*it).xLast - x, (*it).yLast - y, (*it).zLast - z));
-                break;
-            }
-            (*it).xLast = x;
-            (*it).yLast = y;
-            (*it).zLast = z;
-            break;
-          }
-        }
-
-        if (m_userHandleCollision) {
-          m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx,
-                                ky, kz, kx1, ky1, kz1);
-        }
-        switch (cstype) {
-          // Elastic collision
-          case ElectronCollisionTypeElastic:
-            break;
-          // Ionising collision
-          case ElectronCollisionTypeIonisation:
-            if (m_viewer && m_plotIonisations) {
-              m_viewer->AddIonisation(x, y, z);
-            }
-            if (m_userHandleIonisation) {
-              m_userHandleIonisation(x, y, z, t, cstype, level, medium);
-            }
-            for (const auto& secondary : secondaries) {
-              if (secondary.first == Particle::Electron) {
-                const double esec = std::max(secondary.second, Small);
-                if (m_histSecondary) m_histSecondary->Fill(esec);
-                // Increment the electron counter.
-                ++m_nElectrons;
-                if (!aval) continue;
-                // Add the secondary electron to the stack.
-                if (sc) {
-                  double kxs = 0., kys = 0., kzs = 0.;
-                  int bs = -1;
-                  medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
-                  AddToStack(x, y, z, t, esec, kxs, kys, kzs, bs, false,
-                             stackNew);
-                } else {
-                  AddToStack(x, y, z, t, esec, false, stackNew);
-                }
-              } else if (secondary.first == Particle::Hole) {
-                const double esec = std::max(secondary.second, Small);
-                // Increment the hole counter.
-                ++m_nHoles;
-                if (!aval) continue;
-                // Add the secondary hole to the stack.
-                if (sc) {
-                  double kxs = 0., kys = 0., kzs = 0.;
-                  int bs = -1;
-                  medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
-                  AddToStack(x, y, z, t, esec, kxs, kys, kzs, bs, true,
-                             stackNew);
-                } else {
-                  AddToStack(x, y, z, t, esec, true, stackNew);
-                }
-              } else if (secondary.first == Particle::Ion) {
-                ++m_nIons;
-              }
-            }
-            secondaries.clear();
-            if (m_debug) PrintStatus(hdr, "ionised", x, y, z, hole);
-            break;
-          // Attachment
-          case ElectronCollisionTypeAttachment:
-            if (m_viewer && m_plotAttachments) {
-              m_viewer->AddAttachment(x, y, z);
-            }
-            if (m_userHandleAttachment) {
-              m_userHandleAttachment(x, y, z, t, cstype, level, medium);
-            }
-            Update(it, x, y, z, t, en, kx1, ky1, kz1, band);
-            (*it).status = StatusAttached;
-            if (hole) {
-              m_holes.push_back(*it);
-              --m_nHoles;
+        for (const auto& secondary : secondaries) {
+          if (secondary.first == Particle::Electron) {
+            const double esec = std::max(secondary.second, Small);
+            if (m_histSecondary) m_histSecondary->Fill(esec);
+            // Increment the electron counter.
+            ++m_nElectrons;
+            if (!aval) continue;
+            // Add the secondary electron to the stack.
+            if (sc) {
+              double kxs = 0., kys = 0., kzs = 0.;
+              int bs = -1;
+              medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
+              newParticles.emplace_back(std::make_pair(
+                MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs), false));
             } else {
-              m_electrons.push_back(*it);
-              --m_nElectrons;
+              newParticles.emplace_back(std::make_pair(
+                MakePoint(x, y, z, t, esec), false));
             }
-            ok = false;
-            break;
-          // Inelastic collision
-          case ElectronCollisionTypeInelastic:
-            if (m_userHandleInelastic) {
-              m_userHandleInelastic(x, y, z, t, cstype, level, medium);
+          } else if (secondary.first == Particle::Hole) {
+            const double esec = std::max(secondary.second, Small);
+            // Increment the hole counter.
+            ++m_nHoles;
+            if (!aval) continue;
+            // Add the secondary hole to the stack.
+            if (sc) {
+              double kxs = 0., kys = 0., kzs = 0.;
+              int bs = -1;
+              medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
+              newParticles.emplace_back(std::make_pair(
+                MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs), true));
+            } else {
+              newParticles.emplace_back(std::make_pair(
+                MakePoint(x, y, z, t, esec), true));
             }
-            break;
-          // Excitation
-          case ElectronCollisionTypeExcitation:
-            if (m_viewer && m_plotExcitations) {
-              m_viewer->AddExcitation(x, y, z);
-            }
-            if (m_userHandleInelastic) {
-              m_userHandleInelastic(x, y, z, t, cstype, level, medium);
-            }
-            if (ndxc <= 0) break;
-            // Get the electrons/photons produced in the deexcitation cascade.
-            stackPhotons.clear();
-            for (int j = ndxc; j--;) {
-              double tdx = 0., sdx = 0., edx = 0.;
-              int typedx = 0;
-              if (!medium->GetDeexcitationProduct(j, tdx, sdx, typedx, edx)) {
-                std::cerr << hdr << "Cannot retrieve deexcitation product " << j
-                          << "/" << ndxc << ".\n";
-                break;
-              }
-
-              if (typedx == DxcProdTypeElectron) {
-                // Penning ionisation
-                double xp = x, yp = y, zp = z;
-                if (sdx > Small) {
-                  // Randomise the point of creation.
-                  double dxp = 0., dyp = 0., dzp = 0.;
-                  RndmDirection(dxp, dyp, dzp);
-                  xp += sdx * dxp;
-                  yp += sdx * dyp;
-                  zp += sdx * dzp;
-                }
-                // Get the electric field and medium at this location.
-                Medium* med = nullptr;
-                double fx = 0., fy = 0., fz = 0.;
-                m_sensor->ElectricField(xp, yp, zp, fx, fy, fz, med, status);
-                // Check if this location is inside a drift medium/area.
-                if (status != 0 || !m_sensor->IsInArea(xp, yp, zp)) continue;
-                // Make sure we haven't jumped across a wire.
-                if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc,
-                                          false, rc)) {
-                  continue;
-                }
-                // Increment the electron and ion counters.
-                ++m_nElectrons;
-                ++m_nIons;
-                if (m_userHandleIonisation) {
-                  m_userHandleIonisation(xp, yp, zp, t, cstype, level, medium);
-                }
-                if (!aval) continue;
-                // Add the Penning electron to the list.
-                AddToStack(xp, yp, zp, t + tdx, std::max(edx, Small), false,
-                           stackNew);
-              } else if (typedx == DxcProdTypePhoton && m_usePhotons &&
-                         edx > m_gammaCut) {
-                // Radiative de-excitation
-                stackPhotons.emplace_back(std::make_pair(t + tdx, edx));
-              }
-            }
-
-            // Transport the photons (if any)
-            if (aval) {
-              for (const auto& ph : stackPhotons) {
-                TransportPhoton(x, y, z, ph.first, ph.second, stackNew);
-              }
-            }
-            break;
-          // Super-elastic collision
-          case ElectronCollisionTypeSuperelastic:
-            break;
-          // Virtual/null collision
-          case ElectronCollisionTypeVirtual:
-            break;
-          // Acoustic phonon scattering (intravalley)
-          case ElectronCollisionTypeAcousticPhonon:
-            break;
-          // Optical phonon scattering (intravalley)
-          case ElectronCollisionTypeOpticalPhonon:
-            break;
-          // Intervalley scattering (phonon assisted)
-          case ElectronCollisionTypeIntervalleyG:
-          case ElectronCollisionTypeIntervalleyF:
-          case ElectronCollisionTypeInterbandXL:
-          case ElectronCollisionTypeInterbandXG:
-          case ElectronCollisionTypeInterbandLG:
-            break;
-          // Coulomb scattering
-          case ElectronCollisionTypeImpurity:
-            break;
-          default:
-            std::cerr << hdr << "Unknown collision type.\n";
-            ok = false;
-            break;
+          } else if (secondary.first == Particle::Ion) {
+            ++m_nIons;
+          }
         }
-
-        // Continue with the next electron/hole?
-        if (!ok || nCollTemp > m_nCollSkip ||
-            cstype == ElectronCollisionTypeIonisation ||
-            (m_plotExcitations && cstype == ElectronCollisionTypeExcitation) ||
-            (m_plotAttachments && cstype == ElectronCollisionTypeAttachment)) {
-          break;
+        secondaries.clear();
+        break;
+      // Attachment
+      case ElectronCollisionTypeAttachment:
+        if (m_viewer && m_plotAttachments) {
+          m_viewer->AddAttachment(x, y, z);
+          m_viewer->AddDriftLinePoint(did, x, y, z);
         }
-        kx = kx1;
-        ky = ky1;
-        kz = kz1;
-      }
+        if (m_userHandleAttachment) {
+          m_userHandleAttachment(x, y, z, t, cstype, level, medium);
+        }
+        if (hole) {
+          --m_nHoles;
+        } else {
+          --m_nElectrons;
+        }
+        path.emplace_back(MakePoint(x, y, z, t, en, kx1, ky1, kz1, band));
+        return StatusAttached;
+        break;
+      // Inelastic collision
+      case ElectronCollisionTypeInelastic:
+        if (m_userHandleInelastic) {
+          m_userHandleInelastic(x, y, z, t, cstype, level, medium);
+        }
+        break;
+      // Excitation
+      case ElectronCollisionTypeExcitation:
+        if (m_viewer && m_plotExcitations) {
+          m_viewer->AddExcitation(x, y, z);
+          m_viewer->AddDriftLinePoint(did, x, y, z);
+          nCollPlot = 0;
+        }
+        if (m_userHandleInelastic) {
+          m_userHandleInelastic(x, y, z, t, cstype, level, medium);
+        }
+        if (ndxc <= 0) break;
+        // Get the electrons/photons produced in the deexcitation cascade.
+        for (int j = ndxc; j--;) {
+          double tdx = 0., sdx = 0., edx = 0.;
+          int typedx = 0;
+          if (!medium->GetDeexcitationProduct(j, tdx, sdx, typedx, edx)) {
+            std::cerr << m_className << "::TransportElectron: "
+                      << "Cannot retrieve deexcitation product " << j
+                      << "/" << ndxc << ".\n";
+            break;
+          }
 
-      if (!ok) continue;
+          if (typedx == DxcProdTypeElectron) {
+            // Penning ionisation
+            double xp = x, yp = y, zp = z;
+            if (sdx > Small) {
+              // Randomise the point of creation.
+              double dxp = 0., dyp = 0., dzp = 0.;
+              RndmDirection(dxp, dyp, dzp);
+              xp += sdx * dxp;
+              yp += sdx * dyp;
+              zp += sdx * dzp;
+            }
+            // Get the electric field and medium at this location.
+            Medium* med = nullptr;
+            double fx = 0., fy = 0., fz = 0.;
+            m_sensor->ElectricField(xp, yp, zp, fx, fy, fz, med, status);
+            // Check if this location is inside a drift medium/area.
+            if (status != 0 || !m_sensor->IsInArea(xp, yp, zp)) continue;
+            // Make sure we haven't jumped across a wire.
+            if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc,
+                                      false, rc)) {
+              continue;
+            }
+            // Increment the electron and ion counters.
+            ++m_nElectrons;
+            ++m_nIons;
+            if (m_userHandleIonisation) {
+              m_userHandleIonisation(xp, yp, zp, t, cstype, level, medium);
+            }
+            if (!aval) continue;
+            // Add the Penning electron to the list.
+            newParticles.emplace_back(std::make_pair(
+              MakePoint(xp, yp, zp, t + tdx, std::max(edx, Small)), false));
+          } else if (typedx == DxcProdTypePhoton && m_usePhotons &&
+                     edx > m_gammaCut) {
+            // Radiative de-excitation
+            if (aval) TransportPhoton(x, y, z, t + tdx, edx, newParticles);
+          }
+        }
+        break;
+      // Super-elastic collision
+      case ElectronCollisionTypeSuperelastic:
+        break;
+      // Virtual/null collision
+      case ElectronCollisionTypeVirtual:
+        break;
+      // Acoustic phonon scattering (intravalley)
+      case ElectronCollisionTypeAcousticPhonon:
+        break;
+      // Optical phonon scattering (intravalley)
+      case ElectronCollisionTypeOpticalPhonon:
+        break;
+      // Intervalley scattering (phonon assisted)
+      case ElectronCollisionTypeIntervalleyG:
+      case ElectronCollisionTypeIntervalleyF:
+      case ElectronCollisionTypeInterbandXL:
+      case ElectronCollisionTypeInterbandXG:
+      case ElectronCollisionTypeInterbandLG:
+        break;
+      // Coulomb scattering
+      case ElectronCollisionTypeImpurity:
+        break;
+      default:
+        std::cerr << m_className 
+                  << "::TransportElectron: Unknown collision type.\n";
+        break;
+    }
+    // Update the direction vector.
+    kx = kx1;
+    ky = ky1;
+    kz = kz1;
 
-      if (!sc) {
-        // Normalise the direction vector.
-        const double scale = 1. / Mag(kx, ky, kz);
-        kx *= scale;
-        ky *= scale;
-        kz *= scale;
-      }
-      // Add a new point to the drift line (if enabled).
-      if (m_storeDriftLines) {
-        Point point;
-        point.x = x;
-        point.y = y;
-        point.z = z;
-        point.t = t;
-        point.energy = en;
-        (*it).path.push_back(std::move(point));
-      }
-      // Update the stack.
-      Update(it, x, y, z, t, en, kx, ky, kz, band);
+    if (!sc && nColl % 100 == 0) {
+      // Normalise the direction vector.
+      Normalise(kx, ky, kz);
+    }
+
+    // Add a new point to the drift line (if enabled).
+    if (m_storeDriftLines && nColl >= m_nCollSkip) {
+      path.emplace_back(MakePoint(x, y, z, t, en, kx, ky, kz, band));
+      nColl = 0;
+    }
+    if (m_viewer && nCollPlot >= m_nCollPlot) {
+      m_viewer->AddDriftLinePoint(did, x, y, z);
+      nCollPlot = 0;
     }
   }
 
-  // Calculate the induced charge.
-  if (m_doInducedCharge) {
-    for (const auto& ep : m_electrons) {
-      m_sensor->AddInducedCharge(-1, ep.path[0].x, ep.path[0].y, ep.path[0].z, 
-                                 ep.path.back().x, ep.path.back().y, ep.path.back().z);
-    }
-    for (const auto& ep : m_holes) {
-      m_sensor->AddInducedCharge(+1, ep.path[0].x, ep.path[0].y, ep.path[0].z, 
-                                 ep.path.back().x, ep.path.back().y, ep.path.back().z);
-    }
+  if (nColl > 0) {
+    path.emplace_back(MakePoint(x, y, z, t, en, kx, ky, kz, band));
   }
-
-  // Plot the drift paths and photon tracks.
-  if (m_viewer) {
-    // Electrons
-    const size_t nElectronEndpoints = m_electrons.size();
-    for (size_t i = 0; i < nElectronEndpoints; ++i) {
-      const size_t np = GetNumberOfElectronDriftLinePoints(i);
-      if (np <= 0) continue;
-      size_t k;
-      const Electron& p = m_electrons[i];
-      m_viewer->NewDriftLine(Particle::Electron, np, k, 
-                             p.path[0].x, p.path[0].y, p.path[0].z);
-      for (size_t j = 0; j < np; ++j) {
-        double x = 0., y = 0., z = 0., t = 0.;
-        GetElectronDriftLinePoint(x, y, z, t, j, i);
-        m_viewer->SetDriftLinePoint(k, j, x, y, z);
-      }
-    }
-    // Holes
-    const size_t nHoleEndpoints = m_holes.size();
-    for (size_t i = 0; i < nHoleEndpoints; ++i) {
-      const size_t np = GetNumberOfHoleDriftLinePoints(i);
-      if (np <= 0) continue;
-      size_t k;
-      const Electron& p = m_holes[i];
-      m_viewer->NewDriftLine(Particle::Hole, np, k, 
-                             p.path[0].x, p.path[0].y, p.path[0].z);
-      for (size_t j = 0; j < np; ++j) {
-        double x = 0., y = 0., z = 0., t = 0.;
-        GetHoleDriftLinePoint(x, y, z, t, j, i);
-        m_viewer->SetDriftLinePoint(k, j, x, y, z);
-      }
-    }
-    // Photons
-    for (const auto& ph : m_photons) {
-      m_viewer->AddPhoton(ph.x0, ph.y0, ph.z0, ph.x1, ph.y1, ph.z1);
-    }
+  if (m_viewer && nCollPlot > 0) {
+    m_viewer->AddDriftLinePoint(did, x, y, z);
   }
-  return true;
+  if (m_debug) {
+    std::cout << "    Drift line stops at (" 
+              << x << ", " << y << ", " << z << ").\n";
+  } 
+  return status;
 }
 
-void AvalancheMicroscopic::TransportPhoton(const double x0, const double y0,
-                                           const double z0, const double t0,
-                                           const double e0,
-                                           std::vector<Electron>& stack) {
+void AvalancheMicroscopic::AddSignal(
+  const double x0, const double y0, const double z0, const double t0,
+  const double x1, const double y1, const double z1, const double t1,
+  const bool hole) const {
+
+  const int q = hole ? 1 : -1;
+  m_sensor->AddSignal(q, t0, t1, x0, y0, z0, x1, y1, z1,
+                      m_integrateWeightingField,
+                      m_useWeightingPotential);
+}
+
+void AvalancheMicroscopic::TransportPhoton(
+    const double x0, const double y0, const double z0, const double t0,
+    const double e0, std::vector<std::pair<Point, bool> > & stack) {
   // Make sure that the sensor is defined.
   if (!m_sensor) {
     std::cerr << m_className << "::TransportPhoton: Sensor is not defined.\n";
@@ -1350,6 +1310,7 @@ void AvalancheMicroscopic::TransportPhoton(const double x0, const double y0,
     newPhoton.energy = e0;
     newPhoton.status = StatusLeftDriftMedium;
     m_photons.push_back(std::move(newPhoton));
+    if (m_viewer) m_viewer->AddPhoton(x0, y0, z0, x, y, z);
     return;
   }
 
@@ -1364,7 +1325,8 @@ void AvalancheMicroscopic::TransportPhoton(const double x0, const double y0,
   if (type == PhotonCollisionTypeIonisation) {
     // Add the secondary electron (random direction) to the stack.
     if (m_sizeCut == 0 || stack.size() < m_sizeCut) {
-      AddToStack(x, y, z, t, std::max(esec, Small), false, stack);
+      stack.emplace_back(std::make_pair(
+        MakePoint(x, y, z, t, std::max(esec, Small)), false));
     }
     // Increment the electron and ion counters.
     ++m_nElectrons;
@@ -1379,7 +1341,8 @@ void AvalancheMicroscopic::TransportPhoton(const double x0, const double y0,
       if (!medium->GetDeexcitationProduct(j, tdx, sdx, typedx, esec)) continue;
       if (typedx == DxcProdTypeElectron) {
         // Ionisation.
-        AddToStack(x, y, z, t + tdx, std::max(esec, Small), false, stack);
+        stack.emplace_back(std::make_pair(
+          MakePoint(x, y, z, t + tdx, std::max(esec, Small)), false));
         // Increment the electron and ion counters.
         ++m_nElectrons;
         ++m_nIons;
@@ -1406,69 +1369,8 @@ void AvalancheMicroscopic::TransportPhoton(const double x0, const double y0,
   newPhoton.z1 = z;
   newPhoton.energy = e0;
   newPhoton.status = -2;
+  if (m_viewer) m_viewer->AddPhoton(x0, y0, z0, x, y, z);
   m_photons.push_back(std::move(newPhoton));
-}
-
-void AvalancheMicroscopic::Update(std::vector<Electron>::iterator it,
-                                  const double x, const double y,
-                                  const double z, const double t,
-                                  const double energy, const double kx,
-                                  const double ky, const double kz,
-                                  const int band) {
-  (*it).path.back().x = x;
-  (*it).path.back().y = y;
-  (*it).path.back().z = z;
-  (*it).path.back().t = t;
-  (*it).path.back().energy = energy;
-  (*it).kx = kx;
-  (*it).ky = ky;
-  (*it).kz = kz;
-  (*it).band = band;
-}
-
-void AvalancheMicroscopic::AddToStack(const double x, const double y,
-                                      const double z, const double t,
-                                      const double energy, const bool hole,
-                                      std::vector<Electron>& container) const {
-  // Randomise the direction.
-  double dx = 0., dy = 0., dz = 1.;
-  RndmDirection(dx, dy, dz);
-  AddToStack(x, y, z, t, energy, dx, dy, dz, 0, hole, container);
-}
-
-void AvalancheMicroscopic::AddToStack(const double x, const double y,
-                                      const double z, const double t,
-                                      const double energy, const double dx,
-                                      const double dy, const double dz,
-                                      const int band, const bool hole,
-                                      std::vector<Electron>& container) const {
-  Electron electron;
-  electron.status = 0;
-  electron.hole = hole;
-  electron.kx = dx;
-  electron.ky = dy;
-  electron.kz = dz;
-  electron.band = band;
-  // Previous coordinates for distance histogramming.
-  electron.xLast = x;
-  electron.yLast = y;
-  electron.zLast = z;
-  electron.path.reserve(1000);
-  Point p0;
-  p0.x = x;
-  p0.y = y;
-  p0.z = z;
-  p0.t = t;
-  p0.energy = energy;
-  electron.path.push_back(std::move(p0));
-  Point p1;
-  p1.x = x;
-  p1.y = y;
-  p1.z = z;
-  p1.t = t;
-  p1.energy = energy;
-  electron.path.push_back(std::move(p1));
-  container.push_back(std::move(electron));
 }
 
 void AvalancheMicroscopic::Terminate(double x0, double y0, double z0, double t0,
@@ -1485,11 +1387,7 @@ void AvalancheMicroscopic::Terminate(double x0, double y0, double z0, double t0,
     const double zm = 0.5 * (z0 + z1);
     const double tm = 0.5 * (t0 + t1);
     // Check if the mid-point is inside the drift medium.
-    double ex = 0., ey = 0., ez = 0.;
-    Medium* medium = nullptr;
-    int status = 0;
-    m_sensor->ElectricField(xm, ym, zm, ex, ey, ez, medium, status);
-    if (status == 0 && m_sensor->IsInArea(xm, ym, zm)) {
+    if (m_sensor->IsInside(xm, ym, zm) && m_sensor->IsInArea(xm, ym, zm)) {
       x0 = xm;
       y0 = ym;
       z0 = zm;
@@ -1501,26 +1399,23 @@ void AvalancheMicroscopic::Terminate(double x0, double y0, double z0, double t0,
       t1 = tm;
     }
   }
-    bool outsideMedium = true;
-    while(outsideMedium){
-        d *= 0.5;
-        const double xm = 0.5 * (x0 + x1);
-        const double ym = 0.5 * (y0 + y1);
-        const double zm = 0.5 * (z0 + z1);
-        const double tm = 0.5 * (t0 + t1);
-        // Check if the mid-point is inside the drift medium.
-        double ex = 0., ey = 0., ez = 0.;
-        Medium* medium = nullptr;
-        int status = 0;
-        m_sensor->ElectricField(xm, ym, zm, ex, ey, ez, medium, status);
-        if (status == 0 && m_sensor->IsInArea(xm, ym, zm)) {
-            outsideMedium = false;
-        }
-        x1 = xm;
-        y1 = ym;
-        z1 = zm;
-        t1 = tm;
+  // TODO
+  bool outsideMedium = true;
+  while (outsideMedium) {
+    d *= 0.5;
+    const double xm = 0.5 * (x0 + x1);
+    const double ym = 0.5 * (y0 + y1);
+    const double zm = 0.5 * (z0 + z1);
+    const double tm = 0.5 * (t0 + t1);
+    // Check if the mid-point is inside the drift medium.
+    if (m_sensor->IsInside(xm, ym, zm) && m_sensor->IsInArea(xm, ym, zm)) {
+      outsideMedium = false;
     }
+    x1 = xm;
+    y1 = ym;
+    z1 = zm;
+    t1 = tm;
+  }
 }
 
 }  // namespace Garfield
