@@ -549,7 +549,7 @@ bool AvalancheMicroscopic::TransportElectrons(
   }
 
   std::vector<std::pair<Point, bool> > newParticles;
-  if (aval) newParticles.reserve(1000);
+  // if (aval) newParticles.reserve(1000);
   while (!particles.empty()) {
     newParticles.clear();
     // Loop over the electrons/holes in the avalanche.
@@ -662,15 +662,16 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
   }
   double tLim = 1. / fLim;
 
-  // If switched on, get the local magnetic field.
-  double bx = 0., by = 0., bz = 0.;
   // Cyclotron frequency.
   double omega = 0.;
   // Ratio of transverse electric field component and magnetic field.
   double ezovb = 0.;
   std::array<std::array<double, 3>, 3> rot;
+  // If switched on, get the local magnetic field.
   if (useBfield) {
-    m_sensor->MagneticField(x, y, z, bx, by, bz, status);
+    double bx = 0., by = 0., bz = 0.;
+    int st = 0;
+    m_sensor->MagneticField(x, y, z, bx, by, bz, st);
     const double scale = hole ? Tesla2Internal : -Tesla2Internal;
     bx *= scale;
     by *= scale;
@@ -940,7 +941,9 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
 
     if (useBfield) {
       // Get the magnetic field at the new location.
-      m_sensor->MagneticField(x, y, z, bx, by, bz, status);
+      double bx = 0., by = 0., bz = 0.;
+      int st = 0;
+      m_sensor->MagneticField(x, y, z, bx, by, bz, st);
       const double scale = hole ? Tesla2Internal : -Tesla2Internal;
       bx *= scale;
       by *= scale;
@@ -966,6 +969,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
     int cstype = 0;
     int level = 0;
     int ndxc = 0;
+    secondaries.clear();
     medium->ElectronCollision(en1, cstype, level, en, kx1, ky1, kz1,
                               secondaries, ndxc, band);
 
@@ -1053,7 +1057,6 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
             ++m_nIons;
           }
         }
-        secondaries.clear();
         break;
       // Attachment
       case ElectronCollisionTypeAttachment:

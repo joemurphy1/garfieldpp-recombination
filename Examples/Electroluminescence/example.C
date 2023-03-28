@@ -82,27 +82,16 @@ int main(int argc, char * argv[]) {
     // Get information about all the electrons produced in the avalanche.
     unsigned int nBottomPlane = 0;
     unsigned int nTopPlane = 0;
-    const int np = aval.GetNumberOfElectronEndpoints();
-    for (int ie = 0; ie < np; ie++) {
-      double x1, y1, z1, t1, e1;
-      double x2, y2, z2, t2, e2;
-      int status;
-      aval.GetElectronEndpoint(ie, x1, y1, z1, t1, e1, 
-                                   x2, y2, z2, t2, e2, status);
-      if (status == -5) {
+    for (const auto& electron : aval.GetElectrons()) {
+      if (electron.status == -5) {
         // The electron left the drift medium.
-        if (y2 < 0.0001) {
+        if (electron.path.back().y < 0.0001) {
           ++nBottomPlane;
-        } else if (y2 > yGap - 0.0001) {
+        } else if (electron.path.back().y > yGap - 0.0001) {
           ++nTopPlane;
         }
       } else {
-        std::cout << "\nElectron " << ie << " of avalanche " << i   
-                  << " ended with a strange status (" << status << "):\n"
-  	              << "(x1, y1, z1) = (" << x1 << ", " << y1 << ", " << z1 
-                  << "), t1 = " << t1 << ", e1 = " << e1 << "\n"
-                  << "(x2, y2, z2) = (" << x2 << ", " << y2 << ", " << z2 
-                  << "), t2 = " << t2 << ", e2 = " << e2 << "\n";
+        std::cout << "Unexpected status (" << electron.status << ").\n";
       }
     }
     unsigned int nEl = 0;
