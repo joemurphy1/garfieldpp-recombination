@@ -75,21 +75,9 @@ for i in range(nEvents):
   t0 = 0.
   e0 = 0.1
   aval.AvalancheElectron(x0, y0, z0, t0, e0, 0., 0., 0.)
-  np = aval.GetNumberOfElectronEndpoints()
-  xe1 = ctypes.c_double(0.)
-  ye1 = ctypes.c_double(0.)
-  ze1 = ctypes.c_double(0.)
-  te1 = ctypes.c_double(0.)
-  e1 = ctypes.c_double(0.)
-  xe2 = ctypes.c_double(0.)
-  ye2 = ctypes.c_double(0.)
-  ze2 = ctypes.c_double(0.)
-  te2 = ctypes.c_double(0.)
-  e2 = ctypes.c_double(0.)
-  status = ctypes.c_int(0)
-  for j in range(np):
-    aval.GetElectronEndpoint(j, xe1, ye1, ze1, te1, e1, xe2, ye2, ze2, te2, e2, status)
-    drift.DriftIon(xe1.value, ye1.value, ze1.value, te1.value)
+  for electron in aval.GetElectrons():
+    p0 = electron.path[0]
+    drift.DriftIon(p0.x, p0.y, p0.z, p0.t)
 
 cD = ROOT.TCanvas('cD', '', 600, 600)
 meshView = ROOT.Garfield.ViewFEMesh()

@@ -112,12 +112,11 @@ int main(int argc, char * argv[]) {
       aval.ResumeAvalanche();
       const unsigned int np = aval.GetNumberOfElectronEndpoints();
       std::vector<std::array<double, 5> > next;
-      for (unsigned int j = 0; j < np; ++j) {
-        double x1, y1, z1, t1, e1;
-        double x2, y2, z2, t2, e2;
-        int status;
-        aval.GetElectronEndpoint(j, x1, y1, z1, t1, e1, 
-                                    x2, y2, z2, t2, e2, status);
+      for (const auto& electron : aval.GetElectrons()) {
+        const double x1 = electron.path.front().x;
+        const double y1 = electron.path.front().y;
+        const double z1 = electron.path.front().z;
+        const double t1 = electron.path.front().t;
         bool existing = false;
         for (const auto& p : prev) {
           constexpr double tol = 1.e-5;
@@ -128,6 +127,11 @@ int main(int argc, char * argv[]) {
           }
         }
         if (!existing) drift.AddIon(x1, y1, z1, t1);
+        const double x2 = electron.path.back().x;
+        const double y2 = electron.path.back().y;
+        const double z2 = electron.path.back().z;
+        const double t2 = electron.path.back().t;
+        const double e2 = electron.path.back().energy;
         next.push_back({x2, y2, z2, t2, e2});
       }
       prev.swap(next);

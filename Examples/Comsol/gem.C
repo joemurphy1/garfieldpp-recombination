@@ -95,16 +95,12 @@ int main(int argc, char * argv[]) {
     aval.AvalancheElectron(x0, y0, z0, t0, e0, 0., 0., 0.);
     int ne = 0, ni = 0;
     aval.GetAvalancheSize(ne, ni);
-    const unsigned int np = aval.GetNumberOfElectronEndpoints();
-    double xe1, ye1, ze1, te1, e1;
-    double xe2, ye2, ze2, te2, e2;
-    double xi1, yi1, zi1, ti1;
-    double xi2, yi2, zi2, ti2;
-    int status;
-    for (unsigned int j = 0; j < np; ++j) {
-      aval.GetElectronEndpoint(j, xe1, ye1, ze1, te1, e1, 
-                                  xe2, ye2, ze2, te2, e2, status);
-      drift.DriftIon(xe1, ye1, ze1, te1);
+    for (const auto& electron : aval.GetElectrons()) {
+      drift.DriftIon(electron.path.front().x, electron.path.front().y,
+                     electron.path.front().z, electron.path.front().t);
+      double xi1, yi1, zi1, ti1;
+      double xi2, yi2, zi2, ti2;
+      int status = 0;
       drift.GetIonEndpoint(0, xi1, yi1, zi1, ti1, 
                               xi2, yi2, zi2, ti2, status);
     }

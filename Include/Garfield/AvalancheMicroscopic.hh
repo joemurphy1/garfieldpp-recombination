@@ -25,7 +25,7 @@ class AvalancheMicroscopic {
   void SetSensor(Sensor* sensor);
 
   /// Switch on drift line plotting.
-  void EnablePlotting(ViewDrift* view);
+  void EnablePlotting(ViewDrift* view, const size_t nColl = 100);
   /// Switch off drift line plotting.
   void DisablePlotting() { m_viewer = nullptr; }
   /// Draw a marker at every excitation or not.
@@ -120,7 +120,7 @@ class AvalancheMicroscopic {
     m_useBfield = on; 
   }
 
-  /// Set number of collisions to be skipped for plotting
+  /// Set number of collisions to be skipped for storing drift lines.
   void SetCollisionSteps(const unsigned int n) { m_nCollSkip = n; }
 
   /// Define a time interval (only carriers inside the interval are simulated).
@@ -139,10 +139,25 @@ class AvalancheMicroscopic {
     ni = m_nIons;
   }
 
+  struct Point {
+    double x, y, z;    ///< Coordinates.
+    double t;          ///< Time.
+    double energy;     ///< Kinetic energy.
+    double kx, ky, kz; ///< Direction/wave vector.
+    int band;          ///< Band.
+  };
+
+  struct Electron {
+    int status;                    ///< Status.
+    std::vector<Point> path;       ///< Drift line.
+  };
+
+  const std::vector<Electron>& GetElectrons() const { return m_electrons; }
+  const std::vector<Electron>& GetHoles() const { return m_holes; }
   /** Return the number of electron trajectories in the last
    * simulated avalanche (including captured electrons). */
   size_t GetNumberOfElectronEndpoints() const {
-    return m_endpointsElectrons.size();
+    return m_electrons.size();
   }
   /** Return the coordinates and time of start and end point of a given
    * electron drift line.
@@ -165,12 +180,11 @@ class AvalancheMicroscopic {
   size_t GetNumberOfElectronDriftLinePoints(const size_t i = 0) const;
   size_t GetNumberOfHoleDriftLinePoints(const size_t i = 0) const;
   void GetElectronDriftLinePoint(double& x, double& y, double& z, double& t,
-                                 const int ip,
-                                 const unsigned int iel = 0) const;
+                                 const size_t ip, const size_t ie = 0) const;
   void GetHoleDriftLinePoint(double& x, double& y, double& z, double& t,
-                             const int ip, const unsigned int iel = 0) const;
+                             const size_t ip, const size_t ih = 0) const;
 
-  size_t GetNumberOfHoleEndpoints() const { return m_endpointsHoles.size(); }
+  size_t GetNumberOfHoleEndpoints() const { return m_holes.size(); }
   void GetHoleEndpoint(const size_t i, double& x0, double& y0, double& z0,
                        double& t0, double& e0, double& x1, double& y1,
                        double& z1, double& t1, double& e1, int& status) const;
@@ -245,20 +259,8 @@ class AvalancheMicroscopic {
 
   Sensor* m_sensor = nullptr;
 
-  struct Electron {
-    int status;                    ///< Status.
-    bool hole;                     ///< Electron or hole.
-    double x0, y0, z0, t0;         ///< Starting point and time.
-    double e0;                     ///< Initial kinetic energy.
-    int band;                      ///< Band.
-    double x, y, z, t;             ///< Current position and time.
-    double kx, ky, kz;             ///< Current direction/wave vector.
-    double energy;                 ///< Current kinetic energy.
-    std::vector<std::array<double, 4 > > driftLine;  ///< Drift line.
-    double xLast, yLast, zLast;    ///< Previous position.
-  };
-  std::vector<Electron> m_endpointsElectrons;
-  std::vector<Electron> m_endpointsHoles;
+  std::vector<Electron> m_electrons;
+  std::vector<Electron> m_holes;
 
   struct photon {
     int status;             ///< Status
@@ -306,7 +308,8 @@ class AvalancheMicroscopic {
   // Max. avalanche size
   unsigned int m_sizeCut = 0;
 
-  unsigned int m_nCollSkip = 100;
+  size_t m_nCollSkip = 100;
+  size_t m_nCollPlot = 100;
 
   bool m_hasTimeWindow = false;
   double m_tMin = 0.;
@@ -330,40 +333,21 @@ class AvalancheMicroscopic {
   // Switch on/off debugging messages
   bool m_debug = false;
 
-  bool TransportElectrons(std::vector<Electron>& stack, const bool aval);
+  bool TransportElectrons(std::vector<std::pair<Point, bool> >& stack,
+                          const bool aval);
+  int TransportElectron(const Point& p0, const bool hole, 
+                        const bool useBfield, const bool aval, 
+                        std::vector<Point>& path,
+                        std::vector<std::pair<Point, bool> >& newParticles);
   void TransportPhoton(const double x, const double y, const double z,
                        const double t, const double e,
-                       std::vector<Electron>& stack);
+                       std::vector<std::pair<Point, bool> >& stack);
 
-  static bool IsInactive(const Electron& item) {
-    return item.status == StatusLeftDriftMedium ||
-           item.status == StatusBelowTransportCut ||
-           item.status == StatusOutsideTimeWindow ||
-           item.status == StatusLeftDriftArea || 
-           item.status == StatusAttached ||
-           item.status == StatusHitPlane;
-  }
-  void Update(std::vector<Electron>::iterator it, const double x,
-              const double y, const double z, const double t,
-              const double energy, const double kx, const double ky,
-              const double kz, const int band);
-  void AddToEndPoints(const Electron& item, const bool hole) {
-    if (hole) {
-      m_endpointsHoles.push_back(item);
-    } else {
-      m_endpointsElectrons.push_back(item);
-    }
-  }
+  void AddSignal(const double x0, const double y0, const double z0, 
+                 const double t0,
+                 const double x1, const double y1, const double z1, 
+                 const double t1, const bool hole) const;
 
-  /// Add a new electron/hole (with random direction) to a container.
-  void AddToStack(const double x, const double y, const double z,
-                  const double t, const double energy, const bool hole,
-                  std::vector<Electron>& container) const;
-  /// Add a new electron/hole to a container.
-  void AddToStack(const double x, const double y, const double z,
-                  const double t, const double energy, const double dx,
-                  const double dy, const double dz, const int band,
-                  const bool hole, std::vector<Electron>& container) const;
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
                  double& y1, double& z1, double& t1);
 };
