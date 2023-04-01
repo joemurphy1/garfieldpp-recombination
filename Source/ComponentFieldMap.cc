@@ -1057,7 +1057,7 @@ int ComponentFieldMap::FindElement13(
         const auto& node = m_nodes[element.emap[j]];
         nodes[j] = {node.x, node.y, node.z};
       }
-      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, nodes) != 0) {
+      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, nodes, m_w12[i]) != 0) {
         continue;
       }
       if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
@@ -1093,7 +1093,7 @@ int ComponentFieldMap::FindElement13(
         const auto& node = m_nodes[element.emap[j]];
         nodes[j] = {node.x, node.y, node.z};
       }
-      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, nodes) != 0) {
+      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, nodes, m_w12[i]) != 0) {
         continue;
       }
       if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
@@ -1869,60 +1869,75 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
   return ifail;
 }
 
+std::array<std::array<double, 3>, 4> ComponentFieldMap::Weights12(
+    const std::array<std::array<double, 3>, 10>& nodes) {
+
+  std::array<std::array<double, 3>, 4> w;
+  w[0][0] = (nodes[2][1] - nodes[1][1]) * (nodes[3][2] - nodes[1][2]) -
+            (nodes[3][1] - nodes[1][1]) * (nodes[2][2] - nodes[1][2]);
+  w[0][1] = (nodes[2][2] - nodes[1][2]) * (nodes[3][0] - nodes[1][0]) -
+            (nodes[3][2] - nodes[1][2]) * (nodes[2][0] - nodes[1][0]);
+  w[0][2] = (nodes[2][0] - nodes[1][0]) * (nodes[3][1] - nodes[1][1]) - 
+            (nodes[3][0] - nodes[1][0]) * (nodes[2][1] - nodes[1][1]);
+  const double s0 = 1. / ((nodes[0][0] - nodes[1][0]) * w[0][0] + 
+                          (nodes[0][1] - nodes[1][1]) * w[0][1] + 
+                          (nodes[0][2] - nodes[1][2]) * w[0][2]);
+  for (size_t i = 0; i < 3; ++i) w[0][i] *= s0;
+
+  w[1][0] = (nodes[0][1] - nodes[2][1]) * (nodes[3][2] - nodes[2][2]) -
+            (nodes[3][1] - nodes[2][1]) * (nodes[0][2] - nodes[2][2]);
+  w[1][1] = (nodes[0][2] - nodes[2][2]) * (nodes[3][0] - nodes[2][0]) -
+            (nodes[3][2] - nodes[2][2]) * (nodes[0][0] - nodes[2][0]);
+  w[1][2] = (nodes[0][0] - nodes[2][0]) * (nodes[3][1] - nodes[2][1]) - 
+            (nodes[3][0] - nodes[2][0]) * (nodes[0][1] - nodes[2][1]);
+  const double s1 = 1. / ((nodes[1][0] - nodes[2][0]) * w[1][0] + 
+                          (nodes[1][1] - nodes[2][1]) * w[1][1] + 
+                          (nodes[1][2] - nodes[2][2]) * w[1][2]);
+  for (size_t i = 0; i < 3; ++i) w[1][i] *= s1;
+
+  w[2][0] = (nodes[0][1] - nodes[3][1]) * (nodes[1][2] - nodes[3][2]) -
+            (nodes[1][1] - nodes[3][1]) * (nodes[0][2] - nodes[3][2]);
+  w[2][1] = (nodes[0][2] - nodes[3][2]) * (nodes[1][0] - nodes[3][0]) - 
+            (nodes[1][2] - nodes[3][2]) * (nodes[0][0] - nodes[3][0]);
+  w[2][2] = (nodes[0][0] - nodes[3][0]) * (nodes[1][1] - nodes[3][1]) - 
+            (nodes[1][0] - nodes[3][0]) * (nodes[0][1] - nodes[3][1]);
+  const double s2 = 1. / ((nodes[2][0] - nodes[3][0]) * w[2][0] + 
+                          (nodes[2][1] - nodes[3][1]) * w[2][1] + 
+                          (nodes[2][2] - nodes[3][2]) * w[2][2]);
+  for (size_t i = 0; i < 3; ++i) w[2][i] *= s2;
+
+  w[3][0] = (nodes[2][1] - nodes[0][1]) * (nodes[1][2] - nodes[0][2]) -
+            (nodes[1][1] - nodes[0][1]) * (nodes[2][2] - nodes[0][2]);
+  w[3][1] = (nodes[2][2] - nodes[0][2]) * (nodes[1][0] - nodes[0][0]) - 
+            (nodes[1][2] - nodes[0][2]) * (nodes[2][0] - nodes[0][0]);
+  w[3][2] = (nodes[2][0] - nodes[0][0]) * (nodes[1][1] - nodes[0][1]) - 
+            (nodes[1][0] - nodes[0][0]) * (nodes[2][1] - nodes[0][1]);
+  const double s3 = 1. / ((nodes[3][0] - nodes[0][0]) * w[3][0] + 
+                          (nodes[3][1] - nodes[0][1]) * w[3][1] + 
+                          (nodes[3][2] - nodes[0][2]) * w[3][2]);
+  for (size_t i = 0; i < 3; ++i) w[3][i] *= s3;
+  return w;
+}
+
 void ComponentFieldMap::Coordinates12(
     const double x, const double y, const double z, 
     double& t1, double& t2, double& t3, double& t4,
-    const std::array<std::array<double, 3>, 10>& nodes) const {
+    const std::array<std::array<double, 3>, 10>& nodes,
+    const std::array<std::array<double, 3>, 4>& w) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates12:\n"
               << "   Point (" << x << ", " << y << ", " << z << ").\n";
   }
 
   // Compute tetrahedral coordinates.
-  const double f1x = (nodes[2][1] - nodes[1][1]) * (nodes[3][2] - nodes[1][2]) -
-                     (nodes[3][1] - nodes[1][1]) * (nodes[2][2] - nodes[1][2]);
-  const double f1y = (nodes[2][2] - nodes[1][2]) * (nodes[3][0] - nodes[1][0]) -
-                     (nodes[3][2] - nodes[1][2]) * (nodes[2][0] - nodes[1][0]);
-  const double f1z = (nodes[2][0] - nodes[1][0]) * (nodes[3][1] - nodes[1][1]) - 
-                     (nodes[3][0] - nodes[1][0]) * (nodes[2][1] - nodes[1][1]);
-  t1 = ((x - nodes[1][0]) * f1x + (y - nodes[1][1]) * f1y + 
-        (z - nodes[1][2]) * f1z) /
-       ((nodes[0][0] - nodes[1][0]) * f1x + 
-        (nodes[0][1] - nodes[1][1]) * f1y + (nodes[0][2] - nodes[1][2]) * f1z);
-
-
-  const double f2x = (nodes[0][1] - nodes[2][1]) * (nodes[3][2] - nodes[2][2]) -
-                     (nodes[3][1] - nodes[2][1]) * (nodes[0][2] - nodes[2][2]);
-  const double f2y = (nodes[0][2] - nodes[2][2]) * (nodes[3][0] - nodes[2][0]) -
-                     (nodes[3][2] - nodes[2][2]) * (nodes[0][0] - nodes[2][0]);
-  const double f2z = (nodes[0][0] - nodes[2][0]) * (nodes[3][1] - nodes[2][1]) - 
-                     (nodes[3][0] - nodes[2][0]) * (nodes[0][1] - nodes[2][1]);
-  t2 = ((x - nodes[2][0]) * f2x + (y - nodes[2][1]) * f2y + 
-        (z - nodes[2][2]) * f2z) / 
-       ((nodes[1][0] - nodes[2][0]) * f2x + 
-        (nodes[1][1] - nodes[2][1]) * f2y + (nodes[1][2] - nodes[2][2]) * f2z);
-
-  const double f3x = (nodes[0][1] - nodes[3][1]) * (nodes[1][2] - nodes[3][2]) -
-                     (nodes[1][1] - nodes[3][1]) * (nodes[0][2] - nodes[3][2]);
-  const double f3y = (nodes[0][2] - nodes[3][2]) * (nodes[1][0] - nodes[3][0]) - 
-                     (nodes[1][2] - nodes[3][2]) * (nodes[0][0] - nodes[3][0]);
-  const double f3z = (nodes[0][0] - nodes[3][0]) * (nodes[1][1] - nodes[3][1]) - 
-                     (nodes[1][0] - nodes[3][0]) * (nodes[0][1] - nodes[3][1]);
-  t3 = ((x - nodes[3][0]) * f3x + (y - nodes[3][1]) * f3y + 
-        (z - nodes[3][2]) * f3z) /
-       ((nodes[2][0] - nodes[3][0]) * f3x + 
-        (nodes[2][1] - nodes[3][1]) * f3y + (nodes[2][2] - nodes[3][2]) * f3z);
-
-  const double f4x = (nodes[2][1] - nodes[0][1]) * (nodes[1][2] - nodes[0][2]) -
-                     (nodes[1][1] - nodes[0][1]) * (nodes[2][2] - nodes[0][2]);
-  const double f4y = (nodes[2][2] - nodes[0][2]) * (nodes[1][0] - nodes[0][0]) - 
-                     (nodes[1][2] - nodes[0][2]) * (nodes[2][0] - nodes[0][0]);
-  const double f4z = (nodes[2][0] - nodes[0][0]) * (nodes[1][1] - nodes[0][1]) - 
-                     (nodes[1][0] - nodes[0][0]) * (nodes[2][1] - nodes[0][1]);
-  t4 = ((x - nodes[0][0]) * f4x + (y - nodes[0][1]) * f4y + 
-        (z - nodes[0][2]) * f4z) / 
-       ((nodes[3][0] - nodes[0][0]) * f4x + 
-        (nodes[3][1] - nodes[0][1]) * f4y + (nodes[3][2] - nodes[0][2]) * f4z);
+  t1 = (x - nodes[1][0]) * w[0][0] + (y - nodes[1][1]) * w[0][1] + 
+       (z - nodes[1][2]) * w[0][2];
+  t2 = (x - nodes[2][0]) * w[1][0] + (y - nodes[2][1]) * w[1][1] + 
+       (z - nodes[2][2]) * w[1][2];
+  t3 = (x - nodes[3][0]) * w[2][0] + (y - nodes[3][1]) * w[2][1] + 
+       (z - nodes[3][2]) * w[2][2];
+  t4 = (x - nodes[0][0]) * w[3][0] + (y - nodes[0][1]) * w[3][1] + 
+       (z - nodes[0][2]) * w[3][2];
 
   // Result.
   if (m_debug) {
@@ -1949,7 +1964,8 @@ int ComponentFieldMap::Coordinates13(
     const double x, const double y, const double z, 
     double& t1, double& t2, double& t3, double& t4, 
     double jac[4][4], double& det,
-    const std::array<std::array<double, 3>, 10>& nodes) const {
+    const std::array<std::array<double, 3>, 10>& nodes,
+    const std::array<std::array<double, 3>, 4>& w) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates13:\n"
               << "    Point (" << x << ", " << y << ", " << z << ")\n";
@@ -1959,7 +1975,7 @@ int ComponentFieldMap::Coordinates13(
   t1 = t2 = t3 = t4 = 0.;
 
   // Make a first order approximation.
-  Coordinates12(x, y, z, t1, t2, t3, t4, nodes);
+  Coordinates12(x, y, z, t1, t2, t3, t4, nodes, w);
 
   if (t1 < -0.5 || t2 < -0.5 || t3 < -0.5 || t4 < -0.5 || 
       t1 > 1.5 || t2 > 1.5 || t3 > 1.5 || t4 > 1.5) {
@@ -2171,6 +2187,7 @@ void ComponentFieldMap::Reset() {
   m_ready = false;
 
   m_elements.clear();
+  m_w12.clear();
   m_nodes.clear();
   m_pot.clear();
   m_wpot.clear();
@@ -2197,6 +2214,17 @@ void ComponentFieldMap::Prepare() {
   if (InitializeTetrahedralTree()) {
     std::cout << "    Initialized tetrahedral tree.\n";
   }
+  // Precompute terms for interpolation in linear tetrahedra.
+  if (m_elementType == ElementType::CurvedTetrahedron) {
+    std::array<std::array<double, 3>, 10> nodes;
+    for (const auto& element : m_elements) {
+      for (size_t j = 0; j < 10; ++j) {
+        const auto& node = m_nodes[element.emap[j]];
+        nodes[j] = {node.x, node.y, node.z};
+      }
+      m_w12.emplace_back(Weights12(nodes));
+    }
+  } 
 }
 
 void ComponentFieldMap::UpdatePeriodicityCommon() {
