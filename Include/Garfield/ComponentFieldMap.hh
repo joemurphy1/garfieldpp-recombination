@@ -157,6 +157,8 @@ class ComponentFieldMap : public Component {
   };
   std::vector<Element> m_elements;
 
+  std::vector<std::array<std::array<double, 3>, 4> > m_w12;
+
   // Nodes
   struct Node {
     // Coordinates
@@ -346,13 +348,15 @@ class ComponentFieldMap : public Component {
   /// Calculate local coordinates in linear tetrahedra.
   void Coordinates12(const double x, const double y, const double z,
                      double& t1, double& t2, double& t3, double& t4,
-                     const std::array<std::array<double, 3>, 10>& nodes) const;
+                     const std::array<std::array<double, 3>, 10>& nodes,
+                     const std::array<std::array<double, 3>, 4>& w) const;
 
   /// Calculate local coordinates for curved quadratic tetrahedra.
   int Coordinates13(const double x, const double y, const double z, 
                     double& t1, double& t2, double& t3, double& t4, 
                     double jac[4][4], double& det, 
-                    const std::array<std::array<double, 3>, 10>& nodes) const;
+                    const std::array<std::array<double, 3>, 10>& nodes,
+                    const std::array<std::array<double, 3>, 4>& w) const;
   /// Calculate local coordinates for a cube.
   int CoordinatesCube(const double x, const double y, const double z,
                       double& t1, double& t2, double& t3, TMatrixD*& jac,
@@ -376,6 +380,9 @@ class ComponentFieldMap : public Component {
                     const double t3, TMatrixD*& jac,
                     std::vector<TMatrixD*>& dN) const;
 
+  static std::array<std::array<double, 3>, 4> Weights12(
+    const std::array<std::array<double, 3>, 10>& nodes);
+ 
   /// Calculate the bounding boxes of all elements after initialization.
   void CalculateElementBoundingBoxes();
 
