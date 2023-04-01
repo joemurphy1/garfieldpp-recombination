@@ -3,6 +3,8 @@
 
 namespace Garfield {
 
+std::vector<int> QuadTree::emptyBlock = {};
+
 QuadTree::QuadTree(const double x0, const double y0, 
                    const double hx, const double hy) 
     : m_x0(x0), m_y0(y0), m_hx(hx), m_hy(hy) {
@@ -12,11 +14,11 @@ QuadTree::QuadTree(const double x0, const double y0,
   m_ymax = y0 + hy;
 
   // Initially, there are no children.
-  for (int i = 0; i < 4; ++i) children[i] = nullptr;
+  for (size_t i = 0; i < 4; ++i) children[i] = nullptr;
 }
 
 QuadTree::~QuadTree() {
-  for (int i = 0; i < 4; ++i) delete children[i];
+  for (size_t i = 0; i < 4; ++i) delete children[i];
 }
 
 bool QuadTree::DoesBoxOverlap(const double bb[4]) const {
@@ -89,11 +91,10 @@ void QuadTree::InsertMeshElement(const double bb[4], const int index) {
   }
 }
 
-std::vector<int> QuadTree::GetElementsInBlock(const double x, 
-                                              const double y) const {
+const std::vector<int>& QuadTree::GetElementsInBlock(const double x, 
+                                                     const double y) const {
   const auto node = GetBlockFromPoint(x, y);
-  if (node) return node->elements;
-  return std::vector<int>();
+  return node ? node->elements : emptyBlock;
 }
 
 const QuadTree* QuadTree::GetBlockFromPoint(

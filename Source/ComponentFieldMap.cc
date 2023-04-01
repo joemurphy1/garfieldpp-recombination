@@ -874,11 +874,6 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
                                     double& t1, double& t2,
                                     double& t3, double& t4, double jac[4][4],
                                     double& det) const {
-  // Tetra list in the block that contains the input 3D point.
-  std::vector<int> tetList;
-  if (m_useTetrahedralTree && m_octree) {
-    tetList = m_octree->GetElementsInBlock(Vec3(x, y, 0.));
-  }
   // Backup
   double jacbak[4][4], detbak = 1.;
   double t1bak = 0., t2bak = 0., t3bak = 0., t4bak = 0.;
@@ -890,37 +885,48 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
   // Verify the count of volumes that contain the point.
   int nfound = 0;
   int imap = -1;
-
-  // Number of elements to scan.
-  // With tetra tree disabled, all elements are scanned.
-  const int numElemToSearch =
-      m_useTetrahedralTree ? tetList.size() : m_elements.size();
-
-  std::vector<std::array<double, 2> > nodes(8);
-  for (int i = 0; i < numElemToSearch; ++i) {
-    const int idxToElemList = m_useTetrahedralTree ? tetList[i] : i;
-    const Element& element = m_elements[idxToElemList];
-    if (x < element.bbMin[0] || x > element.bbMax[0] || 
-        y < element.bbMin[1] || y > element.bbMax[1])
-      continue;
-    if (element.degenerate) {
-      for (size_t j = 0; j < 6; ++j) {
-        const auto& node = m_nodes[element.emap[j]];
-        nodes[j] = {node.x, node.y};
-      }
-      // Degenerate element
-      if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, nodes) != 0) {
+  std::array<std::array<double, 2>, 8> nodes;
+  if (m_useTetrahedralTree && m_octree) {
+    auto tetList = m_octree->GetElementsInBlock(Vec3(x, y, 0.));
+    for (const auto i : tetList) {
+      const Element& element = m_elements[i];
+      if (x < element.bbMin[0] || x > element.bbMax[0] || 
+          y < element.bbMin[1] || y > element.bbMax[1])
         continue;
+      if (element.degenerate) {
+        // Degenerate element
+        for (size_t j = 0; j < 6; ++j) {
+          const auto& node = m_nodes[element.emap[j]];
+          nodes[j] = {node.x, node.y};
+        }
+        if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, nodes) != 0) {
+          continue;
+        }
+        if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1) continue;
+      } else {
+        // Non-degenerate element
+        for (size_t j = 0; j < 8; ++j) {
+          const auto& node = m_nodes[element.emap[j]];
+          nodes[j] = {node.x, node.y};
+        }
+        if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, nodes) != 0) {
+          continue;
+        }
+        if (t1 < -1 || t1 > 1 || t2 < -1 || t2 > 1) continue;
+
       }
-      if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1) continue;
       ++nfound;
-      imap = idxToElemList;
+      imap = i;
       if (m_debug) {
         std::cout << m_className << "::FindElement5:\n";
-        std::cout << "    Found matching degenerate element " << idxToElemList
-                  << ".\n";
+        if (element.degenerate) {
+          std::cout << "    Found matching degenerate element ";
+        } else {
+          std::cout << "    Found matching non-degenerate element ";
+        }
+        std::cout << i << ".\n";
       }
-      if (!m_checkMultipleElement) return idxToElemList;
+      if (!m_checkMultipleElement) return i;
       for (int j = 0; j < 4; ++j) {
         for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
       }
@@ -930,24 +936,49 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
       t3bak = t3;
       t4bak = t4;
       imapbak = imap;
-    } else {
-      // Non-degenerate element
-      for (size_t j = 0; j < 8; ++j) {
-        const auto& node = m_nodes[element.emap[j]];
-        nodes[j] = {node.x, node.y};
-      }
-      if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, nodes) != 0) {
+    }
+  } else {
+    // Scan all elements.
+    const size_t nElements = m_elements.size();
+    for (size_t i = 0; i < nElements; ++i) {
+      const Element& element = m_elements[i];
+      if (x < element.bbMin[0] || x > element.bbMax[0] || 
+          y < element.bbMin[1] || y > element.bbMax[1])
         continue;
+      if (element.degenerate) {
+        // Degenerate element
+        for (size_t j = 0; j < 6; ++j) {
+          const auto& node = m_nodes[element.emap[j]];
+          nodes[j] = {node.x, node.y};
+        }
+        if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, nodes) != 0) {
+          continue;
+        }
+        if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1) continue;
+      } else {
+        // Non-degenerate element
+        for (size_t j = 0; j < 8; ++j) {
+          const auto& node = m_nodes[element.emap[j]];
+          nodes[j] = {node.x, node.y};
+        }
+        if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, nodes) != 0) {
+          continue;
+        }
+        if (t1 < -1 || t1 > 1 || t2 < -1 || t2 > 1) continue;
+
       }
-      if (t1 < -1 || t1 > 1 || t2 < -1 || t2 > 1) continue;
       ++nfound;
-      imap = idxToElemList;
+      imap = i;
       if (m_debug) {
         std::cout << m_className << "::FindElement5:\n";
-        std::cout << "    Found matching non-degenerate element "
-                  << idxToElemList << ".\n";
+        if (element.degenerate) {
+          std::cout << "    Found matching degenerate element ";
+        } else {
+          std::cout << "    Found matching non-degenerate element ";
+        }
+        std::cout << i << ".\n";
       }
-      if (!m_checkMultipleElement) return idxToElemList;
+      if (!m_checkMultipleElement) return i;
       for (int j = 0; j < 4; ++j) {
         for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
       }
@@ -999,6 +1030,7 @@ int ComponentFieldMap::FindElement13(
     const double x, const double y, const double z, 
     double& t1, double& t2, double& t3, double& t4, 
     double jac[4][4], double& det) const {
+
   // Backup
   double jacbak[4][4];
   double detbak = 1.;
@@ -1008,56 +1040,84 @@ int ComponentFieldMap::FindElement13(
   // Initial values.
   t1 = t2 = t3 = t4 = 0.;
 
-  // Tetra list in the block that contains the input 3D point.
-  std::vector<int> tetList;
-  if (m_useTetrahedralTree && m_octree) {
-    tetList = m_octree->GetElementsInBlock(Vec3(x, y, z));
-  }
-  // Number of elements to scan.
-  // With tetra tree disabled, all elements are scanned.
-  const int numElemToSearch =
-      m_useTetrahedralTree ? tetList.size() : m_elements.size();
   // Verify the count of volumes that contain the point.
   int nfound = 0;
   int imap = -1;
-
-  std::vector<std::array<double, 3> > nodes(10);
-  // Scan all elements.
-  for (int i = 0; i < numElemToSearch; i++) {
-    const int idxToElemList = m_useTetrahedralTree ? tetList[i] : i;
-    const Element& element = m_elements[idxToElemList];
-    if (x < element.bbMin[0] || x > element.bbMax[0] || y < element.bbMin[1] ||
-        y > element.bbMax[1] || z < element.bbMin[2] || z > element.bbMax[2])
-      continue;
-    for (size_t j = 0; j < 10; ++j) {
-      const auto& node = m_nodes[element.emap[j]];
-      nodes[j] = {node.x, node.y, node.z};
+  std::array<std::array<double, 3>, 10> nodes;
+  if (m_useTetrahedralTree && m_octree) {
+    // Tetra list in the block that contains the input 3D point.
+    auto tetList = m_octree->GetElementsInBlock(Vec3(x, y, z));
+    for (const auto i : tetList) {
+      const Element& element = m_elements[i];
+      if (x < element.bbMin[0] || x > element.bbMax[0] || 
+          y < element.bbMin[1] || y > element.bbMax[1] || 
+          z < element.bbMin[2] || z > element.bbMax[2])
+        continue;
+      for (size_t j = 0; j < 10; ++j) {
+        const auto& node = m_nodes[element.emap[j]];
+        nodes[j] = {node.x, node.y, node.z};
+      }
+      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, nodes) != 0) {
+        continue;
+      }
+      if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
+          t4 > 1) {
+        continue;
+      }
+      ++nfound;
+      imap = i;
+      if (m_debug) {
+        std::cout << m_className << "::FindElement13:\n"
+                  << "    Found matching element " << i << ".\n";
+      }
+      if (!m_checkMultipleElement) return i;
+      for (int j = 0; j < 4; ++j) {
+        for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
+      }
+      detbak = det;
+      t1bak = t1;
+      t2bak = t2;
+      t3bak = t3;
+      t4bak = t4;
+      imapbak = imap;
     }
-    if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, nodes) != 0) {
-      continue;
+  } else {
+    const size_t nElements = m_elements.size();
+    for (size_t i = 0; i < nElements; ++i) {
+      const Element& element = m_elements[i];
+      if (x < element.bbMin[0] || x > element.bbMax[0] || 
+          y < element.bbMin[1] || y > element.bbMax[1] || 
+          z < element.bbMin[2] || z > element.bbMax[2])
+        continue;
+      for (size_t j = 0; j < 10; ++j) {
+        const auto& node = m_nodes[element.emap[j]];
+        nodes[j] = {node.x, node.y, node.z};
+      }
+      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, nodes) != 0) {
+        continue;
+      }
+      if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
+          t4 > 1) {
+        continue;
+      }
+      ++nfound;
+      imap = i;
+      if (m_debug) {
+        std::cout << m_className << "::FindElement13:\n";
+        std::cout << "    Found matching element " << i << ".\n";
+      }
+      if (!m_checkMultipleElement) return i;
+      for (int j = 0; j < 4; ++j) {
+        for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
+      }
+      detbak = det;
+      t1bak = t1;
+      t2bak = t2;
+      t3bak = t3;
+      t4bak = t4;
+      imapbak = imap;
     }
-    if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
-        t4 > 1) {
-      continue;
-    }
-    ++nfound;
-    imap = idxToElemList;
-    if (m_debug) {
-      std::cout << m_className << "::FindElement13:\n";
-      std::cout << "    Found matching element " << i << ".\n";
-    }
-    if (!m_checkMultipleElement) return idxToElemList;
-    for (int j = 0; j < 4; ++j) {
-      for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
-    }
-    detbak = det;
-    t1bak = t1;
-    t2bak = t2;
-    t3bak = t3;
-    t4bak = t4;
-    imapbak = imap;
   }
-
   // In checking mode, verify the tetrahedron/triangle count.
   if (m_checkMultipleElement) {
     if (nfound < 1) {
@@ -1144,7 +1204,7 @@ int ComponentFieldMap::FindElementCube(const double x, const double y,
 }
 
 void ComponentFieldMap::Jacobian3(
-    const std::vector<std::array<double, 2> >& nodes,
+    const std::array<std::array<double, 2>, 8>& nodes,
     const double u, const double v, const double w, 
     double& det, double jac[4][4]) {
   // Shorthands.
@@ -1174,7 +1234,7 @@ void ComponentFieldMap::Jacobian3(
 }
 
 void ComponentFieldMap::Jacobian5(
-    const std::vector<std::array<double, 2> >& nodes,
+    const std::array<std::array<double, 2>, 8>& nodes,
     const double u, const double v, double& det, double jac[4][4]) {
   // Jacobian terms
   jac[0][0] = 0.25 * (
@@ -1203,7 +1263,7 @@ void ComponentFieldMap::Jacobian5(
 }
 
 void ComponentFieldMap::Jacobian13(
-    const std::vector<std::array<double, 3> >& nodes,
+    const std::array<std::array<double, 3>, 10>& nodes,
     const double t, const double u, const double v, const double w, 
     double& det, double jac[4][4]) {
 
@@ -1365,7 +1425,7 @@ int ComponentFieldMap::Coordinates3(
     const double x, const double y,  
     double& t1, double& t2, double& t3, double& t4, 
     double jac[4][4], double& det,
-    const std::vector<std::array<double, 2> >& nodes) const {
+    const std::array<std::array<double, 2>, 8>& nodes) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates3:\n"
               << "   Point (" << x << ", " << y << ")\n";
@@ -1510,7 +1570,7 @@ int ComponentFieldMap::Coordinates3(
 int ComponentFieldMap::Coordinates4(
     const double x, const double y,
     double& t1, double& t2, double& t3, double& t4, double& det,
-    const std::vector<std::array<double, 2> >& nodes) const {
+    const std::array<std::array<double, 2>, 8>& nodes) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates4:\n"
               << "   Point (" << x << ", " << y << ")\n";
@@ -1661,7 +1721,7 @@ int ComponentFieldMap::Coordinates4(
 int ComponentFieldMap::Coordinates5(const double x, const double y,
     double& t1, double& t2, double& t3, double& t4, 
     double jac[4][4], double& det, 
-    const std::vector<std::array<double, 2> >& nodes) const {
+    const std::array<std::array<double, 2>, 8>& nodes) const {
   // Debugging
   if (m_debug) {
     std::cout << m_className << "::Coordinates5:\n"
@@ -1812,7 +1872,7 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
 void ComponentFieldMap::Coordinates12(
     const double x, const double y, const double z, 
     double& t1, double& t2, double& t3, double& t4,
-    const std::vector<std::array<double, 3> >& nodes) const {
+    const std::array<std::array<double, 3>, 10>& nodes) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates12:\n"
               << "   Point (" << x << ", " << y << ", " << z << ").\n";
@@ -1889,7 +1949,7 @@ int ComponentFieldMap::Coordinates13(
     const double x, const double y, const double z, 
     double& t1, double& t2, double& t3, double& t4, 
     double jac[4][4], double& det,
-    const std::vector<std::array<double, 3> >& nodes) const {
+    const std::array<std::array<double, 3>, 10>& nodes) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates13:\n"
               << "    Point (" << x << ", " << y << ", " << z << ")\n";
