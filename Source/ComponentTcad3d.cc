@@ -216,18 +216,17 @@ size_t ComponentTcad3d::FindElement(
     std::array<double, nMaxVertices>& w) const {
 
   w.fill(0.);
-
-  std::vector<int> elementsToSearch;
   if (m_tree) {
-    elementsToSearch = m_tree->GetElementsInBlock(Vec3(x, y, z));
+    auto elements = m_tree->GetElementsInBlock(Vec3(x, y, z));
+    for (const auto i : elements) {
+      if (InElement(x, y, z, m_elements[i], w)) return i;
+    }
+  } else {
+    const size_t nElements = m_elements.size();
+    for (size_t i = 0; i < nElements; ++i) {
+      if (InElement(x, y, z, m_elements[i], w)) return i;
+    }
   }
-  const size_t nElementsToSearch = m_tree ? elementsToSearch.size() : m_elements.size(); 
-  // Loop over the elements.
-  for (size_t i = 0; i < nElementsToSearch; ++i) {
-    const size_t idx = m_tree ? elementsToSearch[i] : i;
-    if (InElement(x, y, z, m_elements[idx], w)) return idx;
-  }
-
   if (m_debug) {
     std::cerr << m_className << "::FindElement:\n"
               << "    Point (" << x << ", " << y << ", " << z

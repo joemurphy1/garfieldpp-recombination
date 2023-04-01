@@ -332,42 +332,42 @@ class ComponentFieldMap : public Component {
   int Coordinates3(const double x, const double y,  
                    double& t1, double& t2, double& t3, double& t4, 
                    double jac[4][4], double& det,
-                   const std::vector<std::array<double, 2> >& nodes) const;
+                   const std::array<std::array<double, 2>, 8>& nodes) const;
   /// Calculate local coordinates for linear quadrilaterals.
   int Coordinates4(const double x, const double y,  
                    double& t1, double& t2, double& t3, double& t4, 
                    double& det,
-                   const std::vector<std::array<double, 2> >& nodes) const;
+                   const std::array<std::array<double, 2>, 8>& nodes) const;
   /// Calculate local coordinates for curved quadratic quadrilaterals.
   int Coordinates5(const double x, const double y,  
                    double& t1, double& t2, double& t3, double& t4, 
                    double jac[4][4], double& det, 
-                   const std::vector<std::array<double, 2> >& nodes) const;
+                   const std::array<std::array<double, 2>, 8>& nodes) const;
   /// Calculate local coordinates in linear tetrahedra.
   void Coordinates12(const double x, const double y, const double z,
                      double& t1, double& t2, double& t3, double& t4,
-                     const std::vector<std::array<double, 3> >& nodes) const;
+                     const std::array<std::array<double, 3>, 10>& nodes) const;
 
   /// Calculate local coordinates for curved quadratic tetrahedra.
   int Coordinates13(const double x, const double y, const double z, 
                     double& t1, double& t2, double& t3, double& t4, 
                     double jac[4][4], double& det, 
-                    const std::vector<std::array<double, 3> >& nodes) const;
+                    const std::array<std::array<double, 3>, 10>& nodes) const;
   /// Calculate local coordinates for a cube.
   int CoordinatesCube(const double x, const double y, const double z,
                       double& t1, double& t2, double& t3, TMatrixD*& jac,
                       std::vector<TMatrixD*>& dN, const Element& element) const;
 
   /// Calculate Jacobian for curved quadratic triangles.
-  static void Jacobian3(const std::vector<std::array<double, 2 > >& nodes, 
+  static void Jacobian3(const std::array<std::array<double, 2>, 8>& nodes, 
                         const double u, const double v, const double w,
                         double& det, double jac[4][4]);
   /// Calculate Jacobian for curved quadratic quadrilaterals.
-  static void Jacobian5(const std::vector<std::array<double, 2> >& nodes,
+  static void Jacobian5(const std::array<std::array<double, 2>, 8>& nodes,
                         const double u, const double v,
                         double& det, double jac[4][4]);
   /// Calculate Jacobian for curved quadratic tetrahedra.
-  static void Jacobian13(const std::vector<std::array<double, 3> >& nodes,
+  static void Jacobian13(const std::array<std::array<double, 3>, 10>& nodes,
                          const double t, const double u,
                          const double v, const double w, double& det,
                          double jac[4][4]);

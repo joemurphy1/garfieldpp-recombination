@@ -24,9 +24,11 @@ class QuadTree {
   void InsertMeshElement(const double bb[4], const int index);
 
   /// Get all elements linked to a block corresponding to the given point.
-  std::vector<int> GetElementsInBlock(const double x, const double y) const;
+  const std::vector<int>& GetElementsInBlock(const double x, const double y) const;
 
  private:
+  static std::vector<int> emptyBlock;
+
   // Centre of this tree node.
   double m_x0, m_y0;
   // Half-width in x and y of this tree node.

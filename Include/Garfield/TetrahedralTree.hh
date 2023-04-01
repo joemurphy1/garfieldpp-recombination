@@ -68,9 +68,11 @@ class TetrahedralTree {
   void InsertMeshElement(const double bb[6], const int index);
 
   /// Get all elements linked to a block corresponding to the given point.
-  std::vector<int> GetElementsInBlock(const Vec3& point) const;
+  const std::vector<int>& GetElementsInBlock(const Vec3& point) const;
 
  private:
+  static std::vector<int> emptyBlock;
+
   // Physical centre of this tree node.
   Vec3 m_origin;
   // Half the width/height/depth of this tree node. 

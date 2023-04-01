@@ -299,13 +299,16 @@ size_t ComponentTcad2d::FindElement(const double x, const double y,
     std::array<double, nMaxVertices>& w) const {
 
   w.fill(0.);
- 
-  std::vector<int> elementsToSearch;
-  if (m_tree) elementsToSearch = m_tree->GetElementsInBlock(x, y);
-  const size_t nElementsToSearch = m_tree ? elementsToSearch.size() : m_elements.size(); 
-  for (size_t i = 0; i < nElementsToSearch; ++i) {
-    const size_t idx = m_tree ? elementsToSearch[i] : i;
-    if (InElement(x, y, m_elements[idx], w)) return idx;
+  if (m_tree) {
+    const auto elements = m_tree->GetElementsInBlock(x, y);
+    for (const auto i : elements) { 
+      if (InElement(x, y, m_elements[i], w)) return i;
+    }
+  } else {
+    const size_t nElements = m_elements.size();
+    for (size_t i = 0; i < nElements; ++i) { 
+      if (InElement(x, y, m_elements[i], w)) return i;
+    }
   }
   // Point is outside the mesh.
   if (m_debug) {

@@ -3,6 +3,8 @@
 
 namespace Garfield {
 
+std::vector<int> TetrahedralTree::emptyBlock = {};
+
 /**
 TetrahedralTree.cc
 This class stores the mesh nodes and elements in an Octree data
@@ -105,14 +107,14 @@ void TetrahedralTree::InsertMeshElement(const double bb[6], const int index) {
 // It returns the list of tetrahedrons that intersects in a bounding box (Octree
 // block) that contains the
 // point passed as input.
-std::vector<int> TetrahedralTree::GetElementsInBlock(const Vec3& point) const {
+const std::vector<int>& TetrahedralTree::GetElementsInBlock(const Vec3& point) const {
   const TetrahedralTree* octreeNode = GetBlockFromPoint(point);
 
   if (octreeNode) {
     return octreeNode->elements;
   }
 
-  return std::vector<int>();
+  return emptyBlock;
 }
 
 // check if the point is inside the domain.
