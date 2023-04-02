@@ -249,12 +249,9 @@ bool ComponentElmer::Initialise(const std::string& header,
     }
     if (!ok) break;
     Element element;
-    element.degenerate = false;
-
     // Store the material reference.
     element.matmap = imat;
-
-    // Node references
+    // Store the node references.
     element.emap[0] = inode[0] - 1;
     element.emap[1] = inode[1] - 1;
     element.emap[2] = inode[2] - 1;
@@ -267,6 +264,7 @@ bool ComponentElmer::Initialise(const std::string& header,
     element.emap[9] = inode[9] - 1;
     m_elements.push_back(std::move(element));
   }
+  m_degenerate.assign(m_elements.size(), false);
 
   // Close the elements file.
   felems.close();

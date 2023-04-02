@@ -297,17 +297,16 @@ bool ComponentAnsys121::Initialise(const std::string& elist,
       continue;
     }
     // Store the element, degeneracy
+    bool degenerate = false;
     Element element;
     if (inode[2] == inode[3] && inode[3] == inode[6]) {
       ndegenerate++;
-      element.degenerate = true;
-    } else {
-      element.degenerate = false;
-    }
+      degenerate = true;
+    } 
     // Store the material reference
     element.matmap = imat - 1;
     // Node references
-    if (element.degenerate) {
+    if (degenerate) {
       element.emap[0] = inode[0] - 1;
       element.emap[1] = inode[1] - 1;
       element.emap[2] = inode[2] - 1;
@@ -320,6 +319,7 @@ bool ComponentAnsys121::Initialise(const std::string& elist,
       for (size_t k = 0; k < 8; ++k) element.emap[k] = inode[k] - 1;
     }
     m_elements.push_back(std::move(element));
+    m_degenerate.push_back(degenerate);
   }
   // Close the file
   felist.close();

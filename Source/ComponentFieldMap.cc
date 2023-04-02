@@ -108,7 +108,7 @@ int ComponentFieldMap::Field(const double xin, const double yin,
 
   const Element& element = m_elements[imap];
   if (m_elementType == ElementType::Serendipity) {
-    if (element.degenerate) {
+    if (m_degenerate[imap]) {
       std::array<double, 6> v;
       for (size_t i = 0; i < 6; ++i) v[i] = pot[element.emap[i]];
       Field3(v, {t1, t2, t3}, jac, det, fx, fy);
@@ -123,7 +123,7 @@ int ComponentFieldMap::Field(const double xin, const double yin,
     Field13(v, {t1, t2, t3, t4}, jac, det, fx, fy, fz);
   }
   if (m_debug) {
-    PrintElement("Field", x, y, z, t1, t2, t3, t4, element, pot);
+    PrintElement("Field", x, y, z, t1, t2, t3, t4, imap, pot);
   }
   // Transform field to global coordinates.
   UnmapFields(fx, fy, fz, x, y, z, xmirr, ymirr, zmirr, rcoordinate, rotation);
@@ -167,7 +167,7 @@ double ComponentFieldMap::Potential(const double xin, const double yin,
   double volt = 0.;
   const Element& element = m_elements[imap];
   if (m_elementType == ElementType::Serendipity) {
-    if (element.degenerate) {
+    if (m_degenerate[imap]) {
       std::array<double, 6> v;
       for (size_t i = 0; i < 6; ++i) v[i] = pot[element.emap[i]];
       volt = Potential3(v, {t1, t2, t3});
@@ -182,7 +182,7 @@ double ComponentFieldMap::Potential(const double xin, const double yin,
     volt = Potential13(v, {t1, t2, t3, t4});
   }
   if (m_debug) {
-    PrintElement("Potential", x, y, z, t1, t2, t3, t4, element, pot);
+    PrintElement("Potential", x, y, z, t1, t2, t3, t4, imap, pot);
   }
   return volt;
 }
@@ -296,7 +296,7 @@ double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,
   double dp1 = 0;
   const Element& element = m_elements[imap];
   if (m_elementType == ElementType::Serendipity) {
-    if (element.degenerate) {
+    if (m_degenerate[imap]) {
       std::array<double, 6> v0, v1;
       for (size_t i = 0; i < 6; ++i) {
         v0[i] = m_dwpot[label][element.emap[i]][i0];
@@ -377,7 +377,7 @@ Medium* ComponentFieldMap::GetMedium(const double xin, const double yin,
     return nullptr;
   }
   if (m_debug) {
-    PrintElement("GetMedium", x, y, z, t1, t2, t3, t4, element, m_pot);
+    PrintElement("GetMedium", x, y, z, t1, t2, t3, t4, imap, m_pot);
   }
 
   // Assign a medium.
@@ -457,7 +457,7 @@ bool ComponentFieldMap::Check() {
     double v = 0., dmin = 0., dmax = 0.;
     if (!GetElement(i, v, dmin, dmax)) return false;
     // Check for null-sizes.
-    if (dmin <= 0. && !m_elements[i].degenerate) {
+    if (dmin <= 0. && !m_degenerate[i]) {
       std::cerr << m_className << "::Check:\n"
                 << "    Found element with zero-length vertex separation.\n";
       return false;
@@ -729,7 +729,7 @@ bool ComponentFieldMap::GetElement(const size_t i, size_t& mat, bool& drift,
   mat = element.matmap;
   drift = m_materials[mat].driftmedium;
   size_t nNodes = 4;
-  if (m_elementType == ElementType::Serendipity && element.degenerate) {
+  if (m_elementType == ElementType::Serendipity && m_degenerate[i]) {
     nNodes = 3;
   }
   nodes.resize(nNodes);
@@ -890,11 +890,10 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
   if (m_useTetrahedralTree && m_octree) {
     const auto& tetList = m_octree->GetElementsInBlock(Vec3(x, y, 0.));
     for (const auto i : tetList) {
+      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] ||
+          x > m_bbMax[i][0] || y > m_bbMax[i][1]) continue;
       const Element& element = m_elements[i];
-      if (x < element.bbMin[0] || x > element.bbMax[0] || 
-          y < element.bbMin[1] || y > element.bbMax[1])
-        continue;
-      if (element.degenerate) {
+      if (m_degenerate[i]) {
         // Degenerate element
         for (size_t j = 0; j < 6; ++j) {
           const auto& node = m_nodes[element.emap[j]];
@@ -922,7 +921,7 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
       imap = i;
       if (m_debug) {
         std::cout << m_className << "::FindElement5:\n";
-        if (element.degenerate) {
+        if (m_degenerate[i]) {
           std::cout << "    Found matching degenerate element ";
         } else {
           std::cout << "    Found matching non-degenerate element ";
@@ -944,11 +943,10 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
     // Scan all elements.
     const size_t nElements = m_elements.size();
     for (size_t i = 0; i < nElements; ++i) {
+      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] ||
+          x > m_bbMax[i][0] || y > m_bbMax[i][1]) continue;
       const Element& element = m_elements[i];
-      if (x < element.bbMin[0] || x > element.bbMax[0] || 
-          y < element.bbMin[1] || y > element.bbMax[1])
-        continue;
-      if (element.degenerate) {
+      if (m_degenerate[i]) {
         // Degenerate element
         for (size_t j = 0; j < 6; ++j) {
           const auto& node = m_nodes[element.emap[j]];
@@ -976,7 +974,7 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
       imap = i;
       if (m_debug) {
         std::cout << m_className << "::FindElement5:\n";
-        if (element.degenerate) {
+        if (m_degenerate[i]) {
           std::cout << "    Found matching degenerate element ";
         } else {
           std::cout << "    Found matching non-degenerate element ";
@@ -1055,16 +1053,15 @@ int ComponentFieldMap::FindElement13(
     // Tetra list in the block that contains the input 3D point.
     const auto& tetList = m_octree->GetElementsInBlock(Vec3(x, y, z));
     for (const auto i : tetList) {
-      const Element& element = m_elements[i];
-      if (x < element.bbMin[0] || x > element.bbMax[0] || 
-          y < element.bbMin[1] || y > element.bbMax[1] || 
-          z < element.bbMin[2] || z > element.bbMax[2])
+      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] || z < m_bbMin[i][2] ||
+          x > m_bbMax[i][0] || y > m_bbMax[i][1] || z > m_bbMax[i][2]) {
         continue;
+      }
+      const Element& element = m_elements[i];
       for (size_t j = 0; j < 10; ++j) {
-        const auto& node = m_nodes[element.emap[j]];
-        xn[j] = node.x;
-        yn[j] = node.y;
-        zn[j] = node.z;
+        xn[j] = m_nodes[element.emap[j]].x;
+        yn[j] = m_nodes[element.emap[j]].y;
+        zn[j] = m_nodes[element.emap[j]].z;
       }
       if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn, m_w12[i]) != 0) {
         continue;
@@ -1093,16 +1090,15 @@ int ComponentFieldMap::FindElement13(
   } else {
     const size_t nElements = m_elements.size();
     for (size_t i = 0; i < nElements; ++i) {
-      const Element& element = m_elements[i];
-      if (x < element.bbMin[0] || x > element.bbMax[0] || 
-          y < element.bbMin[1] || y > element.bbMax[1] || 
-          z < element.bbMin[2] || z > element.bbMax[2])
+      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] || z < m_bbMin[i][2] ||
+          x > m_bbMax[i][0] || y > m_bbMax[i][1] || z > m_bbMax[i][2]) {
         continue;
+      }
+      const Element& element = m_elements[i];
       for (size_t j = 0; j < 10; ++j) {
-        const auto& node = m_nodes[element.emap[j]];
-        xn[j] = node.x;
-        yn[j] = node.y;
-        zn[j] = node.z;
+        xn[j] = m_nodes[element.emap[j]].x;
+        yn[j] = m_nodes[element.emap[j]].y;
+        zn[j] = m_nodes[element.emap[j]].z;
       }
       if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn, m_w12[i]) != 0) {
         continue;
@@ -1310,19 +1306,18 @@ void ComponentFieldMap::Jacobian13(
   jac[3][0] = -uv * tz - tu * vz + tv * uz;
 
   jac[0][1] = -(uy - wy) * vz + (uy - vy) * wz + (vy - wy) * uz;
-  jac[0][2] =  (ux - wx) * vz - (ux - vx) * wz - (vx - wx) * uz;
-  jac[0][3] = -(ux - wx) * vy + (ux - vx) * wy + (vx - wx) * uy;
-
   jac[1][1] = -(vy - wy) * tz + (ty - wy) * vz - (ty - vy) * wz;
-  jac[1][2] =  (vx - wx) * tz - (tx - wx) * vz + (tx - vx) * wz;
-  jac[1][3] = -(vx - wx) * ty + (tx - wx) * vy - (tx - vx) * wy;
-
   jac[2][1] =  (uy - wy) * tz + (ty - uy) * wz - (ty - wy) * uz;
-  jac[2][2] = -(ux - wx) * tz - (tx - ux) * wz + (tx - wx) * uz;
-  jac[2][3] =  (ux - wx) * ty + (tx - ux) * wy - (tx - wx) * uy;
-
   jac[3][1] = -(uy - vy) * tz - (ty - uy) * vz + (ty - vy) * uz;
+
+  jac[0][2] =  (ux - wx) * vz - (ux - vx) * wz - (vx - wx) * uz;
+  jac[1][2] =  (vx - wx) * tz - (tx - wx) * vz + (tx - vx) * wz;
+  jac[2][2] = -(ux - wx) * tz - (tx - ux) * wz + (tx - wx) * uz;
   jac[3][2] =  (ux - vx) * tz + (tx - ux) * vz - (tx - vx) * uz;
+
+  jac[0][3] = -(ux - wx) * vy + (ux - vx) * wy + (vx - wx) * uy;
+  jac[1][3] = -(vx - wx) * ty + (tx - wx) * vy - (tx - vx) * wy;
+  jac[2][3] =  (ux - wx) * ty + (tx - ux) * wy - (tx - wx) * uy;
   jac[3][3] = -(ux - vx) * ty - (tx - ux) * vy + (tx - vx) * uy;
 
   det = jac[0][3] * tz + jac[1][3] * uz + jac[2][3] * vz + jac[3][3] * wz;
@@ -1732,7 +1727,6 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
   // Make a first order approximation.
   if (Coordinates4(x, y, t1, t2, t3, t4, det, xn, yn) > 0) {
     if (m_debug) {
-      std::cout << m_className << "::Coordinates5:\n";
       std::cout << "    Failure to obtain linear estimate of isoparametric "
                    "coordinates\n.";
     }
@@ -1742,7 +1736,6 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
   // Check whether the point is far outside.
   if (t1 < -1.5 || t1 > 1.5 || t2 < -1.5 || t2 > 1.5) {
     if (m_debug) {
-      std::cout << m_className << "::Coordinates5:\n";
       std::cout << "    Point far outside, (t1,t2) = (" << t1 << ", " << t2
                 << ").\n";
     }
@@ -1755,7 +1748,6 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
   std::array<double, 8> f;
   for (int iter = 0; iter < 10; iter++) {
     if (m_debug) {
-      std::cout << m_className << "::Coordinates5:\n";
       std::cout << "    Iteration " << iter << ":     (t1, t2) = (" << td1
                 << ", " << td2 << ").\n";
     }
@@ -1788,7 +1780,6 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
     }
     // Debugging
     if (m_debug) {
-      std::cout << m_className << "::Coordinates5:\n";
       std::cout << "    Difference vector: (x, y)   = (" << diff[0] << ", "
                 << diff[1] << ").\n";
       std::cout << "    Correction vector: (t1, t2) = (" << corr[0] << ", "
@@ -1800,25 +1791,17 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
     // Check for convergence.
     constexpr double tol = 1.e-5;
     if (fabs(corr[0]) < tol && fabs(corr[1]) < tol) {
-      if (m_debug) {
-        std::cout << m_className << "::Coordinates5: Convergence reached.\n";
-      }
+      if (m_debug) std::cout << "    Convergence reached.\n";
       converged = true;
       break;
     }
   }
   // No convergence reached.
   if (!converged) {
-    double xmin = xn[0];
-    double xmax = xmin;
-    double ymin = yn[0];
-    double ymax = ymin;
-    for (size_t i = 0; i < 8; ++i) {
-      xmin = std::min(xmin, xn[i]);
-      xmax = std::max(xmax, xn[i]);
-      ymin = std::min(ymin, yn[i]);
-      ymax = std::max(ymax, yn[i]);
-    }
+    double xmin = *std::min_element(xn.begin(), xn.end());
+    double xmax = *std::max_element(xn.begin(), xn.end());
+    double ymin = *std::min_element(yn.begin(), yn.end());
+    double ymax = *std::max_element(yn.begin(), yn.end());
     if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
       if (m_printConvergenceWarnings) {
         std::cout << m_className << "::Coordinates5:\n"
@@ -1837,22 +1820,22 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
   t3 = 0;
   t4 = 0;
   if (m_debug) {
-    std::cout << m_className << "::Coordinates5:\n";
     std::cout << "    Convergence reached at (t1, t2) = (" << t1 << ", " << t2
               << ").\n";
     // For debugging purposes, show position.
-    const double r0 = (-(1 - td1) * (1 - td2) * (1 + td1 + td2)) * 0.25;
-    const double r1 = (-(1 + td1) * (1 - td2) * (1 - td1 + td2)) * 0.25;
-    const double r2 = (-(1 + td1) * (1 + td2) * (1 - td1 - td2)) * 0.25;
-    const double r3 = (-(1 - td1) * (1 + td2) * (1 + td1 - td2)) * 0.25;
-    const double r4 = (1 - td1) * (1 + td1) * (1 - td2) * 0.5;
-    const double r5 = (1 + td1) * (1 + td2) * (1 - td2) * 0.5;
-    const double r6 = (1 - td1) * (1 + td1) * (1 + td2) * 0.5;
-    const double r7 = (1 - td1) * (1 + td2) * (1 - td2) * 0.5;
-    double xr = xn[0] * r0 + xn[1] * r1 + xn[2] * r2 + xn[3] * r3 + xn[4] * r4 +
-                xn[5] * r5 + xn[6] * r6 + xn[7] * r7;
-    double yr = yn[0] * r0 + yn[1] * r1 + yn[2] * r2 + yn[3] * r3 + yn[4] * r4 +
-                yn[5] * r5 + yn[6] * r6 + yn[7] * r7;
+    f[0] = (-(1 - td1) * (1 - td2) * (1 + td1 + td2)) * 0.25;
+    f[1] = (-(1 + td1) * (1 - td2) * (1 - td1 + td2)) * 0.25;
+    f[2] = (-(1 + td1) * (1 + td2) * (1 - td1 - td2)) * 0.25;
+    f[3] = (-(1 - td1) * (1 + td2) * (1 + td1 - td2)) * 0.25;
+    f[4] = (1 - td1) * (1 + td1) * (1 - td2) * 0.5;
+    f[5] = (1 + td1) * (1 + td2) * (1 - td2) * 0.5;
+    f[6] = (1 - td1) * (1 + td1) * (1 + td2) * 0.5;
+    f[7] = (1 - td1) * (1 + td2) * (1 - td2) * 0.5;
+    double xr = 0., yr = 0.;
+    for (size_t i = 0; i < 8; ++i) {
+      xr += xn[i] * f[i];
+      yr += yn[i] * f[i];
+    }
     std::cout << "    Position requested:     (" << x << ", " << y << ")\n";
     std::cout << "    Reconstructed:          (" << xr << ", " << yr << ")\n";
     std::cout << "    Difference:             (" << x - xr << ", " << y - yr
@@ -1936,7 +1919,6 @@ void ComponentFieldMap::Coordinates12(
 
   // Result.
   if (m_debug) {
-    std::cout << m_className << "::Coordinates12:\n";
     std::cout << "    Tetrahedral coordinates (t, u, v, w) = (" << t1 << ", "
               << t2 << ", " << t3 << ", " << t4
               << ") sum = " << t1 + t2 + t3 + t4 << ".\n";
@@ -1968,9 +1950,6 @@ int ComponentFieldMap::Coordinates13(
               << "    Point (" << x << ", " << y << ", " << z << ")\n";
   }
 
-  // Provisional values
-  t1 = t2 = t3 = t4 = 0.;
-
   // Make a first order approximation.
   t1 = (x - xn[1]) * w[0][0] + (y - yn[1]) * w[0][1] + (z - zn[1]) * w[0][2];
   // Stop if we are far outside.
@@ -1989,7 +1968,6 @@ int ComponentFieldMap::Coordinates13(
   bool converged = false;
   for (int iter = 0; iter < 10; iter++) {
     if (m_debug) {
-      std::cout << m_className << "::Coordinates13:\n";
       std::printf("    Iteration %4u: t = (%15.8f, %15.8f %15.8f %15.8f)\n",
                   iter, td[0], td[1], td[2], td[3]);
     }
@@ -2022,7 +2000,6 @@ int ComponentFieldMap::Coordinates13(
 
     // Debugging
     if (m_debug) {
-      std::cout << m_className << "::Coordinates13:\n";
       std::cout << "    Difference vector:  (1, x, y, z)  = (" << diff[0]
                 << ", " << diff[1] << ", " << diff[2] << ", " << diff[3]
                 << ").\n";
@@ -2038,9 +2015,7 @@ int ComponentFieldMap::Coordinates13(
     constexpr double tol = 1.e-5;
     if (fabs(corr[0]) < tol && fabs(corr[1]) < tol && fabs(corr[2]) < tol &&
         fabs(corr[3]) < tol) {
-      if (m_debug) {
-        std::cout << m_className << "::Coordinates13: Convergence reached.\n";
-      }
+      if (m_debug) std::cout << "    Convergence reached.\n";
       converged = true;
       break;
     }
@@ -2074,7 +2049,6 @@ int ComponentFieldMap::Coordinates13(
   t3 = td[2];
   t4 = td[3];
   if (m_debug) {
-    std::cout << m_className << "::Coordinates13:\n";
     std::cout << "    Convergence reached at (t1, t2, t3, t4) = (" << t1 << ", "
               << t2 << ", " << t3 << ", " << t4 << ").\n";
     // Re-compute the (x,y,z) position for this coordinate.
@@ -2177,6 +2151,9 @@ void ComponentFieldMap::Reset() {
   m_ready = false;
 
   m_elements.clear();
+  m_degenerate.clear();
+  m_bbMin.clear();
+  m_bbMax.clear();
   m_w12.clear();
   m_nodes.clear();
   m_pot.clear();
@@ -2744,29 +2721,33 @@ void ComponentFieldMap::CalculateElementBoundingBoxes() {
     return;
   }
 
-  // Calculate the bounding boxes of all elements
-  for (auto& element : m_elements) {
+  // Calculate the bounding boxes of all elements.
+  const size_t nElements = m_elements.size();
+  m_bbMin.resize(nElements);
+  m_bbMax.resize(nElements);
+  for (size_t i = 0; i < nElements; ++i) {
+    const auto& element = m_elements[i];
     const Node& n0 = m_nodes[element.emap[0]];
     const Node& n1 = m_nodes[element.emap[1]];
     const Node& n2 = m_nodes[element.emap[2]];
     const Node& n3 = m_nodes[element.emap[3]];
-    element.bbMin[0] = std::min({n0.x, n1.x, n2.x, n3.x});
-    element.bbMax[0] = std::max({n0.x, n1.x, n2.x, n3.x});
-    element.bbMin[1] = std::min({n0.y, n1.y, n2.y, n3.y});
-    element.bbMax[1] = std::max({n0.y, n1.y, n2.y, n3.y});
-    element.bbMin[2] = std::min({n0.z, n1.z, n2.z, n3.z});
-    element.bbMax[2] = std::max({n0.z, n1.z, n2.z, n3.z});
+    m_bbMin[i][0] = std::min({n0.x, n1.x, n2.x, n3.x});
+    m_bbMax[i][0] = std::max({n0.x, n1.x, n2.x, n3.x});
+    m_bbMin[i][1] = std::min({n0.y, n1.y, n2.y, n3.y});
+    m_bbMax[i][1] = std::max({n0.y, n1.y, n2.y, n3.y});
+    m_bbMin[i][2] = std::min({n0.z, n1.z, n2.z, n3.z});
+    m_bbMax[i][2] = std::max({n0.z, n1.z, n2.z, n3.z});
     // Add tolerances.
     constexpr float f = 0.2;
-    const float tolx = f * (element.bbMax[0] - element.bbMin[0]);
-    element.bbMin[0] -= tolx;
-    element.bbMax[0] += tolx;
-    const float toly = f * (element.bbMax[1] - element.bbMin[1]);
-    element.bbMin[1] -= toly;
-    element.bbMax[1] += toly;
-    const float tolz = f * (element.bbMax[2] - element.bbMin[2]);
-    element.bbMin[2] -= tolz;
-    element.bbMax[2] += tolz;
+    const float tolx = f * (m_bbMax[i][0] - m_bbMin[i][0]);
+    m_bbMin[i][0] -= tolx;
+    m_bbMax[i][0] += tolx;
+    const float toly = f * (m_bbMax[i][1] - m_bbMin[i][1]);
+    m_bbMin[i][1] -= toly;
+    m_bbMax[i][1] += toly;
+    const float tolz = f * (m_bbMax[i][2] - m_bbMin[i][2]);
+    m_bbMin[i][2] -= tolz;
+    m_bbMax[i][2] += tolz;
   }
 }
 
@@ -2831,9 +2812,8 @@ bool ComponentFieldMap::InitializeTetrahedralTree() {
 
   // Insert all mesh elements (tetrahedrons) in the tree
   for (unsigned int i = 0; i < m_elements.size(); i++) {
-    const Element& e = m_elements[i];
-    const double bb[6] = {e.bbMin[0], e.bbMin[1], e.bbMin[2],
-                          e.bbMax[0], e.bbMax[1], e.bbMax[2]};
+    const double bb[6] = {m_bbMin[i][0], m_bbMin[i][1], m_bbMin[i][2],
+                          m_bbMax[i][0], m_bbMax[i][1], m_bbMax[i][2]};
     m_octree->InsertMeshElement(bb, i);
   }
   return true;
@@ -2862,17 +2842,17 @@ void ComponentFieldMap::PrintElement(const std::string& header, const double x,
                                      const double y, const double z,
                                      const double t1, const double t2,
                                      const double t3, const double t4,
-                                     const Element& element,
+                                     const size_t i,
                                      const std::vector<double>& pot) const {
   std::cout << m_className << "::" << header << ":\n"
             << "    Global = (" << x << ", " << y << ", " << z << ")\n"
             << "    Local = (" << t1 << ", " << t2 << ", " << t3 << ", " << t4
             << ")\n";
-  if (element.degenerate) std::cout << "    Element is degenerate.\n";
+  if (m_degenerate[i]) std::cout << "    Element is degenerate.\n";
   std::cout << " Node             x            y            z            V\n";
   unsigned int nN = 0;
   if (m_elementType == ElementType::Serendipity) {
-    if (element.degenerate) {
+    if (m_degenerate[i]) {
       nN = 6;
     } else {
       nN = 8;
@@ -2880,6 +2860,7 @@ void ComponentFieldMap::PrintElement(const std::string& header, const double x,
   } else if (m_elementType == ElementType::CurvedTetrahedron) {
     nN = 10;
   }
+  const auto& element = m_elements[i];
   for (unsigned int ii = 0; ii < nN; ++ii) {
     const Node& node = m_nodes[element.emap[ii]];
     const double v = pot[element.emap[ii]];

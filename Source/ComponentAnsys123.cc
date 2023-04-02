@@ -321,12 +321,9 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
       break;
     }
     Element element;
-    element.degenerate = false;
-
-    // Store the material reference
+    // Store the material reference.
     element.matmap = imat - 1;
-
-    // Node references
+    // Store the node references.
     element.emap[0] = inode[0] - 1;
     element.emap[1] = inode[1] - 1;
     element.emap[2] = inode[2] - 1;
@@ -348,6 +345,7 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
               << "    Found no valid elements in file " << elist << ".\n";
     return false;
   }
+  m_degenerate.assign(m_elements.size(), false);
 
   // Tell how many lines read.
   std::cout << "    Read " << m_elements.size() << " elements from file "

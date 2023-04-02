@@ -180,7 +180,6 @@ bool ComponentComsol::Initialise(const std::string &mesh,
   int perm[10] = {0, 1, 2, 3, 4, 5, 7, 6, 8, 9};
   for (int i = 0; i < nElements; ++i) {
     Element element;
-    element.degenerate = false;
     for (int j = 0; j < 10; ++j) {
       fmesh >> element.emap[perm[j]];
     }
@@ -214,6 +213,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
       m_elements.push_back(std::move(element));
     }
   }
+  m_degenerate.assign(m_elements.size(), false);
 
   if (m_range.set) {
     std::vector<int> nodeMap(nNodes, -1);
