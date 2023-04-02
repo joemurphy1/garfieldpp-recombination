@@ -269,7 +269,7 @@ double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,
   double rcoordinate, rotation;
   MapCoordinates(x, y, z, xmirr, ymirr, zmirr, rcoordinate, rotation);
 
-  if (m_warning) PrintWarning("WeightingPotential");
+  if (m_warning) PrintWarning("DelayedWeightingPotential");
 
   // Find the element that contains this point.
   double t1, t2, t3, t4, jac[4][4], det;
@@ -290,8 +290,7 @@ double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,
 
   TimeInterpolation(t, f0, f1, i0, i1);
 
-  // Get potential value
-
+  // Get potential value.
   double dp0 = 0;
   double dp1 = 0;
   const Element& element = m_elements[imap];
@@ -1070,13 +1069,13 @@ int ComponentFieldMap::FindElement13(
           t4 > 1) {
         continue;
       }
-      ++nfound;
-      imap = i;
       if (m_debug) {
         std::cout << m_className << "::FindElement13:\n"
                   << "    Found matching element " << i << ".\n";
       }
       if (!m_checkMultipleElement) return i;
+      ++nfound;
+      imap = i;
       for (int j = 0; j < 4; ++j) {
         for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
       }
@@ -1107,13 +1106,13 @@ int ComponentFieldMap::FindElement13(
           t4 > 1) {
         continue;
       }
-      ++nfound;
-      imap = i;
       if (m_debug) {
         std::cout << m_className << "::FindElement13:\n";
         std::cout << "    Found matching element " << i << ".\n";
       }
       if (!m_checkMultipleElement) return i;
+      ++nfound;
+      imap = i;
       for (int j = 0; j < 4; ++j) {
         for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
       }
@@ -1945,10 +1944,6 @@ int ComponentFieldMap::Coordinates13(
     const std::array<double, 10>& yn,
     const std::array<double, 10>& zn,
     const std::array<std::array<double, 3>, 4>& w) const {
-  if (m_debug) {
-    std::cout << m_className << "::Coordinates13:\n"
-              << "    Point (" << x << ", " << y << ", " << z << ")\n";
-  }
 
   // Make a first order approximation.
   t1 = (x - xn[1]) * w[0][0] + (y - yn[1]) * w[0][1] + (z - zn[1]) * w[0][2];
@@ -1966,7 +1961,7 @@ int ComponentFieldMap::Coordinates13(
   std::array<double, 10> f;
   // Loop
   bool converged = false;
-  for (int iter = 0; iter < 10; iter++) {
+  for (int iter = 0; iter < 10; ++iter) {
     if (m_debug) {
       std::printf("    Iteration %4u: t = (%15.8f, %15.8f %15.8f %15.8f)\n",
                   iter, td[0], td[1], td[2], td[3]);
@@ -1988,14 +1983,15 @@ int ComponentFieldMap::Coordinates13(
     Jacobian13(xn, yn, zn, td[0], td[1], td[2], td[3], det, jac);
     const double invdet = 1. / det;
     // Compute the difference vector.
-    double diff[4] = {1. - sr, x - xr, y - yr, z - zr};
+    const double diff[4] = {1. - sr, x - xr, y - yr, z - zr};
     // Update the estimate.
     double corr[4] = {0., 0., 0., 0.};
-    for (int l = 0; l < 4; ++l) {
-      for (int k = 0; k < 4; ++k) {
+    for (size_t l = 0; l < 4; ++l) {
+      for (size_t k = 0; k < 4; ++k) {
         corr[l] += jac[l][k] * diff[k];
       }
       corr[l] *= invdet;
+      td[l] += corr[l];
     }
 
     // Debugging
@@ -2007,9 +2003,6 @@ int ComponentFieldMap::Coordinates13(
                 << ", " << corr[1] << ", " << corr[2] << ", " << corr[3]
                 << ").\n";
     }
-
-    // Update the vector.
-    for (size_t j = 0; j < 4; ++j) td[j] += corr[j];
 
     // Check for convergence.
     constexpr double tol = 1.e-5;
