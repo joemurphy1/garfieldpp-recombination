@@ -334,28 +334,35 @@ class ComponentFieldMap : public Component {
   int Coordinates3(const double x, const double y,  
                    double& t1, double& t2, double& t3, double& t4, 
                    double jac[4][4], double& det,
-                   const std::array<std::array<double, 2>, 8>& nodes) const;
+                   const std::array<double, 8>& xn,
+                   const std::array<double, 8>& yn) const;
   /// Calculate local coordinates for linear quadrilaterals.
   int Coordinates4(const double x, const double y,  
                    double& t1, double& t2, double& t3, double& t4, 
                    double& det,
-                   const std::array<std::array<double, 2>, 8>& nodes) const;
+                   const std::array<double, 8>& xn,
+                   const std::array<double, 8>& yn) const;
   /// Calculate local coordinates for curved quadratic quadrilaterals.
   int Coordinates5(const double x, const double y,  
                    double& t1, double& t2, double& t3, double& t4, 
                    double jac[4][4], double& det, 
-                   const std::array<std::array<double, 2>, 8>& nodes) const;
+                   const std::array<double, 8>& xn,
+                   const std::array<double, 8>& yn) const;
   /// Calculate local coordinates in linear tetrahedra.
   void Coordinates12(const double x, const double y, const double z,
                      double& t1, double& t2, double& t3, double& t4,
-                     const std::array<std::array<double, 3>, 10>& nodes,
+                     const std::array<double, 10>& xn,
+                     const std::array<double, 10>& yn,
+                     const std::array<double, 10>& zn,
                      const std::array<std::array<double, 3>, 4>& w) const;
 
   /// Calculate local coordinates for curved quadratic tetrahedra.
   int Coordinates13(const double x, const double y, const double z, 
                     double& t1, double& t2, double& t3, double& t4, 
                     double jac[4][4], double& det, 
-                    const std::array<std::array<double, 3>, 10>& nodes,
+                    const std::array<double, 10>& xn,
+                    const std::array<double, 10>& yn,
+                    const std::array<double, 10>& zn,
                     const std::array<std::array<double, 3>, 4>& w) const;
   /// Calculate local coordinates for a cube.
   int CoordinatesCube(const double x, const double y, const double z,
@@ -363,15 +370,19 @@ class ComponentFieldMap : public Component {
                       std::vector<TMatrixD*>& dN, const Element& element) const;
 
   /// Calculate Jacobian for curved quadratic triangles.
-  static void Jacobian3(const std::array<std::array<double, 2>, 8>& nodes, 
+  static void Jacobian3(const std::array<double, 8>& xn,
+                        const std::array<double, 8>& yn,
                         const double u, const double v, const double w,
                         double& det, double jac[4][4]);
   /// Calculate Jacobian for curved quadratic quadrilaterals.
-  static void Jacobian5(const std::array<std::array<double, 2>, 8>& nodes,
+  static void Jacobian5(const std::array<double, 8>& xn,
+                        const std::array<double, 8>& yn,
                         const double u, const double v,
                         double& det, double jac[4][4]);
   /// Calculate Jacobian for curved quadratic tetrahedra.
-  static void Jacobian13(const std::array<std::array<double, 3>, 10>& nodes,
+  static void Jacobian13(const std::array<double, 10>& xn,
+                         const std::array<double, 10>& yn,
+                         const std::array<double, 10>& zn,
                          const double t, const double u,
                          const double v, const double w, double& det,
                          double jac[4][4]);
@@ -381,7 +392,8 @@ class ComponentFieldMap : public Component {
                     std::vector<TMatrixD*>& dN) const;
 
   static std::array<std::array<double, 3>, 4> Weights12(
-    const std::array<std::array<double, 3>, 10>& nodes);
+    const std::array<double, 10>& xn, const std::array<double, 10>& yn,
+    const std::array<double, 10>& zn);
  
   /// Calculate the bounding boxes of all elements after initialization.
   void CalculateElementBoundingBoxes();

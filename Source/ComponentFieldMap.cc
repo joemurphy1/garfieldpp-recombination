@@ -885,9 +885,10 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
   // Verify the count of volumes that contain the point.
   int nfound = 0;
   int imap = -1;
-  std::array<std::array<double, 2>, 8> nodes;
+  std::array<double, 8> xn;
+  std::array<double, 8> yn;
   if (m_useTetrahedralTree && m_octree) {
-    auto tetList = m_octree->GetElementsInBlock(Vec3(x, y, 0.));
+    const auto& tetList = m_octree->GetElementsInBlock(Vec3(x, y, 0.));
     for (const auto i : tetList) {
       const Element& element = m_elements[i];
       if (x < element.bbMin[0] || x > element.bbMax[0] || 
@@ -897,9 +898,10 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
         // Degenerate element
         for (size_t j = 0; j < 6; ++j) {
           const auto& node = m_nodes[element.emap[j]];
-          nodes[j] = {node.x, node.y};
+          xn[j] = node.x;
+          yn[j] = node.y;
         }
-        if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, nodes) != 0) {
+        if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
           continue;
         }
         if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1) continue;
@@ -907,9 +909,10 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
         // Non-degenerate element
         for (size_t j = 0; j < 8; ++j) {
           const auto& node = m_nodes[element.emap[j]];
-          nodes[j] = {node.x, node.y};
+          xn[j] = node.x;
+          yn[j] = node.y;
         }
-        if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, nodes) != 0) {
+        if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
           continue;
         }
         if (t1 < -1 || t1 > 1 || t2 < -1 || t2 > 1) continue;
@@ -949,9 +952,10 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
         // Degenerate element
         for (size_t j = 0; j < 6; ++j) {
           const auto& node = m_nodes[element.emap[j]];
-          nodes[j] = {node.x, node.y};
+          xn[j] = node.x;
+          yn[j] = node.y;
         }
-        if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, nodes) != 0) {
+        if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
           continue;
         }
         if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1) continue;
@@ -959,9 +963,10 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
         // Non-degenerate element
         for (size_t j = 0; j < 8; ++j) {
           const auto& node = m_nodes[element.emap[j]];
-          nodes[j] = {node.x, node.y};
+          xn[j] = node.x;
+          yn[j] = node.y;
         }
-        if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, nodes) != 0) {
+        if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
           continue;
         }
         if (t1 < -1 || t1 > 1 || t2 < -1 || t2 > 1) continue;
@@ -1043,10 +1048,12 @@ int ComponentFieldMap::FindElement13(
   // Verify the count of volumes that contain the point.
   int nfound = 0;
   int imap = -1;
-  std::array<std::array<double, 3>, 10> nodes;
+  std::array<double, 10> xn;
+  std::array<double, 10> yn;
+  std::array<double, 10> zn;
   if (m_useTetrahedralTree && m_octree) {
     // Tetra list in the block that contains the input 3D point.
-    auto tetList = m_octree->GetElementsInBlock(Vec3(x, y, z));
+    const auto& tetList = m_octree->GetElementsInBlock(Vec3(x, y, z));
     for (const auto i : tetList) {
       const Element& element = m_elements[i];
       if (x < element.bbMin[0] || x > element.bbMax[0] || 
@@ -1055,9 +1062,11 @@ int ComponentFieldMap::FindElement13(
         continue;
       for (size_t j = 0; j < 10; ++j) {
         const auto& node = m_nodes[element.emap[j]];
-        nodes[j] = {node.x, node.y, node.z};
+        xn[j] = node.x;
+        yn[j] = node.y;
+        zn[j] = node.z;
       }
-      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, nodes, m_w12[i]) != 0) {
+      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn, m_w12[i]) != 0) {
         continue;
       }
       if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
@@ -1091,9 +1100,11 @@ int ComponentFieldMap::FindElement13(
         continue;
       for (size_t j = 0; j < 10; ++j) {
         const auto& node = m_nodes[element.emap[j]];
-        nodes[j] = {node.x, node.y, node.z};
+        xn[j] = node.x;
+        yn[j] = node.y;
+        zn[j] = node.z;
       }
-      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, nodes, m_w12[i]) != 0) {
+      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn, m_w12[i]) != 0) {
         continue;
       }
       if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
@@ -1144,7 +1155,6 @@ int ComponentFieldMap::FindElement13(
     imap = imapbak;
     return imap;
   }
-
   if (m_debug) {
     std::cout << m_className << "::FindElement13:\n";
     std::cout << "    No element matching point (" << x << ", " << y << ", "
@@ -1204,7 +1214,8 @@ int ComponentFieldMap::FindElementCube(const double x, const double y,
 }
 
 void ComponentFieldMap::Jacobian3(
-    const std::array<std::array<double, 2>, 8>& nodes,
+    const std::array<double, 8>& xn,
+    const std::array<double, 8>& yn,
     const double u, const double v, const double w, 
     double& det, double jac[4][4]) {
   // Shorthands.
@@ -1212,12 +1223,12 @@ void ComponentFieldMap::Jacobian3(
   const double fourv = 4 * v;
   const double fourw = 4 * w;
 
-  const double ax = (-1 + fourv) * nodes[1][0] + fouru * nodes[3][0] + fourw * nodes[5][0];
-  const double ay = (-1 + fourv) * nodes[1][1] + fouru * nodes[3][1] + fourw * nodes[5][1];
-  const double bx = (-1 + fourw) * nodes[2][0] + fouru * nodes[4][0] + fourv * nodes[5][0];
-  const double by = (-1 + fourw) * nodes[2][1] + fouru * nodes[4][1] + fourv * nodes[5][1];
-  const double cx = (-1 + fouru) * nodes[0][0] + fourv * nodes[3][0] + fourw * nodes[4][0];
-  const double cy = (-1 + fouru) * nodes[0][1] + fourv * nodes[3][1] + fourw * nodes[4][1];
+  const double ax = (-1 + fourv) * xn[1] + fouru * xn[3] + fourw * xn[5];
+  const double ay = (-1 + fourv) * yn[1] + fouru * yn[3] + fourw * yn[5];
+  const double bx = (-1 + fourw) * xn[2] + fouru * xn[4] + fourv * xn[5];
+  const double by = (-1 + fourw) * yn[2] + fouru * yn[4] + fourv * yn[5];
+  const double cx = (-1 + fouru) * xn[0] + fourv * xn[3] + fourw * xn[4];
+  const double cy = (-1 + fouru) * yn[0] + fourv * yn[3] + fourw * yn[4];
   // Determinant of the quadratic triangular Jacobian
   det = -(ax - bx) * cy - (cx - ax) * by + (cx - bx) * ay;
 
@@ -1234,78 +1245,57 @@ void ComponentFieldMap::Jacobian3(
 }
 
 void ComponentFieldMap::Jacobian5(
-    const std::array<std::array<double, 2>, 8>& nodes,
+    const std::array<double, 8>& xn,
+    const std::array<double, 8>& yn,
     const double u, const double v, double& det, double jac[4][4]) {
   // Jacobian terms
   jac[0][0] = 0.25 * (
-    (1 - u) * (2 * v + u) * nodes[0][1] + (1 + u) * (2 * v - u) * nodes[1][1] +
-    (1 + u) * (2 * v + u) * nodes[2][1] + (1 - u) * (2 * v - u) * nodes[3][1]) -
-    0.5 * (1 - u) * (1 + u) * nodes[4][1] - (1 + u) * v * nodes[5][1] +
-    0.5 * (1 - u) * (1 + u) * nodes[6][1] - (1 - u) * v * nodes[7][1];
+    (1 - u) * (2 * v + u) * yn[0] + (1 + u) * (2 * v - u) * yn[1] +
+    (1 + u) * (2 * v + u) * yn[2] + (1 - u) * (2 * v - u) * yn[3]) -
+    0.5 * (1 - u) * (1 + u) * yn[4] - (1 + u) * v * yn[5] +
+    0.5 * (1 - u) * (1 + u) * yn[6] - (1 - u) * v * yn[7];
   jac[0][1] = -0.25 * (
-    (1 - u) * (2 * v + u) * nodes[0][0] + (1 + u) * (2 * v - u) * nodes[1][0] +
-    (1 + u) * (2 * v + u) * nodes[2][0] + (1 - u) * (2 * v - u) * nodes[3][0]) +
-    0.5 * (1 - u) * (1 + u) * nodes[4][0] + (1 + u) * v * nodes[5][0] -
-    0.5 * (1 - u) * (1 + u) * nodes[6][0] + (1 - u) * v * nodes[7][0];
+    (1 - u) * (2 * v + u) * xn[0] + (1 + u) * (2 * v - u) * xn[1] +
+    (1 + u) * (2 * v + u) * xn[2] + (1 - u) * (2 * v - u) * xn[3]) +
+    0.5 * (1 - u) * (1 + u) * xn[4] + (1 + u) * v * xn[5] -
+    0.5 * (1 - u) * (1 + u) * xn[6] + (1 - u) * v * xn[7];
   jac[1][0] = -0.25 * (
-    (1 - v) * (2 * u + v) * nodes[0][1] + (1 - v) * (2 * u - v) * nodes[1][1] +
-    (1 + v) * (2 * u + v) * nodes[2][1] + (1 + v) * (2 * u - v) * nodes[3][1]) +
-    (1 - v) * u * nodes[4][1] - 0.5 * (1 - v) * (1 + v) * nodes[5][1] + 
-    (1 + v) * u * nodes[6][1] + 0.5 * (1 - v) * (1 + v) * nodes[7][1];
+    (1 - v) * (2 * u + v) * yn[0] + (1 - v) * (2 * u - v) * yn[1] +
+    (1 + v) * (2 * u + v) * yn[2] + (1 + v) * (2 * u - v) * yn[3]) +
+    (1 - v) * u * yn[4] - 0.5 * (1 - v) * (1 + v) * yn[5] + 
+    (1 + v) * u * yn[6] + 0.5 * (1 - v) * (1 + v) * yn[7];
   jac[1][1] = 0.25 * (
-    (1 - v) * (2 * u + v) * nodes[0][0] + (1 - v) * (2 * u - v) * nodes[1][0] +
-    (1 + v) * (2 * u + v) * nodes[2][0] + (1 + v) * (2 * u - v) * nodes[3][0]) -
-    (1 - v) * u * nodes[4][0] + 0.5 * (1 - v) * (1 + v) * nodes[5][0] - 
-    (1 + v) * u * nodes[6][0] - 0.5 * (1 - v) * (1 + v) * nodes[7][0];
+    (1 - v) * (2 * u + v) * xn[0] + (1 - v) * (2 * u - v) * xn[1] +
+    (1 + v) * (2 * u + v) * xn[2] + (1 + v) * (2 * u - v) * xn[3]) -
+    (1 - v) * u * xn[4] + 0.5 * (1 - v) * (1 + v) * xn[5] - 
+    (1 + v) * u * xn[6] - 0.5 * (1 - v) * (1 + v) * xn[7];
 
   // Determinant.
   det = jac[0][0] * jac[1][1] - jac[0][1] * jac[1][0];
 }
 
 void ComponentFieldMap::Jacobian13(
-    const std::array<std::array<double, 3>, 10>& nodes,
+    const std::array<double, 10>& xn,
+    const std::array<double, 10>& yn,
+    const std::array<double, 10>& zn,
     const double t, const double u, const double v, const double w, 
     double& det, double jac[4][4]) {
+  
+  const double tx = 4 * ((-0.25 + t) * xn[0] + u * xn[4] + v * xn[5] + w * xn[6]);
+  const double ty = 4 * ((-0.25 + t) * yn[0] + u * yn[4] + v * yn[5] + w * yn[6]);
+  const double tz = 4 * ((-0.25 + t) * zn[0] + u * zn[4] + v * zn[5] + w * zn[6]);
 
-  const double tx = 4 * ((-0.25 + t) * nodes[0][0] + u * nodes[4][0] + v * nodes[5][0] + w * nodes[6][0]);
-  const double ty = 4 * ((-0.25 + t) * nodes[0][1] + u * nodes[4][1] + v * nodes[5][1] + w * nodes[6][1]);
-  const double tz = 4 * ((-0.25 + t) * nodes[0][2] + u * nodes[4][2] + v * nodes[5][2] + w * nodes[6][2]);
+  const double ux = 4 * ((-0.25 + u) * xn[1] + t * xn[4] + v * xn[7] + w * xn[8]);
+  const double uy = 4 * ((-0.25 + u) * yn[1] + t * yn[4] + v * yn[7] + w * yn[8]);
+  const double uz = 4 * ((-0.25 + u) * zn[1] + t * zn[4] + v * zn[7] + w * zn[8]);
 
-  const double ux = 4 * ((-0.25 + u) * nodes[1][0] + t * nodes[4][0] + v * nodes[7][0] + w * nodes[8][0]);
-  const double uy = 4 * ((-0.25 + u) * nodes[1][1] + t * nodes[4][1] + v * nodes[7][1] + w * nodes[8][1]);
-  const double uz = 4 * ((-0.25 + u) * nodes[1][2] + t * nodes[4][2] + v * nodes[7][2] + w * nodes[8][2]);
+  const double vx = 4 * ((-0.25 + v) * xn[2] + t * xn[5] + u * xn[7] + w * xn[9]);
+  const double vy = 4 * ((-0.25 + v) * yn[2] + t * yn[5] + u * yn[7] + w * yn[9]);
+  const double vz = 4 * ((-0.25 + v) * zn[2] + t * zn[5] + u * zn[7] + w * zn[9]);
 
-  const double vx = 4 * ((-0.25 + v) * nodes[2][0] + t * nodes[5][0] + u * nodes[7][0] + w * nodes[9][0]);
-  const double vy = 4 * ((-0.25 + v) * nodes[2][1] + t * nodes[5][1] + u * nodes[7][1] + w * nodes[9][1]);
-  const double vz = 4 * ((-0.25 + v) * nodes[2][2] + t * nodes[5][2] + u * nodes[7][2] + w * nodes[9][2]);
-
-  const double wx = 4 * ((-0.25 + w) * nodes[3][0] + t * nodes[6][0] + u * nodes[8][0] + v * nodes[9][0]);
-  const double wy = 4 * ((-0.25 + w) * nodes[3][1] + t * nodes[6][1] + u * nodes[8][1] + v * nodes[9][1]);
-  const double wz = 4 * ((-0.25 + w) * nodes[3][2] + t * nodes[6][2] + u * nodes[8][2] + v * nodes[9][2]);
-
-  const double ax = ux - wx;
-  const double ay = uy - wy;
-
-  const double bx = ux - vx;
-  const double by = uy - vy;
-
-  const double cx = vx - wx;
-  const double cy = vy - wy;
-
-  const double dx = tx - wx;
-  const double dy = ty - wy;
-
-  const double ex = tx - vx;
-  const double ey = ty - vy;
-
-  const double fx = tx - ux;
-  const double fy = ty - uy;
-
-  // Determinant of the quadrilateral serendipity Jacobian
-  det = (-ax * vy + bx * wy + cx * uy) * tz -
-        (-ax * ty - fx * wy + dx * uy) * vz +
-        (-bx * ty - fx * vy + ex * uy) * wz +
-        (-cx * ty + dx * vy - ex * wy) * uz;
+  const double wx = 4 * ((-0.25 + w) * xn[3] + t * xn[6] + u * xn[8] + v * xn[9]);
+  const double wy = 4 * ((-0.25 + w) * yn[3] + t * yn[6] + u * yn[8] + v * yn[9]);
+  const double wz = 4 * ((-0.25 + w) * zn[3] + t * zn[6] + u * zn[8] + v * zn[9]);
 
   const double tu = tx * uy - ux * ty;
   const double tv = tx * vy - vx * ty;
@@ -1316,24 +1306,26 @@ void ComponentFieldMap::Jacobian13(
 
   jac[0][0] = -uw * vz + uv * wz + vw * uz;
   jac[1][0] = -vw * tz + tw * vz - tv * wz;
-  jac[2][0] = uw * tz + tu * wz - tw * uz;
+  jac[2][0] =  uw * tz + tu * wz - tw * uz;
   jac[3][0] = -uv * tz - tu * vz + tv * uz;
 
-  jac[0][1] = -ay * vz + by * wz + cy * uz;
-  jac[0][2] = ax * vz - bx * wz - cx * uz;
-  jac[0][3] = -ax * vy + bx * wy + cx * uy;
+  jac[0][1] = -(uy - wy) * vz + (uy - vy) * wz + (vy - wy) * uz;
+  jac[0][2] =  (ux - wx) * vz - (ux - vx) * wz - (vx - wx) * uz;
+  jac[0][3] = -(ux - wx) * vy + (ux - vx) * wy + (vx - wx) * uy;
 
-  jac[1][1] = -cy * tz + dy * vz - ey * wz;
-  jac[1][2] = cx * tz - dx * vz + ex * wz;
-  jac[1][3] = -cx * ty + dx * vy - ex * wy;
+  jac[1][1] = -(vy - wy) * tz + (ty - wy) * vz - (ty - vy) * wz;
+  jac[1][2] =  (vx - wx) * tz - (tx - wx) * vz + (tx - vx) * wz;
+  jac[1][3] = -(vx - wx) * ty + (tx - wx) * vy - (tx - vx) * wy;
 
-  jac[2][1] = ay * tz + fy * wz - dy * uz;
-  jac[2][2] = -ax * tz - fx * wz + dx * uz;
-  jac[2][3] = ax * ty + fx * wy - dx * uy;
+  jac[2][1] =  (uy - wy) * tz + (ty - uy) * wz - (ty - wy) * uz;
+  jac[2][2] = -(ux - wx) * tz - (tx - ux) * wz + (tx - wx) * uz;
+  jac[2][3] =  (ux - wx) * ty + (tx - ux) * wy - (tx - wx) * uy;
 
-  jac[3][1] = -by * tz - fy * vz + ey * uz;
-  jac[3][2] = bx * tz + fx * vz - ex * uz;
-  jac[3][3] = -bx * ty - fx * vy + ex * uy;
+  jac[3][1] = -(uy - vy) * tz - (ty - uy) * vz + (ty - vy) * uz;
+  jac[3][2] =  (ux - vx) * tz + (tx - ux) * vz - (tx - vx) * uz;
+  jac[3][3] = -(ux - vx) * ty - (tx - ux) * vy + (tx - vx) * uy;
+
+  det = jac[0][3] * tz + jac[1][3] * uz + jac[2][3] * vz + jac[3][3] * wz;
 }
 
 void ComponentFieldMap::JacobianCube(const Element& element, const double t1,
@@ -1425,7 +1417,8 @@ int ComponentFieldMap::Coordinates3(
     const double x, const double y,  
     double& t1, double& t2, double& t3, double& t4, 
     double jac[4][4], double& det,
-    const std::array<std::array<double, 2>, 8>& nodes) const {
+    const std::array<double, 8>& xn,
+    const std::array<double, 8>& yn) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates3:\n"
               << "   Point (" << x << ", " << y << ")\n";
@@ -1436,25 +1429,25 @@ int ComponentFieldMap::Coordinates3(
 
   // Make a first order approximation, using the linear triangle.
   const double d1 =
-      (nodes[0][0] - nodes[1][0]) * (nodes[2][1] - nodes[1][1]) - 
-      (nodes[2][0] - nodes[1][0]) * (nodes[0][1] - nodes[1][1]);
+      (xn[0] - xn[1]) * (yn[2] - yn[1]) - 
+      (xn[2] - xn[1]) * (yn[0] - yn[1]);
   const double d2 =
-      (nodes[1][0] - nodes[2][0]) * (nodes[0][1] - nodes[2][1]) - 
-      (nodes[0][0] - nodes[2][0]) * (nodes[1][1] - nodes[2][1]);
+      (xn[1] - xn[2]) * (yn[0] - yn[2]) - 
+      (xn[0] - xn[2]) * (yn[1] - yn[2]);
   const double d3 =
-      (nodes[2][0] - nodes[0][0]) * (nodes[1][1] - nodes[0][1]) - 
-      (nodes[1][0] - nodes[0][0]) * (nodes[2][1] - nodes[0][1]);
+      (xn[2] - xn[0]) * (yn[1] - yn[0]) - 
+      (xn[1] - xn[0]) * (yn[2] - yn[0]);
   if (d1 == 0 || d2 == 0 || d3 == 0) {
     std::cerr << m_className << "::Coordinates3:\n"
               << "    Calculation of linear coordinates failed; abandoned.\n";
     return 1;
   }
-  t1 = ((x - nodes[1][0]) * (nodes[2][1] - nodes[1][1]) - 
-        (y - nodes[1][1]) * (nodes[2][0] - nodes[1][0])) / d1;
-  t2 = ((x - nodes[2][0]) * (nodes[0][1] - nodes[2][1]) - 
-        (y - nodes[2][1]) * (nodes[0][0] - nodes[2][0])) / d2;
-  t3 = ((x - nodes[0][0]) * (nodes[1][1] - nodes[0][1]) - 
-        (y - nodes[0][1]) * (nodes[1][0] - nodes[0][0])) / d3;
+  t1 = ((x - xn[1]) * (yn[2] - yn[1]) - 
+        (y - yn[1]) * (xn[2] - xn[1])) / d1;
+  t2 = ((x - xn[2]) * (yn[0] - yn[2]) - 
+        (y - yn[2]) * (xn[0] - xn[2])) / d2;
+  t3 = ((x - xn[0]) * (yn[1] - yn[0]) - 
+        (y - yn[0]) * (xn[1] - xn[0])) / d3;
 
   // Start iterative refinement.
   double td1 = t1, td2 = t2, td3 = t3;
@@ -1477,12 +1470,12 @@ int ComponentFieldMap::Coordinates3(
     // Re-compute the (x,y) position for this coordinate.
     double xr = 0., yr = 0.;
     for (size_t i = 0; i < 6; ++i) {
-      xr += nodes[i][0] * f[i];
-      yr += nodes[i][1] * f[i];
+      xr += xn[i] * f[i];
+      yr += yn[i] * f[i];
     }
     const double sr = td1 + td2 + td3;
     // Compute the Jacobian.
-    Jacobian3(nodes, td1, td2, td3, det, jac);
+    Jacobian3(xn, yn, td1, td2, td3, det, jac);
     // Compute the difference vector.
     const double diff[3] = {1 - sr, x - xr, y - yr};
     // Update the estimate.
@@ -1518,10 +1511,10 @@ int ComponentFieldMap::Coordinates3(
   }
   // No convergence reached
   if (!converged) {
-    const double xmin = std::min({nodes[0][0], nodes[1][0], nodes[2][0]});
-    const double xmax = std::max({nodes[0][0], nodes[1][0], nodes[2][0]});
-    const double ymin = std::min({nodes[0][1], nodes[1][1], nodes[2][1]});
-    const double ymax = std::max({nodes[0][1], nodes[1][1], nodes[2][1]});
+    const double xmin = std::min({xn[0], xn[1], xn[2]});
+    const double xmax = std::max({xn[0], xn[1], xn[2]});
+    const double ymin = std::min({yn[0], yn[1], yn[2]});
+    const double ymax = std::max({yn[0], yn[1], yn[2]});
     if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
       if (m_printConvergenceWarnings) {
         std::cout << m_className << "::Coordinates3:\n"
@@ -1551,9 +1544,9 @@ int ComponentFieldMap::Coordinates3(
     const double f4 = 4 * td1 * td3;
     const double f5 = 4 * td2 * td3;
     const double xr =
-        nodes[0][0] * f0 + nodes[1][0] * f1 + nodes[2][0] * f2 + nodes[3][0] * f3 + nodes[4][0] * f4 + nodes[5][0] * f5;
+        xn[0] * f0 + xn[1] * f1 + xn[2] * f2 + xn[3] * f3 + xn[4] * f4 + xn[5] * f5;
     const double yr =
-        nodes[0][1] * f0 + nodes[1][1] * f1 + nodes[2][1] * f2 + nodes[3][1] * f3 + nodes[4][1] * f4 + nodes[5][1] * f5;
+        yn[0] * f0 + yn[1] * f1 + yn[2] * f2 + yn[3] * f3 + yn[4] * f4 + yn[5] * f5;
     const double sr = td1 + td2 + td3;
     std::cout << m_className << "::Coordinates3:\n";
     std::cout << "    Position requested:     (" << x << ", " << y << ")\n";
@@ -1570,7 +1563,8 @@ int ComponentFieldMap::Coordinates3(
 int ComponentFieldMap::Coordinates4(
     const double x, const double y,
     double& t1, double& t2, double& t3, double& t4, double& det,
-    const std::array<std::array<double, 2>, 8>& nodes) const {
+    const std::array<double, 8>& xn,
+    const std::array<double, 8>& yn) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates4:\n"
               << "   Point (" << x << ", " << y << ")\n";
@@ -1583,17 +1577,17 @@ int ComponentFieldMap::Coordinates4(
 
   // Compute determinant.
   const double dd = 
-      -(nodes[0][0] * nodes[1][1]) + nodes[3][0] * nodes[2][1] - 
-        nodes[2][0] * nodes[3][1] + 
-      x * (-nodes[0][1] + nodes[1][1] - nodes[2][1] + nodes[3][1]) + 
-      nodes[1][0] * (nodes[0][1] - y) + 
-      (nodes[0][0] + nodes[2][0] - nodes[3][0]) * y;
-  det = -(-((nodes[0][0] - nodes[3][0]) * (nodes[1][1] - nodes[2][1])) + 
-            (nodes[1][0] - nodes[2][0]) * (nodes[0][1] - nodes[3][1])) *
-         (2 * x * (-nodes[0][1] + nodes[1][1] + nodes[2][1] - nodes[3][1]) -
-          (nodes[0][0] + nodes[3][0]) * (nodes[1][1] + nodes[2][1] - 2 * y) +
-          nodes[1][0] * (nodes[0][1] + nodes[3][1] - 2 * y) + 
-          nodes[2][0] * (nodes[0][1] + nodes[3][1] - 2 * y)) +
+      -(xn[0] * yn[1]) + xn[3] * yn[2] - 
+        xn[2] * yn[3] + 
+      x * (-yn[0] + yn[1] - yn[2] + yn[3]) + 
+      xn[1] * (yn[0] - y) + 
+      (xn[0] + xn[2] - xn[3]) * y;
+  det = -(-((xn[0] - xn[3]) * (yn[1] - yn[2])) + 
+            (xn[1] - xn[2]) * (yn[0] - yn[3])) *
+         (2 * x * (-yn[0] + yn[1] + yn[2] - yn[3]) -
+          (xn[0] + xn[3]) * (yn[1] + yn[2] - 2 * y) +
+          xn[1] * (yn[0] + yn[3] - 2 * y) + 
+          xn[2] * (yn[0] + yn[3] - 2 * y)) +
         dd * dd;
 
   // Check that the determinant is non-negative
@@ -1608,20 +1602,20 @@ int ComponentFieldMap::Coordinates4(
   }
 
   // Vector products for evaluation of T1.
-  double prod = ((nodes[2][0] - nodes[3][0]) * (nodes[0][1] - nodes[1][1]) - 
-                 (nodes[0][0] - nodes[1][0]) * (nodes[2][1] - nodes[3][1]));
+  double prod = ((xn[2] - xn[3]) * (yn[0] - yn[1]) - 
+                 (xn[0] - xn[1]) * (yn[2] - yn[3]));
   if (prod * prod > 1.0e-12 *
-      ((nodes[0][0] - nodes[1][0]) * (nodes[0][0] - nodes[1][0]) + 
-       (nodes[0][1] - nodes[1][1]) * (nodes[0][1] - nodes[1][1])) *
-      ((nodes[2][0] - nodes[3][0]) * (nodes[2][0] - nodes[3][0]) + 
-       (nodes[2][1] - nodes[3][1]) * (nodes[2][1] - nodes[3][1]))) {
-    t1 = (-(nodes[3][0] * nodes[0][1]) + x * nodes[0][1] + nodes[2][0] * nodes[1][1] - x * nodes[1][1] - nodes[1][0] * nodes[2][1] +
-          x * nodes[2][1] + nodes[0][0] * nodes[3][1] - x * nodes[3][1] - nodes[0][0] * y + nodes[1][0] * y - nodes[2][0] * y +
-          nodes[3][0] * y + sqrt(det)) /
+      ((xn[0] - xn[1]) * (xn[0] - xn[1]) + 
+       (yn[0] - yn[1]) * (yn[0] - yn[1])) *
+      ((xn[2] - xn[3]) * (xn[2] - xn[3]) + 
+       (yn[2] - yn[3]) * (yn[2] - yn[3]))) {
+    t1 = (-(xn[3] * yn[0]) + x * yn[0] + xn[2] * yn[1] - x * yn[1] - xn[1] * yn[2] +
+          x * yn[2] + xn[0] * yn[3] - x * yn[3] - xn[0] * y + xn[1] * y - xn[2] * y +
+          xn[3] * y + sqrt(det)) /
          prod;
   } else {
-    double xp = nodes[0][1] - nodes[1][1];
-    double yp = nodes[1][0] - nodes[0][0];
+    double xp = yn[0] - yn[1];
+    double yp = xn[1] - xn[0];
     double dn = sqrt(xp * xp + yp * yp);
     if (dn <= 0) {
       std::cerr << m_className << "::Coordinates4:\n"
@@ -1630,18 +1624,18 @@ int ComponentFieldMap::Coordinates4(
     }
     xp = xp / dn;
     yp = yp / dn;
-    double dpoint = xp * (x - nodes[0][0]) + yp * (y - nodes[0][1]);
-    double dbox = xp * (nodes[3][0] - nodes[0][0]) + yp * (nodes[3][1] - nodes[0][1]);
+    double dpoint = xp * (x - xn[0]) + yp * (y - yn[0]);
+    double dbox = xp * (xn[3] - xn[0]) + yp * (yn[3] - yn[0]);
     if (dbox == 0) {
       std::cerr << m_className << "::Coordinates4:\n"
                 << "    Element appears to be degenerate in the 1 - 3 axis.\n";
       return ifail;
     }
     double t = -1 + 2 * dpoint / dbox;
-    double xt1 = nodes[0][0] + 0.5 * (t + 1) * (nodes[3][0] - nodes[0][0]);
-    double yt1 = nodes[0][1] + 0.5 * (t + 1) * (nodes[3][1] - nodes[0][1]);
-    double xt2 = nodes[1][0] + 0.5 * (t + 1) * (nodes[2][0] - nodes[1][0]);
-    double yt2 = nodes[1][1] + 0.5 * (t + 1) * (nodes[2][1] - nodes[1][1]);
+    double xt1 = xn[0] + 0.5 * (t + 1) * (xn[3] - xn[0]);
+    double yt1 = yn[0] + 0.5 * (t + 1) * (yn[3] - yn[0]);
+    double xt2 = xn[1] + 0.5 * (t + 1) * (xn[2] - xn[1]);
+    double yt2 = yn[1] + 0.5 * (t + 1) * (yn[2] - yn[1]);
     dn = (xt1 - xt2) * (xt1 - xt2) + (yt1 - yt2) * (yt1 - yt2);
     if (dn <= 0) {
       std::cout << m_className << "::Coordinates4:\n";
@@ -1653,20 +1647,20 @@ int ComponentFieldMap::Coordinates4(
   }
 
   // Vector products for evaluation of T2.
-  prod = ((nodes[0][0] - nodes[3][0]) * (nodes[1][1] - nodes[2][1]) - 
-          (nodes[1][0] - nodes[2][0]) * (nodes[0][1] - nodes[3][1]));
+  prod = ((xn[0] - xn[3]) * (yn[1] - yn[2]) - 
+          (xn[1] - xn[2]) * (yn[0] - yn[3]));
   if (prod * prod > 1.0e-12 *
-      ((nodes[0][0] - nodes[3][0]) * (nodes[0][0] - nodes[3][0]) + 
-       (nodes[0][1] - nodes[3][1]) * (nodes[0][1] - nodes[3][1])) *
-      ((nodes[1][0] - nodes[2][0]) * (nodes[1][0] - nodes[2][0]) + 
-       (nodes[1][1] - nodes[2][1]) * (nodes[1][1] - nodes[2][1]))) {
-    t2 = (-(nodes[1][0] * nodes[0][1]) + x * nodes[0][1] + nodes[0][0] * nodes[1][1] - x * nodes[1][1] - nodes[3][0] * nodes[2][1] +
-          x * nodes[2][1] + nodes[2][0] * nodes[3][1] - x * nodes[3][1] - nodes[0][0] * y + nodes[1][0] * y - nodes[2][0] * y +
-          nodes[3][0] * y - sqrt(det)) /
+      ((xn[0] - xn[3]) * (xn[0] - xn[3]) + 
+       (yn[0] - yn[3]) * (yn[0] - yn[3])) *
+      ((xn[1] - xn[2]) * (xn[1] - xn[2]) + 
+       (yn[1] - yn[2]) * (yn[1] - yn[2]))) {
+    t2 = (-(xn[1] * yn[0]) + x * yn[0] + xn[0] * yn[1] - x * yn[1] - xn[3] * yn[2] +
+          x * yn[2] + xn[2] * yn[3] - x * yn[3] - xn[0] * y + xn[1] * y - xn[2] * y +
+          xn[3] * y - sqrt(det)) /
          prod;
   } else {
-    double xp = nodes[0][1] - nodes[3][1];
-    double yp = nodes[3][0] - nodes[0][0];
+    double xp = yn[0] - yn[3];
+    double yp = xn[3] - xn[0];
     double dn = sqrt(xp * xp + yp * yp);
     if (dn <= 0) {
       std::cerr << m_className << "Coordinates4:\n"
@@ -1675,18 +1669,18 @@ int ComponentFieldMap::Coordinates4(
     }
     xp = xp / dn;
     yp = yp / dn;
-    double dpoint = xp * (x - nodes[0][0]) + yp * (y - nodes[0][1]);
-    double dbox = xp * (nodes[1][0] - nodes[0][0]) + yp * (nodes[1][1] - nodes[0][1]);
+    double dpoint = xp * (x - xn[0]) + yp * (y - yn[0]);
+    double dbox = xp * (xn[1] - xn[0]) + yp * (yn[1] - yn[0]);
     if (dbox == 0) {
       std::cerr << m_className << "::Coordinates4:\n"
                 << "    Element appears to be degenerate in the 1 - 2 axis.\n";
       return ifail;
     }
     double t = -1 + 2 * dpoint / dbox;
-    double xt1 = nodes[0][0] + 0.5 * (t + 1) * (nodes[1][0] - nodes[0][0]);
-    double yt1 = nodes[0][1] + 0.5 * (t + 1) * (nodes[1][1] - nodes[0][1]);
-    double xt2 = nodes[3][0] + 0.5 * (t + 1) * (nodes[2][0] - nodes[3][0]);
-    double yt2 = nodes[3][1] + 0.5 * (t + 1) * (nodes[2][1] - nodes[3][1]);
+    double xt1 = xn[0] + 0.5 * (t + 1) * (xn[1] - xn[0]);
+    double yt1 = yn[0] + 0.5 * (t + 1) * (yn[1] - yn[0]);
+    double xt2 = xn[3] + 0.5 * (t + 1) * (xn[2] - xn[3]);
+    double yt2 = yn[3] + 0.5 * (t + 1) * (yn[2] - yn[3]);
     dn = (xt1 - xt2) * (xt1 - xt2) + (yt1 - yt2) * (yt1 - yt2);
     if (dn <= 0) {
       std::cout
@@ -1704,8 +1698,8 @@ int ComponentFieldMap::Coordinates4(
     const double f1 = (1 + t1) * (1 - t2) * 0.25;
     const double f2 = (1 + t1) * (1 + t2) * 0.25;
     const double f3 = (1 - t1) * (1 + t2) * 0.25;
-    const double xr = nodes[0][0] * f0 + nodes[1][0] * f1 + nodes[2][0] * f2 + nodes[3][0] * f3;
-    const double yr = nodes[0][1] * f0 + nodes[1][1] * f1 + nodes[2][1] * f2 + nodes[3][1] * f3;
+    const double xr = xn[0] * f0 + xn[1] * f1 + xn[2] * f2 + xn[3] * f3;
+    const double yr = yn[0] * f0 + yn[1] * f1 + yn[2] * f2 + yn[3] * f3;
     std::cout << m_className << "::Coordinates4: \n";
     std::cout << "    Position requested:     (" << x << ", " << y << ")\n";
     std::cout << "    Reconstructed:          (" << xr << ", " << yr << ")\n";
@@ -1721,7 +1715,8 @@ int ComponentFieldMap::Coordinates4(
 int ComponentFieldMap::Coordinates5(const double x, const double y,
     double& t1, double& t2, double& t3, double& t4, 
     double jac[4][4], double& det, 
-    const std::array<std::array<double, 2>, 8>& nodes) const {
+    const std::array<double, 8>& xn,
+    const std::array<double, 8>& yn) const {
   // Debugging
   if (m_debug) {
     std::cout << m_className << "::Coordinates5:\n"
@@ -1735,7 +1730,7 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
   t1 = t2 = t3 = t4 = 0;
 
   // Make a first order approximation.
-  if (Coordinates4(x, y, t1, t2, t3, t4, det, nodes) > 0) {
+  if (Coordinates4(x, y, t1, t2, t3, t4, det, xn, yn) > 0) {
     if (m_debug) {
       std::cout << m_className << "::Coordinates5:\n";
       std::cout << "    Failure to obtain linear estimate of isoparametric "
@@ -1775,11 +1770,11 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
     f[7] = (1 - td1) * (1 + td2) * (1 - td2) * 0.5;
     double xr = 0., yr = 0.;
     for (size_t i = 0; i < 8; ++i) {
-      xr += nodes[i][0] * f[i];
-      yr += nodes[i][1] * f[i];
+      xr += xn[i] * f[i];
+      yr += yn[i] * f[i];
     }
     // Compute the Jacobian.
-    Jacobian5(nodes, td1, td2, det, jac);
+    Jacobian5(xn, yn, td1, td2, det, jac);
     // Compute the difference vector.
     double diff[2] = {x - xr, y - yr};
     // Update the estimate.
@@ -1814,15 +1809,15 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
   }
   // No convergence reached.
   if (!converged) {
-    double xmin = nodes[0][0];
+    double xmin = xn[0];
     double xmax = xmin;
-    double ymin = nodes[0][1];
+    double ymin = yn[0];
     double ymax = ymin;
     for (size_t i = 0; i < 8; ++i) {
-      xmin = std::min(xmin, nodes[i][0]);
-      xmax = std::max(xmax, nodes[i][0]);
-      ymin = std::min(ymin, nodes[i][1]);
-      ymax = std::max(ymax, nodes[i][1]);
+      xmin = std::min(xmin, xn[i]);
+      xmax = std::max(xmax, xn[i]);
+      ymin = std::min(ymin, yn[i]);
+      ymax = std::max(ymax, yn[i]);
     }
     if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
       if (m_printConvergenceWarnings) {
@@ -1854,10 +1849,10 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
     const double r5 = (1 + td1) * (1 + td2) * (1 - td2) * 0.5;
     const double r6 = (1 - td1) * (1 + td1) * (1 + td2) * 0.5;
     const double r7 = (1 - td1) * (1 + td2) * (1 - td2) * 0.5;
-    double xr = nodes[0][0] * r0 + nodes[1][0] * r1 + nodes[2][0] * r2 + nodes[3][0] * r3 + nodes[4][0] * r4 +
-                nodes[5][0] * r5 + nodes[6][0] * r6 + nodes[7][0] * r7;
-    double yr = nodes[0][1] * r0 + nodes[1][1] * r1 + nodes[2][1] * r2 + nodes[3][1] * r3 + nodes[4][1] * r4 +
-                nodes[5][1] * r5 + nodes[6][1] * r6 + nodes[7][1] * r7;
+    double xr = xn[0] * r0 + xn[1] * r1 + xn[2] * r2 + xn[3] * r3 + xn[4] * r4 +
+                xn[5] * r5 + xn[6] * r6 + xn[7] * r7;
+    double yr = yn[0] * r0 + yn[1] * r1 + yn[2] * r2 + yn[3] * r3 + yn[4] * r4 +
+                yn[5] * r5 + yn[6] * r6 + yn[7] * r7;
     std::cout << "    Position requested:     (" << x << ", " << y << ")\n";
     std::cout << "    Reconstructed:          (" << xr << ", " << yr << ")\n";
     std::cout << "    Difference:             (" << x - xr << ", " << y - yr
@@ -1870,51 +1865,53 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
 }
 
 std::array<std::array<double, 3>, 4> ComponentFieldMap::Weights12(
-    const std::array<std::array<double, 3>, 10>& nodes) {
+    const std::array<double, 10>& xn,
+    const std::array<double, 10>& yn,
+    const std::array<double, 10>& zn) {
 
   std::array<std::array<double, 3>, 4> w;
-  w[0][0] = (nodes[2][1] - nodes[1][1]) * (nodes[3][2] - nodes[1][2]) -
-            (nodes[3][1] - nodes[1][1]) * (nodes[2][2] - nodes[1][2]);
-  w[0][1] = (nodes[2][2] - nodes[1][2]) * (nodes[3][0] - nodes[1][0]) -
-            (nodes[3][2] - nodes[1][2]) * (nodes[2][0] - nodes[1][0]);
-  w[0][2] = (nodes[2][0] - nodes[1][0]) * (nodes[3][1] - nodes[1][1]) - 
-            (nodes[3][0] - nodes[1][0]) * (nodes[2][1] - nodes[1][1]);
-  const double s0 = 1. / ((nodes[0][0] - nodes[1][0]) * w[0][0] + 
-                          (nodes[0][1] - nodes[1][1]) * w[0][1] + 
-                          (nodes[0][2] - nodes[1][2]) * w[0][2]);
+  w[0][0] = (yn[2] - yn[1]) * (zn[3] - zn[1]) -
+            (yn[3] - yn[1]) * (zn[2] - zn[1]);
+  w[0][1] = (zn[2] - zn[1]) * (xn[3] - xn[1]) -
+            (zn[3] - zn[1]) * (xn[2] - xn[1]);
+  w[0][2] = (xn[2] - xn[1]) * (yn[3] - yn[1]) - 
+            (xn[3] - xn[1]) * (yn[2] - yn[1]);
+  const double s0 = 1. / ((xn[0] - xn[1]) * w[0][0] + 
+                          (yn[0] - yn[1]) * w[0][1] + 
+                          (zn[0] - zn[1]) * w[0][2]);
   for (size_t i = 0; i < 3; ++i) w[0][i] *= s0;
 
-  w[1][0] = (nodes[0][1] - nodes[2][1]) * (nodes[3][2] - nodes[2][2]) -
-            (nodes[3][1] - nodes[2][1]) * (nodes[0][2] - nodes[2][2]);
-  w[1][1] = (nodes[0][2] - nodes[2][2]) * (nodes[3][0] - nodes[2][0]) -
-            (nodes[3][2] - nodes[2][2]) * (nodes[0][0] - nodes[2][0]);
-  w[1][2] = (nodes[0][0] - nodes[2][0]) * (nodes[3][1] - nodes[2][1]) - 
-            (nodes[3][0] - nodes[2][0]) * (nodes[0][1] - nodes[2][1]);
-  const double s1 = 1. / ((nodes[1][0] - nodes[2][0]) * w[1][0] + 
-                          (nodes[1][1] - nodes[2][1]) * w[1][1] + 
-                          (nodes[1][2] - nodes[2][2]) * w[1][2]);
+  w[1][0] = (yn[0] - yn[2]) * (zn[3] - zn[2]) -
+            (yn[3] - yn[2]) * (zn[0] - zn[2]);
+  w[1][1] = (zn[0] - zn[2]) * (xn[3] - xn[2]) -
+            (zn[3] - zn[2]) * (xn[0] - xn[2]);
+  w[1][2] = (xn[0] - xn[2]) * (yn[3] - yn[2]) - 
+            (xn[3] - xn[2]) * (yn[0] - yn[2]);
+  const double s1 = 1. / ((xn[1] - xn[2]) * w[1][0] + 
+                          (yn[1] - yn[2]) * w[1][1] + 
+                          (zn[1] - zn[2]) * w[1][2]);
   for (size_t i = 0; i < 3; ++i) w[1][i] *= s1;
 
-  w[2][0] = (nodes[0][1] - nodes[3][1]) * (nodes[1][2] - nodes[3][2]) -
-            (nodes[1][1] - nodes[3][1]) * (nodes[0][2] - nodes[3][2]);
-  w[2][1] = (nodes[0][2] - nodes[3][2]) * (nodes[1][0] - nodes[3][0]) - 
-            (nodes[1][2] - nodes[3][2]) * (nodes[0][0] - nodes[3][0]);
-  w[2][2] = (nodes[0][0] - nodes[3][0]) * (nodes[1][1] - nodes[3][1]) - 
-            (nodes[1][0] - nodes[3][0]) * (nodes[0][1] - nodes[3][1]);
-  const double s2 = 1. / ((nodes[2][0] - nodes[3][0]) * w[2][0] + 
-                          (nodes[2][1] - nodes[3][1]) * w[2][1] + 
-                          (nodes[2][2] - nodes[3][2]) * w[2][2]);
+  w[2][0] = (yn[0] - yn[3]) * (zn[1] - zn[3]) -
+            (yn[1] - yn[3]) * (zn[0] - zn[3]);
+  w[2][1] = (zn[0] - zn[3]) * (xn[1] - xn[3]) - 
+            (zn[1] - zn[3]) * (xn[0] - xn[3]);
+  w[2][2] = (xn[0] - xn[3]) * (yn[1] - yn[3]) - 
+            (xn[1] - xn[3]) * (yn[0] - yn[3]);
+  const double s2 = 1. / ((xn[2] - xn[3]) * w[2][0] + 
+                          (yn[2] - yn[3]) * w[2][1] + 
+                          (zn[2] - zn[3]) * w[2][2]);
   for (size_t i = 0; i < 3; ++i) w[2][i] *= s2;
 
-  w[3][0] = (nodes[2][1] - nodes[0][1]) * (nodes[1][2] - nodes[0][2]) -
-            (nodes[1][1] - nodes[0][1]) * (nodes[2][2] - nodes[0][2]);
-  w[3][1] = (nodes[2][2] - nodes[0][2]) * (nodes[1][0] - nodes[0][0]) - 
-            (nodes[1][2] - nodes[0][2]) * (nodes[2][0] - nodes[0][0]);
-  w[3][2] = (nodes[2][0] - nodes[0][0]) * (nodes[1][1] - nodes[0][1]) - 
-            (nodes[1][0] - nodes[0][0]) * (nodes[2][1] - nodes[0][1]);
-  const double s3 = 1. / ((nodes[3][0] - nodes[0][0]) * w[3][0] + 
-                          (nodes[3][1] - nodes[0][1]) * w[3][1] + 
-                          (nodes[3][2] - nodes[0][2]) * w[3][2]);
+  w[3][0] = (yn[2] - yn[0]) * (zn[1] - zn[0]) -
+            (yn[1] - yn[0]) * (zn[2] - zn[0]);
+  w[3][1] = (zn[2] - zn[0]) * (xn[1] - xn[0]) - 
+            (zn[1] - zn[0]) * (xn[2] - xn[0]);
+  w[3][2] = (xn[2] - xn[0]) * (yn[1] - yn[0]) - 
+            (xn[1] - xn[0]) * (yn[2] - yn[0]);
+  const double s3 = 1. / ((xn[3] - xn[0]) * w[3][0] + 
+                          (yn[3] - yn[0]) * w[3][1] + 
+                          (zn[3] - zn[0]) * w[3][2]);
   for (size_t i = 0; i < 3; ++i) w[3][i] *= s3;
   return w;
 }
@@ -1922,7 +1919,9 @@ std::array<std::array<double, 3>, 4> ComponentFieldMap::Weights12(
 void ComponentFieldMap::Coordinates12(
     const double x, const double y, const double z, 
     double& t1, double& t2, double& t3, double& t4,
-    const std::array<std::array<double, 3>, 10>& nodes,
+    const std::array<double, 10>& xn,
+    const std::array<double, 10>& yn,
+    const std::array<double, 10>& zn,
     const std::array<std::array<double, 3>, 4>& w) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates12:\n"
@@ -1930,14 +1929,10 @@ void ComponentFieldMap::Coordinates12(
   }
 
   // Compute tetrahedral coordinates.
-  t1 = (x - nodes[1][0]) * w[0][0] + (y - nodes[1][1]) * w[0][1] + 
-       (z - nodes[1][2]) * w[0][2];
-  t2 = (x - nodes[2][0]) * w[1][0] + (y - nodes[2][1]) * w[1][1] + 
-       (z - nodes[2][2]) * w[1][2];
-  t3 = (x - nodes[3][0]) * w[2][0] + (y - nodes[3][1]) * w[2][1] + 
-       (z - nodes[3][2]) * w[2][2];
-  t4 = (x - nodes[0][0]) * w[3][0] + (y - nodes[0][1]) * w[3][1] + 
-       (z - nodes[0][2]) * w[3][2];
+  t1 = (x - xn[1]) * w[0][0] + (y - yn[1]) * w[0][1] + (z - zn[1]) * w[0][2];
+  t2 = (x - xn[2]) * w[1][0] + (y - yn[2]) * w[1][1] + (z - zn[2]) * w[1][2];
+  t3 = (x - xn[3]) * w[2][0] + (y - yn[3]) * w[2][1] + (z - zn[3]) * w[2][2];
+  t4 = (x - xn[0]) * w[3][0] + (y - yn[0]) * w[3][1] + (z - zn[0]) * w[3][2];
 
   // Result.
   if (m_debug) {
@@ -1946,9 +1941,9 @@ void ComponentFieldMap::Coordinates12(
               << t2 << ", " << t3 << ", " << t4
               << ") sum = " << t1 + t2 + t3 + t4 << ".\n";
     // Re-compute the (x,y,z) position for this coordinate.
-    const double xr = nodes[0][0] * t1 + nodes[1][0] * t2 + nodes[2][0] * t3 + nodes[3][0] * t4;
-    const double yr = nodes[0][1] * t1 + nodes[1][1] * t2 + nodes[2][1] * t3 + nodes[3][1] * t4;
-    const double zr = nodes[0][2] * t1 + nodes[1][2] * t2 + nodes[2][2] * t3 + nodes[3][2] * t4;
+    const double xr = xn[0] * t1 + xn[1] * t2 + xn[2] * t3 + xn[3] * t4;
+    const double yr = yn[0] * t1 + yn[1] * t2 + yn[2] * t3 + yn[3] * t4;
+    const double zr = zn[0] * t1 + zn[1] * t2 + zn[2] * t3 + zn[3] * t4;
     const double sr = t1 + t2 + t3 + t4;
     std::cout << "    Position requested:     (" << x << ", " << y << ", " << z
               << ")\n";
@@ -1964,7 +1959,9 @@ int ComponentFieldMap::Coordinates13(
     const double x, const double y, const double z, 
     double& t1, double& t2, double& t3, double& t4, 
     double jac[4][4], double& det,
-    const std::array<std::array<double, 3>, 10>& nodes,
+    const std::array<double, 10>& xn,
+    const std::array<double, 10>& yn,
+    const std::array<double, 10>& zn,
     const std::array<std::array<double, 3>, 4>& w) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates13:\n"
@@ -1975,16 +1972,15 @@ int ComponentFieldMap::Coordinates13(
   t1 = t2 = t3 = t4 = 0.;
 
   // Make a first order approximation.
-  Coordinates12(x, y, z, t1, t2, t3, t4, nodes, w);
-
-  if (t1 < -0.5 || t2 < -0.5 || t3 < -0.5 || t4 < -0.5 || 
-      t1 > 1.5 || t2 > 1.5 || t3 > 1.5 || t4 > 1.5) {
-    if (m_debug) {
-      std::cout << m_className << "::Coordinates13:\n"
-                << "    Linear isoparametric coordinates far outside.\n";
-    }
-    return 1;
-  }
+  t1 = (x - xn[1]) * w[0][0] + (y - yn[1]) * w[0][1] + (z - zn[1]) * w[0][2];
+  // Stop if we are far outside.
+  if (t1 < -0.5 || t1 > 1.5) return 1;
+  t2 = (x - xn[2]) * w[1][0] + (y - yn[2]) * w[1][1] + (z - zn[2]) * w[1][2];
+  if (t2 < -0.5 || t2 > 1.5) return 1;
+  t3 = (x - xn[3]) * w[2][0] + (y - yn[3]) * w[2][1] + (z - zn[3]) * w[2][2];
+  if (t3 < -0.5 || t3 > 1.5) return 1;
+  t4 = (x - xn[0]) * w[3][0] + (y - yn[0]) * w[3][1] + (z - zn[0]) * w[3][2];
+  if (t4 < -0.5 || t4 > 1.5) return 1;
 
   // Start iteration.
   std::array<double, 4> td = {t1, t2, t3, t4};
@@ -2005,16 +2001,13 @@ int ComponentFieldMap::Coordinates13(
     f[8] = 4 * td[1] * td[3];
     f[9] = 4 * td[2] * td[3];
     // Re-compute the (x,y,z) position for this coordinate.
-    double xr = 0., yr = 0., zr = 0.;
-    for (size_t i = 0; i < 10; ++i) {
-      xr += nodes[i][0] * f[i];
-      yr += nodes[i][1] * f[i];
-      zr += nodes[i][2] * f[i];
-    }
+    const double xr = std::inner_product(f.begin(), f.end(), xn.begin(), 0.);
+    const double yr = std::inner_product(f.begin(), f.end(), yn.begin(), 0.);
+    const double zr = std::inner_product(f.begin(), f.end(), zn.begin(), 0.);
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
 
     // Compute the Jacobian.
-    Jacobian13(nodes, td[0], td[1], td[2], td[3], det, jac);
+    Jacobian13(xn, yn, zn, td[0], td[1], td[2], td[3], det, jac);
     const double invdet = 1. / det;
     // Compute the difference vector.
     double diff[4] = {1. - sr, x - xr, y - yr, z - zr};
@@ -2055,12 +2048,12 @@ int ComponentFieldMap::Coordinates13(
 
   // No convergence reached.
   if (!converged) {
-    const double xmin = std::min({nodes[0][0], nodes[1][0], nodes[2][0], nodes[3][0]});
-    const double xmax = std::max({nodes[0][0], nodes[1][0], nodes[2][0], nodes[3][0]});
-    const double ymin = std::min({nodes[0][1], nodes[1][1], nodes[2][1], nodes[3][1]});
-    const double ymax = std::max({nodes[0][1], nodes[1][1], nodes[2][1], nodes[3][1]});
-    const double zmin = std::min({nodes[0][2], nodes[1][2], nodes[2][2], nodes[3][2]});
-    const double zmax = std::max({nodes[0][2], nodes[1][2], nodes[2][2], nodes[3][2]});
+    const double xmin = std::min({xn[0], xn[1], xn[2], xn[3]});
+    const double xmax = std::max({xn[0], xn[1], xn[2], xn[3]});
+    const double ymin = std::min({yn[0], yn[1], yn[2], yn[3]});
+    const double ymax = std::max({yn[0], yn[1], yn[2], yn[3]});
+    const double zmin = std::min({zn[0], zn[1], zn[2], zn[3]});
+    const double zmax = std::max({zn[0], zn[1], zn[2], zn[3]});
     if (x >= xmin && x <= xmax && y >= ymin && y <= ymax && z >= zmin &&
         z <= zmax) {
       if (m_printConvergenceWarnings) {
@@ -2092,12 +2085,9 @@ int ComponentFieldMap::Coordinates13(
     f[7] = 4 * td[1] * td[2];
     f[8] = 4 * td[1] * td[3];
     f[9] = 4 * td[2] * td[3];
-    double xr = 0., yr = 0., zr = 0.;
-    for (size_t i = 0; i < 10; ++i) {
-      xr += nodes[i][0] * f[i];
-      yr += nodes[i][1] * f[i];
-      zr += nodes[i][2] * f[i];
-    }
+    const double xr = std::inner_product(f.begin(), f.end(), xn.begin(), 0.);
+    const double yr = std::inner_product(f.begin(), f.end(), yn.begin(), 0.);
+    const double zr = std::inner_product(f.begin(), f.end(), zn.begin(), 0.);
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
     std::cout << "    Position requested:     (" << x << ", " << y << ", " << z
               << ")\n";
@@ -2216,13 +2206,17 @@ void ComponentFieldMap::Prepare() {
   }
   // Precompute terms for interpolation in linear tetrahedra.
   if (m_elementType == ElementType::CurvedTetrahedron) {
-    std::array<std::array<double, 3>, 10> nodes;
+    std::array<double, 10> xn;
+    std::array<double, 10> yn;
+    std::array<double, 10> zn;
     for (const auto& element : m_elements) {
       for (size_t j = 0; j < 10; ++j) {
         const auto& node = m_nodes[element.emap[j]];
-        nodes[j] = {node.x, node.y, node.z};
+        xn[j] = node.x;
+        yn[j] = node.y;
+        zn[j] = node.z;
       }
-      m_w12.emplace_back(Weights12(nodes));
+      m_w12.emplace_back(Weights12(xn, yn, zn));
     }
   } 
 }

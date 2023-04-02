@@ -217,7 +217,7 @@ size_t ComponentTcad3d::FindElement(
 
   w.fill(0.);
   if (m_tree) {
-    auto elements = m_tree->GetElementsInBlock(Vec3(x, y, z));
+    const auto& elements = m_tree->GetElementsInBlock(Vec3(x, y, z));
     for (const auto i : elements) {
       if (InElement(x, y, z, m_elements[i], w)) return i;
     }

@@ -300,7 +300,7 @@ size_t ComponentTcad2d::FindElement(const double x, const double y,
 
   w.fill(0.);
   if (m_tree) {
-    const auto elements = m_tree->GetElementsInBlock(x, y);
+    const auto& elements = m_tree->GetElementsInBlock(x, y);
     for (const auto i : elements) { 
       if (InElement(x, y, m_elements[i], w)) return i;
     }
