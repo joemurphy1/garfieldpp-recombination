@@ -150,12 +150,13 @@ class ComponentFieldMap : public Component {
     int emap[10];
     // Material
     unsigned int matmap;
-    bool degenerate;
-    // Bounding box of the element
-    std::array<float, 3> bbMin;
-    std::array<float, 3> bbMax;
   };
   std::vector<Element> m_elements;
+  // Degeneracy flags.
+  std::vector<bool> m_degenerate;
+  // Bounding boxes of the elements.
+  std::vector<std::array<float, 3> > m_bbMin;
+  std::vector<std::array<float, 3> > m_bbMax;
 
   std::vector<std::array<std::array<double, 3>, 4> > m_w12;
 
@@ -313,7 +314,7 @@ class ComponentFieldMap : public Component {
                          const std::string& filename) const;
   void PrintElement(const std::string& header, const double x, const double y,
                     const double z, const double t1, const double t2,
-                    const double t3, const double t4, const Element& element,
+                    const double t3, const double t4, const size_t i,
                     const std::vector<double>& potential) const;
   /// Interpolation of potential between two time slices.
   void TimeInterpolation(const double t, double& f0, double& f1, int& i0,

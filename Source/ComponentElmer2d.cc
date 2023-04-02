@@ -255,11 +255,9 @@ bool ComponentElmer2d::Initialise(const std::string& header,
     }
     if (!ok) break;
     Element element;
-    element.degenerate = false;
     // Store the material reference.
     element.matmap = imat;
-
-    // Node references
+    // Store the node references.
     //               3 -- 6 -- 2
     //               |         |
     //               7         5
@@ -304,6 +302,7 @@ bool ComponentElmer2d::Initialise(const std::string& header,
   felems.close();
   if (!ok) return false;
 
+  m_degenerate.assign(m_elements.size(), false);
   // Set the ready flag.
   m_ready = true;
   std::cout << "    Finished.\n";
