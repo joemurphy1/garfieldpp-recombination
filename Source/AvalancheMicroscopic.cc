@@ -547,9 +547,7 @@ bool AvalancheMicroscopic::TransportElectrons(
       ++m_nElectrons;
     }
   }
-
   std::vector<std::pair<Point, bool> > newParticles;
-  // if (aval) newParticles.reserve(1000);
   while (!particles.empty()) {
     newParticles.clear();
     // Loop over the electrons/holes in the avalanche.
@@ -816,7 +814,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
         // Real collision rate is higher than null-collision rate.
         dt += log(r) * tLim;
         // Increase the null collision rate and try again.
-        std::cerr << m_className << "::TransportElectron:"
+        std::cerr << m_className << "::TransportElectron: "
                   << "Increasing null-collision rate by 5%.\n";
         if (sc) std::cerr << "    Band " << band << "\n";
         fLim *= 1.05;

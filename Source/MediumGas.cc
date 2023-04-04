@@ -203,7 +203,7 @@ bool MediumGas::SetComposition(const std::string& gas1, const double f1,
   }
 
   // Print the composition.
-  std::cout << m_className << "::SetComposition:\n    " << m_name;
+  std::cout << m_className << "::SetComposition: " << m_name;
   if (m_nComponents > 1) {
     std::cout << " (" << m_fraction[0] * 100;
     for (unsigned int i = 1; i < m_nComponents; ++i) {
