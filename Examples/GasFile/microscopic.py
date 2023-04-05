@@ -12,17 +12,18 @@ else:
   ROOT.gSystem.Load(path + '/lib/libGarfield.so')
 
 # Electric field [V/cm]
-efield = 20.e3
+efield = 30.e3
 
 # Set up the gas.
 gas = ROOT.Garfield.MediumMagboltz()
-gas.SetComposition("Ar")
+gas.SetComposition("Ar", 90., "CO2", 10.)
 
 # Run Magboltz for the requested electric field.
 gas.SetFieldGrid(efield, efield, 1, False)
-# gas.GenerateGasTable(10)
+gas.GenerateGasTable(10)
 # alpha = ctypes.c_double(0.)
 # gas.ElectronTownsend(efield, 0, 0, 0, 0, 0, alpha)
+gas.SetMaxElectronEnergy(200.)
 
 # Create a component with uniform electric field.
 gap = 200.e-4
@@ -58,9 +59,9 @@ for i in range(nDrift):
 print('{:5d}'.format(nDrift))
 
 vd = 1.e3 * gap / hT.GetMean()
-print('Drift velocity: {:.3f} cm / us'.format(vd))
+print('Drift velocity: {:.2f} cm / us'.format(vd))
 dt = 1.e4 * 0.5 * (hX.GetStdDev() + hY.GetStdDev()) / sqrt(gap)
-print('Transverse diffusion: {:.5f} um / cm1/2'.format(dt))
+print('Transverse diffusion: {:.2f} um / cm1/2'.format(dt))
 
 hNe = ROOT.TH1F('hNe', '', 100, 0, 0)
 nAval = 1000
@@ -76,4 +77,4 @@ for i in range(nAval):
 print('{:5d}'.format(nAval))
 
 alpha = log(hNe.GetMean()) / gap 
-print('Townsend coefficient: {:.2f}'.format(alpha))
+print('Effective Townsend coefficient: {:.2f}'.format(alpha))
