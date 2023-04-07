@@ -505,12 +505,11 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
 
   // Plot the drift line if requested.
   if (m_viewer && !path.empty()) {
-    const size_t nPoints = path.size();
+    const size_t nP = path.size();
     // Register the new drift line and get its ID.
-    size_t id;
-    m_viewer->NewDriftLine(particle, nPoints, id, p0.x, p0.y, p0.z);
+    const size_t id = m_viewer->NewDriftLine(particle, nP, p0.x, p0.y, p0.z);
     // Set the points along the trajectory.
-    for (size_t i = 0; i < nPoints; ++i) {
+    for (size_t i = 0; i < nP; ++i) {
       m_viewer->SetDriftLinePoint(id, i, path[i].x, path[i].y, path[i].z);
     }
   }

@@ -615,9 +615,9 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
   size_t did = 0;
   if (m_viewer) {
     if (hole) {
-      m_viewer->NewDriftLine(Particle::Hole, 1, did, x, y, z); 
+      did = m_viewer->NewDriftLine(Particle::Hole, 1, x, y, z); 
     } else { 
-      m_viewer->NewDriftLine(Particle::Electron, 1, did, x, y, z);
+      did = m_viewer->NewDriftLine(Particle::Electron, 1, x, y, z);
     }
   }
 

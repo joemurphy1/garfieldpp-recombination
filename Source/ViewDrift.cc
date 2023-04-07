@@ -65,8 +65,8 @@ void ViewDrift::GetDriftLine(const size_t i,
   }
 }
 
-void ViewDrift::NewDriftLine(const Particle particle, const size_t np, 
-    size_t& id, const float x0, const float y0, const float z0) {
+size_t ViewDrift::NewDriftLine(const Particle particle, const size_t np, 
+    const float x0, const float y0, const float z0) {
   std::lock_guard<std::mutex> guard(m_mutex);
   // Create a new drift line and add it to the list.
   std::array<float, 3> p = {x0, y0, z0};
@@ -74,7 +74,7 @@ void ViewDrift::NewDriftLine(const Particle particle, const size_t np,
   std::vector<std::array<float, 3> > dl(std::max(minSize, np), p);
   m_driftLines.push_back(std::make_pair(std::move(dl), particle));
   // Return the index of this drift line.
-  id = m_driftLines.size() - 1;
+  return m_driftLines.size() - 1;
 }
 
 void ViewDrift::AddPhoton(const float x0, const float y0, const float z0, 
