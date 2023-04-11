@@ -801,6 +801,8 @@ bool ComponentAnalyticField::InTrapRadius(const double qin, const double xin,
     shift[3] = true;
   }
 
+  double r2min = std::numeric_limits<double>::max();
+  bool inside = false;
   for (const auto& wire : m_w) {
     // Skip wires with the wrong charge.
     if (qin * wire.e > 0.) continue;
@@ -808,36 +810,35 @@ bool ComponentAnalyticField::InTrapRadius(const double qin, const double xin,
     const double dyw0 = wire.y - y0;
     const double r2 = dxw0 * dxw0 + dyw0 * dyw0;
     const double rTrap = wire.r * wire.nTrap;
-    if (r2 < rTrap * rTrap) {
-      xw = wire.x;
-      yw = wire.y;
-      rw = wire.r;
-      if (shift[0]) xw -= m_sx;
-      if (shift[1]) xw += m_sx;
-      if (shift[2]) yw -= m_sy;
-      if (shift[3]) yw += m_sy;
-      if (m_pery && m_tube) {
-        double rhow, phiw;
-        Cartesian2Polar(xw, yw, rhow, phiw);
-        phiw += RadToDegree * m_sy * nPhi;
-        Polar2Cartesian(rhow, phiw, xw, yw);
-      } else if (m_pery) {
-        y0 += m_sy * nY;
-      }
-      if (m_perx) xw += m_sx * nX;
-      if (m_polar) {
-        Internal2Cartesian(xw, yw, xw, yw);
-        rw *= exp(wire.x);
-      }
-      if (m_debug) {
-        std::cout << m_className << "::InTrapRadius: (" << xin << ", "
-                  << yin << ", " << zin << ")" << " within trap radius.\n";
-      }
-      return true;
+    if (r2 > rTrap * rTrap || r2 > r2min) continue;
+    inside = true;
+    r2min = r2;
+    xw = wire.x;
+    yw = wire.y;
+    rw = wire.r;
+    if (shift[0]) xw -= m_sx;
+    if (shift[1]) xw += m_sx;
+    if (shift[2]) yw -= m_sy;
+    if (shift[3]) yw += m_sy;
+    if (m_pery && m_tube) {
+      double rhow, phiw;
+      Cartesian2Polar(xw, yw, rhow, phiw);
+      phiw += RadToDegree * m_sy * nPhi;
+      Polar2Cartesian(rhow, phiw, xw, yw);
+    } else if (m_pery) {
+      y0 += m_sy * nY;
+    }
+    if (m_perx) xw += m_sx * nX;
+    if (m_polar) {
+      Internal2Cartesian(xw, yw, xw, yw);
+      rw *= exp(wire.x);
+    }
+    if (m_debug) {
+      std::cout << m_className << "::InTrapRadius: (" << xin << ", "
+                << yin << ", " << zin << ")" << " within trap radius.\n";
     }
   }
-
-  return false;
+  return inside;
 }
 
 bool ComponentAnalyticField::CrossedPlane(
