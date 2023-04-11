@@ -215,7 +215,7 @@ bool AvalancheMC::DriftElectron(const double x0, const double y0,
   std::vector<std::pair<Point, Particle> > particles;
   particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
                                         Particle::Electron));
-  return Avalanche(particles, true, false, false);
+  return TransportParticles(particles, true, false, false);
 }
 
 bool AvalancheMC::DriftHole(const double x0, const double y0, const double z0,
@@ -223,7 +223,7 @@ bool AvalancheMC::DriftHole(const double x0, const double y0, const double z0,
   std::vector<std::pair<Point, Particle> > particles;
   particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
                                         Particle::Hole));
-  return Avalanche(particles, false, true, false);
+  return TransportParticles(particles, false, true, false);
 }
 
 bool AvalancheMC::DriftIon(const double x0, const double y0, const double z0,
@@ -231,7 +231,7 @@ bool AvalancheMC::DriftIon(const double x0, const double y0, const double z0,
   std::vector<std::pair<Point, Particle> > particles;
   particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
                                         Particle::Ion));
-  return Avalanche(particles, false, true, false);
+  return TransportParticles(particles, false, true, false);
 }
 
 bool AvalancheMC::DriftNegativeIon(const double x0, const double y0, 
@@ -239,13 +239,13 @@ bool AvalancheMC::DriftNegativeIon(const double x0, const double y0,
   std::vector<std::pair<Point, Particle> > particles;
   particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
                                         Particle::NegativeIon));
-  return Avalanche(particles, false, false, false);
+  return TransportParticles(particles, false, false, false);
 }
 
 int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
     std::vector<Point>& path,
     std::vector<std::pair<Point, Particle> > & secondaries,
-    const bool aval) {
+    const bool aval, const bool signal) {
 
   std::array<double, 3> x0 = {p0.x, p0.y, p0.z};
   double t0 = p0.t;
@@ -500,7 +500,7 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
   const double scale = particle == Particle::Electron
                            ? -m_scaleE
                            : particle == Particle::Hole ? m_scaleH : m_scaleI;
-  if (m_doSignal) ComputeSignal(particle, scale, path);
+  if (signal) ComputeSignal(particle, scale, path);
   if (m_doInducedCharge) ComputeInducedCharge(scale, path);
 
   // Plot the drift line if requested.
@@ -522,7 +522,7 @@ bool AvalancheMC::AvalancheElectron(const double x0, const double y0,
   std::vector<std::pair<Point, Particle> > particles;
   particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
                                         Particle::Electron));
-  return Avalanche(particles, true, holes, true);
+  return TransportParticles(particles, true, holes, true);
 }
 
 bool AvalancheMC::AvalancheHole(const double x0, const double y0,
@@ -531,7 +531,7 @@ bool AvalancheMC::AvalancheHole(const double x0, const double y0,
   std::vector<std::pair<Point, Particle> > particles;
   particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
                                         Particle::Hole));
-  return Avalanche(particles, electrons, true, true);
+  return TransportParticles(particles, electrons, true, true);
 }
 
 bool AvalancheMC::AvalancheElectronHole(const double x0, const double y0,
@@ -541,7 +541,7 @@ bool AvalancheMC::AvalancheElectronHole(const double x0, const double y0,
                                         Particle::Electron));
   particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
                                         Particle::Hole));
-  return Avalanche(particles, true, true, true);
+  return TransportParticles(particles, true, true, true);
 }
 
 void AvalancheMC::AddElectron(const double x, const double y, const double z,
@@ -592,10 +592,10 @@ bool AvalancheMC::ResumeAvalanche(const bool electrons, const bool holes) {
       particles.push_back(std::make_pair(p.path.back(), Particle::Ion));
     } 
   }
-  return Avalanche(particles, electrons, holes, true);
+  return TransportParticles(particles, electrons, holes, true);
 }
 
-bool AvalancheMC::Avalanche(
+bool AvalancheMC::TransportParticles(
     std::vector<std::pair<Point, Particle> >& particles, 
     const bool withE, const bool withH, const bool aval) {
   // -----------------------------------------------------------------------
@@ -632,6 +632,7 @@ bool AvalancheMC::Avalanche(
               << "Neither electron nor hole/ion component requested.\n";
   }
 
+  const bool signal = m_doSignal && (m_sensor->GetNumberOfElectrodes() > 0);
   std::vector<std::pair<Point, Particle> > secondaries; 
   while (!particles.empty()) {
     for (const auto& particle : particles) {
@@ -639,7 +640,7 @@ bool AvalancheMC::Avalanche(
       if (!withH && particle.second != Particle::Electron) continue;
       std::vector<Point> path; 
       const int status = DriftLine(particle.first, particle.second, 
-                                   path, secondaries, aval);
+                                   path, secondaries, aval, signal);
       if (path.empty()) continue;
       EndPoint p;
       p.status = status;

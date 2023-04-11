@@ -96,7 +96,6 @@ int main(int argc, char * argv[]) {
   AvalancheMC drift;
   drift.SetDistanceSteps(1.e-4);
   drift.SetSensor(&sensor);
-  drift.EnableSignalCalculation();
 
   ViewSignal vSignal;
   vSignal.SetSensor(&sensor);

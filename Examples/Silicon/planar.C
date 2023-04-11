@@ -124,7 +124,6 @@ int main(int argc, char * argv[]) {
   drift.SetSensor(&sensor);
   // Use steps of 1 micron.
   drift.SetDistanceSteps(1.e-4);
-  drift.EnableSignalCalculation();
  
   // Plot the signal if requested.
   constexpr bool plotSignal = true;

@@ -41,12 +41,6 @@ void Sensor::SetTimeWindow(const double tmin, const double tstep, const int nbin
   the second one is the bin width (in ns), and the last one 
   is the number of time bins.
   \item
-  Switch on signal calculation in the transport classes using 
-\begin{lstlisting}
-void AvalancheMicroscopic::EnableSignalCalculation();
-void AvalancheMC::EnableSignalCalculation();
-void DriftLineRKF::EnableSignalCalculation();
-\end{lstlisting}
   The \texttt{Sensor} then records and accumulates the signals of all 
   avalanches and drift lines which are simulated.
   \item
@@ -90,7 +84,6 @@ const double tStep = (tStop - tStart) / nSteps;
 
 AvalancheMicroscopic aval;
 aval.SetSensor(&sensor);
-aval.EnableSignalCalculation();
 // Calculate some drift lines.
 ...
 // Plot the induced current.

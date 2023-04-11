@@ -35,7 +35,7 @@ class AvalancheMicroscopic {
   /// Draw a marker at every attachment or not.
   void EnableAttachmentMarkers(const bool on = true) { m_plotAttachments = on; }
 
-  /// Switch on calculation of induced currents (default: off).
+  /// Switch calculation of induced currents on or off (default: enabled).
   void EnableSignalCalculation(const bool on = true) { m_doSignal = on; }
   /// Use the weighting potential (as opposed to the weighting field)
   /// for calculating the induced current.
@@ -290,7 +290,7 @@ class AvalancheMicroscopic {
 
   TH1* m_histSecondary = nullptr;
 
-  bool m_doSignal = false;
+  bool m_doSignal = true;
   bool m_useWeightingPotential = false;
   bool m_integrateWeightingField = false;
   bool m_doInducedCharge = false;
@@ -337,6 +337,7 @@ class AvalancheMicroscopic {
                           const bool aval);
   int TransportElectron(const Point& p0, const bool hole, 
                         const bool useBfield, const bool aval, 
+                        const bool signal, 
                         std::vector<Point>& path,
                         std::vector<std::pair<Point, bool> >& newParticles);
   void TransportPhoton(const double x, const double y, const double z,

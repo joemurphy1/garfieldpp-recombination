@@ -80,7 +80,6 @@ int main(int argc, char* argv[]) {
   AvalancheMicroscopic aval;
   aval.SetSensor(&sensor);
   aval.UseWeightingPotential();
-  aval.EnableSignalCalculation();
 
   // Set time window where the calculations will be done microscopically.
   const double tMaxWindow = 2;

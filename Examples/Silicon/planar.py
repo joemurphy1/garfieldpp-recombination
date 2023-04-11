@@ -81,7 +81,6 @@ drift = ROOT.Garfield.AvalancheMC()
 drift.SetSensor(sensor)
 # Use steps of 1 micron.
 drift.SetDistanceSteps(1.e-4)
-drift.EnableSignalCalculation()
 
 # Plot the signal if requested.
 signalView = ROOT.Garfield.ViewSignal()

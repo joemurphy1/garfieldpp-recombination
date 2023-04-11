@@ -30,7 +30,7 @@ class DriftLineRKF {
   /// Switch off drift line plotting.
   void DisablePlotting();
 
-  /// Switch on/off calculation of induced currents (default: enabled).
+  /// Switch calculation of induced currents on or off (default: enabled).
   void EnableSignalCalculation(const bool on = true) { m_doSignal = on; }
   /// Set the number of points to be used when averaging the delayed 
   /// signal vector over a time bin in the Sensor class.

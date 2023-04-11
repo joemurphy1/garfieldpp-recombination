@@ -147,8 +147,6 @@ calculate drift lines and multiplication.
 \begin{lstlisting}
 DriftLineRKF drift;
 drift.SetSensor(&sensor);
-// Switch on signal calculation.
-drift.EnableSignalCalculation();
 \end{lstlisting}
 Let us consider a track that passes at a distance of 3\,mm
 from the wire centre. After simulating the passage of the charged particle,
@@ -659,7 +657,6 @@ AvalancheMC drift;
 drift.SetSensor(&sensor);
 // Set the step size [cm].
 drift.SetDistanceSteps(1.e-4);
-drift.EnableSignalCalculation();
 \end{lstlisting}
 We are now ready to run the simulation. In the snippet below, 
 we simulate a perpendicularly incident charged particle track 

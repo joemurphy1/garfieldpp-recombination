@@ -127,7 +127,6 @@ int main(int argc, char * argv[]) {
       AvalancheMC drift;
       drift.SetDistanceSteps(1.e-4);
       drift.SetSensor(&sensor);
-      drift.EnableSignalCalculation();
       if (plotDrift && RndmUniform() < 0.05) drift.EnablePlotting(&vDrift);
       drift.DriftElectron(electrons[i][0], electrons[i][1], electrons[i][2],
                           electrons[i][3]);
@@ -138,7 +137,6 @@ int main(int argc, char * argv[]) {
       AvalancheMC drift;
       drift.SetDistanceSteps(1.e-4);
       drift.SetSensor(&sensor);
-      drift.EnableSignalCalculation();
       if (plotDrift && RndmUniform() < 0.05) drift.EnablePlotting(&vDrift);
       drift.DriftHole(holes[i][0], holes[i][1], holes[i][2], holes[i][3]);
     }
