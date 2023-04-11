@@ -107,10 +107,9 @@ int main(int argc, char * argv[]) {
   for (unsigned int i = 0; i < nFrames; ++i) {
     if (i % 10 == 0) std::cout << "Frame " << i << "\n"; 
     driftView.Clear();
-    if (aval.GetNumberOfElectronEndpoints() > 0) {
+    if (!aval.GetElectrons().empty()) {
       aval.SetTimeWindow(tmin, tmin + dt);
       aval.ResumeAvalanche();
-      const unsigned int np = aval.GetNumberOfElectronEndpoints();
       std::vector<std::array<double, 5> > next;
       for (const auto& electron : aval.GetElectrons()) {
         const double x1 = electron.path.front().x;
@@ -136,7 +135,7 @@ int main(int argc, char * argv[]) {
       }
       prev.swap(next);
     }
-    if (drift.GetNumberOfIonEndpoints() > 0) {
+    if (!drift.GetIons().empty()) {
       drift.SetTimeWindow(tmin, tmin + dt);
       drift.ResumeAvalanche();
     } 

@@ -98,11 +98,6 @@ int main(int argc, char * argv[]) {
     for (const auto& electron : aval.GetElectrons()) {
       drift.DriftIon(electron.path.front().x, electron.path.front().y,
                      electron.path.front().z, electron.path.front().t);
-      double xi1, yi1, zi1, ti1;
-      double xi2, yi2, zi2, ti2;
-      int status = 0;
-      drift.GetIonEndpoint(0, xi1, yi1, zi1, ti1, 
-                              xi2, yi2, zi2, ti2, status);
     }
   }
   if (plotDrift) {

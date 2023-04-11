@@ -606,12 +606,10 @@ bool DriftLineRKF::DriftLine(const Vec& xi, const double ti,
   }
   if (m_view) {
     // If requested, add the drift line to a plot.
-    size_t id = 0;
-    const size_t nPoints = xs.size();
-    m_view->NewDriftLine(particle, nPoints, id, xi[0], xi[1], xi[2]);
-    for (size_t i = 0; i < nPoints; ++i) {
-      const auto& x = xs[i];
-      m_view->SetDriftLinePoint(id, i, x[0], x[1], x[2]);
+    const size_t nP = xs.size();
+    const size_t id = m_view->NewDriftLine(particle, nP, xi[0], xi[1], xi[2]);
+    for (size_t i = 0; i < nP; ++i) {
+      m_view->SetDriftLinePoint(id, i, xs[i][0], xs[i][1], xs[i][2]);
     }
   }
   if (flag == StatusCalculationAbandoned) return false;

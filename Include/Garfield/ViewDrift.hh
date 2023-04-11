@@ -67,8 +67,8 @@ class ViewDrift : public ViewBase {
                     bool& electron) const;
 
   // Functions used by the transport classes.
-  void NewDriftLine(const Particle particle, const size_t np, size_t& id, 
-                    const float x0, const float y0, const float z0);
+  size_t NewDriftLine(const Particle particle, const size_t np,  
+                      const float x0, const float y0, const float z0);
   void NewChargedParticleTrack(const size_t np, size_t& id, const float x0,
                                const float y0, const float z0);
 

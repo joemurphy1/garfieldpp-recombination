@@ -12,6 +12,26 @@
 
 namespace {
 
+Garfield::AvalancheMC::Point MakePoint(const std::array<double, 3>& x,
+                                       const double t) {
+  Garfield::AvalancheMC::Point p;
+  p.x = x[0];
+  p.y = x[1];
+  p.z = x[2];
+  p.t = t;
+  return p;
+}
+
+Garfield::AvalancheMC::Point MakePoint(const double x, const double y,
+                                       const double z, const double t) {
+  Garfield::AvalancheMC::Point p;
+  p.x = x;
+  p.y = y;
+  p.z = z;
+  p.t = t;
+  return p;
+}
+
 std::string PrintVec(const std::array<double, 3>& x) {
   return "(" + std::to_string(x[0]) + ", " + std::to_string(x[1]) + ", " +
          std::to_string(x[2]) + ")";
@@ -43,7 +63,7 @@ std::array<double, 3> MidPoint(const std::array<double, 3>& x0,
 
 namespace Garfield {
 
-AvalancheMC::AvalancheMC() { m_drift.reserve(10000); }
+AvalancheMC::AvalancheMC() { }
 
 void AvalancheMC::SetSensor(Sensor* sensor) {
   if (!sensor) {
@@ -130,162 +150,106 @@ void AvalancheMC::SetTimeWindow(const double t0, const double t1) {
   m_hasTimeWindow = true;
 }
 
-void AvalancheMC::GetDriftLinePoint(const size_t i, double& x, double& y,
-                                    double& z, double& t) const {
-  if (i >= m_drift.size()) {
-    std::cerr << m_className << "::GetDriftLinePoint: Index out of range.\n";
-    return;
-  }
-
-  x = m_drift[i].x[0];
-  y = m_drift[i].x[1];
-  z = m_drift[i].x[2];
-  t = m_drift[i].t;
-}
-
 void AvalancheMC::GetHoleEndpoint(const size_t i, double& x0, double& y0,
                                   double& z0, double& t0, double& x1,
                                   double& y1, double& z1, double& t1,
                                   int& status) const {
-  if (i >= m_endpointsHoles.size()) {
+  if (i >= m_holes.size()) {
     std::cerr << m_className << "::GetHoleEndpoint: Index out of range.\n";
     return;
   }
 
-  x0 = m_endpointsHoles[i].x0[0];
-  y0 = m_endpointsHoles[i].x0[1];
-  z0 = m_endpointsHoles[i].x0[2];
-  t0 = m_endpointsHoles[i].t0;
-  x1 = m_endpointsHoles[i].x1[0];
-  y1 = m_endpointsHoles[i].x1[1];
-  z1 = m_endpointsHoles[i].x1[2];
-  t1 = m_endpointsHoles[i].t1;
-  status = m_endpointsHoles[i].status;
+  x0 = m_holes[i].path.front().x;
+  y0 = m_holes[i].path.front().y;
+  z0 = m_holes[i].path.front().z;
+  t0 = m_holes[i].path.front().t;
+  x1 = m_holes[i].path.back().x;
+  y1 = m_holes[i].path.back().y;
+  z1 = m_holes[i].path.back().z;
+  t1 = m_holes[i].path.back().t;
+  status = m_holes[i].status;
 }
 
 void AvalancheMC::GetIonEndpoint(const size_t i, double& x0, double& y0,
                                  double& z0, double& t0, double& x1, double& y1,
                                  double& z1, double& t1, int& status) const {
-  if (i >= m_endpointsIons.size()) {
+  if (i >= m_ions.size()) {
     std::cerr << m_className << "::GetIonEndpoint: Index out of range.\n";
     return;
   }
 
-  x0 = m_endpointsIons[i].x0[0];
-  y0 = m_endpointsIons[i].x0[1];
-  z0 = m_endpointsIons[i].x0[2];
-  t0 = m_endpointsIons[i].t0;
-  x1 = m_endpointsIons[i].x1[0];
-  y1 = m_endpointsIons[i].x1[1];
-  z1 = m_endpointsIons[i].x1[2];
-  t1 = m_endpointsIons[i].t1;
-  status = m_endpointsIons[i].status;
+  x0 = m_ions[i].path.front().x;
+  y0 = m_ions[i].path.front().y;
+  z0 = m_ions[i].path.front().z;
+  t0 = m_ions[i].path.front().t;
+  x1 = m_ions[i].path.back().x;
+  y1 = m_ions[i].path.back().y;
+  z1 = m_ions[i].path.back().z;
+  t1 = m_ions[i].path.back().t;
+  status = m_ions[i].status;
 }
 
 void AvalancheMC::GetElectronEndpoint(const size_t i, double& x0,
                                       double& y0, double& z0, double& t0,
                                       double& x1, double& y1, double& z1,
                                       double& t1, int& status) const {
-  if (i >= m_endpointsElectrons.size()) {
+  if (i >= m_electrons.size()) {
     std::cerr << m_className << "::GetElectronEndpoint: Index out of range.\n";
     return;
   }
 
-  x0 = m_endpointsElectrons[i].x0[0];
-  y0 = m_endpointsElectrons[i].x0[1];
-  z0 = m_endpointsElectrons[i].x0[2];
-  t0 = m_endpointsElectrons[i].t0;
-  x1 = m_endpointsElectrons[i].x1[0];
-  y1 = m_endpointsElectrons[i].x1[1];
-  z1 = m_endpointsElectrons[i].x1[2];
-  t1 = m_endpointsElectrons[i].t1;
-  status = m_endpointsElectrons[i].status;
+  x0 = m_electrons[i].path.front().x;
+  y0 = m_electrons[i].path.front().y;
+  z0 = m_electrons[i].path.front().z;
+  t0 = m_electrons[i].path.front().t;
+  x1 = m_electrons[i].path.back().x;
+  y1 = m_electrons[i].path.back().y;
+  z1 = m_electrons[i].path.back().z;
+  t1 = m_electrons[i].path.back().t;
+  status = m_electrons[i].status;
 }
 
 bool AvalancheMC::DriftElectron(const double x0, const double y0,
                                 const double z0, const double t0) {
-  if (!m_sensor) {
-    std::cerr << m_className << "::DriftElectron: Sensor is not defined.\n";
-    return false;
-  }
 
-  m_endpointsElectrons.clear();
-  m_endpointsHoles.clear();
-  m_endpointsIons.clear();
-
-  m_nElectrons = 1;
-  m_nHoles = 0;
-  m_nIons = 0;
-
-  std::vector<DriftPoint> secondaries;
-  return DriftLine({x0, y0, z0}, t0, Particle::Electron, secondaries);
+  std::vector<std::pair<Point, Particle> > particles;
+  particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
+                                        Particle::Electron));
+  return Avalanche(particles, true, false, false);
 }
 
 bool AvalancheMC::DriftHole(const double x0, const double y0, const double z0,
                             const double t0) {
-  if (!m_sensor) {
-    std::cerr << m_className << "::DriftHole: Sensor is not defined.\n";
-    return false;
-  }
-
-  m_endpointsElectrons.clear();
-  m_endpointsHoles.clear();
-  m_endpointsIons.clear();
-
-  m_nElectrons = 0;
-  m_nHoles = 1;
-  m_nIons = 0;
-
-  std::vector<DriftPoint> secondaries;
-  return DriftLine({x0, y0, z0}, t0, Particle::Hole, secondaries);
+  std::vector<std::pair<Point, Particle> > particles;
+  particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
+                                        Particle::Hole));
+  return Avalanche(particles, false, true, false);
 }
 
 bool AvalancheMC::DriftIon(const double x0, const double y0, const double z0,
                            const double t0) {
-  if (!m_sensor) {
-    std::cerr << m_className << "::DriftIon: Sensor is not defined.\n";
-    return false;
-  }
-
-  m_endpointsElectrons.clear();
-  m_endpointsHoles.clear();
-  m_endpointsIons.clear();
-
-  m_nElectrons = 0;
-  m_nHoles = 0;
-  m_nIons = 1;
-
-  std::vector<DriftPoint> secondaries;
-  return DriftLine({x0, y0, z0}, t0, Particle::Ion, secondaries);
+  std::vector<std::pair<Point, Particle> > particles;
+  particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
+                                        Particle::Ion));
+  return Avalanche(particles, false, true, false);
 }
 
 bool AvalancheMC::DriftNegativeIon(const double x0, const double y0, 
                                    const double z0, const double t0) {
-  if (!m_sensor) {
-    std::cerr << m_className << "::DriftNegativeIon: Sensor is not defined.\n";
-    return false;
-  }
-
-  m_endpointsElectrons.clear();
-  m_endpointsHoles.clear();
-  m_endpointsIons.clear();
-
-  m_nElectrons = 0;
-  m_nHoles = 0;
-  m_nIons = 1;
-
-  std::vector<DriftPoint> secondaries;
-  return DriftLine({x0, y0, z0}, t0, Particle::NegativeIon, secondaries);
+  std::vector<std::pair<Point, Particle> > particles;
+  particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
+                                        Particle::NegativeIon));
+  return Avalanche(particles, false, false, false);
 }
 
-bool AvalancheMC::DriftLine(const std::array<double, 3>& xi, const double ti,
-                            const Particle particle,
-                            std::vector<DriftPoint>& secondaries,
-                            const bool aval) {
-  // Reset the drift line.
-  m_drift.clear();
-  // Check the initial position.
-  std::array<double, 3> x0 = xi;
+int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
+    std::vector<Point>& path,
+    std::vector<std::pair<Point, Particle> > & secondaries,
+    const bool aval) {
+
+  std::array<double, 3> x0 = {p0.x, p0.y, p0.z};
+  double t0 = p0.t;
+  // Make sure the starting point is inside an active region.
   std::array<double, 3> e0 = {0., 0., 0.};
   std::array<double, 3> b0 = {0., 0., 0.};
   Medium* medium = nullptr;
@@ -293,21 +257,18 @@ bool AvalancheMC::DriftLine(const std::array<double, 3>& xi, const double ti,
   if (status != 0) {
     std::cerr << m_className + "::DriftLine: "
               << PrintVec(x0) + " is not in a valid drift region.\n";
+    return status;
   }
-  // Check the initial time.
-  double t0 = ti;
-  if (m_hasTimeWindow && (t0 < m_tMin || t0 > m_tMax)) {
-    status = StatusOutsideTimeWindow;
-    std::cerr << m_className + "::DriftLine: " << t0
-              << " is outside the time window.\n";
-  }
-  // Stop here if initial position or time are invalid.
-  if (status != 0) return false;
   // Add the first point to the line.
-  AddPoint(x0, t0, particle, 1, m_drift);
+  path.emplace_back(MakePoint(x0, t0));
   if (m_debug) {
     std::cout << m_className + "::DriftLine: Starting at "
               << PrintVec(x0) + ".\n";
+  }
+  // Make sure the starting time is within the requested window.
+  if (m_hasTimeWindow && (t0 < m_tMin || t0 > m_tMax)) {
+    if (m_debug) std::cout << "    Outside the time window.\n";
+    return StatusOutsideTimeWindow;
   }
   // Determine if the medium is a gas or semiconductor.
   const bool semiconductor = medium->IsSemiconductor();
@@ -457,10 +418,7 @@ bool AvalancheMC::DriftLine(const std::array<double, 3>& xi, const double ti,
       if (m_useDiffusion) AddDiffusion(sqrt(vmag * dt), difl, dift, x1, v1);
       t1 += dt;
     }
-    if (m_debug) {
-      std::cout << m_className + "::DriftLine: Next point: "
-                << PrintVec(x1) + ".\n";
-    }
+    if (m_debug) std::cout << "    Next point: " << PrintVec(x1) + ".\n";
 
     // Get the electric and magnetic field at the new position.
     status = GetField(x1, e0, b0, medium);
@@ -468,12 +426,9 @@ bool AvalancheMC::DriftLine(const std::array<double, 3>& xi, const double ti,
       // Point is not inside a "driftable" medium or outside the drift area.
       // Try terminating the drift line close to the boundary.
       Terminate(x0, t0, x1, t1);
-      if (m_debug) {
-        std::cout << m_className + "::DriftLine: Left drift region at "
-                  << PrintVec(x1) + ".\n";
-      }
+      if (m_debug) std::cout << "    Left the drift region.\n";
       // Add the point to the drift line.
-      AddPoint(x1, t1, particle, 1, m_drift);
+      path.emplace_back(MakePoint(x1, t1));
       break;
     }
     // Check if the particle has crossed a wire.
@@ -481,30 +436,24 @@ bool AvalancheMC::DriftLine(const std::array<double, 3>& xi, const double ti,
     double rc = 0.;
     if (m_sensor->CrossedWire(x0[0], x0[1], x0[2], x1[0], x1[1], x1[2], 
                               xc[0], xc[1], xc[2], false, rc)) {
-      if (m_debug) {
-        std::cout << m_className + "::DriftLine: Hit a wire at "
-                  << PrintVec(xc) + ".\n";
-      }
+      if (m_debug) std::cout << "    Hit a wire.\n";
       status = StatusLeftDriftMedium;
       // Adjust the time step.
       double tc = t0 + (t1 - t0) * Dist(x0, xc) / Dist(x0, x1);
       Terminate(x0, t0, xc, tc);
       // Add the point to the drift line.
-      AddPoint(xc, tc, particle, 1, m_drift);
+      path.emplace_back(MakePoint(xc, tc));
       break;
     }
     if (m_sensor->CrossedPlane(x0[0], x0[1], x0[2], x1[0], x1[1], x1[2], 
                                xc[0], xc[1], xc[2])) {
-      if (m_debug) {
-        std::cout << m_className + "::DriftLine: Hit a plane at "
-                  << PrintVec(xc) + ".\n";
-      }
+      if (m_debug) std::cout << "    Hit a plane.\n";
       status = StatusHitPlane;
       // Adjust the time step.
       double tc = t0 + (t1 - t0) * Dist(x0, xc) / Dist(x0, x1);
       Terminate(x0, t0, xc, tc);
       // Add the point to the drift line.
-      AddPoint(xc, tc, particle, 1, m_drift);
+      path.emplace_back(MakePoint(xc, tc));
       break;
     }
 
@@ -513,7 +462,7 @@ bool AvalancheMC::DriftLine(const std::array<double, 3>& xi, const double ti,
       status = StatusOutsideTimeWindow;
     }
     // Add the point to the drift line.
-    AddPoint(x1, t1, particle, 1, m_drift);
+    path.emplace_back(MakePoint(x1, t1));
     // Update the current position and time.
     x0 = x1;
     t0 = t1;
@@ -531,26 +480,17 @@ bool AvalancheMC::DriftLine(const std::array<double, 3>& xi, const double ti,
   if ((particle == Particle::Electron || particle == Particle::Hole) &&
       (aval || m_useAttachment) &&
       (m_sizeCut == 0 || m_nElectrons < m_sizeCut)) {
-    ComputeGainLoss(particle, m_drift, status, secondaries, semiconductor);
-    if (status == StatusAttached && m_debug) {
-      std::cout << m_className + "::DriftLine: Attached at "
-                << PrintVec(m_drift.back().x) + ".\n";
-    }
+    ComputeGainLoss(particle, path, status, secondaries, semiconductor);
+    if (status == StatusAttached && m_debug) std::cout << "    Attached.\n";
   }
 
   if (m_debug) {
-    std::cout << m_className << "::DriftLine: Stopped at "
-              << PrintVec(m_drift.back().x) + ".\n";
-  }
-  // Create an "endpoint".
-  AddEndPoint(xi, ti, m_drift.back().x, m_drift.back().t,
-              status, particle);
-
-  if (m_debug) {
+    std::cout << "    Stopped at " 
+              << PrintVec({path.back().x, path.back().y, path.back().z}) + ".\n";
     const int nNewElectrons = m_nElectrons - nElectronsOld;
     const int nNewHoles = m_nHoles - nHolesOld;
     const int nNewIons = m_nIons - nIonsOld;
-    std::cout << m_className << "::DriftLine: Produced\n"
+    std::cout << "    Produced\n"
               << "      " << nNewElectrons << " electrons,\n"
               << "      " << nNewHoles << " holes, and\n"
               << "      " << nNewIons << " ions.\n";
@@ -560,99 +500,113 @@ bool AvalancheMC::DriftLine(const std::array<double, 3>& xi, const double ti,
   const double scale = particle == Particle::Electron
                            ? -m_scaleE
                            : particle == Particle::Hole ? m_scaleH : m_scaleI;
-  if (m_doSignal) ComputeSignal(particle, scale, m_drift);
-  if (m_doInducedCharge) ComputeInducedCharge(scale, m_drift);
+  if (m_doSignal) ComputeSignal(particle, scale, path);
+  if (m_doInducedCharge) ComputeInducedCharge(scale, path);
 
   // Plot the drift line if requested.
-  if (m_viewer && !m_drift.empty()) {
-    const size_t nPoints = m_drift.size();
+  if (m_viewer && !path.empty()) {
+    const size_t nP = path.size();
     // Register the new drift line and get its ID.
-    size_t id;
-    m_viewer->NewDriftLine(particle, nPoints, id, xi[0], xi[1], xi[2]);
+    const size_t id = m_viewer->NewDriftLine(particle, nP, p0.x, p0.y, p0.z);
     // Set the points along the trajectory.
-    for (size_t i = 0; i < nPoints; ++i) {
-      const auto& x = m_drift[i].x;
-      m_viewer->SetDriftLinePoint(id, i, x[0], x[1], x[2]);
+    for (size_t i = 0; i < nP; ++i) {
+      m_viewer->SetDriftLinePoint(id, i, path[i].x, path[i].y, path[i].z);
     }
   }
-
-  if (status == StatusCalculationAbandoned) return false;
-  return true;
+  return status;
 }
 
 bool AvalancheMC::AvalancheElectron(const double x0, const double y0,
                                     const double z0, const double t0,
                                     const bool holes) {
-  std::vector<DriftPoint> aval;
-  AddPoint({x0, y0, z0}, t0, Particle::Electron, 1, aval);
-  return Avalanche(aval, true, holes);
+  std::vector<std::pair<Point, Particle> > particles;
+  particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
+                                        Particle::Electron));
+  return Avalanche(particles, true, holes, true);
 }
 
 bool AvalancheMC::AvalancheHole(const double x0, const double y0,
                                 const double z0, const double t0,
                                 const bool electrons) {
-  std::vector<DriftPoint> aval;
-  AddPoint({x0, y0, z0}, t0, Particle::Hole, 1, aval);
-  return Avalanche(aval, electrons, true);
+  std::vector<std::pair<Point, Particle> > particles;
+  particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
+                                        Particle::Hole));
+  return Avalanche(particles, electrons, true, true);
 }
 
 bool AvalancheMC::AvalancheElectronHole(const double x0, const double y0,
                                         const double z0, const double t0) {
-  std::vector<DriftPoint> aval;
-  AddPoint({x0, y0, z0}, t0, Particle::Electron, 1, aval);
-  AddPoint({x0, y0, z0}, t0, Particle::Hole, 1, aval);
-  return Avalanche(aval, true, true);
+  std::vector<std::pair<Point, Particle> > particles;
+  particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
+                                        Particle::Electron));
+  particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
+                                        Particle::Hole));
+  return Avalanche(particles, true, true, true);
 }
 
 void AvalancheMC::AddElectron(const double x, const double y, const double z,
                               const double t) {
-  AddEndPoint({x, y, z}, t, {x, y, z}, t, StatusAlive, Particle::Electron);
+
+  EndPoint p;
+  p.status = StatusAlive;
+  p.path = {MakePoint(x, y, z, t)};
+  m_electrons.push_back(std::move(p));
+  // TODO
   ++m_nElectrons;
 }
 
 void AvalancheMC::AddHole(const double x, const double y, const double z,
                           const double t) {
-  AddEndPoint({x, y, z}, t, {x, y, z}, t, StatusAlive, Particle::Hole);
+  EndPoint p;
+  p.status = StatusAlive;
+  p.path = {MakePoint(x, y, z, t)};
+  m_holes.push_back(std::move(p));
+  // TODO
   ++m_nHoles;
 }
 void AvalancheMC::AddIon(const double x, const double y, const double z,
                          const double t) {
-  AddEndPoint({x, y, z}, t, {x, y, z}, t, StatusAlive, Particle::Ion);
+  EndPoint p;
+  p.status = StatusAlive;
+  p.path = {MakePoint(x, y, z, t)};
+  m_ions.push_back(std::move(p));
+  // TODO
   ++m_nIons;
 }
 
 bool AvalancheMC::ResumeAvalanche(const bool electrons, const bool holes) {
 
-  std::vector<DriftPoint> aval;
-  for (const auto& p: m_endpointsElectrons) {
+  std::vector<std::pair<Point, Particle> > particles;
+  for (const auto& p: m_electrons) {
     if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) {
-      AddPoint(p.x1, p.t1, Particle::Electron, 1, aval);
+      particles.push_back(std::make_pair(p.path.back(), Particle::Electron));
     } 
   }
-  for (const auto& p: m_endpointsHoles) {
+  for (const auto& p: m_holes) {
     if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) {
-      AddPoint(p.x1, p.t1, Particle::Hole, 1, aval);
+      particles.push_back(std::make_pair(p.path.back(), Particle::Hole));
     } 
   }
-  for (const auto& p: m_endpointsIons) {
+  for (const auto& p: m_ions) {
     if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) {
-      AddPoint(p.x1, p.t1, Particle::Ion, 1, aval);
+      particles.push_back(std::make_pair(p.path.back(), Particle::Ion));
     } 
   }
-  return Avalanche(aval, electrons, holes);
+  return Avalanche(particles, electrons, holes, true);
 }
 
-bool AvalancheMC::Avalanche(std::vector<DriftPoint>& aval, 
-                            const bool withE, const bool withH) {
+bool AvalancheMC::Avalanche(
+    std::vector<std::pair<Point, Particle> >& particles, 
+    const bool withE, const bool withH, const bool aval) {
   // -----------------------------------------------------------------------
   //   DLCMCA - Subroutine that computes a drift line using a Monte-Carlo
   //            technique to take account of diffusion and of avalanche
   //            formation.
   // -----------------------------------------------------------------------
 
-  m_endpointsElectrons.clear();
-  m_endpointsHoles.clear();
-  m_endpointsIons.clear();
+  m_electrons.clear();
+  m_holes.clear();
+  m_ions.clear();
 
   // Make sure the sensor is defined.
   if (!m_sensor) {
@@ -663,10 +617,10 @@ bool AvalancheMC::Avalanche(std::vector<DriftPoint>& aval,
   m_nElectrons = 0;
   m_nHoles = 0;
   m_nIons = 0;
-  for (const auto& point : aval) {
-    if (point.particle == Particle::Electron) {
+  for (const auto& particle : particles) {
+    if (particle.second == Particle::Electron) {
       ++m_nElectrons;
-    } else if (point.particle == Particle::Hole) {
+    } else if (particle.second == Particle::Hole) {
       ++m_nHoles;
     } else {
       ++m_nIons;
@@ -678,25 +632,31 @@ bool AvalancheMC::Avalanche(std::vector<DriftPoint>& aval,
               << "Neither electron nor hole/ion component requested.\n";
   }
 
-  std::vector<DriftPoint> secondaries;
-  while (!aval.empty()) {
-    for (const auto& point : aval) {
-      if (!withE && point.particle == Particle::Electron) continue;
-      if (!withH && point.particle != Particle::Electron) continue; 
-      // Skip points outside the time window.
-      if (m_hasTimeWindow && (point.t < m_tMin || point.t > m_tMax)) {
-        for (unsigned int i = 0; i < point.n; ++i) {
-          AddEndPoint(point.x, point.t, point.x, point.t,
-                      StatusOutsideTimeWindow, point.particle);
-        }
-        continue;
+  std::vector<std::pair<Point, Particle> > secondaries; 
+  while (!particles.empty()) {
+    for (const auto& particle : particles) {
+      if (!withE && particle.second == Particle::Electron) continue;
+      if (!withH && particle.second != Particle::Electron) continue;
+      std::vector<Point> path; 
+      const int status = DriftLine(particle.first, particle.second, 
+                                   path, secondaries, aval);
+      if (path.empty()) continue;
+      EndPoint p;
+      p.status = status;
+      if (m_storeDriftLines) {
+        p.path = std::move(path);
+      } else {
+        p.path = {path.front(), path.back()};
       }
-      for (unsigned int i = 0; i < point.n; ++i) {
-        // Compute a drift line.
-        DriftLine(point.x, point.t, point.particle, secondaries, true);
+      if (particle.second == Particle::Electron) {
+        m_electrons.push_back(std::move(p));
+      } else if (particle.second == Particle::Hole) {
+        m_holes.push_back(std::move(p));
+      } else {
+        m_ions.push_back(std::move(p));
       }
     }
-    aval.swap(secondaries);
+    particles.swap(secondaries);
     secondaries.clear();
   }
   return true;
@@ -962,21 +922,21 @@ void AvalancheMC::Terminate(const std::array<double, 3>& x0, const double t0,
 }
 
 bool AvalancheMC::ComputeGainLoss(const Particle particle,
-                                  std::vector<DriftPoint>& driftLine,
-                                  int& status, std::vector<DriftPoint>& secondaries, 
-                                  const bool semiconductor) {
+    std::vector<Point>& path, int& status, 
+    std::vector<std::pair<Point, Particle> >& secondaries, 
+    const bool semiconductor) {
 
   std::vector<double> alps;
   std::vector<double> etas;
   // Compute the integrated Townsend and attachment coefficients.
-  if (!ComputeAlphaEta(particle, driftLine, alps, etas)) return false;
+  if (!ComputeAlphaEta(particle, path, alps, etas)) return false;
 
   // Opposite-charge particle produced in the avalanche.
   Particle other = Particle::Electron;
   if (particle == Particle::Electron) {
     other = semiconductor ? Particle::Hole : Particle::Ion;
   } 
-  const size_t nPoints = driftLine.size();
+  const size_t nPoints = path.size();
   // Loop over the drift line.
   for (size_t i = 0; i < nPoints - 1; ++i) {
     // Start with the initial electron (or hole).
@@ -1023,22 +983,20 @@ bool AvalancheMC::ComputeGainLoss(const Particle particle,
           }
           const double f0 = (j + 0.5) / nDiv;
           const double f1 = 1. - f0;
-          const auto x0 = driftLine[i].x;
-          const auto x1 = driftLine[i + 1].x;
-          driftLine.resize(i + 2);
-          for (size_t k = 0; k < 3; ++k) {
-            driftLine[i + 1].x[k] = f0 * x0[k] + f1 * x1[k];
-          }
-          driftLine[i + 1].t = f0 * driftLine[i].t + f1 * driftLine[i + 1].t;
+          path.resize(i + 2);
+          path[i + 1].x = f0 * path[i].x + f1 * path[i + 1].x;
+          path[i + 1].y = f0 * path[i].y + f1 * path[i + 1].y;
+          path[i + 1].z = f0 * path[i].z + f1 * path[i + 1].z;
+          path[i + 1].t = f0 * path[i].t + f1 * path[i + 1].t;
           break;
         }
       }
     }
     // Add the new electrons to the table.
     if (ne > 1) {
-      DriftPoint point = driftLine[i + 1];
-      point.n = ne - 1; 
-      secondaries.push_back(std::move(point));
+      for (int j = 0; j < ne - 1; ++j) {
+        secondaries.push_back(std::make_pair(path[i + 1], particle));
+      } 
       if (particle == Particle::Electron) {
         m_nElectrons += ne - 1;
       } else if (particle == Particle::Hole) {
@@ -1054,21 +1012,17 @@ bool AvalancheMC::ComputeGainLoss(const Particle particle,
       } else {
         m_nElectrons += ni;
       } 
-      const auto x0 = driftLine[i].x;
-      const auto x1 = driftLine[i + 1].x;
       const double n1 = std::exp(alps[i]) - 1;
       const double a1 = n1 > 0. ? 1. / std::log1p(n1) : 0.;
       for (int j = 0; j < ni; ++j) {
         const double f1 = n1 > 0. ? a1 * std::log1p(RndmUniform() * n1) : 0.5;
         const double f0 = 1. - f1;
-        DriftPoint point;
-        for (size_t k = 0; k < 3; ++k) {
-          point.x[k] = f0 * x0[k] + f1 * x1[k]; 
-        }
-        point.t = f0 * driftLine[i].t + f1 * driftLine[i + 1].t;
-        point.particle = other;
-        point.n = 1;
-        secondaries.push_back(std::move(point));
+        Point point;
+        point.x = f0 * path[i].x + f1 * path[i + 1].x;
+        point.y = f0 * path[i].y + f1 * path[i + 1].y;
+        point.z = f0 * path[i].z + f1 * path[i + 1].z;
+        point.t = f0 * path[i].t + f1 * path[i + 1].t;
+        secondaries.push_back(std::make_pair(std::move(point), other));
       }
     }
     // If trapped, exit the loop over the drift line.
@@ -1078,7 +1032,7 @@ bool AvalancheMC::ComputeGainLoss(const Particle particle,
 }
 
 bool AvalancheMC::ComputeAlphaEta(const Particle particle,
-                                  std::vector<DriftPoint>& driftLine,
+                                  std::vector<Point>& path,
                                   std::vector<double>& alps,
                                   std::vector<double>& etas) const {
   // -----------------------------------------------------------------------
@@ -1086,36 +1040,38 @@ bool AvalancheMC::ComputeAlphaEta(const Particle particle,
   // -----------------------------------------------------------------------
 
   // Loop a first time over the drift line and get alpha at each point.
-  size_t nPoints = driftLine.size();
+  size_t nPoints = path.size();
   alps.assign(nPoints, 0.);
   etas.assign(nPoints, 0.);
   for (size_t i = 0; i < nPoints; ++i) {
-    const auto& x0 = driftLine[i].x;
+    const std::array<double, 3> x0 = {path[i].x, path[i].y, path[i].z};
     std::array<double, 3> e0, b0;
     Medium* medium = nullptr;
     if (GetField(x0, e0, b0, medium) != 0) continue;
     alps[i] = GetTownsend(particle, medium, x0, e0, b0);
   }
 
-  std::vector<DriftPoint> driftLineExt;
+  std::vector<Point> pathExt;
   for (size_t i = 0; i < nPoints - 1; ++i) {
-    const auto& p0 = driftLine[i];
-    const auto& p1 = driftLine[i + 1];
-    driftLineExt.push_back(p0);
+    pathExt.push_back(path[i]);
     if (Slope(alps[i], alps[i + 1]) < 0.5) continue;
-    auto xm = MidPoint(p0.x, p1.x);
+    const std::array<double, 3> x0 = {path[i].x, path[i].y, path[i].z};
+    const std::array<double, 3> x1 = {path[i + 1].x, path[i + 1].y, path[i + 1].z};
+    auto xm = MidPoint(x0, x1);
     std::array<double, 3> em, bm;
     Medium* medium = nullptr;
     if (GetField(xm, em, bm, medium) != 0) continue;
-    auto pm = p0;
-    pm.x = xm;
-    pm.t = 0.5 * (p0.t + p1.t);
-    driftLineExt.push_back(std::move(pm));
+    Point pm;
+    pm.x = xm[0];
+    pm.y = xm[1];
+    pm.z = xm[2];
+    pm.t = 0.5 * (path[i].t + path[i + 1].t);
+    pathExt.push_back(std::move(pm));
   }
-  driftLineExt.push_back(driftLine.back());
-  driftLine.swap(driftLineExt);
+  pathExt.push_back(path.back());
+  path.swap(pathExt);
 
-  nPoints = driftLine.size();
+  nPoints = path.size();
   alps.assign(nPoints, 0.);
   etas.assign(nPoints, 0.);
   if (nPoints < 2) return true;
@@ -1128,14 +1084,14 @@ bool AvalancheMC::ComputeAlphaEta(const Particle particle,
   bool equilibrate = m_doEquilibration;
   // Loop over the drift line.
   for (size_t i = 0; i < nPoints - 1; ++i) {
-    const auto& x0 = driftLine[i].x;
-    const auto& x1 = driftLine[i + 1].x;
+    const std::array<double, 3> x0 = {path[i].x, path[i].y, path[i].z};
+    const std::array<double, 3> x1 = {path[i + 1].x, path[i + 1].y, path[i + 1].z};
     // Compute the step length.
     const std::array<double, 3> del = {x1[0] - x0[0], x1[1] - x0[1],
                                        x1[2] - x0[2]};
     const double dmag = Mag(del);
     if (dmag < Small) continue;
-    const double veff = dmag / (driftLine[i + 1].t - driftLine[i].t);
+    const double veff = dmag / (path[i + 1].t - path[i].t);
     // Integrate drift velocity and Townsend and attachment coefficients.
     std::array<double, 3> vd = {0., 0., 0.};
     for (size_t j = 0; j < nG; ++j) {
@@ -1295,17 +1251,15 @@ bool AvalancheMC::Equilibrate(std::vector<double>& alphas) const {
 
 void AvalancheMC::ComputeSignal(
     const Particle particle, const double q,
-    const std::vector<DriftPoint>& driftLine) const {
-  const size_t nPoints = driftLine.size();
+    const std::vector<Point>& path) const {
+  const size_t nPoints = path.size();
   if (nPoints < 2) return;
 
   if (m_useWeightingPotential) {
     for (size_t i = 0; i < nPoints - 1; ++i) {
-      const auto& x0 = driftLine[i].x;
-      const auto& x1 = driftLine[i + 1].x;
-      const double t0 = driftLine[i].t;
-      const double t1 = driftLine[i + 1].t;
-      m_sensor->AddSignal(q, t0, t1, x0[0], x0[1], x0[2], x1[0], x1[1], x1[2],
+      const auto& p0 = path[i];
+      const auto& p1 = path[i + 1];
+      m_sensor->AddSignal(q, p0.t, p1.t, p0.x, p0.y, p0.z, p1.x, p1.y, p1.z,
                           false, true);
     }
     return;
@@ -1314,27 +1268,27 @@ void AvalancheMC::ComputeSignal(
   std::vector<double> ts;
   std::vector<std::array<double, 3> > xs;
   std::vector<std::array<double, 3> > vs;
-  for (const auto& p : driftLine) {
+  for (const auto& p : path) {
     std::array<double, 3> e;
     std::array<double, 3> b;
     Medium* medium = nullptr;
-    int status = GetField(p.x, e, b, medium);
+    int status = GetField({p.x, p.y, p.z}, e, b, medium);
     if (status != 0) continue;
     std::array<double, 3> v;
-    if (!GetVelocity(particle, medium, p.x, e, b, v)) continue;
+    if (!GetVelocity(particle, medium, {p.x, p.y, p.z}, e, b, v)) continue;
     ts.push_back(p.t);
-    xs.push_back(p.x);
+    xs.push_back({p.x, p.y, p.z});
     vs.push_back(std::move(v));
   }
   m_sensor->AddSignal(q, ts, xs, vs, {}, m_navg);
 }
 
 void AvalancheMC::ComputeInducedCharge(
-    const double q, const std::vector<DriftPoint>& driftLine) const {
-  if (driftLine.size() < 2) return;
-  const auto& x0 = driftLine.front().x;
-  const auto& x1 = driftLine.back().x;
-  m_sensor->AddInducedCharge(q, x0[0], x0[1], x0[2], x1[0], x1[1], x1[2]);
+    const double q, const std::vector<Point>& path) const {
+  if (path.size() < 2) return;
+  const auto& p0 = path.front();
+  const auto& p1 = path.back();
+  m_sensor->AddInducedCharge(q, p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
 }
 
 void AvalancheMC::PrintError(const std::string& fcn, const std::string& par,
