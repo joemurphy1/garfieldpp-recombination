@@ -82,7 +82,6 @@ int main(int argc, char * argv[]) {
   drift.SetSensor(&sensor);
   // Use steps of 1 micron.
   drift.SetDistanceSteps(1.e-4);
-  drift.EnableSignalCalculation();
   
   ViewDrift driftView;
   driftView.SetArea(-0.5 * d, 0, -0.5 * d, 0.5 * d, d, 0.5 * d);

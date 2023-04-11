@@ -108,7 +108,7 @@ class AvalancheMC {
   /// Switch on storage of drift lines (default: off).
   void EnableDriftLines(const bool on = true) { m_storeDriftLines = on; }
 
-  /// Switch on calculation of induced currents (default: disabled).
+  /// Switch calculation of induced currents on or off (default: enabled).
   void EnableSignalCalculation(const bool on = true) { m_doSignal = on; }
   /// Set the number of points to be used when averaging the
   /// signal vector over a time bin in the Sensor class.
@@ -245,7 +245,7 @@ class AvalancheMC {
   ViewDrift* m_viewer = nullptr;
 
   bool m_storeDriftLines = false;
-  bool m_doSignal = false;
+  bool m_doSignal = true;
   unsigned int m_navg = 1;
   bool m_useWeightingPotential = true;
   bool m_doInducedCharge = false;
@@ -273,11 +273,11 @@ class AvalancheMC {
   int DriftLine(const Point& p0, const Particle particle,
                 std::vector<Point>& path,
                 std::vector<std::pair<Point, Particle> >& secondaries,
-                const bool aval = false);
+                const bool aval, const bool signal);
   /// Compute an avalanche.
-  bool Avalanche(std::vector<std::pair<Point, Particle> >& particles,
-                 const bool withElectrons, const bool withHoles,
-                 const bool aval);
+  bool TransportParticles(std::vector<std::pair<Point, Particle> >& particles,
+                          const bool withElectrons, const bool withHoles,
+                          const bool aval);
 
   /// Compute electric and magnetic field at a given position.
   int GetField(const std::array<double, 3>& x, std::array<double, 3>& e,

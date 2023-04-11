@@ -67,7 +67,6 @@ int main(int argc, char* argv[]) {
   drift.SetSensor(&sensor);
   // Use steps of 1 micron.
   drift.SetDistanceSteps(1.e-4);
-  drift.EnableSignalCalculation();
   drift.EnableAttachmentMap();
 
   double x0 = pitch * 1.5, y0 = 5.e-5, z0 = 0., t0 = 0.;
@@ -97,7 +96,5 @@ int main(int argc, char* argv[]) {
     outfile << t << "  " << f << "  " << fe << "  " << fh << "\n";
   }
   outfile.close();
-  if (plotSignal) {
-    app.Run(kTRUE);
-  }
+  if (plotSignal) app.Run();
 }

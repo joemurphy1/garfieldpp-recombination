@@ -79,7 +79,6 @@ int main(int argc, char* argv[]) {
   AvalancheMicroscopic* aval = new AvalancheMicroscopic();
   aval->SetSensor(sensor);
   aval->SetCollisionSteps(100);
-  // aval->EnableSignalCalculation();
 
   // Set up the object for drift line visualization.
   ViewDrift* viewDrift = new ViewDrift();

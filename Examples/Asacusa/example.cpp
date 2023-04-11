@@ -89,8 +89,6 @@ int main(int argc, char * argv[]){
   // We use microscopic tracking for simulating the electron avalanche.
   AvalancheMicroscopic aval;
   aval.SetSensor(&sensor); 
-  // Switch on signal calculation. 
-  aval.EnableSignalCalculation(); 
   aval.EnableMagneticField();
   
   // Simulate an ionizing particle (negative pion) using Heed.

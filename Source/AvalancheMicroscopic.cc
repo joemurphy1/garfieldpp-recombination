@@ -500,6 +500,8 @@ bool AvalancheMicroscopic::TransportElectrons(
   const bool useBfield = m_useBfieldAuto ? m_sensor->HasMagneticField() : 
                          m_useBfield;
 
+  // Do we need to compute the induced signal?
+  const bool signal = m_doSignal && (m_sensor->GetNumberOfElectrodes() > 0);
   // Loop over the initial set of electrons/holes.
   for (auto& p : particles) {
     // Make sure that the starting point is inside the active area.
@@ -566,7 +568,7 @@ bool AvalancheMicroscopic::TransportElectrons(
       }
       std::vector<Point> path;
       const int status = TransportElectron(particle.first, isHole, 
-                                           useBfield, aval, path,
+                                           useBfield, aval, signal, path,
                                            newParticles);
       if (isHole) {
         Electron hole;
@@ -598,7 +600,7 @@ bool AvalancheMicroscopic::TransportElectrons(
 }
 
 int AvalancheMicroscopic::TransportElectron(const Point& p0,
-  const bool hole, const bool useBfield, const bool aval, 
+  const bool hole, const bool useBfield, const bool aval, const bool signal,
   std::vector<Point>& path, 
   std::vector<std::pair<Point, bool> >& newParticles) {
 
@@ -921,7 +923,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
     }
 
     // If switched on, calculate the induced signal.
-    if (m_doSignal) AddSignal(x, y, z, t, x1, y1, z1, t1, hole);
+    if (signal) AddSignal(x, y, z, t, x1, y1, z1, t1, hole);
 
     // Update the coordinates.
     x = x1;
