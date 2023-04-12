@@ -65,6 +65,9 @@ if plotDrift:
   aval.EnablePlotting(driftView)
   drift.EnablePlotting(driftView)
 
+# Count the total number of ions and the back-flowing ions.
+nTotal = 0
+nBF = 0
 nEvents = 10
 for i in range(nEvents):
   # print i, '/', nEvents
@@ -78,7 +81,11 @@ for i in range(nEvents):
   for electron in aval.GetElectrons():
     p0 = electron.path[0]
     drift.DriftIon(p0.x, p0.y, p0.z, p0.t)
+    nTotal += 1
+    endpoint = drift.GetIons().front().path.back()
+    if endpoint.z > 0.005: nBF += 1
 
+print('Ratio of back-flowing ions:', float(nBF) / float(nTotal))
 cD = ROOT.TCanvas('cD', '', 600, 600)
 meshView = ROOT.Garfield.ViewFEMesh()
 plotMesh = True 
