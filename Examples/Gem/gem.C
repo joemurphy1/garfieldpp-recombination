@@ -94,6 +94,9 @@ int main(int argc, char * argv[]) {
     drift.EnablePlotting(&driftView);
   }
 
+  // Count the total number of ions produced the back-flowing ions.
+  unsigned int nTotal = 0;
+  unsigned int nBF = 0;
   constexpr unsigned int nEvents = 10;
   for (unsigned int i = 0; i < nEvents; ++i) { 
     std::cout << i << "/" << nEvents << "\n";
@@ -109,8 +112,13 @@ int main(int argc, char * argv[]) {
     for (const auto& electron : aval.GetElectrons()) {
       const auto& p0 = electron.path[0];
       drift.DriftIon(p0.x, p0.y, p0.z, p0.t);
+      ++nTotal;
+      const auto& endpoint = drift.GetIons().front().path.back();
+      if (endpoint.z > 0.005) ++nBF;
     }
   }
+  std::cout << "Fraction of back-flowing ions: " 
+            << double(nBF) / double(nTotal) << "\n";
   if (plotDrift) {
     TCanvas* cd = new TCanvas();
     constexpr bool plotMesh = true;
