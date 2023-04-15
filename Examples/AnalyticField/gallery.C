@@ -30,9 +30,8 @@ void spiral(ComponentAnalyticField* cmp,
     const double phi = 4 * Pi * f;
     const double x = r * cos(phi);
     const double y = r * sin(phi);
-    const std::string label = i % 2 == 0 ? "p" : "s";
     const double v = i % 2 == 0 ? -i * 10 : i * 10;
-    cmp->AddWire(x, y, d, v, label);
+    cmp->AddWire(x, y, d, v);
   }
   xmin = ymin = -3.05;
   xmax = ymax = +3.05;
@@ -44,8 +43,8 @@ void spiral(ComponentAnalyticField* cmp,
 void hextube(ComponentAnalyticField* cmp,
              double& xmin, double& xmax, double& ymin, double& ymax) {
 
-  cmp->AddTube(2., 0., 6, "t");
-  cmp->AddWire(0., 0., 100.e-4, 5000., "s");
+  cmp->AddTube(2., 0., 6);
+  cmp->AddWire(0., 0., 100.e-4, 5000.);
   xmin = ymin = -2.05;
   xmax = ymax =  2.05;
 }
@@ -56,11 +55,11 @@ void hextube(ComponentAnalyticField* cmp,
 void b2x(ComponentAnalyticField* cmp,
          double& xmin, double& xmax, double& ymin, double& ymax) {
 
-  cmp->AddPlaneX(-1.,    0., "p");
-  cmp->AddPlaneX( 1., 1000., "q");
+  cmp->AddPlaneX(-1.,    0.);
+  cmp->AddPlaneX( 1., 1000.);
   const double d = 0.01;
-  cmp->AddWire(0.0, 0.0, d, 2000., "s");
-  cmp->AddWire(0.5, 0.5, d, 2000., "p");
+  cmp->AddWire(0.0, 0.0, d, 2000.);
+  cmp->AddWire(0.5, 0.5, d, 2000.);
   xmin = -1.05;
   xmax =  1.05;
   ymin = -0.8;
@@ -77,8 +76,8 @@ void mwpc(ComponentAnalyticField* cmp,
   const double pitch = 0.2;
   cmp->SetPeriodicityY(pitch);
 
-  cmp->AddPlaneX( 0.,  0., "p");
-  cmp->AddPlaneX(gap,  0., "q");
+  cmp->AddPlaneX( 0.,  0.);
+  cmp->AddPlaneX(gap,  0.);
 
   const double xw = 0.5 * gap;
   const double dw = 30.e-4;
@@ -122,14 +121,14 @@ void oroc(ComponentAnalyticField* cmp,
   const double yg = 2 * gap + 0.3;
   const double dg = 75.e-4;
   const double vg = -100.;
-  cmp->AddWire(0.25 * period, yg, dg, vg, "g");
-  cmp->AddWire(0.75 * period, yg, dg, vg, "g");
+  cmp->AddWire(0.25 * period, yg, dg, vg);
+  cmp->AddWire(0.75 * period, yg, dg, vg);
 
   // Planes.
-  cmp->AddPlaneY(0., 0., "p");
+  cmp->AddPlaneY(0., 0.);
   const double yp = 2.;
   const double vp = -570.;
-  cmp->AddPlaneY(yp, vp, "q");
+  cmp->AddPlaneY(yp, vp);
 
   xmin = -5 * period;
   xmax =  5 * period;
@@ -144,10 +143,10 @@ void oroc(ComponentAnalyticField* cmp,
 void circle(ComponentAnalyticField* cmp,
             double& xmin, double& xmax, double& ymin, double& ymax) {
 
-  cmp->AddPlaneX(-50., 0., "p");
-  cmp->AddPlaneX( 50., 0., "p");
-  cmp->AddPlaneY(-50., 0., "p");
-  cmp->AddPlaneY( 50., 0., "p");
+  cmp->AddPlaneX(-50., 0.);
+  cmp->AddPlaneX( 50., 0.);
+  cmp->AddPlaneY(-50., 0.);
+  cmp->AddPlaneY( 50., 0.);
   const double r = 5.;
   const unsigned int n = 16;
   const double d = 0.01;
@@ -156,9 +155,9 @@ void circle(ComponentAnalyticField* cmp,
     const double phi = TwoPi * f;
     const double x = r * cos(phi);
     const double y = r * sin(phi);
-    cmp->AddWire(x, y, d, 1000., "p"); 
+    cmp->AddWire(x, y, d, 1000.); 
   }
-  cmp->AddWire(0., 0., d, 4500., "s");
+  cmp->AddWire(0., 0., d, 4500.);
   xmin = ymin = -1.05 * r;
   xmax = ymax =  1.05 * r;
 }
@@ -212,5 +211,5 @@ int main(int argc, char * argv[]) {
     std::cout << "Press ENTER to continue.\n";
     std::cin.get();
   }
-  app.Run(kTRUE);
+  app.Run();
 }

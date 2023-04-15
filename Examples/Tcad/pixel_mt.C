@@ -59,12 +59,11 @@ int main(int argc, char * argv[]) {
   fm.SetMedium("Silicon", &si);
 
   ComponentAnalyticField wfield;
-  wfield.AddPlaneY(0,    0., "bot");
-  wfield.AddPlaneY(d, -100., "top");
+  wfield.AddPlaneY(0,    0.);
+  wfield.AddPlaneY(d, -100.);
   wfield.AddStripOnPlaneY('z', d, 
                           0.5 * width - 0.5 * pitch,
                           0.5 * width + 0.5 * pitch, "strip");
-  wfield.AddReadout("strip");
 
   ViewField vField;
   constexpr bool plotField = true;

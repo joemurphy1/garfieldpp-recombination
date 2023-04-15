@@ -22,8 +22,8 @@ int main(int argc, char * argv[]) {
   constexpr double gap = 0.1;
   ComponentAnalyticField cmp;
   cmp.SetMedium(&gas);
-  cmp.AddPlaneY( 0.,    0., "");
-  cmp.AddPlaneY(gap, 10.e3, "");
+  cmp.AddPlaneY( 0.,    0.);
+  cmp.AddPlaneY(gap, 10.e3);
   cmp.AddCharge(0., 0.5 * gap, 0., 5.e6 * ElementaryCharge);
 
   // Plot isopotential contours.

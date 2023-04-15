@@ -45,20 +45,20 @@ int main(int argc, char * argv[]) {
   // Add the sense (anode) wires.
   constexpr double xs = 0.;
   constexpr double ys = gap;
-  cmp.AddWire(xs, ys, ds, vs, "s", 100., 50., 19.3, 1);
+  cmp.AddWire(xs, ys, ds, vs);
   // Add the cathode wires.
   constexpr double xc = 0.5 * period;
   constexpr double yc = 2 * gap;
-  cmp.AddWire(xc, yc, dc, 0., "c", 100., 50., 19.3, 1);
+  cmp.AddWire(xc, yc, dc, 0.);
   // Add the gate wires.
   constexpr double xg1 = 0.25 * period;
   constexpr double xg2 = 0.75 * period;
   constexpr double yg = 2. * gap + 0.3;
-  cmp.AddWire(xg1, yg, dg, vg, "g", 100., 50., 19.3, 1);  
-  cmp.AddWire(xg2, yg, dg, vg, "g", 100., 50., 19.3, 1);  
+  cmp.AddWire(xg1, yg, dg, vg);
+  cmp.AddWire(xg2, yg, dg, vg);
   // Add the planes.
-  cmp.AddPlaneY(0., 0., "pad_plane");
-  cmp.AddPlaneY(yHV, vHV, "HV");
+  cmp.AddPlaneY(0., 0.);
+  cmp.AddPlaneY(yHV, vHV);
 
   // Plot isopotential contours.
   ViewField fieldView;

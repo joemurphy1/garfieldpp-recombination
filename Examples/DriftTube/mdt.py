@@ -27,9 +27,7 @@ vTube = 0.
 # Add the wire in the centre.
 cmp.AddWire(0, 0, 2 * rWire, vWire, 's')
 # Add the tube.
-cmp.AddTube(rTube, vTube, 0, 't')
-# Request calculation of the weighting field. 
-cmp.AddReadout('s')
+cmp.AddTube(rTube, vTube, 0)
 
 # Make a sensor.
 sensor = ROOT.Garfield.Sensor()

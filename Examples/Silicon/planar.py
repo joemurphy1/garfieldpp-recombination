@@ -44,9 +44,6 @@ wField.AddPlaneY(d, 0, 'front')
 wField.AddStripOnPlaneY('z', d, -halfpitch, halfpitch, 'strip')
 wField.AddPixelOnPlaneY(d, -halfpitch, halfpitch, 
                            -halfpitch, halfpitch, 'pixel')
-wField.AddReadout('strip');
-wField.AddReadout('pixel');
-wField.AddReadout('front');
 
 # Create a sensor. 
 sensor = ROOT.Garfield.Sensor()

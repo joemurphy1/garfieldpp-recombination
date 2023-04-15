@@ -73,13 +73,13 @@ int main(int argc, char * argv[]) {
   // Add the sense (anode) wires.
   constexpr double xs = 0.;
   constexpr double ys = gap;
-  cmpe.AddWire(xs, ys, ds, vs, "s");
-  cmpi.AddWire(xs, ys, ds, vs, "s");
+  cmpe.AddWire(xs, ys, ds, vs);
+  cmpi.AddWire(xs, ys, ds, vs);
   // Add the cathode wires.
   constexpr double xc = 0.5 * period;
   constexpr double yc = 2 * gap;
-  cmpe.AddWire(xc, yc, dc, 0., "c");
-  cmpi.AddWire(xc, yc, dc, 0., "c");
+  cmpe.AddWire(xc, yc, dc, 0.);
+  cmpi.AddWire(xc, yc, dc, 0.);
 
   // Add the gate wires.
   constexpr double xg1 = 0.25 * period;
@@ -93,14 +93,12 @@ int main(int argc, char * argv[]) {
   // Add the planes.
   cmpe.AddPlaneY(0., 0., "pad_plane");
   cmpi.AddPlaneY(0., 0., "pad_plane");
-  cmpe.AddPlaneY(yHV, vHV, "HV");
-  cmpi.AddPlaneY(yHV, vHV, "HV");
+  cmpe.AddPlaneY(yHV, vHV);
+  cmpi.AddPlaneY(yHV, vHV);
 
   // Set the magnetic field [T].
   cmpe.SetMagneticField(0, 0.5, 0);
   cmpi.SetMagneticField(0, 0.5, 0);
-
-  cmpi.AddReadout("pad_plane");
 
   // Make a sensor.
   Sensor sensor;

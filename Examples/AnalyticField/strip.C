@@ -25,11 +25,10 @@ int main(int argc, char * argv[]) {
   // Define the cell layout.
   ComponentAnalyticField cmp;
   cmp.SetMedium(&gas);
-  cmp.AddPlaneX(-0.5,    0., "p1");
-  cmp.AddPlaneX( 0.5, 1000., "p2");
+  cmp.AddPlaneX(-0.5,    0.);
+  cmp.AddPlaneX( 0.5, 1000.);
   // Add a readout strip along z.
   cmp.AddStripOnPlaneX('z', -0.5, -0.1, 0.1, "strip"); 
-  cmp.AddReadout("strip");
   cmp.PrintCell();
 
   Sensor sensor;

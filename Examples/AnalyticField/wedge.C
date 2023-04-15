@@ -21,10 +21,10 @@ int main(int argc, char * argv[]) {
   ComponentAnalyticField cmp;
   cmp.SetMedium(&gas);
   cmp.SetPolarCoordinates();
-  cmp.AddPlaneR(2., 0., "o");
-  cmp.AddPlanePhi(0, 0., "r");
-  cmp.AddPlanePhi(60., 0., "l");
-  cmp.AddWire(1.5, 30., 50.e-4, 500., "w");
+  cmp.AddPlaneR(2., 0.);
+  cmp.AddPlanePhi(0, 0.);
+  cmp.AddPlanePhi(60., 0.);
+  cmp.AddWire(1.5, 30., 50.e-4, 500.);
   cmp.PrintCell();
 
   // Plot the potential.

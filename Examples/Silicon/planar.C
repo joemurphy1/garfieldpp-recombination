@@ -78,9 +78,6 @@ int main(int argc, char * argv[]) {
   wField.AddStripOnPlaneY('z', d, -halfpitch, halfpitch, "strip");
   wField.AddPixelOnPlaneY(d, -halfpitch, halfpitch, 
                              -halfpitch, halfpitch, "pixel");
-  wField.AddReadout("strip");
-  wField.AddReadout("pixel");
-  wField.AddReadout("front");
 
   // Create a sensor. 
   Sensor sensor;

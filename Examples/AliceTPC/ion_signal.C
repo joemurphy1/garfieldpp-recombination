@@ -99,11 +99,8 @@ int main(int argc, char * argv[]) {
 
   // Add the planes.
   cmp.AddPlaneY(0., 0., "pad_plane");
-  cmp.AddPlaneY(yHV, vHV, "HV");
+  cmp.AddPlaneY(yHV, vHV);
 
-  // Request weighting-field calculation for the pad plane. 
-  cmp.AddReadout("pad_plane");
- 
   // Set the magnetic field [T].
   cmp.SetMagneticField(0, 0.5, 0);
 

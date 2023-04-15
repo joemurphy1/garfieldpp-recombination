@@ -33,18 +33,18 @@ vs = 1460. # sense wires
 vg =  -70. # gate wires
 
 # Add the sense (anode) wires.
-cmp.AddWire(0, gap, ds, vs, "s", 100., 50., 19.3, 1)
+cmp.AddWire(0, gap, ds, vs)
 # Add the cathode wires.
-cmp.AddWire(0.5 * period, 2 * gap, dc, 0., "c", 100., 50., 19.3, 1)
+cmp.AddWire(0.5 * period, 2 * gap, dc, 0.)
 # Add the gate wires.
 xg1 = 0.25 * period
 xg2 = 0.75 * period
 yg = 2. * gap + 0.3
-cmp.AddWire(xg1, yg, dg, vg, "g", 100., 50., 19.3, 1)
-cmp.AddWire(xg2, yg, dg, vg, "g", 100., 50., 19.3, 1)
+cmp.AddWire(xg1, yg, dg, vg)
+cmp.AddWire(xg2, yg, dg, vg)
 # Add the planes.
-cmp.AddPlaneY(0., 0., "pad_plane");
-cmp.AddPlaneY(249.7, -100000, "HV");
+cmp.AddPlaneY(0., 0.)
+cmp.AddPlaneY(249.7, -100000)
 
 # Plot isopotential contours.
 fieldView = ROOT.Garfield.ViewField()

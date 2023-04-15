@@ -63,11 +63,6 @@ int main(int argc, char * argv[]){
   const double xStrip3 = xStrip2 + pitch;
   cmpA.AddStripOnPlaneY('z', 0., xStrip3 - hw, xStrip3 + hw, "strip3");
 
-  // We want to calculate the signals induced on the strips. 
-  cmpA.AddReadout("strip1");
-  cmpA.AddReadout("strip2");
-  cmpA.AddReadout("strip3");
-
   // Assemble a sensor.
   Sensor sensor;
   sensor.AddComponent(&cmpD); 

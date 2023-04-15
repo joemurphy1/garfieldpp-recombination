@@ -39,11 +39,10 @@ int main(int argc, char * argv[]) {
   constexpr double pitch = 50.e-4;
   ComponentAnalyticField wField;
   wField.SetGeometry(&geo);
-  wField.AddPlaneY(0., -1., "back");
-  wField.AddPlaneY(gap, 0., "front");
+  wField.AddPlaneY(0., -1.);
+  wField.AddPlaneY(gap, 0.);
   wField.AddPixelOnPlaneY(gap, -0.5 * pitch, 0.5 * pitch, 
                                -0.5 * pitch, 0.5 * pitch, "pixel");
-  wField.AddReadout("pixel");
 
   const double xmin = 0.;
   const double xmax = width;

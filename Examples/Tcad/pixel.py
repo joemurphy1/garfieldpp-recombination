@@ -47,12 +47,11 @@ fm.SetRangeZ(-width, width)
 fm.SetMedium("Silicon", si)
 
 wfield = ROOT.Garfield.ComponentAnalyticField()
-wfield.AddPlaneY(0,    0., 'bot')
-wfield.AddPlaneY(d, -100., 'top')
+wfield.AddPlaneY(0,    0.)
+wfield.AddPlaneY(d, -100.)
 hw = 0.5 * width
 hp = 0.5 * pitch
 wfield.AddStripOnPlaneY('z', d, hw - hp, hw + hp, 'strip')
-wfield.AddReadout('strip')
 
 vField = ROOT.Garfield.ViewField()
 vField.SetComponent(fm)

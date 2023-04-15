@@ -53,8 +53,6 @@ int main(int argc, char * argv[]) {
   wField.AddPlaneY(0, vbias, "back");
   wField.AddPlaneY(d, 0, "front");
   wField.AddStripOnPlaneY('z', d, -0.5 * pitch, 0. * pitch, "strip");
-  wField.AddReadout("strip");
-  wField.AddReadout("front");
 
   // Create a sensor. 
   Sensor sensor;

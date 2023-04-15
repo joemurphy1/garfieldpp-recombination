@@ -24,9 +24,9 @@ int main(int argc, char * argv[]) {
   // Setup the cell layout.
   ComponentAnalyticField cmp;
   cmp.SetMedium(&gas);
-  cmp.AddPlaneY(-1.,    0., "b");
-  cmp.AddPlaneY(+1., 2000., "t");
-  cmp.AddWire(0., 0., 1., 1000., "s");
+  cmp.AddPlaneY(-1.,    0.);
+  cmp.AddPlaneY(+1., 2000.);
+  cmp.AddWire(0., 0., 1., 1000.);
   cmp.EnableDipoleTerms();
   cmp.PrintCell();
 
