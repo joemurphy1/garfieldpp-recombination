@@ -887,21 +887,22 @@ following functions:
 \begin{lstlisting}
 // Add a wire
 void AddWire(const double x, const double y, const double d,
-             const double v, const std::string& label, 
+             const double v, const std::string& label = "", 
              const double length = 100.,
              const double tension = 50., const double rho = 19.3);
 // Add a tube
 void AddTube(const double r, const double v, 
-             const int nEdges, const std::string& label);
+             const int nEdges, const std::string& label = "");
 // Add a plane at constant x
-void AddPlaneX(const double x, const double v, const std::string& label);
+void AddPlaneX(const double x, const double v, const std::string& label = "");
 // Add a plane at constant y
-void AddPlaneY(const double y, const double v, const std::string& label);
+void AddPlaneY(const double y, const double v, const std::string& label = "");
 \end{lstlisting} 
 
-In all of these functions, the potential \texttt{v} (in V) 
-and a label (used for signal calculation) 
-have to be supplied as parameters.
+All of these functions take the potential \texttt{v} (in V) 
+and a label as arguments. 
+The \texttt{label} argument is optional. If the default value 
+(empty string) is used, the calculation of the weighting field and potential for this wire, tube or plane will be skipped (\textit{i. e.} one cannot compute the signal induced in this element).
  
 For wires, the center of the wire (\texttt{x, y}) 
 and its diameter (\texttt{d}) need to be specified. 
@@ -1217,12 +1218,10 @@ bool MultipoleMoments(const unsigned int iw, const unsigned int order = 4,
 
 \subsection{Weighting fields}
 
-The weighting field calculation for a readout group 
--- \textit{i.\,e.} all elements (wires, planes, etc.) with the same label --
-is activated by the function
-\begin{lstlisting}
-void AddReadout(const std::string& label);
-\end{lstlisting}
+By default, weighting fields and potentials will be calculated for 
+all elements (wires, planes, \textit{etc.}) which were assigned a 
+non-empty string as a label.
+
 In addition to the weighting fields of 
 the elements used for the calculation of the 
 (actual) electric field, 

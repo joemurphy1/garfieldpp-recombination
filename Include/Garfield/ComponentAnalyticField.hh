@@ -92,24 +92,24 @@ class ComponentAnalyticField : public Component {
   void SetMedium(Medium* medium) { m_medium = medium; }
   /// Add a wire at (x, y) .
   void AddWire(const double x, const double y, const double diameter,
-               const double voltage, const std::string& label,
+               const double voltage, const std::string& label = "",
                const double length = 100., const double tension = 50.,
                const double rho = 19.3, const int ntrap = 5);
   /// Add a tube.
   void AddTube(const double radius, const double voltage, const int nEdges,
-               const std::string& label);
+               const std::string& label = "");
   /// Add a plane at constant x.
   void AddPlaneX(const double x, const double voltage,
-                 const std::string& label);
+                 const std::string& label = "");
   /// Add a plane at constant y.
   void AddPlaneY(const double y, const double voltage,
-                 const std::string& label);
+                 const std::string& label = "");
   /// Add a plane at constant radius.
   void AddPlaneR(const double r, const double voltage,
-                 const std::string& label);
+                 const std::string& label = "");
   /// Add a plane at constant phi.
   void AddPlanePhi(const double phi, const double voltage,
-                   const std::string& label);
+                   const std::string& label = "");
   /** Add a strip in the y or z direction on an existing plane at constant x.
     * \param direction 'y' or 'z'.
     * \param x coordinate of the plane.
@@ -220,8 +220,9 @@ class ComponentAnalyticField : public Component {
     return GetCellType(m_cellType);
   }
 
-  /// Setup the weighting field for a given group of wires or planes.
-  void AddReadout(const std::string& label);
+  /// Request calculation of weighting field and potential 
+  /// for a given group of wires or planes.
+  void AddReadout(const std::string& label, const bool silent = false);
 
   void SetNumberOfCellCopies(const unsigned int nfourier);
 

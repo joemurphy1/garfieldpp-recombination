@@ -86,7 +86,7 @@ We first set the medium inside the active region.
 cmp.SetMedium(&gas); 
 \end{lstlisting}
 Next we add the elements defining the electric field, 
-\ie~the wire and the tube.
+\ie~the wire (which we label ``s'') and the tube.
 \begin{lstlisting}
 // Wire radius [cm]
 const double rWire = 25.e-4;
@@ -98,16 +98,15 @@ const double vTube =    0.;
 // Add the wire in the centre.
 cmp.AddWire(0, 0, 2 * rWire, vWire, "s");
 // Add the tube.
-cmp.AddTube(rTube, vTube, 0, "t");
+cmp.AddTube(rTube, vTube, 0);
 \end{lstlisting}
-We want to calculate the signal induced on the wire. 
-Using 
-\begin{lstlisting}
-cmp.AddReadout("s");
-\end{lstlisting}
-we tell \texttt{ComponentAnalyticField} to prepare the solution for the 
-weighting potential and weighting field of the wire 
-(which we have given the label ``s'' before).
+%Using 
+%\begin{lstlisting}
+%cmp.AddReadout("s");
+%\end{lstlisting}
+%we tell \texttt{ComponentAnalyticField} to prepare the solution for the 
+%weighting potential and weighting field of the wire 
+%(which we have given the label ``s'' before).
  
 Finally we assemble a \texttt{Sensor} object which acts as an 
 interface to the transport classes discussed below.
@@ -597,18 +596,17 @@ wField.AddPlaneY(0, vbias, "back");
 wField.AddPlaneY(d, 0, "front");
 \end{lstlisting}
 We now define a strip (55\,\textmu{m} width, centred at $x = 0$) 
-on the front side of the sensor and request the calculation of its 
-weighting field (which we label ``strip'').
+on the front side of the sensor.
 \begin{lstlisting}
 constexpr double pitch = 55.e-4;
 constexpr double halfpitch = 0.5 * pitch;
 wField.AddStripOnPlaneY('z', d, -halfpitch, halfpitch, "strip");
-wField.AddReadout("strip");
 \end{lstlisting}
+The last argument of the above function is a label, which we will use 
+later to identify the signal induced on the strip.
 Similarly we could have set up the weighting field of a pixel electrode.
 \begin{lstlisting}
 wField.AddPixelOnPlaneY(d, -halfpitch, halfpitch, -halfpitch, halfpitch, "pixel");
-wField.AddReadout("pixel");
 \end{lstlisting}
 
 Finally, we need to instruct the \texttt{Sensor} 
