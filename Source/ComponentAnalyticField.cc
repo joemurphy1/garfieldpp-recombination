@@ -454,7 +454,7 @@ void ComponentAnalyticField::PrintCell() {
         std::cout << "earthed, ";
       }
       const auto& plane = m_planes[i];
-      if (plane.type.empty() && plane.type != "?") {
+      if (!plane.type.empty() && plane.type != "?") {
         std::cout << "label = " << plane.type << ", ";
       }
       const unsigned int nStrips = plane.strips1.size() + plane.strips2.size();
@@ -462,11 +462,16 @@ void ComponentAnalyticField::PrintCell() {
       if (nStrips == 0 && nPixels == 0) {
         std::cout << "no strips or pixels.\n";
       } else if (nPixels == 0) {
-        std::cout << nStrips << " strips.\n";
+        if (nStrips == 1) std::cout << "1 strip.\n";
+        else std::cout << nStrips << " strips.\n";
       } else if (nStrips == 0) {
-        std::cout << nPixels << " pixels.\n";
+        if (nPixels == 1) std::cout << "1 pixel.\n";
+        else std::cout << nPixels << " pixels.\n";
       } else {
-        std::cout << nStrips << " strips, " << nPixels << " pixels.\n";
+        if (nStrips == 1) std::cout << "1 strip, ";
+        else std::cout << nStrips << " strips, ";
+        if (nPixels == 1) std::cout << "1 pixel.\n";
+        else std::cout << nPixels << " pixels.\n";
       }
       for (const auto& strip : plane.strips2) {
         std::cout << "      ";
@@ -541,7 +546,7 @@ void ComponentAnalyticField::PrintCell() {
         std::cout << "earthed, ";
       }
       const auto& plane = m_planes[i];
-      if (plane.type.empty() && plane.type != "?") {
+      if (!plane.type.empty() && plane.type != "?") {
         std::cout << "label = " << plane.type << ", ";
       }
       const unsigned int nStrips = plane.strips1.size() + plane.strips2.size();
@@ -938,10 +943,11 @@ void ComponentAnalyticField::AddWire(const double x, const double y,
   wire.nTrap = ntrap;
   wire.tension = tension;
   wire.density = rho;
-  // Add the wire to the list
+  // Add the wire to the list.
   m_w.push_back(std::move(wire));
   ++m_nWires;
-
+  // Add the identifier to the list of readout groups.
+  if (!label.empty()) AddReadout(label, true);
   // Force recalculation of the capacitance and signal matrices.
   m_cellset = false;
   m_sigset = false;
@@ -982,6 +988,8 @@ void ComponentAnalyticField::AddTube(const double radius, const double voltage,
   m_planes[4].type = label;
   m_planes[4].ind = -1;
 
+  // Add the identifier to the list of readout groups.
+  if (!label.empty()) AddReadout(label, true);
   // Force recalculation of the capacitance and signal matrices.
   m_cellset = false;
   m_sigset = false;
@@ -1014,6 +1022,8 @@ void ComponentAnalyticField::AddPlaneX(const double x, const double v,
     m_planes[0].ind = -1;
   }
 
+  // Add the identifier to the list of readout groups.
+  if (!label.empty()) AddReadout(label, true);
   // Force recalculation of the capacitance and signal matrices.
   m_cellset = false;
   m_sigset = false;
@@ -1046,6 +1056,8 @@ void ComponentAnalyticField::AddPlaneY(const double y, const double v,
     m_planes[2].ind = -1;
   }
 
+  // Add the identifier to the list of readout groups.
+  if (!label.empty()) AddReadout(label, true);
   // Force recalculation of the capacitance and signal matrices.
   m_cellset = false;
   m_sigset = false;
@@ -1084,6 +1096,8 @@ void ComponentAnalyticField::AddPlaneR(const double r, const double v,
     m_planes[0].ind = -1;
   }
 
+  // Add the identifier to the list of readout groups.
+  if (!label.empty()) AddReadout(label, true);
   // Force recalculation of the capacitance and signal matrices.
   m_cellset = false;
   m_sigset = false;
@@ -1120,6 +1134,8 @@ void ComponentAnalyticField::AddPlanePhi(const double phi, const double v,
     }
   }
 
+  // Add the identifier to the list of readout groups.
+  if (!label.empty()) AddReadout(label, true);
   // Force recalculation of the capacitance and signal matrices.
   m_cellset = false;
   m_sigset = false;
@@ -1149,6 +1165,12 @@ void ComponentAnalyticField::AddStripOnPlaneX(const char dir, const double x,
     return;
   }
 
+  if (label.empty()) {
+    std::cerr << m_className << "::AddStripOnPlaneX: "
+              << "Label must not be an empty string.\n";
+    return;
+  }
+
   Strip newStrip;
   newStrip.type = label;
   newStrip.ind = -1;
@@ -1168,6 +1190,8 @@ void ComponentAnalyticField::AddStripOnPlaneX(const char dir, const double x,
   } else {
     m_planes[iplane].strips2.push_back(std::move(newStrip));
   }
+  // Add the identifier to the list of readout groups.
+  AddReadout(label, true);
 }
 
 void ComponentAnalyticField::AddStripOnPlaneY(const char dir, const double y,
@@ -1194,6 +1218,12 @@ void ComponentAnalyticField::AddStripOnPlaneY(const char dir, const double y,
     return;
   }
 
+  if (label.empty()) {
+    std::cerr << m_className << "::AddStripOnPlaneY: "
+              << "Label must not be an empty string.\n";
+    return;
+  }
+
   Strip newStrip;
   newStrip.type = label;
   newStrip.ind = -1;
@@ -1213,6 +1243,8 @@ void ComponentAnalyticField::AddStripOnPlaneY(const char dir, const double y,
   } else {
     m_planes[iplane].strips2.push_back(std::move(newStrip));
   }
+  // Add the identifier to the list of readout groups.
+  AddReadout(label, true);
 }
 
 void ComponentAnalyticField::AddStripOnPlaneR(const char dir, const double r,
@@ -1236,6 +1268,12 @@ void ComponentAnalyticField::AddStripOnPlaneR(const char dir, const double r,
   if (fabs(smax - smin) < Small) {
     std::cerr << m_className << "::AddStripOnPlaneR:\n"
               << "    Strip width must be greater than zero.\n";
+    return;
+  }
+
+  if (label.empty()) {
+    std::cerr << m_className << "::AddStripOnPlaneR: "
+              << "Label must not be an empty string.\n";
     return;
   }
 
@@ -1266,6 +1304,8 @@ void ComponentAnalyticField::AddStripOnPlaneR(const char dir, const double r,
   } else {
     m_planes[iplane].strips2.push_back(std::move(newStrip));
   }
+  // Add the identifier to the list of readout groups.
+  AddReadout(label, true);
 }
 
 void ComponentAnalyticField::AddStripOnPlanePhi(const char dir, 
@@ -1290,6 +1330,12 @@ void ComponentAnalyticField::AddStripOnPlanePhi(const char dir,
   if (fabs(smax - smin) < Small) {
     std::cerr << m_className << "::AddStripOnPlanePhi:\n"
               << "    Strip width must be greater than zero.\n";
+    return;
+  }
+
+  if (label.empty()) {
+    std::cerr << m_className << "::AddStripOnPlanePhi: "
+              << "Label must not be an empty string.\n";
     return;
   }
 
@@ -1324,6 +1370,8 @@ void ComponentAnalyticField::AddStripOnPlanePhi(const char dir,
   } else {
     m_planes[iplane].strips2.push_back(std::move(newStrip));
   }
+  // Add the identifier to the list of readout groups.
+  AddReadout(label, true);
 }
 
 
@@ -1340,6 +1388,12 @@ void ComponentAnalyticField::AddPixelOnPlaneX(
   if (fabs(ymax - ymin) < Small || fabs(zmax - zmin) < Small) {
     std::cerr << m_className << "::AddPixelOnPlaneX:\n"
               << "    Pixel width must be greater than zero.\n";
+    return;
+  }
+
+  if (label.empty()) {
+    std::cerr << m_className << "::AddPixelOnPlaneX: "
+              << "Label must not be an empty string.\n";
     return;
   }
 
@@ -1364,6 +1418,8 @@ void ComponentAnalyticField::AddPixelOnPlaneX(
   }
 
   m_planes[iplane].pixels.push_back(std::move(pixel));
+  // Add the identifier to the list of readout groups.
+  AddReadout(label, true);
 }
 
 void ComponentAnalyticField::AddPixelOnPlaneY(
@@ -1379,6 +1435,12 @@ void ComponentAnalyticField::AddPixelOnPlaneY(
   if (fabs(xmax - xmin) < Small || fabs(zmax - zmin) < Small) {
     std::cerr << m_className << "::AddPixelOnPlaneY:\n"
               << "    Pixel width must be greater than zero.\n";
+    return;
+  }
+
+  if (label.empty()) {
+    std::cerr << m_className << "::AddPixelOnPlaneY: "
+              << "Label must not be an empty string.\n";
     return;
   }
 
@@ -1403,6 +1465,8 @@ void ComponentAnalyticField::AddPixelOnPlaneY(
   }
 
   m_planes[iplane].pixels.push_back(std::move(pixel));
+  // Add the identifier to the list of readout groups.
+  AddReadout(label, true);
 }
 
 void ComponentAnalyticField::AddPixelOnPlaneR(
@@ -1418,6 +1482,12 @@ void ComponentAnalyticField::AddPixelOnPlaneR(
   if (fabs(phimax - phimin) < Small || fabs(zmax - zmin) < Small) {
     std::cerr << m_className << "::AddPixelOnPlaneR:\n"
               << "    Pixel width must be greater than zero.\n";
+    return;
+  }
+
+  if (label.empty()) {
+    std::cerr << m_className << "::AddPixelOnPlaneR: "
+              << "Label must not be an empty string.\n";
     return;
   }
 
@@ -1441,6 +1511,8 @@ void ComponentAnalyticField::AddPixelOnPlaneR(
   }
 
   m_planes[iplane].pixels.push_back(std::move(pixel));
+  // Add the identifier to the list of readout groups.
+  AddReadout(label, true);
 }
 
 void ComponentAnalyticField::AddPixelOnPlanePhi(
@@ -1463,6 +1535,13 @@ void ComponentAnalyticField::AddPixelOnPlanePhi(
               << "    Radius must be greater than zero.\n";
     return;
   }
+
+  if (label.empty()) {
+    std::cerr << m_className << "::AddPixelOnPlanePhi: "
+              << "Label must not be an empty string.\n";
+    return;
+  }
+
   Pixel pixel;
   pixel.type = label;
   pixel.ind = -1;
@@ -1482,6 +1561,8 @@ void ComponentAnalyticField::AddPixelOnPlanePhi(
   }
 
   m_planes[iplane].pixels.push_back(std::move(pixel));
+  // Add the identifier to the list of readout groups.
+  AddReadout(label, true);
 }
 
 void ComponentAnalyticField::EnableDipoleTerms(const bool on) {
@@ -2755,6 +2836,7 @@ bool ComponentAnalyticField::CellCheck() {
   //   (Last changed on 16/ 2/05.)
   //-----------------------------------------------------------------------
 
+  unsigned int nWarnings = 0;
   // Checks on the planes, first move the x planes to the basic cell.
   if (m_perx) {
     const std::string xr = m_polar ? "r" : "x";
@@ -2770,25 +2852,29 @@ bool ComponentAnalyticField::CellCheck() {
     // Print some warnings if the planes have been moved.
     if ((conew1 != m_coplan[0] && m_ynplan[0]) ||
         (conew2 != m_coplan[1] && m_ynplan[1])) {
-      std::cout << m_className << "::CellCheck:\n    The planes in "
-                << xr << " are moved to the basic period.\n"
-                << "    This should not affect the results.\n";
+      if (nWarnings == 0) std::cout << m_className << "::CellCheck:\n";
+      std::cout << "    Moved " << xr << "-planes to the basic period "
+                << "(should not affect the results).\n";
+      ++nWarnings;
     }
     m_coplan[0] = conew1;
     m_coplan[1] = conew2;
 
     // Two planes should now be separated by SX, cancel PERX if not.
     if (m_ynplan[0] && m_ynplan[1] && fabs(m_coplan[1] - m_coplan[0]) != m_sx) {
-      std::cerr << m_className << "::CellCheck:\n    The separation of the "
-                << xr << " planes does not match the period.\n"
+      if (nWarnings == 0) std::cerr << m_className << "::CellCheck:\n";
+      std::cerr << "    The separation of the "
+                << xr << "-planes does not match the period.\n"
                 << "    The periodicity is cancelled.\n";
+      ++nWarnings;
       m_perx = false;
     }
     // If there are two planes left, they should have identical V's.
     if (m_ynplan[0] && m_ynplan[1] && m_vtplan[0] != m_vtplan[1]) {
-      std::cerr << m_className << "::CellCheck:\n    The voltages of the two "
-                << xr << " planes differ.\n"
-                << "    The periodicity is cancelled.\n";
+      if (nWarnings == 0) std::cerr << m_className << "::CellCheck:\n";
+      std::cerr << "    The voltages of the two " << xr 
+                << "-planes differ. The periodicity is cancelled.\n";
+      ++nWarnings;
       m_perx = false;
     }
   }
@@ -2808,25 +2894,29 @@ bool ComponentAnalyticField::CellCheck() {
     // Print some warnings if the planes have been moved.
     if ((conew3 != m_coplan[2] && m_ynplan[2]) ||
         (conew4 != m_coplan[3] && m_ynplan[3])) {
-      std::cout << m_className << "::CellCheck:\n    The planes in "
-                << yp << " are moved to the basic period.\n"
-                << "    This should not affect the results.\n";
+      if (nWarnings == 0) std::cout << m_className << "::CellCheck:\n";
+      std::cout << "    Moved " << yp << "-planes to the basic period "
+                << "(should not affect the results).\n";
+      ++nWarnings;
     }
     m_coplan[2] = conew3;
     m_coplan[3] = conew4;
 
     // Two planes should now be separated by SY, cancel PERY if not.
     if (m_ynplan[2] && m_ynplan[3] && fabs(m_coplan[3] - m_coplan[2]) != m_sy) {
-      std::cerr << m_className << "::CellCheck:\n    The separation of the two "
-                << yp << " planes does not match the period.\n"
+      if (nWarnings == 0) std::cerr << m_className << "::CellCheck:\n";
+      std::cerr << "    The separation of the two "
+                << yp << "-planes does not match the period.\n"
                 << "    The periodicity is cancelled.\n";
+      ++nWarnings;
       m_pery = false;
     }
     // If there are two planes left, they should have identical V's.
     if (m_ynplan[2] && m_ynplan[3] && m_vtplan[2] != m_vtplan[3]) {
-      std::cerr << m_className << "::CellCheck:\n    The voltages of the two "
-                << yp << " planes differ.\n"
-                << "    The periodicity is cancelled.\n";
+      if (nWarnings == 0) std::cerr << m_className << "::CellCheck:\n";
+      std::cerr << "    The voltages of the two " << yp 
+                << "-planes differ. The periodicity is cancelled.\n";
+      ++nWarnings;
       m_pery = false;
     }
   }
@@ -2836,9 +2926,10 @@ bool ComponentAnalyticField::CellCheck() {
     for (int j = 2; j < 4; ++j) {
       if (m_ynplan[i] && m_ynplan[j] && m_vtplan[i] != m_vtplan[j]) {
         const std::string yp = m_polar ? "phi" : "y";
-        std::cerr << m_className << "::CellCheck:\n"
-                  << "    Conflicting potential of two crossing planes.\n"
-                  << "    One " << yp << " plane is removed.\n";
+        if (nWarnings == 0) std::cerr << m_className << "::CellCheck:\n";
+        std::cout << "    Conflicting potential of two crossing planes.\n"
+                  << "    One " << yp << "-plane is removed.\n";
+        ++nWarnings;
         m_ynplan[j] = false;
       }
     }
@@ -2848,14 +2939,15 @@ bool ComponentAnalyticField::CellCheck() {
   for (int i = 0; i < 3; i += 2) {
     if (m_ynplan[i] && m_ynplan[i + 1]) {
       if (m_coplan[i] == m_coplan[i + 1]) {
-        std::cerr << m_className << "::CellCheck:\n"
-                  << "    Two planes are on top of each other.\n"
+        if (nWarnings == 0) std::cerr << m_className << "::CellCheck:\n";
+        std::cerr << "    Two planes are on top of each other.\n"
                   << "    One of them is removed.\n";
+        ++nWarnings;
         m_ynplan[i + 1] = false;
       }
       if (m_coplan[i] > m_coplan[i + 1]) {
         if (m_debug) {
-          std::cout << m_className << "::CellCheck:\n    Planes "
+          std::cout << m_className << "::CellCheck: Planes "
                     << i << " and " << i + 1 << " are interchanged.\n";
         }
         // Interchange the two planes.
@@ -2877,10 +2969,13 @@ bool ComponentAnalyticField::CellCheck() {
         double yprt = wire.y;
         if (m_polar) Internal2Polar(wire.x, wire.y, xprt, yprt);
         const std::string xr = m_polar ? "r" : "x";
-        std::cout << m_className << "::CellCheck:\n    The " << wire.type
-                  << "-wire at (" << xprt << ", " << yprt
-                  << ") is moved to the basic " << xr << " period.\n"
+        if (nWarnings == 0) std::cerr << m_className << "::CellCheck:\n";
+        std::cout << "    Moved the ";
+        if (!wire.type.empty()) std::cout << "'" << wire.type << "' "; 
+        std::cout << "wire at (" << xprt << ", " << yprt
+                  << ") to the basic " << xr << " period.\n"
                   << "    This should not affect the results.\n";
+        ++nWarnings;
       }
       wire.x = xnew;
     }
@@ -2893,11 +2988,13 @@ bool ComponentAnalyticField::CellCheck() {
       double ynew = m_w[i].y;
       Cartesian2Polar(xnew, ynew, xnew, ynew);
       if (int(round(DegreeToRad * ynew / m_sy)) != 0) {
-        std::cout << m_className << "::CellCheck:\n";
-        std::cout << "    The " << m_w[i].type << "-wire at (" << m_w[i].x
-                  << ", " << m_w[i].y
-                  << ") is moved to the basic phi period.\n";
-        std::cout << "    This should not affect the results.\n";
+        if (nWarnings == 0) std::cout << m_className << "::CellCheck:\n";
+        std::cout << "    Moved the ";
+        if (!m_w[i].type.empty()) std::cout << "'" << m_w[i].type << "' "; 
+        std::cout << "wire at (" << m_w[i].x << ", " << m_w[i].y
+                  << ") to the basic phi period.\n"
+                  << "    This should not affect the results.\n";
+        ++nWarnings;
         ynew -= RadToDegree * m_sy * round(DegreeToRad * ynew / m_sy);
         Polar2Cartesian(xnew, ynew, m_w[i].x, m_w[i].y);
       }
@@ -2911,11 +3008,14 @@ bool ComponentAnalyticField::CellCheck() {
         double xprt = wire.x;
         double yprt = wire.y;
         if (m_polar) Internal2Polar(wire.x, wire.y, xprt, yprt);
+        if (nWarnings == 0) std::cout << m_className << "::CellCheck:\n";
         const std::string yp = m_polar ? "phi" : "y";
-        std::cout << m_className << "::CellCheck:\n    The " << wire.type
-                  << "-wire at (" << xprt << ", " << yprt
-                  << ") is moved to the basic " << yp << " period.\n"
+        std::cout << "    Moved the ";
+        if (!wire.type.empty()) std::cout << "'" << wire.type << "' ";
+        std::cout << "wire at (" << xprt << ", " << yprt
+                  << ") to the basic " << yp << " period.\n"
                   << "    This should not affect the results.\n";
+        ++nWarnings;
       }
       wire.y = ynew;
     }
@@ -3034,26 +3134,37 @@ bool ComponentAnalyticField::CellCheck() {
     if (m_ynplan[3] && m_w[i].y + rw >= m_coplan[3]) wrong[i] = true;
     if (m_tube) {
       if (!InTube(m_w[i].x, m_w[i].y, m_cotube, m_ntube)) {
-        std::cerr << m_className << "::CellCheck:\n";
-        std::cerr << "    The " << m_w[i].type << "-wire at (" << m_w[i].x
-                  << ", " << m_w[i].y << ") is located outside the tube.\n";
-        std::cerr << "    This wire is removed.\n";
+        if (nWarnings == 0) std::cerr << m_className << "::CellCheck:\n";
+        std::cerr << "    The ";
+        if (!m_w[i].type.empty()) std::cerr << "'" << m_w[i].type << "' ";
+        std::cerr << "wire at (" << m_w[i].x << ", " << m_w[i].y 
+                  << ") is located outside the tube.\n"
+                  << "    This wire is removed.\n";
+        ++nWarnings;
         wrong[i] = true;
       }
     } else if (wrong[i]) {
       double xprt = m_w[i].x;
       double yprt = m_w[i].y;
       if (m_polar) Internal2Polar(m_w[i].x, m_w[i].y, xprt, yprt);
-      std::cerr << m_className << "::CellCheck:\n    The " << m_w[i].type
-                << "-wire at (" << xprt << ", " << yprt << ") is located "
-                << "outside the planes.\n    This wire is removed.\n";
+      if (nWarnings == 0) std::cerr << m_className << "::CellCheck:\n";
+      std::cerr << "    The ";
+      if (!m_w[i].type.empty()) std::cerr << "'" << m_w[i].type << "' ";
+      std::cerr << "wire at (" << xprt << ", " << yprt << ") is located "
+                << "outside the planes.\n"
+                << "    This wire is removed.\n";
+      ++nWarnings;
     } else if ((m_perx && dw >= m_sx) || (m_pery && dw >= m_sy)) {
       double xprt = m_w[i].x;
       double yprt = m_w[i].y;
       if (m_polar) Internal2Polar(m_w[i].x, m_w[i].y, xprt, yprt);
-      std::cerr << m_className << "::CellCheck:\n    The diameter of the "
-                << m_w[i].type << "-wire at (" << xprt << ", " << yprt
-                << ") exceeds 1 period.\n    This wire is removed.\n";
+      if (nWarnings == 0) std::cerr << m_className << "::CellCheck:\n";
+      std::cerr << "    The diameter of the ";
+      if (!m_w[i].type.empty()) std::cerr << "'" << m_w[i].type << "' ";
+      std::cerr << "wire at (" << xprt << ", " << yprt
+                << ") exceeds 1 period.\n"
+                << "    This wire is removed.\n";
+      ++nWarnings;
       wrong[i] = true;
     }
   }
@@ -3096,11 +3207,15 @@ bool ComponentAnalyticField::CellCheck() {
         Internal2Polar(m_w[i].x, m_w[i].y, xprti, yprti);
         Internal2Polar(m_w[j].x, m_w[j].y, xprtj, yprtj);
       }
-      std::cerr << m_className << "::CellCheck:\n    Wires " << m_w[i].type
-                << " at (" << xprti << ", " << yprti << ") and " << m_w[j].type
-                << " at (" << xprtj << ", " << yprtj
+      if (nWarnings == 0) std::cerr << m_className << "::CellCheck:\n";
+      std::cerr << "    The ";
+      if (!m_w[i].type.empty()) std::cerr << "'" << m_w[i].type << "' ";
+      std::cerr << "wire at (" << xprti << ", " << yprti << ") and the ";
+      if (!m_w[j].type.empty()) std::cerr << "'" << m_w[j].type << "' ";
+      std::cerr << "wire at (" << xprtj << ", " << yprtj
                 << ") overlap at least partially.\n"
                 << "    The latter wire is removed.\n";
+      ++nWarnings;
       wrong[j] = true;
     }
   }
@@ -3625,14 +3740,17 @@ bool ComponentAnalyticField::PrepareStrips() {
   return true;
 }
 
-void ComponentAnalyticField::AddReadout(const std::string& label) {
+void ComponentAnalyticField::AddReadout(const std::string& label,
+                                        const bool silent) {
   // Check if this readout group already exists.
   if (std::find(m_readout.begin(), m_readout.end(), label) != m_readout.end()) {
-    std::cout << m_className << "::AddReadout:\n";
-    std::cout << "    Readout group " << label << " already exists.\n";
-    return;
+    if (!silent) {
+      std::cout << m_className << "::AddReadout: Readout group " 
+                << label << " already exists.\n";
+    }
+  } else {
+    m_readout.push_back(label);
   }
-  m_readout.push_back(label);
 
   unsigned int nWiresFound = 0;
   for (const auto& wire : m_w) {
@@ -3657,12 +3775,12 @@ void ComponentAnalyticField::AddReadout(const std::string& label) {
 
   if (nWiresFound == 0 && nPlanesFound == 0 && nStripsFound == 0 &&
       nPixelsFound == 0) {
-    std::cerr << m_className << "::AddReadout:\n";
-    std::cerr << "    At present there are no wires, planes or strips\n";
-    std::cerr << "    associated to readout group " << label << ".\n";
-  } else {
-    std::cout << m_className << "::AddReadout:\n";
-    std::cout << "    Readout group " << label << " comprises:\n";
+    std::cerr << m_className << "::AddReadout:\n"
+              << "    At present there are no wires, planes or strips\n"
+              << "    associated to readout group " << label << ".\n";
+  } else if (!silent) {
+    std::cout << m_className << "::AddReadout:\n"
+              << "    Readout group " << label << " comprises:\n";
     if (nWiresFound > 1) {
       std::cout << "      " << nWiresFound << " wires\n";
     } else if (nWiresFound == 1) {
