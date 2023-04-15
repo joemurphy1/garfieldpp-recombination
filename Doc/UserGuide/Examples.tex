@@ -139,8 +139,8 @@ track.SetParticle("muon");
 track.SetEnergy(170.e9);
 track.SetSensor(&sensor);
 \end{lstlisting}
-The drift lines of the electrons created along the track are simulated 
-along the track are calculated using Runge-Kutta-Fehlberg (RKF) integration,
+The drift lines of the electrons created along the track are calculated 
+using Runge-Kutta-Fehlberg (RKF) integration,
 implemented in the class \texttt{DriftLineRKF}.
 This method uses the previously computed tables of transport parameters to 
 calculate drift lines and multiplication. 
@@ -268,7 +268,7 @@ in \texttt{ComponentAnsys123} since we had exploited the symmetry
 of the geometry and modelled only half a hole in Ansys.
 
 Using the class \texttt{ViewField}, we do a visual inspection of the 
-field map to make sure it makes sense. 
+field map to make sure it looks sensible.
 We first make a plot of the potential along the hole axis ($z$ axis).
 \begin{lstlisting}
 ViewField fieldView;
@@ -390,7 +390,7 @@ AvalancheMicroscopic aval;
 aval.SetSensor(&sensor);
 \end{lstlisting}
 We are now ready to simulate an electron avalanche in the GEM.
-We place the initial electron 200\,\textmu{m} above centre of the GEM hole 
+We place the initial electron 200\,\textmu{m} above the centre of the GEM hole 
 and set its initial energy to a typical energy in the electric field 
 of the drift gap.
 \begin{lstlisting}
@@ -412,21 +412,18 @@ and the start- and endpoints of all electron trajectories.
 int ne, ni;
 // Get the number of electrons and ions in the avalanche.
 aval.GetAvalancheSize(ne, ni);
-// Get the number of electron drift lines.
-int np = aval->GetNumberOfElectronEndpoints();
-// Initial position and time
-double x1, y1, z1, t1;
-// Final position and time
-double x2, y2, z2, t2;
-// Initial and final energy
-double e1, e2;
-// Flag indicating why the tracking of an electron was stopped.
-int status;
-// Loop over the avalanche electrons.
-for (int i = 0; i < np; ++i) {
-  aval.GetElectronEndpoint(i, x1, y1, z1, t1, e1,
-                              x2, y2, z2, t2, e2, status);
-} 
+// Loop over the electrons in the avalanche.
+for (const auto& electron : aval.GetElectrons()) {
+  // Initial position.
+  const auto& p0 = electron.path.front();
+  std::cout << "Electron started at (" 
+            << p0.x << ", " << p0.y << ", " << p0.z << ")\n";
+  // Final position.
+  const auto& p1 = electron.path.back();
+  std::cout << "Electron stopped at (" 
+            << p1.x << ", " << p1.y << ", " << p1.z << ")\n";
+  std::cout << "Status code: " << electron.status << "\n";
+}
 \end{lstlisting}
 \paragraph{Ion transport}
 For tracking the ions, we use the class \texttt{AvalancheMC}, 
@@ -443,17 +440,17 @@ trajectories, and calculate an ion drift line starting from the same
 initial point as the electron.
 \begin{lstlisting}
 // Loop over the avalanche electrons.
-for (int i = 0; i < np; ++i) {
-  aval.GetElectronEndpoint(i, x1, y1, z1, t1, e1,
-                              x2, y2, z2, t2, e2, status);
-  drift.DriftIon(x1, y1, z1, t1);
+for (const auto& electron : aval.GetElectrons()) {
+  const auto& p0 = electron.path[0];
+  drift.DriftIon(p0.x, p0.y, p0.z, p0.t);
+  // ...
+}
 \end{lstlisting}
 We can subsequently retrieve the endpoint of the ion drift line using
 \begin{lstlisting}
-double xi1, yi1, zi1, ti1;
-double xi2, yi2, zi2, ti2;
-drift.GetIonEndpoint(0, xi1, yi1, zi1, ti1,
-                        xi2, yi2, zi2, ti2, status);
+const auto& p2 = drift.GetIons()[0].path.back()
+std::cout << "Ion stopped at (" 
+          << p2.x << ", " << p2.y << ", " << p2.z << ").\n";
 \end{lstlisting}
 \subsubsection{Visualizing the drift lines}
 To plot the electron and ion drift lines together with the geometry, 

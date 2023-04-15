@@ -526,7 +526,7 @@ the histogram is filled with the current electron energy.
 If the sensor has a non-zero magnetic field, \texttt{AvalancheMicroscopic} 
 will by default use a more complicated stepping algorithm which takes
 the effect of the $B$ field on the electron trajectory into account.
-In order to explicitly switch using magnetic fields on or off 
+In order to explicitly switch the use of magnetic fields on or off 
 one can use the function
 \begin{lstlisting}
 void EnableMagneticField(const bool on);
@@ -536,7 +536,7 @@ Using
 \begin{lstlisting}
 void EnableAvalancheSizeLimit(const unsigned int size);
 \end{lstlisting}
-the size of an electron avalanche can be limited. 
+an upper limit to the size of an electron avalanche can be imposed.
 After the avalanche has reached the specified max. size, 
 no further secondaries are added to the stack of electrons to be transported.  
 
@@ -653,27 +653,24 @@ For plotting drift lines and tracks the class \texttt{ViewDrift} can be used.
 After attaching a \texttt{ViewDrift} object to a transport class, 
 \textit{e.~g.} using
 \begin{lstlisting}
-void AvalancheMicroscopic::EnablePlotting(ViewDrift* view);
+void AvalancheMicroscopic::EnablePlotting(ViewDrift* view, const size_t nColl = 100);
 void AvalancheMC::EnablePlotting(ViewDrift* view);
 void DriftLineRKF::EnablePlotting(ViewDrift* view);
 void Track::EnablePlotting(ViewDrift* view);
 \end{lstlisting}
-\texttt{ViewDrift} stores the trajectories which are calculated by the 
-transport class. 
-The drawing of the trajectories is triggered by the function
+it will store the trajectories which are calculated by the respective 
+transport class.
+ 
+To actually draw the trajectories, the function 
 \begin{lstlisting}
 void ViewDrift::Plot();
 \end{lstlisting}
+needs to be called.
 
-In case of \texttt{AvalancheMicroscopic}, it is usually not advisable to 
-plot every single collision. The number of collisions 
-to be skipped for plotting can be set using
-\begin{lstlisting}
-void AvalancheMicroscopic::SetCollisionSteps(const int n);
-\end{lstlisting}
-\begin{description}
-  \item[n] number of collisions to be skipped
-\end{description}
+In case of \texttt{AvalancheMicroscopic}, the second argument of 
+\texttt{EnablePlotting} (\texttt{nColl}) sets the number of 
+collisions to be skipped between successive points on the plot 
+(by default, every 100th collision is plotted). 
 Note that this setting does not affect the transport of the electron as such, 
 the electron is always tracked rigorously through single collisions.
 

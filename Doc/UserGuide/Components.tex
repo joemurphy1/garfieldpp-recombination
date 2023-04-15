@@ -1232,10 +1232,10 @@ Strips can be defined using
 \begin{lstlisting}
 void AddStripOnPlaneX(const char direction, const double x,
                       const double smin, const double smax,
-                      const char std::string, const double gap = -1.);
+                      const std::string& label, const double gap = -1.);
 void AddStripOnPlaneY(const char direction, const double y,
                       const double smin, const double smax,
-                      const std::string label, const double gap = -1.);
+                      const std::string& label, const double gap = -1.);
 \end{lstlisting} 
 \begin{description}
   \item[direction]
@@ -1490,7 +1490,67 @@ cmp.SetElectricField(efield);
 \section{Visualizing the field}
 
 The class \texttt{ViewField} provides some basic functions 
-for plotting the potential and field of a component.
+for plotting the potential and field of a component/sensor.
+
+The \texttt{Component} or \texttt{Sensor} from which to retrieve the 
+field/potential to be plotted is set by means of
+\begin{lstlisting}
+void SetComponent(Component* c);
+void SetSensor(Sensor* s);
+\end{lstlisting}
+
+By default, the voltage range is retrieved from the 
+minimum and maximum values of the 
+potential in the component/sensor, and
+the range of the electric and weighting fields is
+``guessed'' by taking random samples.
+This feature can be switched on or off using the function
+\begin{lstlisting}
+void EnableAutoRange(const bool on = true, const bool samplePotential = true);
+\end{lstlisting}
+The flag \texttt{samplePotential} indicates whether the range of the 
+potential should be determined by random sampling or if \texttt{ViewField}
+should first try to retrieve it from the component/sensor. 
+
+If the ``auto-range'' feature is disabled,
+the range of the function to be plotted needs to be set using
+\begin{lstlisting}
+void SetVoltageRange(const double vmin, const double vmax);
+void SetElectricFieldRange(const double emin, const double emax);
+void SetWeightingFieldRange(const double wmin, const double wmax);
+\end{lstlisting}
+
+\subsection{One-dimensional plots}
+The function 
+\begin{lstlisting}
+void PlotProfile(const double x0, const double y0, const double z0,
+                 const double x1, const double y1, const double z1,
+                 const std::string& option = "v",
+                 const bool normalised = true);
+\end{lstlisting}
+plots the potential or field (depending on the parameter \texttt{option}) 
+along the line  
+\(\left(x_{0}, y_{0}, z_{0}\right) \rightarrow 
+  \left(x_{1}, y_{1}, z_{1}\right)\).
+With the flag \texttt{normalised} set to \texttt{true} (default), 
+normalised coordinates $\left[0, 1\right]$ are used for the $x$-axis. 
+
+Similar functions are available for visualizing weighting potentials and fields.
+\begin{lstlisting}
+void PlotContourWeightingField(const std::string& label, const std::string& option);
+void PlotWeightingField(const std::string& label, const std::string& option,
+                        const std::string& drawopt);
+void PlotProfileWeightingField(const std::string& label,
+                   const double x0, const double y0, const double z0,
+                   const double x1, const double y1, const double z1,
+                   const std::string& option = "v",
+                   const bool normalised = true);
+\end{lstlisting}
+\begin{description}
+  \item[label] identifier of the electrode for which to plot the weighting field/potential.
+\end{description}
+
+\subsection{Two-dimensional plots}
 
 The functions 
 \begin{lstlisting}
@@ -1528,42 +1588,6 @@ ViewField view;
 view.Plot("v", "SURF4");
 \end{lstlisting}
 will create a surface plot of the potential.
-
-The function 
-\begin{lstlisting}
-void PlotProfile(const double x0, const double y0, const double z0,
-                 const double x1, const double y1, const double z1,
-                 const std::string& option = "v",
-                 const bool normalised = true);
-\end{lstlisting}
-plots the potential or field (depending on the parameter \texttt{option}) 
-along the line  
-\(\left(x_{0}, y_{0}, z_{0}\right) \rightarrow 
-  \left(x_{1}, y_{1}, z_{1}\right)\).
-With the flag \texttt{normalised} set to \texttt{true} (default), 
-normalised coordinates $\left[0, 1\right]$ are used for the $x$-axis. 
-
-Similar functions are available for visualizing weighting potentials and fields.
-\begin{lstlisting}
-void PlotContourWeightingField(const std::string& label, const std::string& option);
-void PlotWeightingField(const std::string& label, const std::string& option,
-                        const std::string& drawopt);
-void PlotProfileWeightingField(const std::string& label,
-                   const double x0, const double y0, const double z0,
-                   const double x1, const double y1, const double z1,
-                   const std::string& option = "v",
-                   const bool normalised = true);
-\end{lstlisting}
-\begin{description}
-  \item[label] identifier of the electrode for which to plot the weighting field/potential.
-\end{description}
-
-The component or sensor from which to retrieve the field to be plotted 
-is set by means of
-\begin{lstlisting}
-void SetComponent(Component* c);
-void SetSensor(Sensor* s);
-\end{lstlisting}
 
 The viewing plane and the region to be drawn 
 can be specified using
@@ -1607,30 +1631,57 @@ The number of contour levels can be set using
 void SetNumberOfContours(const unsigned int n);
 \end{lstlisting}
 
-By default, the voltage range is retrieved from the 
-minimum and maximum values of the 
-potential in the component/sensor, and
-the range of the electric and weighting fields is
-``guessed'' by taking random samples.
-This feature can be switched on or off using the function
+\subsection{Field lines}
+The function
 \begin{lstlisting}
-void EnableAutoRange(const bool on = true, const bool samplePotential = true);
+void PlotFieldLines(const std::vector<double>& x0,
+                    const std::vector<double>& y0,
+                    const std::vector<double>& z0,
+                    const bool electron = true, const bool axis = true,
+                    const short col = kOrange - 3)
 \end{lstlisting}
-The flag \texttt{samplePotential} indicates whether the range of the 
-potential should be determined by random sampling or if \texttt{ViewField}
-should first try to retrieve it from the component/sensor. 
+computes and draws electric field lines from a set of starting points, 
+given by the vectors \texttt{x0}, \texttt{y0}, \texttt{z0}. 
+The flag \texttt{electron} specifies whether the field lines should 
+be calculated for a negative (electron-like) test charge 
+or for a positive test charge.
 
-If the ``auto-range'' feature is disabled,
-the range of the function to be plotted needs to be set using
+A useful helper function for determining the starting points is
 \begin{lstlisting}
-void SetVoltageRange(const double vmin, const double vmax);
-void SetElectricFieldRange(const double emin, const double emax);
-void SetWeightingFieldRange(const double wmin, const double wmax);
+bool EqualFluxIntervals(const double x0, const double y0, const double z0,
+                        const double x1, const double y1, const double z1,
+                        std::vector<double>& xf, std::vector<double>& yf,
+                        std::vector<double>& zf,
+                        const unsigned int nPoints = 20) const;
+\end{lstlisting} 
+which fills the vectors \texttt{xf}, \texttt{yf}, \texttt{zf} with 
+the coordinates of \texttt{nPoints} along the line 
+$\left(x_{0}, y_{0}, z_{0}\right) -- \left(x_{1}, y_{1}, z_{1}\right)$ 
+which are spaced by equal flux intervals.
+The flux is computed by integrating the electric field component 
+that is in the viewing plane and perpendicular to the line.
+
+If the flux changes sign over the track, then points are only generated 
+over the parts of the line where the flux is positive if the total flux 
+over the line is positive. 
+Conversely, if the total flux is negative, points are generated only in 
+areas where the flux is negative. 
+
+A similar function is
+\begin{lstlisting}
+bool FixedFluxIntervals(const double x0, const double y0, const double z0,
+                        const double x1, const double y1, const double z1,
+                        std::vector<double>& xf, std::vector<double>& yf,
+                        std::vector<double>& zf,
+                        const double interval = 10.) const;
 \end{lstlisting}
+It fills the vectors \texttt{xf}, \texttt{yf}, \texttt{zf} with 
+the coordinates of points that are spaced by a given flux interval 
+(in units of V).
 
 \section{Inspecting the field}
-\texttt{Component} provides functions for inspecting the field, 
-in particular for determining the electric flux over a surface.
+The \texttt{Component} base class provides functions for inspecting the 
+field, in particular for determining the electric flux over a surface.
 \begin{lstlisting}
 double IntegrateFluxSphere(const double xc, const double yc, const double zc,
                            const double r, const unsigned int nI = 20);
@@ -1726,15 +1777,15 @@ charge transport, ionization and similar calculations to a
 certain region of the detector.
 This ``user area'' can be set by
 \begin{lstlisting}
-void SetArea(double xmin, double ymin, double zmin,
-             double xmax, double ymax, double zmax);
+void SetArea(const double xmin, const double ymin, const double zmin,
+             const double xmax, const double ymax, const double zmax);
 \end{lstlisting} 
 \begin{description}
 \item[xmin, \dots, zmax]
 corners of the bounding box within which transport is enabled. 
 \end{description}
 Calling \texttt{SetArea()} (without arguments) sets the 
-user area to the envelope of all components (if available).
+user area to the envelope of all components (if such an envelope exists).
 
 In addition, the \texttt{Sensor} class takes care of 
 signal calculations (Chapter~\ref{Chap:Signals}).
