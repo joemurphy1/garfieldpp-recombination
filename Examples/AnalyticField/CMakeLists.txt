@@ -33,6 +33,12 @@ target_link_libraries(strip Garfield::Garfield)
 add_executable(charges charges.C)
 target_link_libraries(charges Garfield::Garfield)
 
+add_executable(sag sag.C)
+target_link_libraries(sag Garfield::Garfield)
+
+add_executable(plotForces plotForces.C)
+target_link_libraries(plotForces Garfield::Garfield)
+
 foreach(_file ar_50_c2h6_50_B_angle.gas)
   configure_file(${_file} ${CMAKE_CURRENT_BINARY_DIR}/${_file} COPYONLY)
 endforeach()

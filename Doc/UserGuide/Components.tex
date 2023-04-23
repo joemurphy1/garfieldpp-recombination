@@ -1302,7 +1302,7 @@ not the same as the weighting fields of the wires of another copy.
 \texttt{ComponentAnalyticField} will, by default, compute the 
 weighting fields and potentials by considering only the basic cell -- 
 suppressing all periodicities. This is a good approximation if the wires 
-that are read out are surrounded by many other wires in the basic cell.
+being read out are surrounded by many other wires in the basic cell.
 
 This behaviour can be controlled using the function
 \begin{lstlisting}
@@ -1323,6 +1323,122 @@ sets the number of copies of the basic cell to be included in the
 weighting field calculation. 
 Requesting a large number of copies is meaningful only in chambers 
 which contain equipotential planes - convergence is poor otherwise.
+
+\subsection{Wire displacements}
+The forces acting on a wire and the wire displacement that results from 
+these forces can be computed using the methods
+\begin{lstlisting}
+bool ForcesOnWire(const unsigned int iw, 
+                  std::vector<double>& xMap, std::vector<double>& yMap,
+                  std::vector<std::vector<double> >& fxMap,
+                  std::vector<std::vector<double> >& fyMap);
+\end{lstlisting}
+and
+\begin{lstlisting}
+bool WireDisplacement(const unsigned int iw, const bool detailed,
+                      std::vector<double>& csag, std::vector<double>& xsag,
+                      std::vector<double>& ysag, double& stretch,
+                      const bool print = true);
+\end{lstlisting}
+of \texttt{ComponentAnalyticField}. In both methods, the argument 
+\texttt{iw} is the index of the wire (you can use the function \texttt{PrintCell} to print a list of all wires in the cell layout).
+By default, both gravitational force and electrostatic force are 
+taken into account for computing the displacement. 
+This can be changed using
+\begin{lstlisting}
+void EnableGravity(const bool on = true);
+void EnableElectrostaticForce(const bool on = true);
+\end{lstlisting}
+The direction in which gravity acts on the wires can be set using
+\begin{lstlisting}
+void SetGravity(const double dx, const double dy, const double dz);
+\end{lstlisting}
+The three arguments are the components of a vector indicating the 
+direction in which gravity pulls on the wires. 
+Only the direction of the vector is used, not its normalisation. 
+
+The function \texttt{WireDisplacement} fills the vector 
+\texttt{csag} with a set of coordinates along the wire and 
+the vectors \texttt{xsag}, \texttt{ysag} with the $x$ and $y$ components 
+of the sag profile at these coordinates, and sets the variable 
+\texttt{stretch} to the relative elongation.  
+It offers two levels of accuracy.
+\begin{itemize}
+\item
+With the flag \texttt{detailed} set to \texttt{false}, only the force 
+acting on the wire in its nominal position is used to compute the sag.
+The wire sag that results from such a force is parabolic, since it 
+results from an elastic elongation. The shape is not a hyperbolic cosine, 
+this would be the case of a freely hanging wire.
+This approach is incorrect if the wire is nominally in an almost stable 
+position while there are substantial forces acting on the wire in 
+neighbouring positions.
+\item
+If the flag \texttt{detailed} is set to \texttt{true}, the method also 
+considers the force acting on the wire in the vicinity of its nominal 
+position.
+The electrostatic forces are computed by solving the capacitance equations for a set of wire locations on a regular grid around the nominal location 
+and interpolating the resulting table of forces.
+The number of grid lines can be set using
+\begin{lstlisting}
+void SetScanningGrid(const unsigned int nX, const unsigned int nY);
+\end{lstlisting}
+The default is 11 lines in both $x$ and $y$.
+By default, the range of wire shifts for which the forces are computed, 
+is selected automatically by enlarging by a scaling factor 
+(default: 2) the zeroth order 
+estimates of the shift, and restricting this to the largest area around 
+the wire which is free of other cell elements. 
+The scaling factor can be set using 
+\begin{lstlisting}
+void SetScanningAreaFirstOrder(const double scale = 2.);
+\end{lstlisting}
+If the wire movements are expected to be very large, then one may wish 
+to set the scanning area to the largest area around the wire which is 
+free from other cell elements:
+\begin{lstlisting}
+void SetScanningAreaLargest();
+\end{lstlisting}
+You may also manually set the scanning area by specifying a lower $x$, 
+an upper $x$, a lower $y$  and an upper $y$ which together describe a 
+rectangular area relative to the nominal position of the wire 
+under consideration.
+\begin{lstlisting}
+void SetScanningArea(const double xmin, const double xmax, 
+                     const double ymin, const double ymax);
+\end{lstlisting}
+By default, the calculation stops if a point of the wire is found at a 
+position not covered by the scanning area, whether set manually or 
+automatically.
+If you enable extrapolation using
+\begin{lstlisting}
+void EnableExtrapolation(const bool on = true);
+\end{lstlisting}
+then the force on the wire at such a point will be computed by 
+extrapolating the force table.
+It is usually a better strategy to pick a scanning area that covers all 
+wire positions -- if this is not possible, then the wire is probably not 
+in a stable position (\textit{i.e.} it will move against other electrodes).
+\end{itemize}
+In the detailed approach, the differential equation that governs the wire 
+sag is numerically solved using a multiple shooting method in which each 
+shot is traced with a Runge-Kutta-Nystroem method, and in which the 
+boundary and matching conditions are minimised with a Newton method with 
+Broyden rank-1 updates of the derivative matrix.
+The number of shots and the number of integration steps within each shot 
+can be set by the user
+\begin{lstlisting}
+void SetNumberOfShots(const unsigned int n);
+void SetNumberOfSteps(const unsigned int n);
+\end{lstlisting}
+
+The function \texttt{ForcesOnWire} fills the vectors \texttt{xMap}, 
+\texttt{yMap} with the coordinates of the scanning grid lines 
+(relative to the nominal wire position) and the vectors \texttt{fxMap},  
+\texttt{fyMap} with the $x$ and $y$ components of the electrostatic 
+force at the grid points. 
+The scanning grid can be set using the same methods as 
+for \texttt{WireDisplacement}. 
 
 \section{neBEM}
 The nearly exact Boundary Element Method (neBEM) solver discretizes

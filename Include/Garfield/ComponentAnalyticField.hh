@@ -301,7 +301,12 @@ class ComponentAnalyticField : public Component {
   void SetGravity(const double dx, const double dy, const double dz);
   /// Get the gravity orientation.
   void GetGravity(double& dx, double& dy, double& dz) const;
-
+  /// Include gravity in the sag computation or not.
+  void EnableGravity(const bool on = true) { m_useGravitationalForce = on; }
+  /// Include the electrostatic force in the sag computation or not.
+  void EnableElectrostaticForce(const bool on = true) {
+    m_useElectrostaticForce = on; 
+  } 
   /** Calculate a table of the forces acting on a wire.
     * \param iw index of the wire
     * \param xMap coordinates of the grid lines in x
