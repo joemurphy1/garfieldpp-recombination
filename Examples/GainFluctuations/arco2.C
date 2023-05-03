@@ -7,8 +7,6 @@
 #include <TFile.h>
 
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/SolidBox.hh"
-#include "Garfield/GeometrySimple.hh"
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
@@ -31,19 +29,16 @@ int main() {
     gas.SetPressure(760.);
     gas.SetComposition("ar", 90., "co2", 10.);
     gas.SetMaxElectronEnergy(150.);
-    constexpr double scale = 1.;
-    gas.SetExcitationScaling(scale, "ar");
+    // constexpr double scale = 1.;
+    // gas.SetExcitationScaling(scale, "ar");
     gas.Initialise();
   
-    // Make a drift volume.
+    // Adjust the gap size depending on the electric field.
     const double gap = 1. / (3.5 * field - 60.);
-    SolidBox box(0, 0, gap, 2, 2, gap);
-    GeometrySimple geo;
-    geo.AddSolid(&box, &gas);
-  
     // Make a component with constant drift field.
     ComponentConstant cmp;
-    cmp.SetGeometry(&geo);
+    cmp.SetArea(-2., -2., 0., 2., 2., 2 * gap);
+    cmp.SetMedium(&gas);
     cmp.SetElectricField(0, 0, field * 1.e3);
 
     // Make a sensor.
