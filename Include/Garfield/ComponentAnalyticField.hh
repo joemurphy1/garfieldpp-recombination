@@ -305,6 +305,14 @@ class ComponentAnalyticField : public Component {
                       const double x1, const double y1,
                       const unsigned int nX = 10, const unsigned int nY = 10,
                       const bool print = true);
+  /// Vary the potential of selected electrodes to match (a function of) 
+  /// the potential or field on the surfaces of a set of wires.
+  bool OptimiseOnWires(const std::vector<std::string>& groups,
+                       const std::string& field_function, 
+                       const double target,
+                       const std::vector<unsigned int>& wires, 
+                       const bool print = true);
+
   /** Set the conditions at which to allow the iteration to stop.
     * \param dist Maximum deviation among all points 
     *             between target and field function.
