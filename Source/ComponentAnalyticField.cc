@@ -10924,6 +10924,164 @@ bool ComponentAnalyticField::OptimiseOnTrack(
   return true;
 }
 
+bool ComponentAnalyticField::OptimiseOnGrid(
+    const std::vector<std::string>& groups,
+    const std::string& field_function, const double target,
+    const double x0, const double y0,
+    const double x1, const double y1,
+    const unsigned int nX, const unsigned int nY, const bool print) {
+  // -----------------------------------------------------------------------
+  //  OPTSET - Routine attempting to find proper voltage settings.
+  // -----------------------------------------------------------------------
+
+  if (nX * nY < 1) {
+    std::cerr << m_className << "::OptimiseOnGrid: Number of points < 1.\n";
+    return false;
+  }
+
+  if (groups.empty()) {
+    std::cerr << m_className << "::OptimiseOnGrid: No electrode groups.\n";
+    return false;
+  }
+  
+  // Use a constant target value for now.
+  std::string target_function = std::to_string(target);
+
+  if (m_debug) {
+    std::cout << m_className << "::OptimiseOnGrid:\n"
+              << "    The function " << field_function << "\n" 
+              << "    has to approximate the value of the function "
+              << target_function << ".\n"; 
+  }
+
+  // Convert the field function.
+  std::vector<std::string> variables;
+  if (m_polar) {
+    variables = {"r", "phi", "er", "ephi", "e", "v"};
+  } else {
+    variables = {"x", "y", "ex", "ey", "e", "v"};
+  }
+  auto fPtr = MakeFunction("fField", field_function, variables);
+  if (!fPtr) {
+    std::cerr << m_className << "::OptimiseOnGrid: "
+              << "Error in the field function.\n";
+    return false;
+  }
+  typedef std::function<double(const std::vector<double>&)> Fcn; 
+  Fcn& fField = *((Fcn *) fPtr);
+
+  // TODO: add option to use the current average of the field function
+  // as target value.
+
+  // Convert the target function.
+  if (m_polar) {
+    variables = {"r", "phi"};
+  } else {
+    variables = {"x", "y"};
+  }
+  fPtr = MakeFunction("fTarget", target_function, variables);
+  if (!fPtr) {
+    std::cerr << m_className << "::OptimiseOnGrid: "
+              << "Error in the target function.\n";
+    return false;
+  }
+  Fcn& fTarget = *((Fcn *) fPtr);
+
+  const size_t nP = nX * nY;
+  std::vector<double> xFit(nP);
+  std::iota(xFit.begin(), xFit.end(), 0);
+  std::vector<double> yFit(nP);
+  std::vector<double> wFit(nP, 1.);
+  const double dx = m_polar ? (exp(x1) - exp(x0)) / double(nX - 1) : 
+                              (x1 - x0) / double(nX - 1);
+  const double dy = (y1 - y0) / double(nY - 1);
+  for (unsigned int i = 0; i < nX; ++i) {
+    for (unsigned int j = 0; j < nY; ++j) {
+      const unsigned int k = i + nX * j;
+      // Grid position.
+      std::vector<double> var(2, 0.);
+      var[0] = m_polar ? log(exp(x0) + i * dx) : x0 + i * dx;
+      var[1] = y0 + j * dy;
+      if (m_polar) Internal2Polar(var[0], var[1], var[0], var[1]);
+      // Evaluate the position dependent target function.
+      yFit[k] = fTarget(var);
+      // Evaluate the position dependent weighting function.
+      // TODO
+    }
+  }
+
+  // Initialise the fit parameters.
+  std::vector<double> vw0;
+  std::array<double, 5> vp0;
+  std::vector<double> aFit;
+  std::vector<std::vector<unsigned int> > wiresInGroup;
+  std::vector<std::vector<unsigned int> > planesInGroup;
+  InitialiseFitParameters(groups, vw0, vp0, aFit, wiresInGroup, planesInGroup);
+  if (aFit.empty()) {
+    std::cerr << m_className << "::OptimiseOnGrid: "
+              << "Setting fitting parameters failed.\n";
+    return false;
+  }
+
+  auto fFit = [&](const double s, const std::vector<double>& par) {
+    // First set the potentials.
+    std::vector<double> vw = vw0;
+    std::array<double, 5> vp = vp0;
+    const size_t nPar = par.size();
+    for (size_t i = 0; i < nPar; ++i) {    
+      for (unsigned int iw : wiresInGroup[i]) vw[iw] += par[i];
+      for (size_t ip : planesInGroup[i]) vp[ip] += par[i];
+    } 
+    // Next reconstruct the charges.
+    if (!Update(vw, vp)) return 0.;
+
+    std::vector<double> var(6, 0.); 
+    const int j = int(s) / nX;
+    const int i = int(s) - nX * j;
+    var[0] = m_polar ? log(exp(x0) + i * dx) : x0 + i * dx;
+    var[1] = y0 + j * dy;
+    double ez = 0.;
+    Field(var[0], var[1], 0., var[2], var[3], ez, var[5], true);
+    var[4] = sqrt(var[2] * var[2] + var[3] * var[3]);
+    // TODO: drift time, diffusion, gain, ...
+    // Transform to polar if needed.
+    if (m_polar) {
+      Internal2Polar(var[0], var[1], var[0], var[1]);
+      var[2] = var[2] / var[0];
+      var[3] = var[3] / var[0];
+      var[4] = var[4] / var[0];
+    }
+    // Calculate the field function with this field.
+    return fField(var);
+  };
+
+  double chi2 = 0.;
+  std::vector<double> eFit(aFit.size(), 0.);
+  // Carry out the fitting itself.
+  if (!Numerics::LeastSquaresFit(fFit, aFit, eFit, xFit, yFit, wFit,
+                                 m_optNitmax, m_optDist, chi2, m_optEps, 
+                                 print, m_debug)) {
+    std::cerr << m_className << "::OptimiseOnGrid:\n"
+              << "    The new potentials do not fulfill your requirements.\n";
+    return false;
+  }
+
+  // Calculate the charges for the final result.
+  std::vector<double> vw = vw0;
+  std::array<double, 5> vp = vp0;
+  for (size_t i = 0; i < aFit.size(); ++i) {    
+    for (unsigned int iw : wiresInGroup[i]) vw[iw] += aFit[i];
+    for (size_t ip : planesInGroup[i]) vp[ip] += aFit[i];
+  } 
+  if (!Update(vw, vp)) {
+    std::cerr << m_className << "::OptimiseOnGrid:\n"
+              << "    Failed to compute the charges for the final settings.\n";
+    return false;
+  }
+  return true;
+}
+
+
 void ComponentAnalyticField::InitialiseFitParameters(
     const std::vector<std::string>& groups,
     std::vector<double>& vw0, std::array<double, 5>& vp0,
