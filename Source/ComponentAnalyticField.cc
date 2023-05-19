@@ -8,6 +8,8 @@
 
 #include <TCanvas.h>
 #include <TGraph.h>
+#include <TInterpreter.h>
+#include <TROOT.h>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/GarfieldConstants.hh"
@@ -233,6 +235,24 @@ bool FitDipoleMoment(const std::vector<double>& angle,
   phidip = x2;
   ampdip = f2;
   return false;
+}
+
+void* MakeFunction(const std::string& fname,
+                   const std::string& expression,
+                   const std::vector<std::string>& vars) {
+  std::string code = "std::function<double(const std::vector<double>&)> ";
+  code += fname + " = [](const std::vector<double>& vars) {";
+  const size_t nV = vars.size();
+  for (size_t i = 0; i < nV; ++i) {
+    code += "double " + vars[i] + " = vars[" + std::to_string(i) + "];";
+  }
+  code += "return " + expression + ";};";
+
+  ROOT::GetROOT();
+  TInterpreter::EErrorCode ecode;
+  gInterpreter->ProcessLine(code.c_str(), &ecode);
+  code = fname + ";";
+  return (void*)gInterpreter->ProcessLine(code.c_str());
 }
 
 double MirrorCoordinate(const double x, const double xp, const double xw,
@@ -3923,6 +3943,33 @@ bool ComponentAnalyticField::Setup() {
   return true;
 }
 
+bool ComponentAnalyticField::Update(const std::vector<double>& vw, 
+                                    const std::array<double, 5>& vp) {
+  //-----------------------------------------------------------------------
+  //   SETNEW - Calculates charges when the potentials have changed.
+  //-----------------------------------------------------------------------
+
+  // Replace the potentials.
+  for (unsigned int i = 0; i < m_nWires; ++i) m_w[i].v = vw[i];
+  for (size_t i = 0; i < 4; ++i) m_vtplan[i] = vp[i];
+  if (m_tube) m_vttube = vp[4];
+
+  // Recalculate the capacitance matrix and the charges.
+  if (!Setup()) {
+    std::cerr << m_className << "::Update: Error computing the charges.\n";
+    return false;
+  }
+
+  // Add dipole terms if required.
+  if (m_dipole) {
+    if (!SetupDipoleTerms()) {
+      std::cerr << m_className << "::Update:\n"
+                << "    Computing the dipole moments failed.\n";
+      m_dipole = false;
+    }
+  }
+  return true;
+}
 bool ComponentAnalyticField::SetupA00() {
   //-----------------------------------------------------------------------
   //   SETA00 - Subroutine preparing the field calculations by calculating
@@ -10696,6 +10743,244 @@ bool ComponentAnalyticField::MultipoleMoments(const unsigned int iw,
     std::printf("  %6u  %15.8f  %15.8f\n", i, val, phi);
   }
   return true;
+}
+
+void ComponentAnalyticField::SetOptimisationParameters(const double dist,
+    const double eps, const unsigned int iterlim) {
+
+  if (dist <= 0.) {
+    std::cerr << m_className << "::SetOptimisationParameters: "
+              << "Threshold distance must be > 0.\n";
+  } else {
+    m_optDist = dist;
+  }
+  if (eps <= 0.) {
+    std::cerr << m_className << "::SetOptimisationParameters: "
+              << "Relative change (epsilon) must be >= 0.\n";
+  } else {
+    m_optEps = eps;
+  }
+  if (iterlim < 1) {
+    std::cerr << m_className << "::SetOptimisationParameters: "
+              << "Maximum number of iterations must be > 0.\n";
+  } else {
+    m_optNitmax = iterlim;
+  }
+}
+
+bool ComponentAnalyticField::OptimiseOnTrack(
+    const std::vector<std::string>& groups,
+    const std::string& field_function, const double target,
+    const double x0, const double y0, 
+    const double x1, const double y1, 
+    const unsigned int nP, const bool print) {
+
+  // -----------------------------------------------------------------------
+  //  OPTSET - Routine attempting to find proper voltage settings.
+  // -----------------------------------------------------------------------
+  if (nP < 1) {
+    std::cerr << m_className << "::OptimiseOnTrack: Number of points < 1.\n";
+    return false;
+  }
+
+  if (groups.empty()) {
+    std::cerr << m_className << "::OptimiseOnTrack: No electrode groups.\n";
+    return false;
+  }
+  
+  // Use a constant target value for now.
+  std::string target_function = std::to_string(target);
+
+  if (m_debug) {
+    std::cout << m_className << "::OptimiseOnTrack:\n"
+              << "    The function " << field_function << "\n" 
+              << "    has to approximate the value of the function "
+              << target_function << ".\n"; 
+  }
+
+  // Convert the field function.
+  std::vector<std::string> variables;
+  if (m_polar) {
+    variables = {"r", "phi", "er", "ephi", "e", "v"};
+  } else {
+    variables = {"x", "y", "ex", "ey", "e", "v"};
+  }
+  auto fPtr = MakeFunction("fField", field_function, variables);
+  if (!fPtr) {
+    std::cerr << m_className << "::OptimiseOnTrack: "
+              << "Error in the field function.\n";
+    return false;
+  }
+  typedef std::function<double(const std::vector<double>&)> Fcn; 
+  Fcn& fField = *((Fcn *) fPtr);
+
+  // TODO: add option to use the current average of the field function
+  // as target value.
+
+  // Convert the target function.
+  if (m_polar) {
+    variables = {"r", "phi"};
+  } else {
+    variables = {"x", "y"};
+  }
+  fPtr = MakeFunction("fTarget", target_function, variables);
+  if (!fPtr) {
+    std::cerr << m_className << "::OptimiseOnTrack: "
+              << "Error in the target function.\n";
+    return false;
+  }
+  Fcn& fTarget = *((Fcn *) fPtr);
+
+  // TODO: weight function.
+
+  std::vector<double> xFit(nP);
+  std::iota(xFit.begin(), xFit.end(), 0);
+  std::vector<double> yFit(nP);
+  std::vector<double> wFit(nP, 1.);
+  const double dx = (x1 - x0) / double(nP - 1);
+  const double dy = (y1 - y0) / double(nP - 1);
+  // OPTXYA
+  for (unsigned int i = 0; i < nP; ++i) {
+    // Position variables.
+    std::vector<double> var = {x0 + i * dx, y0 + i * dy};
+    if (m_polar) Cartesian2Polar(var[0], var[1], var[0], var[1]);
+    // Evaluate the position dependent target function.
+    yFit[i] = fTarget(var);
+    // Evaluate the position dependent weighting function.
+    // TODO.
+  }
+
+  // Initialise the fit parameters.
+  std::vector<double> vw0;
+  std::array<double, 5> vp0;
+  std::vector<double> aFit;
+  std::vector<std::vector<unsigned int> > wiresInGroup;
+  std::vector<std::vector<unsigned int> > planesInGroup;
+  InitialiseFitParameters(groups, vw0, vp0, aFit, wiresInGroup, planesInGroup);
+  if (aFit.empty()) {
+    std::cerr << m_className << "::OptimiseOnTrack: "
+              << "Setting fitting parameters failed.\n";
+    return false;
+  }
+
+  auto fFit = [&](const double s, const std::vector<double>& par) {
+    // -------------------------------------------------------------------
+    // OPTFUN - Function returning the value of the field function at a 
+    //          given position (integer code).
+    //--------------------------------------------------------------------
+    // First set the potentials.
+    std::vector<double> vw = vw0;
+    std::array<double, 5> vp = vp0;
+    const size_t nPar = par.size();
+    for (size_t i = 0; i < nPar; ++i) {    
+      for (unsigned int iw : wiresInGroup[i]) vw[iw] += par[i];
+      for (size_t ip : planesInGroup[i]) vp[ip] += par[i];
+    } 
+    // Next reconstruct the charges.
+    if (!Update(vw, vp)) return 0.;
+
+    std::vector<double> var(6, 0.); 
+    var[0] = x0 + s * dx;
+    var[1] = y0 + s * dy;
+    if (m_polar) Cartesian2Internal(var[0], var[1], var[0], var[1]);
+    double ez = 0.;
+    Field(var[0], var[1], 0., var[2], var[3], ez, var[5], true);
+    var[4] = sqrt(var[2] * var[2] + var[3] * var[3]);
+    // TODO: drift time, diffusion, gain, ...
+    // Transform to polar if needed.
+    if (m_polar) {
+      Internal2Polar(var[0], var[1], var[0], var[1]);
+      var[2] = var[2] / var[0];
+      var[3] = var[3] / var[0];
+      var[4] = var[4] / var[0];
+    }
+    // Calculate the field function with this field.
+    return fField(var);
+  };
+
+  double chi2 = 0.;
+  std::vector<double> eFit(aFit.size(), 0.);
+  // Carry out the fitting itself.
+  if (!Numerics::LeastSquaresFit(fFit, aFit, eFit, xFit, yFit, wFit,
+                                 m_optNitmax, m_optDist, chi2, m_optEps, 
+                                 print, m_debug)) {
+    std::cerr << m_className << "::OptimiseOnTrack:\n"
+              << "    The new potentials do not fulfill your requirements.\n";
+    return false;
+  }
+
+  // Calculate the charges for the final result.
+  std::vector<double> vw = vw0;
+  std::array<double, 5> vp = vp0;
+  for (size_t i = 0; i < aFit.size(); ++i) {    
+    for (unsigned int iw : wiresInGroup[i]) vw[iw] += aFit[i];
+    for (size_t ip : planesInGroup[i]) vp[ip] += aFit[i];
+  } 
+  if (!Update(vw, vp)) {
+    std::cerr << m_className << "::OptimiseOnTrack:\n"
+              << "    Failed to compute the charges for the final settings.\n";
+    return false;
+  }
+  return true;
+}
+
+void ComponentAnalyticField::InitialiseFitParameters(
+    const std::vector<std::string>& groups,
+    std::vector<double>& vw0, std::array<double, 5>& vp0,
+    std::vector<double>& aFit,
+    std::vector<std::vector<unsigned int> >& wiresInGroup,
+    std::vector<std::vector<unsigned int> >& planesInGroup) {
+  //-----------------------------------------------------------------------
+  //   OPTXYA - Routine fixing the X, Y and A vectors for the fit.
+  //-----------------------------------------------------------------------
+
+  vw0.assign(m_nWires, 0.);
+  for (unsigned int i = 0; i < m_nWires; ++i) vw0[i] = m_w[i].v;
+  for (size_t i = 0; i < 4; ++i) vp0[i] = m_vtplan[i];
+  vp0[4] = m_vttube;
+
+  // Loop over the electrode groups.
+  const size_t nS = groups.size();
+  for (size_t i = 0; i < nS; ++i) {
+    const std::string label = groups[i];
+    // Sum the current potential of the fitting parameters.
+    double vsum = 0.;
+    unsigned int nsum = 0;
+    std::vector<unsigned int> wires;
+    for (unsigned int j = 0; j < m_nWires; ++j) {
+      if (m_w[j].type == label) {
+        vsum += m_w[j].v;
+        ++nsum;
+        wires.push_back(j);
+      }
+    }
+    std::vector<unsigned int> planes;
+    for (size_t j = 0; j < 4; ++j) {
+      if (m_ynplan[j] && m_planes[j].type == label) {
+        vsum += m_vtplan[j];
+        ++nsum;
+        planes.push_back(j);
+      }
+    }
+    if (m_tube && m_planes[4].type == label) {
+      vsum += m_vttube;
+      ++nsum;
+      planes.push_back(4);
+    }
+    // Take the average.
+    if (wires.empty() && planes.empty()) {
+      std::cerr << m_className << "::InitialiseFitParameters: Group " 
+                << label << " has no wires or planes.\n";
+      continue;
+    }
+    const double avg = vsum / nsum;
+    // Subtract from the original settings.
+    for (unsigned int iw : wires) vw0[iw] -= avg;
+    for (unsigned int ip : planes) vp0[ip] -= avg;
+    aFit.push_back(avg);
+    wiresInGroup.push_back(std::move(wires));
+    planesInGroup.push_back(std::move(planes));
+  }
 }
 
 }  // namespace Garfield

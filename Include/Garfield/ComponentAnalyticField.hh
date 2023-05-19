@@ -276,6 +276,36 @@ class ComponentAnalyticField : public Component {
   bool GetTube(double& r, double& voltage, int& nEdges,
                std::string& label) const;
 
+  /** Vary the potential of selected electrodes to match (a function of) 
+    * the potential or field along a given line to a target.
+    * \param groups Identifier of the electrodes for which to vary 
+    *               the potential.
+    * \param field_function A function of the coordinates (x, y or r, phi), 
+    *                       the electrostatic field (ex, ey, e) and 
+    *                       potential (v).
+    * \param target Value of the field function to be reproduced.
+    * \param x0,y0 Starting point of the line.
+    * \param x1,y1 End point of the line.
+    * \param nP Number of points on the line.
+    * \param print Flag to print out information during each fit cycle. 
+    **/
+  bool OptimiseOnTrack(const std::vector<std::string>& groups,
+                       const std::string& field_function, 
+                       const double target,
+                       const double x0, const double y0,
+                       const double x1, const double y1,
+                       const unsigned int nP = 20,
+                       const bool print = true);
+  /** Set the conditions at which to allow the iteration to stop.
+    * \param dist Maximum deviation among all points 
+    *             between target and field function.
+    * \param eps Relative change between iterations.
+    * \param nMaxIter Maximum number of iterations.
+    **/ 
+  void SetOptimisationParameters(const double dist = 1.,
+                                 const double eps = 1.e-4,
+                                 const unsigned int nMaxIter = 10);
+
   /// Calculate the electric field at a given wire position, as if the wire
   /// itself were not there, but with the presence of its mirror images.
   bool ElectricFieldAtWire(const unsigned int iw, double& ex, double& ey);
@@ -524,6 +554,15 @@ class ComponentAnalyticField : public Component {
   // Extrapolate beyond the scanning range or not.
   bool m_extrapolateForces = false;
 
+  // Maximum deviation between target and field function at which 
+  // to allow the iteration to stop. 
+  double m_optDist = 1.;
+  // Relative change in Euclidean distance between target and 
+  // field function at which to allow the iteration to stop. 
+  double m_optEps = 1.e-4;
+  // Maximum number of iterations in the optimisation fit.
+  unsigned int m_optNitmax = 10;
+
   void UpdatePeriodicity() override;
   void Reset() override { 
     CellInit(); 
@@ -543,6 +582,8 @@ class ComponentAnalyticField : public Component {
 
   // Calculation of charges
   bool Setup();
+  bool Update(const std::vector<double>& vw, 
+              const std::array<double, 5>& vp);
   bool SetupA00();
   bool SetupB1X();
   bool SetupB1Y();
@@ -786,6 +827,12 @@ class ComponentAnalyticField : public Component {
              const std::vector<std::vector<double> >& fxMap,
              const std::vector<std::vector<double> >& fyMap) const;
   size_t SignalLayer(const int mx, const int my) const;
+
+  void InitialiseFitParameters(const std::vector<std::string>& groups,
+      std::vector<double>& vw0, std::array<double, 5>& vp0,
+      std::vector<double>& aFit,
+      std::vector<std::vector<unsigned int> >& wiresInGroup,
+      std::vector<std::vector<unsigned int> >& planesInGroup); 
 
 };
 }  // namespace Garfield
