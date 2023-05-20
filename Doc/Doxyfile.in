@@ -306,8 +306,8 @@ LAYOUT_FILE            =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = @PROJECT_SOURCE_DIR@/Include 
-                         @PROJECT_SOURCE_DIR@/Source
-                         @PROJECT_SOURCE_DIR@/Heed
+INPUT                 += @PROJECT_SOURCE_DIR@/Source
+INPUT                 += @PROJECT_SOURCE_DIR@/Heed
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.
