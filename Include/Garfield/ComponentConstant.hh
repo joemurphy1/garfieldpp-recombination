@@ -18,22 +18,6 @@ class ComponentConstant : public Component {
   /// Destructor
   ~ComponentConstant() {}
 
-  Medium* GetMedium(const double x, const double y, const double z) override;
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, Medium*& m, int& status) override;
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, double& v, Medium*& m,
-                     int& status) override;
-  bool GetVoltageRange(double& vmin, double& vmax) override;
-  void WeightingField(const double x, const double y, const double z,
-                      double& wx, double& wy, double& wz,
-                      const std::string& label) override;
-  double WeightingPotential(const double x, const double y, const double z,
-                            const std::string& label) override;
-
-  bool GetBoundingBox(double& xmin, double& ymin, double& zmin,
-                      double& xmax, double& ymax, double& zmax) override;
-
   /// Set the components of the electric field [V / cm].
   void SetElectricField(const double ex, const double ey, const double ez);
   /// Specify the potential at a given point.
@@ -55,6 +39,22 @@ class ComponentConstant : public Component {
   void UnsetArea();
   /// Set the medium in the active area.
   void SetMedium(Medium* medium) { m_medium = medium; }
+
+  Medium* GetMedium(const double x, const double y, const double z) override;
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, Medium*& m, int& status) override;
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, double& v, Medium*& m,
+                     int& status) override;
+  bool GetVoltageRange(double& vmin, double& vmax) override;
+  void WeightingField(const double x, const double y, const double z,
+                      double& wx, double& wy, double& wz,
+                      const std::string& label) override;
+  double WeightingPotential(const double x, const double y, const double z,
+                            const std::string& label) override;
+
+  bool GetBoundingBox(double& xmin, double& ymin, double& zmin,
+                      double& xmax, double& ymax, double& zmax) override;
 
  private:
   // Electric field.

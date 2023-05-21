@@ -17,22 +17,6 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
   /// Destructor
   ~ComponentTcad2d() {}
 
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, double& v, Medium*& m,
-                     int& status) override;
-
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, Medium*& m, int& status) override {
-    double v = 0.;
-    ElectricField(x, y, z, ex, ey, ez, v, m, status);
-  }
-
-  Medium* GetMedium(const double x, const double y, const double z) override;
-
-  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, 
-                      double& xmax, double& ymax, double& zmax) override;
-  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, 
-                         double& xmax, double& ymax, double& zmax) override;
   /// Set the z-extent of the bounding box (default: unlimited).
   void SetRangeZ(const double zmin, const double zmax);
 
@@ -52,6 +36,22 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
   bool GetNode(const size_t i, double& x, double& y, double& v,
                double& ex, double& ey) const;
 
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, double& v, Medium*& m,
+                     int& status) override;
+
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, Medium*& m, int& status) override {
+    double v = 0.;
+    ElectricField(x, y, z, ex, ey, ez, v, m, status);
+  }
+
+  Medium* GetMedium(const double x, const double y, const double z) override;
+
+  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, 
+                      double& xmax, double& ymax, double& zmax) override;
+  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, 
+                         double& xmax, double& ymax, double& zmax) override;
  private:
   // Bounding box
   bool m_hasRangeZ = false;

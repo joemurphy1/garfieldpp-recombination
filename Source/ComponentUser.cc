@@ -81,15 +81,18 @@ void ComponentUser::WeightingField(const double x, const double y,
                                    const double z, double& wx, double& wy,
                                    double& wz, const std::string& label) {
   wx = wy = wz = 0.;
-  if (!m_wfield) return;
-  m_wfield(x, y, z, wx, wy, wz, label);
+  if (m_wfield.count(label) > 0) {
+    m_wfield[label](x, y, z, wx, wy, wz);
+  }
 }
 
 double ComponentUser::WeightingPotential(const double x, const double y,
                                          const double z,
                                          const std::string& label) {
   double v = 0.;
-  if (m_wpot) m_wpot(x, y, z, v, label);
+  if (m_wpot.count(label) > 0) {
+    m_wpot[label](x, y, z, v);
+  }
   return v;
 }
 
@@ -98,7 +101,9 @@ void ComponentUser::DelayedWeightingField(const double x, const double y,
                                           double& wx, double& wy, double& wz,
                                           const std::string& label) {
   wx = wy = wz = 0.;
-  if (m_dwfield) m_dwfield(x, y, z, t, wx, wy, wz, label);
+  if (m_dwfield.count(label) > 0) {
+    m_dwfield[label](x, y, z, t, wx, wy, wz);
+  }
 }
 
 bool ComponentUser::GetBoundingBox(
@@ -144,33 +149,36 @@ void ComponentUser::SetPotential(
 
 void ComponentUser::SetWeightingField(
     std::function<void(const double, const double, const double, 
-                       double&, double&, double&, const std::string&)> f) {
+                       double&, double&, double&)> f,
+    const std::string& label) {
   if (!f) {
     std::cerr << m_className << "::SetWeightingField: Function is empty.\n";
     return;
   }
-  m_wfield = f;
+  m_wfield[label] = f;
 }
 
 void ComponentUser::SetWeightingPotential(
     std::function<void(const double, const double, const double, 
-                       double&, const std::string&)> f) {
+                       double&)> f,
+    const std::string& label) {
   if (!f) {
     std::cerr << m_className << "::SetWeightingPotential: Function is empty.\n";
     return;
   }
-  m_wpot = f;
+  m_wpot[label] = f;
 }
 
 void ComponentUser::SetDelayedWeightingField(
     std::function<void(const double, const double, const double, const double,
-                       double&, double&, double&, const std::string&)> f) {
+                       double&, double&, double&)> f,
+    const std::string& label) {
 
   if (!f) {
     std::cerr << m_className << "::SetDelayedWeightingField: Function is empty.\n";
     return;
   }
-  m_dwfield = f;
+  m_dwfield[label] = f;
 }
 
 void ComponentUser::SetMagneticField(
@@ -205,9 +213,9 @@ void ComponentUser::UnsetArea() {
 void ComponentUser::Reset() {
   m_efield = nullptr;
   m_potential = nullptr;
-  m_wfield = nullptr;
-  m_wpot = nullptr;
-  m_dwfield = nullptr;
+  m_wfield.clear();
+  m_wpot.clear();
+  m_dwfield.clear();
   m_bfield = nullptr;
   m_ready = false;
   UnsetArea();

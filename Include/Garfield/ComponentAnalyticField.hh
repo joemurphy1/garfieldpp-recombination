@@ -20,74 +20,6 @@ class ComponentAnalyticField : public Component {
   /// Destructor
   ~ComponentAnalyticField() {}
 
-  Medium* GetMedium(const double x, const double y, const double z) override;
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, Medium*& m, int& status) override {
-    m = nullptr;
-    // Calculate the field.
-    double v = 0.;
-    status = Field(x, y, z, ex, ey, ez, v, false);
-    // If the field is ok, get the medium.
-    if (status == 0) {
-      m = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
-      if (!m) {
-        status = -6;
-      } else if (!m->IsDriftable()) {
-        status = -5;
-      }
-    }
-  }
-
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, double& v, Medium*& m,
-                     int& status) override {
-    m = nullptr;
-    // Calculate the field.
-    status = Field(x, y, z, ex, ey, ez, v, true);
-    // If the field is ok, get the medium.
-    if (status == 0) {
-      m = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
-      if (!m) {
-        status = -6;
-      } else if (!m->IsDriftable()) {
-        status = -5;
-      }
-    }
-  }
-
-  bool GetVoltageRange(double& pmin, double& pmax) override;
-
-  void WeightingField(const double x, const double y, const double z,
-                      double& wx, double& wy, double& wz,
-                      const std::string& label) override {
-    wx = wy = wz = 0.;
-    if (!m_sigset) PrepareSignals();
-    Wfield(x, y, z, wx, wy, wz, label);
-  }
-  double WeightingPotential(const double x, const double y, const double z,
-                            const std::string& label) override {
-    if (!m_sigset) PrepareSignals();
-    return Wpot(x, y, z, label);
-  }
-
-  bool GetBoundingBox(double& x0, double& y0, double& z0, double& x1,
-                      double& y1, double& z1) override;
-  bool GetElementaryCell(double& x0, double& y0, double& z0, double& x1,
-                         double& y1, double& z1) override;
-
-  bool CrossedWire(const double x0, const double y0, const double z0,
-                   const double x1, const double y1, const double z1,
-                   double& xc, double& yc, double& zc, const bool centre,
-                   double& rc) override;
-
-  bool InTrapRadius(const double q0, const double x0, const double y0,
-                    const double z0, double& xw, double& yx,
-                    double& rw) override;
-
-  bool CrossedPlane(const double x0, const double y0, const double z0,
-                    const double x1, const double y1, const double z1,
-                    double& xc, double& yc, double& zc) override;
-
   /// Set the medium inside the cell.
   void SetMedium(Medium* medium) { m_medium = medium; }
   /// Add a wire at (x, y) .
@@ -384,6 +316,74 @@ class ComponentAnalyticField : public Component {
   void SetNumberOfShots(const unsigned int n) { m_nShots = n; }
   /// Set the number of integration steps within each shot (must be >= 1).
   void SetNumberOfSteps(const unsigned int n);
+
+  Medium* GetMedium(const double x, const double y, const double z) override;
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, Medium*& m, int& status) override {
+    m = nullptr;
+    // Calculate the field.
+    double v = 0.;
+    status = Field(x, y, z, ex, ey, ez, v, false);
+    // If the field is ok, get the medium.
+    if (status == 0) {
+      m = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
+      if (!m) {
+        status = -6;
+      } else if (!m->IsDriftable()) {
+        status = -5;
+      }
+    }
+  }
+
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, double& v, Medium*& m,
+                     int& status) override {
+    m = nullptr;
+    // Calculate the field.
+    status = Field(x, y, z, ex, ey, ez, v, true);
+    // If the field is ok, get the medium.
+    if (status == 0) {
+      m = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
+      if (!m) {
+        status = -6;
+      } else if (!m->IsDriftable()) {
+        status = -5;
+      }
+    }
+  }
+
+  bool GetVoltageRange(double& pmin, double& pmax) override;
+
+  void WeightingField(const double x, const double y, const double z,
+                      double& wx, double& wy, double& wz,
+                      const std::string& label) override {
+    wx = wy = wz = 0.;
+    if (!m_sigset) PrepareSignals();
+    Wfield(x, y, z, wx, wy, wz, label);
+  }
+  double WeightingPotential(const double x, const double y, const double z,
+                            const std::string& label) override {
+    if (!m_sigset) PrepareSignals();
+    return Wpot(x, y, z, label);
+  }
+
+  bool GetBoundingBox(double& x0, double& y0, double& z0, double& x1,
+                      double& y1, double& z1) override;
+  bool GetElementaryCell(double& x0, double& y0, double& z0, double& x1,
+                         double& y1, double& z1) override;
+
+  bool CrossedWire(const double x0, const double y0, const double z0,
+                   const double x1, const double y1, const double z1,
+                   double& xc, double& yc, double& zc, const bool centre,
+                   double& rc) override;
+
+  bool InTrapRadius(const double q0, const double x0, const double y0,
+                    const double z0, double& xw, double& yx,
+                    double& rw) override;
+
+  bool CrossedPlane(const double x0, const double y0, const double z0,
+                    const double x1, const double y1, const double z1,
+                    double& xc, double& yc, double& zc) override;
 
   enum Cell {
     A00,
