@@ -1575,6 +1575,13 @@ void SetPotential(std::function<void(const double, const double, const double,
 \end{description}
 Similar functions are available to set the weighting field and potential,
 and the magnetic field.
+Alternatively, \texttt{ComponentUser} also allows one to define the 
+electric field and potential in string expressions, which are then
+just-in-time compiled internally using the ROOT C++ interpreter.
+\begin{lstlisting}
+void SetElectricField(const std::string& expression);
+void SetPotential(const std::string& expression);
+\end{lstlisting}
 
 As an example, let us consider the electric field in the bulk 
 of an overdepleted planar silicon sensor, given by

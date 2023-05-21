@@ -27,7 +27,6 @@
 
 using namespace Garfield;
 
-
 int main(int argc, char * argv[]) {
 
   TApplication app("app", &argc, argv);
@@ -55,18 +54,21 @@ int main(int argc, char * argv[]) {
   uniformField.SetElectricField(0, vbias / d, 0);
   uniformField.SetWeightingField(0, -1. / d, 0, "pad");
 
+  // Depletion voltage [V]
+  constexpr double vdep = -20.;
   // Make a component with linear drift field.
   auto eLinear = [](const double /*x*/, const double y, const double /*z*/,
                     double& ex, double& ey, double& ez) {
-    // Depletion voltage [V]
-    constexpr double vdep = -20.;
     ex = ez = 0.;
     ey = (vbias - vdep) / d + 2 * y * vdep / (d * d);  
   };
   ComponentUser linearField;
-  linearField.SetArea(-2 * d, 0., - 2 * d, 2 * d, d, 2 * d);
+  linearField.SetArea(-2 * d, 0., -2 * d, 2 * d, d, 2 * d);
   linearField.SetMedium(&si);
   linearField.SetElectricField(eLinear);
+  // std::string efield = "ey = " + std::to_string((vbias - vdep) / d) + 
+  //                      " + 2 * y * " + std::to_string(vdep / (d * d));
+  // linearField.SetElectricField(efield);
 
   // Make a component with analytic weighting field for a strip or pixel.
   constexpr double pitch = 55.e-4;
