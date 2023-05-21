@@ -42,12 +42,7 @@ void ComponentUser::ElectricField(const double x, const double y,
   }
   m_efield(x, y, z, ex, ey, ez);
 
-  if (m_potential) {
-    m_potential(x, y, z, v);
-  } else {
-    v = 0.;
-  }
-
+  v = m_potential ? m_potential(x, y, z) : 0.;
   m = GetMedium(x, y, z);
   if (!m) {
     if (m_debug) {
@@ -90,9 +85,7 @@ double ComponentUser::WeightingPotential(const double x, const double y,
                                          const double z,
                                          const std::string& label) {
   double v = 0.;
-  if (m_wpot.count(label) > 0) {
-    m_wpot[label](x, y, z, v);
-  }
+  if (m_wpot.count(label) > 0) v = m_wpot[label](x, y, z);
   return v;
 }
 
@@ -104,6 +97,15 @@ void ComponentUser::DelayedWeightingField(const double x, const double y,
   if (m_dwfield.count(label) > 0) {
     m_dwfield[label](x, y, z, t, wx, wy, wz);
   }
+}
+
+double ComponentUser::DelayedWeightingPotential(
+    const double x, const double y, const double z, const double t,
+    const std::string& label) {
+
+  double v = 0.;
+  if (m_dwpot.count(label) > 0) v = m_dwpot[label](x, y, z, t);
+  return v;
 }
 
 bool ComponentUser::GetBoundingBox(
@@ -138,8 +140,7 @@ void ComponentUser::SetElectricField(
 }
 
 void ComponentUser::SetPotential(
-    std::function<void(const double, const double, const double, 
-                       double&)> f) {
+    std::function<double(const double, const double, const double)> f) {
   if (!f) {
     std::cerr << m_className << "::SetPotential: Function is empty.\n";
     return;
@@ -159,8 +160,7 @@ void ComponentUser::SetWeightingField(
 }
 
 void ComponentUser::SetWeightingPotential(
-    std::function<void(const double, const double, const double, 
-                       double&)> f,
+    std::function<double(const double, const double, const double)> f,
     const std::string& label) {
   if (!f) {
     std::cerr << m_className << "::SetWeightingPotential: Function is empty.\n";
@@ -175,10 +175,23 @@ void ComponentUser::SetDelayedWeightingField(
     const std::string& label) {
 
   if (!f) {
-    std::cerr << m_className << "::SetDelayedWeightingField: Function is empty.\n";
+    std::cerr << m_className << "::SetDelayedWeightingField: "
+              << "Function is empty.\n";
     return;
   }
   m_dwfield[label] = f;
+}
+
+void ComponentUser::SetDelayedWeightingPotential(
+    std::function<double(const double, const double, const double,
+                         const double)> f,
+    const std::string& label) {
+  if (!f) {
+    std::cerr << m_className << "::SetDelayedWeightingPotential: "
+              << "Function is empty.\n";
+    return;
+  }
+  m_dwpot[label] = f;
 }
 
 void ComponentUser::SetMagneticField(
