@@ -1440,6 +1440,97 @@ force at the grid points.
 The scanning grid can be set using the same methods as 
 for \texttt{WireDisplacement}. 
 
+\subsection{Optimisation}
+\texttt{ComponentAnalyticField} includes a set of methods that 
+vary the potentials of a set of electrodes in an attempt to match as 
+closely as possible a function of the potential and field 
+(field function) to a given target value. 
+\begin{itemize}
+\item
+The method 
+\begin{lstlisting}
+bool OptimiseOnTrack(const std::vector<std::string>& groups,
+    const std::string& field_function, const double target,
+    const double x0, const double y0, const double x1, const double y1,
+    const unsigned int nP = 20, const bool print = true);
+\end{lstlisting}
+compares target and field function on \texttt{nP} sampling points 
+along a straight line between $\left(x_{0}, y_{0}\right)$ and 
+$\left(x_{1}, y_{1}\right)$.
+This function can be used \textit{e. g.} to adjust the potentials on a 
+drift electrode in a TPC to get the proper drift field.
+\item 
+\begin{lstlisting}
+bool OptimiseOnGrid(const std::vector<std::string>& groups,
+    const std::string& field_function, const double target,
+    const double x0, const double y0, const double x1, const double y1,
+    const unsigned int nX = 10, const unsigned int nY = 10,
+    const bool print = true);
+\end{lstlisting}
+compares target and field function on a regular $x-y$ (or $r-\phi$) grid.
+The extent of the grid area is defined by the two corners 
+$\left(x_{0}, y_{0}\right), \left(x_{1}, y_{1}\right)$ and the grid 
+density is defined by \texttt{nX}, \texttt{nY} 
+(number of lines in $x$ and $y$).
+\item
+\begin{lstlisting}
+bool OptimiseOnWires(const std::vector<std::string>& groups,
+    const std::string& field_function, const double target,
+    const std::vector<unsigned int>& wires, const bool print = true);
+\end{lstlisting}
+compares target and field function on the surfaces of a set of wires 
+(the vector \texttt{wires} contains the wire indices).
+This function can be used \textit{e. g.} to adjust the voltages on the  
+anode wires such that the field in their proximity has a given value. 
+\end{itemize}
+The vector \texttt{groups} contains the labels of the electrodes 
+for which to adjust the potentials.
+Electrodes that are put together in a group are shifted collectively.
+In the expression \texttt{field\_function} the following variables may be 
+used:
+\begin{itemize}
+  \item
+  \texttt{x} or \texttt{r} ($x$ or $r$ coordinate),
+  \item
+  \texttt{y} or \texttt{phi} ($y$ or $\phi$ coordinate),
+  \item
+  \texttt{ex} or \texttt{er} ($x$ or $r$-component of the electric field),
+  \item
+  \texttt{ey} or \texttt{ephi} ($y$ or $\phi$-component of the electric field),
+  \item
+  \texttt{e} (norm of the electric field),
+  \item
+  \texttt{v} (electric potential). 
+\end{itemize} 
+More variables can be added on demand.
+
+If the flag \texttt{print} is set to \texttt{true}, 
+some optimisation information is printed at each cycle.
+
+The method used is that of repeated Householder steps minimising 
+(in the Euclidean norm) the difference between target and field 
+function. Several conditions can cause the iteration to be stopped:
+\begin{itemize}
+\item
+the user defined maximum number of iterations is reached,
+\item
+the relative change in Euclidean distance between the target and field 
+function (on the sampling points) drops below threshold $\varepsilon$, 
+\item
+the maximum distance (of all sampling points) between target and field 
+function becomes smaller than a threshold distance.
+\end{itemize}
+These parameters can be set using the method
+\begin{lstlisting} 
+void SetOptimisationParameters(const double dist = 1.,
+                               const double eps = 1.e-4,
+                               const unsigned int nMaxIter = 10);
+\end{lstlisting}
+The parameter $\varepsilon$ is also used for computing the numerical 
+derivatives needed for the covariance matrix. A larger value (say 1) 
+should be chosen when you know you are far from the optimised value 
+and a smaller value (say $10^{-4}$) when your initial guess is quite good.
+
 \section{neBEM}
 The nearly exact Boundary Element Method (neBEM) solver discretizes
 the boundary of the domain in triangular and rectangular elements 
