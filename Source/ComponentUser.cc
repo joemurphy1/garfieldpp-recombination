@@ -1,6 +1,72 @@
 #include <iostream>
 
+#include <TInterpreter.h>
+#include <TROOT.h>
+
 #include "Garfield/ComponentUser.hh"
+
+namespace {
+
+void RemoveSpecialCharacters(std::string& str) {
+
+  str.erase(std::remove_if(str.begin(), str.end(),
+    [](char c) { return std::isspace(c) || !std::isalnum(c); }),
+    str.end()); 
+}
+
+void* MakeFieldFunction(const std::string& fname,
+                        const std::string& expression,
+                        const bool wfield = false, 
+                        const bool bfield = false,
+                        const bool timeDependent = false) {
+  std::string code = "std::function<void("
+    "const double, const double, const double, ";
+  if (timeDependent) code += "const double, ";
+  code += "double&, double&, double&)> ";
+  code += fname + " = [](const double x, const double y, const double z, ";
+  if (timeDependent) code += "const double t, ";
+  if (wfield && (expression.find("wx") != std::string::npos ||
+                 expression.find("wy") != std::string::npos ||
+                 expression.find("wz") != std::string::npos)) { 
+    code += "double& wx, double& wy, double& wz) {";
+    code += "wx = wy = wz = 0.;";
+  } else if (bfield) {
+    code += "double& bx, double& by, double& bz) {";
+    code += "bx = by = bz = 0.;";
+  } else {
+    code += "double& ex, double& ey, double& ez) {";
+    code += "ex = ey = ez = 0.;";
+  }
+  code += expression + ";};";
+
+  ROOT::GetROOT();
+  TInterpreter::EErrorCode ecode;
+  gInterpreter->ProcessLine(code.c_str(), &ecode);
+  code = fname + ";";
+  return (void*)gInterpreter->ProcessLine(code.c_str());
+}
+
+void* MakePotentialFunction(const std::string& fname,
+                            const std::string& expression,
+                            const bool timeDependent = false) {
+  std::string code = "std::function<double("
+    "const double, const double, const double";
+  if (timeDependent) code += ", const double";
+  code += ")> ";
+  code += fname + " = [](const double x, const double y, const double z";
+  if (timeDependent) code += ", const double t";
+  code += ") {";
+  if (expression.find("return") == std::string::npos) code += "return ";
+  code += expression + ";};";
+
+  ROOT::GetROOT();
+  TInterpreter::EErrorCode ecode;
+  gInterpreter->ProcessLine(code.c_str(), &ecode);
+  code = fname + ";";
+  return (void*)gInterpreter->ProcessLine(code.c_str());
+}
+
+}
 
 namespace Garfield {
 
@@ -42,7 +108,7 @@ void ComponentUser::ElectricField(const double x, const double y,
   }
   m_efield(x, y, z, ex, ey, ez);
 
-  v = m_potential ? m_potential(x, y, z) : 0.;
+  v = m_epot ? m_epot(x, y, z) : 0.;
   m = GetMedium(x, y, z);
   if (!m) {
     if (m_debug) {
@@ -139,13 +205,41 @@ void ComponentUser::SetElectricField(
   m_ready = true;
 }
 
+void ComponentUser::SetElectricField(const std::string& expression) {
+  const std::string fname = "fComponentUserEfield";
+  auto fPtr = MakeFieldFunction(fname, expression);
+  if (!fPtr) {
+    std::cerr << m_className << "::SetElectricField: "
+              << "Could not convert the expression.\n";
+    return;
+  }
+  typedef std::function<void(const double, const double, const double,
+                             double&, double&, double&)> Fcn; 
+  Fcn& f = *((Fcn *) fPtr);
+  m_efield = f;
+  m_ready = true;
+}
+
 void ComponentUser::SetPotential(
     std::function<double(const double, const double, const double)> f) {
   if (!f) {
     std::cerr << m_className << "::SetPotential: Function is empty.\n";
     return;
   }
-  m_potential = f;
+  m_epot = f;
+}
+
+void ComponentUser::SetPotential(const std::string& expression) {
+  const std::string fname = "fComponentUserEpot";
+  auto fPtr = MakePotentialFunction(fname, expression);
+  if (!fPtr) {
+    std::cerr << m_className << "::SetPotential: "
+              << "Could not convert the expression.\n";
+    return;
+  }
+  typedef std::function<double(const double, const double, const double)> Fcn;
+  Fcn& f = *((Fcn *) fPtr);
+  m_epot = f;
 }
 
 void ComponentUser::SetWeightingField(
@@ -159,6 +253,23 @@ void ComponentUser::SetWeightingField(
   m_wfield[label] = f;
 }
 
+void ComponentUser::SetWeightingField(const std::string& expression,
+                                      const std::string& label) {
+  std::string fname = label;
+  RemoveSpecialCharacters(fname);
+  fname = "fComponentUserWfield" + fname; 
+  auto fPtr = MakeFieldFunction(fname, expression, true);
+  if (!fPtr) {
+    std::cerr << m_className << "::SetWeightingField: "
+              << "Could not convert the expression.\n";
+    return;
+  }
+  typedef std::function<void(const double, const double, const double,
+                             double&, double&, double&)> Fcn; 
+  Fcn& f = *((Fcn *) fPtr);
+  m_wfield[label] = f;
+}
+
 void ComponentUser::SetWeightingPotential(
     std::function<double(const double, const double, const double)> f,
     const std::string& label) {
@@ -166,6 +277,22 @@ void ComponentUser::SetWeightingPotential(
     std::cerr << m_className << "::SetWeightingPotential: Function is empty.\n";
     return;
   }
+  m_wpot[label] = f;
+}
+
+void ComponentUser::SetWeightingPotential(const std::string& expression,
+                                          const std::string& label) {
+  std::string fname = label;
+  RemoveSpecialCharacters(fname);
+  fname = "fComponentUserWpot" + fname; 
+  auto fPtr = MakePotentialFunction(fname, expression);
+  if (!fPtr) {
+    std::cerr << m_className << "::SetWeightingPotential: "
+              << "Could not convert the expression.\n";
+    return;
+  }
+  typedef std::function<double(const double, const double, const double)> Fcn;
+  Fcn& f = *((Fcn *) fPtr);
   m_wpot[label] = f;
 }
 
@@ -182,6 +309,24 @@ void ComponentUser::SetDelayedWeightingField(
   m_dwfield[label] = f;
 }
 
+void ComponentUser::SetDelayedWeightingField(const std::string& expression,
+                                             const std::string& label) {
+ 
+  std::string fname = label;
+  RemoveSpecialCharacters(fname);
+  fname = "fComponentUserDWfield" + fname; 
+  auto fPtr = MakeFieldFunction(fname, expression, true, false, true);
+  if (!fPtr) {
+    std::cerr << m_className << "::SetDelayedWeightingField: "
+              << "Could not convert the expression.\n";
+    return;
+  }
+  typedef std::function<void(const double, const double, const double,
+                             const double, double&, double&, double&)> Fcn; 
+  Fcn& f = *((Fcn *) fPtr);
+  m_dwfield[label] = f;
+}
+
 void ComponentUser::SetDelayedWeightingPotential(
     std::function<double(const double, const double, const double,
                          const double)> f,
@@ -194,6 +339,23 @@ void ComponentUser::SetDelayedWeightingPotential(
   m_dwpot[label] = f;
 }
 
+void ComponentUser::SetDelayedWeightingPotential(
+    const std::string& expression, const std::string& label) {
+  std::string fname = label;
+  RemoveSpecialCharacters(fname);
+  fname = "fComponentUserDWpot" + fname; 
+  auto fPtr = MakePotentialFunction(fname, expression, true);
+  if (!fPtr) {
+    std::cerr << m_className << "::SetDelayedWeightingPotential: "
+              << "Could not convert the expression.\n";
+    return;
+  }
+  typedef std::function<double(const double, const double, const double,
+                               const double)> Fcn;
+  Fcn& f = *((Fcn *) fPtr);
+  m_dwpot[label] = f;
+}
+
 void ComponentUser::SetMagneticField(
     std::function<void(const double, const double, const double, 
                        double&, double&, double&)> f) {
@@ -201,6 +363,21 @@ void ComponentUser::SetMagneticField(
     std::cerr << m_className << "::SetMagneticField: Function is empty.\n";
     return;
   }
+  m_bfield = f;
+}
+
+void ComponentUser::SetMagneticField(const std::string& expression) {
+ 
+  const std::string fname = "fComponentUserBfield";
+  auto fPtr = MakeFieldFunction(fname, expression, false, true);
+  if (!fPtr) {
+    std::cerr << m_className << "::SetMagneticField: "
+              << "Could not convert the expression.\n";
+    return;
+  }
+  typedef std::function<void(const double, const double, const double,
+                             double&, double&, double&)> Fcn; 
+  Fcn& f = *((Fcn *) fPtr);
   m_bfield = f;
 }
 
@@ -225,10 +402,11 @@ void ComponentUser::UnsetArea() {
 
 void ComponentUser::Reset() {
   m_efield = nullptr;
-  m_potential = nullptr;
+  m_epot = nullptr;
   m_wfield.clear();
   m_wpot.clear();
   m_dwfield.clear();
+  m_dwpot.clear();
   m_bfield = nullptr;
   m_ready = false;
   UnsetArea();

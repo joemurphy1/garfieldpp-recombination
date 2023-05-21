@@ -21,33 +21,59 @@ class ComponentUser : public Component {
   void SetElectricField(
     std::function<void(const double, const double, const double,
                        double&, double&, double&)>);
-  /// Set the function to be called for calculating the potential.
+  /// Set the expression to be used for calculating the electric field.
+  void SetElectricField(const std::string& expression);
+
+  /// Set the function to be called for calculating the electric potential.
   void SetPotential(
     std::function<double(const double, const double, const double)>);
+  /// Set the expression to be used for calculating the electric potential.
+  void SetPotential(const std::string& expression);
+
   /// Set the function to be called for calculating the weighting field.
   void SetWeightingField(
     std::function<void(const double, const double, const double,
                        double&, double&, double&)>,
     const std::string& label);
+  /// Set the expression to be used for calculating the weighting field.
+  void SetWeightingField(const std::string& expression, 
+                         const std::string& label);
+
   /// Set the function to be called for calculating the weighting potential.
   void SetWeightingPotential(
     std::function<double(const double, const double, const double)>,
     const std::string& label);
+  /// Set the expression to be used for calculating the weighting potential.
+  void SetWeightingPotential(const std::string& expression, 
+                             const std::string& label);
+
   /// Set the function to be called for calculating the delayed weighting field.
   void SetDelayedWeightingField(
     std::function<void(const double, const double, const double, 
                        const double,
                        double&, double&, double&)>,
     const std::string& label);
-  /// Set the function to be called for calculating the delayed weighting potential.
+  /// Set the expression to be used for calculating the delayed weighting field.
+  void SetDelayedWeightingField(const std::string& expression, 
+                                const std::string& label);
+
+  /// Set the function to be called for calculating 
+  /// the delayed weighting potential.
   void SetDelayedWeightingPotential(
     std::function<double(const double, const double, const double, 
                          const double)>,
     const std::string& label);
+  /// Set the expression to be used for calculating 
+  /// the delayed weighting potential.
+  void SetDelayedWeightingPotential(const std::string& expression, 
+                                    const std::string& label);
+
   /// Set the function to be called for calculating the magnetic field.
   void SetMagneticField(
     std::function<void(const double, const double, const double,
                        double&, double&, double&)>);
+  /// Set the expression to be used for calculating the magnetic field.
+  void SetMagneticField(const std::string& expression);
 
   /// Set the limits of the active area explicitly 
   /// (instead of using a Geometry object).
@@ -91,7 +117,7 @@ class ComponentUser : public Component {
   std::function<void(const double, const double, const double,
                      double&, double&, double&)> m_efield;
   /// Electric potential function.
-  std::function<double(const double, const double, const double)> m_potential;
+  std::function<double(const double, const double, const double)> m_epot;
 
   /// Weighting field functions.
   std::map<std::string, 
