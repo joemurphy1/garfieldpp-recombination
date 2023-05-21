@@ -2,6 +2,7 @@
 #define G_COMPONENT_USER_H
 
 #include <functional>
+#include <map>
 
 #include "Component.hh"
 
@@ -15,6 +16,73 @@ class ComponentUser : public Component {
   ComponentUser();
   /// Destructor
   ~ComponentUser() {}
+
+  /// Set the function to be called for calculating the electric field.
+  void SetElectricField(
+    std::function<void(const double, const double, const double,
+                       double&, double&, double&)>);
+  /// Set the expression to be used for calculating the electric field.
+  void SetElectricField(const std::string& expression);
+
+  /// Set the function to be called for calculating the electric potential.
+  void SetPotential(
+    std::function<double(const double, const double, const double)>);
+  /// Set the expression to be used for calculating the electric potential.
+  void SetPotential(const std::string& expression);
+
+  /// Set the function to be called for calculating the weighting field.
+  void SetWeightingField(
+    std::function<void(const double, const double, const double,
+                       double&, double&, double&)>,
+    const std::string& label);
+  /// Set the expression to be used for calculating the weighting field.
+  void SetWeightingField(const std::string& expression, 
+                         const std::string& label);
+
+  /// Set the function to be called for calculating the weighting potential.
+  void SetWeightingPotential(
+    std::function<double(const double, const double, const double)>,
+    const std::string& label);
+  /// Set the expression to be used for calculating the weighting potential.
+  void SetWeightingPotential(const std::string& expression, 
+                             const std::string& label);
+
+  /// Set the function to be called for calculating the delayed weighting field.
+  void SetDelayedWeightingField(
+    std::function<void(const double, const double, const double, 
+                       const double,
+                       double&, double&, double&)>,
+    const std::string& label);
+  /// Set the expression to be used for calculating the delayed weighting field.
+  void SetDelayedWeightingField(const std::string& expression, 
+                                const std::string& label);
+
+  /// Set the function to be called for calculating 
+  /// the delayed weighting potential.
+  void SetDelayedWeightingPotential(
+    std::function<double(const double, const double, const double, 
+                         const double)>,
+    const std::string& label);
+  /// Set the expression to be used for calculating 
+  /// the delayed weighting potential.
+  void SetDelayedWeightingPotential(const std::string& expression, 
+                                    const std::string& label);
+
+  /// Set the function to be called for calculating the magnetic field.
+  void SetMagneticField(
+    std::function<void(const double, const double, const double,
+                       double&, double&, double&)>);
+  /// Set the expression to be used for calculating the magnetic field.
+  void SetMagneticField(const std::string& expression);
+
+  /// Set the limits of the active area explicitly 
+  /// (instead of using a Geometry object).
+  void SetArea(const double xmin, const double ymin, const double zmin,
+               const double xmax, const double ymax, const double zmax);
+  /// Remove the explicit limits of the active area. 
+  void UnsetArea();
+  /// Set the medium in the active area.
+  void SetMedium(Medium* medium) { m_medium = medium; }
 
   Medium* GetMedium(const double x, const double y, const double z) override {
     return !m_hasArea ? Component::GetMedium(x, y, z) : 
@@ -36,62 +104,41 @@ class ComponentUser : public Component {
   void DelayedWeightingField(const double x, const double y, const double z,
                              const double t, double& wx, double& wy, double& wz,
                              const std::string& label) override;
+  double DelayedWeightingPotential(const double x, const double y,
+                                   const double z, const double t,
+                                   const std::string& label) override;
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin,
                       double& xmax, double& ymax, double& zmax) override;
 
   bool HasMagneticField() const override;
 
-  /// Set the function to be called for calculating the electric field.
-  void SetElectricField(
-    std::function<void(const double, const double, const double,
-                       double&, double&, double&)>);
-  /// Set the function to be called for calculating the potential.
-  void SetPotential(
-    std::function<void(const double, const double, const double, double&)>);
-  /// Set the function to be called for calculating the weighting field.
-  void SetWeightingField(
-    std::function<void(const double, const double, const double,
-                       double&, double&, double&, const std::string&)>);
-  /// Set the function to be called for calculating the weighting potential.
-  void SetWeightingPotential(
-    std::function<void(const double, const double, const double, 
-                       double&, const std::string&)>);
-  /// Set the function to be called for calculating the delayed weighting field.
-  void SetDelayedWeightingField(
-    std::function<void(const double, const double, const double, const double,
-                       double&, double&, double&, const std::string&)>);
-  /// Set the function to be called for calculating the magnetic field.
-  void SetMagneticField(
-    std::function<void(const double, const double, const double,
-                       double&, double&, double&)>);
-
-  /// Set the limits of the active area explicitly 
-  /// (instead of using a Geometry object).
-  void SetArea(const double xmin, const double ymin, const double zmin,
-               const double xmax, const double ymax, const double zmax);
-  /// Remove the explicit limits of the active area. 
-  void UnsetArea();
-  /// Set the medium in the active area.
-  void SetMedium(Medium* medium) { m_medium = medium; }
  private:
-  /// Electric field function
+  /// Electric field function.
   std::function<void(const double, const double, const double,
                      double&, double&, double&)> m_efield;
-  /// Potential function
-  std::function<void(const double, const double, const double,
-                     double&)> m_potential;
+  /// Electric potential function.
+  std::function<double(const double, const double, const double)> m_epot;
 
-  /// Weighting field function
-  std::function<void(const double, const double, const double, 
-                     double&, double&, double&, const std::string&)> m_wfield;
+  /// Weighting field functions.
+  std::map<std::string, 
+           std::function<void(const double, const double, const double, 
+                              double&, double&, double&)> > m_wfield;
 
-  /// Weighting potential function
-  std::function<void(const double, const double, const double, 
-                     double&, const std::string&)> m_wpot;
+  /// Weighting potential functions.
+  std::map<std::string,
+           std::function<double(const double, const double, const double)> 
+          > m_wpot;
 
-  /// Delayed weighting field function
-  std::function<void(const double, const double, const double, const double,
-                     double&, double&, double&, const std::string&)> m_dwfield;
+  /// Delayed weighting field functions.
+  std::map<std::string,
+           std::function<void(const double, const double, const double, 
+                              const double,
+                              double&, double&, double&)> > m_dwfield;
+
+  /// Delayed weighting potential functions.
+  std::map<std::string,
+           std::function<double(const double, const double, const double, 
+                                const double)> > m_dwpot;
 
   /// Magnetic field function
   std::function<void(const double, const double, const double, 

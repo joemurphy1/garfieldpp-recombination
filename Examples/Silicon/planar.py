@@ -22,23 +22,30 @@ mediumView.PlotHoleVelocity('e', True)
 
 # Thickness of the silicon [cm]
 d = 100.e-4
-box = ROOT.Garfield.SolidBox(0, 0.5 * d, 0, 2 * d, 0.5 * d, 2 * d)
-geo = ROOT.Garfield.GeometrySimple()
-geo.AddSolid(box, si)
 
 # Make a component with constant drift field and weighting field.
 # Bias voltage [V]
 vbias = -50.;
 uniformField = ROOT.Garfield.ComponentConstant()
-uniformField.SetGeometry(geo);
+uniformField.SetArea(-2 * d, 0., -2 * d, 2 * d, d, 2 * d)
+uniformField.SetMedium(si)
 uniformField.SetElectricField(0, vbias / d, 0)
 uniformField.SetWeightingField(0, -1. / d, 0, 'pad')
+
+# Depletion voltage [V]
+vdep = -20.
+# Make a component with linear drift field.
+linearField = ROOT.Garfield.ComponentUser()
+linearField.SetArea(-2 * d, 0., -2 * d, 2 * d, d, 2 * d)
+linearField.SetMedium(si)
+eLinear = 'ey = ' + repr((vbias - vdep) / d) + ' + 2 * y * ' + repr(vdep / (d * d))
+linearField.SetElectricField(eLinear)
 
 # Make a component with analytic weighting field for a strip or pixel.
 pitch = 55.e-4
 halfpitch = 0.5 * pitch
 wField = ROOT.Garfield.ComponentAnalyticField()
-wField.SetGeometry(geo)
+wField.SetMedium(si)
 wField.AddPlaneY(0, vbias, 'back')
 wField.AddPlaneY(d, 0, 'front')
 wField.AddStripOnPlaneY('z', d, -halfpitch, halfpitch, 'strip')
@@ -47,7 +54,8 @@ wField.AddPixelOnPlaneY(d, -halfpitch, halfpitch,
 
 # Create a sensor. 
 sensor = ROOT.Garfield.Sensor()
-sensor.AddComponent(uniformField)
+# sensor.AddComponent(uniformField)
+sensor.AddComponent(linearField)
 label = 'strip'
 sensor.AddElectrode(wField, label)
 

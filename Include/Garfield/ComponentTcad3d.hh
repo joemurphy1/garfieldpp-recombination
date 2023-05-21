@@ -17,19 +17,6 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
   /// Destructor
   ~ComponentTcad3d() {}
 
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, double& v, Medium*& m,
-                     int& status) override;
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, Medium*& m, int& status) override;
-
-  Medium* GetMedium(const double x, const double y, const double z) override;
-
-  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, 
-                      double& xmax, double& ymax, double& zmax) override;
-  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, 
-                         double& xmax, double& ymax, double& zmax) override;
-
   /** Retrieve the properties of an element.
     * \param i index of the element
     * \param vol volume
@@ -45,6 +32,19 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
   /// electric field at this node.
   bool GetNode(const size_t i, double& x, double& y, double& z, double& v,
                double& ex, double& ey, double& ez) const;
+
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, double& v, Medium*& m,
+                     int& status) override;
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, Medium*& m, int& status) override;
+
+  Medium* GetMedium(const double x, const double y, const double z) override;
+
+  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, 
+                      double& xmax, double& ymax, double& zmax) override;
+  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, 
+                         double& xmax, double& ymax, double& zmax) override;
 
  private:
 

@@ -10,7 +10,7 @@ the same or another stream for emergency or exstraordinary cases,
 exceptions, error, etc. These logical streams can be realized not only to
 default tty, but to files. Perhaps there are many ways to control this,
 but the simplest one is the use symbolic stream
-notations mcout amnd mcerr (my cout and my cerr) throughout the program,
+notations mcout and mcerr (my cout and my cerr) throughout the program,
 and to bound them with real streams through trivial macro-driven replacements,
 as done below.
 
@@ -39,14 +39,14 @@ any line printed from any object. Any object should be allowed to
 add additional blanks and required to remove the additions at the
 end of its output.
 
-It appered that it is not trivial to arrange such system that makes this
+It appeared that it is not trivial to arrange such system that makes this
 and is completely safe from any misuse. Despite of all the power of C++
 it appears to be not possible without significant intrusion in internal
 functioning of streams. There was some discussion in a news-group which
 does not point to any appropriate solution. Therefore here this is done
 by means which could be crititized in some respects by the lovers of
 object-oriented approach, but it has the pronounced advantages that
-it is compartible with any streams, it is convenuent enough for practice,
+it is compatible with any streams, it is convenient enough for practice,
 it really works, and it really exists.
 
 There is a class indentation and the global object of this

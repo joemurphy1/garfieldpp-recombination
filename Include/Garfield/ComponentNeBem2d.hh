@@ -14,28 +14,6 @@ class ComponentNeBem2d : public Component {
   /// Destructor
   ~ComponentNeBem2d() {}
 
-  Medium* GetMedium(const double x, const double y, const double z) override;
-
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, Medium*& m, int& status) override;
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, double& v, Medium*& m,
-                     int& status) override;
-  bool GetVoltageRange(double& vmin, double& vmax) override;
-
-  bool GetBoundingBox(double& xmin, double& ymin, double& zmin,
-                      double& xmax, double& ymax, double& zmax) override;
-  bool GetElementaryCell(double& xmin, double& ymin, double& zmin,
-                         double& xmax, double& ymax, double& zmax) override;
-
-  bool CrossedWire(const double x0, const double y0, const double z0,
-                   const double x1, const double y1, const double z1,
-                   double& xc, double& yc, double& zc, const bool centre,
-                   double& rc) override;
-  bool InTrapRadius(const double q0, const double x0, const double y0,
-                    const double z0, double& xw, double& yx,
-                    double& rw) override;
-
   /// Set the "background" medium.
   void SetMedium(Medium* medium) { m_medium = medium; }
 
@@ -106,6 +84,29 @@ class ComponentNeBem2d : public Component {
   /// Return the coordinates and charge of a given boundary element.
   bool GetElement(const unsigned int i, double& x0, double& y0,
                   double& x1, double& y1, double& q) const;
+
+  Medium* GetMedium(const double x, const double y, const double z) override;
+
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, Medium*& m, int& status) override;
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, double& v, Medium*& m,
+                     int& status) override;
+  bool GetVoltageRange(double& vmin, double& vmax) override;
+
+  bool GetBoundingBox(double& xmin, double& ymin, double& zmin,
+                      double& xmax, double& ymax, double& zmax) override;
+  bool GetElementaryCell(double& xmin, double& ymin, double& zmin,
+                         double& xmax, double& ymax, double& zmax) override;
+
+  bool CrossedWire(const double x0, const double y0, const double z0,
+                   const double x1, const double y1, const double z1,
+                   double& xc, double& yc, double& zc, const bool centre,
+                   double& rc) override;
+  bool InTrapRadius(const double q0, const double x0, const double y0,
+                    const double z0, double& xw, double& yx,
+                    double& rw) override;
+
  private:
   static const double InvEpsilon0;
   static const double InvTwoPiEpsilon0;

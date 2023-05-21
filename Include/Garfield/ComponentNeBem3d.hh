@@ -18,19 +18,6 @@ class ComponentNeBem3d : public Component {
 
   Medium* GetMedium(const double x, const double y, const double z) override;
 
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, Medium*& m, int& status) override;
-  void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, double& v, Medium*& m,
-                     int& status) override;
-  bool GetVoltageRange(double& vmin, double& vmax) override;
-
-  void WeightingField(const double x, const double y, const double z,
-                      double& wx, double& wy, double& wz,
-                      const std::string& label) override;
-  double WeightingPotential(const double x, const double y, const double z,
-                            const std::string& label) override;
-
   /// Add a plane at constant x.
   void AddPlaneX(const double x, const double voltage);
   /// Add a plane at constant y.
@@ -207,6 +194,19 @@ class ComponentNeBem3d : public Component {
 
   /// Set option related to removal of primitives.
   void SetOptRmPrim(const unsigned int n) { m_optRmPrim = n; }
+
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, Medium*& m, int& status) override;
+  void ElectricField(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, double& v, Medium*& m,
+                     int& status) override;
+  bool GetVoltageRange(double& vmin, double& vmax) override;
+
+  void WeightingField(const double x, const double y, const double z,
+                      double& wx, double& wy, double& wz,
+                      const std::string& label) override;
+  double WeightingPotential(const double x, const double y, const double z,
+                            const std::string& label) override;
 
  protected:
   void Reset() override;
