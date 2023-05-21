@@ -1623,6 +1623,92 @@ The weighting field corresponding to this label will then be
 computed by setting the potential of all elements associated to solids 
 with this label to 1\,V (and grounding all other conducting elements).
 
+\section{Parameterisations}
+The class \texttt{ComponentUser} takes the electric field and potential
+from a user-defined function.
+\begin{lstlisting}
+void SetElectricField(std::function<void(const double, const double, const double, 
+                                         double& double&, double&)> f);
+void SetPotential(std::function<double(const double, const double, const double)> f);
+\end{lstlisting}
+\begin{description}
+  \item[f] user function
+\end{description}
+The signature of the electric field function is \texttt{void(const double, const double, const double, double\&, double\&, double\&)}, 
+the first three arguments being the coordinates $x, y, z$ and the 
+last three (reference) arguments being the components of the electric 
+field (to be assigned in the function).
+The potential function takes the coordinates $x, y, z$ as arguments and
+returns the potential. 
+Similar functions are available to set the weighting field and potential,
+and the magnetic field.
+
+Alternatively, \texttt{ComponentUser} also allows one to define the 
+electric field and potential in string expressions, which are then
+just-in-time compiled internally using the ROOT C++ interpreter.
+\begin{lstlisting}
+void SetElectricField(const std::string& expression);
+void SetPotential(const std::string& expression);
+\end{lstlisting}
+\begin{description}
+  \item[expression] a compileable C++ expression.
+\end{description}
+Valid parameter names are \texttt{x}, \texttt{y}, \texttt{z}. 
+The expression used for evaluating the electric field 
+shall assign the variables \texttt{ex}, \texttt{ey}, \texttt{ez} 
+(corresponding to the three field components). 
+If a field component is not assigned in the expression, it is assumed 
+to be zero.
+
+As an example, let us consider the electric field in the bulk 
+of an overdepleted planar silicon sensor, given by
+\begin{equation*}
+E\left(x\right) = \frac{V - V_{\text{dep}}}{d} + 
+                    2x \frac{V_{\text{dep}}}{d^{2}},
+\end{equation*}
+where \(V\) is the applied bias voltage, \(V_{\text{dep}}\) is 
+the depletion voltage, and \(d\) is the thickness of the diode.
+\begin{lstlisting}
+MediumSilicon si;
+// Detector thickness
+const double d = 0.1;
+
+ComponentUser cmp;
+cmp.SetArea(0., -2 * d, -2 * d, d, 2 * d, 2 * d);
+cmp.SetMedium(&si);
+auto efield = [](const double x, const double y, const double z,
+                 double& ex, double& ey, double& ez) { 
+
+  // Depletion voltage
+  const double vdep = 160.;
+  // Applied voltage
+  const double v = 200.;
+
+  ey = ez = 0.;
+  ex = (v - vdep) / d + 2 * x * vdep / (d * d);
+};
+cmp.SetElectricField(efield);
+\end{lstlisting}
+
+Using the JIT-compilation approach, the above example would look like this.
+\begin{lstlisting}
+MediumSilicon si;
+// Detector thickness
+const double d = 0.1;
+
+ComponentUser cmp;
+cmp.SetArea(0., -2 * d, -2 * d, d, 2 * d, 2 * d);
+cmp.SetMedium(&si);
+// Depletion voltage
+const double vdep = 160.;
+// Applied voltage
+const double v = 200.;
+
+std::string efield = "ex = " + std::to_string((v - vdep) / d) + 
+                     "2 * x * " + std::to_string(vdep / (d * d));
+cmp.SetElectricField(efield);
+\end{lstlisting}
+
 \section{Other components}
 For simple calculations, the class \texttt{ComponentConstant} can be used. 
 As the name implies, it provides a uniform electric field. 
@@ -1652,53 +1738,6 @@ void SetWeightingPotential(const double x, const double y, const double z,
   \item[x, y, z] coordinates where the weighting potential is specified
   \item[v] weighting potential at the given position 
 \end{description}
-
-The class \texttt{ComponentUser} takes the electric field and potential
-from a user-defined function.
-\begin{lstlisting}
-void SetElectricField(std::function<void(const double, const double, const double, 
-                                         double& double&, double&)>);
-void SetPotential(std::function<void(const double, const double, const double, 
-                                     double&)>);
-\end{lstlisting}
-\begin{description}
-  \item[f] user function
-\end{description}
-Similar functions are available to set the weighting field and potential,
-and the magnetic field.
-Alternatively, \texttt{ComponentUser} also allows one to define the 
-electric field and potential in string expressions, which are then
-just-in-time compiled internally using the ROOT C++ interpreter.
-\begin{lstlisting}
-void SetElectricField(const std::string& expression);
-void SetPotential(const std::string& expression);
-\end{lstlisting}
-
-As an example, let us consider the electric field in the bulk 
-of an overdepleted planar silicon sensor, given by
-\begin{equation*}
-E\left(x\right) = \frac{V - V_{\text{dep}}}{d} + 
-                    2x \frac{V_{\text{dep}}}{d^{2}},
-\end{equation*}
-where \(V\) is the applied bias voltage, \(V_{\text{dep}}\) is 
-the depletion voltage, and \(d\) is the thickness of the diode.
-\begin{lstlisting}
-auto efield = [](const double x, const double y, const double z,
-                 double& ex, double& ey, double& ez) { 
-
-  // Depletion voltage
-  const double vdep = 160.;
-  // Applied voltage
-  const double v = 200.;
-  // Detector thickness
-  const double d = 0.1;
-
-  ey = ez = 0.;
-  ex = (v - vdep) / d + 2 * x * vdep / (d * d);
-};
-ComponentUser cmp;
-cmp.SetElectricField(efield);
-\end{lstlisting}
 
 \section{Visualizing the field}
 

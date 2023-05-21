@@ -57,8 +57,9 @@ int main(int argc, char * argv[]) {
   // Depletion voltage [V]
   constexpr double vdep = -20.;
   // Make a component with linear drift field.
-  auto eLinear = [](const double /*x*/, const double y, const double /*z*/,
-                    double& ex, double& ey, double& ez) {
+  auto eLinear = [d,vbias,vdep](const double /*x*/, const double y, 
+                                const double /*z*/,
+                                double& ex, double& ey, double& ez) {
     ex = ez = 0.;
     ey = (vbias - vdep) / d + 2 * y * vdep / (d * d);  
   };
