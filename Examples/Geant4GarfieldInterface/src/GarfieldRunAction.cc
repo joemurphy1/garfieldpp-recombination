@@ -95,7 +95,7 @@ void GarfieldRunAction::BeginOfRunAction(const G4Run* /*run*/) {
 
   // Open an output file
   //
-  G4String fileName = "Garfield";
+  G4String fileName = "Garfield.root";
   analysisManager->OpenFile(fileName);
 }
 
