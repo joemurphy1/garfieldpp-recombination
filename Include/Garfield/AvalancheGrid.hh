@@ -16,15 +16,13 @@ namespace Garfield {
 /// statistics.
 
 class AvalancheGrid {
-public:
+ public:
   /// Constructor
   AvalancheGrid() {}
   /// Destructor
   ~AvalancheGrid() {}
   /// Set the sensor.
   void SetSensor(Sensor *sensor) { m_sensor = sensor; }
-  /// Set the AvalancheMicroscopic.
-  void SetAvalancheMicroscopic(AvalancheMicroscopic *avmc) { m_avmc = avmc; }
 
   /** Start grid based avalanche simulation.
    *
@@ -64,10 +62,10 @@ public:
    * \param v speed of initial electron.
    * \param t starting time of avalanche.
    */
-  void CreateAvalanche(const double x, const double y, const double z,
-                       const double t = 0, const int n = 1);
+  void AvalancheElectron(const double x, const double y, const double z,
+                         const double t = 0, const int n = 1);
   /// Import electron data from AvalancheMicroscopic class
-  void GetElectronsFromAvalancheMicroscopic();
+  void ImportElectronsFromAvalancheMicroscopic(AvalancheMicroscopic *avmc);
 
   /// Import electron data from AvalancheMicroscopic class
   void SetGrid(const double xmin, const double xmax, const int xsteps,
@@ -86,27 +84,27 @@ public:
 
   void Reset();
 
-private:
+ private:
   bool m_debug = false;
 
-  double m_Townsend = -1; // [1/cm]
+  double m_Townsend = -1;  // [1/cm]
 
-  double m_Attachment = -1; // [1/cm]
+  double m_Attachment = -1;  // [1/cm]
 
-  double m_Velocity = 0.; // [cm/ns]
+  double m_Velocity = 0.;  // [cm/ns]
 
   std::vector<int> m_velNormal = {0, 0, 0};
 
-  double m_MaxSize = 1.6e7; // Saturations size
+  double m_MaxSize = 1.6e7;  // Saturations size
 
-  bool m_Saturated = false; // Check if avalanche has reached maximum size
+  bool m_Saturated = false;  // Check if avalanche has reached maximum size
 
   double m_SaturationTime =
-      -1.; // Time when the avalanche has reached maximum size
+      -1.;  // Time when the avalanche has reached maximum size
 
-  bool m_diffusion = false; // Check if transverse diffusion is enabled.
+  bool m_diffusion = false;  // Check if transverse diffusion is enabled.
 
-  double m_DiffSigma = 0.; // Transverse diffusion coefficients (in √cm).
+  double m_DiffSigma = 0.;  // Transverse diffusion coefficients (in √cm).
 
   int m_nestart = 0.;
 
@@ -120,30 +118,28 @@ private:
 
   Sensor *m_sensor = nullptr;
 
-  AvalancheMicroscopic *m_avmc = nullptr;
-
   bool m_printPar = false;
 
   struct Grid {
-    std::vector<double> zgrid; ///< Grid points of z-coordinate.
-    int zsteps = 0;            ///< Amount of grid points.
+    std::vector<double> zgrid;  ///< Grid points of z-coordinate.
+    int zsteps = 0;             ///< Amount of grid points.
     double zStepSize =
-        0.; ///< Distance between the grid points of z-coordinate.
+        0.;  ///< Distance between the grid points of z-coordinate.
 
-    std::vector<double> ygrid; ///< Grid points of y-coordinate.
-    double yStepSize = 0.;     ///< Amount of grid points.
-    int ysteps = 0.; ///< Distance between the grid points of y-coordinate.
+    std::vector<double> ygrid;  ///< Grid points of y-coordinate.
+    double yStepSize = 0.;      ///< Amount of grid points.
+    int ysteps = 0.;  ///< Distance between the grid points of y-coordinate.
 
-    std::vector<double> xgrid; ///< Grid points of x-coordinate.
-    double xStepSize = 0.;     ///< Amount of grid points.
-    int xsteps = 0.; ///< Distance between the grid points of x-coordinate.
+    std::vector<double> xgrid;  ///< Grid points of x-coordinate.
+    double xStepSize = 0.;      ///< Amount of grid points.
+    int xsteps = 0.;  ///< Distance between the grid points of x-coordinate.
 
-    bool gridset = false; ///< Keeps track if the grid has been defined.
-    int N = 0;            ///< Total amount of charge.
+    bool gridset = false;  ///< Keeps track if the grid has been defined.
+    int N = 0;             ///< Total amount of charge.
 
-    double time = 0; ///< Clock.
+    double time = 0;  ///< Clock.
 
-    bool run = true; ///< Tracking if the charges are still in the drift gap.
+    bool run = true;  ///< Tracking if the charges are still in the drift gap.
   };
 
   struct AvalancheNode {
@@ -162,8 +158,8 @@ private:
     double stepSize = 0;
     std::vector<int> velNormal = {0, 0, 0};
 
-    double time = 0.; ///< Clock.
-    double dt = -1.;  ///< time step.
+    double time = 0.;  ///< Clock.
+    double dt = -1.;   ///< time step.
 
     bool active = true;
     double dSigmaL = 0;
@@ -196,6 +192,6 @@ private:
 
   void DeactivateNode(AvalancheNode &node);
 };
-} // namespace Garfield
+}  // namespace Garfield
 
 #endif

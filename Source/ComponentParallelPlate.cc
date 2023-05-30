@@ -35,8 +35,7 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
     return;
   }
 
-  if (m_debug)
-    std::cout << m_className << "::Setup:: Loading parameters.\n";
+  if (m_debug) std::cout << m_className << "::Setup:: Loading parameters.\n";
   m_epsHolder = eps;
   m_eps = placeHolder;
 
@@ -44,6 +43,12 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
   m_d = placeHolder;
   m_N = N + 1;
   m_V = V;
+
+  if (sigmaIndex.size() == 0) {
+    for (int i = 0; i < N; i++) {
+      if (eps[i] != 1) sigmaIndex.push_back(i + 1);
+    }
+  }
 
   m_sigmaIndex = sigmaIndex;
 
@@ -59,8 +64,7 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
   }
   m_z = m_zHolder;
 
-  if (m_debug)
-    std::cout << m_className << "Setup:: Constructing matrices.\n";
+  if (m_debug) std::cout << m_className << "Setup:: Constructing matrices.\n";
   constructGeometryMatrices(m_N);
 
   if (m_debug)
@@ -81,8 +85,7 @@ bool ComponentParallelPlate::GetBoundingBox(double &x0, double &y0, double &z0,
 
   // Here I switch conventions back with the y-axis the direction of drift.
   if (m_geometry) {
-    if (m_geometry->GetBoundingBox(x0, y0, z0, x1, y1, z1))
-      return true;
+    if (m_geometry->GetBoundingBox(x0, y0, z0, x1, y1, z1)) return true;
   }
   z0 = -std::numeric_limits<double>::infinity();
   x0 = -std::numeric_limits<double>::infinity();
@@ -99,44 +102,46 @@ double ComponentParallelPlate::IntegratePromptPotential(const Electrode &el,
                                                         const double y,
                                                         const double z) {
   switch (el.ind) {
-  case structureelectrode::Plane: {
-    return wpPlane(z);
-    break;
-  }
-  case structureelectrode::Pixel: {
-    m_wpPixelIntegral.SetParameters(x, y, el.xpos, el.ypos, el.lx, el.ly,
-                                    z); //(x,y,x0,y0,lx,ly,z)
-    int im;
-    double epsm;
-    getLayer(z, im, epsm);
-    double upLim = m_upperBoundIntegration;
-    if (z == 0 || m_upperBoundIntegration / z > 200) {
-      upLim = 200;
-    } else {
-      upLim *= 1 / z;
+    case structureelectrode::Plane: {
+      return wpPlane(z);
+      break;
     }
-    return m_wpPixelIntegral.Integral(0, upLim, 0, upLim, 1.e-12);
-    break;
-  }
-  case structureelectrode::Strip: {
-    m_wpStripIntegral.SetParameters(x, el.xpos, el.lx, z); //(x,x0,lx,z)
-    int im;
-    double epsm;
-    getLayer(z, im, epsm);
-    double upLim = m_upperBoundIntegration;
-    if (z == 0 || m_upperBoundIntegration / z > 200) {
-      upLim = 200;
-    } else {
-      upLim *= 1 / z;
+    case structureelectrode::Pixel: {
+      m_wpPixelIntegral.SetParameters(x, y, el.xpos, el.ypos, el.lx, el.ly,
+                                      z);  //(x,y,x0,y0,lx,ly,z)
+      int im;
+      double epsm = 0.;
+      getLayer(z, im, epsm);
+      if (!m_getPotentialInPlate && epsm != 1) return 0.;
+      double upLim = m_upperBoundIntegration;
+      if (z == 0 || m_upperBoundIntegration / z > 200) {
+        upLim = 200;
+      } else {
+        upLim *= 1 / z;
+      }
+      return m_wpPixelIntegral.Integral(0, upLim, 0, upLim, m_precision);
+      break;
     }
-    return m_wpStripIntegral.Integral(0, upLim, 1.e-12);
-    break;
-  }
-  default: {
-    std::cerr << m_className << "::IntegratePromptPotential:\n"
-              << "    Unknown electrode type.\n";
-    return 0.;
-  }
+    case structureelectrode::Strip: {
+      m_wpStripIntegral.SetParameters(x, el.xpos, el.lx, z);  //(x,x0,lx,z)
+      int im;
+      double epsm = 0.;
+      getLayer(z, im, epsm);
+      if (!m_getPotentialInPlate && epsm != 1) return 0.;
+      double upLim = m_upperBoundIntegration;
+      if (z == 0 || m_upperBoundIntegration / z > 200) {
+        upLim = 200;
+      } else {
+        upLim *= 1 / z;
+      }
+      return m_wpStripIntegral.Integral(0, upLim, m_precision);
+      break;
+    }
+    default: {
+      std::cerr << m_className << "::IntegratePromptPotential:\n"
+                << "    Unknown electrode type.\n";
+      return 0.;
+    }
   }
 }
 
@@ -220,8 +225,7 @@ void ComponentParallelPlate::ElectricField(const double x, const double y,
 }
 
 bool ComponentParallelPlate::GetVoltageRange(double &vmin, double &vmax) {
-  if (m_V == 0)
-    return false;
+  if (m_V == 0) return false;
 
   if (m_V < 0) {
     vmin = m_V;
@@ -245,8 +249,7 @@ double ComponentParallelPlate::WeightingPotential(const double x,
   for (auto &electrode : m_readout_p) {
     if (electrode.label == label) {
       double yin = y;
-      if (!electrode.formAnode)
-        yin = m_z.back() - y;
+      if (!electrode.formAnode) yin = m_z.back() - y;
       if (!electrode.m_usegrid) {
         ret += IntegratePromptPotential(electrode, z, x, yin);
       } else {
@@ -388,8 +391,7 @@ bool ComponentParallelPlate::Ntheta(
 
   for (int i = 0; i < nRow; i++) {
     for (int j = 0; j < nCol; j++) {
-      for (int l = j; l < nCol; l++)
-        thetaRow[j] *= sigmaMatrix[i][l];
+      for (int l = j; l < nCol; l++) thetaRow[j] *= sigmaMatrix[i][l];
     }
     thetaMatrix.push_back(thetaRow);
     thetaRow = thetaRowReset;
@@ -438,10 +440,8 @@ void ComponentParallelPlate::constructGeometryFunction(const int N) {
 
     for (int i = 0; i < nCol; i++) {
       // cyclic permutation over the rows of sigma
-      if (ix1 == pow(2, n - 1))
-        ix1 = 0;
-      if (ix2 == pow(2, N - n))
-        ix2 = 0;
+      if (ix1 == pow(2, n - 1)) ix1 = 0;
+      if (ix2 == pow(2, N - n)) ix2 = 0;
       // normalization
       cHold[i] *= 1 / pow(2, n - 1);
       gHold[i] *= 1 / pow(2, N - n);
@@ -488,8 +488,7 @@ void ComponentParallelPlate::setHIntegrand() {
 
     int im = -1;
     double epsM = -1;
-    if (!getLayer(z, im, epsM))
-      return 0.;
+    if (!getLayer(z, im, epsM)) return 0.;
     LayerUpdate(z, im, epsM);
 
     for (int i = 0; i < pow(2, m_N - im - 1); i++) {
@@ -534,7 +533,7 @@ void ComponentParallelPlate::setwpPixelIntegrand() {
       new TF2("wpPixelIntegrand", intFunction, 0, m_upperBoundIntegration, 0,
               m_upperBoundIntegration, 7);
   wpPixelIntegrand->SetNpx(
-      10000); // increasing number of points the function is evaluated on
+      10000);  // increasing number of points the function is evaluated on
   wpPixelIntegrand->SetNpy(10000);
   wpPixelIntegrand->Copy(m_wpPixelIntegral);
 
@@ -555,7 +554,7 @@ void ComponentParallelPlate::setwpStripIntegrand() {
   TF1 *wpStripIntegrand =
       new TF1("wpStripIntegrand", intFunction, 0, m_upperBoundIntegration, 4);
   wpStripIntegrand->SetNpx(
-      1000); // increasing number of points the function is evaluated on
+      1000);  // increasing number of points the function is evaluated on
   wpStripIntegrand->Copy(m_wpStripIntegral);
 
   delete wpStripIntegrand;
@@ -569,14 +568,14 @@ bool ComponentParallelPlate::decToBinary(int n, std::vector<int> &binaryNum) {
     if (i + 1 > L) {
       std::cerr << m_className
                 << "::decToBinary: Size of binary exceeds amount of colomb.\n";
-      return false; // Triggered if binary expression is larger then n.
+      return false;  // Triggered if binary expression is larger then n.
     }
     // storing remainder in binary array
     binaryNum[i] = n % 2;
     n = n / 2;
     i++;
   }
-  return true; // Succesfully
+  return true;  // Succesfully
 }
 
 void ComponentParallelPlate::SetWeightingPotentialGrid(
@@ -595,7 +594,8 @@ void ComponentParallelPlate::SetWeightingPotentialGrid(
       if (electrode.grid.SetMesh(xsteps, ysteps, zsteps, xmin, xmax, ymin, ymax,
                                  zmin, zmax)) {
         std::cerr << m_className << "::SetWeightingPotentialGrid: Mesh set for "
-                  << label << ".\n";
+                  << label << " (for " << xsteps *ysteps *zsteps
+                  << " points).\n";
       }
 
       electrode.grid.SaveWeightingField(this, label, label + "map", "xyz");
@@ -623,4 +623,4 @@ double ComponentParallelPlate::FindWeightingPotentialInGrid(Electrode &el,
   return el.grid.WeightingPotential(y, z, x, el.label);
 }
 
-} // namespace Garfield
+}  // namespace Garfield

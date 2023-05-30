@@ -14,9 +14,11 @@
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentParallelPlate.hh"
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/GeometrySimple.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
+#include "Garfield/SolidBox.hh"
 #include "Garfield/TrackHeed.hh"
 #include "Garfield/ViewSignal.hh"
 
@@ -24,23 +26,45 @@
 
 using namespace Garfield;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
 
   const bool debug = true;
   constexpr bool plotSignal = true;
-  constexpr bool plotDrift = false;
-    
-  // The geometry of the RPC.
-  const double gap = 0.03;  // [cm]
-  const double thickness = 0.2;  // [cm]
-  const double eps = 8.;  // [1]
-  const double voltage = -3e3;  // [V]
-  const double sigma = 1e-12; // [S/m]
 
-  ComponentParallelPlate* RPC = new ComponentParallelPlate();
-  RPC->Setup(gap, thickness, eps, voltage, sigma);
+  // The geometry of the RPC.
+  const int N = 15;  // Total amount of layers inside the geometry
+
+  // Relative permitivity of the layers
+  const double epMylar = 3.1;     // [1]
+  const double epGlaverbel = 8.;  // [1]
+  const double epWindow = 6.;     // [1]
+  const double epGas = 1.;        // [1]
+
+  std::vector<double> eps = {epMylar, epWindow,    epGas,  epGlaverbel,
+                             epGas,   epGlaverbel, epGas,  epGlaverbel,
+                             epGas,   epGlaverbel, epGas,  epGlaverbel,
+                             epGas,   epWindow,    epMylar};
+
+  // Thickness of the layers
+  const double dMylar = 0.035;      // [cm]
+  const double dGlaverbell = 0.07;  // [cm]
+  const double dWindow = 0.12;      // [cm]
+  const double dGas = 0.025;        // [cm]
+
+  std::vector<double> thickness = {dMylar, dWindow,     dGas,  dGlaverbell,
+                                   dGas,   dGlaverbell, dGas,  dGlaverbell,
+                                   dGas,   dGlaverbell, dGas,  dGlaverbell,
+                                   dGas,   dWindow,     dMylar};
+
+  double totalThickness = 0.81;
+
+  // Applied potential
+  const double voltage = -15e3;  // [V]
+
+  ComponentParallelPlate *RPC = new ComponentParallelPlate();
+  RPC->Setup(N, eps, thickness, voltage);
 
   // Adding a readout structure.
   const std::string label = "ReadoutPlane";
@@ -48,19 +72,20 @@ int main(int argc, char* argv[]) {
 
   // Setup the gas, but one can also use a gasfile.
   MediumMagboltz gas;
-  gas.LoadGasFile("TimingRPCGas.gas"); // c2h2f4/ic4h10/sf6 85/5/10.
+  gas.LoadGasFile("c2h2f4_ic4h10_sf6.gas");  // c2h2f4/ic4h10/sf6 90/5/5.
   gas.Initialise(true);
 
   // Setting the drift medium.
+  SolidBox box(0., totalThickness / 2, 0., 5., totalThickness / 2, 5.);
+  GeometrySimple geo;
+  geo.AddSolid(&box, &gas);
+  RPC->SetGeometry(&geo);
   RPC->SetMedium(&gas);
 
   // Create the sensor.
   Sensor sensor;
   sensor.AddComponent(RPC);
   sensor.AddElectrode(RPC, label);
-
-  // The resistive layer will make the weighting potential time-dependent.
-  sensor.EnableDelayedSignal();
 
   // Set the time bins.
   const unsigned int nTimeBins = 200;
@@ -69,20 +94,14 @@ int main(int argc, char* argv[]) {
   const double tstep = (tmax - tmin) / nTimeBins;
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
 
-  // Set the times the delayed signals will be calculated.
-  std::vector<double> times;
-  for (int i = 0; i < nTimeBins; i++) {
-    times.push_back(tmin + tstep / 2 + i * tstep);
-  }
-  //sensor.SetDelayedSignalTimes(times);
-
   // Create the AvalancheMicroscopic.
   AvalancheMicroscopic aval;
   aval.SetSensor(&sensor);
+  aval.EnableSignalCalculation();
   aval.UseWeightingPotential();
 
   // Set time window where the calculations will be done microscopically.
-  const double tMaxWindow = 2;
+  const double tMaxWindow = 0.1;
   aval.SetTimeWindow(0., tMaxWindow);
 
   // Create the AvalancheGrid for grid-based avalanche calculations that are
@@ -90,16 +109,14 @@ int main(int argc, char* argv[]) {
   // calculations of the microscopic class after the set time-window.
   AvalancheGrid avalgrid;
   avalgrid.SetSensor(&sensor);
-  avalgrid.SetAvalancheMicroscopic(&aval);
-    
-    
-  avalgrid.SetGrid(-0.05, 0.05, 5,-0.05, 0.05, 5,0, gap, 1000);
-  //avalgrid.EnableDebugging();
+
+  int steps = totalThickness * 1e4;
+  avalgrid.SetGrid(-0.05, 0.05, 5, 0.0, totalThickness, steps, -0.05, 0.05, 5);
 
   // Preparing the plotting of the induced charge and signal of the electrode
   // readout.
-  ViewSignal* signalView = nullptr;
-  TCanvas* cSignal = nullptr;
+  ViewSignal *signalView = nullptr;
+  TCanvas *cSignal = nullptr;
   if (plotSignal) {
     cSignal = new TCanvas("cSignal", "", 600, 600);
     signalView = new ViewSignal();
@@ -107,8 +124,8 @@ int main(int argc, char* argv[]) {
     signalView->SetSensor(&sensor);
   }
 
-  ViewSignal* chargeView = nullptr;
-  TCanvas* cCharge = nullptr;
+  ViewSignal *chargeView = nullptr;
+  TCanvas *cCharge = nullptr;
 
   if (plotSignal) {
     cCharge = new TCanvas("cCharge", "", 600, 600);
@@ -121,68 +138,54 @@ int main(int argc, char* argv[]) {
   TrackHeed track;
   track.SetSensor(&sensor);
   // Set the particle type and momentum [eV/c].
-    track.SetParticle("pion");
-    track.SetMomentum(7.e9);
-
-  ViewDrift* driftView = nullptr;
-  TCanvas* cDrift = nullptr;
-  if (plotDrift) {
-    cDrift = new TCanvas("cDrift", "", 600, 600);
-    driftView = new ViewDrift();
-    driftView->SetArea(-0.2, -0.2, 0, 0.2, 0.2, gap);
-    driftView->SetPlane(0, -1, 0, 0, 0, 0);
-    driftView->SetCanvas(cDrift);
-    track.EnablePlotting(driftView);
-  }
+  track.SetParticle("pion");
+  track.SetMomentum(7.e9);
 
   // Setting the timer for the running time of the algorithm.
   std::clock_t start = std::clock();
 
   // Simulate a charged-particle track.
-  track.NewTrack(0, 0, gap, 0, 0, 0, -1);
+  track.NewTrack(0, totalThickness, 0, 0, 0, -1, 0);
   // Retrieve the clusters along the track.
-  for (const auto& cluster : track.GetClusters()) {
+  for (const auto &cluster : track.GetClusters()) {
     // Loop over the electrons in the cluster.
-    for (const auto& electron : cluster.electrons) {
-      // Simulate the electron and hole drift lines.
-      if (plotDrift) aval.EnablePlotting(driftView);
-      aval.AvalancheElectron(electron.x, electron.y, electron.z, 
-                             electron.t, 0.1, 0., 0., 0.);
-      // Stops calculation after tMaxWindow ns.
-      avalgrid.GetElectronsFromAvalancheMicroscopic();
+    for (const auto &electron : cluster.electrons) {
+      // Simulate the electron track
+      aval.AvalancheElectron(electron.x, electron.y, electron.z, electron.t,
+                             0.1, 0., 0., 0.);
+      // Stops calculation after tMaxWindow ns and import electrons in.
+      avalgrid.ImportElectronsFromAvalancheMicroscopic(&aval);
     }
   }
 
   // Start grid based avalanche calculations starting from where the microsocpic
   // calculations stoped.
+  LOG("Switching to grid based methode.");
+  avalgrid.AsignLayerIndex(RPC);
   avalgrid.StartGridAvalanche();
   // Stop timer.
-  double duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+  double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 
   LOG("Script: "
       << "Electrons have drifted. It took " << duration << "s to run.");
-    
-  if (plotDrift) {
-    constexpr bool twod = true;
-    driftView->Plot(twod);
-    cDrift->Update();
-    gSystem->ProcessEvents();
-  }
-    
+
   if (plotSignal) {
     // Plot signals
-    signalView->Plot(label, true);
+    signalView->PlotSignal(label);
     cSignal->Update();
     gSystem->ProcessEvents();
-      
-    sensor.ExportSignal(label,"SignalNaN");
+
+    sensor.ExportSignal(label, "Signal");
     // Plot induced charge
-    chargeView->Plot(label, false);
+    sensor.IntegrateSignal(label);
+    chargeView->PlotSignal(label);
     cCharge->Update();
     gSystem->ProcessEvents();
     // Export induced current data as an csv file.
-    sensor.ExportSignal(label,"ChargeNaN");
+    sensor.ExportSignal(label, "Charge");
   }
-    
+  LOG("Script: Total induced charge = " << sensor.GetTotalInducedCharge(label)
+                                        << " [fC].");
+
   app.Run(kTRUE);
 }

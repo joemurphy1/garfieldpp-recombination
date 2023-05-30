@@ -15,7 +15,7 @@ namespace Garfield {
 /// Component for parallel-plate geometries.
 
 class ComponentParallelPlate : public Component {
-public:
+ public:
   /// Constructor
   ComponentParallelPlate();
   /// Destructor
@@ -27,7 +27,8 @@ public:
    * top lauer along \f$y\f$. \param eps relative permittivities of the layers
    * starting from the bottom to the top lauer along \f$y\f$ . Here, the  gas
    * gaps having a value of 1. \param sigmaIndex Indices of the resistive
-   * layers. \param V applied potential difference between the parallel plates.
+   * layers (optional). \param V applied potential difference between the
+   * parallel plates.
    */
   void Setup(const int N, std::vector<double> eps, std::vector<double> d,
              const double V, std::vector<int> sigmaIndex = {});
@@ -121,8 +122,7 @@ public:
         break;
       }
     }
-    if (mholer == -1)
-      return false;
+    if (mholer == -1) return false;
 
     m = mholer;
     epsM = m_epsHolder[m - 1];
@@ -130,62 +130,84 @@ public:
   }
   int NumberOfLayers() { return m_N - 1; }
 
-private:
-  static constexpr double m_precision = 1.e-30;
+  void SetIntegrationPrecision(const double eps) { m_precision = eps; }
+
+  void SetIntegrationUpperbound(const double p) { m_upperBoundIntegration = p; }
+
+  void DisablePotentialCalculationOutsideGasGap() {
+    m_getPotentialInPlate = false;
+  }
+
+ private:
+  double m_precision = 1.e-12;
   static constexpr double m_Vw = 1.;
   double m_eps0 = 8.85418782e-3;
   // Voltage difference between the parallel plates.
   double m_V = 0.;
 
+  bool m_getPotentialInPlate = true;
+
   double m_dt = 0.;
 
-  int m_N = 0; ///< amount of layers
+  int m_N = 0;  ///< amount of layers
 
   double m_upperBoundIntegration = 30;
 
-  std::vector<double> m_eps; ///< relative permittivity of each layer
+  std::vector<double> m_eps;  ///< relative permittivity of each layer
   std::vector<double> m_epsHolder;
-  std::vector<double> m_d; ///< thickness of each layer
+  std::vector<double> m_d;  ///< thickness of each layer
   std::vector<double> m_dHolder;
-  std::vector<double> m_z; ///< list of indices of conducting layers
+  std::vector<double> m_z;  ///< list of indices of conducting layers
 
-  std::vector<int> m_sigmaIndex; ///< list of indices of conducting layers
+  std::vector<int> m_sigmaIndex;  ///< list of indices of conducting layers
 
   TF2 m_hIntegrand;
 
-  TF1 m_wpStripIntegral; ///< Weighting potential integrant for strips
-  TF2 m_wpPixelIntegral; ///< Weighting potential integrant for pixels
+  TF1 m_wpStripIntegral;  ///< Weighting potential integrant for strips
+  TF2 m_wpPixelIntegral;  ///< Weighting potential integrant for pixels
 
-  std::vector<std::vector<std::vector<int>>>
-      m_sigmaMatrix; // sigma_{i,j}^n, where n goes from 1 to N;
-  std::vector<std::vector<std::vector<int>>>
-      m_thetaMatrix; // theta_{i,j}^n, where n goes from 1 to N;
+  std::vector<std::vector<std::vector<int>>> m_sigmaMatrix;  // sigma_{i,j}^n,
+                                                             // where n goes
+                                                             // from 1 to N;
+  std::vector<std::vector<std::vector<int>>> m_thetaMatrix;  // theta_{i,j}^n,
+                                                             // where n goes
+                                                             // from 1 to N;
 
-  std::vector<std::vector<double>> m_cMatrix; ///< c-matrixl.
-  std::vector<std::vector<double>> m_vMatrix; ///< v-matrixl.
-  std::vector<std::vector<double>> m_gMatrix; ///< g-matrixl.
-  std::vector<std::vector<double>> m_wMatrix; ///< w-matrixl.
+  std::vector<std::vector<double>> m_cMatrix;  ///< c-matrixl.
+  std::vector<std::vector<double>> m_vMatrix;  ///< v-matrixl.
+  std::vector<std::vector<double>> m_gMatrix;  ///< g-matrixl.
+  std::vector<std::vector<double>> m_wMatrix;  ///< w-matrixl.
 
-  int m_currentLayer = 0; ///< Index of the current layer.
+  int m_currentLayer = 0;  ///< Index of the current layer.
+  double m_currentPosition = -1;
 
   Medium *m_medium = nullptr;
 
   /// Structure that captures the information of the electrodes under study
   struct Electrode {
-    std::string label;                    ///< Label.
-    int ind = structureelectrode::NotSet; ///< Readout group.
-    double xpos, ypos;                    ///< Coordinates in x/y.
-    double lx, ly;                        ///< Dimensions in the x-y plane.
-    bool formAnode = true;                ///< Dimensions in the x-y plane.
+    std::string label;                     ///< Label.
+    int ind = structureelectrode::NotSet;  ///< Readout group.
+    double xpos, ypos;                     ///< Coordinates in x/y.
+    double lx, ly;                         ///< Dimensions in the x-y plane.
+    bool formAnode = true;                 ///< Dimensions in the x-y plane.
 
-    bool m_usegrid = false; ///< Enabeling grid based calculations.
-    ComponentGrid grid;     ///< grid object.
+    bool m_usegrid = false;  ///< Enabeling grid based calculations.
+    ComponentGrid grid;      ///< grid object.
   };
 
-  enum fieldcomponent { xcomp = 0, ycomp, zcomp };
+  enum fieldcomponent {
+    xcomp = 0,
+    ycomp,
+    zcomp
+  };
 
   /// Possible readout groups
-  enum structureelectrode { NotSet = -1, Plane, Strip, Pixel };
+  enum structureelectrode {
+    NotSet = -1,
+    Plane,
+    Strip,
+    Pixel
+  };
 
   // Vectors storing the readout electrodes.
   std::vector<std::string> m_readout;
@@ -249,8 +271,7 @@ private:
   double wpPlane(const double z) {
     int im = -1;
     double epsM = -1;
-    if (!getLayer(z, im, epsM))
-      return 0.;
+    if (!getLayer(z, im, epsM)) return 0.;
     double v = 1 - (z - m_z[im - 1]) * constWEFieldLayer(im);
     for (int i = 1; i <= im - 1; i++) {
       v -= (m_z[i] - m_z[i - 1]) * constWEFieldLayer(i);
@@ -261,8 +282,7 @@ private:
 
   // electric field in layer with index "indexLayer"
   double constEFieldLayer(const int indexLayer) {
-    if (kroneckerDelta(indexLayer) == 0)
-      return 0.;
+    if (kroneckerDelta(indexLayer) == 0) return 0.;
     double invEz = 0;
     for (int i = 1; i <= m_N - 1; i++) {
       invEz += -(m_z[i] - m_z[i - 1]) * kroneckerDelta(i) / m_epsHolder[i - 1];
@@ -274,27 +294,31 @@ private:
   bool decToBinary(int n, std::vector<int> &binaryNum);
 
   // Rebuilds c, v, g and w matrix.
-  void LayerUpdate(const double z, const int im, const double epsM) {
+  void LayerUpdate(double &z, const int im, const double epsM) {
+
+    if (z == m_currentPosition) {
+
+      return;
+
+    } else {
+      m_currentPosition = z;
+    }
 
     if (im != m_currentLayer) {
       m_currentLayer = im;
-      for (int i = 0; i < im - 1; i++)
-        m_eps[i] = m_epsHolder[i];
+      for (int i = 0; i < im - 1; i++) m_eps[i] = m_epsHolder[i];
       m_eps[im - 1] = epsM;
       m_eps[im] = epsM;
-      for (int i = im + 1; i < m_N; i++)
-        m_eps[i] = m_epsHolder[i - 1];
+      for (int i = im + 1; i < m_N; i++) m_eps[i] = m_epsHolder[i - 1];
     }
 
     double diff1 = m_z[im] - z;
     double diff2 = z - m_z[im - 1];
 
-    for (int i = 0; i < im - 1; i++)
-      m_d[i] = m_dHolder[i];
+    for (int i = 0; i < im - 1; i++) m_d[i] = m_dHolder[i];
     m_d[im - 1] = diff2;
     m_d[im] = diff1;
-    for (int i = im + 1; i < m_N; i++)
-      m_d[i] = m_dHolder[i - 1];
+    for (int i = im + 1; i < m_N; i++) m_d[i] = m_dHolder[i - 1];
     // TODO::Construct c and g matrices only for im != m_currentLayer.
     constructGeometryFunction(m_N);
   };
@@ -302,5 +326,5 @@ private:
   void UpdatePeriodicity() override;
   void Reset() override;
 };
-} // namespace Garfield
+}  // namespace Garfield
 #endif
