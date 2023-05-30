@@ -190,8 +190,8 @@ class ComponentFieldMap : public Component {
   struct WeightingFieldCopy {
     // Source
     std::string source;
-    TMatrixD rot;
-    TVectorD trans;
+    TMatrixD rot = TMatrixD(3,3);
+    TVectorD trans = TVectorD(3);
   };
 
   // Weighting potential copies.
