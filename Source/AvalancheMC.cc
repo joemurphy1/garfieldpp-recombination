@@ -239,7 +239,7 @@ bool AvalancheMC::DriftNegativeIon(const double x0, const double y0,
   std::vector<std::pair<Point, Particle> > particles;
   particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
                                         Particle::NegativeIon));
-  return TransportParticles(particles, false, false, false);
+  return TransportParticles(particles, false, true, false);
 }
 
 int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
