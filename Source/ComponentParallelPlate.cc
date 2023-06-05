@@ -479,7 +479,11 @@ void ComponentParallelPlate::constructGeometryFunction(const int N) {
 }
 
 void ComponentParallelPlate::setHIntegrand() {
+#if __cplusplus > 201703L // C++20 or newer
+  auto hFunction = [=,this](double *k, double * /*p*/) {
+#else
   auto hFunction = [=](double *k, double * /*p*/) {
+#endif
     double kk = k[0];
     double z = k[1];
 
@@ -509,7 +513,12 @@ void ComponentParallelPlate::setHIntegrand() {
 }
 
 void ComponentParallelPlate::setwpPixelIntegrand() {
+
+#if __cplusplus > 201703L // C++20 or newer
+  auto intFunction = [=,this](double *k, double *p) {
+#else
   auto intFunction = [=](double *k, double *p) {
+#endif
     double kx = k[0];
     double ky = k[1];
 
@@ -541,7 +550,12 @@ void ComponentParallelPlate::setwpPixelIntegrand() {
 }
 
 void ComponentParallelPlate::setwpStripIntegrand() {
+
+#if __cplusplus > 201703L // C++20 or newer
+  auto intFunction = [=,this](double *k, double *p) {
+#else
   auto intFunction = [=](double *k, double *p) {
+#endif
     double kk = k[0];
     double x = p[0];
     double x0 = p[1];
