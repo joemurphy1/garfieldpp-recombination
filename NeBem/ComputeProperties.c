@@ -3504,6 +3504,11 @@ int WtFldPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF,
   globalF->Z = totF.Z / MyFACTOR;
 #endif
 
+  if (OptSystemChargeZero) {
+    // Respect total system charge constraint.
+    (*Potential) += WtFieldChDen[IdWtField][NbSystemChargeZero];
+  } 
+
   /*
   For weighting field, effect of KnCh is possibly zero.
   Similarly, there is no reason to respect constraint on total system charge.
