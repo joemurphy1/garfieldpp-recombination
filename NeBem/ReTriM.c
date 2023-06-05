@@ -3222,7 +3222,7 @@ int InitChargingUp(void) {
             if (debugFn)  // check electron positions, volume primitives and
                           // elements
             {
-              char elecposdbg[256], enbstr[10];
+              char elecposdbg[256], enbstr[12];
               sprintf(enbstr, "%d", electron);
               strcpy(elecposdbg, "/tmp/Electron");
               strcat(elecposdbg, enbstr);
@@ -3978,7 +3978,7 @@ int InitChargingUp(void) {
 
             if (debugFn)  // check ion positions, volume primitives and elements
             {
-              char ionposdbg[256], inbstr[10];
+              char ionposdbg[256], inbstr[12];
               sprintf(inbstr, "%d", ion);
               strcpy(ionposdbg, "/tmp/Ion");
               strcat(ionposdbg, inbstr);
