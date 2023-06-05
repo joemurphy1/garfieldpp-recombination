@@ -497,9 +497,16 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
   }
 
   // Compute the induced signal and induced charge if requested.
-  const double scale = particle == Particle::Electron
-                           ? -m_scaleE
-                           : particle == Particle::Hole ? m_scaleH : m_scaleI;
+  double scale = 1.;
+  if (particle == Particle::Electron) {
+    scale = -m_scaleE;
+  } else if (particle == Particle::Ion) {
+    scale = m_scaleI;
+  } else if (particle == Particle::Hole) {
+    scale = m_scaleH;
+  } else if (particle == Particle::NegativeIon) {
+    scale = -m_scaleI;
+  }
   if (signal) ComputeSignal(particle, scale, path);
   if (m_doInducedCharge) ComputeInducedCharge(scale, path);
 
