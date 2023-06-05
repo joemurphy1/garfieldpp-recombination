@@ -103,8 +103,8 @@ class EqualStepCoorMesh {
     return 1;
   }
 
-  EqualStepCoorMesh<T>() : q(0), xmin(0), xmax(0), step(0) {}
-  EqualStepCoorMesh<T>(long fq, T fxmin, T fxmax);
+  EqualStepCoorMesh() : q(0), xmin(0), xmax(0), step(0) {}
+  EqualStepCoorMesh(long fq, T fxmin, T fxmax);
   void print(std::ostream& file) const;
 
  private:
@@ -424,15 +424,15 @@ class PointCoorMesh {
     return 1;
   }
 
-  PointCoorMesh<T, D>(void)
+  PointCoorMesh(void)
       : q(0), xmin(0), xmax(0), x_old(0), n_old(-1), amesh(NULL) {
     ;
   }
-  PointCoorMesh<T, D>(long fq,  // number of points, number of intervals
+  PointCoorMesh(long fq,  // number of points, number of intervals
                       // is fq - 1.
                       D* famesh);  // dimension is fq and the last index is fq-1
                                    // This is the end point of the last interval
-  virtual ~PointCoorMesh<T, D>() {}
+  virtual ~PointCoorMesh() {}
   void check(void);  // check that the points are sequencial.
                      // This is also done in constructor above provided that
                      // macro CHECK_POINT_MESH is initialized.
