@@ -145,6 +145,7 @@ target_sources(
           Source/TGeoTet.cc
           Source/Track.cc
           Source/TrackBichsel.cc
+          Source/TrackDegrade.cc
           Source/TrackElectron.cc
           Source/TrackHeed.cc
           Source/TrackPAI.cc
