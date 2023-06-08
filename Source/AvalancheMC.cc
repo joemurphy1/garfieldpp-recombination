@@ -599,6 +599,11 @@ bool AvalancheMC::ResumeAvalanche(const bool electrons, const bool holes) {
       particles.push_back(std::make_pair(p.path.back(), Particle::Ion));
     } 
   }
+  for (const auto& p: m_negativeIons) {
+    if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) {
+      particles.push_back(std::make_pair(p.path.back(), Particle::NegativeIon));
+    } 
+  }
   return TransportParticles(particles, electrons, holes, true);
 }
 
@@ -614,10 +619,12 @@ bool AvalancheMC::TransportParticles(
   m_electrons.clear();
   m_holes.clear();
   m_ions.clear();
+  m_negativeIons.clear();
 
   // Make sure the sensor is defined.
   if (!m_sensor) {
-    std::cerr << m_className << "::Avalanche: Sensor is not defined.\n";
+    std::cerr << m_className 
+              << "::TransportParticles: Sensor is not defined.\n";
     return false;
   }
 
@@ -629,13 +636,13 @@ bool AvalancheMC::TransportParticles(
       ++m_nElectrons;
     } else if (particle.second == Particle::Hole) {
       ++m_nHoles;
-    } else {
+    } else if (particle.second == Particle::Ion) {
       ++m_nIons;
     }
   }
 
   if (!withH && !withE) {
-    std::cerr << m_className + "::Avalanche: "
+    std::cerr << m_className + "::TransportParticles: "
               << "Neither electron nor hole/ion component requested.\n";
   }
 
@@ -660,8 +667,13 @@ bool AvalancheMC::TransportParticles(
         m_electrons.push_back(std::move(p));
       } else if (particle.second == Particle::Hole) {
         m_holes.push_back(std::move(p));
-      } else {
+      } else if (particle.second == Particle::Ion) {
         m_ions.push_back(std::move(p));
+      } else if (particle.second == Particle::NegativeIon) {
+        m_negativeIons.push_back(std::move(p));
+      } else {
+        std::cerr << m_className 
+                  << "::TransportParticles: Unexpected particle type.\n";
       }
     }
     particles.swap(secondaries);
@@ -748,7 +760,8 @@ bool AvalancheMC::GetVelocity(const Particle particle, Medium* medium,
   }
   if (m_debug) {
     std::cout << m_className << "::GetVelocity: Velocity at " << PrintVec(x)
-              << " = " << PrintVec(v) << "\n";
+//              << " = " << PrintVec(v) << "\n";
+                << " = " << v[0] << ", " << v[1] << ", " << v[2] << "\n";
   }
   return true;
 }
