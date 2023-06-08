@@ -73,6 +73,9 @@ class AvalancheMC {
   const std::vector<EndPoint>& GetElectrons() const { return m_electrons; }
   const std::vector<EndPoint>& GetHoles() const { return m_holes; }
   const std::vector<EndPoint>& GetIons() const { return m_ions; }
+  const std::vector<EndPoint>& GetNegativeIons() const { 
+    return m_negativeIons; 
+  }
 
   /** Return the number of electron trajectories in the last
    * simulated avalanche (including captured electrons). */
@@ -239,8 +242,10 @@ class AvalancheMC {
   /// Start/end points of all holes in the avalanche 
   /// (including captured ones).
   std::vector<EndPoint> m_holes;
-  /// Start/end points of all ions in the avalanche.
+  /// Start/end points of all positive ions in the avalanche.
   std::vector<EndPoint> m_ions;
+  /// Start/end points of all negative ions in the avalanche.
+  std::vector<EndPoint> m_negativeIons;
 
   ViewDrift* m_viewer = nullptr;
 
