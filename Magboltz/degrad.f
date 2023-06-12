@@ -506,6 +506,42 @@ C      CALL OUTPUT
 C      GO TO 1
   99  RETURN
       END
+      SUBROUTINE GETIE(E, IE) BIND(C, name="getie")
+      IMPLICIT REAL*8 (A-H,O-Z)
+      IMPLICIT INTEGER*8 (I-N)
+      COMMON/INPT/NGAS,NSTEP,NANISO,EFINAL,ESTEP,AKT,ARY,TEMPC,TORR,IPEN
+***   Varying energy steps.
+      IF(EFINAL.LE.140000.) THEN
+        ESTEP1=(EFINAL-16000.0)/DFLOAT(4000)
+      ELSE
+        ESTEP1=20.0
+        ESTEP2=(EFINAL-92000.0)/DFLOAT(4000)
+      ENDIF
+      IF(IMIP.EQ.1) THEN                                     
+       IE=DINT(E/ESTEP)+1                                               
+      ELSE
+       IF(EFINAL.LE.20000.) THEN
+        IE=DINT(E/ESTEP)+1
+       ELSE IF(EFINAL.LE.140000.) THEN
+        IF(E.LE.16000.) THEN
+         IE=DINT(E)+1
+        ELSE
+         IE=16000+DINT((E-16000.)/ESTEP1)
+        ENDIF
+       ELSE
+        IF(E.LE.12000.) THEN
+         IE=DINT(E)+1
+        ELSE IF(E.LE.92000.) THEN
+         IE=12000+DINT((E-12000.)/ESTEP1)
+        ELSE
+         IE=16000+DINT((E-92000.)/ESTEP2)
+        ENDIF
+       ENDIF
+      ENDIF 
+      J20000=20000 
+      IE=DMIN0(IE,J20000)
+      RETURN
+      END
       SUBROUTINE GETTCF(IE, TCFF) BIND(C, name="gettcf")
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)                                         
@@ -514,9 +550,16 @@ C      GO TO 1
       TCFF=TCF(IE)
       RETURN
       END
-      SUBROUTINE GETLEVEL(IE, R1, JZBR, RGAS1, EIN1, IA, WPL1, INDEX1,
-     /AN1,PS1,WKLM1,NC00,EC00,NG01,EG01,NG02,EG02,
-     /DFL) BIND(C, name="getlevel")
+      SUBROUTINE GETTCFN(IE, TCFNN) BIND(C, name="gettcfn")
+      IMPLICIT REAL*8 (A-H,O-Z)
+      IMPLICIT INTEGER*8 (I-N)                                         
+      COMMON/LARGEN/CFN(20000,60),TCFN(20000),SCLENUL(60),NPLAST    
+      TCFNN=TCFN(IE)
+      RETURN
+      END
+      SUBROUTINE GETLEVEL(IE,R1,JZBR,RGAS1,EIN1,IA,WPL1,INDEX1,
+     /AN1,PS1,WKLM1,NC00,EC00,NG01,EG01,NG02,EG02,DFL,JPN,KG1,LG1,
+     /IGSHEL,IONMDL,ILVL) BIND(C, name="getlevel")
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)                                         
       COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),
@@ -525,6 +568,8 @@ C      GO TO 1
       COMMON/COMP/LCMP,LCFLG,LRAY,LRFLG,LPAP,LPFLG,LBRM,LBFLG,LPEFLG
       COMMON/IONFL/NC0(512),EC0(512),NG1(512),EG1(512),NG2(512),
      /EG2(512),WKLM(512),DSTFL(512)
+      COMMON/ECASC/NEGAS(512),LEGAS(512),IESHELL(512),IECASC            
+      COMMON/IONMOD/ESPLIT(512,20),IONMODEL(512)
 *** Determine the collision type.
       I=0
    11 I=I+1 
@@ -545,7 +590,57 @@ C      GO TO 1
       NG02=NG2(I)
       EG02=EG2(I)
       DFL=DSTFL(I)
+      JPN=IPN(I)
+      KG1=NEGAS(I)
+      LG1=LEGAS(I)
+      IGSHEL=IESHELL(I)
+      IONMDL=IONMODEL(I)
+      ILVL=I
       RETURN
+      END
+      SUBROUTINE GETEBREM(K, EE, XE, YE, ZE, TE, DXE, DYE, DZE, IOK)
+     /BIND(C, name="getebrem")
+      IMPLICIT REAL*8 (A-H,O-Z)
+      IMPLICIT INTEGER*8 (I-N)
+      COMMON/CASRSB/ECASB(400),XCASB(400),YCASB(400),ZCASB(400),
+     /DRXB(400),DRYB(400),DRZB(400),TTB1(400),NFLGFB(400),NFLGPPB(400),
+     /IEVNTLB
+      IF(K.GT.IEVNTLB) THEN
+        IOK=0
+      ELSE
+        IOK=1
+        EE=ECASB(K)
+        XE=XCASB(K)
+        YE=YCASB(K)
+        ZE=ZCASB(K)
+        TE=TTB1(K)
+        DXE=DRXB(K)
+        DYE=DRYB(K)
+        DZE=DRZB(K)
+      ENDIF
+      RETURN 
+      END
+      SUBROUTINE GETECASC(K, EE, XE, YE, ZE, TE, DXE, DYE, DZE, IOK)
+     /BIND(C, name="getecasc")
+      IMPLICIT REAL*8 (A-H,O-Z)
+      IMPLICIT INTEGER*8 (I-N)
+      COMMON/CASRSE/ECASE(400),XCASE(400),YCASE(400),ZCASE(400),
+     /DRXCE(400),DRYCE(400),DRZCE(400),TCASE(400),
+     /NFLGFE(400),NFLGPPE(400),IEVENTE
+      IF(K.GT.IEVENTE) THEN
+        IOK=0
+      ELSE
+        IOK=1
+        EE=ECASE(K)
+        XE=XCASE(K)
+        YE=YCASE(K)
+        ZE=ZCASE(K)
+        TE=TCASE(K)
+        DXE=DRXCE(K)
+        DYE=DRYCE(K)
+        DZE=DRZCE(K)
+      ENDIF
+      RETURN 
       END
 C      PROGRAM DEGRADE                                                   
       SUBROUTINE DEGRADE() BIND(C, name="degrade")
@@ -24300,6 +24395,7 @@ C     ENDIF
       RETURN     
       END         
       SUBROUTINE BREMSCASC(J11,EGAMMA,X0,Y0,Z0,T0,GDCX,GDCY,GDCZ,ILOW)
+     /BIND(C, name="bremscasc")
       IMPLICIT REAL*8(A-H,O-Z)
       IMPLICIT INTEGER*8(I-N)
       CHARACTER*6 SCR(17),SCR1(17)
@@ -25992,6 +26088,7 @@ C NO MORE TRANSITIONS POSSIBLE
       STOP 
       END
       SUBROUTINE CASCADEE(J11,KGAS,LGAS,X0,Y0,Z0,T0,EINIT,ISHELL)
+     /BIND(C, name="cascadee")
       IMPLICIT REAL*8(A-H,O-Z)
       IMPLICIT INTEGER*8(I-N)
       CHARACTER*6 SCR(17),SCR1(17)
@@ -27892,7 +27989,7 @@ C     ENDIF
       ENDIF
       RETURN     
       END         
-      SUBROUTINE IONSPLIT(I,E,EI,ESEC)
+      SUBROUTINE IONSPLIT(I,E,EI,ESEC) BIND(C, name="ionsplit")
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)
       COMMON/IONMOD/ESPLIT(512,20),IONMODEL(512)

@@ -24,19 +24,34 @@ void deginit(int64_t* ng, int64_t* nevt, int64_t* mip,
              double* etot, double* btot, double* bang,
              int64_t* jcmp, int64_t* jray, int64_t* jpap, 
              int64_t* jbrm, int64_t* jecasc, int64_t* iverb);
+void getie(double* e, int64_t* ie);
 void gettcf(int64_t* ie, double* tcf);
+void gettcfn(int64_t* ie, double* tcfn);
 void getlevel(int64_t* ie, double* r1, int64_t* izbr, double* rgas, 
               double* ein, int64_t* ia, double* wpl, int64_t* index, 
               double* an, double* ps, double* wklm, 
               int64_t* nc0, double* ec0, int64_t* ng1, double* eg1, 
-              int64_t* ng2, double* eg2, double* dstfl);
+              int64_t* ng2, double* eg2, double* dstfl, int64_t* jpn,
+              int64_t* kg1, int64_t* lg1, int64_t* igshel, 
+              int64_t* ionmdl, int64_t* ilvl);
+void getebrem(int64_t* k, double* ee, double* xe, double* ye, double* ze, 
+              double* te, double* dxe, double* dye, double* dze, int64_t* iok);
+void getecasc(int64_t* k, double* ee, double* xe, double* ye, double* ze, 
+              double* te, double* dxe, double* dye, double* dze, int64_t* iok);
 void degrade();
 void brems(int64_t* iz, double* ein, double* dx, double* dy, double* dz,
            double* eout, double* dxe, double* dye, double* dze,
            double* egamma, double* dxg, double* dyg, double* dzg);
+void bremscasc(int64_t* j11, double* egamma, 
+               double* x0, double* y0, double* z0, double* t0, 
+               double* gdcx, double* gdcy, double* gdcz, int64_t* ilow);
+void cascadee(int64_t* j11, int64_t* kgas, int64_t* lgas,
+              double* x0, double* y0, double* z0, double* t0, 
+              double* einit, int64_t* ishell);
 void drcos(double* drx, double* dry, double* drz, 
            double* theta, double* phi,
            double* drxx, double* dryy, double* drzz);
+void ionsplit(int64_t* i, double* e, double* ei, double* esec);
 }
 }
 }
