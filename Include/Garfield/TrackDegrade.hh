@@ -53,6 +53,9 @@ class TrackDegrade : public Track {
   bool m_bremsStrahlung = true;
   bool m_fullCascade = true;
 
+  double m_mediumDensity = -1.;
+  std::string m_mediumName = "";
+
   std::vector<Electron> TransportDeltaElectron(
       const double x0, const double y0, const double z0, const double t0,
       const double e0, const double dx, const double dy, const double dz);

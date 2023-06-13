@@ -58,7 +58,15 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
     std::cerr << m_className << "::NewTrack: No medium at initial position.\n";
     return false;
   }
-  if (!Initialise(medium, m_debug)) return false;
+  // Check if the medium has changed since the last call.
+  if (medium->GetName() != m_mediumName ||
+      fabs(medium->GetMassDensity() - m_mediumDensity) > 1.e-9) {
+    m_isChanged = true;
+  }
+  if (m_isChanged) {
+    if (!Initialise(medium, m_debug)) return false;
+    m_isChanged = false;
+  }
 
   double xp = x0;
   double yp = y0;
@@ -264,7 +272,6 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
         // Penning transfer distance.
         double asign = 1.;
         if (RndmUniform() < 0.5) asign = -asign;
-        // TODO: why penfra2 * 1.D-6?
         const double xs = xp - log(RndmUniformPos()) * penfra2 * asign;
         if (RndmUniform() < 0.5) asign = -asign;
         const double ys = yp - log(RndmUniformPos()) * penfra2 * asign;
@@ -299,16 +306,16 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
     double cphi0 = cos(phi0);
     if (ep < ein) ein = 0.;
     double arg1 = std::max(1. - s1 * ein / ep, 1.e-20);
-    double d = 1. - cthetap * sqrt(arg1);
+    const double d = 1. - cthetap * sqrt(arg1);
     double e1 = std::max(ep * (1. - ein / (s1 * ep) - 2. * d / s2), 1.e-20);
-    double q = std::min(sqrt((ep / e1) * arg1) / s1, 1.); 
-    double theta = asin(q * sthetap);
+    const double q = std::min(sqrt((ep / e1) * arg1) / s1, 1.); 
+    const double theta = asin(q * sthetap);
     double ctheta = cos(theta);
     if (cthetap < 0.) {
-      double u = (s1 - 1.) * (s1 - 1.) / arg1;
+      const double u = (s1 - 1.) * (s1 - 1.) / arg1;
       if (cthetap * cthetap > u) ctheta = -ctheta;
     }
-    double stheta = sin(theta);
+    const double stheta = sin(theta);
     double dx1 = dxp;
     double dy1 = dyp;
     double dz1 = std::min(dzp, 1.);
@@ -319,8 +326,8 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
       dyp = sphi0 * stheta;
     } else {
       dzp = dz1 * ctheta + argz * stheta * sphi0;
-      dyp = dy1 * ctheta + (stheta/argz) * (dx1 * cphi0 - dy1 * dz1 * sphi0);
-      dxp = dx1 * ctheta - (stheta/argz) * (dy1 * cphi0 + dx1 * dz1 * sphi0);
+      dyp = dy1 * ctheta + (stheta / argz) * (dx1 * cphi0 - dy1 * dz1 * sphi0);
+      dxp = dx1 * ctheta - (stheta / argz) * (dy1 * cphi0 + dx1 * dz1 * sphi0);
     }
     ep = e1;
   }
@@ -405,6 +412,9 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
                    &frac[0], &frac[1], &frac[2], &frac[3], &frac[4], &frac[5],
                    &temperature, &pressure, &etot, &btot, &bang,
                    &jcmp, &jray, &jpap, &jbrm, &jecasc, &iverb);
+
+  m_mediumName = medium->GetName();
+  m_mediumDensity = medium->GetMassDensity();
   return true;
 }
 
@@ -420,6 +430,11 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
 
   // Based on MONTEFE subroutine.
 
+  if (!m_sensor) {
+    std::cerr << m_className << "::TransportDeltaElectron: "
+              << "Sensor is not defined.\n";
+    return {};
+  }
   // TODO:
   double ethrm = 2.;
 
@@ -483,7 +498,7 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
         const double gamma2 = (ElectronMass + e2) / ElectronMass;
         // const double gamma12 = 0.5 * (gamma1 + gamma2);
         const double beta2 = sqrt(1. - 1. / (gamma2 * gamma2));
-        double c6 = beta1 / beta2;
+        const double c6 = beta1 / beta2;
         double dx2 = dx1 * c6;
         double dy2 = dy1 * c6;
         double dz2 = dz1 * c6;
@@ -493,7 +508,10 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
         double z2 = z1 + dz1 * a;
         double t2 = t1 + dt;
 
-        // TODO: not inside? Break.
+        if (!m_sensor->IsInside(x2, y2, z2)) {
+          // Endpoint of the free-flight step is outside the active area.
+          break;
+        }
         x1 = x2;
         y1 = y2;
         z1 = z2;
@@ -721,8 +739,10 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
         const double q = std::min(sqrt((e2/ e1) * arg1) / s1, 1.);
         const double theta = asin(q * sin(theta0));
         double ctheta = cos(theta);
-        const double u = (s1 - 1.) * (s1 - 1.) / arg1;
-        if (ctheta0 < 0. && ctheta0 * ctheta0 > u) ctheta = -1. * ctheta;
+        if (ctheta0 < 0.) {
+          const double u = (s1 - 1.) * (s1 - 1.) / arg1;
+          if (ctheta0 * ctheta0 > u) ctheta = -ctheta;
+        }
         double stheta = sin(theta);
         dz2 = std::min(dz2, 1.);
         const double argz = sqrt(dx2 * dx2 + dy2 * dy2);
