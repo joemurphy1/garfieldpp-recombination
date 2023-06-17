@@ -830,8 +830,8 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
 }
 
 void TrackDegrade::SetupPenning(Medium* medium,
-                                std::array<double, 6> rP,
-                                std::array<double, 6> dP) {
+                                std::array<double, 6>& rP,
+                                std::array<double, 6>& dP) {
   rP.fill(0.);
   dP.fill(0.); 
   auto gas = dynamic_cast<MediumGas*>(medium);

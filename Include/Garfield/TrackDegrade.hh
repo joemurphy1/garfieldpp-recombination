@@ -66,8 +66,8 @@ class TrackDegrade : public Track {
       const double x0, const double y0, const double z0, const double t0,
       const double e0, const double dx, const double dy, const double dz);
 
-  void SetupPenning(Medium* medium, std::array<double, 6> rP,
-                    std::array<double, 6> dP); 
+  void SetupPenning(Medium* medium, std::array<double, 6>& rP,
+                    std::array<double, 6>& dP); 
 };
 }
 
