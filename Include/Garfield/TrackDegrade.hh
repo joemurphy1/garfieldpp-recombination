@@ -1,6 +1,8 @@
 #ifndef G_TRACK_DEGRADE_H
 #define G_TRACK_DEGRADE_H
 
+#include <array>
+
 #include "Track.hh"
 
 namespace Garfield {
@@ -49,16 +51,23 @@ class TrackDegrade : public Track {
   std::vector<Cluster> m_clusters;
   size_t m_cluster = 0;
 
-  bool m_penning = false;
+  bool m_penning = true;
   bool m_bremsStrahlung = true;
   bool m_fullCascade = true;
 
   double m_mediumDensity = -1.;
   std::string m_mediumName = "";
+  unsigned int m_nGas = 0;
+ 
+  std::array<double, 6> m_rPenning;
+  std::array<double, 6> m_dPenning;
 
   std::vector<Electron> TransportDeltaElectron(
       const double x0, const double y0, const double z0, const double t0,
       const double e0, const double dx, const double dy, const double dz);
+
+  void SetupPenning(Medium* medium, std::array<double, 6> rP,
+                    std::array<double, 6> dP); 
 };
 }
 

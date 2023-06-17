@@ -1,7 +1,9 @@
 #include <iostream>
+#include <cstdio>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/MediumGas.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
@@ -67,7 +69,11 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
     if (!Initialise(medium, m_debug)) return false;
     m_isChanged = false;
   }
-
+  SetupPenning(medium, m_rPenning, m_dPenning);
+  const double eMinIon = Degrade::ionpot();
+  if (m_debug) {
+    std::cout << "    Ionisation potential: " << eMinIon << " eV.\n";
+  } 
   double xp = x0;
   double yp = y0;
   double zp = z0;
@@ -250,12 +256,24 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
       m_clusters.push_back(std::move(cluster));
     } else if (ia ==  4 || ia ==  9 || ia == 14 || ia == 19 || 
                ia == 24 || ia == 29) {
-      // Excitation
-      // TODO: PENFRA(1,I), PENFRA(2,I), PENFRA(3,I)
-      constexpr double penfra1 = 0.;
-      constexpr double penfra2 = 0.;
+      // Excitation.
+      const double eExc = rgas * ein;
+      // Find the gas in which the excitation occured.
+      int64_t igas = 0;
+      Degrade::getgas(&ilvl, &igas);
+      if (igas <= 0 || igas >= 6) {
+        std::cerr << m_className << "::NewTrack: " 
+                  << "Could not retrieve gas index.\n";
+        igas = 0;
+      } else {
+        igas -= 1;
+      }
+      const double penfra1 = m_rPenning[igas];
+      const double penfra2 = m_dPenning[igas];
       constexpr double penfra3 = 0.;
-      if (m_penning && penfra1 > 0. && RndmUniform() < penfra1) {
+      const bool penning = m_penning && eExc > eMinIon && 
+                           penfra1 > 0. && m_nGas > 1;
+      if (penning && RndmUniform() < penfra1) {
         // Penning transfer
         Cluster cluster;
         cluster.x = xp;
@@ -397,7 +415,7 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
   int64_t iseed = 0;
   double e0 = GetKineticEnergy();
   double et = 2.;
-  double ec = 10.;
+  double ec = 10000.;
   double etot = 100.;
   double btot = 0.;
   double bang = 90.;
@@ -405,7 +423,7 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
   int64_t jray = 1;
   int64_t jpap = 1;
   int64_t jbrm = m_bremsStrahlung ? 1 : 0;
-  int64_t jecasc = 1;
+  int64_t jecasc = m_fullCascade ? 1 : 0;
   int64_t iverb = verbose ? 1 : 0;
   Degrade::deginit(&ng, &ne, &mip, &idvec, &iseed, &e0, &et, &ec,
                    &ngas[0], &ngas[1], &ngas[2], &ngas[3], &ngas[4], &ngas[5],
@@ -415,6 +433,7 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
 
   m_mediumName = medium->GetName();
   m_mediumDensity = medium->GetMassDensity();
+  m_nGas = nComponents;
   return true;
 }
 
@@ -435,6 +454,12 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
               << "Sensor is not defined.\n";
     return {};
   }
+
+  const double eMinIon = Degrade::ionpot();
+  if (m_debug) {
+    std::cout << "    Ionisation potential: " << eMinIon << " eV.\n";
+  } 
+
   // TODO:
   double ethrm = 2.;
 
@@ -592,10 +617,22 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
           break;
         } else if (ipn == 0) {
           // Excitation.
-          constexpr double penfra1 = 0.;
-          constexpr double penfra2 = 0.;
+          const double eExc = rgas * ein;
+          // Find the gas in which the excitation occured.
+          int64_t igas = 0;
+          Degrade::getgas(&ilvl, &igas);
+          if (igas <= 0 || igas >= 6) {
+            std::cerr << m_className << "::TransportDeltaElectron: "
+                      << "Could not retrieve gas index.\n";
+            igas = 0;
+          } else {
+            igas -= 1;
+          }
+          const double penfra1 = m_rPenning[igas];
+          const double penfra2 = m_dPenning[igas];
           constexpr double penfra3 = 0.;
-          const bool penning = m_penning && penfra1 > 0.; // TODO: && nGas > 1
+          const bool penning = m_penning && eExc > eMinIon && 
+                               penfra1 > 0. && m_nGas > 1;
           if (penning && RndmUniform() < penfra1) {
             // Penning transfer.
             double xs = x2;
@@ -615,8 +652,8 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
             newDeltas.emplace_back(
               MakeElectron(1., xs, ys, zs, ts, dx1, dy1, dz1));
          } else {
-            if ((rgas * ein) > 4.0) {
-              // Find gas in which excitation occured and increment counter.
+            if (eExc > 4.0) {
+              // Increment counter.
               // TODO
               // Store excitation x, y, z, t.
             }
@@ -790,6 +827,24 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
     newDeltas.clear();
   }
   return thermalisedElectrons;
+}
+
+void TrackDegrade::SetupPenning(Medium* medium,
+                                std::array<double, 6> rP,
+                                std::array<double, 6> dP) {
+  rP.fill(0.);
+  dP.fill(0.); 
+  auto gas = dynamic_cast<MediumGas*>(medium);
+  if (!gas) return;
+  const unsigned int nComponents = medium->GetNumberOfComponents();
+  if (m_debug) std::cout << m_className << "::SetupPenning:\n";
+  for (unsigned int i = 0; i < nComponents; ++i) {
+    std::string name;
+    double f;
+    medium->GetComponent(i, name, f);
+    gas->GetPenningTransfer(name, rP[i], dP[i]);
+    if (m_debug) std::printf("  %-15s %5.3f\n", name.c_str(), rP[i]);
+  }
 }
 
 }
