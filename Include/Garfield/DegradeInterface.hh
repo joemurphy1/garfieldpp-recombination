@@ -35,6 +35,7 @@ void getlevel(int64_t* ie, double* r1, int64_t* izbr, double* rgas,
               int64_t* kg1, int64_t* lg1, int64_t* igshel, 
               int64_t* ionmdl, int64_t* ilvl);
 void getgas(int64_t* ilvl, int64_t* igas);
+double ionpot();
 void getebrem(int64_t* k, double* ee, double* xe, double* ye, double* ze, 
               double* te, double* dxe, double* dye, double* dze, int64_t* iok);
 void getecasc(int64_t* k, double* ee, double* xe, double* ye, double* ze, 

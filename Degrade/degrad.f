@@ -619,6 +619,21 @@ C      GO TO 1
       ENDIF
       RETURN
       END
+      DOUBLE PRECISION FUNCTION IONPOT() BIND(C, name="ionpot")
+      IMPLICIT REAL*8 (A-H,O-Z)
+      IMPLICIT INTEGER*8 (I-N)                                         
+      COMMON/IONC/DOUBLE(6,20000),CMINIXSC(6),CMINEXSC(6),ECLOSS(6),
+     /WPLN(6),ICOUNT,AVPFRAC(3,6)
+      COMMON/INPT/NGAS,NSTEP,NANISO,EFINAL,ESTEP,AKT,ARY,TEMPC,TORR,IPEN
+*** Determine the smallest ionisation potential in the mixture.
+      IONPOT=ECLOSS(1)
+      DO I=1,NGAS
+       IF(ECLOSS(I).LT.IONPOT) THEN
+        IONPOT=ECLOSS(I)
+       ENDIF
+      END DO
+      RETURN 
+      END FUNCTION
       SUBROUTINE GETEBREM(K, EE, XE, YE, ZE, TE, DXE, DYE, DZE, IOK)
      /BIND(C, name="getebrem")
       IMPLICIT REAL*8 (A-H,O-Z)
