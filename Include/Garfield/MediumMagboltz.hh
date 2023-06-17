@@ -120,9 +120,12 @@ class MediumMagboltz : public MediumGas {
                                              unsigned int& nSuperelastic) const;
   /// Get the number of cross-section terms.
   unsigned int GetNumberOfLevels();
-  /// Get detailed information about a given cross-section term i
+  /// Get detailed information about a given cross-section term i.
   bool GetLevel(const unsigned int i, int& ngas, int& type, std::string& descr,
                 double& e);
+  /// Get the Penning transfer probability and distance of a specific level. 
+  bool GetPenningTransfer(const unsigned int i, double& r, double& lambda);
+
   /// Get the number of collisions for a specific cross-section term.
   unsigned int GetNumberOfElectronCollisions(const unsigned int level) const;
 

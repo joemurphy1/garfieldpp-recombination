@@ -2654,6 +2654,29 @@ void MediumGas::DisablePenningTransfer() {
   AdjustTownsendCoefficient();
 }
 
+bool MediumGas::GetPenningTransfer(const std::string& gasname,
+                                   double& r, double& lambda) {
+
+  r = 0.;
+  lambda = 0.;
+  // Get the "standard" name of this gas.
+  const std::string gas = GetGasName(gasname);
+  if (gas.empty()) {
+    std::cerr << m_className << "::GetPenningTransfer: Unknown gas name.\n";
+    return false;
+  }
+  for (unsigned int i = 0; i < m_nComponents; ++i) {
+    if (m_gas[i] == gas) {
+      r = m_rPenningGas[i];
+      lambda = m_lambdaPenningGas[i];
+      return true;
+    }
+  }
+  std::cerr << m_className << "::GetPenningTransfer: " << gasname
+            << " is not part of the mixture.\n";
+  return false;
+}
+
 void MediumGas::GetIonisationLevel(const size_t level, std::string& label, 
                                    double& energy) const {
   if (level >= m_ionLevels.size()) {

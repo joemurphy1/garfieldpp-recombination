@@ -60,6 +60,11 @@ class MediumGas : public Medium {
   /// Switch the simulation of Penning transfers off for a given component.
   virtual bool DisablePenningTransfer(std::string gasname);
 
+  /// Retrieve the Penning transfer probability and distance for a 
+  /// specific component.
+  bool GetPenningTransfer(const std::string& gasname, 
+                          double& r, double& lambda);
+
   /// Print information about the present gas mixture and available data.
   virtual void PrintGas();
   /// Print a list of all available gases.

@@ -1064,6 +1064,17 @@ bool MediumMagboltz::GetLevel(const unsigned int i, int& ngas, int& type,
   return true;
 }
 
+bool MediumMagboltz::GetPenningTransfer(const unsigned int i, 
+                                        double& r, double& lambda) {
+  r = 0.;
+  lambda = 0.;
+  if (!Update()) return false;
+  if (i >= m_nTerms) return false;
+  r = m_rPenning[i];
+  lambda = m_lambdaPenning[i];
+  return true; 
+}
+
 unsigned int MediumMagboltz::GetNumberOfElectronCollisions(
     const unsigned int level) const {
   if (level >= m_nTerms) {
