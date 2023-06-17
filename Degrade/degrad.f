@@ -598,6 +598,27 @@ C      GO TO 1
       ILVL=I
       RETURN
       END
+      SUBROUTINE GETGAS(ILVL,IGAS) BIND(C, name="getgas")
+      IMPLICIT REAL*8 (A-H,O-Z)
+      IMPLICIT INTEGER*8 (I-N)                                         
+      COMMON/IDEXC/NGEXC1,NGEXC2,NGEXC3,NGEXC4,NGEXC5,NGEXC6,IDG1,IDG2,
+     /IDG3,IDG4,IDG5,IDG6 
+      IGAS=0
+      IF(ILVL.LE.IDG1) THEN 
+       IGAS=1
+      ELSE IF(ILVL.LE.IDG2) THEN
+       IGAS=2
+      ELSE IF(ILVL.LE.IDG3) THEN
+       IGAS=3
+      ELSE IF(ILVL.LE.IDG4) THEN
+       IGAS=4
+      ELSE IF(ILVL.LE.IDG5) THEN
+       IGAS=5
+      ELSE IF(ILVL.LE.IDG6) THEN
+       IGAS=6
+      ENDIF
+      RETURN
+      END
       SUBROUTINE GETEBREM(K, EE, XE, YE, ZE, TE, DXE, DYE, DZE, IOK)
      /BIND(C, name="getebrem")
       IMPLICIT REAL*8 (A-H,O-Z)
