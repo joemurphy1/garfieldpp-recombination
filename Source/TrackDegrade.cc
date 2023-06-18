@@ -434,11 +434,20 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
     std::cerr << m_className << "::Initialise: Invalid gas mixture.\n";
     return false;
   }
+  std::vector<unsigned int> notdone = {
+    13, 17, 20, 22, 24, 26, 27, 28, 32, 33, 37, 38, 39, 40, 41, 42, 43,
+    50, 51, 53, 54, 55, 56, 57}; 
   for (unsigned int i = 0; i < nComponents; ++i) {
     std::string name;
     double f;
     medium->GetComponent(i, name, f);
     ngas[i] = MediumMagboltz::GetGasNumberMagboltz(name);
+    if (std::find(notdone.begin(), notdone.end(), ngas[i]) != notdone.end()) {
+      std::cerr << m_className << "::Initialise:\n"
+                << "    Cross-sections for " << name 
+                << " are not yet implemented.\n";
+      return false;
+    }
     frac[i] = 100. * f;
   }
 
@@ -448,7 +457,7 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
   int64_t idvec = 1;
   int64_t iseed = 0;
   double e0 = GetKineticEnergy();
-  double et = 2.;
+  double et = m_ethr;
   double ec = 10000.;
   double etot = 100.;
   double btot = 0.;
