@@ -47,6 +47,9 @@ class TrackDegrade : public Track {
 
   bool Initialise(Medium* medium, const bool verbose = false);
 
+  void EnableBremsstrahlung(const bool on = true) { m_bremsStrahlung = on; }
+  void EnableFullCascade(const bool on = true) { m_fullCascade = on; }
+
  protected:
   std::vector<Cluster> m_clusters;
   size_t m_cluster = 0;
@@ -55,7 +58,8 @@ class TrackDegrade : public Track {
   bool m_bremsStrahlung = true;
   bool m_fullCascade = true;
 
-  double m_mediumDensity = -1.;
+  double m_pressure = -1.;
+  double m_temperature = -1.;
   std::string m_mediumName = "";
   unsigned int m_nGas = 0;
  
@@ -67,7 +71,8 @@ class TrackDegrade : public Track {
       const double e0, const double dx, const double dy, const double dz);
 
   void SetupPenning(Medium* medium, std::array<double, 6>& rP,
-                    std::array<double, 6>& dP); 
+                    std::array<double, 6>& dP);
+  bool IsInside(const double x, const double y, const double z); 
 };
 }
 

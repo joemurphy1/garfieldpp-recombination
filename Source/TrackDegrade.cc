@@ -62,7 +62,8 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
   }
   // Check if the medium has changed since the last call.
   if (medium->GetName() != m_mediumName ||
-      fabs(medium->GetMassDensity() - m_mediumDensity) > 1.e-9) {
+      fabs(medium->GetPressure() - m_pressure) > 1.e-4 ||
+      fabs(medium->GetTemperature() - m_temperature) > 1.e-4) {
     m_isChanged = true;
   }
   if (m_isChanged) {
@@ -95,8 +96,7 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
   }
   // Get the total collision rate.
   int64_t ie = 20000;
-  double tcf = 0.;
-  Degrade::gettcf(&ie, &tcf);
+  double tcf = Degrade::gettcf(&ie);
   // Convert to ns-1.
   tcf *= 1.e3;
   double beta = GetBeta();
@@ -118,7 +118,7 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
     yp += dyp * step;
     zp += dzp * step;
     tp += dt;
-    if (!m_sensor->IsInside(xp, yp, zp)) break;
+    if (!IsInside(xp, yp, zp)) break;
     // Reset the scattering angle.
     double cthetap = -99.;
     double sthetap = -99.;
@@ -259,8 +259,7 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
       // Excitation.
       const double eExc = rgas * ein;
       // Find the gas in which the excitation occured.
-      int64_t igas = 0;
-      Degrade::getgas(&ilvl, &igas);
+      int64_t igas = Degrade::getgas(&ilvl);
       if (igas <= 0 || igas >= 6) {
         std::cerr << m_className << "::NewTrack: " 
                   << "Could not retrieve gas index.\n";
@@ -432,7 +431,8 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
                    &jcmp, &jray, &jpap, &jbrm, &jecasc, &iverb);
 
   m_mediumName = medium->GetName();
-  m_mediumDensity = medium->GetMassDensity();
+  m_pressure = medium->GetPressure();
+  m_temperature = medium->GetTemperature();
   m_nGas = nComponents;
   return true;
 }
@@ -466,10 +466,8 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
   // Calculate maximum collision frequency.
   double flim = 0.;
   for (int64_t j = 1; j <= 20000; ++j) { 
-    double tcf = 0.;
-    Degrade::gettcf(&j, &tcf);
-    double tcfn = 0.;
-    Degrade::gettcfn(&j, &tcfn);
+    double tcf = Degrade::gettcf(&j);
+    double tcfn = Degrade::gettcfn(&j);
     flim = std::max(flim, tcf + tcfn);
   }
   // Convert to ns-1.
@@ -504,11 +502,9 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
         // TODO: electric field.
         double e2 = e1;
         if (e2 < 0.) e2 = 0.001;
-        int64_t ie = 1;
-        Degrade::getie(&e2, &ie);
+        int64_t ie = Degrade::getie(&e2);
         // Test for real or null collision.
-        double tcf = 0.;
-        Degrade::gettcf(&ie, &tcf);
+        double tcf = Degrade::gettcf(&ie);
         // Convert to ns-1.
         tcf *= 1.e3;
         const double r5 = RndmUniform();
@@ -619,8 +615,7 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
           // Excitation.
           const double eExc = rgas * ein;
           // Find the gas in which the excitation occured.
-          int64_t igas = 0;
-          Degrade::getgas(&ilvl, &igas);
+          int64_t igas = Degrade::getgas(&ilvl);
           if (igas <= 0 || igas >= 6) {
             std::cerr << m_className << "::TransportDeltaElectron: "
                       << "Could not retrieve gas index.\n";
@@ -845,6 +840,22 @@ void TrackDegrade::SetupPenning(Medium* medium,
     gas->GetPenningTransfer(name, rP[i], dP[i]);
     if (m_debug) std::printf("  %-15s %5.3f\n", name.c_str(), rP[i]);
   }
+}
+
+bool TrackDegrade::IsInside(const double x, const double y, const double z) {
+  // Check if the point is inside the drift area.
+  if (!m_sensor->IsInArea(x, y, z)) return false;
+  // Check if the point is inside a medium.
+  Medium* medium = m_sensor->GetMedium(x, y, z);
+  if (!medium) return false;
+  // Make sure the medium has not changed.
+  if (medium->GetName() != m_mediumName ||
+      fabs(medium->GetPressure() - m_pressure) > 1.e-4 ||
+      fabs(medium->GetTemperature() - m_temperature) > 1.e-4 ||
+      !medium->IsIonisable() || !medium->IsGas()) {
+    return false;
+  }
+  return true;
 }
 
 }

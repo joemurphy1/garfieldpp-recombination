@@ -506,7 +506,7 @@ C      CALL OUTPUT
 C      GO TO 1
   99  RETURN
       END
-      SUBROUTINE GETIE(E, IE) BIND(C, name="getie")
+      INTEGER*8 FUNCTION GETIE(E) BIND(C, name="getie")
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)
       COMMON/INPT/NGAS,NSTEP,NANISO,EFINAL,ESTEP,AKT,ARY,TEMPC,TORR,IPEN
@@ -539,22 +539,22 @@ C      GO TO 1
        ENDIF
       ENDIF 
       J20000=20000 
-      IE=DMIN0(IE,J20000)
+      GETIE=DMIN0(IE,J20000)
       RETURN
-      END
-      SUBROUTINE GETTCF(IE, TCFF) BIND(C, name="gettcf")
+      END FUNCTION
+      DOUBLE PRECISION FUNCTION GETTCF(IE) BIND(C, name="gettcf")
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)                                         
       COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),
      /RGAS(512),IPN(512),WPL(512),IZBR(512),IPLAST,PENFRA(3,512)
-      TCFF=TCF(IE)
+      GETTCF=TCF(IE)
       RETURN
-      END
-      SUBROUTINE GETTCFN(IE, TCFNN) BIND(C, name="gettcfn")
+      END FUNCTION
+      DOUBLE PRECISION FUNCTION GETTCFN(IE) BIND(C, name="gettcfn")
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)                                         
       COMMON/LARGEN/CFN(20000,60),TCFN(20000),SCLENUL(60),NPLAST    
-      TCFNN=TCFN(IE)
+      GETTCFN=TCFN(IE)
       RETURN
       END
       SUBROUTINE GETLEVEL(IE,R1,JZBR,RGAS1,EIN1,IA,WPL1,INDEX1,
@@ -598,24 +598,24 @@ C      GO TO 1
       ILVL=I
       RETURN
       END
-      SUBROUTINE GETGAS(ILVL,IGAS) BIND(C, name="getgas")
+      INTEGER*8 FUNCTION GETGAS(ILVL) BIND(C, name="getgas")
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)                                         
       COMMON/IDEXC/NGEXC1,NGEXC2,NGEXC3,NGEXC4,NGEXC5,NGEXC6,IDG1,IDG2,
      /IDG3,IDG4,IDG5,IDG6 
-      IGAS=0
+      GETGAS=0
       IF(ILVL.LE.IDG1) THEN 
-       IGAS=1
+       GETGAS=1
       ELSE IF(ILVL.LE.IDG2) THEN
-       IGAS=2
+       GETGAS=2
       ELSE IF(ILVL.LE.IDG3) THEN
-       IGAS=3
+       GETGAS=3
       ELSE IF(ILVL.LE.IDG4) THEN
-       IGAS=4
+       GETGAS=4
       ELSE IF(ILVL.LE.IDG5) THEN
-       IGAS=5
+       GETGAS=5
       ELSE IF(ILVL.LE.IDG6) THEN
-       IGAS=6
+       GETGAS=6
       ENDIF
       RETURN
       END

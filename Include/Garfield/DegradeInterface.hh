@@ -24,9 +24,9 @@ void deginit(int64_t* ng, int64_t* nevt, int64_t* mip,
              double* etot, double* btot, double* bang,
              int64_t* jcmp, int64_t* jray, int64_t* jpap, 
              int64_t* jbrm, int64_t* jecasc, int64_t* iverb);
-void getie(double* e, int64_t* ie);
-void gettcf(int64_t* ie, double* tcf);
-void gettcfn(int64_t* ie, double* tcfn);
+int64_t getie(double* e);
+double gettcf(int64_t* ie);
+double gettcfn(int64_t* ie);
 void getlevel(int64_t* ie, double* r1, int64_t* izbr, double* rgas, 
               double* ein, int64_t* ia, double* wpl, int64_t* index, 
               double* an, double* ps, double* wklm, 
@@ -34,7 +34,7 @@ void getlevel(int64_t* ie, double* r1, int64_t* izbr, double* rgas,
               int64_t* ng2, double* eg2, double* dstfl, int64_t* jpn,
               int64_t* kg1, int64_t* lg1, int64_t* igshel, 
               int64_t* ionmdl, int64_t* ilvl);
-void getgas(int64_t* ilvl, int64_t* igas);
+int64_t getgas(int64_t* ilvl);
 double ionpot();
 void getebrem(int64_t* k, double* ee, double* xe, double* ye, double* ze, 
               double* te, double* dxe, double* dye, double* dze, int64_t* iok);
