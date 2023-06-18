@@ -23,7 +23,6 @@ class TrackDegrade : public Track {
   };
   struct Cluster {
     double x, y, z, t;
-    double energy;
     std::vector<Electron> deltaElectrons;
     std::vector<Electron> electrons;
   };
@@ -47,6 +46,8 @@ class TrackDegrade : public Track {
 
   bool Initialise(Medium* medium, const bool verbose = false);
 
+  void SetThresholdEnergy(const double eth);
+
   void EnableBremsstrahlung(const bool on = true) { m_bremsStrahlung = on; }
   void EnableFullCascade(const bool on = true) { m_fullCascade = on; }
 
@@ -57,6 +58,9 @@ class TrackDegrade : public Track {
   bool m_penning = true;
   bool m_bremsStrahlung = true;
   bool m_fullCascade = true;
+
+  // Energy threshold for tracking electrons.
+  double m_ethr = 2.;
 
   double m_pressure = -1.;
   double m_temperature = -1.;

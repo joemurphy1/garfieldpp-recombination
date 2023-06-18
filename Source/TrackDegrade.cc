@@ -42,6 +42,15 @@ TrackDegrade::TrackDegrade() : Track("Degrade") {
   m_particleName = "electron";
 }
 
+void TrackDegrade::SetThresholdEnergy(const double ethr) {
+
+  if (ethr < Small) {
+    std::cerr << m_className << "::SetThresholdEnergy: Energy must be > 0.\n";
+  } else {
+    m_ethr = ethr;
+  }
+}
+
 bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
                             const double t0, const double dx0, const double dy0,
                             const double dz0) {
@@ -370,8 +379,7 @@ bool TrackDegrade::GetCluster(double& xc, double& yc, double& zc, double& tc,
   yc = cluster.y;
   zc = cluster.z;
   tc = cluster.t;
-  ec = cluster.energy;
-  ne = 1; 
+  ne = cluster.electrons.size(); 
   ++m_cluster;
   return true;
 }
@@ -460,9 +468,6 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
     std::cout << "    Ionisation potential: " << eMinIon << " eV.\n";
   } 
 
-  // TODO:
-  double ethrm = 2.;
-
   // Calculate maximum collision frequency.
   double flim = 0.;
   for (int64_t j = 1; j <= 20000; ++j) { 
@@ -490,7 +495,7 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
       bool attached = false;
       double tdash = 0.;
       while (1) {
-        if (e1 <= ethrm) break;
+        if (e1 <= m_ethr) break;
         bool ionised = false;
         size_t jsec = 0;
         double esec = 0.;
