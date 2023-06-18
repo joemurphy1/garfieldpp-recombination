@@ -25,10 +25,11 @@ mixtures, an interface to the \textsc{Magboltz} program
 \cite{BiagiMagboltz,Biagi1999} is available. 
 
 The ionisation pattern produced by relativistic charged particles 
-can be simulated using the program ``Heed'' \cite{Smirnov2005}.
+can be simulated using the program \textsc{Heed} \cite{Smirnov2005}.
 For simulating the ionisation produced by low-energy ions, 
 results calculated using the SRIM software package \cite{Ziegler1985} 
-can be imported.
+can be imported. The program \textsc{Degrade} simulates ionisation by 
+electrons.
 
 The present document aims to give an overview of Garfield++, 
 but does not provide an exhaustive 
@@ -70,8 +71,8 @@ scope to the \texttt{\&CELL} section.
                     label=left:{\parbox{10em}{
                     \footnotesize material properties 
                     \begin{itemize} 
-                      \item gas \(\rightarrow\) Magboltz 
-                      \item silicon 
+                      \item gases \(\rightarrow\) Magboltz 
+                      \item semiconductors 
                     \end{itemize}}}]  {\small Medium};
     \node (dummy)  [right of=medium,
                     label=above:{\small detector description}] {};
@@ -93,7 +94,7 @@ scope to the \texttt{\&CELL} section.
     \node (dummy1) [below of = sensor,
                     label=below:{\small Transport}] {};
     \node (aval)   [drift, right of=dummy1,label=right:{\parbox{8em}{\footnotesize charge transport \begin{itemize} \item microscopic \item MC \item RKF \end{itemize}}}]        {\small Drift};
-    \node (track)  [drift, left of=dummy1,label=left:{\parbox{8em}{\footnotesize primary ionisation \begin{itemize} \item Heed \item SRIM, TRIM \end{itemize}}}]      {\small Track}; 
+    \node (track)  [drift, left of=dummy1,label=left:{\parbox{8em}{\footnotesize primary ionisation \begin{itemize} \item Heed \item SRIM, TRIM \item Degrade \end{itemize}}}]      {\small Track}; 
     \path [line]   (medium) -- (comp);
     \path [line]   (geo)    -- (comp);
     \path [line]   (comp)   -- (sensor);

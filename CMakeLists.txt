@@ -80,8 +80,14 @@ endif()
 find_package(GSL REQUIRED)
 find_package(OpenMP)
 
-#--- Add Magboltz -------------------------------------------------------------
+# Add Magboltz
 add_subdirectory(Magboltz)
+
+# Add Degrade
+option(WITH_DEGRADE "Build Degrade." ON)
+if(WITH_DEGRADE)
+  add_subdirectory(Degrade)
+endif()
 
 # Creating the main Garfield library
 add_library(Garfield SHARED "")
@@ -160,6 +166,12 @@ target_sources(
           Source/ViewIsochrons.cc
           Source/ViewMedium.cc
           Source/ViewSignal.cc)
+if(WITH_DEGRADE)
+  target_sources(
+    Garfield
+    PRIVATE Source/TrackDegrade.cc
+  )
+endif()
 
 #--- Create ROOT dictionary ---------------------------------------------------
 if(ROOT_VERSION VERSION_LESS 6.17)
@@ -248,6 +260,10 @@ add_subdirectory(Heed)
 
 target_link_libraries(Garfield PUBLIC ROOT::Geom ROOT::Gdml ROOT::Graf3d GSL::gsl
                                       Garfield::magboltz)
+if(WITH_DEGRADE)
+  target_link_libraries(Garfield PUBLIC Garfield::degrade)
+endif()
+
 if(OpenMP_CXX_FOUND)
   target_link_libraries(Garfield PRIVATE OpenMP::OpenMP_CXX)
 endif()

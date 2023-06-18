@@ -120,9 +120,12 @@ class MediumMagboltz : public MediumGas {
                                              unsigned int& nSuperelastic) const;
   /// Get the number of cross-section terms.
   unsigned int GetNumberOfLevels();
-  /// Get detailed information about a given cross-section term i
+  /// Get detailed information about a given cross-section term i.
   bool GetLevel(const unsigned int i, int& ngas, int& type, std::string& descr,
                 double& e);
+  /// Get the Penning transfer probability and distance of a specific level. 
+  bool GetPenningTransfer(const unsigned int i, double& r, double& lambda);
+
   /// Get the number of collisions for a specific cross-section term.
   unsigned int GetNumberOfElectronCollisions(const unsigned int level) const;
 
@@ -180,6 +183,7 @@ class MediumMagboltz : public MediumGas {
 
   void PlotElectronCrossSections();
 
+  static int GetGasNumberMagboltz(const std::string& input);
  private:
   static constexpr int nEnergyStepsLog = 1000;
   static constexpr int nEnergyStepsGamma = 5000;
@@ -354,7 +358,6 @@ class MediumMagboltz : public MediumGas {
   // 3: excitation
   std::array<unsigned int, nCsTypesGamma> m_nPhotonCollisions;
 
-  static int GetGasNumberMagboltz(const std::string& input);
   bool Update(const bool verbose = false);
   bool Mixer(const bool verbose = false);
   void SetupGreenSawada();

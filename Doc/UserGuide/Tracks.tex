@@ -1,5 +1,5 @@
 The purpose of \texttt{Track...} classes is to simulate  
-ionization patterns produced by fast charged particles traversing the detector. 
+ionization patterns produced by charged particles traversing the detector. 
 
 The type of the primary particle is set by the function
 \begin{lstlisting}
@@ -371,3 +371,58 @@ that reproduces the requested work function ($W$ value) and Fano factor.
 At the next call to \texttt{NewTrack}, \texttt{TrackTrim} moves to the  
 next ion trajectory in the list (if it reaches the end of the list, 
 it rewinds to the first one). 
+
+\section{Degrade}
+The class \texttt{TrackDegrade} simulates ionisation by primary electrons 
+in a gas and the subsequent degradation of $\delta$ electrons, 
+Auger electrons and photoelectrons, 
+using an interface to the program \textsc{Degrade}, developed by S. Biagi. 
+\textsc{Degrade} has many commonalities with \textsc{Magboltz}, 
+in particular the database of electron-atom/molecule cross-sections. 
+
+While the \textsc{Degrade} program can also be used for simulating X-rays, 
+$\beta$ decay and double $\beta$ decay, but these features are not (yet) 
+accessible through the \texttt{TrackDegrade} interface at the moment. 
+It is also worth noting, that the current version of \texttt{TrackDegrade} 
+does not consider the electric and magnetic fields in the detector.
+
+The \texttt{Cluster} objects returned by \texttt{TrackDegrade::GetClusters} 
+contain the position and time of the ionizing collision 
+(member variables \texttt{x, y, z, t}), a \texttt{vector} of 
+\texttt{Electron} objects corresponding to the thermalised electrons 
+associated to the cluster. In addition, it also contains a \texttt{vector} 
+of the $\delta$ electrons and Auger electrons.
+
+\begin{lstlisting}
+TrackDegrade track;
+// ...
+double x0 = 0., y0 = 0., z0 = 0., t0 = 0.;
+double dx0 = 1., dy0 = 0., dz0 = 0.
+track.NewTrack(x0, y0, z0, t0, dx0, dy0, dz0);
+// Loop over the clusters along the track.
+for (const auto& cluster : track.GetClusters()) {
+  // Loop over the thermalised electrons in the cluster.
+  for (const auto& electron : cluster.electrons) {
+    // Get the coordinates and kinetic energy of the electron.
+    double xe = electron.x;
+    double ye = electron.y;
+    double ze = electron.z;
+    double te = electron.t;
+    double ee = electron.energy;
+  }
+}
+\end{lstlisting}
+
+By default, electrons are tracked until their kinetic energy falls below 
+2\,eV. This threshold can be changed using the function
+\begin{lstlisting}
+void SetThresholdEnergy(const double ethr);
+\end{lstlisting}
+
+If the function 
+\begin{lstlisting}
+void StoreExcitations(const bool on = true, const double ethr);
+\end{lstlisting}
+is called prior to \texttt{NewTrack}, the excitations (with excitation 
+energy above \texttt{ethr}) produced by the primary and secondary electrons 
+are also stored in the \texttt{Cluster} object. 
