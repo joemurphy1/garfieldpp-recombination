@@ -28,6 +28,19 @@ Garfield::TrackDegrade::Electron MakeElectron(
   return electron;
 }
 
+Garfield::TrackDegrade::Excitation MakeExcitation(
+    const double energy, const double x, const double y, const double z, 
+    const double t) {
+
+  Garfield::TrackDegrade::Excitation exc;
+  exc.energy = energy;
+  exc.x = x;
+  exc.y = y;
+  exc.z = z;
+  exc.t = t;
+  return exc;
+}
+
 }
 
 namespace Garfield {
@@ -308,6 +321,16 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
         cluster.deltaElectrons.emplace_back(
           MakeElectron(4., xs, ys, zs, ts, dx, dy, dz));
         m_clusters.push_back(std::move(cluster)); 
+      } else {
+        if (m_storeExcitations && eExc > m_ethrExc) {
+          Cluster cluster;
+          cluster.x = xp;
+          cluster.y = yp;
+          cluster.z = zp;
+          cluster.excitations.emplace_back(
+            MakeExcitation(eExc, xp, yp, zp, tp));
+          m_clusters.push_back(std::move(cluster)); 
+        }
       }
     }
     double s1 = 1. + gamma * (rgas - 1.);
@@ -359,11 +382,15 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
   }
   for (auto& cluster : m_clusters) {
     for (const auto& delta : cluster.deltaElectrons) {
-      auto electrons = TransportDeltaElectron(delta.x, delta.y, delta.z,
-                                              delta.t, delta.energy,
-                                              delta.dx, delta.dy, delta.dz);
+      auto secondaries = TransportDeltaElectron(delta.x, delta.y, delta.z,
+                                                delta.t, delta.energy,
+                                                delta.dx, delta.dy, delta.dz);
       cluster.electrons.insert(cluster.electrons.end(),
-                               electrons.begin(), electrons.end());
+                               secondaries.first.begin(), 
+                               secondaries.first.end());
+      cluster.excitations.insert(cluster.excitations.end(),
+                                 secondaries.second.begin(), 
+                                 secondaries.second.end());
     }
   }
   return true;
@@ -451,16 +478,20 @@ void TrackDegrade::SetParticle(const std::string& particle) {
   }
 }
 
-std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
+std::pair<std::vector<TrackDegrade::Electron>,
+          std::vector<TrackDegrade::Excitation> > 
+TrackDegrade::TransportDeltaElectron(
     const double x0, const double y0, const double z0, const double t0,
     const double e0, const double dx0, const double dy0, const double dz0) {
 
   // Based on MONTEFE subroutine.
+  std::vector<Electron> thermalisedElectrons;
+  std::vector<Excitation> excitations;
 
   if (!m_sensor) {
     std::cerr << m_className << "::TransportDeltaElectron: "
               << "Sensor is not defined.\n";
-    return {};
+    return std::make_pair(thermalisedElectrons, excitations);
   }
 
   const double eMinIon = Degrade::ionpot();
@@ -480,7 +511,7 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
   std::vector<Electron> deltas;
   deltas.emplace_back(MakeElectron(e0, x0, y0, z0, t0, dx0, dy0, dz0));
   std::vector<Electron> newDeltas;
-  std::vector<Electron> thermalisedElectrons;
+
   while (!deltas.empty()) {
     for (const auto& delta : deltas) {
       double x1 = delta.x;
@@ -652,10 +683,12 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
             newDeltas.emplace_back(
               MakeElectron(1., xs, ys, zs, ts, dx1, dy1, dz1));
          } else {
-            if (eExc > 4.0) {
-              // Increment counter.
-              // TODO
-              // Store excitation x, y, z, t.
+            if (eExc > m_ethrExc) {
+              // Store excitation.
+              if (m_storeExcitations) {
+                excitations.emplace_back(
+                  MakeExcitation(eExc, x2, y2, z2, t2));
+              }
             }
           } 
         } else if (ipn == 1) {
@@ -826,7 +859,7 @@ std::vector<TrackDegrade::Electron> TrackDegrade::TransportDeltaElectron(
     deltas.swap(newDeltas);
     newDeltas.clear();
   }
-  return thermalisedElectrons;
+  return std::make_pair(thermalisedElectrons, excitations);
 }
 
 void TrackDegrade::SetupPenning(Medium* medium,

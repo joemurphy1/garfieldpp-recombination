@@ -2,6 +2,7 @@
 #define G_TRACK_DEGRADE_H
 
 #include <array>
+#include <utility>
 
 #include "Track.hh"
 
@@ -21,10 +22,20 @@ class TrackDegrade : public Track {
     double dy = 0.;
     double dz = 0.;
   };
+
+  struct Excitation {
+    double x = 0.;
+    double y = 0.;
+    double z = 0.;
+    double t = 0.;
+    double energy = 0.;
+  };
+
   struct Cluster {
     double x, y, z, t;
     std::vector<Electron> deltaElectrons;
     std::vector<Electron> electrons;
+    std::vector<Excitation> excitations;
   };
 
   /// Constructor
@@ -42,14 +53,21 @@ class TrackDegrade : public Track {
                   double& tc, int& ne, double& ec, double& extra) override;
   const std::vector<Cluster>& GetClusters() const { return m_clusters; }
 
-  void SetParticle(const std::string& particle) override;
-
   bool Initialise(Medium* medium, const bool verbose = false);
 
+  /// Set the energy down to which electrons are tracked (default: 2 eV).
   void SetThresholdEnergy(const double eth);
-
+  /// Store excitations in the cluster or not (off by default). 
+  void StoreExcitations(const bool on = true, const double thr = 4.) { 
+    m_storeExcitations = on; 
+    m_ethrExc = std::max(thr, 1.e-3);
+  }
+  /// Enable or disable bremsstrahlung.
   void EnableBremsstrahlung(const bool on = true) { m_bremsStrahlung = on; }
+  /// Enable or disable detailed simulation of the deexcitation cascade.
   void EnableFullCascade(const bool on = true) { m_fullCascade = on; }
+
+  void SetParticle(const std::string& particle) override;
 
  protected:
   std::vector<Cluster> m_clusters;
@@ -58,7 +76,9 @@ class TrackDegrade : public Track {
   bool m_penning = true;
   bool m_bremsStrahlung = true;
   bool m_fullCascade = true;
-
+  bool m_storeExcitations = false;
+  // Energy threshold for storing excitations.
+  double m_ethrExc = 4.;
   // Energy threshold for tracking electrons.
   double m_ethr = 2.;
 
@@ -70,7 +90,8 @@ class TrackDegrade : public Track {
   std::array<double, 6> m_rPenning;
   std::array<double, 6> m_dPenning;
 
-  std::vector<Electron> TransportDeltaElectron(
+  std::pair<std::vector<Electron>, 
+            std::vector<Excitation> > TransportDeltaElectron(
       const double x0, const double y0, const double z0, const double t0,
       const double e0, const double dx, const double dy, const double dz);
 

@@ -415,4 +415,12 @@ By default, electrons are tracked until their kinetic energy falls below
 2\,eV. This threshold can be changed using the function
 \begin{lstlisting}
 void SetThresholdEnergy(const double ethr);
-\end{lstlisting} 
+\end{lstlisting}
+
+If the function 
+\begin{lstlisting}
+void StoreExcitations(const bool on = true, const double ethr);
+\end{lstlisting}
+is called prior to \texttt{NewTrack}, the excitations (with excitation 
+energy above \texttt{ethr}) produced by the primary and secondary electrons 
+are also stored in the \texttt{Cluster} object. 
