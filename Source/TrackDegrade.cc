@@ -478,7 +478,28 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
   m_pressure = medium->GetPressure();
   m_temperature = medium->GetTemperature();
   m_nGas = nComponents;
+  m_isChanged = false;
+  m_dedx = -1.;
+  m_clusterDensity = -1.;
   return true;
+}
+
+double TrackDegrade::GetClusterDensity() {
+  if (m_isChanged) return 0.;
+  if (m_clusterDensity < 0.) {
+    // Compute dE/dx and cluster density.
+    Degrade::getdedx(&m_dedx, &m_clusterDensity);
+  }
+  return m_clusterDensity;
+}
+
+double TrackDegrade::GetStoppingPower() { 
+  if (m_isChanged) return 0.;
+  if (m_dedx < 0.) {
+    // Compute dE/dx and cluster density.
+    Degrade::getdedx(&m_dedx, &m_clusterDensity);
+  }
+  return m_dedx;
 }
 
 void TrackDegrade::SetParticle(const std::string& particle) {

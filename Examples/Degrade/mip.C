@@ -54,10 +54,12 @@ int main(int argc, char * argv[]) {
 
   TCanvas c1;
   hElectrons.Draw();
+  c1.Update();
 
   TCanvas c2;
   hClusterSize.Draw();
   c2.SetLogy();
+  c2.Update();
 
   app.Run(true); 
 

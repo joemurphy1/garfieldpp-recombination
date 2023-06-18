@@ -43,15 +43,14 @@ class TrackDegrade : public Track {
   /// Destructor
   virtual ~TrackDegrade() {}
 
-  // double GetClusterDensity() override;
-  // double GetStoppingPower() override;
-
   bool NewTrack(const double x0, const double y0, const double z0,
                         const double t0, const double dx0, const double dy0,
                         const double dz0) override;
   bool GetCluster(double& xc, double& yc, double& zc,
                   double& tc, int& ne, double& ec, double& extra) override;
   const std::vector<Cluster>& GetClusters() const { return m_clusters; }
+  double GetClusterDensity() override;
+  double GetStoppingPower() override;
 
   bool Initialise(Medium* medium, const bool verbose = false);
 
@@ -86,6 +85,9 @@ class TrackDegrade : public Track {
   double m_temperature = -1.;
   std::string m_mediumName = "";
   unsigned int m_nGas = 0;
+
+  double m_dedx = -1.;
+  double m_clusterDensity = -1.;
  
   std::array<double, 6> m_rPenning;
   std::array<double, 6> m_dPenning;

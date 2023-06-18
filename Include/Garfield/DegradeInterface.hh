@@ -24,6 +24,7 @@ void deginit(int64_t* ng, int64_t* nevt, int64_t* mip,
              double* etot, double* btot, double* bang,
              int64_t* jcmp, int64_t* jray, int64_t* jpap, 
              int64_t* jbrm, int64_t* jecasc, int64_t* iverb);
+void getdedx(double* dedxi, double* cldensi);
 int64_t getie(double* e);
 double gettcf(int64_t* ie);
 double gettcfn(int64_t* ie);

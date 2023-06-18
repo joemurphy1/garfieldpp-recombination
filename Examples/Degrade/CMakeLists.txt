@@ -4,6 +4,9 @@ if(NOT TARGET Garfield::Garfield)
   find_package(Garfield REQUIRED)
 endif()
 
-# ---Build executable------------------------------------------------------------
+# Build executables
 add_executable(mip mip.C)
 target_link_libraries(mip Garfield::Garfield)
+
+add_executable(plotdedx plotdedx.C)
+target_link_libraries(plotdedx Garfield::Garfield)
