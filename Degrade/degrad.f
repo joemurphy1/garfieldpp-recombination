@@ -2853,11 +2853,11 @@ C
       QATT(6,I)=Q6(4,I)*AN6                                             
 C                                                                       
       QREL(I)=0.0D0                                                     
-      QSATT(I)=0.0D0                                                   
+C      QSATT(I)=0.0D0                                                   
       QSUM(I)=0.0D0                                                     
       DO 855 J=1,NGAS                                                   
       QSUM(I)=QSUM(I)+QION(J,I)+QATT(J,I)                               
-      QSATT(I)=QSATT(I)+QATT(J,I)                                       
+C      QSATT(I)=QSATT(I)+QATT(J,I)                                       
   855 QREL(I)=QREL(I)+QION(J,I)-QATT(J,I)                               
 C                                                                       
       IF(NIN1.EQ.0) GO TO 865                                           
