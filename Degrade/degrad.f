@@ -442,7 +442,8 @@ C     /IWRITE,IPEN,DETEFF,EXCWGHT,KGAS,LGAS,
      /JCMP,JRAY,JPAP,JBRM,JECASC,IVERB) BIND(C, name="deginit")
       IMPLICIT REAL*8 (A-H,O-Z) 
       IMPLICIT INTEGER*8 (I-N) 
-      INTEGER*4 NSEED                                       
+      INTEGER*4 NSEED
+      INTEGER*4 ISEED
       COMMON/INPT/NGAS,NSTEP,NANISO,EFINAL,ESTEP,AKT,ARY,TEMPC,TORR,IPEN
       COMMON/INPT2/KGAS,LGAS,DETEFF,EXCWGHT
       COMMON/INPT1/NDVEC                                
@@ -521,6 +522,8 @@ C      GO TO 1
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)
       COMMON/INPT/NGAS,NSTEP,NANISO,EFINAL,ESTEP,AKT,ARY,TEMPC,TORR,IPEN
+      COMMON/SETP/TMAX,SMALL,API,ESTART,THETA,PHI,TCFMAX(10),TCFMAX1,
+     /RSTART,EFIELD,ETHRM,ECUT,NEVENT,IMIP,IWRITE
 ***   Varying energy steps.
       IF(EFINAL.LE.140000.) THEN
         ESTEP1=(EFINAL-16000.0)/DFLOAT(4000)
@@ -759,14 +762,11 @@ C  ---------------------------------------------------------------
       CHARACTER*50 DSCRPTN,SCRPN1(10),SCRPN2(10),SCRPN3(10),SCRPN4(10),
      /SCRPN5(10),SCRPN6(10)                          
       COMMON/GASN/NGASN(6) 
-      COMMON/MIX1/QELM(20000),QSUM(20000),QION(6,20000),QIN1(250,20000),
-     /QIN2(250,20000),QIN3(250,20000),QIN4(250,20000),QIN5(250,20000),
-     /QIN6(250,20000),QSATT(20000)             
       COMMON/MIX2/E(20000),EROOT(20000),QTOT(20000),QREL(20000),
      /QINEL(20000),QEL(20000)
-      COMMON/MIX3/NIN1,NIN2,NIN3,NIN4,NIN5,NIN6,LION(6),LIN1(250),
-     /LIN2(250),LIN3(250),LIN4(250),LIN5(250),LIN6(250),ALION(6),
-     /ALIN1(250),ALIN2(250),ALIN3(250),ALIN4(250),ALIN5(250),ALIN6(250)
+C      COMMON/MIX3/NIN1,NIN2,NIN3,NIN4,NIN5,NIN6,LION(6),LIN1(250),
+C     /LIN2(250),LIN3(250),LIN4(250),LIN5(250),LIN6(250),ALION(6),
+C     /ALIN1(250),ALIN2(250),ALIN3(250),ALIN4(250),ALIN5(250),ALIN6(250)
       COMMON/INPT/NGAS,NSTEP,NANISO,EFINAL,ESTEP,AKT,ARY,TEMPC,TORR,IPEN
       COMMON/CNSTS1/CONST1,CONST2,CONST3,CONST4,CONST5                  
       COMMON/SETP/TMAX,SMALL,API,ESTART,THETA,PHI,TCFMAX(10),TCFMAX1,
@@ -793,7 +793,8 @@ C  ---------------------------------------------------------------
      /Q5(6,20000),Q6(6,20000)
       DIMENSION E1(6),E2(6),E3(6),E4(6),E5(6),E6(6),EI1(250),EI2(250),
      /EI3(250),EI4(250),EI5(250),EI6(250)
-      DIMENSION QATT(6,20000),EION(6)         
+      DIMENSION QIN1(250,20000),QIN2(250,20000),QIN3(250,20000)
+      DIMENSION QIN4(250,20000),QIN5(250,20000),QIN6(250,20000)
       DIMENSION PEQEL1(6,20000),PEQEL2(6,20000),PEQEL3(6,20000),
      /PEQEL4(6,20000),PEQEL5(6,20000),PEQEL6(6,20000)
       DIMENSION PEQIN1(250,20000),PEQIN2(250,20000),PEQIN3(250,20000),  
@@ -1230,8 +1231,10 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0
       IONMODEL(NP)=IONMODL1
-      DO 19 K=1,20
-   19 ESPLIT(NP,K)=ESPLIT1(IONMODL1,K) 
+      IF(IONMODL1.NE.0) THEN
+       DO 19 K=1,20
+   19  ESPLIT(NP,K)=ESPLIT1(IONMODL1,K) 
+      END IF
       GO TO 30
    20 DO 25 KION=1,NION1
       NP=NP+1
@@ -1280,8 +1283,10 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0
       IONMODEL(NP)=IONMODL1
-      DO 24 K=1,20
-   24 ESPLIT(NP,K)=ESPLIT1(IONMODL1,K) 
+      IF(IONMODL1.NE.0) THEN
+       DO 24 K=1,20
+   24  ESPLIT(NP,K)=ESPLIT1(IONMODL1,K)
+      END IF 
    25 CONTINUE   
    30 IF(EFINAL.LT.E1(4)) GO TO 40   
       IF(NATT1.GT.1) GO TO 551                                   
@@ -1486,8 +1491,10 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0  
       IONMODEL(NP)=IONMODL2
-      DO 69 K=1,20
-   69 ESPLIT(NP,K)=ESPLIT2(IONMODL2,K) 
+      IF(IONMODL2.NE.0) THEN
+       DO 69 K=1,20
+   69  ESPLIT(NP,K)=ESPLIT2(IONMODL2,K) 
+      END IF
       GO TO 130                                       
    70 DO 80 KION=1,NION2
       NP=NP+1
@@ -1535,8 +1542,10 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0       
       IONMODEL(NP)=IONMODL2
-      DO 79 K=1,20
-   79 ESPLIT(NP,K)=ESPLIT2(IONMODL2,K) 
+      IF(IONMODL2.NE.0) THEN
+       DO 79 K=1,20
+   79  ESPLIT(NP,K)=ESPLIT2(IONMODL2,K) 
+      END IF
    80 CONTINUE                                  
   130 IF(EFINAL.LT.E2(4)) GO TO 140    
       IF(NATT2.GT.1) GO TO 561                                 
@@ -1741,8 +1750,10 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0 
       IONMODEL(NP)=IONMODL3
-      DO 169 K=1,20
-  169 ESPLIT(NP,K)=ESPLIT3(IONMODL3,K) 
+      IF(IONMODL3.NE.0) THEN
+       DO 169 K=1,20
+  169  ESPLIT(NP,K)=ESPLIT3(IONMODL3,K) 
+      END IF
       GO TO 230  
   170 DO 180 KION=1,NION3                                         
       NP=NP+1
@@ -1791,8 +1802,10 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0    
       IONMODEL(NP)=IONMODL3
-      DO 179 K=1,20
-  179 ESPLIT(NP,K)=ESPLIT3(IONMODL3,K) 
+      IF(IONMODL3.NE.0) THEN
+       DO 179 K=1,20
+  179  ESPLIT(NP,K)=ESPLIT3(IONMODL3,K) 
+      END IF
   180 CONTINUE                                        
   230 IF(EFINAL.LT.E3(4)) GO TO 240      
       IF(NATT3.GT.1) GO TO 571                               
@@ -1998,8 +2011,10 @@ C
       PENFRA(2,NP)=0.0 
       PENFRA(3,NP)=0.0  
       IONMODEL(NP)=IONMODL4
-      DO 269 K=1,20
-  269 ESPLIT(NP,K)=ESPLIT4(IONMODL4,K) 
+      IF(IONMODL4.NE.0) THEN
+       DO 269 K=1,20
+  269  ESPLIT(NP,K)=ESPLIT4(IONMODL4,K) 
+      END IF
       GO TO 330
   270 DO 280 KION=1,NION4                                       
       NP=NP+1
@@ -2048,8 +2063,10 @@ C
       PENFRA(2,NP)=0.0 
       PENFRA(3,NP)=0.0  
       IONMODEL(NP)=IONMODL4
-      DO 279 K=1,20
-  279 ESPLIT(NP,K)=ESPLIT4(IONMODL4,K) 
+      IF(IONMODL4.NE.0) THEN
+       DO 279 K=1,20
+  279  ESPLIT(NP,K)=ESPLIT4(IONMODL4,K) 
+      END IF
   280 CONTINUE                                       
   330 IF(EFINAL.LT.E4(4)) GO TO 340          
       IF(NATT4.GT.1) GO TO 581                           
@@ -2254,8 +2271,10 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0 
       IONMODEL(NP)=IONMODL5
-      DO 369 K=1,20
-  369 ESPLIT(NP,K)=ESPLIT5(IONMODL5,K) 
+      IF(IONMODL5.NE.0) THEN
+       DO 369 K=1,20
+  369  ESPLIT(NP,K)=ESPLIT5(IONMODL5,K) 
+      END IF
       GO TO 430       
   370 DO 380 KION=1,NION5                                   
       NP=NP+1
@@ -2304,8 +2323,10 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0 
       IONMODEL(NP)=IONMODL5
-      DO 379 K=1,20
-  379 ESPLIT(NP,K)=ESPLIT5(IONMODL5,K) 
+      IF(IONMODL5.NE.0) THEN
+       DO 379 K=1,20
+  379  ESPLIT(NP,K)=ESPLIT5(IONMODL5,K) 
+      END IF
   380 CONTINUE
   430 IF(EFINAL.LT.E5(4)) GO TO 440                 
       IF(NATT5.GT.1) GO TO 591                    
@@ -2556,8 +2577,10 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0    
       IONMODEL(NP)=IONMODL6
-      DO 479 K=1,20
-  479 ESPLIT(NP,K)=ESPLIT6(IONMODL6,K) 
+      IF(IONMODL6.NE.0) THEN
+       DO 479 K=1,20
+  479  ESPLIT(NP,K)=ESPLIT6(IONMODL6,K) 
+      END IF
   480 CONTINUE                                 
   530 IF(EFINAL.LT.E6(4)) GO TO 540                  
       IF(NATT6.GT.1) GO TO 590                   
@@ -2606,8 +2629,10 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0
       IONMODEL(NP)=IONMODL6
-      DO 601 K=1,20
-  601 ESPLIT(NP,K)=ESPLIT6(IONMODL6,K)  
+      IF(IONMODL6.NE.0) THEN
+       DO 601 K=1,20
+  601  ESPLIT(NP,K)=ESPLIT6(IONMODL6,K)  
+      END IF
   602 CONTINUE                                    
   540 IF(NIN6.EQ.0) GO TO 560                                           
       DO 550 J=1,NIN6 
@@ -2657,7 +2682,7 @@ C
   560 CONTINUE     
 C                                                                       
   600 CONTINUE                                                          
-      IPLAST=NP  
+      IPLAST=NP 
 C ----------------------------------------------------------------      
 C   CAN INCREASE ARRAY SIZE UP TO 1740 IF MORE COMPLEX MIXTURES USED.
 C   1740 = 6 * 290 ( 6 = MAX NO OF GASES. 290 = MAX NO OF LEVELS )    
@@ -2815,70 +2840,41 @@ C ---------------------------------------------------------------------
       QEL(I)=AN1*Q1(2,I)+AN2*Q2(2,I)+AN3*Q3(2,I)+AN4*Q4(2,I)+
      /AN5*Q5(2,I)+AN6*Q6(2,I)             
 C                                                                       
-      QION(1,I)=Q1(3,I)*AN1   
+      QION=0.0
+      QION=QION+Q1(3,I)*AN1   
       IF(NION1.GT.1) THEN
        DO 811 KION=1,NION1
-  811  QION(1,I)=QION1(KION,I)*AN1
+  811  QION=QION+QION1(KION,I)*AN1
       ENDIF                                           
-      QION(2,I)=Q2(3,I)*AN2                                             
+      QION=QION+Q2(3,I)*AN2                                             
       IF(NION2.GT.1) THEN
        DO 812 KION=1,NION2
-  812  QION(2,I)=QION2(KION,I)*AN2
+  812  QION=QION+QION2(KION,I)*AN2
       ENDIF                                           
-      QION(3,I)=Q3(3,I)*AN3                                             
+      QION=QION+Q3(3,I)*AN3                                             
       IF(NION3.GT.1) THEN
        DO 813 KION=1,NION3
-  813  QION(3,I)=QION3(KION,I)*AN3
+  813  QION=QION+QION3(KION,I)*AN3
       ENDIF                                           
-      QION(4,I)=Q4(3,I)*AN4
+      QION=QION+Q4(3,I)*AN4
       IF(NION4.GT.1) THEN
        DO 814 KION=1,NION4
-  814  QION(4,I)=QION4(KION,I)*AN4
+  814  QION=QION+QION4(KION,I)*AN4
       ENDIF                                           
-      QION(5,I)=Q5(3,I)*AN5
+      QION=QION+Q5(3,I)*AN5
       IF(NION5.GT.1) THEN
        DO 815 KION=1,NION5
-  815  QION(5,I)=QION5(KION,I)*AN5
+  815  QION=QION+QION5(KION,I)*AN5
       ENDIF                                           
-      QION(6,I)=Q6(3,I)*AN6                                             
+      QION=QION+Q6(3,I)*AN6                                             
       IF(NION6.GT.1) THEN
        DO 816 KION=1,NION6
-  816  QION(6,I)=QION6(KION,I)*AN6
+  816  QION=QION+QION6(KION,I)*AN6
       ENDIF                                           
-      QATT(1,I)=Q1(4,I)*AN1                                             
-      QATT(2,I)=Q2(4,I)*AN2                                             
-      QATT(3,I)=Q3(4,I)*AN3                                             
-      QATT(4,I)=Q4(4,I)*AN4
-      QATT(5,I)=Q5(4,I)*AN5
-      QATT(6,I)=Q6(4,I)*AN6                                             
+      QATT=Q1(4,I)*AN1+Q2(4,I)*AN2+Q3(4,I)*AN3+Q4(4,I)*AN4+
+     /Q5(4,I)*AN5+Q6(4,I)*AN6
 C                                                                       
-      QREL(I)=0.0D0                                                     
-C      QSATT(I)=0.0D0                                                   
-      QSUM(I)=0.0D0                                                     
-      DO 855 J=1,NGAS                                                   
-      QSUM(I)=QSUM(I)+QION(J,I)+QATT(J,I)                               
-C      QSATT(I)=QSATT(I)+QATT(J,I)                                       
-  855 QREL(I)=QREL(I)+QION(J,I)-QATT(J,I)                               
-C                                                                       
-      IF(NIN1.EQ.0) GO TO 865                                           
-      DO 860 J=1,NIN1                                                   
-  860 QSUM(I)=QSUM(I)+QIN1(J,I)*AN1                                     
-  865 IF(NIN2.EQ.0) GO TO 875                                           
-      DO 870 J=1,NIN2                                                   
-  870 QSUM(I)=QSUM(I)+QIN2(J,I)*AN2                                     
-  875 IF(NIN3.EQ.0) GO TO 885                                           
-      DO 880 J=1,NIN3                                                   
-  880 QSUM(I)=QSUM(I)+QIN3(J,I)*AN3                                     
-  885 IF(NIN4.EQ.0) GO TO 895                                           
-      DO 890 J=1,NIN4                                                   
-  890 QSUM(I)=QSUM(I)+QIN4(J,I)*AN4                                     
-  895 IF(NIN5.EQ.0) GO TO 898 
-      DO 896 J=1,NIN5
-  896 QSUM(I)=QSUM(I)+QIN5(J,I)*AN5
-  898 IF(NIN6.EQ.0) GO TO 900
-      DO 899 J=1,NIN6
-  899 QSUM(I)=QSUM(I)+QIN6(J,I)*AN6                                     
-C                                                                       
+      QREL(I)=QION-QATT
  900  CONTINUE                                                          
 C                                                                       
       RETURN                                                            
@@ -23664,10 +23660,10 @@ C
       CFTEMP(I)=CF(20000,I)
       PSTEMP(I)=PSCT(20000,I)
       ANTEMP(I)=ANGCT(20000,I)
+    1 CONTINUE
       TCFF=TCF(20000)
       BETA=BET(20000)
       GAMM=GAM(20000)
-    1 CONTINUE
       VEL=BETA*VC
       DO 2 J=1,IPLAST
       IA=IARRY(J)
@@ -34360,7 +34356,8 @@ C EGAMMA IS INCIDENT PHOTON ENERGY
 C E1 AND E2 ARE CALCULATED ELECTRON AND POSITRON ENERGIES
 C THET1 AND THET2 ARE CALCULATED SCATTERING ANGLES
 C USE FLAT DISTRIBUTION FOR ENERGIES 
-      TWOPI=2.0D0*DACOS(-1.0D0)
+      API=DACOS(-1.0D0)
+      TWOPI=2.0D0*API
       EMASS=510998.928D0
       ETOT=EGAMMA-2.0D0*EMASS
       R1=drand48(RDUM)
@@ -34371,7 +34368,7 @@ C USE BETHE AND HEITLER AVERAGE ANGLE
       THET2=EMASS/(EMASS+E2)
 C RANDOM PHI ANGLE WITH PI BETWEEN PHI ANGLES
       R2=drand48(RDUM)
-      PHI1=TWOPI*R3
+      PHI1=TWOPI*R2
       PHI2=PHI1+API
       IF(PHI2.GT.TWOPI) PHI2=PHI2-TWOPI 
       RETURN
@@ -82409,7 +82406,7 @@ C CALCULATE DIPOLE ANGULAR DISTRIBUTION FACTOR FOR TRANSITION
       DO 141 M=2,NRTANG
       IF(EPOINT.LE.ENROT(M)) GO TO 142
   141 CONTINUE
-      M=NTRANG
+      M=NRTANG
   142 A=(YEPSR(M)-YEPSR(M-1))/(ENROT(M)-ENROT(M-1))
       B=(ENROT(M-1)*YEPSR(M)-ENROT(M)*YEPSR(M-1))/(ENROT(M-1)-ENROT(M))
       EPSIL=A*EPOINT+B
@@ -89524,7 +89521,7 @@ C CALC ANISOTROPY FACTOR
 C EPSILON =1.0-YEPS
       EPS=1.0D0-EPS
    52 CONTINUE  
-      IF(NANISO.EQ.O) THEN
+      IF(NANISO.EQ.0) THEN
 C ISOTROPIC SCATTERING
        Q(2,I)=QELM
        PEQEL(2,I)=0.5
@@ -110610,54 +110607,54 @@ C SET TO 0 SINCE VERY LOW ENERGY EXCITATION LEVELS
       DO 5 L=1,3
     5 PENFRA(L,K)=0.0
 C **************************************************************
-      SCRPT(1)='                                                   '
-      SCRPT(2)=' ELASTIC  N-(CH3)3 TRIMETHYL AMINE                 '
-      SCRPT(3)=' IONISATION                         ELOSS=   8.40  '
-      SCRPT(4)=' IONISATION   CARBON K-SHELL        ELOSS= 285.0   '
-      SCRPT(5)=' IONISATION NITROGEN K-SHELL        ELOSS= 401.6   '
-      SCRPT(6)=' ATTACHMENT                                        '
-      SCRPT(7)='                                                   '
-      SCRPT(8)='                                                   '
-      SCRPT(9)=' ROTATION                           ELOSS= -0.025  '
-      SCRPT(10)=' ROTATION                           ELOSS=  0.025  '
-      SCRPT(11)=' TORSION + ROTATION                 ELOSS= -0.0334 '
-      SCRPT(12)=' TORSION + ROTATION                 ELOSS=  0.0334 '
-      SCRPT(13)=' VIBRATION V1                       ELOSS= -0.103  '
-      SCRPT(14)=' VIBRATION V1                       ELOSS=  0.103  '
-      SCRPT(15)=' VIBRATION V2                       ELOSS=  0.179  '
-      SCRPT(16)=' VIBRATION V3                       ELOSS=  0.366  '
-      SCRPT(17)=' VIBRATION HARMONICS                ELOSS=  0.480  '
-      SCRPT(18)=' EXC TRIPLET                        ELOSS=  4.6    '
-      SCRPT(19)=' EXC DIPOLE   3S RYDBERG  F=.00047  ELOSS=  4.65   '
-      SCRPT(20)=' EXC DIPOLE   3S RYDBERG  F=.00384  ELOSS=  4.95   '
-      SCRPT(21)=' EXC DIPOLE   3S RYDBERG  F=.00828  ELOSS=  5.25   '
-      SCRPT(22)=' EXC DIPOLE   3S RYDBERG  F=.00974  ELOSS=  5.55   '
-      SCRPT(23)=' EXC TRIPLET                        ELOSS=  5.70   '
-      SCRPT(24)=' EXC DIPOLE   3P RYDBERG  F=.02635  ELOSS=  5.85   '
-      SCRPT(25)=' EXC DIPOLE   3P RYDBERG  F=.03621  ELOSS=  6.15   '
-      SCRPT(26)=' EXC DIPOLE   3P RYDBERG  F=.02819  ELOSS=  6.45   '
-      SCRPT(27)=' EXC DIPOLE   3P RYDBERG  F=.02325  ELOSS=  6.75   '
-      SCRPT(28)=' EXC TRIPLET                        ELOSS=  7.00   '
-      SCRPT(29)=' EXC DIPOLE HIGH RYDBERG  F=.02271  ELOSS=  7.05   '
-      SCRPT(30)=' EXC DIPOLE HIGH RYDBERG  F=.02561  ELOSS=  7.35   '
-      SCRPT(31)=' EXC DIPOLE HIGH RYDBERG  F=.02641  ELOSS=  7.65   '
-      SCRPT(32)=' EXC DIPOLE HIGH RYDBERG  F=.02625  ELOSS=  7.95   '
-      SCRPT(33)=' EXC DIPOLE HIGH RYDBERG  F=.02671  ELOSS=  8.25   '
-      SCRPT(34)=' EXC DIPOLE HIGH RYDBERG  F=.04342  ELOSS=  8.55   '
-      SCRPT(35)=' EXC DIPOLE HIGH RYDBERG  F=.06804  ELOSS=  8.85   '
-      SCRPT(36)=' EXC DIPOLE HIGH RYDBERG  F=.07186  ELOSS=  9.15   '
-      SCRPT(37)=' EXC DIPOLE HIGH RYDBERG  F=.07346  ELOSS=  9.45   '
-      SCRPT(38)=' EXC DIPOLE HIGH RYDBERG  F=.08795  ELOSS=  9.75   '
-      SCRPT(39)=' EXC DIPOLE HIGH RYDBERG  F=.11445  ELOSS= 10.05   '
-      SCRPT(40)=' EXC DIPOLE HIGH RYDBERG  F=.12904  ELOSS= 10.35   '
-      SCRPT(41)=' EXC DIPOLE HIGH RYDBERG  F=.13512  ELOSS= 10.65   '
-      SCRPT(42)=' EXC DIPOLE HIGH RYDBERG  F=.14497  ELOSS= 10.95   '
-      SCRPT(43)=' EXC DIPOLE HIGH RYDBERG  F=.15169  ELOSS= 11.25   '
-      SCRPT(44)=' EXC DIPOLE HIGH RYDBERG  F=.15328  ELOSS= 11.55   '
-      SCRPT(45)=' EXC DIPOLE HIGH RYDBERG  F=.15788  ELOSS= 11.85   '
-      SCRPT(46)=' BREMSSTRAHLUNG FROM HYDROGEN ATOMS                '
-      SCRPT(47)=' BREMSSTRAHLUNG FROM CARBON ATOMS                  '
-      SCRPT(48)=' BREMSSTRAHLUNG FROM NITROGEN ATOM                 '
+      SCRPT(1)='                                                  '
+      SCRPT(2)=' ELASTIC  N-(CH3)3 TRIMETHYL AMINE                '
+      SCRPT(3)=' IONISATION                         ELOSS=   8.40 '
+      SCRPT(4)=' IONISATION   CARBON K-SHELL        ELOSS= 285.0  '
+      SCRPT(5)=' IONISATION NITROGEN K-SHELL        ELOSS= 401.6  '
+      SCRPT(6)=' ATTACHMENT                                       '
+      SCRPT(7)='                                                  '
+      SCRPT(8)='                                                  '
+      SCRPT(9)=' ROTATION                           ELOSS= -0.025 '
+      SCRPT(10)=' ROTATION                           ELOSS=  0.025 '
+      SCRPT(11)=' TORSION + ROTATION                 ELOSS= -0.0334'
+      SCRPT(12)=' TORSION + ROTATION                 ELOSS=  0.0334'
+      SCRPT(13)=' VIBRATION V1                       ELOSS= -0.103 '
+      SCRPT(14)=' VIBRATION V1                       ELOSS=  0.103 '
+      SCRPT(15)=' VIBRATION V2                       ELOSS=  0.179 '
+      SCRPT(16)=' VIBRATION V3                       ELOSS=  0.366 '
+      SCRPT(17)=' VIBRATION HARMONICS                ELOSS=  0.480 '
+      SCRPT(18)=' EXC TRIPLET                        ELOSS=  4.6   '
+      SCRPT(19)=' EXC DIPOLE   3S RYDBERG  F=.00047  ELOSS=  4.65  '
+      SCRPT(20)=' EXC DIPOLE   3S RYDBERG  F=.00384  ELOSS=  4.95  '
+      SCRPT(21)=' EXC DIPOLE   3S RYDBERG  F=.00828  ELOSS=  5.25  '
+      SCRPT(22)=' EXC DIPOLE   3S RYDBERG  F=.00974  ELOSS=  5.55  '
+      SCRPT(23)=' EXC TRIPLET                        ELOSS=  5.70  '
+      SCRPT(24)=' EXC DIPOLE   3P RYDBERG  F=.02635  ELOSS=  5.85  '
+      SCRPT(25)=' EXC DIPOLE   3P RYDBERG  F=.03621  ELOSS=  6.15  '
+      SCRPT(26)=' EXC DIPOLE   3P RYDBERG  F=.02819  ELOSS=  6.45  '
+      SCRPT(27)=' EXC DIPOLE   3P RYDBERG  F=.02325  ELOSS=  6.75  '
+      SCRPT(28)=' EXC TRIPLET                        ELOSS=  7.00  '
+      SCRPT(29)=' EXC DIPOLE HIGH RYDBERG  F=.02271  ELOSS=  7.05  '
+      SCRPT(30)=' EXC DIPOLE HIGH RYDBERG  F=.02561  ELOSS=  7.35  '
+      SCRPT(31)=' EXC DIPOLE HIGH RYDBERG  F=.02641  ELOSS=  7.65  '
+      SCRPT(32)=' EXC DIPOLE HIGH RYDBERG  F=.02625  ELOSS=  7.95  '
+      SCRPT(33)=' EXC DIPOLE HIGH RYDBERG  F=.02671  ELOSS=  8.25  '
+      SCRPT(34)=' EXC DIPOLE HIGH RYDBERG  F=.04342  ELOSS=  8.55  '
+      SCRPT(35)=' EXC DIPOLE HIGH RYDBERG  F=.06804  ELOSS=  8.85  '
+      SCRPT(36)=' EXC DIPOLE HIGH RYDBERG  F=.07186  ELOSS=  9.15  '
+      SCRPT(37)=' EXC DIPOLE HIGH RYDBERG  F=.07346  ELOSS=  9.45  '
+      SCRPT(38)=' EXC DIPOLE HIGH RYDBERG  F=.08795  ELOSS=  9.75  '
+      SCRPT(39)=' EXC DIPOLE HIGH RYDBERG  F=.11445  ELOSS= 10.05  '
+      SCRPT(40)=' EXC DIPOLE HIGH RYDBERG  F=.12904  ELOSS= 10.35  '
+      SCRPT(41)=' EXC DIPOLE HIGH RYDBERG  F=.13512  ELOSS= 10.65  '
+      SCRPT(42)=' EXC DIPOLE HIGH RYDBERG  F=.14497  ELOSS= 10.95  '
+      SCRPT(43)=' EXC DIPOLE HIGH RYDBERG  F=.15169  ELOSS= 11.25  '
+      SCRPT(44)=' EXC DIPOLE HIGH RYDBERG  F=.15328  ELOSS= 11.55  '
+      SCRPT(45)=' EXC DIPOLE HIGH RYDBERG  F=.15788  ELOSS= 11.85  '
+      SCRPT(46)=' BREMSSTRAHLUNG FROM HYDROGEN ATOMS               '
+      SCRPT(47)=' BREMSSTRAHLUNG FROM CARBON ATOMS                 '
+      SCRPT(48)=' BREMSSTRAHLUNG FROM NITROGEN ATOM                '
 C
       APOP1=DEXP(EIN(1)/AKT)
       APOP2=DEXP(EIN(3)/AKT)
@@ -117107,7 +117104,7 @@ C CALC ANGULAR DISTRIBUTION
        DO 3232 M=2,NRTANG
        IF(EPOINT.LE.ENROT(M)) GO TO 3233
  3232  CONTINUE
-       M=NTRANG
+       M=NRTANG
  3233  A=(YEPSR(M)-YEPSR(M-1))/(ENROT(M)-ENROT(M-1))
        B=(ENROT(M-1)*YEPSR(M)-ENROT(M)*YEPSR(M-1))/(ENROT(M-1)-ENROT(M))
        EPSIL=A*EPOINT+B
@@ -117175,7 +117172,7 @@ c
 C CALC ANGULAR DISTRIBUTION
       IF(EN.LT.4.0*EIN(5)) THEN
        EPOINT=EN/EIN(5)
-       DO 3483 M=2,NTRANG
+       DO 3483 M=2,NRTANG
        IF(EPOINT.LE.ENROT(M)) GO TO 3484
  3483  CONTINUE
        M=NRTANG
@@ -117198,7 +117195,7 @@ C V13 + V24
       DO 341 J=2,NVIBR
       IF(EN.LE.XVIBR(J)) GO TO 342
   341 CONTINUE
-      J=NNVIBR
+      J=NVIBR
   342 A=(YVIBR(J)-YVIBR(J-1))/(XVIBR(J)-XVIBR(J-1))                     
       B=(XVIBR(J-1)*YVIBR(J)-XVIBR(J)*YVIBR(J-1))/(XVIBR(J-1)-XVIBR(J))
       QRES=(A*EN+B) 
@@ -117214,7 +117211,7 @@ C  2V13
       DO 346 J=2,NVIBR
       IF(EN.LE.XVIBR(J)) GO TO 347
   346 CONTINUE
-      J=NNVIBR
+      J=NVIBR
   347 A=(YVIBR(J)-YVIBR(J-1))/(XVIBR(J)-XVIBR(J-1))                     
       B=(XVIBR(J-1)*YVIBR(J)-XVIBR(J)*YVIBR(J-1))/(XVIBR(J-1)-XVIBR(J))
       QRES=(A*EN+B)   
@@ -117230,7 +117227,7 @@ C  SUM OF HIGHER VIBRATIONS
       DO 351 J=2,NVIBR
       IF(EN.LE.XVIBR(J)) GO TO 352
   351 CONTINUE
-      J=NNVIBR
+      J=NVIBR
   352 A=(YVIBR(J)-YVIBR(J-1))/(XVIBR(J)-XVIBR(J-1))                     
       B=(XVIBR(J-1)*YVIBR(J)-XVIBR(J)*YVIBR(J-1))/(XVIBR(J-1)-XVIBR(J))
       QRES=(A*EN+B)   
