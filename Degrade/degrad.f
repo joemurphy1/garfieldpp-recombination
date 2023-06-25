@@ -1,5 +1,8 @@
       MODULE degrad
         USE, INTRINSIC :: iso_c_binding
+
+        REAL*8, ALLOCATABLE :: CF(:,:),PSCT(:,:),ANGCT(:,:)
+        REAL*8, ALLOCATABLE :: CFN(:,:)
        CONTAINS
 C 
 C                   PROGRAM DEGRADE VERSION 3.17  
@@ -442,7 +445,8 @@ C     /IWRITE,IPEN,DETEFF,EXCWGHT,KGAS,LGAS,
      /JCMP,JRAY,JPAP,JBRM,JECASC,IVERB) BIND(C, name="deginit")
       IMPLICIT REAL*8 (A-H,O-Z) 
       IMPLICIT INTEGER*8 (I-N) 
-      INTEGER*4 NSEED                                       
+      INTEGER*4 NSEED
+      INTEGER*4 ISEED
       COMMON/INPT/NGAS,NSTEP,NANISO,EFINAL,ESTEP,AKT,ARY,TEMPC,TORR,IPEN
       COMMON/INPT2/KGAS,LGAS,DETEFF,EXCWGHT
       COMMON/INPT1/NDVEC                                
@@ -521,6 +525,8 @@ C      GO TO 1
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)
       COMMON/INPT/NGAS,NSTEP,NANISO,EFINAL,ESTEP,AKT,ARY,TEMPC,TORR,IPEN
+      COMMON/SETP/TMAX,SMALL,API,ESTART,THETA,PHI,TCFMAX(10),TCFMAX1,
+     /RSTART,EFIELD,ETHRM,ECUT,NEVENT,IMIP,IWRITE
 ***   Varying energy steps.
       IF(EFINAL.LE.140000.) THEN
         ESTEP1=(EFINAL-16000.0)/DFLOAT(4000)
@@ -556,7 +562,7 @@ C      GO TO 1
       DOUBLE PRECISION FUNCTION GETTCF(IE) BIND(C, name="gettcf")
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)                                         
-      COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),
+      COMMON/LARGE/EIN(512),TCF(20000),IARRY(512),
      /RGAS(512),IPN(512),WPL(512),IZBR(512),IPLAST,PENFRA(3,512)
       GETTCF=TCF(IE)
       RETURN
@@ -564,7 +570,7 @@ C      GO TO 1
       DOUBLE PRECISION FUNCTION GETTCFN(IE) BIND(C, name="gettcfn")
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)                                         
-      COMMON/LARGEN/CFN(20000,60),TCFN(20000),SCLENUL(60),NPLAST    
+      COMMON/LARGEN/TCFN(20000),SCLENUL(60),NPLAST    
       GETTCFN=TCFN(IE)
       RETURN
       END
@@ -573,9 +579,9 @@ C      GO TO 1
      /IGSHEL,IONMDL,ILVL) BIND(C, name="getlevel")
       IMPLICIT REAL*8 (A-H,O-Z)
       IMPLICIT INTEGER*8 (I-N)                                         
-      COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),
+      COMMON/LARGE/EIN(512),TCF(20000),IARRY(512),
      /RGAS(512),IPN(512),WPL(512),IZBR(512),IPLAST,PENFRA(3,512)
-      COMMON/ANIS/PSCT(20000,512),ANGCT(20000,512),INDEX(512),NISO
+      COMMON/ANIS/INDEX(512),NISO
       COMMON/COMP/LCMP,LCFLG,LRAY,LRFLG,LPAP,LPFLG,LBRM,LBFLG,LPEFLG
       COMMON/IONFL/NC0(512),EC0(512),NG1(512),EG1(512),NG2(512),
      /EG2(512),WKLM(512),DSTFL(512)
@@ -759,23 +765,16 @@ C  ---------------------------------------------------------------
       CHARACTER*50 DSCRPTN,SCRPN1(10),SCRPN2(10),SCRPN3(10),SCRPN4(10),
      /SCRPN5(10),SCRPN6(10)                          
       COMMON/GASN/NGASN(6) 
-      COMMON/MIX1/QELM(20000),QSUM(20000),QION(6,20000),QIN1(250,20000),
-     /QIN2(250,20000),QIN3(250,20000),QIN4(250,20000),QIN5(250,20000),
-     /QIN6(250,20000),QSATT(20000)             
       COMMON/MIX2/E(20000),EROOT(20000),QTOT(20000),QREL(20000),
      /QINEL(20000),QEL(20000)
-      COMMON/MIX3/NIN1,NIN2,NIN3,NIN4,NIN5,NIN6,LION(6),LIN1(250),
-     /LIN2(250),LIN3(250),LIN4(250),LIN5(250),LIN6(250),ALION(6),
-     /ALIN1(250),ALIN2(250),ALIN3(250),ALIN4(250),ALIN5(250),ALIN6(250)
       COMMON/INPT/NGAS,NSTEP,NANISO,EFINAL,ESTEP,AKT,ARY,TEMPC,TORR,IPEN
       COMMON/CNSTS1/CONST1,CONST2,CONST3,CONST4,CONST5                  
       COMMON/SETP/TMAX,SMALL,API,ESTART,THETA,PHI,TCFMAX(10),TCFMAX1,
      /RSTART,EFIELD,ETHRM,ECUT,NDELTA,IMIP,IWRITE                    
-      COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),
+      COMMON/LARGE/EIN(512),TCF(20000),IARRY(512),
      /RGAS(512),IPN(512),WPL(512),IZBR(512),IPLAST,PENFRA(3,512)  
-      COMMON/LARGEN/CFN(20000,60),TCFN(20000),SCLENUL(60),NPLAST    
-      COMMON/ANIS/PSCT(20000,512),ANGCT(20000,512),INDEX(512),NISO
-      COMMON/FRED/FCION(20000),FCATT(20000)
+      COMMON/LARGEN/TCFN(20000),SCLENUL(60),NPLAST    
+      COMMON/ANIS/INDEX(512),NISO
       COMMON/ECASC/NEGAS(512),LEGAS(512),IESHELL(512),IECASC            
       COMMON/MRATIO/VAN1,VAN2,VAN3,VAN4,VAN5,VAN6,VAN
       COMMON/IONC/DOUBLE(6,20000),CMINIXSC(6),CMINEXSC(6),ECLOSS(6),
@@ -789,15 +788,8 @@ C  ---------------------------------------------------------------
       COMMON/SCRIP/DSCRPT(512),DSCRPTN(60)
       COMMON/IONMOD/ESPLIT(512,20),IONMODEL(512)
       COMMON/RLTVY/BET(20000),GAM(20000),VC,EMS                        
-      DIMENSION Q1(6,20000),Q2(6,20000),Q3(6,20000),Q4(6,20000),
-     /Q5(6,20000),Q6(6,20000)
       DIMENSION E1(6),E2(6),E3(6),E4(6),E5(6),E6(6),EI1(250),EI2(250),
      /EI3(250),EI4(250),EI5(250),EI6(250)
-      DIMENSION QATT(6,20000),EION(6)         
-      DIMENSION PEQEL1(6,20000),PEQEL2(6,20000),PEQEL3(6,20000),
-     /PEQEL4(6,20000),PEQEL5(6,20000),PEQEL6(6,20000)
-      DIMENSION PEQIN1(250,20000),PEQIN2(250,20000),PEQIN3(250,20000),  
-     /PEQIN4(250,20000),PEQIN5(250,20000),PEQIN6(250,20000)
       DIMENSION PENFRA1(3,250),PENFRA2(3,250),PENFRA3(3,250),
      /PENFRA4(3,250),PENFRA5(3,250),PENFRA6(3,250)
       DIMENSION KIN1(250),KIN2(250),KIN3(250),KIN4(250),KIN5(250),
@@ -805,10 +797,6 @@ C  ---------------------------------------------------------------
       DIMENSION KEL1(6),KEL2(6),KEL3(6),KEL4(6),KEL5(6),KEL6(6)
       DIMENSION EION1(30),EION2(30),EION3(30),EION4(30),EION5(30),
      /EION6(30)
-      DIMENSION QION1(30,20000),QION2(30,20000),QION3(30,20000),
-     /QION4(30,20000),QION5(30,20000),QION6(30,20000)
-      DIMENSION PEQION1(30,20000),PEQION2(30,20000),PEQION3(30,20000),
-     /PEQION4(30,20000),PEQION5(30,20000),PEQION6(30,20000)
       DIMENSION LEGAS1(30),LEGAS2(30),LEGAS3(30),LEGAS4(30),LEGAS5(30),
      /LEGAS6(30)
       DIMENSION IESHEL1(30),IESHEL2(30),IESHEL3(30),IESHEL4(30),
@@ -824,13 +812,47 @@ C  ---------------------------------------------------------------
       DIMENSION EFL1(30),EFL2(30),EFL3(30),EFL4(30),EFL5(30),EFL6(30)
       DIMENSION IZBR1(250),IZBR2(250),IZBR3(250),IZBR4(250),IZBR5(250),
      /IZBR6(250)
-      DIMENSION QATT1(8,20000),QATT2(8,20000),QATT3(8,20000),
-     /QATT4(8,20000),QATT5(8,20000),QATT6(8,20000) 
-      DIMENSION QNUL1(10,20000),QNUL2(10,20000),QNUL3(10,20000),
-     /QNUL4(10,20000),QNUL5(10,20000),QNUL6(10,20000),SCLN1(10),
-     /SCLN2(10),SCLN3(10),SCLN4(10),SCLN5(10),SCLN6(10)  
+      DIMENSION SCLN1(10),SCLN2(10),SCLN3(10),SCLN4(10),SCLN5(10),
+     /SCLN6(10)  
       DIMENSION ESPLIT1(5,20),ESPLIT2(5,20),ESPLIT3(5,20),ESPLIT4(5,20),
      /ESPLIT5(5,20),ESPLIT6(5,20)
+      real*8, allocatable :: Q1(:,:),Q2(:,:),Q3(:,:)
+      real*8, allocatable :: Q4(:,:),Q5(:,:),Q6(:,:)
+      real*8, allocatable :: QIN1(:,:),QIN2(:,:),QIN3(:,:)
+      real*8, allocatable :: QIN4(:,:),QIN5(:,:),QIN6(:,:)
+      real*8, allocatable :: QION1(:,:),QION2(:,:),QION3(:,:)
+      real*8, allocatable :: QION4(:,:),QION5(:,:),QION6(:,:)
+      real*8, allocatable :: QATT1(:,:),QATT2(:,:),QATT3(:,:)
+      real*8, allocatable :: QATT4(:,:),QATT5(:,:),QATT6(:,:)
+      real*8, allocatable :: QNUL1(:,:),QNUL2(:,:),QNUL3(:,:)
+      real*8, allocatable :: QNUL4(:,:),QNUL5(:,:),QNUL6(:,:)
+      real*8, allocatable :: PEQEL1(:,:),PEQEL2(:,:),PEQEL3(:,:)
+      real*8, allocatable :: PEQEL4(:,:),PEQEL5(:,:),PEQEL6(:,:)
+      real*8, allocatable :: PEQIN1(:,:),PEQIN2(:,:),PEQIN3(:,:)
+      real*8, allocatable :: PEQIN4(:,:),PEQIN5(:,:),PEQIN6(:,:)
+      real*8, allocatable :: PEQION1(:,:),PEQION2(:,:),PEQION3(:,:)
+      real*8, allocatable :: PEQION4(:,:),PEQION5(:,:),PEQION6(:,:)
+      allocate(Q1(6, 20000),Q2(6, 20000),Q3(6, 20000))
+      allocate(Q4(6, 20000),Q5(6, 20000),Q6(6, 20000)) 
+      allocate(QIN1(250, 20000),QIN2(250, 20000),QIN3(250, 20000))
+      allocate(QIN4(250, 20000),QIN5(250, 20000),QIN6(250, 20000)) 
+      allocate(QION1(30, 20000),QION2(30, 20000),QION3(30, 20000))
+      allocate(QION4(30, 20000),QION5(30, 20000),QION6(30, 20000)) 
+      allocate(QATT1(8, 20000),QATT2(8, 20000),QATT3(8, 20000))
+      allocate(QATT4(8, 20000),QATT5(8, 20000),QATT6(8, 20000)) 
+      allocate(QNUL1(10, 20000),QNUL2(10, 20000),QNUL3(10, 20000))
+      allocate(QNUL4(10, 20000),QNUL5(10, 20000),QNUL6(10, 20000)) 
+      allocate(PEQEL1(6, 20000),PEQEL2(6, 20000),PEQEL3(6, 20000))
+      allocate(PEQEL4(6, 20000),PEQEL5(6, 20000),PEQEL6(6, 20000))
+      allocate(PEQIN1(250, 20000),PEQIN2(250, 20000),PEQIN3(250, 20000))
+      allocate(PEQIN4(250, 20000),PEQIN5(250, 20000),PEQIN6(250, 20000))
+      allocate(PEQION1(30, 20000),PEQION2(30, 20000),PEQION3(30, 20000))
+      allocate(PEQION4(30, 20000),PEQION5(30, 20000),PEQION6(30, 20000))
+*** Allocate global variables
+      if(.not.allocated(CF)) allocate(CF(20000,512))
+      if(.not.allocated(PSCT)) allocate(PSCT(20000,512))
+      if(.not.allocated(ANGCT)) allocate(ANGCT(20000,512))
+      IF(.NOT.ALLOCATED(CFN)) ALLOCATE(CFN(20000,60))
 C                                                                       
 C  ---------------------------------------------------------------------
 C                                                                       
@@ -1117,9 +1139,15 @@ C     L=5*N-2    ATTACHMENT NTH GAS
 C     L=5*N-1    INELASTIC NTH GAS    
 C     L=5*N      SUPERELASTIC NTH GAS                    
 C---------------------------------------------------------------   
+      RGAS1=1.0D0+E1(2)/2.0D0
+      RGAS2=1.0D0+E2(2)/2.0D0
+      RGAS3=1.0D0+E3(2)/2.0D0
+      RGAS4=1.0D0+E4(2)/2.0D0
+      RGAS5=1.0D0+E5(2)/2.0D0
+      RGAS6=1.0D0+E6(2)/2.0D0
       DO 700 IE=1,20000  
-      FCION(IE)=0.0D0
-      FCATT(IE)=0.0D0
+C      FCION(IE)=0.0D0
+C      FCATT(IE)=0.0D0
 C
       NP=1 
       IDG1=1
@@ -1144,7 +1172,6 @@ C   ELASTIC ANG
       ENDIF
 C
       IF(IE.GT.1) GO TO 12                                   
-      RGAS1=1.0D0+E1(2)/2.0D0                                           
       RGAS(NP)=RGAS1                                                    
       EIN(NP)=0.0D0                                                     
       IPN(NP)=0 
@@ -1170,11 +1197,11 @@ C
 C CHOOSE BETWEEN COUNTING AND GROSS IONISATION X-SECTION
       IF(ICOUNT.EQ.1) THEN
        CF(IE,NP)=Q1(5,IE)*VAN1*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
        DOUBLE(1,IE)=Q1(3,IE)/Q1(5,IE)-1.0D0
       ELSE                                    
        CF(IE,NP)=Q1(3,IE)*VAN1*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
       ENDIF
       NEGAS(NP)=1 
       LEGAS(NP)=0
@@ -1230,15 +1257,17 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0
       IONMODEL(NP)=IONMODL1
-      DO 19 K=1,20
-   19 ESPLIT(NP,K)=ESPLIT1(IONMODL1,K) 
+      IF(IONMODL1.NE.0) THEN
+       DO 19 K=1,20
+   19  ESPLIT(NP,K)=ESPLIT1(IONMODL1,K) 
+      END IF
       GO TO 30
    20 DO 25 KION=1,NION1
       NP=NP+1
       IDG1=NP
 C CHOOSE BETWEEN COUNTING AND GROSS IONISATION X-SECTION
       CF(IE,NP)=QION1(KION,IE)*VAN1*BET(IE)
-      FCION(IE)=FCION(IE)+CF(IE,NP)
+C      FCION(IE)=FCION(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5D0
       ANGCT(IE,NP)=1.0D0
       INDEX(NP)=0 
@@ -1280,15 +1309,17 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0
       IONMODEL(NP)=IONMODL1
-      DO 24 K=1,20
-   24 ESPLIT(NP,K)=ESPLIT1(IONMODL1,K) 
+      IF(IONMODL1.NE.0) THEN
+       DO 24 K=1,20
+   24  ESPLIT(NP,K)=ESPLIT1(IONMODL1,K)
+      END IF 
    25 CONTINUE   
    30 IF(EFINAL.LT.E1(4)) GO TO 40   
       IF(NATT1.GT.1) GO TO 551                                   
       NP=NP+1
       IDG1=NP                                                           
       CF(IE,NP)=Q1(4,IE)*VAN1*BET(IE)
-      FCATT(IE)=FCATT(IE)+CF(IE,NP) 
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP) 
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 40
@@ -1311,7 +1342,7 @@ C
       NP=NP+1
       IDG1=NP
       CF(IE,NP)=QATT1(JJ,IE)*VAN1*BET(IE)
-      FCATT(IE)=FCATT(IE)+CF(IE,NP)
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 552
@@ -1400,7 +1431,6 @@ C
       ENDIF 
 C
       IF(IE.GT.1) GO TO 62                                     
-      RGAS2=1.0D0+E2(2)/2.0D0                                           
       RGAS(NP)=RGAS2                                                    
       EIN(NP)=0.0D0                                                     
       IPN(NP)=0
@@ -1426,11 +1456,11 @@ C
 C CHOOSE BETWEEN COUNTING AND GROSS IONISATION X-SECTION
       IF(ICOUNT.EQ.1) THEN
        CF(IE,NP)=Q2(5,IE)*VAN2*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
        DOUBLE(2,IE)=Q2(3,IE)/Q2(5,IE)-1.0D0
       ELSE                             
        CF(IE,NP)=Q2(3,IE)*VAN2*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
       ENDIF
       NEGAS(NP)=2
       LEGAS(NP)=0
@@ -1486,14 +1516,16 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0  
       IONMODEL(NP)=IONMODL2
-      DO 69 K=1,20
-   69 ESPLIT(NP,K)=ESPLIT2(IONMODL2,K) 
+      IF(IONMODL2.NE.0) THEN
+       DO 69 K=1,20
+   69  ESPLIT(NP,K)=ESPLIT2(IONMODL2,K) 
+      END IF
       GO TO 130                                       
    70 DO 80 KION=1,NION2
       NP=NP+1
       IDG2=NP
       CF(IE,NP)=QION2(KION,IE)*VAN2*BET(IE)
-      FCION(IE)=FCION(IE)+CF(IE,NP)
+C      FCION(IE)=FCION(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       INDEX(NP)=0
@@ -1535,15 +1567,17 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0       
       IONMODEL(NP)=IONMODL2
-      DO 79 K=1,20
-   79 ESPLIT(NP,K)=ESPLIT2(IONMODL2,K) 
+      IF(IONMODL2.NE.0) THEN
+       DO 79 K=1,20
+   79  ESPLIT(NP,K)=ESPLIT2(IONMODL2,K) 
+      END IF
    80 CONTINUE                                  
   130 IF(EFINAL.LT.E2(4)) GO TO 140    
       IF(NATT2.GT.1) GO TO 561                                 
       NP=NP+1
       IDG2=NP                                                           
       CF(IE,NP)=Q2(4,IE)*VAN2*BET(IE)
-      FCATT(IE)=FCATT(IE)+CF(IE,NP)  
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP)  
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 140
@@ -1566,7 +1600,7 @@ C
       NP=NP+1
       IDG2=NP
       CF(IE,NP)=QATT2(JJ,IE)*VAN2*BET(IE)
-      FCATT(IE)=FCATT(IE)+CF(IE,NP)
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 562
@@ -1655,7 +1689,6 @@ C
       ENDIF
 C
       IF(IE.GT.1) GO TO 162                                     
-      RGAS3=1.0D0+E3(2)/2.0D0                                           
       RGAS(NP)=RGAS3                                                    
       EIN(NP)=0.0D0                                                     
       IPN(NP)=0  
@@ -1681,11 +1714,11 @@ C
 C CHOOSE BETWEEN COUNTING AND GROSS IONISATION X-SECTION
       IF(ICOUNT.EQ.1) THEN
        CF(IE,NP)=Q3(5,IE)*VAN3*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
        DOUBLE(3,IE)=Q3(3,IE)/Q3(5,IE)-1.0D0
       ELSE                              
        CF(IE,NP)=Q3(3,IE)*VAN3*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
       ENDIF
       NEGAS(NP)=3
       LEGAS(NP)=0
@@ -1741,15 +1774,17 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0 
       IONMODEL(NP)=IONMODL3
-      DO 169 K=1,20
-  169 ESPLIT(NP,K)=ESPLIT3(IONMODL3,K) 
+      IF(IONMODL3.NE.0) THEN
+       DO 169 K=1,20
+  169  ESPLIT(NP,K)=ESPLIT3(IONMODL3,K) 
+      END IF
       GO TO 230  
   170 DO 180 KION=1,NION3                                         
       NP=NP+1
       IDG3=NP
 C CHOOSE BETWEEN COUNTING AND GROSS IONISATION X-SECTION
       CF(IE,NP)=QION3(KION,IE)*VAN3*BET(IE)
-      FCION(IE)=FCION(IE)+CF(IE,NP)
+C      FCION(IE)=FCION(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       INDEX(NP)=0
@@ -1791,15 +1826,17 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0    
       IONMODEL(NP)=IONMODL3
-      DO 179 K=1,20
-  179 ESPLIT(NP,K)=ESPLIT3(IONMODL3,K) 
+      IF(IONMODL3.NE.0) THEN
+       DO 179 K=1,20
+  179  ESPLIT(NP,K)=ESPLIT3(IONMODL3,K) 
+      END IF
   180 CONTINUE                                        
   230 IF(EFINAL.LT.E3(4)) GO TO 240      
       IF(NATT3.GT.1) GO TO 571                               
       NP=NP+1
       IDG3=NP                                                           
       CF(IE,NP)=Q3(4,IE)*VAN3*BET(IE)
-      FCATT(IE)=FCATT(IE)+CF(IE,NP)
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 240
@@ -1823,7 +1860,7 @@ C
       NP=NP+1
       IDG3=NP
       CF(IE,NP)=QATT3(JJ,IE)*VAN3*BET(IE)  
-      FCATT(IE)=FCATT(IE)+CF(IE,NP)      
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP)      
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 572
@@ -1912,7 +1949,6 @@ C
       ENDIF 
 C
       IF(IE.GT.1) GO TO 262                                    
-      RGAS4=1.0D0+E4(2)/2.0D0                                           
       RGAS(NP)=RGAS4                                                    
       EIN(NP)=0.0D0                                                     
       IPN(NP)=0
@@ -1938,11 +1974,11 @@ C
 C CHOOSE BETWEEN COUNTING AND GROSS IONISATION X-SECTION
       IF(ICOUNT.EQ.1) THEN
        CF(IE,NP)=Q4(5,IE)*VAN4*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
        DOUBLE(4,IE)=Q4(3,IE)/Q4(5,IE)-1.0D0
       ELSE                                                         
        CF(IE,NP)=Q4(3,IE)*VAN4*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
       ENDIF
       NEGAS(NP)=4
       LEGAS(NP)=0
@@ -1998,15 +2034,17 @@ C
       PENFRA(2,NP)=0.0 
       PENFRA(3,NP)=0.0  
       IONMODEL(NP)=IONMODL4
-      DO 269 K=1,20
-  269 ESPLIT(NP,K)=ESPLIT4(IONMODL4,K) 
+      IF(IONMODL4.NE.0) THEN
+       DO 269 K=1,20
+  269  ESPLIT(NP,K)=ESPLIT4(IONMODL4,K) 
+      END IF
       GO TO 330
   270 DO 280 KION=1,NION4                                       
       NP=NP+1
       IDG4=NP
 C CHOOSE BETWEEN COUNTING AND GROSS IONISATION X-SECTION
       CF(IE,NP)=QION4(KION,IE)*VAN4*BET(IE)
-      FCION(IE)=FCION(IE)+CF(IE,NP)
+C      FCION(IE)=FCION(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       INDEX(NP)=0  
@@ -2048,15 +2086,17 @@ C
       PENFRA(2,NP)=0.0 
       PENFRA(3,NP)=0.0  
       IONMODEL(NP)=IONMODL4
-      DO 279 K=1,20
-  279 ESPLIT(NP,K)=ESPLIT4(IONMODL4,K) 
+      IF(IONMODL4.NE.0) THEN
+       DO 279 K=1,20
+  279  ESPLIT(NP,K)=ESPLIT4(IONMODL4,K) 
+      END IF
   280 CONTINUE                                       
   330 IF(EFINAL.LT.E4(4)) GO TO 340          
       IF(NATT4.GT.1) GO TO 581                           
       NP=NP+1
       IDG4=NP                                                           
       CF(IE,NP)=Q4(4,IE)*VAN4*BET(IE)
-      FCATT(IE)=FCATT(IE)+CF(IE,NP)
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 340  
@@ -2079,7 +2119,7 @@ C
       NP=NP+1
       IDG4=NP
       CF(IE,NP)=QATT4(JJ,IE)*VAN4*BET(IE)
-      FCATT(IE)=FCATT(IE)+CF(IE,NP) 
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP) 
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 582
@@ -2168,7 +2208,6 @@ C
       ENDIF
 C 
       IF(IE.GT.1) GO TO 362                                    
-      RGAS5=1.0D0+E5(2)/2.0D0                                           
       RGAS(NP)=RGAS5                                                    
       EIN(NP)=0.0D0                                                     
       IPN(NP)=0
@@ -2194,11 +2233,11 @@ C
 C CHOOSE BETWEEN COUNTING AND GROSS IONISATION X-SECTION
       IF(ICOUNT.EQ.1) THEN
        CF(IE,NP)=Q5(5,IE)*VAN5*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
        DOUBLE(5,IE)=Q5(3,IE)/Q5(5,IE)-1.0D0
       ELSE                                                         
        CF(IE,NP)=Q5(3,IE)*VAN5*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
       ENDIF
       NEGAS(NP)=5
       LEGAS(NP)=0
@@ -2254,15 +2293,17 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0 
       IONMODEL(NP)=IONMODL5
-      DO 369 K=1,20
-  369 ESPLIT(NP,K)=ESPLIT5(IONMODL5,K) 
+      IF(IONMODL5.NE.0) THEN
+       DO 369 K=1,20
+  369  ESPLIT(NP,K)=ESPLIT5(IONMODL5,K) 
+      END IF
       GO TO 430       
   370 DO 380 KION=1,NION5                                   
       NP=NP+1
       IDG5=NP  
 C CHOOSE BETWEEN COUNTING AND GROSS IONISATION X-SECTION
       CF(IE,NP)=QION5(KION,IE)*VAN5*BET(IE)
-      FCION(IE)=FCION(IE)+CF(IE,NP)
+C      FCION(IE)=FCION(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       INDEX(NP)=0 
@@ -2304,15 +2345,17 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0 
       IONMODEL(NP)=IONMODL5
-      DO 379 K=1,20
-  379 ESPLIT(NP,K)=ESPLIT5(IONMODL5,K) 
+      IF(IONMODL5.NE.0) THEN
+       DO 379 K=1,20
+  379  ESPLIT(NP,K)=ESPLIT5(IONMODL5,K) 
+      END IF
   380 CONTINUE
   430 IF(EFINAL.LT.E5(4)) GO TO 440                 
       IF(NATT5.GT.1) GO TO 591                    
       NP=NP+1
       IDG5=NP                                                           
       CF(IE,NP)=Q5(4,IE)*VAN5*BET(IE)
-      FCATT(IE)=FCATT(IE)+CF(IE,NP)
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 440
@@ -2335,7 +2378,7 @@ C
       NP=NP+1
       IDG5=NP
       CF(IE,NP)=QATT5(JJ,IE)*VAN5*BET(IE)
-      FCATT(IE)=FCATT(IE)+CF(IE,NP)
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 592
@@ -2424,7 +2467,6 @@ C
       ENDIF
 C  
       IF(IE.GT.1) GO TO 462                                    
-      RGAS6=1.0D0+E6(2)/2.0D0                                           
       RGAS(NP)=RGAS6                                                    
       EIN(NP)=0.0D0                                                     
       IPN(NP)=0
@@ -2450,11 +2492,11 @@ C
 C CHOOSE BETWEEN COUNTING AND GROSS IONISATION X-SECTION
       IF(ICOUNT.EQ.1) THEN
        CF(IE,NP)=Q6(5,IE)*VAN6*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
        DOUBLE(6,IE)=Q6(3,IE)/Q6(5,IE)-1.0D0
       ELSE                                                         
        CF(IE,NP)=Q6(3,IE)*VAN6*BET(IE)
-       FCION(IE)=FCION(IE)+CF(IE,NP)
+C       FCION(IE)=FCION(IE)+CF(IE,NP)
       ENDIF
       NEGAS(NP)=6
       LEGAS(NP)=0
@@ -2515,7 +2557,7 @@ C
       IDG6=NP  
 C CHOOSE BETWEEN COUNTING AND GROSS IONISATION X-SECTION
       CF(IE,NP)=QION6(KION,IE)*VAN6*BET(IE)
-      FCION(IE)=FCION(IE)+CF(IE,NP)
+C      FCION(IE)=FCION(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       INDEX(NP)=0
@@ -2556,15 +2598,17 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0    
       IONMODEL(NP)=IONMODL6
-      DO 479 K=1,20
-  479 ESPLIT(NP,K)=ESPLIT6(IONMODL6,K) 
+      IF(IONMODL6.NE.0) THEN
+       DO 479 K=1,20
+  479  ESPLIT(NP,K)=ESPLIT6(IONMODL6,K) 
+      END IF
   480 CONTINUE                                 
   530 IF(EFINAL.LT.E6(4)) GO TO 540                  
       IF(NATT6.GT.1) GO TO 590                   
       NP=NP+1
       IDG6=NP                                                           
       CF(IE,NP)=Q6(4,IE)*VAN6*BET(IE) 
-      FCATT(IE)=FCATT(IE)+CF(IE,NP)
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 540 
@@ -2587,7 +2631,7 @@ C
       NP=NP+1
       IDG6=NP
       CF(IE,NP)=QATT6(JJ,IE)*VAN6*BET(IE)
-      FCATT(IE)=FCATT(IE)+CF(IE,NP)
+C      FCATT(IE)=FCATT(IE)+CF(IE,NP)
       PSCT(IE,NP)=0.5
       ANGCT(IE,NP)=1.0
       IF(IE.GT.1) GO TO 602
@@ -2606,8 +2650,10 @@ C
       PENFRA(2,NP)=0.0
       PENFRA(3,NP)=0.0
       IONMODEL(NP)=IONMODL6
-      DO 601 K=1,20
-  601 ESPLIT(NP,K)=ESPLIT6(IONMODL6,K)  
+      IF(IONMODL6.NE.0) THEN
+       DO 601 K=1,20
+  601  ESPLIT(NP,K)=ESPLIT6(IONMODL6,K)  
+      END IF
   602 CONTINUE                                    
   540 IF(NIN6.EQ.0) GO TO 560                                           
       DO 550 J=1,NIN6 
@@ -2657,7 +2703,7 @@ C
   560 CONTINUE     
 C                                                                       
   600 CONTINUE                                                          
-      IPLAST=NP  
+      IPLAST=NP 
 C ----------------------------------------------------------------      
 C   CAN INCREASE ARRAY SIZE UP TO 1740 IF MORE COMPLEX MIXTURES USED.
 C   1740 = 6 * 290 ( 6 = MAX NO OF GASES. 290 = MAX NO OF LEVELS )    
@@ -2692,8 +2738,8 @@ C
 C     FCATT(IE)=FCATT(IE)*EROOT(IE)
 C     FCION(IE)=FCION(IE)*EROOT(IE)                                     
 C     TCF(IE)=TCF(IE)*EROOT(IE)   
-      FCATT(IE)=FCATT(IE)*1.0D-10  
-      FCION(IE)=FCION(IE)*1.0D-10                                       
+C      FCATT(IE)=FCATT(IE)*1.0D-10  
+C      FCION(IE)=FCION(IE)*1.0D-10                                       
       TCF(IE)=TCF(IE)*1.0D-10   
 C CALCULATION OF NULL COLLISION FREQUENCIES
       NP=0
@@ -2815,72 +2861,50 @@ C ---------------------------------------------------------------------
       QEL(I)=AN1*Q1(2,I)+AN2*Q2(2,I)+AN3*Q3(2,I)+AN4*Q4(2,I)+
      /AN5*Q5(2,I)+AN6*Q6(2,I)             
 C                                                                       
-      QION(1,I)=Q1(3,I)*AN1   
+      QION=0.0
+      QION=QION+Q1(3,I)*AN1   
       IF(NION1.GT.1) THEN
        DO 811 KION=1,NION1
-  811  QION(1,I)=QION1(KION,I)*AN1
+  811  QION=QION+QION1(KION,I)*AN1
       ENDIF                                           
-      QION(2,I)=Q2(3,I)*AN2                                             
+      QION=QION+Q2(3,I)*AN2                                             
       IF(NION2.GT.1) THEN
        DO 812 KION=1,NION2
-  812  QION(2,I)=QION2(KION,I)*AN2
+  812  QION=QION+QION2(KION,I)*AN2
       ENDIF                                           
-      QION(3,I)=Q3(3,I)*AN3                                             
+      QION=QION+Q3(3,I)*AN3                                             
       IF(NION3.GT.1) THEN
        DO 813 KION=1,NION3
-  813  QION(3,I)=QION3(KION,I)*AN3
+  813  QION=QION+QION3(KION,I)*AN3
       ENDIF                                           
-      QION(4,I)=Q4(3,I)*AN4
+      QION=QION+Q4(3,I)*AN4
       IF(NION4.GT.1) THEN
        DO 814 KION=1,NION4
-  814  QION(4,I)=QION4(KION,I)*AN4
+  814  QION=QION+QION4(KION,I)*AN4
       ENDIF                                           
-      QION(5,I)=Q5(3,I)*AN5
+      QION=QION+Q5(3,I)*AN5
       IF(NION5.GT.1) THEN
        DO 815 KION=1,NION5
-  815  QION(5,I)=QION5(KION,I)*AN5
+  815  QION=QION+QION5(KION,I)*AN5
       ENDIF                                           
-      QION(6,I)=Q6(3,I)*AN6                                             
+      QION=QION+Q6(3,I)*AN6                                             
       IF(NION6.GT.1) THEN
        DO 816 KION=1,NION6
-  816  QION(6,I)=QION6(KION,I)*AN6
+  816  QION=QION+QION6(KION,I)*AN6
       ENDIF                                           
-      QATT(1,I)=Q1(4,I)*AN1                                             
-      QATT(2,I)=Q2(4,I)*AN2                                             
-      QATT(3,I)=Q3(4,I)*AN3                                             
-      QATT(4,I)=Q4(4,I)*AN4
-      QATT(5,I)=Q5(4,I)*AN5
-      QATT(6,I)=Q6(4,I)*AN6                                             
+      QATT=Q1(4,I)*AN1+Q2(4,I)*AN2+Q3(4,I)*AN3+Q4(4,I)*AN4+
+     /Q5(4,I)*AN5+Q6(4,I)*AN6
 C                                                                       
-      QREL(I)=0.0D0                                                     
-      QSATT(I)=0.0D0                                                   
-      QSUM(I)=0.0D0                                                     
-      DO 855 J=1,NGAS                                                   
-      QSUM(I)=QSUM(I)+QION(J,I)+QATT(J,I)                               
-      QSATT(I)=QSATT(I)+QATT(J,I)                                       
-  855 QREL(I)=QREL(I)+QION(J,I)-QATT(J,I)                               
-C                                                                       
-      IF(NIN1.EQ.0) GO TO 865                                           
-      DO 860 J=1,NIN1                                                   
-  860 QSUM(I)=QSUM(I)+QIN1(J,I)*AN1                                     
-  865 IF(NIN2.EQ.0) GO TO 875                                           
-      DO 870 J=1,NIN2                                                   
-  870 QSUM(I)=QSUM(I)+QIN2(J,I)*AN2                                     
-  875 IF(NIN3.EQ.0) GO TO 885                                           
-      DO 880 J=1,NIN3                                                   
-  880 QSUM(I)=QSUM(I)+QIN3(J,I)*AN3                                     
-  885 IF(NIN4.EQ.0) GO TO 895                                           
-      DO 890 J=1,NIN4                                                   
-  890 QSUM(I)=QSUM(I)+QIN4(J,I)*AN4                                     
-  895 IF(NIN5.EQ.0) GO TO 898 
-      DO 896 J=1,NIN5
-  896 QSUM(I)=QSUM(I)+QIN5(J,I)*AN5
-  898 IF(NIN6.EQ.0) GO TO 900
-      DO 899 J=1,NIN6
-  899 QSUM(I)=QSUM(I)+QIN6(J,I)*AN6                                     
-C                                                                       
+      QREL(I)=QION-QATT
  900  CONTINUE                                                          
 C                                                                       
+      deallocate(QIN1,QIN2,QIN3,QIN4,QIN5,QIN6)
+      deallocate(QION1,QION2,QION3,QION4,QION5,QION6)
+      deallocate(QATT1,QATT2,QATT3,QATT4,QATT5,QATT6)
+      deallocate(QNUL1,QNUL2,QNUL3,QNUL4,QNUL5,QNUL6)
+      deallocate(PEQEL1,PEQEL2,PEQEL3,PEQEL4,PEQEL5,PEQEL6)
+      deallocate(PEQIN1,PEQIN2,PEQIN3,PEQIN4,PEQIN5,PEQIN6)
+      deallocate(PEQION1,PEQION2,PEQION3,PEQION4,PEQION5,PEQION6)
       RETURN                                                            
       END 
       SUBROUTINE GASMIX(NGS,Q,QIN,NIN,E,EI,NAME,VIRL,EB,
@@ -23112,9 +23136,9 @@ C   METRES PER PICOSECOND
       COMMON/SETP/TMAX,SMALL,API,ESTART,THETA,PHI,TCFMAX(10),TCFMAX1,
      /RSTART,EFIELD,ECUT,ETHRM,NDELTA,IMIP,IWRITE        
       COMMON/BFLD/EOVB,WB,BTHETA,BMAG    
-      COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),    
+      COMMON/LARGE/EIN(512),TCF(20000),IARRY(512),    
      /RGAS(512),IPN(512),WPL(512),IZBR(512),LAST,PENFRA(3,512) 
-      COMMON/LARGEN/CFN(20000,60),TCFN(20000),SCLENUL(60),NPLAST
+      COMMON/LARGEN/TCFN(20000),SCLENUL(60),NPLAST
       COMMON/OUTPT/ICOLL(30),NETOT,NPRIME,TMAX1,TIME(300),NNULL,
      /NITOT,ICOLN(512),ICOLNN(60),NREAL,NEXCTOT
       COMMON/FANO/AFAN1,AFAN2,AFAN3,AFAN4,ASKEW,AKURT,AFAN1EXC,AFAN2EXC,
@@ -23615,9 +23639,9 @@ C    /,2(/),30(1X,10E10.3/))
       COMMON/SETP/TMAX,SMALL,API,ESTART,THETA,PHI,TCFMAX(10),TCFMAX1,
      /RSTART,EFIELD,ETHRM,ECUT,NEVENT,IMIP,IWRITE  
       COMMON/SET2/DRXINIT,DRYINIT,DRZINIT
-      COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),
+      COMMON/LARGE/EIN(512),TCF(20000),IARRY(512),
      /RGAS(512),IPN(512),WPL(512),IZBR(512),IPLAST,PENFRA(3,512)
-      COMMON/ANIS/PSCT(20000,512),ANGCT(20000,512),INDEX(512),NISO
+      COMMON/ANIS/INDEX(512),NISO
       COMMON/RLTVY/BET(20000),GAM(20000),VC,EMS
       COMMON/MIPCLC/ANPRELA,ANPRATT,ANPREXC,ANPRION,ANPREXCI,ANPRBRM
       COMMON/DEDX/ELOSS,ELOSEX,ELOSION,ESUM,BETAGAM,TCFHIGH,VELC,
@@ -23664,10 +23688,10 @@ C
       CFTEMP(I)=CF(20000,I)
       PSTEMP(I)=PSCT(20000,I)
       ANTEMP(I)=ANGCT(20000,I)
+    1 CONTINUE
       TCFF=TCF(20000)
       BETA=BET(20000)
       GAMM=GAM(20000)
-    1 CONTINUE
       VEL=BETA*VC
       DO 2 J=1,IPLAST
       IA=IARRY(J)
@@ -28124,9 +28148,9 @@ C POSSIBLE ENERGY SPLITTING FUNCTION
       COMMON/CNSTS1/CONST1,CONST2,CONST3,CONST4,CONST5                  
       COMMON/SETP/TMAX,SMALL,API,ESTART,THETA,PHI,TCFMAX(10),TCFMAX1,
      /RSTART,EFIELD,ETHRM,ECUT,NDELTA,IMIP,IWRITE                    
-      COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),
+      COMMON/LARGE/EIN(512),TCF(20000),IARRY(512),
      /RGAS(512),IPN(512),WPL(512),IZBR(512),IPLAST,PENFRA(3,512)
-      COMMON/LARGEN/CFN(20000,60),TCFN(20000),SCLENUL(60),NPLAST
+      COMMON/LARGEN/TCFN(20000),SCLENUL(60),NPLAST
       COMMON/OUTPT/ICOLL(30),NETOT,NPRIME,TMAX1,TIME(300),NNULL,
      /NITOT,ICOLN(512),ICOLNN(60),NREAL,NEXCTOT 
       COMMON/RLTVY/BET(20000),GAM(20000),VC,EMS
@@ -28142,7 +28166,7 @@ C POSSIBLE ENERGY SPLITTING FUNCTION
       COMMON/IONFL/NC0(512),EC0(512),NG1(512),EG1(512),NG2(512),
      /EG2(512),WKLM(512),DSTFL(512)
       COMMON/IONMOD/ESPLIT(512,20),IONMODEL(512)
-      COMMON/ANIS/PSCT(20000,512),ANGCT(20000,512),INDEX(512),NISO
+      COMMON/ANIS/INDEX(512),NISO
       COMMON/CASRS/ECAS(400),XCAS(400),YCAS(400),ZCAS(400),DRXS(400),
      /DRYS(400),DRZS(400),TT1(400),NFLGF(400),NFLGPP(400),IEVNTL
       COMMON/COMP/LCMP,LCFLG,LRAY,LRFLG,LPAP,LPFLG,LBRM,LBFLG,LPEFLG
@@ -28157,10 +28181,14 @@ C POSSIBLE ENERGY SPLITTING FUNCTION
       COMMON/ECASC/NEGAS(512),LEGAS(512),IESHELL(512),IECASC
       COMMON/IDEXC/NGEXC1,NGEXC2,NGEXC3,NGEXC4,NGEXC5,NGEXC6,
      /IDG1,IDG2,IDG3,IDG4,IDG5,IDG6
-      DIMENSION XS(150000),YS(150000),ZS(150000),TS(150000),ES(150000),
-     /DCX(150000),DCY(150000),DCZ(150000),
-     /NFLGFC(150000),NFLGPPC(150000),NFLGBRMC(150000)
-      DIMENSION TEMP(20000)
+      real*8, allocatable :: XS(:),YS(:),ZS(:),TS(:),ES(:)
+      real*8, allocatable :: DCX(:),DCY(:),DCZ(:)
+      integer*8, allocatable :: NFLGFC(:),NFLGPPC(:),NFLGBRMC(:)
+      real*8, allocatable :: TEMP(:)
+      allocate(XS(150000),YS(150000),ZS(150000),TS(150000),ES(150000))
+      allocate(DCX(150000),DCY(150000),DCZ(150000))
+      allocate(NFLGFC(150000),NFLGPPC(150000),NFLGBRMC(150000))
+      allocate(TEMP(20000))
 C     DIMENSION ETEMP(1000)
 C ----------------------------------------------------------------------
 C      RELATIVISTIC VERSION SEPTEMBER 2013
@@ -28862,6 +28890,8 @@ C  MAIN LOOP END
 C RESET NUMBER OF EVENTS FOR BAD EVENTS
       IF(IMIP.GT.2) NDELTA=NDELTA-IBADTOT
 C
+      deallocate(XS,YS,ZS,TS,ES,DCX,DCY,DCZ,TEMP)
+      deallocate(NFLGFC,NFLGPPC,NFLGBRMC)
       WRITE(6,887) EMAX,NEOVFL
   887 FORMAT(' EMAX=',D12.7,' NEOVFL=',I5)  
       IF(EMAX.GT.EFINAL) THEN
@@ -28876,6 +28906,8 @@ C
   992 FORMAT(3(/),' WARNING STOPPED AFTER NPRIME=',I6,' LAST PRIMARY HAS
      /AT LEAST ',I6,' SECONDARIES LEFT TO TRACK OUT OF ',I6,' ELECTRONS 
      /ALREADY IN CLUSTER') 
+      deallocate(XS,YS,ZS,TS,ES,DCX,DCY,DCZ,TEMP)
+      deallocate(NFLGFC,NFLGPPC,NFLGBRMC)
       STOP                      
       RETURN                                                            
       END
@@ -28888,9 +28920,9 @@ C
       COMMON/SETP/TMAX,SMALL,API,ESTART,THETA,PHI,TCFMAX(10),TCFMAX1,
      /RSTART,EFIELD,ETHRM,ECUT,NDELTA,IMIP,IWRITE   
       COMMON/BFLD/EOVB,WB,BTHETA,BMAG                                   
-      COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),    
+      COMMON/LARGE/EIN(512),TCF(20000),IARRY(512),    
      /RGAS(512),IPN(512),WPL(512),IZBR(512),IPLAST,PENFRA(3,512)
-      COMMON/LARGEN/CFN(20000,60),TCFN(20000),SCLENUL(60),NPLAST
+      COMMON/LARGEN/TCFN(20000),SCLENUL(60),NPLAST
       COMMON/OUTPT/ICOLL(30),NETOT,NPRIME,TMAX1,TIME(300),NNULL,
      /NITOT,ICOLN(512),ICOLNN(60),NREAL,NEXCTOT 
       COMMON/RLTVY/BET(20000),GAM(20000),VC,EMS
@@ -28906,7 +28938,7 @@ C
       COMMON/IONFL/NC0(512),EC0(512),NG1(512),EG1(512),NG2(512),
      /EG2(512),WKLM(512),DSTFL(512)
       COMMON/IONMOD/ESPLIT(512,20),IONMODEL(512) 
-      COMMON/ANIS/PSCT(20000,512),ANGCT(20000,512),INDEX(512),NISO
+      COMMON/ANIS/INDEX(512),NISO
       COMMON/CASRS/ECAS(400),XCAS(400),YCAS(400),ZCAS(400),DRXS(400),
      /DRYS(400),DRZS(400),TT1(400),NFLGF(400),NFLGPP(400),IEVNTL
       COMMON/COMP/LCMP,LCFLG,LRAY,LRFLG,LPAP,LPFLG,LBRM,LBFLG,LPEFLG
@@ -28921,10 +28953,14 @@ C
       COMMON/ECASC/NEGAS(512),LEGAS(512),IESHELL(512),IECASC
       COMMON/IDEXC/NGEXC1,NGEXC2,NGEXC3,NGEXC4,NGEXC5,NGEXC6,
      /IDG1,IDG2,IDG3,IDG4,IDG5,IDG6
-      DIMENSION XS(150000),YS(150000),ZS(150000),TS(150000),ES(150000),
-     /DCX(150000),DCY(150000),DCZ(150000),
-     /NFLGFC(150000),NFLGPPC(150000),NFLGBRMC(150000)
-      DIMENSION TEMP(20000)
+      real*8, allocatable :: XS(:),YS(:),ZS(:),TS(:),ES(:)
+      real*8, allocatable :: DCX(:),DCY(:),DCZ(:)
+      integer*8, allocatable :: NFLGFC(:),NFLGPPC(:),NFLGBRMC(:)
+      real*8, allocatable :: TEMP(:)
+      allocate(XS(150000),YS(150000),ZS(150000),TS(150000),ES(150000))
+      allocate(DCX(150000),DCY(150000),DCZ(150000))
+      allocate(NFLGFC(150000),NFLGPPC(150000),NFLGBRMC(150000))
+      allocate(TEMP(20000))
 C ----------------------------------------------------------------------   
 C   RELATIVISTIC KINEMATICS
 C   ELECTRIC AND MAGNETIC FIELDS  PARALLEL TO Z-AXIS      
@@ -29670,6 +29706,8 @@ C MAIN LOOP END
 C RESET NUMBER OF EVENTS FOR BAD EVENTS
       IF(IMIP.GT.2) NDELTA=NDELTA-IBADTOT
 C
+      deallocate(XS,YS,ZS,TS,ES,DCX,DCY,DCZ,TEMP)
+      deallocate(NFLGFC,NFLGPPC,NFLGBRMC)
       WRITE(6,887) EMAX,NEOVFL
   887 FORMAT(' EMAX=',D12.7,' NEOVFL =',I5)
       IF(EMAX.GT.EFINAL) THEN
@@ -29684,6 +29722,8 @@ C
   992 FORMAT(3(/),' WARNING STOPPED AFTER NPRIME=',I6,' LAST PRIMARY HAS
      / AT LEAST ',I6,' SECONDARIES LEFT TO TRACK, OUT OF ',I6,' ELECTRON
      /S ALREADY IN CLUSTER')
+      deallocate(XS,YS,ZS,TS,ES,DCX,DCY,DCZ,TEMP)
+      deallocate(NFLGFC,NFLGPPC,NFLGBRMC)
       STOP
       RETURN
       END
@@ -29696,9 +29736,9 @@ C
       COMMON/SETP/TMAX,SMALL,API,ESTART,THETA,PHI,TCFMAX(10),TCFMAX1,
      /RSTART,EFIELD,ETHRM,ECUT,NDELTA,IMIP,IWRITE 
       COMMON/BFLD/EOVB,WB,BTHETA,BMAG                                   
-      COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),    
+      COMMON/LARGE/EIN(512),TCF(20000),IARRY(512),    
      /RGAS(512),IPN(512),WPL(512),IZBR(512),IPLAST,PENFRA(3,512)
-      COMMON/LARGEN/CFN(20000,60),TCFN(20000),SCLENUL(60),NPLAST
+      COMMON/LARGEN/TCFN(20000),SCLENUL(60),NPLAST
       COMMON/OUTPT/ICOLL(30),NETOT,NPRIME,TMAX1,TIME(300),NNULL, 
      /NITOT,ICOLN(512),ICOLNN(60),NREAL,NEXCTOT  
       COMMON/RLTVY/BET(20000),GAM(20000),VC,EMS
@@ -29714,7 +29754,7 @@ C
       COMMON/IONFL/NC0(512),EC0(512),NG1(512),EG1(512),NG2(512),
      /EG2(512),WKLM(512),DSTFL(512)
       COMMON/IONMOD/ESPLIT(512,20),IONMODEL(512) 
-      COMMON/ANIS/PSCT(20000,512),ANGCT(20000,512),INDEX(512),NISO 
+      COMMON/ANIS/INDEX(512),NISO 
       COMMON/CASRS/ECAS(400),XCAS(400),YCAS(400),ZCAS(400),DRXS(400),
      /DRYS(400),DRZS(400),TT1(400),NFLGF(400),NFLGPP(400),IEVNTL
       COMMON/COMP/LCMP,LCFLG,LRAY,LRFLG,LPAP,LPFLG,LBRM,LBFLG,LPEFLG
@@ -29729,10 +29769,14 @@ C
       COMMON/ECASC/NEGAS(512),LEGAS(512),IESHELL(512),IECASC
       COMMON/IDEXC/NGEXC1,NGEXC2,NGEXC3,NGEXC4,NGEXC5,NGEXC6,
      /IDG1,IDG2,IDG3,IDG4,IDG5,IDG6
-      DIMENSION XS(150000),YS(150000),ZS(150000),TS(150000),ES(150000),
-     /DCX(150000),DCY(150000),DCZ(150000),
-     /NFLGFC(150000),NFLGPPC(150000),NFLGBRMC(150000)           
-      DIMENSION TEMP(20000)   
+      real*8, allocatable :: XS(:),YS(:),ZS(:),TS(:),ES(:)
+      real*8, allocatable :: DCX(:),DCY(:),DCZ(:)
+      integer*8, allocatable :: NFLGFC(:),NFLGPPC(:),NFLGBRMC(:)
+      real*8, allocatable :: TEMP(:)
+      allocate(XS(150000),YS(150000),ZS(150000),TS(150000),ES(150000))
+      allocate(DCX(150000),DCY(150000),DCZ(150000))
+      allocate(NFLGFC(150000),NFLGPPC(150000),NFLGBRMC(150000))
+      allocate(TEMP(20000))
 C -------------------------------------------------------------------  
 C  RELATIVISTIC VERSION
 C  ELECTRIC FIELD ALONG Z-AXIS MAGNETIC FIELD ALONG  X-AXIS.
@@ -30452,6 +30496,8 @@ C  MAIN LOOP END
 C RESET NUMBER OF EVENTS FOR BAD EVENTS
       IF(IMIP.GT.2) NDELTA=NDELTA-IBADTOT
 C
+      deallocate(XS,YS,ZS,TS,ES,DCX,DCY,DCZ,TEMP)
+      deallocate(NFLGFC,NFLGPPC,NFLGBRMC)
       WRITE(6,887) EMAX,NEOVFL
   887 FORMAT(' EMAX=',D12.7,' NEOVFL =',I5)
       IF(EMAX.GT.EFINAL) THEN
@@ -30466,6 +30512,8 @@ C
   992 FORMAT(3(/),' WARNING STOPPED AFTER NPRIME=',I6,' LAST PRIMARY HAS
      / AT LEAST ',I6,' SECONDARIES LEFT TO TRACK,OUT OF ',I6,' ELECTRONS
      / ALREADY IN CLUSTER')
+      deallocate(XS,YS,ZS,TS,ES,DCX,DCY,DCZ,TEMP)
+      deallocate(NFLGFC,NFLGPPC,NFLGBRMC)
       STOP
       RETURN
       END                                                   
@@ -30478,9 +30526,9 @@ C
       COMMON/SETP/TMAX,SMALL,API,ESTART,THETA,PHI,TCFMAX(10),TCFMAX1,
      /RSTART,EFIELD,ETHRM,ECUT,NDELTA,IMIP,IWRITE  
       COMMON/BFLD/EOVB,WB,BTHETA,BMAG
-      COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),    
+      COMMON/LARGE/EIN(512),TCF(20000),IARRY(512),    
      /RGAS(512),IPN(512),WPL(512),IZBR(512),IPLAST,PENFRA(3,512)
-      COMMON/LARGEN/CFN(20000,60),TCFN(20000),SCLENUL(60),NPLAST
+      COMMON/LARGEN/TCFN(20000),SCLENUL(60),NPLAST
       COMMON/OUTPT/ICOLL(30),NETOT,NPRIME,TMAX1,TIME(300),NNULL, 
      /NITOT,ICOLN(512),ICOLNN(60),NREAL,NEXCTOT  
       COMMON/RLTVY/BET(20000),GAM(20000),VC,EMS
@@ -30496,7 +30544,7 @@ C
       COMMON/IONFL/NC0(512),EC0(512),NG1(512),EG1(512),NG2(512),
      /EG2(512),WKLM(512),DSTFL(512)
       COMMON/IONMOD/ESPLIT(512,20),IONMODEL(512) 
-      COMMON/ANIS/PSCT(20000,512),ANGCT(20000,512),INDEX(512),NISO
+      COMMON/ANIS/INDEX(512),NISO
       COMMON/CASRS/ECAS(400),XCAS(400),YCAS(400),ZCAS(400),DRXS(400),
      /DRYS(400),DRZS(400),TT1(400),NFLGF(400),NFLGPP(400),IEVNTL     
       COMMON/COMP/LCMP,LCFLG,LRAY,LRFLG,LPAP,LPFLG,LBRM,LBFLG,LPEFLG
@@ -30511,10 +30559,14 @@ C
       COMMON/ECASC/NEGAS(512),LEGAS(512),IESHELL(512),IECASC
       COMMON/IDEXC/NGEXC1,NGEXC2,NGEXC3,NGEXC4,NGEXC5,NGEXC6,
      /IDG1,IDG2,IDG3,IDG4,IDG5,IDG6
-      DIMENSION XS(150000),YS(150000),ZS(150000),TS(150000),ES(150000),
-     /DCX(150000),DCY(150000),DCZ(150000),
-     /NFLGFC(150000),NFLGPPC(150000),NFLGBRMC(150000)           
-      DIMENSION TEMP(20000) 
+      real*8, allocatable :: XS(:),YS(:),ZS(:),TS(:),ES(:)
+      real*8, allocatable :: DCX(:),DCY(:),DCZ(:)
+      integer*8, allocatable :: NFLGFC(:),NFLGPPC(:),NFLGBRMC(:)
+      real*8, allocatable :: TEMP(:)
+      allocate(XS(150000),YS(150000),ZS(150000),TS(150000),ES(150000))
+      allocate(DCX(150000),DCY(150000),DCZ(150000))
+      allocate(NFLGFC(150000),NFLGPPC(150000),NFLGBRMC(150000))
+      allocate(TEMP(20000))
 C ------------------------------------------------------------------- 
 C   RELATIVISTIC VERSION  
 C   CALCULATES COLLISION EVENTS AND UPDATES DIFFUSION AND VELOCITY.
@@ -31258,6 +31310,9 @@ C MAIN LOOP END
   210 CONTINUE
 C RESET NUMBER OF EVENTS FOR BAD EVENTS
       IF(IMIP.GT.2) NDELTA=NDELTA-IBADTOT
+C
+      deallocate(XS,YS,ZS,TS,ES,DCX,DCY,DCZ,TEMP)
+      deallocate(NFLGFC,NFLGPPC,NFLGBRMC)
       WRITE(6,887) EMAX,NEOVFL
   887 FORMAT(' EMAX=',D12.7,' NEOVFL =',I5)
       IF(EMAX.GT.EFINAL) THEN
@@ -31272,6 +31327,8 @@ C RESET NUMBER OF EVENTS FOR BAD EVENTS
   992 FORMAT(3(/),' WARNING STOPPED AFTER NPRIME=',I6,' LAST PRIMARY HAS
      / AT LEAST ',I6,' SECONDARIES LEFT TO TRACK. OUT OF ',I6,' ELECTRON
      /S ALREADY IN CLUSTER')
+      deallocate(XS,YS,ZS,TS,ES,DCX,DCY,DCZ,TEMP)
+      deallocate(NFLGFC,NFLGPPC,NFLGBRMC)
       STOP
       RETURN
       END                                                  
@@ -32717,10 +32774,12 @@ C LOAD PAIR PRODUCTION
      /YT(10,50,10000),ZT(10,50,10000),DRX(10,50,10000),DRY(10,50,10000),
      /DRZ(10,50,10000),NJFLR(10,50,10000),IEVENTL(10,10000),IBAD(10000),
      /IBADTOT
-      DIMENSION EST(10,10000),EPH(10,10000),EPSM(10,10000),
-     /ESTOT(10,10000)
       DIMENSION AIGEN1F(28),AIGEN2F(28),AIGEN3F(28),AIGEN4F(28),
      /AIGEN5F(28),AITOT(50),AITOTS(50)
+***
+      real*8, allocatable :: EST(:,:),EPH(:,:),EPSM(:,:),ESTOT(:,:)
+      allocate(EST(10,10000),EPH(10,10000),EPSM(10,10000))
+      allocate(ESTOT(10,10000))
 C      
 C
       DO 1 L=1,28
@@ -32950,7 +33009,10 @@ C     ENDIF
       EPHAV=EPHAV/DFLOAT(NEVENT)
       ETOTAV=ETOTAV/DFLOAT(NEVENT)
 C DO NOT PRINT ION ANALYSIS IF COMPTON OR PAIR PRODUCTION USED
-      IF(IPR.GT.0) RETURN  
+      IF(IPR.GT.0) THEN
+       deallocate(EST,EPH,EPSM,ESTOT)
+       RETURN
+      END IF
       DO 40 I=1,28
       WRITE(6,88) I,AIONFRQ(I),I,AIFLFRQ(I)
    88 FORMAT(' FREQ FOR',I3,' CHARGE IONS =',D12.4,' FREQUENCY FOR',I3,'
@@ -32981,6 +33043,7 @@ C DO NOT PRINT ION ANALYSIS IF COMPTON OR PAIR PRODUCTION USED
      /' MAX IONS GEN 5 =',I2,/,' MAX NO. OF ELECTRONS AFTER PHOTON ABSOR
      /PTION =',I2,/,' AVERAGE NO. OF ELECTRONS =',D12.3,/,' AVERAGE TOTA
      /L ELECTRON ENERGY =',D12.6,/,/) 
+      deallocate(EST,EPH,EPSM,ESTOT)
       RETURN     
       END         
       SUBROUTINE VACANCY(KGAS,LGAS,I,ILAST)            
@@ -33239,6 +33302,8 @@ C PAIR PRODUCTION
   998  FORMAT(' ERROR IN SUBROUTINE ABSO FLAG NOT CORRECT')
        STOP
       ENDIF
+*** TODO (HS)
+      IF(IEND-ISTART+1.GT.18) IEND=ISTART+17
       DO 160 J=ISTART,IEND
       XSUM(J)=XSUM(ISTART-1)+XSECP(J-ISTART+1)
   160 CONTINUE
@@ -34360,7 +34425,8 @@ C EGAMMA IS INCIDENT PHOTON ENERGY
 C E1 AND E2 ARE CALCULATED ELECTRON AND POSITRON ENERGIES
 C THET1 AND THET2 ARE CALCULATED SCATTERING ANGLES
 C USE FLAT DISTRIBUTION FOR ENERGIES 
-      TWOPI=2.0D0*DACOS(-1.0D0)
+      API=DACOS(-1.0D0)
+      TWOPI=2.0D0*API
       EMASS=510998.928D0
       ETOT=EGAMMA-2.0D0*EMASS
       R1=drand48(RDUM)
@@ -34371,7 +34437,7 @@ C USE BETHE AND HEITLER AVERAGE ANGLE
       THET2=EMASS/(EMASS+E2)
 C RANDOM PHI ANGLE WITH PI BETWEEN PHI ANGLES
       R2=drand48(RDUM)
-      PHI1=TWOPI*R3
+      PHI1=TWOPI*R2
       PHI2=PHI1+API
       IF(PHI2.GT.TWOPI) PHI2=PHI2-TWOPI 
       RETURN
@@ -36109,7 +36175,7 @@ C LOAD GENERAL DATA FOR CASCADE CALCULATIONS
       COMMON/BFLD/EOVB,WB,BTHETA,BMAG  
       COMMON/IONC/DOUBLE(6,20000),CMINIXSC(6),CMINEXSC(6),ECLOSS(6),
      /WPLN(6),ICOUNT,AVPFRAC(3,6)
-      COMMON/LARGE/CF(20000,512),EIN(512),TCF(20000),IARRY(512),    
+      COMMON/LARGE/EIN(512),TCF(20000),IARRY(512),    
      /RGAS(512),IPN(512),WPL(512),IZBR(512),IPLAST,PENFRA(3,512)   
       COMMON/NAMES/NAMEG(6)  
       COMMON/KSEED/NSEED 
@@ -36250,8 +36316,6 @@ C LOAD GENERAL DATA FOR CASCADE CALCULATIONS
      /PRSHBT5(3,17),PRSHBT6(3,17)
       DIMENSION ESH1(3,17),ESH2(3,17),ESH3(3,17),ESH4(3,17),ESH5(3,17),
      /ESH6(3,17)
-      DIMENSION AUG1(3,17,17,17),AUG2(3,17,17,17),AUG3(3,17,17,17),
-     /AUG4(3,17,17,17),AUG5(3,17,17,17),AUG6(3,17,17,17)
       DIMENSION RAD1(3,17,17),RAD2(3,17,17),RAD3(3,17,17),RAD4(3,17,17),
      /RAD5(3,17,17),RAD6(3,17,17)
       DIMENSION INIOCC1(3,17),INIOCC2(3,17),INIOCC3(3,17),INIOCC4(3,17),
@@ -36271,6 +36335,11 @@ C LOAD GENERAL DATA FOR CASCADE CALCULATIONS
      /FFAR5(3,45),FFAR6(3,45)
       DIMENSION IZ1(3),IZ2(3),IZ3(3),IZ4(3),IZ5(3),IZ6(3)
       DIMENSION AMZ1(3),AMZ2(3),AMZ3(3),AMZ4(3),AMZ5(3),AMZ6(3)
+***
+      real*8, allocatable :: AUG1(:,:,:,:),AUG2(:,:,:,:),AUG3(:,:,:,:)
+      real*8, allocatable :: AUG4(:,:,:,:),AUG5(:,:,:,:),AUG6(:,:,:,:)
+      allocate(AUG1(3,17,17,17),AUG2(3,17,17,17),AUG3(3,17,17,17))
+      allocate(AUG4(3,17,17,17),AUG5(3,17,17,17),AUG6(3,17,17,17))
 C LOAD PHOTOELECTRIC AND COMPTON X-SECS
 C LOAD INITIAL SHELL OCCUPANCIES FOR EACH GAS
 C LOAD ENERGY LEVELS
@@ -36500,6 +36569,7 @@ C LOAD SHAKE OFF PROBABILITIES AND ENERGIES
        STOP
       ENDIF
  1000 CONTINUE
+      deallocate(AUG1,AUG2,AUG3,AUG4,AUG5,AUG6)
       RETURN
       END
       SUBROUTINE GASMIXC(NGS,PRSH,PRSHBT,ESH,AUG,RAD,XPE,YPE,XCP,YRY,
@@ -82409,7 +82479,7 @@ C CALCULATE DIPOLE ANGULAR DISTRIBUTION FACTOR FOR TRANSITION
       DO 141 M=2,NRTANG
       IF(EPOINT.LE.ENROT(M)) GO TO 142
   141 CONTINUE
-      M=NTRANG
+      M=NRTANG
   142 A=(YEPSR(M)-YEPSR(M-1))/(ENROT(M)-ENROT(M-1))
       B=(ENROT(M-1)*YEPSR(M)-ENROT(M)*YEPSR(M-1))/(ENROT(M-1)-ENROT(M))
       EPSIL=A*EPOINT+B
@@ -89524,7 +89594,7 @@ C CALC ANISOTROPY FACTOR
 C EPSILON =1.0-YEPS
       EPS=1.0D0-EPS
    52 CONTINUE  
-      IF(NANISO.EQ.O) THEN
+      IF(NANISO.EQ.0) THEN
 C ISOTROPIC SCATTERING
        Q(2,I)=QELM
        PEQEL(2,I)=0.5
@@ -110610,54 +110680,54 @@ C SET TO 0 SINCE VERY LOW ENERGY EXCITATION LEVELS
       DO 5 L=1,3
     5 PENFRA(L,K)=0.0
 C **************************************************************
-      SCRPT(1)='                                                   '
-      SCRPT(2)=' ELASTIC  N-(CH3)3 TRIMETHYL AMINE                 '
-      SCRPT(3)=' IONISATION                         ELOSS=   8.40  '
-      SCRPT(4)=' IONISATION   CARBON K-SHELL        ELOSS= 285.0   '
-      SCRPT(5)=' IONISATION NITROGEN K-SHELL        ELOSS= 401.6   '
-      SCRPT(6)=' ATTACHMENT                                        '
-      SCRPT(7)='                                                   '
-      SCRPT(8)='                                                   '
-      SCRPT(9)=' ROTATION                           ELOSS= -0.025  '
-      SCRPT(10)=' ROTATION                           ELOSS=  0.025  '
-      SCRPT(11)=' TORSION + ROTATION                 ELOSS= -0.0334 '
-      SCRPT(12)=' TORSION + ROTATION                 ELOSS=  0.0334 '
-      SCRPT(13)=' VIBRATION V1                       ELOSS= -0.103  '
-      SCRPT(14)=' VIBRATION V1                       ELOSS=  0.103  '
-      SCRPT(15)=' VIBRATION V2                       ELOSS=  0.179  '
-      SCRPT(16)=' VIBRATION V3                       ELOSS=  0.366  '
-      SCRPT(17)=' VIBRATION HARMONICS                ELOSS=  0.480  '
-      SCRPT(18)=' EXC TRIPLET                        ELOSS=  4.6    '
-      SCRPT(19)=' EXC DIPOLE   3S RYDBERG  F=.00047  ELOSS=  4.65   '
-      SCRPT(20)=' EXC DIPOLE   3S RYDBERG  F=.00384  ELOSS=  4.95   '
-      SCRPT(21)=' EXC DIPOLE   3S RYDBERG  F=.00828  ELOSS=  5.25   '
-      SCRPT(22)=' EXC DIPOLE   3S RYDBERG  F=.00974  ELOSS=  5.55   '
-      SCRPT(23)=' EXC TRIPLET                        ELOSS=  5.70   '
-      SCRPT(24)=' EXC DIPOLE   3P RYDBERG  F=.02635  ELOSS=  5.85   '
-      SCRPT(25)=' EXC DIPOLE   3P RYDBERG  F=.03621  ELOSS=  6.15   '
-      SCRPT(26)=' EXC DIPOLE   3P RYDBERG  F=.02819  ELOSS=  6.45   '
-      SCRPT(27)=' EXC DIPOLE   3P RYDBERG  F=.02325  ELOSS=  6.75   '
-      SCRPT(28)=' EXC TRIPLET                        ELOSS=  7.00   '
-      SCRPT(29)=' EXC DIPOLE HIGH RYDBERG  F=.02271  ELOSS=  7.05   '
-      SCRPT(30)=' EXC DIPOLE HIGH RYDBERG  F=.02561  ELOSS=  7.35   '
-      SCRPT(31)=' EXC DIPOLE HIGH RYDBERG  F=.02641  ELOSS=  7.65   '
-      SCRPT(32)=' EXC DIPOLE HIGH RYDBERG  F=.02625  ELOSS=  7.95   '
-      SCRPT(33)=' EXC DIPOLE HIGH RYDBERG  F=.02671  ELOSS=  8.25   '
-      SCRPT(34)=' EXC DIPOLE HIGH RYDBERG  F=.04342  ELOSS=  8.55   '
-      SCRPT(35)=' EXC DIPOLE HIGH RYDBERG  F=.06804  ELOSS=  8.85   '
-      SCRPT(36)=' EXC DIPOLE HIGH RYDBERG  F=.07186  ELOSS=  9.15   '
-      SCRPT(37)=' EXC DIPOLE HIGH RYDBERG  F=.07346  ELOSS=  9.45   '
-      SCRPT(38)=' EXC DIPOLE HIGH RYDBERG  F=.08795  ELOSS=  9.75   '
-      SCRPT(39)=' EXC DIPOLE HIGH RYDBERG  F=.11445  ELOSS= 10.05   '
-      SCRPT(40)=' EXC DIPOLE HIGH RYDBERG  F=.12904  ELOSS= 10.35   '
-      SCRPT(41)=' EXC DIPOLE HIGH RYDBERG  F=.13512  ELOSS= 10.65   '
-      SCRPT(42)=' EXC DIPOLE HIGH RYDBERG  F=.14497  ELOSS= 10.95   '
-      SCRPT(43)=' EXC DIPOLE HIGH RYDBERG  F=.15169  ELOSS= 11.25   '
-      SCRPT(44)=' EXC DIPOLE HIGH RYDBERG  F=.15328  ELOSS= 11.55   '
-      SCRPT(45)=' EXC DIPOLE HIGH RYDBERG  F=.15788  ELOSS= 11.85   '
-      SCRPT(46)=' BREMSSTRAHLUNG FROM HYDROGEN ATOMS                '
-      SCRPT(47)=' BREMSSTRAHLUNG FROM CARBON ATOMS                  '
-      SCRPT(48)=' BREMSSTRAHLUNG FROM NITROGEN ATOM                 '
+      SCRPT(1)='                                                  '
+      SCRPT(2)=' ELASTIC  N-(CH3)3 TRIMETHYL AMINE                '
+      SCRPT(3)=' IONISATION                         ELOSS=   8.40 '
+      SCRPT(4)=' IONISATION   CARBON K-SHELL        ELOSS= 285.0  '
+      SCRPT(5)=' IONISATION NITROGEN K-SHELL        ELOSS= 401.6  '
+      SCRPT(6)=' ATTACHMENT                                       '
+      SCRPT(7)='                                                  '
+      SCRPT(8)='                                                  '
+      SCRPT(9)=' ROTATION                           ELOSS= -0.025 '
+      SCRPT(10)=' ROTATION                           ELOSS=  0.025 '
+      SCRPT(11)=' TORSION + ROTATION                 ELOSS= -0.0334'
+      SCRPT(12)=' TORSION + ROTATION                 ELOSS=  0.0334'
+      SCRPT(13)=' VIBRATION V1                       ELOSS= -0.103 '
+      SCRPT(14)=' VIBRATION V1                       ELOSS=  0.103 '
+      SCRPT(15)=' VIBRATION V2                       ELOSS=  0.179 '
+      SCRPT(16)=' VIBRATION V3                       ELOSS=  0.366 '
+      SCRPT(17)=' VIBRATION HARMONICS                ELOSS=  0.480 '
+      SCRPT(18)=' EXC TRIPLET                        ELOSS=  4.6   '
+      SCRPT(19)=' EXC DIPOLE   3S RYDBERG  F=.00047  ELOSS=  4.65  '
+      SCRPT(20)=' EXC DIPOLE   3S RYDBERG  F=.00384  ELOSS=  4.95  '
+      SCRPT(21)=' EXC DIPOLE   3S RYDBERG  F=.00828  ELOSS=  5.25  '
+      SCRPT(22)=' EXC DIPOLE   3S RYDBERG  F=.00974  ELOSS=  5.55  '
+      SCRPT(23)=' EXC TRIPLET                        ELOSS=  5.70  '
+      SCRPT(24)=' EXC DIPOLE   3P RYDBERG  F=.02635  ELOSS=  5.85  '
+      SCRPT(25)=' EXC DIPOLE   3P RYDBERG  F=.03621  ELOSS=  6.15  '
+      SCRPT(26)=' EXC DIPOLE   3P RYDBERG  F=.02819  ELOSS=  6.45  '
+      SCRPT(27)=' EXC DIPOLE   3P RYDBERG  F=.02325  ELOSS=  6.75  '
+      SCRPT(28)=' EXC TRIPLET                        ELOSS=  7.00  '
+      SCRPT(29)=' EXC DIPOLE HIGH RYDBERG  F=.02271  ELOSS=  7.05  '
+      SCRPT(30)=' EXC DIPOLE HIGH RYDBERG  F=.02561  ELOSS=  7.35  '
+      SCRPT(31)=' EXC DIPOLE HIGH RYDBERG  F=.02641  ELOSS=  7.65  '
+      SCRPT(32)=' EXC DIPOLE HIGH RYDBERG  F=.02625  ELOSS=  7.95  '
+      SCRPT(33)=' EXC DIPOLE HIGH RYDBERG  F=.02671  ELOSS=  8.25  '
+      SCRPT(34)=' EXC DIPOLE HIGH RYDBERG  F=.04342  ELOSS=  8.55  '
+      SCRPT(35)=' EXC DIPOLE HIGH RYDBERG  F=.06804  ELOSS=  8.85  '
+      SCRPT(36)=' EXC DIPOLE HIGH RYDBERG  F=.07186  ELOSS=  9.15  '
+      SCRPT(37)=' EXC DIPOLE HIGH RYDBERG  F=.07346  ELOSS=  9.45  '
+      SCRPT(38)=' EXC DIPOLE HIGH RYDBERG  F=.08795  ELOSS=  9.75  '
+      SCRPT(39)=' EXC DIPOLE HIGH RYDBERG  F=.11445  ELOSS= 10.05  '
+      SCRPT(40)=' EXC DIPOLE HIGH RYDBERG  F=.12904  ELOSS= 10.35  '
+      SCRPT(41)=' EXC DIPOLE HIGH RYDBERG  F=.13512  ELOSS= 10.65  '
+      SCRPT(42)=' EXC DIPOLE HIGH RYDBERG  F=.14497  ELOSS= 10.95  '
+      SCRPT(43)=' EXC DIPOLE HIGH RYDBERG  F=.15169  ELOSS= 11.25  '
+      SCRPT(44)=' EXC DIPOLE HIGH RYDBERG  F=.15328  ELOSS= 11.55  '
+      SCRPT(45)=' EXC DIPOLE HIGH RYDBERG  F=.15788  ELOSS= 11.85  '
+      SCRPT(46)=' BREMSSTRAHLUNG FROM HYDROGEN ATOMS               '
+      SCRPT(47)=' BREMSSTRAHLUNG FROM CARBON ATOMS                 '
+      SCRPT(48)=' BREMSSTRAHLUNG FROM NITROGEN ATOM                '
 C
       APOP1=DEXP(EIN(1)/AKT)
       APOP2=DEXP(EIN(3)/AKT)
@@ -117107,7 +117177,7 @@ C CALC ANGULAR DISTRIBUTION
        DO 3232 M=2,NRTANG
        IF(EPOINT.LE.ENROT(M)) GO TO 3233
  3232  CONTINUE
-       M=NTRANG
+       M=NRTANG
  3233  A=(YEPSR(M)-YEPSR(M-1))/(ENROT(M)-ENROT(M-1))
        B=(ENROT(M-1)*YEPSR(M)-ENROT(M)*YEPSR(M-1))/(ENROT(M-1)-ENROT(M))
        EPSIL=A*EPOINT+B
@@ -117175,7 +117245,7 @@ c
 C CALC ANGULAR DISTRIBUTION
       IF(EN.LT.4.0*EIN(5)) THEN
        EPOINT=EN/EIN(5)
-       DO 3483 M=2,NTRANG
+       DO 3483 M=2,NRTANG
        IF(EPOINT.LE.ENROT(M)) GO TO 3484
  3483  CONTINUE
        M=NRTANG
@@ -117198,7 +117268,7 @@ C V13 + V24
       DO 341 J=2,NVIBR
       IF(EN.LE.XVIBR(J)) GO TO 342
   341 CONTINUE
-      J=NNVIBR
+      J=NVIBR
   342 A=(YVIBR(J)-YVIBR(J-1))/(XVIBR(J)-XVIBR(J-1))                     
       B=(XVIBR(J-1)*YVIBR(J)-XVIBR(J)*YVIBR(J-1))/(XVIBR(J-1)-XVIBR(J))
       QRES=(A*EN+B) 
@@ -117214,7 +117284,7 @@ C  2V13
       DO 346 J=2,NVIBR
       IF(EN.LE.XVIBR(J)) GO TO 347
   346 CONTINUE
-      J=NNVIBR
+      J=NVIBR
   347 A=(YVIBR(J)-YVIBR(J-1))/(XVIBR(J)-XVIBR(J-1))                     
       B=(XVIBR(J-1)*YVIBR(J)-XVIBR(J)*YVIBR(J-1))/(XVIBR(J-1)-XVIBR(J))
       QRES=(A*EN+B)   
@@ -117230,7 +117300,7 @@ C  SUM OF HIGHER VIBRATIONS
       DO 351 J=2,NVIBR
       IF(EN.LE.XVIBR(J)) GO TO 352
   351 CONTINUE
-      J=NNVIBR
+      J=NVIBR
   352 A=(YVIBR(J)-YVIBR(J-1))/(XVIBR(J)-XVIBR(J-1))                     
       B=(XVIBR(J-1)*YVIBR(J)-XVIBR(J)*YVIBR(J-1))/(XVIBR(J-1)-XVIBR(J))
       QRES=(A*EN+B)   

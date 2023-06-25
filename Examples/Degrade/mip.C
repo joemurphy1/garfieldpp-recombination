@@ -41,6 +41,7 @@ int main(int argc, char * argv[]) {
   TrackDegrade track;
   track.SetSensor(&sensor);
   track.SetBetaGamma(3.);
+  track.Initialise(&gas, true);
   for (unsigned int i = 0; i < 1000; ++i) {
     if (i % 10 == 0) std::cout << "Track " << i << "...\n";
     track.NewTrack(0., 0., 0., 0., 1., 0., 0.);

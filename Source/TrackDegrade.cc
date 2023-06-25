@@ -129,7 +129,7 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
               << "    Particle energy: " << ep << " eV\n"
               << "    Collision rate: " << tcf << " / ns\n"
               << "    Collisions / cm: " 
-              << 1. / (SpeedOfLight * beta / tcf) << "\n";
+              << tcf / (SpeedOfLight * beta) << "\n";
   }
   bool ok = true;
   while (ok) {
@@ -178,13 +178,13 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
       double dxg = 0., dyg = 0., dzg = 0.;
       Degrade::brems(&izbr, &ep, &dxp, &dyp, &dzp, &eout, &dxe, &dye, &dze,
                      &egamma, &dxg, &dyg, &dzg);
-      ep = eout;
+      // TODO
+      // ep = eout;
       dxp = dxe;
       dyp = dye;
       dzp = dze;
       continue;
     }
-
     if (ia ==  2 || ia ==  7 || ia == 12 || ia == 17 || 
         ia == 22 || ia == 27) {
       Cluster cluster;
@@ -201,8 +201,8 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
         cthetap = 1. - RndmUniform() * an;
         if (RndmUniform() > ps) cthetap = -cthetap;
       } else if (index == 2) {
-        const double r3 = RndmUniform();
-        cthetap = 1. - (2. * r3 * (1. - ps) / (1. + ps * (1. - 2. * r3)));
+        const double ctheta0 = 1. - 2 * RndmUniform();
+        cthetap = (ctheta0 + ps) / (1. + ps * ctheta0);
       } else { 
         cthetap = 1. - 2. * RndmUniform();
       }
@@ -342,8 +342,8 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
         if (RndmUniform() > ps) cthetap = -cthetap;
       } else if (index == 2) {
         // Anisotropic scattering
-        const double r3 = RndmUniform();
-        cthetap = 1. - (2. * r3 * (1. - ps) / (1. + ps * (1. - 2. * r3))); 
+        const double ctheta0 = 1. - 2 * RndmUniform();
+        cthetap = (ctheta0 + ps) / (1. + ps * ctheta0);
       } else { 
         // Isotropic scattering
         cthetap = 1. - 2. * RndmUniform();
@@ -378,8 +378,10 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
       dyp = dy1 * ctheta + (stheta / argz) * (dx1 * cphi0 - dy1 * dz1 * sphi0);
       dxp = dx1 * ctheta - (stheta / argz) * (dy1 * cphi0 + dx1 * dz1 * sphi0);
     }
-    ep = e1;
+    // TODO
+    // ep = e1;
   }
+  if (m_debug) std::cout << "    " << m_clusters.size() << " clusters.\n";
   for (auto& cluster : m_clusters) {
     for (const auto& delta : cluster.deltaElectrons) {
       auto secondaries = TransportDeltaElectron(delta.x, delta.y, delta.z,
@@ -455,7 +457,7 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
   int64_t ne = 1;
   int64_t mip = 1;
   int64_t idvec = 1;
-  int64_t iseed = 0;
+  int32_t iseed = 0;
   double e0 = GetKineticEnergy();
   double et = m_ethr;
   double ec = 10000.;
@@ -595,7 +597,7 @@ TrackDegrade::TransportDeltaElectron(
         double z2 = z1 + dz1 * a;
         double t2 = t1 + dt;
 
-        if (!m_sensor->IsInside(x2, y2, z2)) {
+        if (!IsInside(x2, y2, z2)) {
           // Endpoint of the free-flight step is outside the active area.
           break;
         }
@@ -821,8 +823,8 @@ TrackDegrade::TransportDeltaElectron(
           if (RndmUniform() > ps) ctheta0 = -ctheta0;
         } else if (index == 2) {
           // Anisotropic scattering
-          const double r3 = RndmUniform();
-          ctheta0 = 1. - (2. * r3 * (1. - ps) / (1. + ps * (1. - 2. * r3)));
+          ctheta0 = 1. - 2 * RndmUniform();
+          ctheta0 = (ctheta0 + ps) / (1. + ps * ctheta0);
         } else { 
           // Isotropic scattering
           ctheta0 = 1. - 2. * RndmUniform();

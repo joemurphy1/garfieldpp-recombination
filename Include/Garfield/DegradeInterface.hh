@@ -14,7 +14,7 @@ namespace Degrade {
 extern "C" {
 
 void deginit(int64_t* ng, int64_t* nevt, int64_t* mip, 
-             int64_t* idvec, int64_t* iseed, 
+             int64_t* idvec, int32_t* iseed, 
              double* e0, double* et, double* ec,
              int64_t* ngas1, int64_t* ngas2, int64_t* ngas3,
              int64_t* ngas4, int64_t* ngas5, int64_t* ngas6,
