@@ -1680,7 +1680,7 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
 
   // Check whether collocation points overlap
   {
-    int startcntr = 1, cntr1, cntr2, NbCollPtOverlaps = 0;
+    int startcntr = 1, cntr1, cntr2;
     Point3D pt1, pt2;
     double dist;
     for (cntr1 = startcntr; cntr1 <= EleCntr; ++cntr1) {
@@ -1693,10 +1693,9 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
         pt2.Z = (EleArr + cntr2 - 1)->BC.CollPt.Z;
 
         dist = GetDistancePoint3D(&pt1, &pt2);
-        if (dist <=
-            MINDIST)  // we need a linked-list here so that the overlapped
-        {  // element is easily deleted and the rest upgraded immediately
-          ++NbCollPtOverlaps;
+        if (dist <= MINDIST)  {
+          // we need a linked-list here so that the overlapped
+          // element is easily deleted and the rest upgraded immediately
 
           // Upgrade the element array manually, starting from cntr2 and restart
           // the overlap check. At present it is only a warning to the user with

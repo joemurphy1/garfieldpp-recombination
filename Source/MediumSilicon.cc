@@ -539,10 +539,6 @@ double MediumSilicon::GetElectronEnergy(const double px, const double py,
 
 void MediumSilicon::GetElectronMomentum(const double e, double& px, double& py,
                                         double& pz, int& band) {
-  int nBands = m_nValleysX;
-  if (e > m_eMinL) nBands += m_nValleysL;
-  if (e > m_eMinG) ++nBands;
-
   // If the band index is out of range, choose one at random.
   if (band < 0 || band > m_nValleysX + m_nValleysL ||
       (e < m_eMinL || band >= m_nValleysX) ||

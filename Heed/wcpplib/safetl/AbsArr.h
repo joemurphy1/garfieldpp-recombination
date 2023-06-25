@@ -630,9 +630,7 @@ void DynLinArr<T>::sort(long q_to_sort) {
   if (q_to_sort <= 1) return;
 
   long n_possible_next = 1;
-  long q_comp = 0;
-  long n, m;
-  for (n = 0; n < q_to_sort - 1; n++) {
+  for (long n = 0; n < q_to_sort - 1; n++) {
     // Iprint2n(mcout, n, n_possible_next);
     // first it finds the minimum along the rest and replaces if it is less
     // long nmin = n+1;
@@ -641,8 +639,7 @@ void DynLinArr<T>::sort(long q_to_sort) {
     int s_change_possible_next = 0;
 
     // for(m=n+2; m<q_to_sort; m++)
-    for (m = n_possible_next + 1; m < q_to_sort; m++) {
-      q_comp++;
+    for (long m = n_possible_next + 1; m < q_to_sort; m++) {
       // if(el[nmin] > el[m])
       if (el_min > el[m]) {
         n_possible_next = nmin;
@@ -677,7 +674,6 @@ void DynLinArr<T>::sort(long q_to_sort) {
     }
     // Iprintn(mcout, (*this));
   }
-  // Iprintn(mcout, q_comp);
 }
 
 // New variant, should be faster, the old is below.
