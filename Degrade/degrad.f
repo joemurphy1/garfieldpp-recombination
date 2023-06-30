@@ -22546,8 +22546,8 @@ C  SOME FREQUENTLY USED COMBINATIONS
       C5=tri_1*E_f+tri_2*p_f*Vc
 C
       IF (Theta_i.NE.0.0) THEN
-      xint(1)=2.0*PI*A/DSQRT(tri_2**2+C1)
-     /*DLOG((tri_2**2+C1-DSQRT(tri_2**2+C1)*(tri_1+tri_2)+tri_1*tri_2)/
+      xint(1)=2.0*PI*A/DSQRT(tri_2**2+C1)*
+     /DLOG((tri_2**2+C1-DSQRT(tri_2**2+C1)*(tri_1+tri_2)+tri_1*tri_2)/
      /(-tri_2**2-C1-DSQRT(tri_2**2+C1)*(tri_1-tri_2)+tri_1*tri_2))*
      /(1.0+Vc*tri_2/(p_f*C3)-p_0**2*Vc2*sint**2/C3**2-
      /2.0*hbar*hbar*phot_freq**2*p_f*tri_2/(Vc*C3*(tri_2**2+C1)))
