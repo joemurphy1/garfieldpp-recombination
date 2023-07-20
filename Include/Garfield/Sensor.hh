@@ -125,6 +125,10 @@ class Sensor {
   /// Set/override the signal in a given time bin explicitly.
   void SetSignal(const std::string& label, const unsigned int bin,
                  const double signal);
+  /// Set/override the signal.
+  void SetSignal(const std::string& label,
+                 const std::vector<double>& ts,
+                 const std::vector<double>& is);
   /// Retrieve the total signal for a given electrode and time bin.
   double GetSignal(const std::string& label, const unsigned int bin);
   /// Retrieve the electron signal for a given electrode and time bin.
