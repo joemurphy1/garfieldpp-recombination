@@ -954,6 +954,21 @@ void Sensor::SetSignal(const std::string &label, const unsigned int bin,
   }
 }
 
+void Sensor::SetSignal(const std::string& label, 
+                       const std::vector<double>& ts,
+                       const std::vector<double>& is) {
+
+  constexpr double q = -1.;
+  constexpr int navg = 0;
+  if (m_nEvents == 0) m_nEvents = 1;
+  for (auto &electrode : m_electrodes) {
+    if (electrode.label == label) {
+      FillSignal(electrode, q, ts, is, navg, false);
+      break;
+    }
+  }
+}
+ 
 double Sensor::GetSignal(const std::string &label, const unsigned int bin) {
   if (m_nEvents == 0) return 0.;
   if (bin >= m_nTimeBins) return 0.;
