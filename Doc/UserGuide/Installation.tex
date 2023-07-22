@@ -152,7 +152,7 @@ Sometimes it may be necessary to restart from a clean slate,
 in which case one can remove the build folder completely and restart the procedures of this section.
 
 \section{Building an application}
-The recommended way to build a Garfield++-based application is 
+The recommended way to build a Garfield++-based C++ application is 
 using CMake. Let us consider as an example the program \texttt{gem.C} 
 (see Sec.~\ref{Sec:ExampleGem}) 
 which together with the corresponding \texttt{CMakeLists.txt} can be 
@@ -197,8 +197,14 @@ make
 ./gem
 \end{lstlisting}
 \end{itemize}
-%\subsection{GarfRoot}
-%
-%The Garfield++ classes can be used interactively within the ROOT shell.
-%
+
+\section{Python}
+Thanks to PyROOT, the Garfield++ classes can also be used from Python.
+After building the project and setting up the environment 
+following the instructions above, one can load the relevant libraries 
+in the Python interpreter using
+\begin{lstlisting}[language=python]
+import ROOT
+import Garfield
+\end{lstlisting} 
 
