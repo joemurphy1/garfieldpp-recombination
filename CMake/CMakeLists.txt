@@ -35,5 +35,11 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/setup.sh.in
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/setup.csh.in
                ${PROJECT_BINARY_DIR}/setupGarfield.csh @ONLY)
 
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Garfield)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in
+               ${PROJECT_BINARY_DIR}/Garfield/__init__.py @ONLY)
+
 install(FILES ${PROJECT_BINARY_DIR}/setupGarfield.sh ${PROJECT_BINARY_DIR}/setupGarfield.csh
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Garfield)
+install(DIRECTORY ${PROJECT_BINARY_DIR}/Garfield/ 
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/Garfield)
