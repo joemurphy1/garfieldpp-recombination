@@ -1,14 +1,8 @@
 import ROOT
-import os, sys
-import ctypes
+import Garfield
+import os
 
 path = os.getenv('GARFIELD_INSTALL')
-if sys.platform == 'darwin':
-  ROOT.gSystem.Load(path + '/lib/libmagboltz.dylib')
-  ROOT.gSystem.Load(path + '/lib/libGarfield.dylib')
-else:
-  ROOT.gSystem.Load(path + '/lib/libmagboltz.so')
-  ROOT.gSystem.Load(path + '/lib/libGarfield.so')
 
 # Set up the gas.
 gas = ROOT.Garfield.MediumMagboltz()
