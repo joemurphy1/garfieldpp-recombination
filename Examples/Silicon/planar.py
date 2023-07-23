@@ -1,14 +1,5 @@
 import ROOT
-import os, sys
-import ctypes
-
-path = os.getenv('GARFIELD_INSTALL')
-if sys.platform == 'darwin':
-  ROOT.gSystem.Load(path + '/lib/libmagboltz.dylib')
-  ROOT.gSystem.Load(path + '/lib/libGarfield.dylib')
-else:
-  ROOT.gSystem.Load(path + '/lib/libmagboltz.so')
-  ROOT.gSystem.Load(path + '/lib/libGarfield.so')
+import Garfield
 
 si = ROOT.Garfield.MediumSilicon()
 si.SetTemperature(293.)

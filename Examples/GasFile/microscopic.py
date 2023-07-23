@@ -1,15 +1,7 @@
 import ROOT
-import os, sys
+import Garfield
 from math import *
 import ctypes
-
-path = os.getenv('GARFIELD_INSTALL')
-if sys.platform == 'darwin':
-  ROOT.gSystem.Load(path + '/lib/libmagboltz.dylib')
-  ROOT.gSystem.Load(path + '/lib/libGarfield.dylib')
-else:
-  ROOT.gSystem.Load(path + '/lib/libmagboltz.so')
-  ROOT.gSystem.Load(path + '/lib/libGarfield.so')
 
 # Electric field [V/cm]
 efield = 30.e3

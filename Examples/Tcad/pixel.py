@@ -1,15 +1,7 @@
 import ROOT
-import os, sys
+import Garfield
 import ctypes
 import math
-
-path = os.getenv('GARFIELD_INSTALL')
-if sys.platform == 'darwin':
-  ROOT.gSystem.Load(path + '/lib/libmagboltz.dylib')
-  ROOT.gSystem.Load(path + '/lib/libGarfield.dylib')
-else:
-  ROOT.gSystem.Load(path + '/lib/libmagboltz.so')
-  ROOT.gSystem.Load(path + '/lib/libGarfield.so')
 
 cpp_code = """
 double transfer(double t) {

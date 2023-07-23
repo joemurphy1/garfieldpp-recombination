@@ -1,15 +1,10 @@
 import ROOT
-import os, sys
+import Garfield
+import os
 import math
 import ctypes
 
 path = os.getenv('GARFIELD_INSTALL')
-if sys.platform == 'darwin':
-  ROOT.gSystem.Load(path + '/lib/libmagboltz.dylib')
-  ROOT.gSystem.Load(path + '/lib/libGarfield.dylib')
-else:
-  ROOT.gSystem.Load(path + '/lib/libmagboltz.so')
-  ROOT.gSystem.Load(path + '/lib/libGarfield.so')
 
 gas = ROOT.Garfield.MediumMagboltz()
 gas.LoadGasFile('ar_93_co2_7_3bar.gas')

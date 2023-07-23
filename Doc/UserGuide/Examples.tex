@@ -546,18 +546,16 @@ In this example, we will use $V_{\text{dep}} = -20$\,V and
 $V_{\text{bias}} = -50$\,V.
 
 In order to use this expression for the electric field in our simulation, 
-we need to write a small function
+we write a lambda expression
 \begin{lstlisting}
-void eLinear(const double /*x*/, const double /*y*/, const double /*z*/,
-             double& ex, double& ey, double& ez) {
-
-  // Bias voltage [V]
-  constexpr double vbias = -50.;
-  // Depletion voltage [V]
-  constexpr double vdep = -20.;
+// Depletion voltage [V]
+constexpr double vdep = -20.;
+auto eLinear = [d,vbias,vdep](const double /*x*/, const double y,
+                              const double /*z*/,
+                              double& ex, double& ey, double& ez) {
   ex = ez = 0.;
   ey = (vbias - vdep) / d + 2 * y * vdep / (d * d);
-}
+};
 \end{lstlisting}
 and set up a \texttt{ComponentUser} object 
 which delegates the calculation of the electric field to this function.
