@@ -29,6 +29,8 @@ configure_package_config_file(
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${ConfigFileName}" "${VersionFilePath}"
         DESTINATION "${CMAKE_INSTALL_DIR}")
 
+find_package(Python)
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/setup.sh.in
                ${PROJECT_BINARY_DIR}/setupGarfield.sh @ONLY)
 
@@ -39,7 +41,6 @@ install(FILES ${PROJECT_BINARY_DIR}/setupGarfield.sh
               ${PROJECT_BINARY_DIR}/setupGarfield.csh
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Garfield)
 
-find_package(Python)
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Garfield)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in
                ${PROJECT_BINARY_DIR}/Garfield/__init__.py @ONLY)
