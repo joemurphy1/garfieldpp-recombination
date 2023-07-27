@@ -51,6 +51,10 @@ class AvalancheMicroscopic {
   /// Switch on calculation of the total induced charge (default: off).
   void UseInducedCharge(const bool on = true) { m_doInducedCharge = on; }
 
+  /// Compute and store the path length of each trajectory (default: off).
+  void EnablePathLengthComputation(const bool on = true) {
+    m_computePathLength = on;
+  } 
   /// Fill a histogram with the electron energy distribution.
   void EnableElectronEnergyHistogramming(TH1* histo);
   /// Stop histogramming the electron energy distribution.
@@ -150,6 +154,7 @@ class AvalancheMicroscopic {
   struct Electron {
     int status;                    ///< Status.
     std::vector<Point> path;       ///< Drift line.
+    double pathLength;             ///< Path length.
   };
 
   const std::vector<Electron>& GetElectrons() const { return m_electrons; }
@@ -176,7 +181,6 @@ class AvalancheMicroscopic {
                            double& y1, double& z1, double& t1, double& e1,
                            double& dx1, double& dy1, double& dz1,
                            int& status) const;
-  double GetElectronPathLength(const size_t i) const;
   size_t GetNumberOfElectronDriftLinePoints(const size_t i = 0) const;
   size_t GetNumberOfHoleDriftLinePoints(const size_t i = 0) const;
   void GetElectronDriftLinePoint(double& x, double& y, double& z, double& t,
@@ -294,6 +298,8 @@ class AvalancheMicroscopic {
   bool m_useWeightingPotential = false;
   bool m_integrateWeightingField = false;
   bool m_doInducedCharge = false;
+
+  bool m_computePathLength = false;
   bool m_storeDriftLines = false;
   bool m_usePhotons = false;
   bool m_useBandStructure = true;
@@ -339,7 +345,8 @@ class AvalancheMicroscopic {
                         const bool useBfield, const bool aval, 
                         const bool signal, 
                         std::vector<Point>& path,
-                        std::vector<std::pair<Point, bool> >& newParticles);
+                        std::vector<std::pair<Point, bool> >& newParticles,
+                        double& pathLength);
   void TransportPhoton(const double x, const double y, const double z,
                        const double t, const double e,
                        std::vector<std::pair<Point, bool> >& stack);

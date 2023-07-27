@@ -307,22 +307,6 @@ void AvalancheMicroscopic::GetHoleEndpoint(const size_t i,
   status = m_holes[i].status;
 }
 
-double AvalancheMicroscopic::GetElectronPathLength(const size_t i) const {
-
-  if (i >= m_electrons.size()) return 0.;
-  const size_t nP = GetNumberOfElectronDriftLinePoints(i);
-  if (nP < 2) return 0.;
-  double s = 0.;
-  for (size_t j = 0; j < nP - 1; ++j) {
-    double x0 = 0., y0 = 0., z0 = 0., t0 = 0.;
-    GetElectronDriftLinePoint(x0, y0, z0, t0, j, i);
-    double x1 = 0., y1 = 0., z1 = 0., t1 = 0.;
-    GetElectronDriftLinePoint(x1, y1, z1, t1, j + 1, i);
-    s += Mag(x1 - x0, y1 - y0, z1 - z0);
-  }
-  return s; 
-}
-
 size_t AvalancheMicroscopic::GetNumberOfElectronDriftLinePoints(
     const size_t i) const {
   if (i >= m_electrons.size()) {
@@ -567,18 +551,21 @@ bool AvalancheMicroscopic::TransportElectrons(
         } 
       }
       std::vector<Point> path;
+      double pathLength = 0.;
       const int status = TransportElectron(particle.first, isHole, 
                                            useBfield, aval, signal, path,
-                                           newParticles);
+                                           newParticles, pathLength);
       if (isHole) {
         Electron hole;
         hole.status = status;
         hole.path = std::move(path);
+        hole.pathLength = pathLength;
         m_holes.push_back(std::move(hole));
       } else {
         Electron electron;
         electron.status = status;
         electron.path = std::move(path);
+        electron.pathLength = pathLength;
         m_electrons.push_back(std::move(electron));
       }
     }
@@ -602,8 +589,10 @@ bool AvalancheMicroscopic::TransportElectrons(
 int AvalancheMicroscopic::TransportElectron(const Point& p0,
   const bool hole, const bool useBfield, const bool aval, const bool signal,
   std::vector<Point>& path, 
-  std::vector<std::pair<Point, bool> >& newParticles) {
+  std::vector<std::pair<Point, bool> >& newParticles,
+  double& pathLength) {
 
+  pathLength = 0.;
   double x = p0.x;
   double y = p0.y;
   double z = p0.z;
@@ -926,6 +915,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
     if (signal) AddSignal(x, y, z, t, x1, y1, z1, t1, hole);
 
     // Update the coordinates.
+    if (m_computePathLength) pathLength += Mag(x1 - x, y1 - y, z1 - z);
     x = x1;
     y = y1;
     z = z1;
