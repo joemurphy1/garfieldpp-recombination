@@ -397,7 +397,8 @@ void AvalancheGrid::ImportElectronsFromAvalancheMicroscopic(
     avmc->GetElectronEndpoint(i, x1, y1, z1, t1, e1, x2, y2, z2, t2, e2,
                               status);
 
-    if (status != -17) return;
+    if (status != -17) continue; // if the electron is not stopped due to
+      // the upper bound of the time range: then skip this electron.
 
     vel = (z2 - z1) / (t2 - t1);
 
