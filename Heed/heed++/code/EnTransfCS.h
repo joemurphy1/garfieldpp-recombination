@@ -20,7 +20,7 @@ class EnTransfCS {
   EnTransfCS() = default;
   /// Constructor
   EnTransfCS(double fparticle_mass, double fgamma_1, bool fs_primary_electron,
-             HeedMatterDef* fhmd, long fparticle_charge = 1,
+             HeedMatterDef* fhmd, double fparticle_charge = 1.,
              const bool debug = false);
 
   void print(std::ostream& file, int l) const;
@@ -32,7 +32,7 @@ class EnTransfCS {
   /// Particle mass [MeV]
   double particle_mass = 0.;
   /// Charge in units of electron charge (used square, sign does not matter).
-  long particle_charge = 0;
+  double particle_charge = 1.;
 
   /// Lorentz factor - 1 (the best dimensionless measurement of speed).
   double gamma_1 = 0.;

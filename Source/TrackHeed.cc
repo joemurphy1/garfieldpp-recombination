@@ -821,7 +821,7 @@ bool TrackHeed::Initialise(Medium* medium, const bool verbose) {
   // Set a flag indicating whether the primary particle is an electron.
   m_transferCs.reset(new Heed::EnTransfCS(1.e-6 * m_mass, GetGamma() - 1.,
                                           m_isElectron, m_matter.get(),
-                                          long(m_q)));
+                                          m_q));
   if (!m_transferCs->m_ok) {
     std::cerr << m_className << "::Initialise:\n"
               << "    Problems occured when calculating the differential"

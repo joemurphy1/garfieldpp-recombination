@@ -111,7 +111,7 @@ using CLHEP::cm;
 
 EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
                        bool fs_primary_electron, HeedMatterDef* fhmd,
-                       long fparticle_charge, const bool debug)
+                       double fparticle_charge, const bool debug)
     : particle_mass(fparticle_mass),
       particle_charge(fparticle_charge),
       gamma_1(fgamma_1),
@@ -199,7 +199,7 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
 #endif
   }
 
-  const long q2 = particle_charge * particle_charge;
+  const double q2 = particle_charge * particle_charge;
   double coefpa = fine_structure_const * q2 / CLHEP::pi;
   if (beta2 > 0.) {
     coefpa /= beta2;
