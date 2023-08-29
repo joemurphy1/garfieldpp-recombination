@@ -23,8 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id: GarfieldG4FastSimulationModel.cc 999994 2015-12-11 14:47:43Z dpfeiffe $
-//
 /// \file GarfieldG4FastSimulationModel.cc
 /// \brief Implementation of the GarfieldG4FastSimulationModel class
 

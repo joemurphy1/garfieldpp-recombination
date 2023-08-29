@@ -23,8 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id: GarfieldRunAction.cc 999999 2015-12-11 14:47:43Z dpfeiffe $
-//
 /// \file GarfieldRunAction.cc
 /// \brief Implementation of the GarfieldRunAction class
 

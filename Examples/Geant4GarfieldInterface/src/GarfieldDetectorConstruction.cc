@@ -23,8 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id: GarfieldDetectorConstruction.cc 999992 2015-12-11 14:47:43Z dpfeiffe $
-//
 /// \file GarfieldDetectorConstruction.cc
 /// \brief Implementation of the GarfieldDetectorConstruction class
 

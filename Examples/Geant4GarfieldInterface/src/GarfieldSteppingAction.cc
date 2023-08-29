@@ -23,8 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id: GarfieldSteppingAction.cc 999990 2015-12-11 14:47:43Z dpfeiffe $
-//
 /// \file GarfieldSteppingAction.cc
 /// \brief Implementation of the GarfieldSteppingAction class
 
@@ -53,14 +51,11 @@ GarfieldSteppingAction::~GarfieldSteppingAction() {}
 void GarfieldSteppingAction::UserSteppingAction(const G4Step* step) {
   // Collect energy and track length step by step
 
-  // get volume of the current step
-  G4VPhysicalVolume* volume =
-      step->GetPreStepPoint()->GetTouchableHandle()->GetVolume();
-
-  // energy deposit
+  // Get volume of the current step
+  auto volume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume();
+  // Energy deposit
   G4double edep = step->GetTotalEnergyDeposit();
-
-  // step length
+  // Step length
   G4double stepLength = 0.;
   if (step->GetTrack()->GetDefinition()->GetPDGCharge() != 0.) {
     stepLength = step->GetStepLength();

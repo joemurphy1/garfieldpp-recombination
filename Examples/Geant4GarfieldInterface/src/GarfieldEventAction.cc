@@ -23,8 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id: GarfieldEventAction.cc 999993 2015-12-11 14:47:43Z dpfeiffe $
-//
 /// \file GarfieldEventAction.cc
 /// \brief Implementation of the GarfieldEventAction class
 

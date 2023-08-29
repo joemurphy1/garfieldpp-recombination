@@ -36,9 +36,7 @@ GarfieldPhysics* GarfieldPhysics::fGarfieldPhysics = nullptr;
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 GarfieldPhysics* GarfieldPhysics::GetInstance() {
-  if (!fGarfieldPhysics) {
-    fGarfieldPhysics = new GarfieldPhysics();
-  }
+  if (!fGarfieldPhysics) fGarfieldPhysics = new GarfieldPhysics();
   return fGarfieldPhysics;
 }
 
@@ -67,7 +65,7 @@ void GarfieldPhysics::SetIonizationModel(std::string model, bool useDefaults) {
   fIonizationModel = model;
 
   if (fIonizationModel == "PAIPhot" || fIonizationModel == "PAI") {
-    if (useDefaults == true) {
+    if (useDefaults) {
       // Particle types and energies for which the G4FastSimulationModel with
       // Garfield++ is valid
       this->AddParticleName("e-", 1e-6, 1e-3, "garfield");
@@ -87,7 +85,7 @@ void GarfieldPhysics::SetIonizationModel(std::string model, bool useDefaults) {
     }
 
   } else if (fIonizationModel == "Heed") {
-    if (useDefaults == true) {
+    if (useDefaults) {
       // Particle types and energies for which the G4FastSimulationModel with
       // Garfield++ is valid
       this->AddParticleName("gamma", 1e-6, 1e+8, "garfield");
