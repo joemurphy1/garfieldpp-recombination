@@ -39,12 +39,11 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 GarfieldRunAction::GarfieldRunAction() : G4UserRunAction() {
-  // set printing event number per each event
+  // Print event number for each event
   G4RunManager::GetRunManager()->SetPrintProgress(1);
 
   // Create analysis manager
-  // The choice of analysis technology is done via selectin of a namespace
-  // in Garfieldnalysis.hh
+  // The choice of analysis technology is done in GarfieldAnalysis.hh
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
   G4cout << "Using " << analysisManager->GetType() << G4endl;
 
@@ -54,21 +53,17 @@ GarfieldRunAction::GarfieldRunAction() : G4UserRunAction() {
   analysisManager->SetVerboseLevel(1);
   analysisManager->SetFirstHistoId(1);
 
-  // Book histograms, ntuple
-  //
-
-  // Creating histograms
+  // Book histograms
   analysisManager->CreateH1("1", "Edep in absorber", 100, 0., 800 * MeV);
-  analysisManager->CreateH1("2", "trackL in absorber", 100, 0., 1 * m);
+  analysisManager->CreateH1("2", "Track length in absorber", 100, 0., 1 * m);
   analysisManager->CreateH1("3", "Edep in gas", 1000, 0., 100 * keV);
 
   analysisManager->CreateH1("4", "Avalanche size in gas", 10000, 0, 10000);
-  analysisManager->CreateH1("5", "gain", 1000, 0., 100);
+  analysisManager->CreateH1("5", "Gain", 1000, 0., 100);
   analysisManager->CreateH3("1", "Track position", 200, -10 * cm, 10 * cm, 29,
                             -1.45 * cm, 1.45 * cm, 29, -1.45 * cm, 1.45 * cm);
 
-  // Creating ntuple
-  //
+  // Book ntuple
   analysisManager->CreateNtuple("Garfield", "Edep and TrackL");
   analysisManager->CreateNtupleDColumn("Eabs");
   analysisManager->CreateNtupleDColumn("Labs");
@@ -81,20 +76,22 @@ GarfieldRunAction::GarfieldRunAction() : G4UserRunAction() {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 GarfieldRunAction::~GarfieldRunAction() {
-  delete G4AnalysisManager::Instance();
+#if (G4VERSION_NUMBER < 1100)
+  auto analysisManager = G4AnalysisManager::Instance();
+  if (analysisManager) delete analysisManager;
+#endif
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void GarfieldRunAction::BeginOfRunAction(const G4Run* /*run*/) {
-  // inform the runManager to save random number seed
+  // Inform the runManager to save random number seed
   // G4RunManager::GetRunManager()->SetRandomNumberStore(true);
 
   // Get analysis manager
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
 
   // Open an output file
-  //
   G4String fileName = "Garfield.root";
   analysisManager->OpenFile(fileName);
 }
@@ -102,8 +99,7 @@ void GarfieldRunAction::BeginOfRunAction(const G4Run* /*run*/) {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void GarfieldRunAction::EndOfRunAction(const G4Run* /*run*/) {
-  // print histogram statistics
-  //
+  // Print histogram statistics
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
   if (analysisManager->GetH1(1)) {
     G4cout << G4endl << " ----> print histograms statistic ";
@@ -135,8 +131,7 @@ void GarfieldRunAction::EndOfRunAction(const G4Run* /*run*/) {
            << " rms = " << analysisManager->GetH1(5)->rms() << G4endl;
   }
 
-  // save histograms & ntuple
-  //
+  // Save histograms and ntuple
   analysisManager->Write();
   analysisManager->CloseFile();
 }
