@@ -31,34 +31,21 @@
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
 
-GarfieldPhysics* GarfieldPhysics::fGarfieldPhysics = 0;
+GarfieldPhysics* GarfieldPhysics::fGarfieldPhysics = nullptr;
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 GarfieldPhysics* GarfieldPhysics::GetInstance() {
-  if (!fGarfieldPhysics) {
-    fGarfieldPhysics = new GarfieldPhysics();
-  }
+  if (!fGarfieldPhysics) fGarfieldPhysics = new GarfieldPhysics();
   return fGarfieldPhysics;
 }
 
 void GarfieldPhysics::Dispose() {
   delete fGarfieldPhysics;
-  fGarfieldPhysics = 0;
-}
-
-GarfieldPhysics::GarfieldPhysics() {
-  fSecondaryParticles = new std::vector<GarfieldParticle*>();
-  fMediumMagboltz = 0;
-  fSensor = 0;
-  fComponentAnalyticField = 0;
-  fTrackHeed = 0;
-  createSecondariesInGeant4 = false;
-  fIonizationModel = "PAIPhot";
+  fGarfieldPhysics = nullptr;
 }
 
 GarfieldPhysics::~GarfieldPhysics() {
-  DeleteSecondaryParticles();
-  delete fSecondaryParticles;
   delete fMediumMagboltz;
   delete fSensor;
   delete fComponentAnalyticField;
@@ -78,7 +65,7 @@ void GarfieldPhysics::SetIonizationModel(std::string model, bool useDefaults) {
   fIonizationModel = model;
 
   if (fIonizationModel == "PAIPhot" || fIonizationModel == "PAI") {
-    if (useDefaults == true) {
+    if (useDefaults) {
       // Particle types and energies for which the G4FastSimulationModel with
       // Garfield++ is valid
       this->AddParticleName("e-", 1e-6, 1e-3, "garfield");
@@ -98,7 +85,7 @@ void GarfieldPhysics::SetIonizationModel(std::string model, bool useDefaults) {
     }
 
   } else if (fIonizationModel == "Heed") {
-    if (useDefaults == true) {
+    if (useDefaults) {
       // Particle types and energies for which the G4FastSimulationModel with
       // Garfield++ is valid
       this->AddParticleName("gamma", 1e-6, 1e+8, "garfield");
@@ -253,7 +240,7 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
                            double dx, double dy, double dz) {
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
   fEnergyDeposit = 0;
-  DeleteSecondaryParticles();
+  fSecondaryParticles.clear();
 
   Garfield::AvalancheMC drift;
   drift.SetSensor(fSensor);
@@ -298,7 +285,7 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
         if (newTime < time) {
           newTime += time;
         }
-        fSecondaryParticles->push_back(new GarfieldParticle(
+        fSecondaryParticles.emplace_back(GarfieldParticle(
             "e-", ee, newTime, xe, ye, ze, dxe, dye, dze));
       }
 
@@ -351,7 +338,7 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
           if (newTime < time) {
             newTime += time;
           }
-          fSecondaryParticles->push_back(new GarfieldParticle(
+          fSecondaryParticles.emplace_back(GarfieldParticle(
               "e-", electron.e, newTime, electron.x, electron.y, electron.z, 
               electron.dx, electron.dy, electron.dz));
         }
@@ -388,13 +375,3 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
   fGain = fAvalancheSize / nsum;
 }
 
-std::vector<GarfieldParticle*>* GarfieldPhysics::GetSecondaryParticles() {
-  return fSecondaryParticles;
-}
-
-void GarfieldPhysics::DeleteSecondaryParticles() {
-  if (!fSecondaryParticles->empty()) {
-    fSecondaryParticles->erase(fSecondaryParticles->begin(),
-                               fSecondaryParticles->end());
-  }
-}

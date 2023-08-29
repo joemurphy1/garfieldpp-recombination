@@ -23,8 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id: GarfieldPhysicsList.cc 999997 2015-12-11 14:47:43Z dpfeiffe $
-//
 /// \file GarfieldPhysicsList.cc
 /// \brief Implementation of the GarfieldPhysicsList class
 
@@ -55,7 +53,7 @@ GarfieldPhysicsList::GarfieldPhysicsList() : G4VModularPhysicsList() {
   for (G4int i = 0;; ++i) {
     G4VPhysicsConstructor* elem =
         const_cast<G4VPhysicsConstructor*>(physicsList->GetPhysics(i));
-    if (elem == NULL) break;
+    if (!elem) break;
     G4cout << "RegisterPhysics: " << elem->GetPhysicsName() << G4endl;
     RegisterPhysics(elem);
   }

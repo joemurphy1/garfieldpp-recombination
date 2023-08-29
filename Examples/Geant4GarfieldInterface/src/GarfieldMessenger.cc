@@ -23,8 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id: GarfieldMessenger.cc 999995 2015-12-11 14:47:43Z dpfeiffe $
-//
 /// \file GarfieldMessenger.cc
 /// \brief Implementation of the GarfieldMessenger class
 

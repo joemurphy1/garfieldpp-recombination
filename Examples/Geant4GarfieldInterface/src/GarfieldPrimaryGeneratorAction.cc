@@ -23,8 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id: GarfieldPrimaryGeneratorAction.cc 999998 2015-12-11 14:47:43Z dpfeiffe $
-//
 /// \file GarfieldPrimaryGeneratorAction.cc
 /// \brief Implementation of the GarfieldPrimaryGeneratorAction class
 
@@ -71,26 +69,23 @@ void GarfieldPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
   // This function is called at the begining of event
 
   /*
-    G4double worldZHalfLength = 0;
-    G4LogicalVolume* worlLV
+  G4double worldZHalfLength = 0;
+  G4LogicalVolume* worldLV 
       = G4LogicalVolumeStore::GetInstance()->GetVolume("World");
-    G4Box* worldBox = 0;
-    if ( worlLV) worldBox = dynamic_cast< G4Box*>(worlLV->GetSolid());
-    if ( worldBox ) {
-      worldZHalfLength = worldBox->GetZHalfLength();
-    }
-    else  {
-      G4ExceptionDescription msg;
-      msg << "World volume of box not found." << G4endl;
-      msg << "Perhaps you have changed geometry." << G4endl;
-      msg << "The gun will be place in the center.";
-      G4Exception("GarfieldPrimaryGeneratorAction::GeneratePrimaries()",
-        "MyCode0002", JustWarning, msg);
-    }
-
-    // Set gun position
-    fParticleGun
-      ->SetParticlePosition(G4ThreeVector(0., 0., -worldZHalfLength));
+  G4Box* worldBox = nullptr;
+  if (worldLV) worldBox = dynamic_cast<G4Box*>(worlLV->GetSolid());
+  if (worldBox) {
+    worldZHalfLength = worldBox->GetZHalfLength();
+  } else {
+    G4ExceptionDescription msg;
+    msg << "World volume of box not found." << G4endl;
+    msg << "Perhaps you have changed geometry." << G4endl;
+    msg << "The gun will be place in the center.";
+    G4Exception("GarfieldPrimaryGeneratorAction::GeneratePrimaries()",
+                "MyCode0002", JustWarning, msg);
+  }
+  // Set gun position
+  fParticleGun->SetParticlePosition(G4ThreeVector(0., 0., -worldZHalfLength));
   */
   fParticleGun->GeneratePrimaryVertex(anEvent);
 }

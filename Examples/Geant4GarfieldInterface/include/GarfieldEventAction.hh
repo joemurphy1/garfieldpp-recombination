@@ -44,21 +44,21 @@
 
 class GarfieldEventAction : public G4UserEventAction {
  public:
-  GarfieldEventAction();
+  GarfieldEventAction() = default;
   virtual ~GarfieldEventAction();
 
-  virtual void BeginOfEventAction(const G4Event* event);
-  virtual void EndOfEventAction(const G4Event* event);
+  void BeginOfEventAction(const G4Event* event) override;
+  void EndOfEventAction(const G4Event* event) override;
 
   void AddAbs(G4double de, G4double dl);
   void AddGas(G4double de);
 
  private:
-  G4double fEnergyAbs;
-  G4double fEnergyGas;
-  G4double fTrackLAbs;
-  G4double fAvalancheSize;
-  G4double fGain;
+  G4double fEnergyAbs = 0.;
+  G4double fEnergyGas = 0.;
+  G4double fTrackLAbs = 0.;
+  G4double fAvalancheSize = 0.;
+  G4double fGain = 0.;
 };
 
 // inline functions
