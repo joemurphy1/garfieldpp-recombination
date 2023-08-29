@@ -58,15 +58,15 @@ class GarfieldParticle {
         fdz(dz) {}
   ~GarfieldParticle() {}
 
-  std::string getParticleName() { return fParticleName; }
-  double getX_mm() { return fx_mm; }
-  double getY_mm() { return fy_mm; }
-  double getZ_mm() { return fz_mm; }
-  double getEkin_MeV() { return fEkin_MeV; }
-  double getTime() { return fTime; }
-  double getDX() { return fdx; }
-  double getDY() { return fdy; }
-  double getDZ() { return fdz; }
+  std::string getParticleName() const { return fParticleName; }
+  double getX_mm() const { return fx_mm; }
+  double getY_mm() const { return fy_mm; }
+  double getZ_mm() const { return fz_mm; }
+  double getEkin_MeV() const { return fEkin_MeV; }
+  double getTime() const { return fTime; }
+  double getDX() const { return fdx; }
+  double getDY() const { return fdy; }
+  double getDZ() const { return fdz; }
 
  private:
   std::string fParticleName;
@@ -95,18 +95,19 @@ class GarfieldPhysics {
                                  std::string program = "garfield");
   void SetIonizationModel(std::string model, bool useDefaults = true);
   std::string GetIonizationModel();
-  std::vector<GarfieldParticle*>* GetSecondaryParticles();
-  void DeleteSecondaryParticles();
-  inline void EnableCreateSecondariesInGeant4(bool flag) {
+  const std::vector<GarfieldParticle>& GetSecondaryParticles() const {
+    return fSecondaryParticles;
+  }
+  void EnableCreateSecondariesInGeant4(bool flag) {
     createSecondariesInGeant4 = flag;
   }
-  inline bool GetCreateSecondariesInGeant4() {
-    return createSecondariesInGeant4;
+  bool GetCreateSecondariesInGeant4() const { 
+    return createSecondariesInGeant4; 
   }
-  inline double GetEnergyDeposit_MeV() { return fEnergyDeposit / 1000000; }
-  inline double GetAvalancheSize() { return fAvalancheSize; }
-  inline double GetGain() { return fGain; }
-  inline void Clear() {
+  double GetEnergyDeposit_MeV() const { return fEnergyDeposit / 1000000; }
+  double GetAvalancheSize() const { return fAvalancheSize; }
+  double GetGain() const { return fGain; }
+  void Clear() {
     fEnergyDeposit = 0;
     fAvalancheSize = 0;
     fGain = 0;
@@ -114,25 +115,26 @@ class GarfieldPhysics {
   }
 
  private:
-  GarfieldPhysics();
+  GarfieldPhysics() = default;
   ~GarfieldPhysics();
 
-  std::string fIonizationModel;
+  std::string fIonizationModel = "PAIPhot";
 
   static GarfieldPhysics* fGarfieldPhysics;
+
   MapParticlesEnergy fMapParticlesEnergyGeant4;
   MapParticlesEnergy fMapParticlesEnergyGarfield;
-  Garfield::MediumMagboltz* fMediumMagboltz;
-  Garfield::Sensor* fSensor;
-  Garfield::TrackHeed* fTrackHeed;
-  Garfield::ComponentAnalyticField* fComponentAnalyticField;
+  Garfield::MediumMagboltz* fMediumMagboltz = nullptr;
+  Garfield::Sensor* fSensor = nullptr;
+  Garfield::TrackHeed* fTrackHeed = nullptr;
+  Garfield::ComponentAnalyticField* fComponentAnalyticField = nullptr;
 
-  std::vector<GarfieldParticle*>* fSecondaryParticles;
+  std::vector<GarfieldParticle> fSecondaryParticles;
 
-  bool createSecondariesInGeant4;
-  double fEnergyDeposit;
-  double fAvalancheSize;
-  double fGain;
-  int nsum;
+  bool createSecondariesInGeant4 = false;
+  double fEnergyDeposit = 0.;
+  double fAvalancheSize = 0.;
+  double fGain = 0.;
+  int nsum = 0;
 };
 #endif /* GARFIELDMODELCONFIG_HH_ */

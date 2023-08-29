@@ -113,29 +113,26 @@ void GarfieldG4FastSimulationModel::DoIt(const G4FastTrack& fastTrack,
   fastStep.SetTotalEnergyDeposited(fGarfieldPhysics->GetEnergyDeposit_MeV());
 
   if (!fGarfieldPhysics->GetCreateSecondariesInGeant4()) return;
-  std::vector<GarfieldParticle*>* secondaryParticles =
-      fGarfieldPhysics->GetSecondaryParticles();
+  const auto& secondaryParticles = fGarfieldPhysics->GetSecondaryParticles();
 
-  if (secondaryParticles->empty()) return;
-  fastStep.SetNumberOfSecondaryTracks(secondaryParticles->size());
+  if (secondaryParticles.empty()) return;
+  fastStep.SetNumberOfSecondaryTracks(secondaryParticles.size());
 
-  G4double totalEnergySecondaries_MeV = 0;
+  G4double totalEnergySecondaries_MeV = 0.;
 
-  for (auto it = secondaryParticles->begin(); it != secondaryParticles->end(); ++it) {
-    G4double eKin_MeV = (*it)->getEkin_MeV();
-    G4double time = (*it)->getTime();
-    G4ThreeVector momentumDirection((*it)->getDX(), (*it)->getDY(), 
-                                    (*it)->getDZ());
-    G4ThreeVector position((*it)->getX_mm(), (*it)->getY_mm(), 
-                           (*it)->getZ_mm());
-    if ((*it)->getParticleName() == "e-") {
+  for (const auto& sp : secondaryParticles) {
+    G4double eKin_MeV = sp.getEkin_MeV();
+    G4double time = sp.getTime();
+    G4ThreeVector momentumDirection(sp.getDX(), sp.getDY(), sp.getDZ());
+    G4ThreeVector position(sp.getX_mm(), sp.getY_mm(), sp.getZ_mm());
+    if (sp.getParticleName() == "e-") {
       G4DynamicParticle particle(G4Electron::ElectronDefinition(),
                                  momentumDirection, eKin_MeV);
       fastStep.CreateSecondaryTrack(particle, position, time, true);
       totalEnergySecondaries_MeV += eKin_MeV;
-    } else if ((*it)->getParticleName() == "gamma") {
+    } else if (sp.getParticleName() == "gamma") {
        G4DynamicParticle particle(G4Gamma::GammaDefinition(),
-                                 momentumDirection, eKin_MeV);
+                                  momentumDirection, eKin_MeV);
       fastStep.CreateSecondaryTrack(particle, position, time, true);
       totalEnergySecondaries_MeV += eKin_MeV;
     }
