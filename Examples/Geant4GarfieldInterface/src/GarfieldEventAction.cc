@@ -42,22 +42,17 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-GarfieldEventAction::GarfieldEventAction()
-    : G4UserEventAction(), fEnergyAbs(0.), fEnergyGas(0.), fTrackLAbs(0.) {}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 GarfieldEventAction::~GarfieldEventAction() {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void GarfieldEventAction::BeginOfEventAction(const G4Event* /*event*/) {
   // initialisation per event
-  fEnergyAbs = 0;
-  fEnergyGas = 0;
-  fTrackLAbs = 0;
-  fAvalancheSize = 0;
-  fGain = 0;
+  fEnergyAbs = 0.;
+  fEnergyGas = 0.;
+  fTrackLAbs = 0.;
+  fAvalancheSize = 0.;
+  fGain = 0.;
 
   GarfieldPhysics* garfieldPhysics = GarfieldPhysics::GetInstance();
   garfieldPhysics->Clear();
@@ -67,10 +62,9 @@ void GarfieldEventAction::BeginOfEventAction(const G4Event* /*event*/) {
 
 void GarfieldEventAction::EndOfEventAction(const G4Event* event) {
   // Accumulate statistics
-  //
   GarfieldPhysics* garfieldPhysics = GarfieldPhysics::GetInstance();
 
-  // get analysis manager
+  // Get analysis manager
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
   // fEnergyGas += garfieldPhysics->GetEnergyDeposit_MeV();
   fAvalancheSize = garfieldPhysics->GetAvalancheSize();
