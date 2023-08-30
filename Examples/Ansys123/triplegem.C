@@ -42,7 +42,6 @@ int main() {
 
   AvalancheMicroscopic aval;
   aval.SetSensor(&sensor);
-  aval.EnableMagneticField();
   aval.EnableAvalancheSizeLimit(1000);
 
   TH1F hNelec("hNelec", "Number of electrons produced", 1000, -0.5, 999.5);
