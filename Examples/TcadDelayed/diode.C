@@ -80,6 +80,7 @@ int main(int argc, char * argv[]) {
 
 
   // This is necessary to enable the delayed signal
+  // Defining to few `delay_times` leads to an imprecise calculation of the delayed signal.
   std::vector<double> delay_times;
   for(int tt=0; tt<100; tt++) {
     delay_times.push_back(tt);
@@ -110,8 +111,7 @@ int main(int argc, char * argv[]) {
   drift.SetDistanceSteps(1.e-4);
 
 
-  // Using the Weithging Potential leads to bad results for the delayed term!
-  // Use the weighting field instead.
+  // Force the use of the weighting field instead of the weighing potential.
   drift.UseWeightingPotential(false);
 
 
