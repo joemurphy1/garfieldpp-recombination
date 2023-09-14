@@ -479,8 +479,6 @@ bool ComponentTcadBase<N>::SetWeightingField(
     for (size_t i = 0; i < nVertices; ++i) {
       for (size_t j = 0; j < N; ++j) {
         wf[i][j] = (wf2[i][j] - wf1[i][j]) * s;
-        // Subtract the prompt component.
-        wf[i][j] -= m_wfield[i][j];
       } 
     }
     if (m_dwtf.empty() || t > m_dwtf.back()) {
