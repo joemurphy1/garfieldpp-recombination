@@ -381,33 +381,21 @@ void AvalancheGrid::ImportElectronsFromAvalancheMicroscopic(
 
   if (!m_importAvalanche) m_importAvalanche = true;
 
-  int np = avmc->GetNumberOfElectronEndpoints();
-
-  if (np == 0) return;
-
   // Get initial positions of electrons
-  double x1, y1, z1, t1;
-  double x2, y2, z2, t2;
-  double e1, e2;
-  int status = 0;
+  for (const auto& electron : avmc->GetElectrons()) {
+    // If the electron is not stopped due to
+    // the upper bound of the time range: then skip this electron.
+    if (electron.status != -17) continue;
+    const auto& p1 = electron.path.at(0);
+    const auto& p2 = electron.path.back();
+    const double vel = (p2.z - p1.z) / (p2.t - p1.t);
+    m_avgrid.time = p2.t;
 
-  double vel = 0.;
-
-  for (int i = 0; i < np; ++i) {
-    avmc->GetElectronEndpoint(i, x1, y1, z1, t1, e1, x2, y2, z2, t2, e2,
-                              status);
-
-    if (status != -17) continue; // if the electron is not stopped due to
-      // the upper bound of the time range: then skip this electron.
-
-    vel = (z2 - z1) / (t2 - t1);
-
-    m_avgrid.time = t2;
-
-    if (SnapToGrid(m_avgrid, x2, y2, z2, vel) && m_debug)
+    if (SnapToGrid(m_avgrid, p2.x, p2.y, p2.z, vel) && m_debug) {
       std::cerr << m_className
-                << "::GetElectronsFromAvalancheMicroscopic::Electron added at "
-                   "(x,y,z) =  (" << x2 << "," << y2 << "," << z2 << ").\n";
+                << "::ImportElectronsFromAvalancheMicroscopic: Electron added at "
+                   "(x,y,z) =  (" << p2.x << "," << p2.y << "," << p2.z << ").\n";
+    }
   }
 }
 
