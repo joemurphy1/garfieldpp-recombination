@@ -24,19 +24,19 @@ build-centos7:
 
 # Docker image chosen to match build instructions at:
 # https://garfieldpp.web.cern.ch/garfieldpp/getting-started/
-build-centos7-view97:
-  stage: build
-  image: rootproject/root:6.22.02-centos7
-  before_script:
-    - yum install libXmu-devel motif-devel -y
-  script:
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-centos7-gcc9-opt/setup.sh
-    - rm -rf build
-    - mkdir build
-    - cd build
-    - cmake  -DCMAKE_INSTALL_PREFIX=/usr/local ../
-    - make -j4
-    - make install
+#build-centos7-view97:
+#  stage: build
+#  image: rootproject/root:6.22.02-centos7
+#  before_script:
+#    - yum install libXmu-devel motif-devel -y
+#  script:
+#    - source /cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-centos7-gcc9-opt/setup.sh
+#    - rm -rf build
+#    - mkdir build
+#    - cd build
+#    - cmake  -DCMAKE_INSTALL_PREFIX=/usr/local ../
+#    - make -j4
+#    - make install
 
 build-ubuntu:
   stage: build
