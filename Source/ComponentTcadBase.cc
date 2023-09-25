@@ -420,6 +420,80 @@ bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
 }
 
 template<size_t N>
+bool ComponentTcadBase<N>::SetWeightingPotential(
+    const std::string& datfile1, const std::string& datfile2,
+    const double dv, const double t, const std::string& label) {
+
+  if (!m_ready) {
+    std::cerr << m_className << "::SetWeightingPotential:\n"
+              << "    Mesh is not available. Call Initialise first.\n";
+    return false;
+  }
+  if (dv < Small) {
+     std::cerr << m_className << "::SetWeightingPotential:\n"
+               << "    Voltage difference must be > 0.\n";
+     return false;
+  }
+  const double s = 1. / dv;
+ 
+  if (m_wlabel.empty()) {
+    std::cerr << m_className << "::SetWeightingPotential:\n"
+              << "    Prompt component not present.\n"
+              << "    Import the map for t = 0 first.\n";
+    return false;
+  }
+  if (label != m_wlabel.front()) {
+    std::cerr << m_className << "::SetWeightingPotential:\n"
+              << "    Label does not match the existing prompt component.\n";
+    return false;
+  }
+
+  // Load the first map.
+  std::vector<std::array<double, N> > wf1;
+  std::vector<double> wp1;
+  if (!LoadWeightingField(datfile1, wf1, wp1)) {
+    std::cerr << m_className << "::SetWeightingPotential:\n"
+              << "    Could not import data from " << datfile1 << ".\n";
+    return false;
+  }
+  // Load the second map.
+  std::vector<std::array<double, N> > wf2;
+  std::vector<double> wp2;
+  if (!LoadWeightingField(datfile2, wf2, wp2)) {
+    std::cerr << m_className << "::SetWeightingPotential:\n"
+              << "    Could not import data from " << datfile2 << ".\n";
+    return false;
+  }
+  const size_t nVertices = m_vertices.size();
+  if (wp1.size() != nVertices || wp2.size() != nVertices) {
+    std::cerr << m_className << "::SetWeightingPotential:\n"
+              << "    Could not load electrostatic potentials.\n";
+    return false;
+  } 
+  if (m_wpot.size() != nVertices) {
+    std::cerr << m_className << "::SetWeightingPotential:\n"
+              << "    Prompt weighting potential not present.\n";
+    return false; 
+  }
+  std::vector<double> wp(nVertices, 0.);
+  for (size_t i = 0; i < nVertices; ++i) {
+    wp[i] = (wp2[i] - wp1[i]) * s;
+    // Subtract the prompt component.
+    wp[i] -= m_wpot[i]; 
+  }
+  if (m_dwtp.empty() || t > m_dwtp.back()) {
+    m_dwtp.push_back(t);
+    m_dwp.push_back(std::move(wp));
+  } else {
+    const auto it = std::upper_bound(m_dwtp.begin(), m_dwtp.end(), t);
+    const auto n = std::distance(m_dwtp.begin(), it);
+    m_dwtp.insert(it, t);
+    m_dwp.insert(m_dwp.begin() + n, std::move(wp));
+  }
+  return true;
+}
+
+template<size_t N>
 bool ComponentTcadBase<N>::SetWeightingField(
     const std::string& datfile1, const std::string& datfile2,
     const double dv, const double t, const std::string& label) {
@@ -465,58 +539,33 @@ bool ComponentTcadBase<N>::SetWeightingField(
     return false;
   }
   const size_t nVertices = m_vertices.size();
-  bool foundField = false;
   if (wf1.size() != nVertices || wf2.size() != nVertices) {
     std::cerr << m_className << "::SetWeightingField:\n"
               << "    Could not load electric field values.\n";
-  } else if (m_wfield.size() != nVertices) {
-    std::cerr << m_className << "::SetWeightingField:\n"
-              << "    Prompt weighting field not present.\n"; 
-  } else {
-    foundField = true;
-    std::vector<std::array<double, N> > wf; 
-    wf.resize(nVertices);
-    for (size_t i = 0; i < nVertices; ++i) {
-      for (size_t j = 0; j < N; ++j) {
-        wf[i][j] = (wf2[i][j] - wf1[i][j]) * s;
-      } 
-    }
-    if (m_dwtf.empty() || t > m_dwtf.back()) {
-      m_dwtf.push_back(t);
-      m_dwf.push_back(std::move(wf));
-    } else {
-      const auto it = std::upper_bound(m_dwtf.begin(), m_dwtf.end(), t);
-      const auto n = std::distance(m_dwtf.begin(), it);
-      m_dwtf.insert(it, t);
-      m_dwf.insert(m_dwf.begin() + n, std::move(wf));
-    }
+    return false;
   }
-  bool foundPotential = false;
-  if (wp1.size() != nVertices || wp2.size() != nVertices) {
+  if (m_wfield.size() != nVertices) {
     std::cerr << m_className << "::SetWeightingField:\n"
-              << "    Could not load electrostatic potentials.\n";
-  } else if (m_wpot.size() != nVertices) {
-    std::cerr << m_className << "::SetWeightingField:\n"
-              << "    Prompt weighting potential not present.\n"; 
-  } else {
-    foundPotential = true;
-    std::vector<double> wp(nVertices, 0.);
-    for (size_t i = 0; i < nVertices; ++i) {
-      wp[i] = (wp2[i] - wp1[i]) * s;
-      // Subtract the prompt component.
-      wp[i] -= m_wpot[i]; 
-    }
-    if (m_dwtp.empty() || t > m_dwtp.back()) {
-      m_dwtp.push_back(t);
-      m_dwp.push_back(std::move(wp));
-    } else {
-      const auto it = std::upper_bound(m_dwtp.begin(), m_dwtp.end(), t);
-      const auto n = std::distance(m_dwtp.begin(), it);
-      m_dwtp.insert(it, t);
-      m_dwp.insert(m_dwp.begin() + n, std::move(wp));
-    }
+              << "    Prompt weighting field not present.\n";
+    return false; 
   }
-  return (foundField || foundPotential);
+  std::vector<std::array<double, N> > wf; 
+  wf.resize(nVertices);
+  for (size_t i = 0; i < nVertices; ++i) {
+    for (size_t j = 0; j < N; ++j) {
+      wf[i][j] = (wf2[i][j] - wf1[i][j]) * s;
+    } 
+  }
+  if (m_dwtf.empty() || t > m_dwtf.back()) {
+    m_dwtf.push_back(t);
+    m_dwf.push_back(std::move(wf));
+  } else {
+    const auto it = std::upper_bound(m_dwtf.begin(), m_dwtf.end(), t);
+    const auto n = std::distance(m_dwtf.begin(), it);
+    m_dwtf.insert(it, t);
+    m_dwf.insert(m_dwf.begin() + n, std::move(wf));
+  }
+  return true;
 }
 
 template<size_t N>
