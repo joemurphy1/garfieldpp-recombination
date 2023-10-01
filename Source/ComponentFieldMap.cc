@@ -1300,23 +1300,23 @@ void ComponentFieldMap::Jacobian13(
   const double vw = vx * wy - wx * vy;
 
   jac[0][0] = -uw * vz + uv * wz + vw * uz;
-  jac[1][0] = -vw * tz + tw * vz - tv * wz;
-  jac[2][0] =  uw * tz + tu * wz - tw * uz;
-  jac[3][0] = -uv * tz - tu * vz + tv * uz;
-
   jac[0][1] = -(uy - wy) * vz + (uy - vy) * wz + (vy - wy) * uz;
-  jac[1][1] = -(vy - wy) * tz + (ty - wy) * vz - (ty - vy) * wz;
-  jac[2][1] =  (uy - wy) * tz + (ty - uy) * wz - (ty - wy) * uz;
-  jac[3][1] = -(uy - vy) * tz - (ty - uy) * vz + (ty - vy) * uz;
-
   jac[0][2] =  (ux - wx) * vz - (ux - vx) * wz - (vx - wx) * uz;
-  jac[1][2] =  (vx - wx) * tz - (tx - wx) * vz + (tx - vx) * wz;
-  jac[2][2] = -(ux - wx) * tz - (tx - ux) * wz + (tx - wx) * uz;
-  jac[3][2] =  (ux - vx) * tz + (tx - ux) * vz - (tx - vx) * uz;
-
   jac[0][3] = -(ux - wx) * vy + (ux - vx) * wy + (vx - wx) * uy;
+
+  jac[1][0] = -vw * tz + tw * vz - tv * wz;
+  jac[1][1] = -(vy - wy) * tz + (ty - wy) * vz - (ty - vy) * wz;
+  jac[1][2] =  (vx - wx) * tz - (tx - wx) * vz + (tx - vx) * wz;
   jac[1][3] = -(vx - wx) * ty + (tx - wx) * vy - (tx - vx) * wy;
+
+  jac[2][0] =  uw * tz + tu * wz - tw * uz;
+  jac[2][1] =  (uy - wy) * tz + (ty - uy) * wz - (ty - wy) * uz;
+  jac[2][2] = -(ux - wx) * tz - (tx - ux) * wz + (tx - wx) * uz;
   jac[2][3] =  (ux - wx) * ty + (tx - ux) * wy - (tx - wx) * uy;
+
+  jac[3][0] = -uv * tz - tu * vz + tv * uz;
+  jac[3][1] = -(uy - vy) * tz - (ty - uy) * vz + (ty - vy) * uz;
+  jac[3][2] =  (ux - vx) * tz + (tx - ux) * vz - (tx - vx) * uz;
   jac[3][3] = -(ux - vx) * ty - (tx - ux) * vy + (tx - vx) * uy;
 
   det = jac[0][3] * tz + jac[1][3] * uz + jac[2][3] * vz + jac[3][3] * wz;
@@ -1966,18 +1966,22 @@ int ComponentFieldMap::Coordinates13(
       std::printf("    Iteration %4u: t = (%15.8f, %15.8f %15.8f %15.8f)\n",
                   iter, td[0], td[1], td[2], td[3]);
     }
-    // Re-compute the (x,y,z) position for this coordinate.
-    const double f0 = td[0] * (2 * td[0] - 1.);
-    const double f1 = td[1] * (2 * td[1] - 1.);
-    const double f2 = td[2] * (2 * td[2] - 1.);
-    const double f3 = td[3] * (2 * td[3] - 1.);
-    double xr = f0 * xn[0] + f1 * xn[1] + f2 * xn[2] + f3 * xn[3];
-    double yr = f0 * yn[0] + f1 * yn[1] + f2 * yn[2] + f3 * yn[3];
-    double zr = f0 * zn[0] + f1 * zn[1] + f2 * zn[2] + f3 * zn[3];
+    // Evaluate the shape functions and re-compute the (x,y,z) position 
+    // for this set of isoparametric coordinates.
+    const double f0 = td[0] * (td[0] - 0.5);
+    const double f1 = td[1] * (td[1] - 0.5);
+    const double f2 = td[2] * (td[2] - 0.5);
+    const double f3 = td[3] * (td[3] - 0.5);
+    double xr = 2 * (f0 * xn[0] + f1 * xn[1] + f2 * xn[2] + f3 * xn[3]);
+    double yr = 2 * (f0 * yn[0] + f1 * yn[1] + f2 * yn[2] + f3 * yn[3]);
+    double zr = 2 * (f0 * zn[0] + f1 * zn[1] + f2 * zn[2] + f3 * zn[3]);
     const double fourt0 = 4 * td[0];
-    xr += fourt0 * (td[1] * xn[4] + td[2] * xn[5] + td[3] * xn[6]);
-    yr += fourt0 * (td[1] * yn[4] + td[2] * yn[5] + td[3] * yn[6]);
-    zr += fourt0 * (td[1] * zn[4] + td[2] * zn[5] + td[3] * zn[6]);
+    const double f4 = fourt0 * td[1];
+    const double f5 = fourt0 * td[2];
+    const double f6 = fourt0 * td[3];
+    xr += f4 * xn[4] + f5 * xn[5] + f6 * xn[6];
+    yr += f4 * yn[4] + f5 * yn[5] + f6 * yn[6];
+    zr += f4 * zn[4] + f5 * zn[5] + f6 * zn[6];
     const double fourt1 = 4 * td[1];
     const double f7 = fourt1 * td[2];
     const double f8 = fourt1 * td[3];
@@ -1985,6 +1989,7 @@ int ComponentFieldMap::Coordinates13(
     xr += f7 * xn[7] + f8 * xn[8] + f9 * xn[9];
     yr += f7 * yn[7] + f8 * yn[8] + f9 * yn[9];
     zr += f7 * zn[7] + f8 * zn[8] + f9 * zn[9];
+
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
     // Compute the Jacobian.
     Jacobian13(xn, yn, zn, td[0], td[1], td[2], td[3], det, jac);
