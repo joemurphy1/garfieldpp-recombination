@@ -628,13 +628,19 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
 
     // Sample the scattering process.
     const double r = RndmUniform();
-    if (r <= m_cf[iE][0]) {
-      level = 0;
-    } else if (r >= m_cf[iE][m_nTerms - 1]) {
-      level = m_nTerms - 1;
-    } else {
-      const auto begin = m_cf[iE].cbegin();
-      level = std::lower_bound(begin, begin + m_nTerms, r) - begin;
+    level = 0;
+    if (r > m_cf[iE][0]) {
+      int iLow = 0;
+      int iUp = m_nTerms - 1;
+      while (iUp - iLow > 1) {
+        int iMid = (iLow + iUp) >> 1;
+        if (r < m_cf[iE][iMid]) {
+          iUp = iMid;
+        } else {
+          iLow = iMid;
+        }
+      } 
+      level = iUp;
     }
     // Get the angular distribution parameters.
     angCut = m_scatCut[iE][level];
@@ -646,13 +652,19 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
                             nEnergyStepsLog - 1);
     // Sample the scattering process.
     const double r = RndmUniform();
-    if (r <= m_cfLog[iE][0]) {
-      level = 0;
-    } else if (r >= m_cfLog[iE][m_nTerms - 1]) {
-      level = m_nTerms - 1;
-    } else {
-      const auto begin = m_cfLog[iE].cbegin();
-      level = std::lower_bound(begin, begin + m_nTerms, r) - begin;
+    level = 0;
+    if (r > m_cfLog[iE][0]) {
+      int iLow = 0;
+      int iUp = m_nTerms - 1;
+      while (iUp - iLow > 1) {
+        int iMid = (iLow + iUp) >> 1;
+        if (r < m_cfLog[iE][iMid]) {
+          iUp = iMid;
+        } else {
+          iLow = iMid;
+        }
+      }
+      level = iUp;
     }
     // Get the angular distribution parameters.
     angCut = m_scatCutLog[iE][level];
