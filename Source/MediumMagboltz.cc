@@ -540,11 +540,9 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
   }
 
   // Get the energy interval.
-  if (e <= m_eHigh) {
+  if (e < m_eHigh) {
     // Linear binning
-    constexpr int iemax = Magboltz::nEnergySteps - 1;
-    const int iE = std::min(std::max(int(e * m_eStepInv), 0), iemax);
-    return m_cfTot[iE];
+    return m_cfTot[int(e * m_eStepInv)];
   }
 
   // Logarithmic binning
@@ -576,10 +574,9 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
   // Get the total scattering rate.
   double rate = GetElectronCollisionRate(e, band);
   // Get the energy interval.
-  if (e <= m_eHigh) {
+  if (e < m_eHigh) {
     // Linear binning
-    constexpr int iemax = Magboltz::nEnergySteps - 1;
-    const int iE = std::min(std::max(int(e * m_eStepInv), 0), iemax);
+    const int iE = int(e * m_eStepInv);
     if (level == 0) {
       rate *= m_cf[iE][0];
     } else {
@@ -624,11 +621,10 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
   double angCut = 1.;
   double angPar = 0.5;
 
-  if (e <= m_eHigh) {
+  if (e < m_eHigh) {
     // Linear binning
     // Get the energy interval.
-    constexpr int iemax = Magboltz::nEnergySteps - 1;
-    const int iE = std::min(std::max(int(e * m_eStepInv), 0), iemax);
+    const int iE = int(e * m_eStepInv);
 
     // Sample the scattering process.
     const double r = RndmUniform();
