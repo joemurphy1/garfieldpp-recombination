@@ -1958,7 +1958,7 @@ int ComponentFieldMap::Coordinates13(
 
   // Start iteration.
   std::array<double, 4> td = {t1, t2, t3, t4};
-  std::array<double, 10> f;
+
   // Loop
   bool converged = false;
   for (int iter = 0; iter < 10; ++iter) {
@@ -1966,19 +1966,26 @@ int ComponentFieldMap::Coordinates13(
       std::printf("    Iteration %4u: t = (%15.8f, %15.8f %15.8f %15.8f)\n",
                   iter, td[0], td[1], td[2], td[3]);
     }
-    for (size_t i = 0; i < 4; ++i) f[i] = td[i] * (2 * td[i] - 1.);
-    f[4] = 4 * td[0] * td[1];
-    f[5] = 4 * td[0] * td[2];
-    f[6] = 4 * td[0] * td[3];
-    f[7] = 4 * td[1] * td[2];
-    f[8] = 4 * td[1] * td[3];
-    f[9] = 4 * td[2] * td[3];
     // Re-compute the (x,y,z) position for this coordinate.
-    const double xr = std::inner_product(f.begin(), f.end(), xn.begin(), 0.);
-    const double yr = std::inner_product(f.begin(), f.end(), yn.begin(), 0.);
-    const double zr = std::inner_product(f.begin(), f.end(), zn.begin(), 0.);
+    const double f0 = td[0] * (2 * td[0] - 1.);
+    const double f1 = td[1] * (2 * td[1] - 1.);
+    const double f2 = td[2] * (2 * td[2] - 1.);
+    const double f3 = td[3] * (2 * td[3] - 1.);
+    double xr = f0 * xn[0] + f1 * xn[1] + f2 * xn[2] + f3 * xn[3];
+    double yr = f0 * yn[0] + f1 * yn[1] + f2 * yn[2] + f3 * yn[3];
+    double zr = f0 * zn[0] + f1 * zn[1] + f2 * zn[2] + f3 * zn[3];
+    const double fourt0 = 4 * td[0];
+    xr += fourt0 * (td[1] * xn[4] + td[2] * xn[5] + td[3] * xn[6]);
+    yr += fourt0 * (td[1] * yn[4] + td[2] * yn[5] + td[3] * yn[6]);
+    zr += fourt0 * (td[1] * zn[4] + td[2] * zn[5] + td[3] * zn[6]);
+    const double fourt1 = 4 * td[1];
+    const double f7 = fourt1 * td[2];
+    const double f8 = fourt1 * td[3];
+    const double f9 = 4 * td[2] * td[3];
+    xr += f7 * xn[7] + f8 * xn[8] + f9 * xn[9];
+    yr += f7 * yn[7] + f8 * yn[8] + f9 * yn[9];
+    zr += f7 * zn[7] + f8 * zn[8] + f9 * zn[9];
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
-
     // Compute the Jacobian.
     Jacobian13(xn, yn, zn, td[0], td[1], td[2], td[3], det, jac);
     const double invdet = 1. / det;
@@ -2045,6 +2052,7 @@ int ComponentFieldMap::Coordinates13(
     std::cout << "    Convergence reached at (t1, t2, t3, t4) = (" << t1 << ", "
               << t2 << ", " << t3 << ", " << t4 << ").\n";
     // Re-compute the (x,y,z) position for this coordinate.
+    std::array<double, 10> f;
     for (size_t i = 0; i < 4; ++i) f[i] = td[i] * (2 * td[i] - 1.);
     f[4] = 4 * td[0] * td[1];
     f[5] = 4 * td[0] * td[2];
@@ -2052,9 +2060,12 @@ int ComponentFieldMap::Coordinates13(
     f[7] = 4 * td[1] * td[2];
     f[8] = 4 * td[1] * td[3];
     f[9] = 4 * td[2] * td[3];
-    const double xr = std::inner_product(f.begin(), f.end(), xn.begin(), 0.);
-    const double yr = std::inner_product(f.begin(), f.end(), yn.begin(), 0.);
-    const double zr = std::inner_product(f.begin(), f.end(), zn.begin(), 0.);
+    double xr = 0., yr = 0., zr = 0.;
+    for (size_t i = 0; i < 10; ++i) {
+      xr += f[i] * xn[i];
+      yr += f[i] * yn[i];
+      zr += f[i] * zn[i];
+    } 
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
     std::cout << "    Position requested:     (" << x << ", " << y << ", " << z
               << ")\n";
