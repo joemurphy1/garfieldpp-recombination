@@ -2731,14 +2731,14 @@ void ComponentFieldMap::CalculateElementBoundingBoxes() {
     m_bbMin[i][2] = std::min({n0.z, n1.z, n2.z, n3.z});
     m_bbMax[i][2] = std::max({n0.z, n1.z, n2.z, n3.z});
     // Add tolerances.
-    constexpr float f = 0.2;
-    const float tolx = f * (m_bbMax[i][0] - m_bbMin[i][0]);
+    constexpr double f = 0.2;
+    const double tolx = f * (m_bbMax[i][0] - m_bbMin[i][0]);
     m_bbMin[i][0] -= tolx;
     m_bbMax[i][0] += tolx;
-    const float toly = f * (m_bbMax[i][1] - m_bbMin[i][1]);
+    const double toly = f * (m_bbMax[i][1] - m_bbMin[i][1]);
     m_bbMin[i][1] -= toly;
     m_bbMax[i][1] += toly;
-    const float tolz = f * (m_bbMax[i][2] - m_bbMin[i][2]);
+    const double tolz = f * (m_bbMax[i][2] - m_bbMin[i][2]);
     m_bbMin[i][2] -= tolz;
     m_bbMax[i][2] += tolz;
   }

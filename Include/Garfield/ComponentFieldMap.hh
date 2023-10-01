@@ -155,8 +155,8 @@ class ComponentFieldMap : public Component {
   // Degeneracy flags.
   std::vector<bool> m_degenerate;
   // Bounding boxes of the elements.
-  std::vector<std::array<float, 3> > m_bbMin;
-  std::vector<std::array<float, 3> > m_bbMax;
+  std::vector<std::array<double, 3> > m_bbMin;
+  std::vector<std::array<double, 3> > m_bbMax;
 
   std::vector<std::array<std::array<double, 3>, 4> > m_w12;
 
