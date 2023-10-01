@@ -521,7 +521,7 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
     std::cerr << m_className << "::GetElectronCollisionRate: Invalid energy.\n";
     return m_cfTot[0];
   }
-  if (e > m_eMax && m_useAutoAdjust) {
+  if (e > m_eMax) {
     std::cerr << m_className << "::GetElectronCollisionRate:\n    Rate at " << e
               << " eV is not included in the current table.\n    "
               << "Increasing energy range to " << 1.05 * e << " eV.\n";
@@ -597,8 +597,8 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
     return false;
   }
   // Check if the electron energy is within the currently set range.
-  if (e > m_eMax && m_useAutoAdjust) {
-    std::cerr << m_className << "::ElectronCollision:\n    Provided energy ("
+  if (e > m_eMax) {
+    std::cerr << m_className << "::ElectronCollision:\n    Requested energy ("
               << e << " eV) exceeds current energy range.\n"
               << "    Increasing energy range to " << 1.05 * e << " eV.\n";
     SetMaxElectronEnergy(1.05 * e);
@@ -849,10 +849,10 @@ bool MediumMagboltz::GetDeexcitationProduct(const unsigned int i, double& t,
 
 double MediumMagboltz::GetPhotonCollisionRate(const double e) {
   if (e <= 0.) {
-    std::cerr << m_className << "::GetPhotonCollisionRate: Invalid  energy.\n";
+    std::cerr << m_className << "::GetPhotonCollisionRate: Invalid energy.\n";
     return m_cfTotGamma[0];
   }
-  if (e > m_eFinalGamma && m_useAutoAdjust) {
+  if (e > m_eFinalGamma) {
     std::cerr << m_className << "::GetPhotonCollisionRate:\n    Rate at " << e
               << " eV is not included in the current table.\n"
               << "    Increasing energy range to " << 1.05 * e << " eV.\n";
@@ -885,7 +885,7 @@ bool MediumMagboltz::GetPhotonCollision(const double e, int& type, int& level,
     std::cerr << m_className << "::GetPhotonCollision: Invalid energy.\n";
     return false;
   }
-  if (e > m_eFinalGamma && m_useAutoAdjust) {
+  if (e > m_eFinalGamma) {
     std::cerr << m_className << "::GetPhotonCollision:\n    Provided energy ("
               << e << " eV) exceeds current energy range.\n"
               << "    Increasing energy range to " << 1.05 * e << " eV.\n";
