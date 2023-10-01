@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -507,19 +508,14 @@ void MediumMagboltz::PrintGas() {
   }
 }
 
-double MediumMagboltz::GetElectronNullCollisionRate(const int band) {
+double MediumMagboltz::GetElectronNullCollisionRate(const int /*band*/) {
   // If necessary, update the collision rates table.
   if (!Update()) return 0.;
-
-  if (m_debug && band > 0) {
-    std::cerr << m_className << "::GetElectronNullCollisionRate: Band > 0.\n";
-  }
-
   return m_cfNull;
 }
 
 double MediumMagboltz::GetElectronCollisionRate(const double e,
-                                                const int band) {
+                                                const int /*band*/) {
   // Check if the electron energy is within the currently set range.
   if (e <= 0.) {
     std::cerr << m_className << "::GetElectronCollisionRate: Invalid energy.\n";
@@ -534,10 +530,6 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
 
   // If necessary, update the collision rates table.
   if (!Update()) return 0.;
-
-  if (m_debug && band > 0) {
-    std::cerr << m_className << "::GetElectronCollisionRate: Band > 0.\n";
-  }
 
   // Get the energy interval.
   if (e < m_eHigh) {
@@ -598,6 +590,7 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
     int& level, double& e1, double& dx, double& dy, double& dz, 
     std::vector<std::pair<Particle, double> >& secondaries, int& ndxc,
     int& band) {
+  band = 0;
   ndxc = 0;
   if (e <= 0.) {
     std::cerr << m_className << "::ElectronCollision: Invalid energy.\n";
@@ -613,10 +606,6 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
 
   // If necessary, update the collision rates table.
   if (!Update()) return false;
-
-  if (m_debug && band > 0) {
-    std::cerr << m_className << "::ElectronCollision: Band > 0.\n";
-  }
 
   double angCut = 1.;
   double angPar = 0.5;
