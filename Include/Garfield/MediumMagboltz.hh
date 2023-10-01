@@ -206,6 +206,8 @@ class MediumMagboltz : public MediumGas {
   double m_eMax;
   /// Energy spacing in the linear part of the collision rate tables.
   double m_eStep;
+  /// Inverse energy spacing.
+  double m_eStepInv;
   double m_eHigh, m_eHighLog;
   double m_lnStep;
   bool m_useAutoAdjust = true;

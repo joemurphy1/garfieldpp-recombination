@@ -79,6 +79,7 @@ MediumMagboltz::MediumMagboltz()
     : MediumGas(),
       m_eMax(40.),
       m_eStep(m_eMax / Magboltz::nEnergySteps),
+      m_eStepInv(1. / m_eStep),
       m_eHigh(400.),
       m_eHighLog(log(m_eHigh)),
       m_lnStep(1.),
@@ -148,6 +149,7 @@ bool MediumMagboltz::SetMaxElectronEnergy(const double e) {
   std::lock_guard<std::mutex> guard(m_mutex);
   // Determine the energy interval size.
   m_eStep = std::min(m_eMax, m_eHigh) / Magboltz::nEnergySteps;
+  m_eStepInv = 1. / m_eStep;
 
   // Force recalculation of the scattering rates table.
   m_isChanged = true;
@@ -541,7 +543,7 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
   if (e <= m_eHigh) {
     // Linear binning
     constexpr int iemax = Magboltz::nEnergySteps - 1;
-    const int iE = std::min(std::max(int(e / m_eStep), 0), iemax);
+    const int iE = std::min(std::max(int(e * m_eStepInv), 0), iemax);
     return m_cfTot[iE];
   }
 
@@ -577,7 +579,7 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
   if (e <= m_eHigh) {
     // Linear binning
     constexpr int iemax = Magboltz::nEnergySteps - 1;
-    const int iE = std::min(std::max(int(e / m_eStep), 0), iemax);
+    const int iE = std::min(std::max(int(e * m_eStepInv), 0), iemax);
     if (level == 0) {
       rate *= m_cf[iE][0];
     } else {
@@ -626,7 +628,7 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
     // Linear binning
     // Get the energy interval.
     constexpr int iemax = Magboltz::nEnergySteps - 1;
-    const int iE = std::min(std::max(int(e / m_eStep), 0), iemax);
+    const int iE = std::min(std::max(int(e * m_eStepInv), 0), iemax);
 
     // Sample the scattering process.
     const double r = RndmUniform();
