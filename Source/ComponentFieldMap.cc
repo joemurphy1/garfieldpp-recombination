@@ -1275,51 +1275,69 @@ void ComponentFieldMap::Jacobian13(
     const std::array<double, 10>& zn,
     const double t, const double u, const double v, const double w, 
     double& det, double jac[4][4]) {
-  
-  const double tx = 4 * ((-0.25 + t) * xn[0] + u * xn[4] + v * xn[5] + w * xn[6]);
-  const double ty = 4 * ((-0.25 + t) * yn[0] + u * yn[4] + v * yn[5] + w * yn[6]);
-  const double tz = 4 * ((-0.25 + t) * zn[0] + u * zn[4] + v * zn[5] + w * zn[6]);
 
-  const double ux = 4 * ((-0.25 + u) * xn[1] + t * xn[4] + v * xn[7] + w * xn[8]);
-  const double uy = 4 * ((-0.25 + u) * yn[1] + t * yn[4] + v * yn[7] + w * yn[8]);
-  const double uz = 4 * ((-0.25 + u) * zn[1] + t * zn[4] + v * zn[7] + w * zn[8]);
+  const double fourt = 4 * t;
+  const double fouru = 4 * u;  
+  const double fourv = 4 * v;  
+  const double fourw = 4 * w;  
+  const double ax = (fourt - 1.) * xn[0] + fouru * xn[4] + fourv * xn[5] + fourw * xn[6];
+  const double ay = (fourt - 1.) * yn[0] + fouru * yn[4] + fourv * yn[5] + fourw * yn[6];
+  const double az = (fourt - 1.) * zn[0] + fouru * zn[4] + fourv * zn[5] + fourw * zn[6];
 
-  const double vx = 4 * ((-0.25 + v) * xn[2] + t * xn[5] + u * xn[7] + w * xn[9]);
-  const double vy = 4 * ((-0.25 + v) * yn[2] + t * yn[5] + u * yn[7] + w * yn[9]);
-  const double vz = 4 * ((-0.25 + v) * zn[2] + t * zn[5] + u * zn[7] + w * zn[9]);
+  const double bx = (fouru - 1.) * xn[1] + fourt * xn[4] + fourv * xn[7] + fourw * xn[8];
+  const double by = (fouru - 1.) * yn[1] + fourt * yn[4] + fourv * yn[7] + fourw * yn[8];
+  const double bz = (fouru - 1.) * zn[1] + fourt * zn[4] + fourv * zn[7] + fourw * zn[8];
 
-  const double wx = 4 * ((-0.25 + w) * xn[3] + t * xn[6] + u * xn[8] + v * xn[9]);
-  const double wy = 4 * ((-0.25 + w) * yn[3] + t * yn[6] + u * yn[8] + v * yn[9]);
-  const double wz = 4 * ((-0.25 + w) * zn[3] + t * zn[6] + u * zn[8] + v * zn[9]);
+  const double cx = (fourv - 1.) * xn[2] + fourt * xn[5] + fouru * xn[7] + fourw * xn[9];
+  const double cy = (fourv - 1.) * yn[2] + fourt * yn[5] + fouru * yn[7] + fourw * yn[9];
+  const double cz = (fourv - 1.) * zn[2] + fourt * zn[5] + fouru * zn[7] + fourw * zn[9];
 
-  const double tu = tx * uy - ux * ty;
-  const double tv = tx * vy - vx * ty;
-  const double tw = tx * wy - wx * ty;
-  const double uv = ux * vy - vx * uy;
-  const double uw = ux * wy - wx * uy;
-  const double vw = vx * wy - wx * vy;
+  const double dx = (fourw - 1.) * xn[3] + fourt * xn[6] + fouru * xn[8] + fourv * xn[9];
+  const double dy = (fourw - 1.) * yn[3] + fourt * yn[6] + fouru * yn[8] + fourv * yn[9];
+  const double dz = (fourw - 1.) * zn[3] + fourt * zn[6] + fouru * zn[8] + fourv * zn[9];
 
-  jac[0][0] = -uw * vz + uv * wz + vw * uz;
-  jac[0][1] = -(uy - wy) * vz + (uy - vy) * wz + (vy - wy) * uz;
-  jac[0][2] =  (ux - wx) * vz - (ux - vx) * wz - (vx - wx) * uz;
-  jac[0][3] = -(ux - wx) * vy + (ux - vx) * wy + (vx - wx) * uy;
+  const double ab = ax * by - bx * ay;
+  const double ac = ax * cy - cx * ay;
+  const double ad = ax * dy - dx * ay;
+  const double bc = bx * cy - cx * by;
+  const double bd = bx * dy - dx * by;
+  const double cd = cx * dy - dx * cy;
 
-  jac[1][0] = -vw * tz + tw * vz - tv * wz;
-  jac[1][1] = -(vy - wy) * tz + (ty - wy) * vz - (ty - vy) * wz;
-  jac[1][2] =  (vx - wx) * tz - (tx - wx) * vz + (tx - vx) * wz;
-  jac[1][3] = -(vx - wx) * ty + (tx - wx) * vy - (tx - vx) * wy;
+  const double abx = ax - bx;
+  const double acx = ax - cx;
+  const double adx = ax - dx;
+  const double bcx = bx - cx;
+  const double bdx = bx - dx;
+  const double cdx = cx - dx;
 
-  jac[2][0] =  uw * tz + tu * wz - tw * uz;
-  jac[2][1] =  (uy - wy) * tz + (ty - uy) * wz - (ty - wy) * uz;
-  jac[2][2] = -(ux - wx) * tz - (tx - ux) * wz + (tx - wx) * uz;
-  jac[2][3] =  (ux - wx) * ty + (tx - ux) * wy - (tx - wx) * uy;
+  const double aby = ay - by;
+  const double acy = ay - cy;
+  const double ady = ay - dy;
+  const double bcy = by - cy;
+  const double bdy = by - dy;
+  const double cdy = cy - dy;
 
-  jac[3][0] = -uv * tz - tu * vz + tv * uz;
-  jac[3][1] = -(uy - vy) * tz - (ty - uy) * vz + (ty - vy) * uz;
-  jac[3][2] =  (ux - vx) * tz + (tx - ux) * vz - (tx - vx) * uz;
-  jac[3][3] = -(ux - vx) * ty - (tx - ux) * vy + (tx - vx) * uy;
+  jac[0][0] = -bd * cz + bc * dz + cd * bz;
+  jac[0][1] = -bdy * cz + bcy * dz + cdy * bz;
+  jac[0][2] =  bdx * cz - bcx * dz - cdx * bz;
+  jac[0][3] = -bdx * cy + bcx * dy + cdx * by;
 
-  det = jac[0][3] * tz + jac[1][3] * uz + jac[2][3] * vz + jac[3][3] * wz;
+  jac[1][0] = -cd * az + ad * cz - ac * dz;
+  jac[1][1] = -cdy * az + ady * cz - acy * dz;
+  jac[1][2] =  cdx * az - adx * cz + acx * dz;
+  jac[1][3] = -cdx * ay + adx * cy - acx * dy;
+
+  jac[2][0] =  bd * az + ab * dz - ad * bz;
+  jac[2][1] =  bdy * az + aby * dz - ady * bz;
+  jac[2][2] = -bdx * az - abx * dz + adx * bz;
+  jac[2][3] =  bdx * ay + abx * dy - adx * by;
+
+  jac[3][0] = -bc * az - ab * cz + ac * bz;
+  jac[3][1] = -bcy * az - aby * cz + acy * bz;
+  jac[3][2] =  bcx * az + abx * cz - acx * bz;
+  jac[3][3] = -bcx * ay - abx * cy + acx * by;
+
+  det = jac[0][3] * az + jac[1][3] * bz + jac[2][3] * cz + jac[3][3] * dz;
 }
 
 void ComponentFieldMap::JacobianCube(const Element& element, const double t1,
