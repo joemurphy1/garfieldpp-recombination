@@ -213,6 +213,7 @@ class MediumMagboltz : public MediumGas {
   unsigned int m_nTerms = 0;
   /// Recoil energy parameter
   std::array<double, m_nMaxGases> m_rgas;
+  std::array<double, m_nMaxGases> m_s2;
   /// Opal-Beaty-Peterson splitting parameter [eV]
   std::array<double, Magboltz::nMaxLevels> m_wOpalBeaty;
   /// Green-Sawada splitting parameters [eV]

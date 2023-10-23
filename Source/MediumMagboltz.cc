@@ -794,13 +794,12 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
   }
 
   const double s1 = m_rgas[igas];
-  const double s2 = (s1 * s1) / (s1 - 1.);
   const double theta0 = acos(ctheta0);
   const double arg = std::max(1. - s1 * loss / e, Small);
   const double d = 1. - ctheta0 * sqrt(arg);
 
   // Update the energy.
-  e1 = std::max(e * (1. - loss / (s1 * e) - 2. * d / s2), Small);
+  e1 = std::max(e * (1. - loss / (s1 * e) - 2. * d * m_s2[igas]), Small);
   double q = std::min(sqrt((e / e1) * arg) / s1, 1.);
   const double theta = asin(q * sin(theta0));
   double ctheta = cos(theta);
@@ -817,11 +816,7 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
   const double phi = TwoPi * RndmUniform();
   const double cphi = cos(phi);
   const double sphi = sin(phi);
-  if (argZ == 0.) {
-    dz = ctheta;
-    dx = cphi * stheta;
-    dy = sphi * stheta;
-  } else {
+  if (argZ > 0.) {
     const double a = stheta / argZ;
     const double dz1 = dz * ctheta + argZ * stheta * sphi;
     const double dy1 = dy * ctheta + a * (dx * cphi - dy * dz * sphi);
@@ -829,8 +824,11 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
     dz = dz1;
     dy = dy1;
     dx = dx1;
+  } else {
+    dz = ctheta;
+    dx = cphi * stheta;
+    dy = sphi * stheta;
   }
-
   return true;
 }
 
@@ -1303,6 +1301,7 @@ bool MediumMagboltz::Mixer(const bool verbose) {
   const double prefactor = dens * SpeedOfLight * sqrt(2. / ElectronMass);
 
   m_rgas.fill(1.);
+  m_s2.fill(0.);
 
   m_ionPot.fill(-1.);
   m_minIonPot = -1.;
@@ -1486,6 +1485,7 @@ bool MediumMagboltz::Mixer(const bool verbose) {
     m_scatModel[np] = kEl[1];
     const double r = 1. + 0.5 * e[1];
     m_rgas[iGas] = r;
+    m_s2[iGas] = (r - 1.) / (r * r);
     m_energyLoss[np] = 0.;
     m_description[np] = GetDescription(1, scrpt);
     m_csType[np] = nCsTypes * iGas + ElectronCollisionTypeElastic;
