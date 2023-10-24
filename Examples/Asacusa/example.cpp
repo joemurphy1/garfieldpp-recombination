@@ -22,8 +22,7 @@ int main(int argc, char * argv[]){
   plottingEngine.SetDefaultStyle();
 
   // Set the gas mixture.
-  MediumMagboltz gas;
-  gas.SetComposition("ar", 90., "c4h10", 10.);
+  MediumMagboltz gas("ar", 90., "c4h10", 10.);
 
   // Build the Micromegas geometry.
   // We use separate components for drift and amplification regions. 
@@ -84,7 +83,6 @@ int main(int argc, char * argv[]){
   // We use microscopic tracking for simulating the electron avalanche.
   AvalancheMicroscopic aval;
   aval.SetSensor(&sensor); 
-  aval.EnableMagneticField();
   
   // Simulate an ionizing particle (negative pion) using Heed.
   TrackHeed track;
@@ -115,15 +113,13 @@ int main(int argc, char * argv[]){
       // Simulate the drift/avalanche of this electron.
       aval.AvalancheElectron(electron.x, electron.y, electron.z, 
                              electron.t, 0.1, 0., 0., 0.);
-      // Move electrons that hit the mesh plane into the amplification gap.
-      double x0, y0, z0, t0, e0;
-      double x1, y1, z1, t1, e1;
-      int status;
-      aval.GetElectronEndpoint(0, x0, y0, z0, t0, e0, 
-                                  x1, y1, z1, t1, e1, status);
-      if (fabs(y1 - yMesh) < 1.e-6) {
-        aval.AvalancheElectron(x1, yMesh - 1.e-6, z1, t1, e1, 0, -1., 0.);
-      }
+      // Get the end point of the initial electron's trajectory.
+      const auto& p1 = aval.GetElectrons().front().path.back();
+      // Skip electrons that didn't hit the mesh plane.
+      if (fabs(p1.y - yMesh) > 1.e-6) continue;
+      // Move the electron into the amplification gap.
+      aval.AvalancheElectron(p1.x, yMesh - 1.e-6, p1.z, p1.t, 
+                             p1.energy, 0, -1., 0.);
     }
   }
   
