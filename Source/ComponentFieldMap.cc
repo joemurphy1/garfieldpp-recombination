@@ -1218,25 +1218,25 @@ void ComponentFieldMap::Jacobian3(
   const double fourv = 4 * v;
   const double fourw = 4 * w;
 
-  const double ax = (-1 + fourv) * xn[1] + fouru * xn[3] + fourw * xn[5];
-  const double ay = (-1 + fourv) * yn[1] + fouru * yn[3] + fourw * yn[5];
-  const double bx = (-1 + fourw) * xn[2] + fouru * xn[4] + fourv * xn[5];
-  const double by = (-1 + fourw) * yn[2] + fouru * yn[4] + fourv * yn[5];
-  const double cx = (-1 + fouru) * xn[0] + fourv * xn[3] + fourw * xn[4];
-  const double cy = (-1 + fouru) * yn[0] + fourv * yn[3] + fourw * yn[4];
+  const double j10 = (-1 + fouru) * xn[0] + fourv * xn[3] + fourw * xn[4];
+  const double j20 = (-1 + fouru) * yn[0] + fourv * yn[3] + fourw * yn[4];
+  const double j11 = (-1 + fourv) * xn[1] + fouru * xn[3] + fourw * xn[5];
+  const double j21 = (-1 + fourv) * yn[1] + fouru * yn[3] + fourw * yn[5];
+  const double j12 = (-1 + fourw) * xn[2] + fouru * xn[4] + fourv * xn[5];
+  const double j22 = (-1 + fourw) * yn[2] + fouru * yn[4] + fourv * yn[5];
   // Determinant of the quadratic triangular Jacobian
-  det = -(ax - bx) * cy - (cx - ax) * by + (cx - bx) * ay;
+  det = -(j11 - j12) * j20 - (j10 - j11) * j22 + (j10 - j12) * j21;
 
   // Terms of the quadratic triangular Jacobian
-  jac[0][0] = ax * by - bx * ay;
-  jac[0][1] = ay - by;
-  jac[0][2] = bx - ax;
-  jac[1][0] = bx * cy - cx * by;
-  jac[1][1] = by - cy;
-  jac[1][2] = cx - bx;
-  jac[2][0] = -ax * cy + cx * ay;
-  jac[2][1] = cy - ay;
-  jac[2][2] = ax - cx;
+  jac[0][0] = j11 * j22 - j12 * j21;
+  jac[0][1] = j21 - j22;
+  jac[0][2] = j12 - j11;
+  jac[1][0] = j12 * j20 - j10 * j22;
+  jac[1][1] = j22 - j20;
+  jac[1][2] = j10 - j12;
+  jac[2][0] = j10 * j21 - j11 * j20;
+  jac[2][1] = j20 - j21;
+  jac[2][2] = j11 - j10;
 }
 
 void ComponentFieldMap::Jacobian5(
@@ -1244,26 +1244,32 @@ void ComponentFieldMap::Jacobian5(
     const std::array<double, 8>& yn,
     const double u, const double v, double& det, double jac[4][4]) {
   // Jacobian terms
-  jac[0][0] = 0.25 * (
-    (1 - u) * (2 * v + u) * yn[0] + (1 + u) * (2 * v - u) * yn[1] +
-    (1 + u) * (2 * v + u) * yn[2] + (1 - u) * (2 * v - u) * yn[3]) -
-    0.5 * (1 - u) * (1 + u) * yn[4] - (1 + u) * v * yn[5] +
-    0.5 * (1 - u) * (1 + u) * yn[6] - (1 - u) * v * yn[7];
-  jac[0][1] = -0.25 * (
-    (1 - u) * (2 * v + u) * xn[0] + (1 + u) * (2 * v - u) * xn[1] +
-    (1 + u) * (2 * v + u) * xn[2] + (1 - u) * (2 * v - u) * xn[3]) +
-    0.5 * (1 - u) * (1 + u) * xn[4] + (1 + u) * v * xn[5] -
-    0.5 * (1 - u) * (1 + u) * xn[6] + (1 - u) * v * xn[7];
-  jac[1][0] = -0.25 * (
-    (1 - v) * (2 * u + v) * yn[0] + (1 - v) * (2 * u - v) * yn[1] +
-    (1 + v) * (2 * u + v) * yn[2] + (1 + v) * (2 * u - v) * yn[3]) +
-    (1 - v) * u * yn[4] - 0.5 * (1 - v) * (1 + v) * yn[5] + 
-    (1 + v) * u * yn[6] + 0.5 * (1 - v) * (1 + v) * yn[7];
-  jac[1][1] = 0.25 * (
-    (1 - v) * (2 * u + v) * xn[0] + (1 - v) * (2 * u - v) * xn[1] +
-    (1 + v) * (2 * u + v) * xn[2] + (1 + v) * (2 * u - v) * xn[3]) -
-    (1 - v) * u * xn[4] + 0.5 * (1 - v) * (1 + v) * xn[5] - 
-    (1 + v) * u * xn[6] - 0.5 * (1 - v) * (1 + v) * xn[7];
+  const double g0 = (1 - u) * (2 * v + u);
+  const double g1 = (1 + u) * (2 * v - u);
+  const double g2 = (1 + u) * (2 * v + u);
+  const double g3 = (1 - u) * (2 * v - u);
+  const double g4 = (1 - u) * (1 + u);
+  const double g5 = (1 + u) * v;
+  const double g7 = (1 - u) * v;
+  jac[0][0] =  0.25 * (g0 * yn[0] + g1 * yn[1] + g2 * yn[2] + g3 * yn[3]) -
+    0.5 * g4 * yn[4] - g5 * yn[5] +
+    0.5 * g4 * yn[6] - g7 * yn[7];
+  jac[0][1] = -0.25 * (g0 * xn[0] + g1 * xn[1] + g2 * xn[2] + g3 * xn[3]) +
+    0.5 * g4 * xn[4] + g5 * xn[5] -
+    0.5 * g4 * xn[6] + g7 * xn[7];
+  const double h0 = (1 - v) * (2 * u + v);
+  const double h1 = (1 - v) * (2 * u - v);
+  const double h2 = (1 + v) * (2 * u + v);
+  const double h3 = (1 + v) * (2 * u - v);
+  const double h4 = (1 - v) * u;
+  const double h5 = (1 - v) * (1 + v);
+  const double h6 = (1 + v) * u;
+  jac[1][0] = -0.25 * (h0 * yn[0] + h1 * yn[1] + h2 * yn[2] + h3 * yn[3]) +
+    h4 * yn[4] - 0.5 * h5 * yn[5] + 
+    h6 * yn[6] + 0.5 * h5 * yn[7];
+  jac[1][1] =  0.25 * (h0 * xn[0] + h1 * xn[1] + h2 * xn[2] + h3 * xn[3]) -
+    h4 * xn[4] + 0.5 * h5 * xn[5] - 
+    h6 * xn[6] - 0.5 * h5 * xn[7];
 
   // Determinant.
   det = jac[0][0] * jac[1][1] - jac[0][1] * jac[1][0];
@@ -1273,71 +1279,68 @@ void ComponentFieldMap::Jacobian13(
     const std::array<double, 10>& xn,
     const std::array<double, 10>& yn,
     const std::array<double, 10>& zn,
-    const double t, const double u, const double v, const double w, 
+    const double fourt0, const double fourt1, 
+    const double fourt2, const double fourt3, 
     double& det, double jac[4][4]) {
 
-  const double fourt = 4 * t;
-  const double fouru = 4 * u;  
-  const double fourv = 4 * v;  
-  const double fourw = 4 * w;  
-  const double ax = (fourt - 1.) * xn[0] + fouru * xn[4] + fourv * xn[5] + fourw * xn[6];
-  const double ay = (fourt - 1.) * yn[0] + fouru * yn[4] + fourv * yn[5] + fourw * yn[6];
-  const double az = (fourt - 1.) * zn[0] + fouru * zn[4] + fourv * zn[5] + fourw * zn[6];
+  const double j10 = (fourt0 - 1.) * xn[0] + fourt1 * xn[4] + fourt2 * xn[5] + fourt3 * xn[6];
+  const double j20 = (fourt0 - 1.) * yn[0] + fourt1 * yn[4] + fourt2 * yn[5] + fourt3 * yn[6];
+  const double j30 = (fourt0 - 1.) * zn[0] + fourt1 * zn[4] + fourt2 * zn[5] + fourt3 * zn[6];
 
-  const double bx = (fouru - 1.) * xn[1] + fourt * xn[4] + fourv * xn[7] + fourw * xn[8];
-  const double by = (fouru - 1.) * yn[1] + fourt * yn[4] + fourv * yn[7] + fourw * yn[8];
-  const double bz = (fouru - 1.) * zn[1] + fourt * zn[4] + fourv * zn[7] + fourw * zn[8];
+  const double j11 = (fourt1 - 1.) * xn[1] + fourt0 * xn[4] + fourt2 * xn[7] + fourt3 * xn[8];
+  const double j21 = (fourt1 - 1.) * yn[1] + fourt0 * yn[4] + fourt2 * yn[7] + fourt3 * yn[8];
+  const double j31 = (fourt1 - 1.) * zn[1] + fourt0 * zn[4] + fourt2 * zn[7] + fourt3 * zn[8];
 
-  const double cx = (fourv - 1.) * xn[2] + fourt * xn[5] + fouru * xn[7] + fourw * xn[9];
-  const double cy = (fourv - 1.) * yn[2] + fourt * yn[5] + fouru * yn[7] + fourw * yn[9];
-  const double cz = (fourv - 1.) * zn[2] + fourt * zn[5] + fouru * zn[7] + fourw * zn[9];
+  const double j12 = (fourt2 - 1.) * xn[2] + fourt0 * xn[5] + fourt1 * xn[7] + fourt3 * xn[9];
+  const double j22 = (fourt2 - 1.) * yn[2] + fourt0 * yn[5] + fourt1 * yn[7] + fourt3 * yn[9];
+  const double j32 = (fourt2 - 1.) * zn[2] + fourt0 * zn[5] + fourt1 * zn[7] + fourt3 * zn[9];
 
-  const double dx = (fourw - 1.) * xn[3] + fourt * xn[6] + fouru * xn[8] + fourv * xn[9];
-  const double dy = (fourw - 1.) * yn[3] + fourt * yn[6] + fouru * yn[8] + fourv * yn[9];
-  const double dz = (fourw - 1.) * zn[3] + fourt * zn[6] + fouru * zn[8] + fourv * zn[9];
+  const double j13 = (fourt3 - 1.) * xn[3] + fourt0 * xn[6] + fourt1 * xn[8] + fourt2 * xn[9];
+  const double j23 = (fourt3 - 1.) * yn[3] + fourt0 * yn[6] + fourt1 * yn[8] + fourt2 * yn[9];
+  const double j33 = (fourt3 - 1.) * zn[3] + fourt0 * zn[6] + fourt1 * zn[8] + fourt2 * zn[9];
 
-  const double ab = ax * by - bx * ay;
-  const double ac = ax * cy - cx * ay;
-  const double ad = ax * dy - dx * ay;
-  const double bc = bx * cy - cx * by;
-  const double bd = bx * dy - dx * by;
-  const double cd = cx * dy - dx * cy;
+  const double a1 = j10 * j21 - j20 * j11;
+  const double a2 = j10 * j22 - j20 * j12;
+  const double a3 = j10 * j23 - j20 * j13;
+  const double a4 = j11 * j22 - j21 * j12;
+  const double a5 = j11 * j23 - j21 * j13;
+  const double a6 = j12 * j23 - j22 * j13;
 
-  const double abx = ax - bx;
-  const double acx = ax - cx;
-  const double adx = ax - dx;
-  const double bcx = bx - cx;
-  const double bdx = bx - dx;
-  const double cdx = cx - dx;
+  const double d1011 = j10 - j11;
+  const double d1012 = j10 - j12;
+  const double d1013 = j10 - j13;
+  const double d1112 = j11 - j12;
+  const double d1113 = j11 - j13;
+  const double d1213 = j12 - j13;
 
-  const double aby = ay - by;
-  const double acy = ay - cy;
-  const double ady = ay - dy;
-  const double bcy = by - cy;
-  const double bdy = by - dy;
-  const double cdy = cy - dy;
+  const double d2021 = j20 - j21;
+  const double d2022 = j20 - j22;
+  const double d2023 = j20 - j23;
+  const double d2122 = j21 - j22;
+  const double d2123 = j21 - j23;
+  const double d2223 = j22 - j23;
 
-  jac[0][0] = -bd * cz + bc * dz + cd * bz;
-  jac[0][1] = -bdy * cz + bcy * dz + cdy * bz;
-  jac[0][2] =  bdx * cz - bcx * dz - cdx * bz;
-  jac[0][3] = -bdx * cy + bcx * dy + cdx * by;
+  jac[0][0] = -a5 * j32 + a4 * j33 + a6 * j31;
+  jac[0][1] = -d2123 * j32 + d2122 * j33 + d2223 * j31;
+  jac[0][2] =  d1113 * j32 - d1112 * j33 - d1213 * j31;
+  jac[0][3] = -d1113 * j22 + d1112 * j23 + d1213 * j21;
 
-  jac[1][0] = -cd * az + ad * cz - ac * dz;
-  jac[1][1] = -cdy * az + ady * cz - acy * dz;
-  jac[1][2] =  cdx * az - adx * cz + acx * dz;
-  jac[1][3] = -cdx * ay + adx * cy - acx * dy;
+  jac[1][0] = -a6 * j30 + a3 * j32 - a2 * j33;
+  jac[1][1] = -d2223 * j30 + d2023 * j32 - d2022 * j33;
+  jac[1][2] =  d1213 * j30 - d1013 * j32 + d1012 * j33;
+  jac[1][3] = -d1213 * j20 + d1013 * j22 - d1012 * j23;
 
-  jac[2][0] =  bd * az + ab * dz - ad * bz;
-  jac[2][1] =  bdy * az + aby * dz - ady * bz;
-  jac[2][2] = -bdx * az - abx * dz + adx * bz;
-  jac[2][3] =  bdx * ay + abx * dy - adx * by;
+  jac[2][0] =  a5 * j30 + a1 * j33 - a3 * j31;
+  jac[2][1] =  d2123 * j30 + d2021 * j33 - d2023 * j31;
+  jac[2][2] = -d1113 * j30 - d1011 * j33 + d1013 * j31;
+  jac[2][3] =  d1113 * j20 + d1011 * j23 - d1013 * j21;
 
-  jac[3][0] = -bc * az - ab * cz + ac * bz;
-  jac[3][1] = -bcy * az - aby * cz + acy * bz;
-  jac[3][2] =  bcx * az + abx * cz - acx * bz;
-  jac[3][3] = -bcx * ay - abx * cy + acx * by;
+  jac[3][0] = -a4 * j30 - a1 * j32 + a2 * j31;
+  jac[3][1] = -d2122 * j30 - d2021 * j32 + d2022 * j31;
+  jac[3][2] =  d1112 * j30 + d1011 * j32 - d1012 * j31;
+  jac[3][3] = -d1112 * j20 - d1011 * j22 + d1012 * j21;
 
-  det = jac[0][3] * az + jac[1][3] * bz + jac[2][3] * cz + jac[3][3] * dz;
+  det = jac[0][3] * j30 + jac[1][3] * j31 + jac[2][3] * j32 + jac[3][3] * j33;
 }
 
 void ComponentFieldMap::JacobianCube(const Element& element, const double t1,
@@ -2003,14 +2006,16 @@ int ComponentFieldMap::Coordinates13(
     const double fourt1 = 4 * td[1];
     const double f7 = fourt1 * td[2];
     const double f8 = fourt1 * td[3];
-    const double f9 = 4 * td[2] * td[3];
+    const double fourt2 = 4 * td[2];
+    const double f9 = fourt2 * td[3];
     xr += f7 * xn[7] + f8 * xn[8] + f9 * xn[9];
     yr += f7 * yn[7] + f8 * yn[8] + f9 * yn[9];
     zr += f7 * zn[7] + f8 * zn[8] + f9 * zn[9];
 
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
     // Compute the Jacobian.
-    Jacobian13(xn, yn, zn, td[0], td[1], td[2], td[3], det, jac);
+    const double fourt3 = 4 * td[3];
+    Jacobian13(xn, yn, zn, fourt0, fourt1, fourt2, fourt3, det, jac);
     const double invdet = 1. / det;
     // Compute the difference vector.
     const double diff[4] = {1. - sr, x - xr, y - yr, z - zr};

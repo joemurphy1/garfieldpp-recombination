@@ -384,9 +384,9 @@ class ComponentFieldMap : public Component {
   static void Jacobian13(const std::array<double, 10>& xn,
                          const std::array<double, 10>& yn,
                          const std::array<double, 10>& zn,
-                         const double t, const double u,
-                         const double v, const double w, double& det,
-                         double jac[4][4]);
+                         const double fourt0, const double fourt1,
+                         const double fourt2, const double fourt3, 
+                         double& det, double jac[4][4]);
   /// Calculate Jacobian for a cube.
   void JacobianCube(const Element& element, const double t1, const double t2,
                     const double t3, TMatrixD*& jac,
