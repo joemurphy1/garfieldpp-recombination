@@ -152,6 +152,7 @@ class ComponentFieldMap : public Component {
     unsigned int matmap;
   };
   std::vector<Element> m_elements;
+  std::vector<int> m_elementIndices;
   // Degeneracy flags.
   std::vector<bool> m_degenerate;
   // Bounding boxes of the elements.

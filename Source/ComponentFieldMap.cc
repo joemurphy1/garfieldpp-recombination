@@ -885,127 +885,73 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
   int imap = -1;
   std::array<double, 8> xn;
   std::array<double, 8> yn;
-  if (m_useTetrahedralTree && m_octree) {
-    const auto& tetList = m_octree->GetElementsInBlock(Vec3(x, y, 0.));
-    for (const auto i : tetList) {
-      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] ||
-          x > m_bbMax[i][0] || y > m_bbMax[i][1]) continue;
-      const Element& element = m_elements[i];
-      if (m_degenerate[i]) {
-        // Degenerate element
-        for (size_t j = 0; j < 6; ++j) {
-          const auto& node = m_nodes[element.emap[j]];
-          xn[j] = node.x;
-          yn[j] = node.y;
-        }
-        if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
-          continue;
-        }
-        if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1) continue;
-      } else {
-        // Non-degenerate element
-        for (size_t j = 0; j < 8; ++j) {
-          const auto& node = m_nodes[element.emap[j]];
-          xn[j] = node.x;
-          yn[j] = node.y;
-        }
-        if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
-          continue;
-        }
-        if (t1 < -1 || t1 > 1 || t2 < -1 || t2 > 1) continue;
-
+  const auto& elements = (m_useTetrahedralTree && m_octree) ? 
+      m_octree->GetElementsInBlock(Vec3(x, y, 0.)) :
+      m_elementIndices;
+  for (const auto i : elements) {
+    if (x < m_bbMin[i][0] || y < m_bbMin[i][1] ||
+        x > m_bbMax[i][0] || y > m_bbMax[i][1]) continue;
+    const Element& element = m_elements[i];
+    if (m_degenerate[i]) {
+      // Degenerate element
+      for (size_t j = 0; j < 6; ++j) {
+        const auto& node = m_nodes[element.emap[j]];
+        xn[j] = node.x;
+        yn[j] = node.y;
       }
-      ++nfound;
-      imap = i;
-      if (m_debug) {
-        std::cout << m_className << "::FindElement5:\n";
-        if (m_degenerate[i]) {
-          std::cout << "    Found matching degenerate element ";
-        } else {
-          std::cout << "    Found matching non-degenerate element ";
-        }
-        std::cout << i << ".\n";
+      if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
+        continue;
       }
-      if (!m_checkMultipleElement) return i;
-      for (int j = 0; j < 4; ++j) {
-        for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
+      if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1) continue;
+    } else {
+      // Non-degenerate element
+      for (size_t j = 0; j < 8; ++j) {
+        const auto& node = m_nodes[element.emap[j]];
+        xn[j] = node.x;
+        yn[j] = node.y;
       }
-      detbak = det;
-      t1bak = t1;
-      t2bak = t2;
-      t3bak = t3;
-      t4bak = t4;
-      imapbak = imap;
+      if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
+        continue;
+      }
+      if (t1 < -1 || t1 > 1 || t2 < -1 || t2 > 1) continue;
     }
-  } else {
-    // Scan all elements.
-    const size_t nElements = m_elements.size();
-    for (size_t i = 0; i < nElements; ++i) {
-      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] ||
-          x > m_bbMax[i][0] || y > m_bbMax[i][1]) continue;
-      const Element& element = m_elements[i];
+    ++nfound;
+    imap = i;
+    if (m_debug) {
+      std::cout << m_className << "::FindElement5:\n";
       if (m_degenerate[i]) {
-        // Degenerate element
-        for (size_t j = 0; j < 6; ++j) {
-          const auto& node = m_nodes[element.emap[j]];
-          xn[j] = node.x;
-          yn[j] = node.y;
-        }
-        if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
-          continue;
-        }
-        if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1) continue;
+        std::cout << "    Found matching degenerate element ";
       } else {
-        // Non-degenerate element
-        for (size_t j = 0; j < 8; ++j) {
-          const auto& node = m_nodes[element.emap[j]];
-          xn[j] = node.x;
-          yn[j] = node.y;
-        }
-        if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
-          continue;
-        }
-        if (t1 < -1 || t1 > 1 || t2 < -1 || t2 > 1) continue;
-
+        std::cout << "    Found matching non-degenerate element ";
       }
-      ++nfound;
-      imap = i;
-      if (m_debug) {
-        std::cout << m_className << "::FindElement5:\n";
-        if (m_degenerate[i]) {
-          std::cout << "    Found matching degenerate element ";
-        } else {
-          std::cout << "    Found matching non-degenerate element ";
-        }
-        std::cout << i << ".\n";
-      }
-      if (!m_checkMultipleElement) return i;
-      for (int j = 0; j < 4; ++j) {
-        for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
-      }
-      detbak = det;
-      t1bak = t1;
-      t2bak = t2;
-      t3bak = t3;
-      t4bak = t4;
-      imapbak = imap;
+      std::cout << i << ".\n";
     }
+    if (!m_checkMultipleElement) return i;
+    for (int j = 0; j < 4; ++j) {
+      for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
+    }
+    detbak = det;
+    t1bak = t1;
+    t2bak = t2;
+    t3bak = t3;
+    t4bak = t4;
+    imapbak = imap;
   }
 
-  // In checking mode, verify the tetrahedron/triangle count.
+  // In checking mode, verify the element count.
   if (m_checkMultipleElement) {
     if (nfound < 1) {
       if (m_debug) {
-        std::cout << m_className << "::FindElement5:\n";
-        std::cout << "    No element matching point (" << x << ", " << y
+        std::cout << m_className << "::FindElement5:\n"
+                  << "    No element matching point (" << x << ", " << y
                   << ") found.\n";
       }
       return -1;
     }
     if (nfound > 1) {
-      std::cout << m_className << "::FindElement5:\n";
-      std::cout << "    Found " << nfound << " elements matching point (" << x
-                << ", " << y << ").\n";
+      std::cout << m_className << "::FindElement5:\n"
+                << "    Found " << nfound << " elements matching point (" 
+                << x << ", " << y << ").\n";
     }
     for (int j = 0; j < 4; ++j) {
       for (int k = 0; k < 4; ++k) jac[j][k] = jacbak[j][k];
@@ -1020,8 +966,8 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
   }
 
   if (m_debug) {
-    std::cout << m_className << "::FindElement5:\n";
-    std::cout << "    No element matching point (" << x << ", " << y
+    std::cout << m_className << "::FindElement5:\n"
+              << "    No element matching point (" << x << ", " << y
               << ") found.\n";
   }
   return -1;
@@ -1047,89 +993,51 @@ int ComponentFieldMap::FindElement13(
   std::array<double, 10> xn;
   std::array<double, 10> yn;
   std::array<double, 10> zn;
-  if (m_useTetrahedralTree && m_octree) {
-    // Tetra list in the block that contains the input 3D point.
-    const auto& tetList = m_octree->GetElementsInBlock(Vec3(x, y, z));
-    for (const auto i : tetList) {
-      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] || z < m_bbMin[i][2] ||
-          x > m_bbMax[i][0] || y > m_bbMax[i][1] || z > m_bbMax[i][2]) {
-        continue;
-      }
-      const Element& element = m_elements[i];
-      for (size_t j = 0; j < 10; ++j) {
-        xn[j] = m_nodes[element.emap[j]].x;
-        yn[j] = m_nodes[element.emap[j]].y;
-        zn[j] = m_nodes[element.emap[j]].z;
-      }
-      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn, m_w12[i]) != 0) {
-        continue;
-      }
-      if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
-          t4 > 1) {
-        continue;
-      }
-      if (m_debug) {
-        std::cout << m_className << "::FindElement13:\n"
-                  << "    Found matching element " << i << ".\n";
-      }
-      if (!m_checkMultipleElement) return i;
-      ++nfound;
-      imap = i;
-      for (int j = 0; j < 4; ++j) {
-        for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
-      }
-      detbak = det;
-      t1bak = t1;
-      t2bak = t2;
-      t3bak = t3;
-      t4bak = t4;
-      imapbak = imap;
+  const auto& elements = (m_useTetrahedralTree && m_octree) ? 
+      m_octree->GetElementsInBlock(Vec3(x, y, z)) : m_elementIndices;
+  for (const auto i : elements) {
+    if (x < m_bbMin[i][0] || y < m_bbMin[i][1] || z < m_bbMin[i][2] ||
+        x > m_bbMax[i][0] || y > m_bbMax[i][1] || z > m_bbMax[i][2]) {
+      continue;
     }
-  } else {
-    const size_t nElements = m_elements.size();
-    for (size_t i = 0; i < nElements; ++i) {
-      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] || z < m_bbMin[i][2] ||
-          x > m_bbMax[i][0] || y > m_bbMax[i][1] || z > m_bbMax[i][2]) {
-        continue;
-      }
-      const Element& element = m_elements[i];
-      for (size_t j = 0; j < 10; ++j) {
-        xn[j] = m_nodes[element.emap[j]].x;
-        yn[j] = m_nodes[element.emap[j]].y;
-        zn[j] = m_nodes[element.emap[j]].z;
-      }
-      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn, m_w12[i]) != 0) {
-        continue;
-      }
-      if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
-          t4 > 1) {
-        continue;
-      }
-      if (m_debug) {
-        std::cout << m_className << "::FindElement13:\n"
-                  << "    Found matching element " << i << ".\n";
-      }
-      if (!m_checkMultipleElement) return i;
-      ++nfound;
-      imap = i;
-      for (int j = 0; j < 4; ++j) {
-        for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
-      }
-      detbak = det;
-      t1bak = t1;
-      t2bak = t2;
-      t3bak = t3;
-      t4bak = t4;
-      imapbak = imap;
+    for (size_t j = 0; j < 10; ++j) {
+      const auto& node = m_nodes[m_elements[i].emap[j]];
+      xn[j] = node.x;
+      yn[j] = node.y;
+      zn[j] = node.z;
     }
+    if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn, m_w12[i]) != 0) {
+      continue;
+    }
+    if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
+        t4 > 1) {
+      continue;
+    }
+    if (m_debug) {
+      std::cout << m_className << "::FindElement13:\n"
+                << "    Found matching element " << i << ".\n";
+    }
+    if (!m_checkMultipleElement) return i;
+    ++nfound;
+    imap = i;
+    for (int j = 0; j < 4; ++j) {
+      for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
+    }
+    detbak = det;
+    t1bak = t1;
+    t2bak = t2;
+    t3bak = t3;
+    t4bak = t4;
+    imapbak = imap;
   }
+
   // In checking mode, verify the tetrahedron/triangle count.
   if (m_checkMultipleElement) {
     if (nfound < 1) {
       if (m_debug) {
         std::cout << m_className << "::FindElement13:\n"
-                  << "    No element matching point (" << x << ", " << y << ", 
-                  << z << ") found.\n";
+                  << "    No element matching point (" 
+                  << x << ", " << y << ", " << z << ") found.\n";
       }
       return -1;
     }
@@ -2218,6 +2126,8 @@ void ComponentFieldMap::Prepare() {
   if (InitializeTetrahedralTree()) {
     std::cout << "    Initialized tetrahedral tree.\n";
   }
+  m_elementIndices.resize(m_elements.size());
+  std::iota(m_elementIndices.begin(), m_elementIndices.end(), 0);
   // Precompute terms for interpolation in linear tetrahedra.
   if (m_elementType == ElementType::CurvedTetrahedron) {
     std::array<double, 10> xn;
