@@ -120,7 +120,7 @@ int ComponentFieldMap::Field(const double xin, const double yin,
   } else if (m_elementType == ElementType::CurvedTetrahedron) {
     std::array<double, 10> v;
     for (size_t i = 0; i < 10; ++i) v[i] = pot[element.emap[i]];
-    Field13(v, {t1, t2, t3, t4}, jac, det, fx, fy, fz);
+    Field13(v, {t1, t2, t3, t4}, jac, 4 * det, fx, fy, fz);
   }
   if (m_debug) {
     PrintElement("Field", x, y, z, t1, t2, t3, t4, imap, pot);
@@ -863,10 +863,9 @@ void ComponentFieldMap::Field13(const std::array<double, 10>& v,
       f[i] += g[j] * jac[j][i + 1];
     }
   }
-  const double invdet = -4. / det;
-  ex = f[0] * invdet;
-  ey = f[1] * invdet;
-  ez = f[2] * invdet;
+  ex = -f[0] * det;
+  ey = -f[1] * det;
+  ez = -f[2] * det;
 }
 
 int ComponentFieldMap::FindElement5(const double x, const double y,
@@ -1107,8 +1106,8 @@ int ComponentFieldMap::FindElement13(
         continue;
       }
       if (m_debug) {
-        std::cout << m_className << "::FindElement13:\n";
-        std::cout << "    Found matching element " << i << ".\n";
+        std::cout << m_className << "::FindElement13:\n"
+                  << "    Found matching element " << i << ".\n";
       }
       if (!m_checkMultipleElement) return i;
       ++nfound;
@@ -1128,15 +1127,15 @@ int ComponentFieldMap::FindElement13(
   if (m_checkMultipleElement) {
     if (nfound < 1) {
       if (m_debug) {
-        std::cout << m_className << "::FindElement13:\n";
-        std::cout << "    No element matching point (" << x << ", " << y << ", "
+        std::cout << m_className << "::FindElement13:\n"
+                  << "    No element matching point (" << x << ", " << y << ", 
                   << z << ") found.\n";
       }
       return -1;
     }
     if (nfound > 1) {
-      std::cerr << m_className << "::FindElement13:\n";
-      std::cerr << "    Found << " << nfound << " elements matching point ("
+      std::cerr << m_className << "::FindElement13:\n"
+                << "    Found << " << nfound << " elements matching point ("
                 << x << ", " << y << ", " << z << ").\n";
     }
     for (int j = 0; j < 4; ++j) {
@@ -1151,8 +1150,8 @@ int ComponentFieldMap::FindElement13(
     return imap;
   }
   if (m_debug) {
-    std::cout << m_className << "::FindElement13:\n";
-    std::cout << "    No element matching point (" << x << ", " << y << ", "
+    std::cout << m_className << "::FindElement13:\n"
+              << "    No element matching point (" << x << ", " << y << ", "
               << z << ") found.\n";
   }
   return -1;
@@ -1340,7 +1339,7 @@ void ComponentFieldMap::Jacobian13(
   jac[3][2] =  d1112 * j30 + d1011 * j32 - d1012 * j31;
   jac[3][3] = -d1112 * j20 - d1011 * j22 + d1012 * j21;
 
-  det = jac[0][3] * j30 + jac[1][3] * j31 + jac[2][3] * j32 + jac[3][3] * j33;
+  det = 1. / (jac[0][3] * j30 + jac[1][3] * j31 + jac[2][3] * j32 + jac[3][3] * j33);
 }
 
 void ComponentFieldMap::JacobianCube(const Element& element, const double t1,
@@ -1997,27 +1996,25 @@ int ComponentFieldMap::Coordinates13(
     double yr = 2 * (f0 * yn[0] + f1 * yn[1] + f2 * yn[2] + f3 * yn[3]);
     double zr = 2 * (f0 * zn[0] + f1 * zn[1] + f2 * zn[2] + f3 * zn[3]);
     const double fourt0 = 4 * td[0];
+    const double fourt1 = 4 * td[1];
+    const double fourt2 = 4 * td[2];
+    const double fourt3 = 4 * td[3];
     const double f4 = fourt0 * td[1];
     const double f5 = fourt0 * td[2];
     const double f6 = fourt0 * td[3];
-    xr += f4 * xn[4] + f5 * xn[5] + f6 * xn[6];
-    yr += f4 * yn[4] + f5 * yn[5] + f6 * yn[6];
-    zr += f4 * zn[4] + f5 * zn[5] + f6 * zn[6];
-    const double fourt1 = 4 * td[1];
     const double f7 = fourt1 * td[2];
     const double f8 = fourt1 * td[3];
-    const double fourt2 = 4 * td[2];
     const double f9 = fourt2 * td[3];
-    xr += f7 * xn[7] + f8 * xn[8] + f9 * xn[9];
-    yr += f7 * yn[7] + f8 * yn[8] + f9 * yn[9];
-    zr += f7 * zn[7] + f8 * zn[8] + f9 * zn[9];
-
-    const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
+    xr += f4 * xn[4] + f5 * xn[5] + f6 * xn[6] + f7 * xn[7] + 
+          f8 * xn[8] + f9 * xn[9];
+    yr += f4 * yn[4] + f5 * yn[5] + f6 * yn[6] + f7 * yn[7] + 
+          f8 * yn[8] + f9 * yn[9];
+    zr += f4 * zn[4] + f5 * zn[5] + f6 * zn[6] + f7 * zn[7] + 
+          f8 * zn[8] + f9 * zn[9];
     // Compute the Jacobian.
-    const double fourt3 = 4 * td[3];
     Jacobian13(xn, yn, zn, fourt0, fourt1, fourt2, fourt3, det, jac);
-    const double invdet = 1. / det;
     // Compute the difference vector.
+    const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
     const double diff[4] = {1. - sr, x - xr, y - yr, z - zr};
     // Update the estimate.
     double corr[4] = {0., 0., 0., 0.};
@@ -2025,7 +2022,7 @@ int ComponentFieldMap::Coordinates13(
       for (size_t k = 0; k < 4; ++k) {
         corr[l] += jac[l][k] * diff[k];
       }
-      corr[l] *= invdet;
+      corr[l] *= det;
       td[l] += corr[l];
     }
 
@@ -2080,20 +2077,28 @@ int ComponentFieldMap::Coordinates13(
     std::cout << "    Convergence reached at (t1, t2, t3, t4) = (" << t1 << ", "
               << t2 << ", " << t3 << ", " << t4 << ").\n";
     // Re-compute the (x,y,z) position for this coordinate.
-    std::array<double, 10> f;
-    for (size_t i = 0; i < 4; ++i) f[i] = td[i] * (2 * td[i] - 1.);
-    f[4] = 4 * td[0] * td[1];
-    f[5] = 4 * td[0] * td[2];
-    f[6] = 4 * td[0] * td[3];
-    f[7] = 4 * td[1] * td[2];
-    f[8] = 4 * td[1] * td[3];
-    f[9] = 4 * td[2] * td[3];
-    double xr = 0., yr = 0., zr = 0.;
-    for (size_t i = 0; i < 10; ++i) {
-      xr += f[i] * xn[i];
-      yr += f[i] * yn[i];
-      zr += f[i] * zn[i];
-    } 
+    const double f0 = td[0] * (td[0] - 0.5);
+    const double f1 = td[1] * (td[1] - 0.5);
+    const double f2 = td[2] * (td[2] - 0.5);
+    const double f3 = td[3] * (td[3] - 0.5);
+    double xr = 2 * (f0 * xn[0] + f1 * xn[1] + f2 * xn[2] + f3 * xn[3]);
+    double yr = 2 * (f0 * yn[0] + f1 * yn[1] + f2 * yn[2] + f3 * yn[3]);
+    double zr = 2 * (f0 * zn[0] + f1 * zn[1] + f2 * zn[2] + f3 * zn[3]);
+    const double fourt0 = 4 * td[0];
+    const double fourt1 = 4 * td[1];
+    const double fourt2 = 4 * td[2];
+    const double f4 = fourt0 * td[1];
+    const double f5 = fourt0 * td[2];
+    const double f6 = fourt0 * td[3];
+    const double f7 = fourt1 * td[2];
+    const double f8 = fourt1 * td[3];
+    const double f9 = fourt2 * td[3];
+    xr += f4 * xn[4] + f5 * xn[5] + f6 * xn[6] + f7 * xn[7] + 
+          f8 * xn[8] + f9 * xn[9];
+    yr += f4 * yn[4] + f5 * yn[5] + f6 * yn[6] + f7 * yn[7] + 
+          f8 * yn[8] + f9 * yn[9];
+    zr += f4 * zn[4] + f5 * zn[5] + f6 * zn[6] + f7 * zn[7] + 
+          f8 * zn[8] + f9 * zn[9];
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
     std::cout << "    Position requested:     (" << x << ", " << y << ", " << z
               << ")\n";
