@@ -342,7 +342,18 @@ class AvalancheMicroscopic {
   bool TransportElectrons(std::vector<std::pair<Point, bool> >& stack,
                           const bool aval);
   int TransportElectron(const Point& p0, const bool hole, 
-                        const bool useBfield, const bool aval, 
+                        const bool aval, const bool signal, 
+                        std::vector<Point>& path,
+                        std::vector<std::pair<Point, bool> >& newParticles,
+                        double& pathLength);
+  int TransportElectronBfield(const Point& p0, const bool hole, 
+                        const bool aval, 
+                        const bool signal, 
+                        std::vector<Point>& path,
+                        std::vector<std::pair<Point, bool> >& newParticles,
+                        double& pathLength);
+  int TransportElectronSc(const Point& p0, const bool hole, 
+                        const bool aval, 
                         const bool signal, 
                         std::vector<Point>& path,
                         std::vector<std::pair<Point, bool> >& newParticles,
@@ -358,6 +369,13 @@ class AvalancheMicroscopic {
 
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
                  double& y1, double& z1, double& t1);
+
+  void PlotCollision(const int cstype, const size_t did,
+                     const double x, const double y, const double z,
+                     size_t& nCollPlot) const;
+  void FillDistanceHistogram(const int cstype,
+                             const double x, const double y, const double z,
+                             double& xLast, double& yLast, double& zLast);
 };
 }
 

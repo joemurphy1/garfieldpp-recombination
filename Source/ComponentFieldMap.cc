@@ -120,7 +120,7 @@ int ComponentFieldMap::Field(const double xin, const double yin,
   } else if (m_elementType == ElementType::CurvedTetrahedron) {
     std::array<double, 10> v;
     for (size_t i = 0; i < 10; ++i) v[i] = pot[element.emap[i]];
-    Field13(v, {t1, t2, t3, t4}, jac, det, fx, fy, fz);
+    Field13(v, {t1, t2, t3, t4}, jac, 4 * det, fx, fy, fz);
   }
   if (m_debug) {
     PrintElement("Field", x, y, z, t1, t2, t3, t4, imap, pot);
@@ -863,10 +863,9 @@ void ComponentFieldMap::Field13(const std::array<double, 10>& v,
       f[i] += g[j] * jac[j][i + 1];
     }
   }
-  const double invdet = -4. / det;
-  ex = f[0] * invdet;
-  ey = f[1] * invdet;
-  ez = f[2] * invdet;
+  ex = -f[0] * det;
+  ey = -f[1] * det;
+  ez = -f[2] * det;
 }
 
 int ComponentFieldMap::FindElement5(const double x, const double y,
@@ -886,127 +885,73 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
   int imap = -1;
   std::array<double, 8> xn;
   std::array<double, 8> yn;
-  if (m_useTetrahedralTree && m_octree) {
-    const auto& tetList = m_octree->GetElementsInBlock(Vec3(x, y, 0.));
-    for (const auto i : tetList) {
-      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] ||
-          x > m_bbMax[i][0] || y > m_bbMax[i][1]) continue;
-      const Element& element = m_elements[i];
-      if (m_degenerate[i]) {
-        // Degenerate element
-        for (size_t j = 0; j < 6; ++j) {
-          const auto& node = m_nodes[element.emap[j]];
-          xn[j] = node.x;
-          yn[j] = node.y;
-        }
-        if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
-          continue;
-        }
-        if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1) continue;
-      } else {
-        // Non-degenerate element
-        for (size_t j = 0; j < 8; ++j) {
-          const auto& node = m_nodes[element.emap[j]];
-          xn[j] = node.x;
-          yn[j] = node.y;
-        }
-        if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
-          continue;
-        }
-        if (t1 < -1 || t1 > 1 || t2 < -1 || t2 > 1) continue;
-
+  const auto& elements = (m_useTetrahedralTree && m_octree) ? 
+      m_octree->GetElementsInBlock(Vec3(x, y, 0.)) :
+      m_elementIndices;
+  for (const auto i : elements) {
+    if (x < m_bbMin[i][0] || y < m_bbMin[i][1] ||
+        x > m_bbMax[i][0] || y > m_bbMax[i][1]) continue;
+    const Element& element = m_elements[i];
+    if (m_degenerate[i]) {
+      // Degenerate element
+      for (size_t j = 0; j < 6; ++j) {
+        const auto& node = m_nodes[element.emap[j]];
+        xn[j] = node.x;
+        yn[j] = node.y;
       }
-      ++nfound;
-      imap = i;
-      if (m_debug) {
-        std::cout << m_className << "::FindElement5:\n";
-        if (m_degenerate[i]) {
-          std::cout << "    Found matching degenerate element ";
-        } else {
-          std::cout << "    Found matching non-degenerate element ";
-        }
-        std::cout << i << ".\n";
+      if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
+        continue;
       }
-      if (!m_checkMultipleElement) return i;
-      for (int j = 0; j < 4; ++j) {
-        for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
+      if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1) continue;
+    } else {
+      // Non-degenerate element
+      for (size_t j = 0; j < 8; ++j) {
+        const auto& node = m_nodes[element.emap[j]];
+        xn[j] = node.x;
+        yn[j] = node.y;
       }
-      detbak = det;
-      t1bak = t1;
-      t2bak = t2;
-      t3bak = t3;
-      t4bak = t4;
-      imapbak = imap;
+      if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
+        continue;
+      }
+      if (t1 < -1 || t1 > 1 || t2 < -1 || t2 > 1) continue;
     }
-  } else {
-    // Scan all elements.
-    const size_t nElements = m_elements.size();
-    for (size_t i = 0; i < nElements; ++i) {
-      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] ||
-          x > m_bbMax[i][0] || y > m_bbMax[i][1]) continue;
-      const Element& element = m_elements[i];
+    ++nfound;
+    imap = i;
+    if (m_debug) {
+      std::cout << m_className << "::FindElement5:\n";
       if (m_degenerate[i]) {
-        // Degenerate element
-        for (size_t j = 0; j < 6; ++j) {
-          const auto& node = m_nodes[element.emap[j]];
-          xn[j] = node.x;
-          yn[j] = node.y;
-        }
-        if (Coordinates3(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
-          continue;
-        }
-        if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1) continue;
+        std::cout << "    Found matching degenerate element ";
       } else {
-        // Non-degenerate element
-        for (size_t j = 0; j < 8; ++j) {
-          const auto& node = m_nodes[element.emap[j]];
-          xn[j] = node.x;
-          yn[j] = node.y;
-        }
-        if (Coordinates5(x, y, t1, t2, t3, t4, jac, det, xn, yn) != 0) {
-          continue;
-        }
-        if (t1 < -1 || t1 > 1 || t2 < -1 || t2 > 1) continue;
-
+        std::cout << "    Found matching non-degenerate element ";
       }
-      ++nfound;
-      imap = i;
-      if (m_debug) {
-        std::cout << m_className << "::FindElement5:\n";
-        if (m_degenerate[i]) {
-          std::cout << "    Found matching degenerate element ";
-        } else {
-          std::cout << "    Found matching non-degenerate element ";
-        }
-        std::cout << i << ".\n";
-      }
-      if (!m_checkMultipleElement) return i;
-      for (int j = 0; j < 4; ++j) {
-        for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
-      }
-      detbak = det;
-      t1bak = t1;
-      t2bak = t2;
-      t3bak = t3;
-      t4bak = t4;
-      imapbak = imap;
+      std::cout << i << ".\n";
     }
+    if (!m_checkMultipleElement) return i;
+    for (int j = 0; j < 4; ++j) {
+      for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
+    }
+    detbak = det;
+    t1bak = t1;
+    t2bak = t2;
+    t3bak = t3;
+    t4bak = t4;
+    imapbak = imap;
   }
 
-  // In checking mode, verify the tetrahedron/triangle count.
+  // In checking mode, verify the element count.
   if (m_checkMultipleElement) {
     if (nfound < 1) {
       if (m_debug) {
-        std::cout << m_className << "::FindElement5:\n";
-        std::cout << "    No element matching point (" << x << ", " << y
+        std::cout << m_className << "::FindElement5:\n"
+                  << "    No element matching point (" << x << ", " << y
                   << ") found.\n";
       }
       return -1;
     }
     if (nfound > 1) {
-      std::cout << m_className << "::FindElement5:\n";
-      std::cout << "    Found " << nfound << " elements matching point (" << x
-                << ", " << y << ").\n";
+      std::cout << m_className << "::FindElement5:\n"
+                << "    Found " << nfound << " elements matching point (" 
+                << x << ", " << y << ").\n";
     }
     for (int j = 0; j < 4; ++j) {
       for (int k = 0; k < 4; ++k) jac[j][k] = jacbak[j][k];
@@ -1021,8 +966,8 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
   }
 
   if (m_debug) {
-    std::cout << m_className << "::FindElement5:\n";
-    std::cout << "    No element matching point (" << x << ", " << y
+    std::cout << m_className << "::FindElement5:\n"
+              << "    No element matching point (" << x << ", " << y
               << ") found.\n";
   }
   return -1;
@@ -1048,95 +993,57 @@ int ComponentFieldMap::FindElement13(
   std::array<double, 10> xn;
   std::array<double, 10> yn;
   std::array<double, 10> zn;
-  if (m_useTetrahedralTree && m_octree) {
-    // Tetra list in the block that contains the input 3D point.
-    const auto& tetList = m_octree->GetElementsInBlock(Vec3(x, y, z));
-    for (const auto i : tetList) {
-      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] || z < m_bbMin[i][2] ||
-          x > m_bbMax[i][0] || y > m_bbMax[i][1] || z > m_bbMax[i][2]) {
-        continue;
-      }
-      const Element& element = m_elements[i];
-      for (size_t j = 0; j < 10; ++j) {
-        xn[j] = m_nodes[element.emap[j]].x;
-        yn[j] = m_nodes[element.emap[j]].y;
-        zn[j] = m_nodes[element.emap[j]].z;
-      }
-      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn, m_w12[i]) != 0) {
-        continue;
-      }
-      if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
-          t4 > 1) {
-        continue;
-      }
-      if (m_debug) {
-        std::cout << m_className << "::FindElement13:\n"
-                  << "    Found matching element " << i << ".\n";
-      }
-      if (!m_checkMultipleElement) return i;
-      ++nfound;
-      imap = i;
-      for (int j = 0; j < 4; ++j) {
-        for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
-      }
-      detbak = det;
-      t1bak = t1;
-      t2bak = t2;
-      t3bak = t3;
-      t4bak = t4;
-      imapbak = imap;
+  const auto& elements = (m_useTetrahedralTree && m_octree) ? 
+      m_octree->GetElementsInBlock(Vec3(x, y, z)) : m_elementIndices;
+  for (const auto i : elements) {
+    if (x < m_bbMin[i][0] || y < m_bbMin[i][1] || z < m_bbMin[i][2] ||
+        x > m_bbMax[i][0] || y > m_bbMax[i][1] || z > m_bbMax[i][2]) {
+      continue;
     }
-  } else {
-    const size_t nElements = m_elements.size();
-    for (size_t i = 0; i < nElements; ++i) {
-      if (x < m_bbMin[i][0] || y < m_bbMin[i][1] || z < m_bbMin[i][2] ||
-          x > m_bbMax[i][0] || y > m_bbMax[i][1] || z > m_bbMax[i][2]) {
-        continue;
-      }
-      const Element& element = m_elements[i];
-      for (size_t j = 0; j < 10; ++j) {
-        xn[j] = m_nodes[element.emap[j]].x;
-        yn[j] = m_nodes[element.emap[j]].y;
-        zn[j] = m_nodes[element.emap[j]].z;
-      }
-      if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn, m_w12[i]) != 0) {
-        continue;
-      }
-      if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
-          t4 > 1) {
-        continue;
-      }
-      if (m_debug) {
-        std::cout << m_className << "::FindElement13:\n";
-        std::cout << "    Found matching element " << i << ".\n";
-      }
-      if (!m_checkMultipleElement) return i;
-      ++nfound;
-      imap = i;
-      for (int j = 0; j < 4; ++j) {
-        for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
-      }
-      detbak = det;
-      t1bak = t1;
-      t2bak = t2;
-      t3bak = t3;
-      t4bak = t4;
-      imapbak = imap;
+    for (size_t j = 0; j < 10; ++j) {
+      const auto& node = m_nodes[m_elements[i].emap[j]];
+      xn[j] = node.x;
+      yn[j] = node.y;
+      zn[j] = node.z;
     }
+    if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn, m_w12[i]) != 0) {
+      continue;
+    }
+    if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
+        t4 > 1) {
+      continue;
+    }
+    if (m_debug) {
+      std::cout << m_className << "::FindElement13:\n"
+                << "    Found matching element " << i << ".\n";
+    }
+    if (!m_checkMultipleElement) return i;
+    ++nfound;
+    imap = i;
+    for (int j = 0; j < 4; ++j) {
+      for (int k = 0; k < 4; ++k) jacbak[j][k] = jac[j][k];
+    }
+    detbak = det;
+    t1bak = t1;
+    t2bak = t2;
+    t3bak = t3;
+    t4bak = t4;
+    imapbak = imap;
   }
+
   // In checking mode, verify the tetrahedron/triangle count.
   if (m_checkMultipleElement) {
     if (nfound < 1) {
       if (m_debug) {
-        std::cout << m_className << "::FindElement13:\n";
-        std::cout << "    No element matching point (" << x << ", " << y << ", "
-                  << z << ") found.\n";
+        std::cout << m_className << "::FindElement13:\n"
+                  << "    No element matching point (" 
+                  << x << ", " << y << ", " << z << ") found.\n";
       }
       return -1;
     }
     if (nfound > 1) {
-      std::cerr << m_className << "::FindElement13:\n";
-      std::cerr << "    Found << " << nfound << " elements matching point ("
+      std::cerr << m_className << "::FindElement13:\n"
+                << "    Found << " << nfound << " elements matching point ("
                 << x << ", " << y << ", " << z << ").\n";
     }
     for (int j = 0; j < 4; ++j) {
@@ -1151,8 +1058,8 @@ int ComponentFieldMap::FindElement13(
     return imap;
   }
   if (m_debug) {
-    std::cout << m_className << "::FindElement13:\n";
-    std::cout << "    No element matching point (" << x << ", " << y << ", "
+    std::cout << m_className << "::FindElement13:\n"
+              << "    No element matching point (" << x << ", " << y << ", "
               << z << ") found.\n";
   }
   return -1;
@@ -1218,25 +1125,25 @@ void ComponentFieldMap::Jacobian3(
   const double fourv = 4 * v;
   const double fourw = 4 * w;
 
-  const double ax = (-1 + fourv) * xn[1] + fouru * xn[3] + fourw * xn[5];
-  const double ay = (-1 + fourv) * yn[1] + fouru * yn[3] + fourw * yn[5];
-  const double bx = (-1 + fourw) * xn[2] + fouru * xn[4] + fourv * xn[5];
-  const double by = (-1 + fourw) * yn[2] + fouru * yn[4] + fourv * yn[5];
-  const double cx = (-1 + fouru) * xn[0] + fourv * xn[3] + fourw * xn[4];
-  const double cy = (-1 + fouru) * yn[0] + fourv * yn[3] + fourw * yn[4];
+  const double j10 = (-1 + fouru) * xn[0] + fourv * xn[3] + fourw * xn[4];
+  const double j20 = (-1 + fouru) * yn[0] + fourv * yn[3] + fourw * yn[4];
+  const double j11 = (-1 + fourv) * xn[1] + fouru * xn[3] + fourw * xn[5];
+  const double j21 = (-1 + fourv) * yn[1] + fouru * yn[3] + fourw * yn[5];
+  const double j12 = (-1 + fourw) * xn[2] + fouru * xn[4] + fourv * xn[5];
+  const double j22 = (-1 + fourw) * yn[2] + fouru * yn[4] + fourv * yn[5];
   // Determinant of the quadratic triangular Jacobian
-  det = -(ax - bx) * cy - (cx - ax) * by + (cx - bx) * ay;
+  det = -(j11 - j12) * j20 - (j10 - j11) * j22 + (j10 - j12) * j21;
 
   // Terms of the quadratic triangular Jacobian
-  jac[0][0] = ax * by - bx * ay;
-  jac[0][1] = ay - by;
-  jac[0][2] = bx - ax;
-  jac[1][0] = bx * cy - cx * by;
-  jac[1][1] = by - cy;
-  jac[1][2] = cx - bx;
-  jac[2][0] = -ax * cy + cx * ay;
-  jac[2][1] = cy - ay;
-  jac[2][2] = ax - cx;
+  jac[0][0] = j11 * j22 - j12 * j21;
+  jac[0][1] = j21 - j22;
+  jac[0][2] = j12 - j11;
+  jac[1][0] = j12 * j20 - j10 * j22;
+  jac[1][1] = j22 - j20;
+  jac[1][2] = j10 - j12;
+  jac[2][0] = j10 * j21 - j11 * j20;
+  jac[2][1] = j20 - j21;
+  jac[2][2] = j11 - j10;
 }
 
 void ComponentFieldMap::Jacobian5(
@@ -1244,26 +1151,32 @@ void ComponentFieldMap::Jacobian5(
     const std::array<double, 8>& yn,
     const double u, const double v, double& det, double jac[4][4]) {
   // Jacobian terms
-  jac[0][0] = 0.25 * (
-    (1 - u) * (2 * v + u) * yn[0] + (1 + u) * (2 * v - u) * yn[1] +
-    (1 + u) * (2 * v + u) * yn[2] + (1 - u) * (2 * v - u) * yn[3]) -
-    0.5 * (1 - u) * (1 + u) * yn[4] - (1 + u) * v * yn[5] +
-    0.5 * (1 - u) * (1 + u) * yn[6] - (1 - u) * v * yn[7];
-  jac[0][1] = -0.25 * (
-    (1 - u) * (2 * v + u) * xn[0] + (1 + u) * (2 * v - u) * xn[1] +
-    (1 + u) * (2 * v + u) * xn[2] + (1 - u) * (2 * v - u) * xn[3]) +
-    0.5 * (1 - u) * (1 + u) * xn[4] + (1 + u) * v * xn[5] -
-    0.5 * (1 - u) * (1 + u) * xn[6] + (1 - u) * v * xn[7];
-  jac[1][0] = -0.25 * (
-    (1 - v) * (2 * u + v) * yn[0] + (1 - v) * (2 * u - v) * yn[1] +
-    (1 + v) * (2 * u + v) * yn[2] + (1 + v) * (2 * u - v) * yn[3]) +
-    (1 - v) * u * yn[4] - 0.5 * (1 - v) * (1 + v) * yn[5] + 
-    (1 + v) * u * yn[6] + 0.5 * (1 - v) * (1 + v) * yn[7];
-  jac[1][1] = 0.25 * (
-    (1 - v) * (2 * u + v) * xn[0] + (1 - v) * (2 * u - v) * xn[1] +
-    (1 + v) * (2 * u + v) * xn[2] + (1 + v) * (2 * u - v) * xn[3]) -
-    (1 - v) * u * xn[4] + 0.5 * (1 - v) * (1 + v) * xn[5] - 
-    (1 + v) * u * xn[6] - 0.5 * (1 - v) * (1 + v) * xn[7];
+  const double g0 = (1 - u) * (2 * v + u);
+  const double g1 = (1 + u) * (2 * v - u);
+  const double g2 = (1 + u) * (2 * v + u);
+  const double g3 = (1 - u) * (2 * v - u);
+  const double g4 = (1 - u) * (1 + u);
+  const double g5 = (1 + u) * v;
+  const double g7 = (1 - u) * v;
+  jac[0][0] =  0.25 * (g0 * yn[0] + g1 * yn[1] + g2 * yn[2] + g3 * yn[3]) -
+    0.5 * g4 * yn[4] - g5 * yn[5] +
+    0.5 * g4 * yn[6] - g7 * yn[7];
+  jac[0][1] = -0.25 * (g0 * xn[0] + g1 * xn[1] + g2 * xn[2] + g3 * xn[3]) +
+    0.5 * g4 * xn[4] + g5 * xn[5] -
+    0.5 * g4 * xn[6] + g7 * xn[7];
+  const double h0 = (1 - v) * (2 * u + v);
+  const double h1 = (1 - v) * (2 * u - v);
+  const double h2 = (1 + v) * (2 * u + v);
+  const double h3 = (1 + v) * (2 * u - v);
+  const double h4 = (1 - v) * u;
+  const double h5 = (1 - v) * (1 + v);
+  const double h6 = (1 + v) * u;
+  jac[1][0] = -0.25 * (h0 * yn[0] + h1 * yn[1] + h2 * yn[2] + h3 * yn[3]) +
+    h4 * yn[4] - 0.5 * h5 * yn[5] + 
+    h6 * yn[6] + 0.5 * h5 * yn[7];
+  jac[1][1] =  0.25 * (h0 * xn[0] + h1 * xn[1] + h2 * xn[2] + h3 * xn[3]) -
+    h4 * xn[4] + 0.5 * h5 * xn[5] - 
+    h6 * xn[6] - 0.5 * h5 * xn[7];
 
   // Determinant.
   det = jac[0][0] * jac[1][1] - jac[0][1] * jac[1][0];
@@ -1273,53 +1186,72 @@ void ComponentFieldMap::Jacobian13(
     const std::array<double, 10>& xn,
     const std::array<double, 10>& yn,
     const std::array<double, 10>& zn,
-    const double t, const double u, const double v, const double w, 
+    const double fourt0, const double fourt1, 
+    const double fourt2, const double fourt3, 
     double& det, double jac[4][4]) {
-  
-  const double tx = 4 * ((-0.25 + t) * xn[0] + u * xn[4] + v * xn[5] + w * xn[6]);
-  const double ty = 4 * ((-0.25 + t) * yn[0] + u * yn[4] + v * yn[5] + w * yn[6]);
-  const double tz = 4 * ((-0.25 + t) * zn[0] + u * zn[4] + v * zn[5] + w * zn[6]);
 
-  const double ux = 4 * ((-0.25 + u) * xn[1] + t * xn[4] + v * xn[7] + w * xn[8]);
-  const double uy = 4 * ((-0.25 + u) * yn[1] + t * yn[4] + v * yn[7] + w * yn[8]);
-  const double uz = 4 * ((-0.25 + u) * zn[1] + t * zn[4] + v * zn[7] + w * zn[8]);
+  const double fourt0m1 = fourt0 - 1.;
+  const double j10 = fourt0m1 * xn[0] + fourt1 * xn[4] + fourt2 * xn[5] + fourt3 * xn[6];
+  const double j20 = fourt0m1 * yn[0] + fourt1 * yn[4] + fourt2 * yn[5] + fourt3 * yn[6];
+  const double j30 = fourt0m1 * zn[0] + fourt1 * zn[4] + fourt2 * zn[5] + fourt3 * zn[6];
 
-  const double vx = 4 * ((-0.25 + v) * xn[2] + t * xn[5] + u * xn[7] + w * xn[9]);
-  const double vy = 4 * ((-0.25 + v) * yn[2] + t * yn[5] + u * yn[7] + w * yn[9]);
-  const double vz = 4 * ((-0.25 + v) * zn[2] + t * zn[5] + u * zn[7] + w * zn[9]);
+  const double fourt1m1 = fourt1 - 1.;
+  const double j11 = fourt1m1 * xn[1] + fourt0 * xn[4] + fourt2 * xn[7] + fourt3 * xn[8];
+  const double j21 = fourt1m1 * yn[1] + fourt0 * yn[4] + fourt2 * yn[7] + fourt3 * yn[8];
+  const double j31 = fourt1m1 * zn[1] + fourt0 * zn[4] + fourt2 * zn[7] + fourt3 * zn[8];
 
-  const double wx = 4 * ((-0.25 + w) * xn[3] + t * xn[6] + u * xn[8] + v * xn[9]);
-  const double wy = 4 * ((-0.25 + w) * yn[3] + t * yn[6] + u * yn[8] + v * yn[9]);
-  const double wz = 4 * ((-0.25 + w) * zn[3] + t * zn[6] + u * zn[8] + v * zn[9]);
+  const double fourt2m1 = fourt2 - 1.;
+  const double j12 = fourt2m1 * xn[2] + fourt0 * xn[5] + fourt1 * xn[7] + fourt3 * xn[9];
+  const double j22 = fourt2m1 * yn[2] + fourt0 * yn[5] + fourt1 * yn[7] + fourt3 * yn[9];
+  const double j32 = fourt2m1 * zn[2] + fourt0 * zn[5] + fourt1 * zn[7] + fourt3 * zn[9];
 
-  const double tu = tx * uy - ux * ty;
-  const double tv = tx * vy - vx * ty;
-  const double tw = tx * wy - wx * ty;
-  const double uv = ux * vy - vx * uy;
-  const double uw = ux * wy - wx * uy;
-  const double vw = vx * wy - wx * vy;
+  const double fourt3m1 = fourt3 - 1.;
+  const double j13 = fourt3m1 * xn[3] + fourt0 * xn[6] + fourt1 * xn[8] + fourt2 * xn[9];
+  const double j23 = fourt3m1 * yn[3] + fourt0 * yn[6] + fourt1 * yn[8] + fourt2 * yn[9];
+  const double j33 = fourt3m1 * zn[3] + fourt0 * zn[6] + fourt1 * zn[8] + fourt2 * zn[9];
 
-  jac[0][0] = -uw * vz + uv * wz + vw * uz;
-  jac[1][0] = -vw * tz + tw * vz - tv * wz;
-  jac[2][0] =  uw * tz + tu * wz - tw * uz;
-  jac[3][0] = -uv * tz - tu * vz + tv * uz;
+  const double a1 = j10 * j21 - j20 * j11;
+  const double a2 = j10 * j22 - j20 * j12;
+  const double a3 = j10 * j23 - j20 * j13;
+  const double a4 = j11 * j22 - j21 * j12;
+  const double a5 = j11 * j23 - j21 * j13;
+  const double a6 = j12 * j23 - j22 * j13;
 
-  jac[0][1] = -(uy - wy) * vz + (uy - vy) * wz + (vy - wy) * uz;
-  jac[1][1] = -(vy - wy) * tz + (ty - wy) * vz - (ty - vy) * wz;
-  jac[2][1] =  (uy - wy) * tz + (ty - uy) * wz - (ty - wy) * uz;
-  jac[3][1] = -(uy - vy) * tz - (ty - uy) * vz + (ty - vy) * uz;
+  const double d1011 = j10 - j11;
+  const double d1012 = j10 - j12;
+  const double d1013 = j10 - j13;
+  const double d1112 = j11 - j12;
+  const double d1113 = j11 - j13;
+  const double d1213 = j12 - j13;
 
-  jac[0][2] =  (ux - wx) * vz - (ux - vx) * wz - (vx - wx) * uz;
-  jac[1][2] =  (vx - wx) * tz - (tx - wx) * vz + (tx - vx) * wz;
-  jac[2][2] = -(ux - wx) * tz - (tx - ux) * wz + (tx - wx) * uz;
-  jac[3][2] =  (ux - vx) * tz + (tx - ux) * vz - (tx - vx) * uz;
+  const double d2021 = j20 - j21;
+  const double d2022 = j20 - j22;
+  const double d2023 = j20 - j23;
+  const double d2122 = j21 - j22;
+  const double d2123 = j21 - j23;
+  const double d2223 = j22 - j23;
 
-  jac[0][3] = -(ux - wx) * vy + (ux - vx) * wy + (vx - wx) * uy;
-  jac[1][3] = -(vx - wx) * ty + (tx - wx) * vy - (tx - vx) * wy;
-  jac[2][3] =  (ux - wx) * ty + (tx - ux) * wy - (tx - wx) * uy;
-  jac[3][3] = -(ux - vx) * ty - (tx - ux) * vy + (tx - vx) * uy;
+  jac[0][0] = -a5 * j32 + a4 * j33 + a6 * j31;
+  jac[0][1] = -d2123 * j32 + d2122 * j33 + d2223 * j31;
+  jac[0][2] =  d1113 * j32 - d1112 * j33 - d1213 * j31;
+  jac[0][3] = -d1113 * j22 + d1112 * j23 + d1213 * j21;
 
-  det = jac[0][3] * tz + jac[1][3] * uz + jac[2][3] * vz + jac[3][3] * wz;
+  jac[1][0] = -a6 * j30 + a3 * j32 - a2 * j33;
+  jac[1][1] = -d2223 * j30 + d2023 * j32 - d2022 * j33;
+  jac[1][2] =  d1213 * j30 - d1013 * j32 + d1012 * j33;
+  jac[1][3] = -d1213 * j20 + d1013 * j22 - d1012 * j23;
+
+  jac[2][0] =  a5 * j30 + a1 * j33 - a3 * j31;
+  jac[2][1] =  d2123 * j30 + d2021 * j33 - d2023 * j31;
+  jac[2][2] = -d1113 * j30 - d1011 * j33 + d1013 * j31;
+  jac[2][3] =  d1113 * j20 + d1011 * j23 - d1013 * j21;
+
+  jac[3][0] = -a4 * j30 - a1 * j32 + a2 * j31;
+  jac[3][1] = -d2122 * j30 - d2021 * j32 + d2022 * j31;
+  jac[3][2] =  d1112 * j30 + d1011 * j32 - d1012 * j31;
+  jac[3][3] = -d1112 * j20 - d1011 * j22 + d1012 * j21;
+
+  det = 1. / (jac[0][3] * j30 + jac[1][3] * j31 + jac[2][3] * j32 + jac[3][3] * j33);
 }
 
 void ComponentFieldMap::JacobianCube(const Element& element, const double t1,
@@ -1958,7 +1890,7 @@ int ComponentFieldMap::Coordinates13(
 
   // Start iteration.
   std::array<double, 4> td = {t1, t2, t3, t4};
-  std::array<double, 10> f;
+
   // Loop
   bool converged = false;
   for (int iter = 0; iter < 10; ++iter) {
@@ -1966,23 +1898,35 @@ int ComponentFieldMap::Coordinates13(
       std::printf("    Iteration %4u: t = (%15.8f, %15.8f %15.8f %15.8f)\n",
                   iter, td[0], td[1], td[2], td[3]);
     }
-    for (size_t i = 0; i < 4; ++i) f[i] = td[i] * (2 * td[i] - 1.);
-    f[4] = 4 * td[0] * td[1];
-    f[5] = 4 * td[0] * td[2];
-    f[6] = 4 * td[0] * td[3];
-    f[7] = 4 * td[1] * td[2];
-    f[8] = 4 * td[1] * td[3];
-    f[9] = 4 * td[2] * td[3];
-    // Re-compute the (x,y,z) position for this coordinate.
-    const double xr = std::inner_product(f.begin(), f.end(), xn.begin(), 0.);
-    const double yr = std::inner_product(f.begin(), f.end(), yn.begin(), 0.);
-    const double zr = std::inner_product(f.begin(), f.end(), zn.begin(), 0.);
-    const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
-
+    // Evaluate the shape functions and re-compute the (x,y,z) position 
+    // for this set of isoparametric coordinates.
+    const double f0 = td[0] * (td[0] - 0.5);
+    const double f1 = td[1] * (td[1] - 0.5);
+    const double f2 = td[2] * (td[2] - 0.5);
+    const double f3 = td[3] * (td[3] - 0.5);
+    double xr = 2 * (f0 * xn[0] + f1 * xn[1] + f2 * xn[2] + f3 * xn[3]);
+    double yr = 2 * (f0 * yn[0] + f1 * yn[1] + f2 * yn[2] + f3 * yn[3]);
+    double zr = 2 * (f0 * zn[0] + f1 * zn[1] + f2 * zn[2] + f3 * zn[3]);
+    const double fourt0 = 4 * td[0];
+    const double fourt1 = 4 * td[1];
+    const double fourt2 = 4 * td[2];
+    const double fourt3 = 4 * td[3];
+    const double f4 = fourt0 * td[1];
+    const double f5 = fourt0 * td[2];
+    const double f6 = fourt0 * td[3];
+    const double f7 = fourt1 * td[2];
+    const double f8 = fourt1 * td[3];
+    const double f9 = fourt2 * td[3];
+    xr += f4 * xn[4] + f5 * xn[5] + f6 * xn[6] + f7 * xn[7] + 
+          f8 * xn[8] + f9 * xn[9];
+    yr += f4 * yn[4] + f5 * yn[5] + f6 * yn[6] + f7 * yn[7] + 
+          f8 * yn[8] + f9 * yn[9];
+    zr += f4 * zn[4] + f5 * zn[5] + f6 * zn[6] + f7 * zn[7] + 
+          f8 * zn[8] + f9 * zn[9];
     // Compute the Jacobian.
-    Jacobian13(xn, yn, zn, td[0], td[1], td[2], td[3], det, jac);
-    const double invdet = 1. / det;
+    Jacobian13(xn, yn, zn, fourt0, fourt1, fourt2, fourt3, det, jac);
     // Compute the difference vector.
+    const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
     const double diff[4] = {1. - sr, x - xr, y - yr, z - zr};
     // Update the estimate.
     double corr[4] = {0., 0., 0., 0.};
@@ -1990,7 +1934,7 @@ int ComponentFieldMap::Coordinates13(
       for (size_t k = 0; k < 4; ++k) {
         corr[l] += jac[l][k] * diff[k];
       }
-      corr[l] *= invdet;
+      corr[l] *= det;
       td[l] += corr[l];
     }
 
@@ -2045,16 +1989,28 @@ int ComponentFieldMap::Coordinates13(
     std::cout << "    Convergence reached at (t1, t2, t3, t4) = (" << t1 << ", "
               << t2 << ", " << t3 << ", " << t4 << ").\n";
     // Re-compute the (x,y,z) position for this coordinate.
-    for (size_t i = 0; i < 4; ++i) f[i] = td[i] * (2 * td[i] - 1.);
-    f[4] = 4 * td[0] * td[1];
-    f[5] = 4 * td[0] * td[2];
-    f[6] = 4 * td[0] * td[3];
-    f[7] = 4 * td[1] * td[2];
-    f[8] = 4 * td[1] * td[3];
-    f[9] = 4 * td[2] * td[3];
-    const double xr = std::inner_product(f.begin(), f.end(), xn.begin(), 0.);
-    const double yr = std::inner_product(f.begin(), f.end(), yn.begin(), 0.);
-    const double zr = std::inner_product(f.begin(), f.end(), zn.begin(), 0.);
+    const double f0 = td[0] * (td[0] - 0.5);
+    const double f1 = td[1] * (td[1] - 0.5);
+    const double f2 = td[2] * (td[2] - 0.5);
+    const double f3 = td[3] * (td[3] - 0.5);
+    double xr = 2 * (f0 * xn[0] + f1 * xn[1] + f2 * xn[2] + f3 * xn[3]);
+    double yr = 2 * (f0 * yn[0] + f1 * yn[1] + f2 * yn[2] + f3 * yn[3]);
+    double zr = 2 * (f0 * zn[0] + f1 * zn[1] + f2 * zn[2] + f3 * zn[3]);
+    const double fourt0 = 4 * td[0];
+    const double fourt1 = 4 * td[1];
+    const double fourt2 = 4 * td[2];
+    const double f4 = fourt0 * td[1];
+    const double f5 = fourt0 * td[2];
+    const double f6 = fourt0 * td[3];
+    const double f7 = fourt1 * td[2];
+    const double f8 = fourt1 * td[3];
+    const double f9 = fourt2 * td[3];
+    xr += f4 * xn[4] + f5 * xn[5] + f6 * xn[6] + f7 * xn[7] + 
+          f8 * xn[8] + f9 * xn[9];
+    yr += f4 * yn[4] + f5 * yn[5] + f6 * yn[6] + f7 * yn[7] + 
+          f8 * yn[8] + f9 * yn[9];
+    zr += f4 * zn[4] + f5 * zn[5] + f6 * zn[6] + f7 * zn[7] + 
+          f8 * zn[8] + f9 * zn[9];
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
     std::cout << "    Position requested:     (" << x << ", " << y << ", " << z
               << ")\n";
@@ -2174,6 +2130,8 @@ void ComponentFieldMap::Prepare() {
   if (InitializeTetrahedralTree()) {
     std::cout << "    Initialized tetrahedral tree.\n";
   }
+  m_elementIndices.resize(m_elements.size());
+  std::iota(m_elementIndices.begin(), m_elementIndices.end(), 0);
   // Precompute terms for interpolation in linear tetrahedra.
   if (m_elementType == ElementType::CurvedTetrahedron) {
     std::array<double, 10> xn;
@@ -2731,14 +2689,14 @@ void ComponentFieldMap::CalculateElementBoundingBoxes() {
     m_bbMin[i][2] = std::min({n0.z, n1.z, n2.z, n3.z});
     m_bbMax[i][2] = std::max({n0.z, n1.z, n2.z, n3.z});
     // Add tolerances.
-    constexpr float f = 0.2;
-    const float tolx = f * (m_bbMax[i][0] - m_bbMin[i][0]);
+    constexpr double f = 0.2;
+    const double tolx = f * (m_bbMax[i][0] - m_bbMin[i][0]);
     m_bbMin[i][0] -= tolx;
     m_bbMax[i][0] += tolx;
-    const float toly = f * (m_bbMax[i][1] - m_bbMin[i][1]);
+    const double toly = f * (m_bbMax[i][1] - m_bbMin[i][1]);
     m_bbMin[i][1] -= toly;
     m_bbMax[i][1] += toly;
-    const float tolz = f * (m_bbMax[i][2] - m_bbMin[i][2]);
+    const double tolz = f * (m_bbMax[i][2] - m_bbMin[i][2]);
     m_bbMin[i][2] -= tolz;
     m_bbMax[i][2] += tolz;
   }

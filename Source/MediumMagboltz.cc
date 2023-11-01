@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -79,6 +80,7 @@ MediumMagboltz::MediumMagboltz()
     : MediumGas(),
       m_eMax(40.),
       m_eStep(m_eMax / Magboltz::nEnergySteps),
+      m_eStepInv(1. / m_eStep),
       m_eHigh(400.),
       m_eHighLog(log(m_eHigh)),
       m_lnStep(1.),
@@ -148,6 +150,7 @@ bool MediumMagboltz::SetMaxElectronEnergy(const double e) {
   std::lock_guard<std::mutex> guard(m_mutex);
   // Determine the energy interval size.
   m_eStep = std::min(m_eMax, m_eHigh) / Magboltz::nEnergySteps;
+  m_eStepInv = 1. / m_eStep;
 
   // Force recalculation of the scattering rates table.
   m_isChanged = true;
@@ -505,25 +508,20 @@ void MediumMagboltz::PrintGas() {
   }
 }
 
-double MediumMagboltz::GetElectronNullCollisionRate(const int band) {
+double MediumMagboltz::GetElectronNullCollisionRate(const int /*band*/) {
   // If necessary, update the collision rates table.
   if (!Update()) return 0.;
-
-  if (m_debug && band > 0) {
-    std::cerr << m_className << "::GetElectronNullCollisionRate: Band > 0.\n";
-  }
-
   return m_cfNull;
 }
 
 double MediumMagboltz::GetElectronCollisionRate(const double e,
-                                                const int band) {
+                                                const int /*band*/) {
   // Check if the electron energy is within the currently set range.
   if (e <= 0.) {
     std::cerr << m_className << "::GetElectronCollisionRate: Invalid energy.\n";
     return m_cfTot[0];
   }
-  if (e > m_eMax && m_useAutoAdjust) {
+  if (e > m_eMax) {
     std::cerr << m_className << "::GetElectronCollisionRate:\n    Rate at " << e
               << " eV is not included in the current table.\n    "
               << "Increasing energy range to " << 1.05 * e << " eV.\n";
@@ -533,16 +531,10 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
   // If necessary, update the collision rates table.
   if (!Update()) return 0.;
 
-  if (m_debug && band > 0) {
-    std::cerr << m_className << "::GetElectronCollisionRate: Band > 0.\n";
-  }
-
   // Get the energy interval.
-  if (e <= m_eHigh) {
+  if (e < m_eHigh) {
     // Linear binning
-    constexpr int iemax = Magboltz::nEnergySteps - 1;
-    const int iE = std::min(std::max(int(e / m_eStep), 0), iemax);
-    return m_cfTot[iE];
+    return m_cfTot[int(e * m_eStepInv)];
   }
 
   // Logarithmic binning
@@ -574,10 +566,9 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
   // Get the total scattering rate.
   double rate = GetElectronCollisionRate(e, band);
   // Get the energy interval.
-  if (e <= m_eHigh) {
+  if (e < m_eHigh) {
     // Linear binning
-    constexpr int iemax = Magboltz::nEnergySteps - 1;
-    const int iE = std::min(std::max(int(e / m_eStep), 0), iemax);
+    const int iE = int(e * m_eStepInv);
     if (level == 0) {
       rate *= m_cf[iE][0];
     } else {
@@ -599,14 +590,15 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
     int& level, double& e1, double& dx, double& dy, double& dz, 
     std::vector<std::pair<Particle, double> >& secondaries, int& ndxc,
     int& band) {
+  band = 0;
   ndxc = 0;
   if (e <= 0.) {
     std::cerr << m_className << "::ElectronCollision: Invalid energy.\n";
     return false;
   }
   // Check if the electron energy is within the currently set range.
-  if (e > m_eMax && m_useAutoAdjust) {
-    std::cerr << m_className << "::ElectronCollision:\n    Provided energy ("
+  if (e > m_eMax) {
+    std::cerr << m_className << "::ElectronCollision:\n    Requested energy ("
               << e << " eV) exceeds current energy range.\n"
               << "    Increasing energy range to " << 1.05 * e << " eV.\n";
     SetMaxElectronEnergy(1.05 * e);
@@ -615,28 +607,29 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
   // If necessary, update the collision rates table.
   if (!Update()) return false;
 
-  if (m_debug && band > 0) {
-    std::cerr << m_className << "::ElectronCollision: Band > 0.\n";
-  }
-
   double angCut = 1.;
   double angPar = 0.5;
 
-  if (e <= m_eHigh) {
+  if (e < m_eHigh) {
     // Linear binning
     // Get the energy interval.
-    constexpr int iemax = Magboltz::nEnergySteps - 1;
-    const int iE = std::min(std::max(int(e / m_eStep), 0), iemax);
+    const int iE = int(e * m_eStepInv);
 
     // Sample the scattering process.
     const double r = RndmUniform();
-    if (r <= m_cf[iE][0]) {
-      level = 0;
-    } else if (r >= m_cf[iE][m_nTerms - 1]) {
-      level = m_nTerms - 1;
-    } else {
-      const auto begin = m_cf[iE].cbegin();
-      level = std::lower_bound(begin, begin + m_nTerms, r) - begin;
+    level = 0;
+    if (r > m_cf[iE][0]) {
+      int iLow = 0;
+      int iUp = m_nTerms - 1;
+      while (iUp - iLow > 1) {
+        int iMid = (iLow + iUp) >> 1;
+        if (r < m_cf[iE][iMid]) {
+          iUp = iMid;
+        } else {
+          iLow = iMid;
+        }
+      } 
+      level = iUp;
     }
     // Get the angular distribution parameters.
     angCut = m_scatCut[iE][level];
@@ -648,13 +641,19 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
                             nEnergyStepsLog - 1);
     // Sample the scattering process.
     const double r = RndmUniform();
-    if (r <= m_cfLog[iE][0]) {
-      level = 0;
-    } else if (r >= m_cfLog[iE][m_nTerms - 1]) {
-      level = m_nTerms - 1;
-    } else {
-      const auto begin = m_cfLog[iE].cbegin();
-      level = std::lower_bound(begin, begin + m_nTerms, r) - begin;
+    level = 0;
+    if (r > m_cfLog[iE][0]) {
+      int iLow = 0;
+      int iUp = m_nTerms - 1;
+      while (iUp - iLow > 1) {
+        int iMid = (iLow + iUp) >> 1;
+        if (r < m_cfLog[iE][iMid]) {
+          iUp = iMid;
+        } else {
+          iLow = iMid;
+        }
+      }
+      level = iUp;
     }
     // Get the angular distribution parameters.
     angCut = m_scatCutLog[iE][level];
@@ -795,13 +794,12 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
   }
 
   const double s1 = m_rgas[igas];
-  const double s2 = (s1 * s1) / (s1 - 1.);
   const double theta0 = acos(ctheta0);
   const double arg = std::max(1. - s1 * loss / e, Small);
   const double d = 1. - ctheta0 * sqrt(arg);
 
   // Update the energy.
-  e1 = std::max(e * (1. - loss / (s1 * e) - 2. * d / s2), Small);
+  e1 = std::max(e * (1. - loss / (s1 * e) - 2. * d * m_s2[igas]), Small);
   double q = std::min(sqrt((e / e1) * arg) / s1, 1.);
   const double theta = asin(q * sin(theta0));
   double ctheta = cos(theta);
@@ -818,11 +816,7 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
   const double phi = TwoPi * RndmUniform();
   const double cphi = cos(phi);
   const double sphi = sin(phi);
-  if (argZ == 0.) {
-    dz = ctheta;
-    dx = cphi * stheta;
-    dy = sphi * stheta;
-  } else {
+  if (argZ > 0.) {
     const double a = stheta / argZ;
     const double dz1 = dz * ctheta + argZ * stheta * sphi;
     const double dy1 = dy * ctheta + a * (dx * cphi - dy * dz * sphi);
@@ -830,8 +824,11 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
     dz = dz1;
     dy = dy1;
     dx = dx1;
+  } else {
+    dz = ctheta;
+    dx = cphi * stheta;
+    dy = sphi * stheta;
   }
-
   return true;
 }
 
@@ -850,10 +847,10 @@ bool MediumMagboltz::GetDeexcitationProduct(const unsigned int i, double& t,
 
 double MediumMagboltz::GetPhotonCollisionRate(const double e) {
   if (e <= 0.) {
-    std::cerr << m_className << "::GetPhotonCollisionRate: Invalid  energy.\n";
+    std::cerr << m_className << "::GetPhotonCollisionRate: Invalid energy.\n";
     return m_cfTotGamma[0];
   }
-  if (e > m_eFinalGamma && m_useAutoAdjust) {
+  if (e > m_eFinalGamma) {
     std::cerr << m_className << "::GetPhotonCollisionRate:\n    Rate at " << e
               << " eV is not included in the current table.\n"
               << "    Increasing energy range to " << 1.05 * e << " eV.\n";
@@ -886,7 +883,7 @@ bool MediumMagboltz::GetPhotonCollision(const double e, int& type, int& level,
     std::cerr << m_className << "::GetPhotonCollision: Invalid energy.\n";
     return false;
   }
-  if (e > m_eFinalGamma && m_useAutoAdjust) {
+  if (e > m_eFinalGamma) {
     std::cerr << m_className << "::GetPhotonCollision:\n    Provided energy ("
               << e << " eV) exceeds current energy range.\n"
               << "    Increasing energy range to " << 1.05 * e << " eV.\n";
@@ -1304,6 +1301,7 @@ bool MediumMagboltz::Mixer(const bool verbose) {
   const double prefactor = dens * SpeedOfLight * sqrt(2. / ElectronMass);
 
   m_rgas.fill(1.);
+  m_s2.fill(0.);
 
   m_ionPot.fill(-1.);
   m_minIonPot = -1.;
@@ -1487,6 +1485,7 @@ bool MediumMagboltz::Mixer(const bool verbose) {
     m_scatModel[np] = kEl[1];
     const double r = 1. + 0.5 * e[1];
     m_rgas[iGas] = r;
+    m_s2[iGas] = (r - 1.) / (r * r);
     m_energyLoss[np] = 0.;
     m_description[np] = GetDescription(1, scrpt);
     m_csType[np] = nCsTypes * iGas + ElectronCollisionTypeElastic;

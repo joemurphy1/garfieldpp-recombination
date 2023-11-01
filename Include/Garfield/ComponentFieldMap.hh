@@ -152,11 +152,12 @@ class ComponentFieldMap : public Component {
     unsigned int matmap;
   };
   std::vector<Element> m_elements;
+  std::vector<int> m_elementIndices;
   // Degeneracy flags.
   std::vector<bool> m_degenerate;
   // Bounding boxes of the elements.
-  std::vector<std::array<float, 3> > m_bbMin;
-  std::vector<std::array<float, 3> > m_bbMax;
+  std::vector<std::array<double, 3> > m_bbMin;
+  std::vector<std::array<double, 3> > m_bbMax;
 
   std::vector<std::array<std::array<double, 3>, 4> > m_w12;
 
@@ -384,9 +385,9 @@ class ComponentFieldMap : public Component {
   static void Jacobian13(const std::array<double, 10>& xn,
                          const std::array<double, 10>& yn,
                          const std::array<double, 10>& zn,
-                         const double t, const double u,
-                         const double v, const double w, double& det,
-                         double jac[4][4]);
+                         const double fourt0, const double fourt1,
+                         const double fourt2, const double fourt3, 
+                         double& det, double jac[4][4]);
   /// Calculate Jacobian for a cube.
   void JacobianCube(const Element& element, const double t1, const double t2,
                     const double t3, TMatrixD*& jac,

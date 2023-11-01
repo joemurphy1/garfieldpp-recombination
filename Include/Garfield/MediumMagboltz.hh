@@ -38,10 +38,6 @@ class MediumMagboltz : public MediumGas {
   /// Get the highest photon energy in the table of scattering rates.
   double GetMaxPhotonEnergy() const { return m_eFinalGamma; }
 
-  /// Switch on/off the automatic adjustment of the max. energy when an
-  /// energy exceeding the present range is requested
-  void EnableEnergyRangeAdjustment(const bool on) { m_useAutoAdjust = on; }
-
   /// Switch on/off anisotropic scattering (enabled by default)
   void EnableAnisotropicScattering(const bool on = true) {
     m_useAnisotropic = on;
@@ -206,9 +202,10 @@ class MediumMagboltz : public MediumGas {
   double m_eMax;
   /// Energy spacing in the linear part of the collision rate tables.
   double m_eStep;
+  /// Inverse energy spacing.
+  double m_eStepInv;
   double m_eHigh, m_eHighLog;
   double m_lnStep;
-  bool m_useAutoAdjust = true;
 
   /// Flag enabling/disabling output of cross-section table to file
   bool m_useCsOutput = false;
@@ -216,6 +213,7 @@ class MediumMagboltz : public MediumGas {
   unsigned int m_nTerms = 0;
   /// Recoil energy parameter
   std::array<double, m_nMaxGases> m_rgas;
+  std::array<double, m_nMaxGases> m_s2;
   /// Opal-Beaty-Peterson splitting parameter [eV]
   std::array<double, Magboltz::nMaxLevels> m_wOpalBeaty;
   /// Green-Sawada splitting parameters [eV]
