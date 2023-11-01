@@ -1190,21 +1190,25 @@ void ComponentFieldMap::Jacobian13(
     const double fourt2, const double fourt3, 
     double& det, double jac[4][4]) {
 
-  const double j10 = (fourt0 - 1.) * xn[0] + fourt1 * xn[4] + fourt2 * xn[5] + fourt3 * xn[6];
-  const double j20 = (fourt0 - 1.) * yn[0] + fourt1 * yn[4] + fourt2 * yn[5] + fourt3 * yn[6];
-  const double j30 = (fourt0 - 1.) * zn[0] + fourt1 * zn[4] + fourt2 * zn[5] + fourt3 * zn[6];
+  const double fourt0m1 = fourt0 - 1.;
+  const double j10 = fourt0m1 * xn[0] + fourt1 * xn[4] + fourt2 * xn[5] + fourt3 * xn[6];
+  const double j20 = fourt0m1 * yn[0] + fourt1 * yn[4] + fourt2 * yn[5] + fourt3 * yn[6];
+  const double j30 = fourt0m1 * zn[0] + fourt1 * zn[4] + fourt2 * zn[5] + fourt3 * zn[6];
 
-  const double j11 = (fourt1 - 1.) * xn[1] + fourt0 * xn[4] + fourt2 * xn[7] + fourt3 * xn[8];
-  const double j21 = (fourt1 - 1.) * yn[1] + fourt0 * yn[4] + fourt2 * yn[7] + fourt3 * yn[8];
-  const double j31 = (fourt1 - 1.) * zn[1] + fourt0 * zn[4] + fourt2 * zn[7] + fourt3 * zn[8];
+  const double fourt1m1 = fourt1 - 1.;
+  const double j11 = fourt1m1 * xn[1] + fourt0 * xn[4] + fourt2 * xn[7] + fourt3 * xn[8];
+  const double j21 = fourt1m1 * yn[1] + fourt0 * yn[4] + fourt2 * yn[7] + fourt3 * yn[8];
+  const double j31 = fourt1m1 * zn[1] + fourt0 * zn[4] + fourt2 * zn[7] + fourt3 * zn[8];
 
-  const double j12 = (fourt2 - 1.) * xn[2] + fourt0 * xn[5] + fourt1 * xn[7] + fourt3 * xn[9];
-  const double j22 = (fourt2 - 1.) * yn[2] + fourt0 * yn[5] + fourt1 * yn[7] + fourt3 * yn[9];
-  const double j32 = (fourt2 - 1.) * zn[2] + fourt0 * zn[5] + fourt1 * zn[7] + fourt3 * zn[9];
+  const double fourt2m1 = fourt2 - 1.;
+  const double j12 = fourt2m1 * xn[2] + fourt0 * xn[5] + fourt1 * xn[7] + fourt3 * xn[9];
+  const double j22 = fourt2m1 * yn[2] + fourt0 * yn[5] + fourt1 * yn[7] + fourt3 * yn[9];
+  const double j32 = fourt2m1 * zn[2] + fourt0 * zn[5] + fourt1 * zn[7] + fourt3 * zn[9];
 
-  const double j13 = (fourt3 - 1.) * xn[3] + fourt0 * xn[6] + fourt1 * xn[8] + fourt2 * xn[9];
-  const double j23 = (fourt3 - 1.) * yn[3] + fourt0 * yn[6] + fourt1 * yn[8] + fourt2 * yn[9];
-  const double j33 = (fourt3 - 1.) * zn[3] + fourt0 * zn[6] + fourt1 * zn[8] + fourt2 * zn[9];
+  const double fourt3m1 = fourt3 - 1.;
+  const double j13 = fourt3m1 * xn[3] + fourt0 * xn[6] + fourt1 * xn[8] + fourt2 * xn[9];
+  const double j23 = fourt3m1 * yn[3] + fourt0 * yn[6] + fourt1 * yn[8] + fourt2 * yn[9];
+  const double j33 = fourt3m1 * zn[3] + fourt0 * zn[6] + fourt1 * zn[8] + fourt2 * zn[9];
 
   const double a1 = j10 * j21 - j20 * j11;
   const double a2 = j10 * j22 - j20 * j12;
