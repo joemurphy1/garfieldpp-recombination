@@ -92,6 +92,7 @@ class ComponentNeBem2d : public Component {
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,
                      int& status) override;
+  using Component::ElectricField;
   bool GetVoltageRange(double& vmin, double& vmax) override;
 
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin,

@@ -34,11 +34,8 @@ int main(int argc, char * argv[]) {
   outfile.open("triangle.txt", std::ios::out);
   outfile << "# " << nDiv << " divisions\n";
   for (int i = 1; i < 10; ++i) {
-    Medium* medium = nullptr;
-    double ex = 0., ey = 0., ez = 0., v = 0.; 
-    int stat;
     const double y = i * 0.1;
-    cmp.ElectricField(0, y, 0, ex, ey, ez, v, medium, stat);
+    const double v = cmp.ElectricPotential(0., y, 0.);
     outfile << y << "  " << std::setprecision(9) << v << "\n";
   }
   outfile.close();

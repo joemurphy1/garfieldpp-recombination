@@ -93,6 +93,7 @@ class ComponentUser : public Component {
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,
                      int& status) override;
+  using Component::ElectricField;
   bool GetVoltageRange(double& vmin, double& vmax) override;
   void MagneticField(const double x, const double y, const double z, double& bx,
                      double& by, double& bz, int& status) override;

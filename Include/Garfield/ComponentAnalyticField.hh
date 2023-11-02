@@ -351,7 +351,7 @@ class ComponentAnalyticField : public Component {
       }
     }
   }
-
+  using Component::ElectricField;
   bool GetVoltageRange(double& pmin, double& pmax) override;
 
   void WeightingField(const double x, const double y, const double z,

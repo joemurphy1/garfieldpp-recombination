@@ -48,6 +48,9 @@ wfield.AddStripOnPlaneY('z', d, hw - hp, hw + hp, 'strip')
 vField = ROOT.Garfield.ViewField()
 vField.SetComponent(fm)
 vField.PlotContour('v')
+# Probe the electric field.
+efield = fm.ElectricField(0., 0.5 * d, 0.) 
+print(efield)
 
 # Create a sensor. 
 sensor = ROOT.Garfield.Sensor()

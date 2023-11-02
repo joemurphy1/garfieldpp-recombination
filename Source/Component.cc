@@ -39,6 +39,25 @@ void Component::Clear() {
   Reset();
 }
 
+std::array<double, 3> Component::ElectricField(
+    const double x, const double y, const double z) {
+  double ex = 0., ey = 0., ez = 0.;
+  Medium* medium = nullptr;
+  int status = 0;
+  ElectricField(x, y, z, ex, ey, ez, medium, status);
+  std::array<double, 3> efield = {ex, ey, ez};
+  return efield;
+}
+
+double Component::ElectricPotential(const double x, const double y,
+                                    const double z) {
+  double ex = 0., ey = 0., ez = 0., v = 0.;
+  Medium* medium = nullptr;
+  int status = 0;
+  ElectricField(x, y, z, ex, ey, ez, v, medium, status);
+  return v;
+}
+
 void Component::WeightingField(const double /*x*/, const double /*y*/,
                                const double /*z*/, double& wx, double& wy,
                                double& wz, const std::string& /*label*/) {

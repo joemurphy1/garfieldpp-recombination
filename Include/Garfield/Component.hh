@@ -51,6 +51,12 @@ class Component {
   virtual void ElectricField(const double x, const double y, const double z,
                              double& ex, double& ey, double& ez, double& v,
                              Medium*& m, int& status) = 0;
+  /// Calculate the drift field [V/cm] at (x, y, z).
+  std::array<double, 3> ElectricField(const double x, const double y,
+                                      const double z); 
+  /// Calculate the (drift) electrostatic potential [V] at (x, y, z).
+  virtual double ElectricPotential(const double x, const double y,
+                                   const double z);
   /// Calculate the voltage range [V].
   virtual bool GetVoltageRange(double& vmin, double& vmax) = 0;
 

@@ -38,7 +38,7 @@ class ComponentParallelPlate : public Component {
   void ElectricField(const double x, const double y, const double z, double &ex,
                      double &ey, double &ez, double &v, Medium *&m,
                      int &status) override;
-
+  using Component::ElectricField;
   double WeightingPotential(const double x, const double y, const double z,
                             const std::string &label) override;
 

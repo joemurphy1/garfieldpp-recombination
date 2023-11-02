@@ -45,7 +45,7 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
     double v = 0.;
     ElectricField(x, y, z, ex, ey, ez, v, m, status);
   }
-
+  using Component::ElectricField;
   Medium* GetMedium(const double x, const double y, const double z) override;
 
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, 

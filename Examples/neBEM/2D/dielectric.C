@@ -19,8 +19,7 @@ int main(int argc, char * argv[]) {
 
   TApplication app("app", &argc, argv);
 
-  MediumMagboltz gas;
-  gas.SetComposition("ar", 100.);
+  MediumMagboltz gas("ar");;
 
   MediumPlastic plastic;
   plastic.SetDielectricConstant(5.);
@@ -63,13 +62,11 @@ int main(int argc, char * argv[]) {
   const double dx = 3. * delta / nSteps;
   for (int i = 1; i < nSteps; ++i) {
     const double x = xMin + i * dx;
-    Medium* medium = nullptr;
-    double ex = 0., ey = 0., ez = 0., p = 0.; 
-    int stat = 0;
-    cmp.ElectricField(x, 0., 0., ex, ey, ez, p, medium, stat);
+    const double epot = cmp.ElectricPotential(x, 0., 0.);
+    const std::array<double, 3> efld = cmp.ElectricField(x, 0., 0.);
     const double exact = x <= -xD ? f1 : x < xD ? f2 : f1;
-    outfile << x << "  " << p << "  " 
-            << std::setprecision(10) << ex << "  " << ey << "  " 
+    outfile << x << "  " << epot << "  " 
+            << std::setprecision(10) << efld[0] << "  " << efld[1] << "  " 
             << std::setprecision(10) << exact << std::endl;
   }
   outfile.close();
