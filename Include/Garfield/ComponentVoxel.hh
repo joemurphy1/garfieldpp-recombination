@@ -88,6 +88,7 @@ class ComponentVoxel : public Component {
                      int& status) override;
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, Medium*& m, int& status) override;
+  using Component::ElectricField;
   void WeightingField(const double x, const double y, const double z,
                       double& wx, double& wy, double& wz,
                       const std::string& label) override;

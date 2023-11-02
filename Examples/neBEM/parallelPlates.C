@@ -34,11 +34,10 @@ int main(int argc, char * argv[]) {
   nebem.EnableDebugging();
   nebem.Initialise();
  
-  Medium* medium = nullptr; 
-  double ex = 0., ey = 0., ez = 0., v = 0.;
-  int status = 0;
-  nebem.ElectricField(0, 0, 0, ex, ey, ez, v, medium, status);
-  std::printf("E = (%15.8f, %15.8f %15.8f), V = %15.8f, status = %d\n", ex, ey, ez, v, status);
+  const auto efield = nebem.ElectricField(0, 0, 0);
+  const double v = nebem.ElectricPotential(0, 0, 0);
+  std::printf("E = (%15.8f, %15.8f %15.8f), V = %15.8f\n", 
+              efield[0], efield[1], efield[2], v);
 
   ViewField fieldView;
   fieldView.SetComponent(&nebem);

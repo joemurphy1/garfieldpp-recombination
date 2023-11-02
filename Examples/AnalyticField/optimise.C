@@ -42,6 +42,10 @@ int main(int argc, char * argv[]) {
   cmp.OptimiseOnTrack({"q"}, "e", 125., -0.2, 1.9, 0.2, 1.9);
   // cmp.OptimiseOnGrid({"q"}, "e", 125., -0.2, 1.9, 0.2, 2.1);
 
+  const auto efield = cmp.ElectricField(0., 1.9, 0.);
+  const double emag = sqrt(efield[0] * efield[0] + efield[1] * efield[1]);
+  std::cout << "Drift field after optimisation: " << emag << "\n";
+
   ViewField view;
   view.SetComponent(&cmp);
   view.PlotProfile(0.05, 0., 0., 0.05, 2., 0., "e", false);

@@ -1,13 +1,12 @@
-# ########################################################################################
-# Use the code in this section for standalone projects
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 project(neBEM)
+
+#--- Find Garfield package
 if(NOT TARGET Garfield::Garfield)
   find_package(Garfield REQUIRED)
 endif()
-# ########################################################################################
 
-# ---Build executables-----------------------------------------------------------
+#--- Build executables
 add_executable(RPCbyneBEM RPCbyneBEM.C)
 target_link_libraries(RPCbyneBEM Garfield::Garfield)
 

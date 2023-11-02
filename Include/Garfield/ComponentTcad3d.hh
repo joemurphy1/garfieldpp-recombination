@@ -38,7 +38,7 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
                      int& status) override;
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, Medium*& m, int& status) override;
-
+  using Component::ElectricField;
   Medium* GetMedium(const double x, const double y, const double z) override;
 
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, 
