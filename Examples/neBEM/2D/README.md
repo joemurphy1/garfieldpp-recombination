@@ -1,5 +1,3 @@
-# neBEM 2D examples
-
 This folder contains three simple examples illustrating the two-dimensional version of the neBEM (nearly-exact Boundary Element Method) field solver implemented in the class `ComponentNeBem2d`. 
 
 The first example (`triangle`) considers a right-angled triangle with an altitude of 1 cm. The hypothenuse is grounded and the legs are kept at a fixed potential of 1 V.
