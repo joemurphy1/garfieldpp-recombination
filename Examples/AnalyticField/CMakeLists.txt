@@ -5,7 +5,10 @@ if(NOT TARGET Garfield::Garfield)
   find_package(Garfield REQUIRED)
 endif()
 
-# ---Define executables----------------------------------------------------------
+# --- Build executables.
+add_executable(mwpc mwpc.C)
+target_link_libraries(mwpc Garfield::Garfield)
+
 add_executable(gallery gallery.C)
 target_link_libraries(gallery Garfield::Garfield)
 
