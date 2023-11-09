@@ -6,10 +6,13 @@
 #include <iomanip>
 #include <iostream>
 
+#include <TGraph.h>
+
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/ViewBase.hh"
 
 namespace {
 
@@ -1076,6 +1079,40 @@ void Sensor::SetTransferFunction(Shaper &shaper) {
   m_fTransferTab.clear();
   m_fTransferSq = -1.;
   m_fTransferFFT.clear();
+}
+
+void Sensor::PlotTransferFunction() {
+
+  const std::string name = ViewBase::FindUnusedCanvasName("cTransferFunction");
+  std::vector<double> t;
+  std::vector<double> f;
+  for (unsigned int i = 0; i < m_nTimeBins; ++i) {
+    // Positive time part.
+    t.push_back(i * m_tStep);
+    f.push_back(GetTransferFunction(i * m_tStep));
+  }
+  if (t.empty()) return;
+  double fmin = *std::min_element(f.begin(), f.end());
+  double fmax = *std::max_element(f.begin(), f.end());
+  double df = fmax - fmin;
+  if (fabs(df) < 1.e-6) {
+    fmin -= 1.;
+    fmax += 1.;
+  } else {
+    fmax += 0.1 * df;
+    if (fmin < 0.) fmin -= 0.1 * df;
+  } 
+
+  TCanvas* cf = new TCanvas(name.c_str(), "Transfer Function");
+  cf->SetGridx();
+  cf->SetGridy();
+  cf->DrawFrame(0., fmin, m_nTimeBins * m_tStep, fmax,
+                ";time [ns]; transfer function");
+  TGraph graph;
+  graph.SetLineWidth(4);
+  graph.SetLineColor(kBlue + 2);
+  graph.DrawGraph(t.size(), t.data(), f.data(), "l");
+  gPad->Update();
 }
 
 double Sensor::InterpolateTransferFunctionTable(const double t) const {
