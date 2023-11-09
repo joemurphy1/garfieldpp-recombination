@@ -161,6 +161,8 @@ class Sensor {
   double GetTransferFunction(const double t);
   /// Print some information about the presently set transfer function.
   void PrintTransferFunction();
+  /// Plot the presently set transfer function.
+  void PlotTransferFunction();
   /// Cache integral and FFT of the transfer function
   /// instead of recomputing it at every call (default: on).
   void EnableTransferFunctionCache(const bool on = true) {
