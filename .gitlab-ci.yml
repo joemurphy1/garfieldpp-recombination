@@ -40,7 +40,8 @@ build-centos7:
 
 build-ubuntu:
   stage: build
-  image: rootproject/root:latest
+  #image: rootproject/root:latest
+  image: rootproject/root:6.28.10-ubuntu22.04
   script:
     - rm -rf build
     - mkdir build
