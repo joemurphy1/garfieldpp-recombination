@@ -152,9 +152,9 @@ class AvalancheMicroscopic {
   };
 
   struct Electron {
-    int status;                    ///< Status.
+    int status = 0;                ///< Status.
     std::vector<Point> path;       ///< Drift line.
-    double pathLength;             ///< Path length.
+    double pathLength = 0.;        ///< Path length.
   };
 
   const std::vector<Electron>& GetElectrons() const { return m_electrons; }

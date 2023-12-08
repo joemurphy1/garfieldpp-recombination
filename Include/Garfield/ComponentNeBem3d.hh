@@ -224,13 +224,13 @@ class ComponentNeBem3d : public Component {
     /// Z-coordinates of vertices
     std::vector<double> zv;
     /// Interface type.
-    int interface;
+    int interface = 0;
     /// Potential
-    double v;
+    double v = 0.;
     /// Charge
-    double q;
+    double q = 0.;
     /// Ratio of dielectric constants
-    double lambda;
+    double lambda = 0.;
     /// Target element size.
     double elementSize;
     /// Volumes.
@@ -255,17 +255,17 @@ class ComponentNeBem3d : public Component {
     /// Z-coordinates of vertices
     std::vector<double> zv;
     /// Interface type.
-    int interface;
+    int interface = 0;
     /// Ratio of dielectric permittivities.
-    double lambda;
+    double lambda = 0.;
     /// Collocation point.
     std::array<double, 3> collocationPoint;
     /// Boundary condition.
-    double bc;
+    double bc = 0.;
     /// Fixed charge density.
-    double assigned;
+    double assigned = 0.;
     /// Solution (accumulated charge).
-    double solution;
+    double solution = 0.;
   };
   /// List of elements.
   std::vector<Element> m_elements;

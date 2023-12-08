@@ -146,6 +146,7 @@ void SolidSphere::MakePanels(const int vol, const double r, const bool out,
       const double ctheta1 = cos(theta1);
       const double stheta1 = sin(theta1);
       Panel panel;
+      panel.colour = m_colour;
       // Corners of this parcel.
       if (j == 1) {
         const double xv0 = m_cX + r * cphi0 * ctheta0;

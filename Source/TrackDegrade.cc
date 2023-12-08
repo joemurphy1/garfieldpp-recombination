@@ -327,6 +327,7 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
           cluster.x = xp;
           cluster.y = yp;
           cluster.z = zp;
+	  cluster.t = tp;
           cluster.excitations.emplace_back(
             MakeExcitation(eExc, xp, yp, zp, tp));
           m_clusters.push_back(std::move(cluster)); 
