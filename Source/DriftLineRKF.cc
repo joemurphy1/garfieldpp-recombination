@@ -147,12 +147,12 @@ bool DriftLineRKF::DriftElectron(const double x0, const double y0,
   int status = 0;
   const bool ok = DriftLine({x0, y0, z0}, t0, Particle::Electron, 
                             t, x, status);
-  const size_t nPoints = t.size();
-  std::vector<double> ne(nPoints, 1.);
-  std::vector<double> ni(nPoints, 0.);
-  std::vector<double> nn(nPoints, 0.);
-  double scale = 1.;
   if (ok) {
+    const size_t nPoints = t.size();
+    std::vector<double> ne(nPoints, 1.);
+    std::vector<double> ni(nPoints, 0.);
+    std::vector<double> nn(nPoints, 0.);
+    double scale = 1.;
     if (m_doAvalanche) Avalanche(Particle::Electron, x, ne, ni, nn, scale);
     if (m_doSignal) {
       ComputeSignal(Particle::Electron, scale * m_scaleE, t, x, ne);
@@ -161,9 +161,12 @@ bool DriftLineRKF::DriftElectron(const double x0, const double y0,
       if (m_doIonTail) AddIonTail(t, x, ni, scale);
       if (m_doNegativeIonTail) AddNegativeIonTail(t, x, nn, scale);
     }
-  }
-  m_nE = scale * ne.back();
-  m_nI = scale * std::accumulate(ni.begin(), ni.end(), 0.);
+    m_nE = scale * ne.back();
+    m_nI = scale * std::accumulate(ni.begin(), ni.end(), 0.);
+  } else {
+    m_nE = 0.;
+    m_nI = 0.;
+  } 
   std::swap(m_x, x);
   std::swap(m_t, t);
   m_particle = Particle::Electron;
