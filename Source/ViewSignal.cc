@@ -107,7 +107,7 @@ void ViewSignal::PlotSignal(const std::string& label,
   if (totalT) {
     const auto hname = FindUnusedHistogramName("hSignal_");
     m_hSignal.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
-
+    m_hSignal->SetDirectory(nullptr);
     m_hSignal->SetLineColor(m_colTotal);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetSignal(label, i, 0);
@@ -145,8 +145,9 @@ void ViewSignal::PlotSignal(const std::string& label,
   }
 
   if (totalD) {
-    const auto hnamed = FindUnusedHistogramName("hDelayedSignal_");
-    m_hDelayedSignal.reset(new TH1D(hnamed.c_str(), "", nBins, t0, t1));
+    const auto hname = FindUnusedHistogramName("hDelayedSignal_");
+    m_hDelayedSignal.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
+    m_hDelayedSignal->SetDirectory(nullptr);
     m_hDelayedSignal->SetLineColor(m_colDelayed[3]);
     m_hDelayedSignal->SetLineStyle(7);
     m_hDelayedSignal->SetStats(0);
@@ -163,8 +164,9 @@ void ViewSignal::PlotSignal(const std::string& label,
   }
 
   if (totalP) {
-    const auto dnamed = FindUnusedHistogramName("hPromptCharge_");
-    m_hPromptSignal.reset(new TH1D(dnamed.c_str(), "", nBins, t0, t1));
+    const auto hname = FindUnusedHistogramName("hPromptSignal_");
+    m_hPromptSignal.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
+    m_hPromptSignal->SetDirectory(nullptr);
     m_hPromptSignal->SetLineColor(m_colPrompt[0]);
     m_hPromptSignal->SetLineStyle(2);
     m_hPromptSignal->SetStats(0);
@@ -184,6 +186,7 @@ void ViewSignal::PlotSignal(const std::string& label,
   if (electronT) {
     const auto hname = FindUnusedHistogramName("hSignalElectrons_");
     m_hSignalElectrons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
+    m_hSignalElectrons->SetDirectory(nullptr);
     m_hSignalElectrons->SetLineColor(m_colElectrons);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetElectronSignal(label, i);
@@ -194,27 +197,28 @@ void ViewSignal::PlotSignal(const std::string& label,
   }
 
   if (electronD) {
-    const auto hnamed = FindUnusedHistogramName("m_hDelayedSignalElectrons_");
-    m_hDelayedSignalElectrons.reset(
-        new TH1D(hnamed.c_str(), "", nBins, t0, t1));
-    m_hDelayedSignalElectrons->SetLineColor(m_colDelayed[4]);
-    m_hDelayedSignalElectrons->SetLineStyle(7);
-    m_hDelayedSignalElectrons->SetStats(0);
+    const auto hname = FindUnusedHistogramName("m_hDelayedElectrons_");
+    m_hDelayedElectrons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
+    m_hDelayedElectrons->SetDirectory(nullptr);
+    m_hDelayedElectrons->SetLineColor(m_colDelayed[4]);
+    m_hDelayedElectrons->SetLineStyle(7);
+    m_hDelayedElectrons->SetStats(0);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetDelayedElectronSignal(label, i);
       if (!std::isnan(sig) && std::abs(sig) < tol) {
-        m_hDelayedSignalElectrons->SetBinContent(i + 1, 0.);
+        m_hDelayedElectrons->SetBinContent(i + 1, 0.);
       } else {
-        m_hDelayedSignalElectrons->SetBinContent(i + 1, sig);
+        m_hDelayedElectrons->SetBinContent(i + 1, sig);
       }
     }
-    m_hDelayedSignalElectrons->SetLineWidth(lineThickness);
-    m_hDelayedSignalElectrons->DrawCopy("same");
+    m_hDelayedElectrons->SetLineWidth(lineThickness);
+    m_hDelayedElectrons->DrawCopy("same");
   }
 
   if (electronP) {
-    const auto dnamed = FindUnusedHistogramName("m_hPromptElectrons_");
-    m_hPromptElectrons.reset(new TH1D(dnamed.c_str(), "", nBins, t0, t1));
+    const auto hname = FindUnusedHistogramName("m_hPromptElectrons_");
+    m_hPromptElectrons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
+    m_hPromptElectrons->SetDirectory(nullptr);
     m_hPromptElectrons->SetLineColor(m_colPrompt[1]);
     m_hPromptElectrons->SetLineStyle(2);
     m_hPromptElectrons->SetStats(0);
@@ -235,6 +239,7 @@ void ViewSignal::PlotSignal(const std::string& label,
   if (ionT) {
     const auto hname = FindUnusedHistogramName("m_hSignalIons_");
     m_hSignalIons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
+    m_hSignalIons->SetDirectory(nullptr);
     m_hSignalIons->SetLineColor(m_colIons);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetIonSignal(label, i);
@@ -245,27 +250,29 @@ void ViewSignal::PlotSignal(const std::string& label,
   }
 
   if (ionD) {
-    const auto hnamed = FindUnusedHistogramName("m_hDelayedSignalIons_");
-    m_hDelayedSignalIons.reset(new TH1D(hnamed.c_str(), "", nBins, t0, t1));
-    m_hDelayedSignalIons->SetLineColor(m_colDelayed[5]);
-    m_hDelayedSignalIons->SetLineStyle(7);
-    m_hDelayedSignalIons->SetStats(0);
+    const auto hname = FindUnusedHistogramName("m_hDelayedIons_");
+    m_hDelayedIons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
+    m_hDelayedIons->SetDirectory(nullptr);
+    m_hDelayedIons->SetLineColor(m_colDelayed[5]);
+    m_hDelayedIons->SetLineStyle(7);
+    m_hDelayedIons->SetStats(0);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetDelayedIonSignal(label, i);
       if (!std::isnan(sig) && std::abs(sig) < tol) {
-        m_hDelayedSignalIons->SetBinContent(i + 1, 0.);
+        m_hDelayedIons->SetBinContent(i + 1, 0.);
       } else {
-        m_hDelayedSignalIons->SetBinContent(i + 1, sig);
+        m_hDelayedIons->SetBinContent(i + 1, sig);
       }
     }
-    m_hDelayedSignalIons->SetLineWidth(lineThickness);
-    m_hDelayedSignalIons->DrawCopy("same");
+    m_hDelayedIons->SetLineWidth(lineThickness);
+    m_hDelayedIons->DrawCopy("same");
   }
 
   if (ionP) {
     std::cerr << m_className << "::ionP.\n";
-    const auto dnamed = FindUnusedHistogramName("m_hPromptIons_");
-    m_hPromptIons.reset(new TH1D(dnamed.c_str(), "", nBins, t0, t1));
+    const auto hname = FindUnusedHistogramName("m_hPromptIons_");
+    m_hPromptIons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
+    m_hPromptIons->SetDirectory(nullptr);
     m_hPromptIons->SetLineColor(m_colPrompt[2]);
     m_hPromptIons->SetLineStyle(2);
     m_hPromptIons->SetStats(0);
@@ -301,7 +308,7 @@ void ViewSignal::PlotSignal(const std::string& label,
                     "l");
     }
     if (electronD) {
-      leg->AddEntry(m_hDelayedSignalElectrons.get(),
+      leg->AddEntry(m_hDelayedElectrons.get(),
                     "Electron delayed induced signal", "l");
     }
     if (ionT) leg->AddEntry(m_hSignalIons.get(), "Ion induced signal", "l");
@@ -309,7 +316,7 @@ void ViewSignal::PlotSignal(const std::string& label,
       leg->AddEntry(m_hPromptIons.get(), "Ion/hole prompt induced signal", "l");
     }
     if (ionD) {
-      leg->AddEntry(m_hDelayedSignalIons.get(), "Ion/hole delayed induced signal",
+      leg->AddEntry(m_hDelayedIons.get(), "Ion/hole delayed induced signal",
                     "l");
     }
     leg->Draw();

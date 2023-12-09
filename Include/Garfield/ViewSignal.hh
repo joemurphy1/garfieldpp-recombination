@@ -109,19 +109,14 @@ class ViewSignal : public ViewBase {
 
   // Histograms.
   std::unique_ptr<TH1D> m_hSignal;
+  std::unique_ptr<TH1D> m_hSignalElectrons;
+  std::unique_ptr<TH1D> m_hSignalIons;
   std::unique_ptr<TH1D> m_hPromptSignal;
   std::unique_ptr<TH1D> m_hPromptElectrons;
   std::unique_ptr<TH1D> m_hPromptIons;
-
-  std::unique_ptr<TH1D> m_hCharge;
-  std::unique_ptr<TH1D> m_hPromptCharge;
-  std::unique_ptr<TH1D> m_hDelayedCharge;
-
-  std::unique_ptr<TH1D> m_hSignalElectrons;
-  std::unique_ptr<TH1D> m_hSignalIons;
   std::unique_ptr<TH1D> m_hDelayedSignal;
-  std::unique_ptr<TH1D> m_hDelayedSignalElectrons;
-  std::unique_ptr<TH1D> m_hDelayedSignalIons;
+  std::unique_ptr<TH1D> m_hDelayedElectrons;
+  std::unique_ptr<TH1D> m_hDelayedIons;
 
   bool m_legend = false;
 
