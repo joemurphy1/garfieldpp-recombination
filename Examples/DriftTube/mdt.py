@@ -60,18 +60,12 @@ drift.SetGainFluctuationsPolya(0., 20000.)
 driftView = ROOT.Garfield.ViewDrift()
 cD = ROOT.TCanvas('cD', '', 600, 600)
 driftView.SetCanvas(cD)
-cellView = ROOT.Garfield.ViewCell()
 plotDrift = True
 if plotDrift:
   drift.EnablePlotting(driftView)
   track.EnablePlotting(driftView)
-  cellView.SetComponent(cmp)
-  cellView.SetCanvas(driftView.GetCanvas())
 
-signalView = ROOT.Garfield.ViewSignal()
 cS = ROOT.TCanvas('cS', '', 600, 600)
-signalView.SetCanvas(cS)
-signalView.SetSensor(sensor)
 plotSignal = True
 
 rTrack = 0.3
@@ -85,15 +79,16 @@ for j in range(nTracks):
   for cluster in track.GetClusters():
     for electron in cluster.electrons:
       drift.DriftElectron(electron.x, electron.y, electron.z, electron.t)
-    if plotDrift:
-      driftView.GetCanvas().Clear()
-      cellView.Plot2d()
-      driftView.Plot(True, False)
-      ROOT.gPad.Update()
+  if plotDrift:
+    cD.Clear()
+    cmp.PlotCell(cD)
+    driftView.Plot(True, False)
+    cD.Update()
   sensor.ConvoluteSignals()
   nt = ctypes.c_int(0)
   if sensor.ComputeThresholdCrossings(-2., 's', nt) == False:
     continue
   if plotSignal:
-    signalView.PlotSignal('s')
+    sensor.PlotSignal('s', cS)
+    cS.Update()
 

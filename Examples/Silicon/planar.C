@@ -19,7 +19,6 @@
 #include "Garfield/ViewMedium.hh"
 #include "Garfield/ViewDrift.hh"
 #include "Garfield/ViewField.hh"
-#include "Garfield/ViewSignal.hh"
 #include "Garfield/Plotting.hh"
 
 #include "Garfield/FundamentalConstants.hh"
@@ -127,13 +126,9 @@ int main(int argc, char * argv[]) {
  
   // Plot the signal if requested.
   constexpr bool plotSignal = true;
-  ViewSignal* signalView = nullptr;
   TCanvas* cSignal = nullptr;
   if (plotSignal) { 
     cSignal = new TCanvas("cSignal", "", 600, 600);
-    signalView = new ViewSignal();
-    signalView->SetCanvas(cSignal);
-    signalView->SetSensor(&sensor);
   }
 
   constexpr bool plotDrift = true;
@@ -174,7 +169,7 @@ int main(int argc, char * argv[]) {
       }
     }
     if (plotSignal) {
-      signalView->PlotSignal(label);
+      sensor.PlotSignal(label, cSignal);
       cSignal->Update();
       gSystem->ProcessEvents();
     }
