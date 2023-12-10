@@ -4,12 +4,9 @@ import Garfield
 si = ROOT.Garfield.MediumSilicon()
 si.SetTemperature(293.)
 
-mediumView = ROOT.Garfield.ViewMedium()
+ROOT.Garfield.plottingEngine.SetDefaultStyle()
 cM = ROOT.TCanvas('cM', '', 600, 600)
-mediumView.SetCanvas(cM)
-mediumView.SetMedium(si)
-mediumView.PlotElectronVelocity('e')
-mediumView.PlotHoleVelocity('e', True)
+si.PlotVelocity("eh", cM)
 
 # Thickness of the silicon [cm]
 d = 100.e-4

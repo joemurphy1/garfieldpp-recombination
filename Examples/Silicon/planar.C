@@ -16,7 +16,6 @@
 #include "Garfield/TrackHeed.hh"
 #include "Garfield/AvalancheMC.hh"
 
-#include "Garfield/ViewMedium.hh"
 #include "Garfield/ViewDrift.hh"
 #include "Garfield/ViewField.hh"
 #include "Garfield/Plotting.hh"
@@ -33,14 +32,13 @@ int main(int argc, char * argv[]) {
   // Define the medium.
   MediumSilicon si;
   si.SetTemperature(293.);
-  constexpr bool plotVelocity = true;
-  if (plotVelocity) {
-    ViewMedium* mediumView = new ViewMedium();
-    mediumView->SetMedium(&si);
-    mediumView->PlotElectronVelocity('e');
-    mediumView->PlotHoleVelocity('e', true);
-  }
 
+  // Make a plot of the drift velocities.
+  plottingEngine.SetDefaultStyle();
+  constexpr bool plotVelocity = true;
+  if (plotVelocity) si.PlotVelocity("eh", new TCanvas("cM", "", 600, 600));
+  si.PlotAlphaEta("eh", new TCanvas("cM1", "", 600, 600));
+ 
   // Sensor thickness [cm]
   constexpr double d = 100.e-4;
 

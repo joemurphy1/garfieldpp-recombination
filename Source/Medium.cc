@@ -9,6 +9,7 @@
 #include "Garfield/Medium.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/ViewMedium.hh"
 
 namespace {
 
@@ -155,6 +156,41 @@ void Medium::SetMassDensity(const double rho) {
   }
   m_density = rho / (AtomicMassUnit * m_a);
   m_isChanged = true;
+}
+
+void Medium::PlotVelocity(const std::string& opt, TPad* pad) {
+  ViewMedium view;
+  view.SetMedium(this);
+  if (pad) view.SetCanvas(pad);
+  view.PlotVelocity(opt, 'e');
+}
+
+void Medium::PlotDiffusion(const std::string& opt, TPad* pad) {
+  ViewMedium view;
+  view.SetMedium(this);
+  if (pad) view.SetCanvas(pad);
+  view.PlotDiffusion(opt, 'e');
+}
+
+void Medium::PlotTownsend(const std::string& opt, TPad* pad) {
+  ViewMedium view;
+  view.SetMedium(this);
+  if (pad) view.SetCanvas(pad);
+  view.PlotTownsend(opt, 'e');
+}
+
+void Medium::PlotAttachment(const std::string& opt, TPad* pad) {
+  ViewMedium view;
+  view.SetMedium(this);
+  if (pad) view.SetCanvas(pad);
+  view.PlotAttachment(opt, 'e');
+}
+
+void Medium::PlotAlphaEta(const std::string& opt, TPad* pad) {
+  ViewMedium view;
+  view.SetMedium(this);
+  if (pad) view.SetCanvas(pad);
+  view.PlotAlphaEta(opt, 'e');
 }
 
 bool Medium::Velocity(const double ex, const double ey, const double ez,

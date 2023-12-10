@@ -48,6 +48,28 @@ class ViewMedium : public ViewBase {
   void EnableExport(const std::string& txtfile) { m_outfile = txtfile; }
   void DisableExport() { m_outfile = ""; }
 
+  /** Plot the drift velocity components.
+    * \param option string indicating the carriers for which to plot 
+    *        the drift velocity
+    *   - "e": electrons,
+    *   - "h": holes,
+    *   - "i": ions 
+    *         Options can be concatenated (e. g. "ei", "eh"). 
+    * \param xaxis abscissa.
+    *   - 'e': electric field, 
+    *   - 'b': magnetic field, 
+    *   - 'a': angle between E and B.
+    */
+  void PlotVelocity(const std::string& carriers, const char xaxis);
+  /// Plot the transverse and longitudinal diffusion coefficients.
+  void PlotDiffusion(const std::string& carriers, const char xaxis);
+  /// Plot the Townsend coefficient. 
+  void PlotTownsend(const std::string& carriers, const char xaxis);
+  /// Plot the attachment coefficient. 
+  void PlotAttachment(const std::string& carriers, const char xaxis);
+  /// Plot Townsend and attachment coefficients.
+  void PlotAlphaEta(const std::string& carriers, const char xaxis);
+
   /** Plot the drift velocity components of electrons in the medium.
     * \param xaxis abscissa.
     *   - 'e': electric field, 

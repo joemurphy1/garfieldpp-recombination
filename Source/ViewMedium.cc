@@ -284,7 +284,9 @@ void ViewMedium::Draw() {
   const double ySizeNDC = ySize / (gPad->GetY2() - gPad->GetY1());
 
   double xLabel = 0., yLabel = 1.;
-  if (!gPad->PlaceBox(&latex, xSizeNDC, nLabels * ySizeNDC, xLabel, yLabel)) {
+  constexpr bool autoPlace = false;
+  if (!autoPlace || 
+      !gPad->PlaceBox(&latex, xSizeNDC, nLabels * ySizeNDC, xLabel, yLabel)) {
     // Auto-placement failed.
     const double lm = gPad->GetLeftMargin();
     const double rm = 1. - gPad->GetRightMargin();
@@ -581,6 +583,77 @@ void ViewMedium::PlotDiffusion(const Axis xaxis, const Charge charge,
     m_yGraph.push_back(std::move(ygr[i]));
   }
   Draw();
+}
+
+void ViewMedium::PlotVelocity(const std::string& opt, const char xaxis) {
+
+  const auto ax = GetAxis(xaxis);
+  std::vector<Charge> carriers;
+  if (opt.find('e') != std::string::npos) carriers.push_back(Charge::Electron);
+  if (opt.find('h') != std::string::npos) carriers.push_back(Charge::Hole);
+  if (opt.find('i') != std::string::npos) carriers.push_back(Charge::Ion);
+  const size_t nC = carriers.size();
+  for (size_t i = 0; i < nC; ++i) {
+    const bool same = i > 0 ? true : false;
+    PlotVelocity(ax, carriers[i], same);
+  } 
+}
+
+void ViewMedium::PlotDiffusion(const std::string& opt, const char xaxis) {
+
+  const auto ax = GetAxis(xaxis);
+  std::vector<Charge> carriers;
+  if (opt.find('e') != std::string::npos) carriers.push_back(Charge::Electron);
+  if (opt.find('h') != std::string::npos) carriers.push_back(Charge::Hole);
+  if (opt.find('i') != std::string::npos) carriers.push_back(Charge::Ion);
+  const size_t nC = carriers.size();
+  for (size_t i = 0; i < nC; ++i) {
+    const bool same = i > 0 ? true : false;
+    PlotDiffusion(ax, carriers[i], same);
+  } 
+}
+
+void ViewMedium::PlotTownsend(const std::string& opt, const char xaxis) {
+
+  const auto ax = GetAxis(xaxis);
+  std::vector<Charge> carriers;
+  if (opt.find('e') != std::string::npos) carriers.push_back(Charge::Electron);
+  if (opt.find('h') != std::string::npos) carriers.push_back(Charge::Hole);
+  if (opt.find('i') != std::string::npos) carriers.push_back(Charge::Ion);
+  const size_t nC = carriers.size();
+  for (size_t i = 0; i < nC; ++i) {
+    const bool same = i > 0 ? true : false;
+    Plot(ax, carriers[i], Parameter::Townsend, same);
+  } 
+}
+
+void ViewMedium::PlotAttachment(const std::string& opt, const char xaxis) {
+
+  const auto ax = GetAxis(xaxis);
+  std::vector<Charge> carriers;
+  if (opt.find('e') != std::string::npos) carriers.push_back(Charge::Electron);
+  if (opt.find('h') != std::string::npos) carriers.push_back(Charge::Hole);
+  if (opt.find('i') != std::string::npos) carriers.push_back(Charge::Ion);
+  const size_t nC = carriers.size();
+  for (size_t i = 0; i < nC; ++i) {
+    const bool same = i > 0 ? true : false;
+    Plot(ax, carriers[i], Parameter::Attachment, same);
+  } 
+}
+
+void ViewMedium::PlotAlphaEta(const std::string& opt, const char xaxis) {
+
+  const auto ax = GetAxis(xaxis);
+  std::vector<Charge> carriers;
+  if (opt.find('e') != std::string::npos) carriers.push_back(Charge::Electron);
+  if (opt.find('h') != std::string::npos) carriers.push_back(Charge::Hole);
+  if (opt.find('i') != std::string::npos) carriers.push_back(Charge::Ion);
+  bool same = false;
+  for (const auto c : carriers) {
+    Plot(ax, c, Parameter::Townsend, same);
+    Plot(ax, c, Parameter::Attachment, true);
+    same = true;
+  } 
 }
 
 void ViewMedium::PlotVelocity(const Axis xaxis, const Charge charge,
