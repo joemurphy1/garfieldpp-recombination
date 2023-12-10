@@ -15,6 +15,7 @@
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/ViewBase.hh"
+#include "Garfield/ViewCell.hh"
 
 namespace {
 
@@ -684,6 +685,14 @@ void ComponentAnalyticField::PrintCell() {
     std::cout << "  The net charge on the wires is "
               << 1.e-3 * TwoPiEpsilon0 * sum << " pC/cm.\n";
   }
+}
+
+void ComponentAnalyticField::PlotCell(TPad* pad) {
+
+  ViewCell view;
+  view.SetComponent(this);
+  if (pad) view.SetCanvas(pad);
+  view.Plot2d();
 }
 
 bool ComponentAnalyticField::CrossedWire(
