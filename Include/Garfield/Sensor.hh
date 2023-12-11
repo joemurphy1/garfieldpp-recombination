@@ -11,6 +11,8 @@
 #include "Component.hh"
 #include "Shaper.hh"
 
+class TPad;
+
 namespace Garfield {
 
 /// %Sensor
@@ -241,9 +243,11 @@ class Sensor {
                  const std::vector<double>& ns, const int navg,
                  const bool useWeightingPotential = false);
 
+  /// Plot the induced signal.
+  void PlotSignal(const std::string& label, TPad* pad);
   /// Exporting induced signal to a csv file.
   void ExportSignal(const std::string& label, const std::string& filename,
-                    const bool chargeCariers = false);
+                    const bool chargeCariers = false) const;
 
   /// Add the induced charge from a charge carrier drift between two points.
   void AddInducedCharge(const double q, const double x0, const double y0,

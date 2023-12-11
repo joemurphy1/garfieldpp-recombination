@@ -16,10 +16,8 @@
 #include "Garfield/TrackHeed.hh"
 #include "Garfield/AvalancheMC.hh"
 
-#include "Garfield/ViewMedium.hh"
 #include "Garfield/ViewDrift.hh"
 #include "Garfield/ViewField.hh"
-#include "Garfield/ViewSignal.hh"
 #include "Garfield/Plotting.hh"
 
 #include "Garfield/FundamentalConstants.hh"
@@ -34,14 +32,13 @@ int main(int argc, char * argv[]) {
   // Define the medium.
   MediumSilicon si;
   si.SetTemperature(293.);
-  constexpr bool plotVelocity = true;
-  if (plotVelocity) {
-    ViewMedium* mediumView = new ViewMedium();
-    mediumView->SetMedium(&si);
-    mediumView->PlotElectronVelocity('e');
-    mediumView->PlotHoleVelocity('e', true);
-  }
 
+  // Make a plot of the drift velocities.
+  plottingEngine.SetDefaultStyle();
+  constexpr bool plotVelocity = true;
+  if (plotVelocity) si.PlotVelocity("eh", new TCanvas("cM", "", 600, 600));
+  si.PlotAlphaEta("eh", new TCanvas("cM1", "", 600, 600));
+ 
   // Sensor thickness [cm]
   constexpr double d = 100.e-4;
 
@@ -127,13 +124,9 @@ int main(int argc, char * argv[]) {
  
   // Plot the signal if requested.
   constexpr bool plotSignal = true;
-  ViewSignal* signalView = nullptr;
   TCanvas* cSignal = nullptr;
   if (plotSignal) { 
     cSignal = new TCanvas("cSignal", "", 600, 600);
-    signalView = new ViewSignal();
-    signalView->SetCanvas(cSignal);
-    signalView->SetSensor(&sensor);
   }
 
   constexpr bool plotDrift = true;
@@ -174,7 +167,7 @@ int main(int argc, char * argv[]) {
       }
     }
     if (plotSignal) {
-      signalView->PlotSignal(label);
+      sensor.PlotSignal(label, cSignal);
       cSignal->Update();
       gSystem->ProcessEvents();
     }

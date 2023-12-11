@@ -6,9 +6,7 @@
 #include <TROOT.h>
 #include <TApplication.h>
 
-#include "Garfield/ViewCell.hh"
 #include "Garfield/ViewDrift.hh"
-#include "Garfield/ViewSignal.hh"
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
@@ -96,27 +94,18 @@ int main(int argc, char * argv[]) {
   // drift.EnableIonTail();
  
   TCanvas* cD = nullptr;
-  ViewCell cellView;
   ViewDrift driftView;
   constexpr bool plotDrift = true;
   if (plotDrift) {
     cD = new TCanvas("cD", "", 600, 600);
-    cellView.SetCanvas(cD);
-    cellView.SetComponent(&cmp);
     driftView.SetCanvas(cD);
     drift.EnablePlotting(&driftView);
     track.EnablePlotting(&driftView);
   }
  
   TCanvas* cS = nullptr;
-  ViewSignal signalView;
   constexpr bool plotSignal = true;
-  if (plotSignal) {
-    cS = new TCanvas("cS", "", 600, 600);
-    signalView.SetCanvas(cS);
-    signalView.SetSensor(&sensor);
-    signalView.SetLabelY("signal [fC]");
-  } 
+  if (plotSignal) cS = new TCanvas("cS", "", 600, 600);
 
   const double rTrack = 0.3;
   const double x0 = rTrack;
@@ -132,7 +121,7 @@ int main(int argc, char * argv[]) {
     }
     if (plotDrift) {
       cD->Clear();
-      cellView.Plot2d();
+      cmp.PlotCell(cD);
       constexpr bool twod = true;
       constexpr bool drawaxis = false;
       driftView.Plot(twod, drawaxis);
@@ -140,7 +129,7 @@ int main(int argc, char * argv[]) {
     sensor.ConvoluteSignals();
     int nt = 0;
     if (!sensor.ComputeThresholdCrossings(-2., "s", nt)) continue;
-    if (plotSignal) signalView.PlotSignal("s");
+    if (plotSignal) sensor.PlotSignal("s", cS);
   }
 
   app.Run(kTRUE);

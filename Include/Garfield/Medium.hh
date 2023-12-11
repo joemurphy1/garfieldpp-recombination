@@ -7,6 +7,8 @@
 #include "FundamentalConstants.hh"
 #include "GarfieldConstants.hh"
 
+class TPad;
+
 namespace Garfield {
 
 /// Abstract base class for media.
@@ -86,6 +88,17 @@ class Medium {
   void SetFanoFactor(const double f) { m_fano = f; }
   /// Get the Fano factor.
   double GetFanoFactor() const { return m_fano; }
+
+  /// Plot the drift velocity as function of the electric field.
+  void PlotVelocity(const std::string& carriers, TPad* pad);
+  /// Plot the diffusion coefficients as function of the electric field.
+  void PlotDiffusion(const std::string& carriers, TPad* pad);
+  /// Plot the Townsend coefficient(s) as function of the electric field.
+  void PlotTownsend(const std::string& carriers, TPad* pad);
+  /// Plot the attachment coefficient(s) as function of the electric field.
+  void PlotAttachment(const std::string& carriers, TPad* pad);
+  /// Plot Townsend and attachment coefficients.
+  void PlotAlphaEta(const std::string& carriers, TPad* pad);
 
   // Transport parameters for electrons
   /// Drift velocity [cm / ns]

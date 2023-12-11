@@ -13,6 +13,7 @@
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/ViewBase.hh"
+#include "Garfield/ViewSignal.hh"
 
 namespace {
 
@@ -1756,8 +1757,19 @@ void Sensor::FFT(std::vector<double> &data, const bool inverse, const int nn) {
   }
 }
 
+void Sensor::PlotSignal(const std::string& label, TPad* pad) {
+
+  ViewSignal view;
+  view.SetSensor(this);
+  if (pad) view.SetCanvas(pad);
+  std::string optTotal = "t";
+  std::string optPrompt = "";
+  std::string optDelayed = "";
+  view.PlotSignal(label, optTotal, optPrompt, optDelayed); 
+}
+ 
 void Sensor::ExportSignal(const std::string &label, const std::string &name,
-                          const bool chargeCarriers) {
+                          const bool chargeCarriers) const {
   const double scale = ElementaryCharge / (m_nEvents * m_tStep);
   for (const auto &electrode : m_electrodes) {
     if (electrode.label != label) continue;

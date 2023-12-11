@@ -8,6 +8,8 @@
 #include "Component.hh"
 #include "FundamentalConstants.hh"
 
+class TPad;
+
 namespace Garfield {
 
 /// Semi-analytic calculation of two-dimensional configurations
@@ -117,6 +119,8 @@ class ComponentAnalyticField : public Component {
 
   /// Print all available information on the cell.
   void PrintCell();
+  /// Make a plot of the cell layout.
+  void PlotCell(TPad* pad);
 
   /// Add a point charge.
   void AddCharge(const double x, const double y, const double z,
