@@ -197,13 +197,11 @@ constexpr bool twod = true;
 constexpr bool drawaxis = false;
 driftView.Plot(twod, drawaxis);
 \end{lstlisting}
-
-Using the class \texttt{ViewSignal}, we plot the current induced on 
+and we plot the current induced on 
 the wire by the drift lines simulated in the previous step.
 \begin{lstlisting}
-ViewSignal signalView;
-signalView.SetSensor(&sensor);
-signalView.PlotSignal("s");
+TCanvas* cS = new TCanvas("cS", "", 600, 600);
+sensor.PlotSignal("s", cS);
 \end{lstlisting}
 
 \subsubsection{Ion tail}
@@ -232,11 +230,9 @@ inner hole diameter: 50\,\textmu{m}, pitch: 140\,\textmu{m})
 etched into the foil.
 \subsubsection{Field map}
 As a first step, we need to calculate the electric field in the GEM. 
-Currently this calculation has to be performed using an external field 
-solver like Ansys \cite{ANSYS}, Elmer \cite{Elmer}, or Comsol \cite{Comsol}.
-In this example, 
-we use Ansys, but the steps for importing field maps from other 
-programs are very similar.
+In this example, we use Ansys \cite{ANSYS} but the steps for importing 
+field maps from other finite-element solvers like
+Elmer \cite{Elmer} or Comsol \cite{Comsol} are very similar.
 
 In the following we assume that the output files resulting from the 
 Ansys run are located in the current working directory.
@@ -691,14 +687,10 @@ Plotting the drift lines can slow down the execution time quite a bit, so it is 
 
 \subsubsection{Retrieving the signal}
 After having simulated the charge carrier drift lines, 
-we can plot the induced current using the class \texttt{ViewSignal}.
+we can plot the induced current.
 \begin{lstlisting}
-ViewSignal signalView;
-signalView.SetSensor(&sensor);
-constexpr bool plotTotalSignal = true;
-constexpr bool plotElectronSignal = false;
-constexpr bool plotHoleSignal = false;
-signalView.PlotSignal("strip", plotTotalSignal, plotElectronSignal, plotHoleSignal);
+TCanvas* cSignal = new TCanvas("cSignal", "", 600, 600);
+sensor.PlotSignal("strip", cSignal);
 \end{lstlisting}
 
 To post-process the induced current pulse, one can convolute 

@@ -161,10 +161,23 @@ geoView.Plot2d();
 %\texttt{TGeoManager}. 
 
 The layout of an arrangement of wires, planes and tubes
-defined in \texttt{ComponentAnalyticField} 
-can be inspected using the class \texttt{ViewCell}.
+defined in \texttt{ComponentAnalyticField} can be visualized using 
+the member function
 \begin{lstlisting}
-// Create and setup the component.
+void PlotCell(TPad* pad);
+\end{lstlisting}
+of \texttt{ComponentAnalyticField}:
+\begin{lstlisting}
+// Create and set up the component.
+ComponentAnalyticField cmp;
+// ...
+TCanvas* canvas = new TCanvas("c", "", 600, 600);
+cmp.PlotCell(canvas); 
+\end{lstlisting}
+This function internally uses the class \texttt{ViewCell}.
+Instead of calling \texttt{PlotCell} one can also use \texttt{ViewCell} directly:
+\begin{lstlisting}
+// Create and set up the component.
 ComponentAnalyticField cmp;
 ... 
 // Create a viewer.
@@ -174,7 +187,12 @@ view.SetComponent(&cmp);
 // Make a two-dimensional plot of the cell layout.
 view.Plot2d();
 \end{lstlisting}
-Similarly, the function \texttt{ViewCell::Plot3d()} paints
+By default, \texttt{ViewCell} will use marker symbols to indicate the position of the wires (instead of drawing the wires to scale). 
+This behaviour can be switched on or off using the function
+\begin{lstlisting}
+ViewCell::EnableWireMarkers(const bool on);
+\end{lstlisting} 
+The function \texttt{ViewCell::Plot3d()} paints
 a three-dimensional view of the cell layout.
 
 \section{Field maps}

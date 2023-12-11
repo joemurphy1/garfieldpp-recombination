@@ -62,7 +62,26 @@ void Sensor::ClearSignal();
   to reset the signal to zero.
 \end{enumerate}
 
-For plotting the signal, the class \texttt{ViewSignal} can be used.
+The method 
+\begin{lstlisting}
+void Sensor::PlotSignal(const std::string& label, TPad* pad);
+\end{lstlisting}
+plots the (total) signal for the electrode with identifier \texttt{label} 
+on a pad.
+Internally, this method uses the class \texttt{ViewSignal}. 
+By default, the function
+\begin{lstlisting}
+void ViewSignal::PlotSignal(const std::string& label,
+                            const std::string& optTotal = "t",
+                            const std::string& optPrompt = "",
+                            const std::string& optDelayed = "",
+                            const bool same = false);
+\end{lstlisting} 
+produces the same plot as \texttt{Sensor::PlotSignal}. 
+The three option strings can be used for specifying the components of the 
+signal to be included in the plot. If \texttt{optTotal} is set to \texttt{tei}, the electron-induced signal, the signal induced by ions (or holes) and the sum of the two will be shown. Analogously, the option strings \texttt{optPrompt} and \texttt{optDelayed} define which components (if any) of the 
+prompt and delayed part of the signal should be shown. 
+
 As an illustration of the above recipe consider the following example. 
 \begin{lstlisting}
 // Electrode label
@@ -87,9 +106,8 @@ aval.SetSensor(&sensor);
 // Calculate some drift lines.
 ...
 // Plot the induced current.
-ViewSignal signalView;
-signalView.SetSensor(&sensor);
-signalView.PlotSignal(label);
+TCanvas* cS = new TCanvas("cS", "Induced current", 600, 600);
+sensor.PlotSignal(label, cS);
 \end{lstlisting}
 
 All three transport classes (\texttt{DriftLineRKF}, \texttt{AvalancheMC}, \texttt{AvalancheMicroscopic}) offer the choice 

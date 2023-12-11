@@ -210,39 +210,39 @@ The default settings are
 \end{itemize}
 
 \subsection{Visualization}
-For plotting the transport parameters, the class
-\texttt{ViewMedium} can be used. In the following example the 
-drift velocities of electrons and holes in silicon are plotted as a 
-function of the electric field.
+For plotting transport parameters as function of the electric field, 
+the member functions
+\begin{lstlisting}
+void PlotVelocity(const std::string& carriers, TPad* pad);
+void PlotDiffusion(const std::string& carriers, TPad* pad);
+void PlotTownsend(const std::string& carriers, TPad* pad);
+void PlotAttachment(const std::string& carriers, TPad* pad);
+void PlotAlphaEta(const std::string& carriers, TPad* pad);
+\end{lstlisting}
+of the class \texttt{Medium} can be used, where the option string 
+\texttt{carriers} indicates the charge carriers (\texttt{"e"}: electrons, \texttt{"i"}: ions, \texttt{"h"}: holes) for which to plot the requested 
+transport parameters. 
+The following example plots the drift velocity of electrons and holes in silicon as well as the Townsend and attachment coefficients.
+\begin{lstlisting}
+MediumSilicon si;
+TCanvas* c1 = new TCanvas("c1", "", 600, 600);
+si.PlotVelocity("eh", c1);
+TCanvas* c2 = new TCanvas("c2", "", 600, 600);
+si.PlotAlphaEta("eh", c2);
+\end{lstlisting} 
+
+Internally, the above functions use the class \texttt{ViewMedium}. 
+Using \texttt{ViewMedium} directly, another way to produce the first plot 
+in the above example would be:
 \begin{lstlisting}
 MediumSilicon si;
 ViewMedium view;
 view.SetMedium(&si);
-view.PlotElectronVelocity('e');
-view.PlotHoleVelocity('e', true);
+view.PlotVelocity("eh", 'e');
 \end{lstlisting}
+The second argument (of type \texttt{char}) of the function \texttt{ViewMedium::PlotVelocity} indicates the quantity to plot on the $x$-axis. 
+Valid options are \texttt{'e'} (electric field), \texttt{'b'} (magnetic field) and \texttt{'a'} (angle between electric and magnetic field). 
 
-The following functions for visualizing transport parameters 
-are currently implemented in \texttt{ViewMedium}.
-\begin{lstlisting}
-void PlotElectronVelocity(const char xaxis, const bool same = false);
-void PlotHoleVelocity(const char xaxis, const bool same = false);
-void PlotIonVelocity(const char xaxis, const bool same = false);
-void PlotElectronDiffusion(const char xaxis, const bool same = false);
-void PlotHoleDiffusion(const char xaxis, const bool same = false);
-void PlotIonDiffusion(const char xaxis, const bool same = false);
-void PlotElectronTownsend(const char xaxis, const bool same = false);
-void PlotHoleTownsend(const char xaxis, const bool same = false);
-void PlotElectronAttachment(const char xaxis, const bool same = false);
-void PlotHoleAttachment(const char xaxis, const bool same = false);
-void PlotElectronLorentzAngle(const char xaxis, const bool same = false);
-\end{lstlisting}
-\begin{description}
-  \item[xaxis] quantity to plot on the $x$-axis (\texttt{'e'}: electric field, 
-  \texttt{'b'}: magnetic field, \texttt{'a'}: angle),
-  \item[same] flag whether to start a new plot (\texttt{false}) or to add the 
-plot to the existing ones.
-\end{description}
 By default, \texttt{ViewMedium} will try to determine the range of the 
 $x$ axis based on the grid of electric fields, magnetic fields, 
 and angles, and the range of the $y$ axis based on the 
@@ -259,6 +259,18 @@ void SetRangeB(const double bmin, const double bmax, const bool logscale);
 void SetRangeA(const double amin, const double amax, const bool logscale);
 void SetRangeY(const double ymin, const double ymax, const bool logscale);
 \end{lstlisting}
+When making a plot as function of the electric field, the magnetic field 
+and angle can be set using
+\begin{lstlisting}
+void SetMagneticField(const double bfield);
+void SetAngle(const double angle);
+\end{lstlisting}
+Similarly, the electric field to be used when making a plot as 
+function of magnetic field or angle can be set using
+\begin{lstlisting}
+void SetElectricField(const double efield);
+\end{lstlisting}
+
 The (ROOT) colours with which to draw the graphs/curves and the labels
 to be used to identify them can be customized using
 \begin{lstlisting}
@@ -274,7 +286,7 @@ void EnableExport(const std::string& txtfile);
   \item[txtfile] name of the output text file
 \end{description}
 is called before one of the \texttt{Plot..} functions, the 
-plot data will be saved to a text file.
+plot data points will be saved to a text file.
 
 %\section{Electron scattering rates}
 %For calculating electron drift lines using ``microscopic tracking'' 
@@ -413,7 +425,8 @@ where $I$ is the ionisation potential of the gas.
 
 The \texttt{Data} directory of the project includes a number of text files  
 (\textit{e.~g.} \texttt{IonMobility\_Ar+\_Ar.txt} for Ar\(^{+}\) ions in argon) 
-with ion mobility data. More precisely, the files contain
+with ion mobility data. When building the project, these files are copied to the folder \texttt{share/Garfield/Data/} of the install directory. 
+More precisely, the files contain
 a table of reduced electric fields \(E/N\) and reduced mobilities.
 The reduced electric fields are given in units of   
 Td\footnote{1\,Td = 10\(^{-17}\) V\,cm\(^{2}\)} (Townsend) and the mobility values 
