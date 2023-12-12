@@ -38,8 +38,7 @@ int main(int argc, char * argv[]) {
   Sensor sensor;
   sensor.AddComponent(&cmp);
 
-  TrackDegrade track;
-  track.SetSensor(&sensor);
+  TrackDegrade track(&sensor);
   track.SetBetaGamma(3.);
   track.Initialise(&gas, true);
   for (unsigned int i = 0; i < 1000; ++i) {

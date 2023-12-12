@@ -81,15 +81,13 @@ int main(int argc, char * argv[]){
   sensor.SetTimeWindow(0., tStep, nTimeBins);
 
   // We use microscopic tracking for simulating the electron avalanche.
-  AvalancheMicroscopic aval;
-  aval.SetSensor(&sensor); 
+  AvalancheMicroscopic aval(&sensor);
   
   // Simulate an ionizing particle (negative pion) using Heed.
-  TrackHeed track;
+  TrackHeed track(&sensor);
   track.SetParticle("pi-");
   constexpr double momentum = 300.e6; // [eV / c]
   track.SetMomentum(momentum);
-  track.SetSensor(&sensor);
   track.EnableMagneticField();
   // track.EnableElectricField();
 

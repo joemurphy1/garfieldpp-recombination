@@ -14,8 +14,10 @@ class TrackSimple : public Track {
     double energy;
   };
 
+  /// Default constructor
+  TrackSimple() : TrackSimple(nullptr) {}
   /// Constructor
-  TrackSimple();
+  TrackSimple(Sensor* sensor);
   /// Destructor
   virtual ~TrackSimple() {}
 

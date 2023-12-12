@@ -21,8 +21,10 @@ class TrackBichsel : public Track {
     double energy;
   };
 
+  /// Default constructor
+  TrackBichsel() : TrackBichsel(nullptr) {}
   /// Constructor
-  TrackBichsel();
+  TrackBichsel(Sensor* sensor);
   /// Destructor
   virtual ~TrackBichsel() {}
 

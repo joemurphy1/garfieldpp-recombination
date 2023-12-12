@@ -45,18 +45,15 @@ int main(int argc, char *argv[]) {
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
  
   // Read the TRIM output file. 
-  TrackTrim tr;
+  TrackTrim tr(&sensor);
   const std::string filename = "EXYZ.txt";
   // Import the first 100 ions.
   if (!tr.ReadFile(filename, 100)) {
     std::cerr << "Reading TRIM EXYZ file failed.\n";
     return 1;
   }
-  // Connect the track to a sensor.
-  tr.SetSensor(&sensor);
 
-  DriftLineRKF drift;
-  drift.SetSensor(&sensor);
+  DriftLineRKF drift(&sensor);
   drift.SetMaximumStepSize(10.e-4);
 
   // Plot the track and the drift lines.

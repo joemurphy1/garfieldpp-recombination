@@ -45,8 +45,8 @@ Garfield::TrackDegrade::Excitation MakeExcitation(
 
 namespace Garfield {
 
-TrackDegrade::TrackDegrade() : Track("Degrade") {
-
+TrackDegrade::TrackDegrade(Sensor* sensor) : Track("Degrade") {
+  m_sensor = sensor;
   m_q = -1;
   m_spin = 1;
   m_mass = ElectronMass;

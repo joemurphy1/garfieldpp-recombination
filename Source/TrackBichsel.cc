@@ -23,7 +23,8 @@ bool IsComment(const std::string& line) {
 
 namespace Garfield {
 
-TrackBichsel::TrackBichsel() : Track("Bichsel") {
+TrackBichsel::TrackBichsel(Sensor* sensor) : Track("Bichsel") {
+  m_sensor = sensor;
   Initialise();
 }
 

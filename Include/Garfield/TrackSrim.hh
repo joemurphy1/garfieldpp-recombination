@@ -10,8 +10,10 @@ namespace Garfield {
 
 class TrackSrim : public Track {
  public:
+  /// Default constructor
+  TrackSrim() : TrackSrim(nullptr) {}
   /// Constructor
-  TrackSrim();
+  TrackSrim(Sensor* sensor);
   /// Destructor
   virtual ~TrackSrim() {}
 

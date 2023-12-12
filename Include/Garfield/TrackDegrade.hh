@@ -38,8 +38,10 @@ class TrackDegrade : public Track {
     std::vector<Excitation> excitations;
   };
 
+  /// Default constructor
+  TrackDegrade() : TrackDegrade(nullptr) {}
   /// Constructor
-  TrackDegrade();
+  TrackDegrade(Sensor* sensor);
   /// Destructor
   virtual ~TrackDegrade() {}
 

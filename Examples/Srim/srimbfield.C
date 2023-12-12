@@ -38,10 +38,8 @@ int main(int argc, char *argv[]) {
   Sensor sensor;
   sensor.AddComponent(&cmp);
   
-  // Create a track class.
-  TrackSrim tr;
-  // Connect the track to a sensor.
-  tr.SetSensor(&sensor);
+  // Create a track class and connect it to a sensor.
+  TrackSrim tr(&sensor);
   // Read SRIM output from file.
   const std::string file = "Alpha_in_Ar.txt";
   if (!tr.ReadFile(file)) {

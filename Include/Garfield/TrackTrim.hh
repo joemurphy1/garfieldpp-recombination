@@ -13,8 +13,10 @@ namespace Garfield {
 
 class TrackTrim : public Track {
  public:
+  /// Default constructor
+  TrackTrim() : TrackTrim(nullptr) {}
   /// Constructor
-  TrackTrim();
+  TrackTrim(Sensor* sensor);
   /// Destructor
   virtual ~TrackTrim() {}
 

@@ -35,10 +35,8 @@ int main(int argc, char *argv[]) {
   Sensor sensor;
   sensor.AddComponent(&cmp);
   
-  // Create a track class.
-  TrackTrim tr;
-  // Connect the track to a sensor.
-  tr.SetSensor(&sensor);
+  // Create a track class and connect it to a sensor.
+  TrackTrim tr(&sensor);
   // Read the TRIM output file.
   const std::string filename = "EXYZ.txt";
   // Import 100 ions, skip the first 200 in the list.

@@ -87,7 +87,8 @@ double Speed(const double ekin, const double mass) {
 
 namespace Garfield {
 
-TrackTrim::TrackTrim() : Track("Trim") { 
+TrackTrim::TrackTrim(Sensor* sensor) : Track("Trim") {
+  m_sensor = sensor; 
   m_q = 1.;
 }
 

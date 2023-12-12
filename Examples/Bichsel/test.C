@@ -38,9 +38,8 @@ int main(int argc, char * argv[]) {
   Sensor sensor;
   sensor.AddComponent(&cmp);
 
-  TrackBichsel track;
+  TrackBichsel track(&sensor);
   track.EnableDebugging();
-  track.SetSensor(&sensor);
   track.SetParticle("pi");
   track.SetBetaGamma(10.);
   track.Initialise();
