@@ -46,44 +46,40 @@ int main(int argc, char* argv[]) {
   const double axis_z = 0.25 + lem_th / 2 + lem_cpth;
 
 
-  // Define the medium.
-  MediumMagboltz* gas = new MediumMagboltz();
+  // Define the medium (Ar/CO2 70:30).
+  MediumMagboltz gas("ar", 70., "co2", 30.);
   // Set the temperature (K)
-  gas->SetTemperature(293.15);  
+  gas.SetTemperature(293.15);  
   // Set the pressure (Torr)
-  gas->SetPressure(740.);       
-  // Specify the gas mixture (Ar/CO2 70:30)
-  gas->SetComposition("ar", 70., "co2", 30.);  
+  gas.SetPressure(740.);       
 
   // Import an Elmer-created field map.
-  ComponentElmer* elm = new ComponentElmer(
+  ComponentElmer elm(
       "gemcell/mesh.header", "gemcell/mesh.elements", "gemcell/mesh.nodes",
       "gemcell/dielectrics.dat", "gemcell/gemcell.result", "cm");
-  elm->EnablePeriodicityX();
-  elm->EnableMirrorPeriodicityY();
-  elm->SetGas(gas);
+  elm.EnablePeriodicityX();
+  elm.EnableMirrorPeriodicityY();
+  elm.SetGas(&gas);
   // Import the weighting field for the readout electrode.
-  // elm->SetWeightingField("gemcell/gemcell_WTlel.result", "wtlel");
+  // elm.SetWeightingField("gemcell/gemcell_WTlel.result", "wtlel");
 
   // Set up a sensor object.
-  Sensor* sensor = new Sensor();
-  sensor->AddComponent(elm);
-  sensor->SetArea(-axis_x, -axis_y, -axis_z, axis_x, axis_y, axis_z);
-  // sensor->AddElectrode(elm, "wtlel");
+  Sensor sensor;
+  sensor.AddComponent(&elm);
+  sensor.SetArea(-axis_x, -axis_y, -axis_z, axis_x, axis_y, axis_z);
+  // sensor.AddElectrode(elm, "wtlel");
   // Set the signal binning.
   const double tEnd = 500.0;
   const int nsBins = 500;
-  // sensor->SetTimeWindow(0., tEnd / nsBins, nsBins);
+  // sensor.SetTimeWindow(0., tEnd / nsBins, nsBins);
 
   // Create an avalanche object
-  AvalancheMicroscopic* aval = new AvalancheMicroscopic();
-  aval->SetSensor(sensor);
-  aval->SetCollisionSteps(100);
+  AvalancheMicroscopic aval(&sensor);
 
   // Set up the object for drift line visualization.
-  ViewDrift* viewDrift = new ViewDrift();
-  viewDrift->SetArea(-axis_x, -axis_y, -axis_z, axis_x, axis_y, axis_z);
-  aval->EnablePlotting(viewDrift);
+  ViewDrift viewDrift;
+  viewDrift.SetArea(-axis_x, -axis_y, -axis_z, axis_x, axis_y, axis_z);
+  aval.EnablePlotting(&viewDrift, 100);
 
   // Set the electron start parameters.
   // Starting z position for electron drift
@@ -93,9 +89,9 @@ int main(int argc, char* argv[]) {
   double xi = ri * cos(thetai);
   double yi = ri * sin(thetai);
   // Calculate the avalanche.
-  aval->AvalancheElectron(xi, yi, zi, 0., 0., 0., 0., 0.);
+  aval.AvalancheElectron(xi, yi, zi, 0., 0., 0., 0., 0.);
   std::cout << "... avalanche complete with "
-            << aval->GetNumberOfElectronEndpoints() << " electron tracks.\n";
+            << aval.GetNumberOfElectronEndpoints() << " electron tracks.\n";
 
   // Extract the calculated signal.
   double bscale = tEnd / nsBins;  // time per bin
@@ -112,7 +108,7 @@ int main(int argc, char* argv[]) {
   //  The total signal is then the integral over all bins multiplied by the bin
   // width in ns.
   for (int i = 0; i < nsBins; i++) {
-    double wt = sensor->GetSignal("wtlel", i) / ElementaryCharge;
+    double wt = sensor.GetSignal("wtlel", i) / ElementaryCharge;
     sum += wt;
     hS->Fill(i * bscale, wt);
     hInt->Fill(i * bscale, sum);
@@ -128,7 +124,7 @@ int main(int argc, char* argv[]) {
   if (plotSignal) {
     TCanvas* cSignal = new TCanvas("signal", "Signal");
     ViewSignal* vSignal = new ViewSignal();
-    vSignal->SetSensor(sensor);
+    vSignal->SetSensor(&sensor);
     vSignal->SetCanvas(cSignal);
     vSignal->PlotSignal("wtlel");
   }
@@ -139,7 +135,7 @@ int main(int argc, char* argv[]) {
   const bool plotContours = false;
   if (plotContours) {
     ViewField* vf = new ViewField();
-    vf->SetSensor(sensor);
+    vf->SetSensor(&sensor);
     vf->SetCanvas(cGeom);
     vf->SetArea(-axis_x, -axis_y, axis_x, axis_y);
     vf->SetNumberOfContours(40);
@@ -149,24 +145,23 @@ int main(int argc, char* argv[]) {
   }
 
   // Set up the object for FE mesh visualization.
-  ViewFEMesh* vFE = new ViewFEMesh();
-  vFE->SetArea(-axis_x, -axis_z, -axis_y, axis_x, axis_z, axis_y);
-  vFE->SetCanvas(cGeom);
-  vFE->SetComponent(elm);
-  vFE->SetPlane(0, -1, 0, 0, 0, 0);
-  vFE->SetFillMesh(true);
-  vFE->SetColor(1, kGray);
-  vFE->SetColor(2, kYellow + 3);
-  vFE->SetColor(3, kYellow + 3);
+  ViewFEMesh vFE;
+  vFE.SetArea(-axis_x, -axis_z, -axis_y, axis_x, axis_z, axis_y);
+  vFE.SetCanvas(cGeom);
+  vFE.SetComponent(&elm);
+  vFE.SetPlane(0, -1, 0, 0, 0, 0);
+  vFE.SetFillMesh(true);
+  vFE.SetColor(1, kGray);
+  vFE.SetColor(2, kYellow + 3);
+  vFE.SetColor(3, kYellow + 3);
   if (!plotContours) {
-    vFE->EnableAxes();
-    vFE->SetXaxisTitle("x (cm)");
-    vFE->SetYaxisTitle("z (cm)");
-    vFE->SetViewDrift(viewDrift);
-    vFE->Plot();
+    vFE.EnableAxes();
+    vFE.SetXaxisTitle("x (cm)");
+    vFE.SetYaxisTitle("z (cm)");
+    vFE.SetViewDrift(&viewDrift);
+    vFE.Plot();
   }
 
-  app.Run(kTRUE);
-
+  app.Run();
   return 0;
 }

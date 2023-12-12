@@ -86,15 +86,13 @@ int main(int argc, char * argv[]) {
   std::cout << "Threshold: " << thr1 << " fC\n";
 
   // Charged-particle track.
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   track.SetParticle("pi");
   track.SetMomentum(180.e9);
 
   // Electron/hole transport.
-  AvalancheMC drift;
+  AvalancheMC drift(&sensor);
   drift.SetDistanceSteps(1.e-4);
-  drift.SetSensor(&sensor);
 
   ViewSignal vSignal;
   vSignal.SetSensor(&sensor);

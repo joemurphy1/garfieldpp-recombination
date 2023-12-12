@@ -45,8 +45,7 @@ int main(int argc, char * argv[]) {
   sensor.AddComponent(&cmp);
 
   // Track class
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   track.SetParticle("pi");
   track.SetMomentum(120.e9);
   constexpr bool verbose = true;

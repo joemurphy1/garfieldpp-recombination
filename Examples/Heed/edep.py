@@ -27,8 +27,7 @@ sensor = ROOT.Garfield.Sensor()
 sensor.AddComponent(cmp)
 
 # Set up HEED.
-track = ROOT.Garfield.TrackHeed()
-track.SetSensor(sensor)
+track = ROOT.Garfield.TrackHeed(sensor)
 track.SetParticle("pi")
 track.SetMomentum(120.e9)
 track.Initialise(gas, True)

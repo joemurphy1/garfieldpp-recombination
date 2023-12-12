@@ -77,7 +77,8 @@ Heed::MolecPhotoAbsCS makeMPACS(const std::string& atom1, const int n1,
 
 namespace Garfield {
 
-TrackHeed::TrackHeed() : Track("Heed") {
+TrackHeed::TrackHeed(Sensor* sensor) : Track("Heed") {
+  m_sensor = sensor;
   m_fieldMap.reset(new Heed::HeedFieldMap());
 }
 

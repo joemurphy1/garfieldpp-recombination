@@ -52,8 +52,7 @@ track.SetEnergy(170.e9)
 track.SetSensor(sensor)
 
 # RKF integration.
-drift = ROOT.Garfield.DriftLineRKF()
-drift.SetSensor(sensor)
+drift = ROOT.Garfield.DriftLineRKF(sensor)
 drift.SetGainFluctuationsPolya(0., 20000.)
 # drift.EnableIonTail()
 

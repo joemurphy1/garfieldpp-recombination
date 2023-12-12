@@ -16,8 +16,10 @@ namespace Garfield {
 
 class AvalancheMicroscopic {
  public:
+  /// Default constructor
+  AvalancheMicroscopic() : AvalancheMicroscopic(nullptr) {}
   /// Constructor
-  AvalancheMicroscopic();
+  AvalancheMicroscopic(Sensor* sensor);
   /// Destructor
   ~AvalancheMicroscopic() {}
 

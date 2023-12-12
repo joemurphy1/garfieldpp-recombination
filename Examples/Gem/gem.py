@@ -47,11 +47,9 @@ sensor = ROOT.Garfield.Sensor()
 sensor.AddComponent(fm)
 sensor.SetArea(-5 * pitch, -5 * pitch, -0.01, 5 * pitch,  5 * pitch, 0.025)
 
-aval = ROOT.Garfield.AvalancheMicroscopic()
-aval.SetSensor(sensor)
+aval = ROOT.Garfield.AvalancheMicroscopic(sensor)
 
-drift = ROOT.Garfield.AvalancheMC()
-drift.SetSensor(sensor)
+drift = ROOT.Garfield.AvalancheMC(sensor)
 drift.SetDistanceSteps(2.e-4)
 
 driftView = ROOT.Garfield.ViewDrift()

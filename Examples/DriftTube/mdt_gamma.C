@@ -86,8 +86,7 @@ int main(int argc, char * argv[]) {
   track.SetSensor(&sensor);
 
   // RKF integration.
-  DriftLineRKF drift;
-  drift.SetSensor(&sensor);
+  DriftLineRKF drift(&sensor);
   drift.SetGainFluctuationsPolya(0., 20000.);
   // drift.EnableIonTail();
  

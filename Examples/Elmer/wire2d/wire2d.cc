@@ -56,14 +56,12 @@ int main(int argc, char* argv[]) {
   sensor.SetArea(-axis_x, -axis_y, -axis_z, axis_x, axis_y, axis_z);
 
   // Create an avalanche object
-  AvalancheMicroscopic aval;
-  aval.SetSensor(&sensor);
-  aval.SetCollisionSteps(100);
+  AvalancheMicroscopic aval(&sensor);
 
   // Set up the object for drift line visualization.
   ViewDrift viewDrift;
   viewDrift.SetArea(-axis_x, -axis_y, -axis_z, axis_x, axis_y, axis_z);
-  aval.EnablePlotting(&viewDrift);
+  aval.EnablePlotting(&viewDrift, 100);
 
   // Set the electron start parameters.
   const double zi = 1.0;

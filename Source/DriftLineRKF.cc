@@ -55,7 +55,7 @@ namespace Garfield {
 
 using Vec = std::array<double, 3>;
 
-DriftLineRKF::DriftLineRKF() {
+DriftLineRKF::DriftLineRKF(Sensor* sensor) : m_sensor(sensor) {
   m_t.reserve(1000);
   m_x.reserve(1000);
 }

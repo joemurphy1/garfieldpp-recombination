@@ -116,16 +116,14 @@ int main(int argc, char * argv[]) {
   fieldView.SetVoltageRange(-400., 1000.);
   fieldView.PlotContour();
 
-  DriftLineRKF drift;
-  drift.SetSensor(&sensor);
+  DriftLineRKF drift(&sensor);
   // Polya parameter for gain distribution (for Ne)
   constexpr double theta = 0.4;
   // Average gain.
   constexpr double gain = 10;
 
   // Set up the charged particle track.
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   track.SetParticle("pi");
   // Set the momentum [eV / c].
   track.SetMomentum(1.e9);

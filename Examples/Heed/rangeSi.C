@@ -46,8 +46,7 @@ int main(int argc, char * argv[]) {
   sensor.AddComponent(&cmp);
   
   // Heed
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   
   // Histograms
   TH1::StatOverflows();

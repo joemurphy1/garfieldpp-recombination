@@ -39,8 +39,7 @@ int main() {
   sensor.AddComponent(&cmp);
 
   // Microscopic tracking.
-  AvalancheMicroscopic aval;
-  aval.SetSensor(&sensor);
+  AvalancheMicroscopic aval(&sensor);
 
   // Histogram the distance (along z) between successive ioniations.
   TH1F hDeltaZ("hDeltaZ", "Distance between collisions", 150, 0., 150.e-4);

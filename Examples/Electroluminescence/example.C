@@ -51,8 +51,7 @@ int main(int argc, char * argv[]) {
   sensor.SetArea();
 
   // Make a microscopic tracking class for electron transport.
-  AvalancheMicroscopic aval;
-  aval.SetSensor(&sensor);
+  AvalancheMicroscopic aval(&sensor);
   // Make a histogram of the electron energy distribution.
   TH1D hEn("hEn","energy distribution", 1000, 0., 100.);
   aval.EnableElectronEnergyHistogramming(&hEn);

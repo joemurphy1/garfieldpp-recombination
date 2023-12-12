@@ -65,8 +65,10 @@ class TrackHeed : public Track {
     std::vector<Electron> ions;
   };
 
+  /// Default constructor
+  TrackHeed() : TrackHeed(nullptr) {}
   /// Constructor
-  TrackHeed();
+  TrackHeed(Sensor* sensor);
   /// Destructor
   virtual ~TrackHeed();
 

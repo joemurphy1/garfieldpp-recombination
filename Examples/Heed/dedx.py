@@ -18,8 +18,7 @@ sensor = ROOT.Garfield.Sensor()
 sensor.AddComponent(cmp)
 
 # Set up HEED.
-track = ROOT.Garfield.TrackHeed()
-track.SetSensor(sensor)
+track = ROOT.Garfield.TrackHeed(sensor)
 track.SetParticle("p")
 track.SetMomentum(120.e9)
 track.Initialise(si, True)

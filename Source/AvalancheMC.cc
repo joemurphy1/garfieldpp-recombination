@@ -63,7 +63,7 @@ std::array<double, 3> MidPoint(const std::array<double, 3>& x0,
 
 namespace Garfield {
 
-AvalancheMC::AvalancheMC() { }
+AvalancheMC::AvalancheMC(Sensor* sensor) : m_sensor(sensor) { }
 
 void AvalancheMC::SetSensor(Sensor* sensor) {
   if (!sensor) {

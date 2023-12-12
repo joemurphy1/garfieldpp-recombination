@@ -17,8 +17,10 @@ namespace Garfield {
 
 class DriftLineRKF {
  public:
+  /// Default constructor
+  DriftLineRKF() : DriftLineRKF(nullptr) {}
   /// Constructor
-  DriftLineRKF();
+  DriftLineRKF(Sensor* sensor);
   /// Destructor
   ~DriftLineRKF() {}
 

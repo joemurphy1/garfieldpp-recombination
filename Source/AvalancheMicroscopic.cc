@@ -122,7 +122,8 @@ Garfield::AvalancheMicroscopic::Point MakePoint(
 
 namespace Garfield {
 
-AvalancheMicroscopic::AvalancheMicroscopic() {
+AvalancheMicroscopic::AvalancheMicroscopic(Sensor* sensor) :
+    m_sensor(sensor) {
   m_electrons.reserve(10000);
   m_holes.reserve(10000);
   m_photons.reserve(1000);

@@ -49,8 +49,7 @@ int main(int argc, char * argv[]) {
   sensor.AddComponent(&cmp);
 
   // Microscopic tracking.
-  AvalancheMicroscopic aval;
-  aval.SetSensor(&sensor);
+  AvalancheMicroscopic aval(&sensor);
   aval.SetUserHandleInelastic(userHandle);
   
   // Histogram of the z coordinates of the excitations. 

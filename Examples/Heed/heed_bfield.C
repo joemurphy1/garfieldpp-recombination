@@ -23,8 +23,7 @@ int main(int argc, char * argv[]) {
   Sensor sensor;
   sensor.AddComponent(&cmp);
 
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   track.SetParticle("muon");
   track.SetMomentum(1.e9);
   ViewDrift view;

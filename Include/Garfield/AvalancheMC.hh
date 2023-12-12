@@ -17,8 +17,10 @@ namespace Garfield {
 
 class AvalancheMC {
  public:
+  /// Default constructor
+  AvalancheMC() : AvalancheMC(nullptr) {}
   /// Constructor
-  AvalancheMC();
+  AvalancheMC(Sensor* sensor); 
   /// Destructor
   ~AvalancheMC() {}
 

@@ -54,11 +54,9 @@ int main(int argc, char * argv[]) {
   sensor.SetArea(-5 * pitch, -5 * pitch, -0.02,
                   5 * pitch,  5 * pitch,  0.025);
 
-  AvalancheMicroscopic aval;
-  aval.SetSensor(&sensor);
+  AvalancheMicroscopic aval(&sensor);
 
-  AvalancheMC drift;
-  drift.SetSensor(&sensor);
+  AvalancheMC drift(&sensor);
   drift.SetTimeSteps(0.05);
 
   ViewField fieldView;

@@ -50,16 +50,14 @@ int main(int argc, char * argv[]) {
   fieldView.PlotContour();
 
   // Use MC transport for drifting the electrons and holes.
-  AvalancheMC drift;
+  AvalancheMC drift(&sensor);
   drift.SetDistanceSteps(1.e-4);
-  drift.SetSensor(&sensor);
 
   // Visualize the drift lines.
   ViewDrift driftView;
   drift.EnablePlotting(&driftView);
 
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   track.SetParticle("pi");
   track.SetMomentum(3.e9);
 

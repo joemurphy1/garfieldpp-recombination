@@ -118,8 +118,7 @@ int main(int argc, char * argv[]) {
     const std::size_t ne = electrons.size();
     #pragma omp parallel for
     for (size_t k = 0; k < ne; ++k) {
-      DriftLineRKF drift;
-      drift.SetSensor(&sensor);
+      DriftLineRKF drift(&sensor);
       drift.SetGainFluctuationsPolya(0., 20000., true);
       // drift.EnableIonTail();
       if (plotDrift) drift.EnablePlotting(&driftView);

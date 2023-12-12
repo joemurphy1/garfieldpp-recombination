@@ -69,15 +69,13 @@ int main(int argc, char * argv[]) {
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
 
   // Set up Heed.
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   // Set the particle type and momentum [eV/c].
   track.SetParticle("pion");
   track.SetMomentum(180.e9);
 
   // Simulate electron/hole drift lines using MC integration.
-  AvalancheMC drift;
-  drift.SetSensor(&sensor);
+  AvalancheMC drift(&sensor);
   // Use steps of 1 micron.
   drift.SetDistanceSteps(1.e-4);
   

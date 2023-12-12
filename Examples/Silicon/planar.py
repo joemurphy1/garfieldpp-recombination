@@ -63,15 +63,13 @@ tstep = (tmax - tmin) / nTimeBins
 sensor.SetTimeWindow(tmin, tstep, nTimeBins)
 
 # Set up Heed.
-track = ROOT.Garfield.TrackHeed()
-track.SetSensor(sensor)
+track = ROOT.Garfield.TrackHeed(sensor)
 # Set the particle type and momentum [eV/c].
 track.SetParticle('pion')
 track.SetMomentum(180.e9)
 
 # Simulate electron/hole drift lines using MC integration.
-drift = ROOT.Garfield.AvalancheMC()
-drift.SetSensor(sensor)
+drift = ROOT.Garfield.AvalancheMC(sensor)
 # Use steps of 1 micron.
 drift.SetDistanceSteps(1.e-4)
 

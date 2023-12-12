@@ -46,9 +46,7 @@ int main() {
     sensor.AddComponent(&cmp);
   
     // Microscopic tracking.
-    AvalancheMicroscopic aval;
-    aval.SetSensor(&sensor);
-    aval.SetCollisionSteps(100000);
+    AvalancheMicroscopic aval(&sensor);
     
     // Histograms
     TH1::StatOverflows(true);

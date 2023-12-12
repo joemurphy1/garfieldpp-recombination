@@ -79,11 +79,9 @@ int main(int argc, char * argv[]) {
   sensor.SetArea(-5 * pitch, -5 * pitch, -0.01,
                   5 * pitch,  5 * pitch,  0.025);
 
-  AvalancheMicroscopic aval;
-  aval.SetSensor(&sensor);
+  AvalancheMicroscopic aval(&sensor);
 
-  AvalancheMC drift;
-  drift.SetSensor(&sensor);
+  AvalancheMC drift(&sensor);
   drift.SetDistanceSteps(2.e-4);
 
   ViewDrift driftView;

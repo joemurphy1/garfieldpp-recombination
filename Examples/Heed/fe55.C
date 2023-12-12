@@ -60,8 +60,7 @@ int main(int argc, char * argv[]) {
   sensor.AddComponent(&field);
   
   // Use Heed for simulating the photon absorption.
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   track.EnableElectricField();
   // Histogram
   const int nBins = 500;

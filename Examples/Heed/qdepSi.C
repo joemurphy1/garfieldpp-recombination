@@ -39,8 +39,7 @@ int main(int argc, char * argv[]) {
   TH1F hNe("hNe", ";deposited charge [electrons];entries", 150, 0., 15000.);
   TH1F hNc("hNc", ";number of clusters;entries", 350, -0.5, 349.5);
 
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   track.SetParticle("pion");
   track.SetBetaGamma(10.);
   track.Initialise(&si, true);

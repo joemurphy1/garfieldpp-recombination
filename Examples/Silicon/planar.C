@@ -36,8 +36,9 @@ int main(int argc, char * argv[]) {
   // Make a plot of the drift velocities.
   plottingEngine.SetDefaultStyle();
   constexpr bool plotVelocity = true;
-  if (plotVelocity) si.PlotVelocity("eh", new TCanvas("cM", "", 600, 600));
-  si.PlotAlphaEta("eh", new TCanvas("cM1", "", 600, 600));
+  if (plotVelocity) {
+    si.PlotVelocity("eh", new TCanvas("cM", "", 600, 600));
+  }
  
   // Sensor thickness [cm]
   constexpr double d = 100.e-4;
@@ -110,15 +111,13 @@ int main(int argc, char * argv[]) {
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
 
   // Set up Heed.
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   // Set the particle type and momentum [eV/c].
   track.SetParticle("pion");
   track.SetMomentum(180.e9);
 
   // Simulate electron/hole drift lines using MC integration.
-  AvalancheMC drift;
-  drift.SetSensor(&sensor);
+  AvalancheMC drift(&sensor);
   // Use steps of 1 micron.
   drift.SetDistanceSteps(1.e-4);
  

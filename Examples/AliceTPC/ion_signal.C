@@ -123,8 +123,7 @@ int main(int argc, char * argv[]) {
   fieldView.PlotContour();
 
   // Calculate ion drift lines using the RKF method.
-  DriftLineRKF driftline;
-  driftline.SetSensor(&sensor);
+  DriftLineRKF driftline(&sensor);
 
   // Plot the drift line.
   ViewDrift driftView;

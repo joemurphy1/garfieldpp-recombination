@@ -95,9 +95,8 @@ int main(int argc, char *argv[]) {
   sensor.EnableDelayedSignal();
   sensor.SetDelayedSignalTimes(times);
 
-  AvalancheMC drift;
+  AvalancheMC drift(&sensor);
   // drift.UseWeightingPotential(false);
-  drift.SetSensor(&sensor);
   drift.SetTimeSteps(0.1);
   drift.DisableDiffusion();
 
