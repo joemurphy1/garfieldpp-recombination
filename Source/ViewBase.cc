@@ -57,7 +57,7 @@ bool Invert(std::array<std::array<double, 3>, 3>& a) {
 
 std::string Fmt(const double x) {
   char buf[100];
-  sprintf(buf, "%g", x);
+  snprintf(buf, 100, "%g", x);
   return std::string(buf);
 }
 
