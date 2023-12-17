@@ -96,8 +96,10 @@ int neBEMInitialize(void) {
 
   // Set up parameters related to neBEM computations
   // The file will be removed soon
+#ifdef _OPENMP
   int RqstdThreads = 1;
   if (NbThreads > 0) RqstdThreads = NbThreads;
+#endif
   /*
   FILE *processFile = fopen("neBEMInp/neBEMProcess.inp", "r");
   if (processFile == NULL) {
@@ -1314,9 +1316,9 @@ int neBEMReadGeometry(void) {
   fprintf(fNativeInFile, "#====>No. of volumes:\n");
   fprintf(fNativeInFile, "%d\n", VolMax);
   for (int prim = 1; prim <= NbPrimitives; ++prim) {
-    char NativePrimFile[256];
     char strPrimNb[11];
-    sprintf(strPrimNb, "%d", prim);
+    snprintf(strPrimNb, 11, "%d", prim);
+    char NativePrimFile[256];
     strcpy(NativePrimFile, "Primitive");
     strcat(NativePrimFile, strPrimNb);
     strcat(NativePrimFile, ".inp");
@@ -1374,10 +1376,9 @@ int neBEMReadGeometry(void) {
     neBEMVolumeDescription(volume, &shape, &material, &epsilon, &potential,
                            &charge, &boundarytype);
 
-    char NativeVolFile[256];
     char strVolNb[11];
-    sprintf(strVolNb, "%d", volume);
-
+    snprintf(strVolNb, 11, "%d", volume);
+    char NativeVolFile[256];
     strcpy(NativeVolFile, NativePrimDir);
     strcat(NativeVolFile, "/Volume");
     strcat(NativeVolFile, strVolNb);
@@ -2199,7 +2200,7 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
 
   // stringify the integer
   char strIdWtField[5];
-  sprintf(strIdWtField, "%d", IdWtField);
+  snprintf(strIdWtField, 5, "%d", IdWtField);
   // printf("strIdWtField: %s\n", strIdWtField);
 
   // Set up parameters related to fixed specification of weighting field
@@ -2500,7 +2501,7 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
 
       // stringify the integer
       char stringIdWtField[5];
-      sprintf(stringIdWtField, "%d", IdWtField);
+      snprintf(stringIdWtField, 5, "%d", IdWtField);
       char FastVolPFFile[256];
       strcpy(FastVolPFFile, BCOutDir);
       strcat(FastVolPFFile, "/WtFldFastVolPF_");
@@ -2536,16 +2537,14 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
 
       if (OptStaggerWtFldFastVol[IdWtField]) {
         // stringify the integer
-        sprintf(stringIdWtField, "%d", IdWtField);
+        snprintf(stringIdWtField, 5, "%d", IdWtField);
         char StgFastVolPFFile[256];
-        FILE *fStgFastVolPF;
         strcpy(StgFastVolPFFile, BCOutDir);
         // strcat(StgFastVolPFFile, "/WtFldStgFastVolPF.out");
         strcat(StgFastVolPFFile, "/StgWtFldFastVolPF_");
         strcat(StgFastVolPFFile, stringIdWtField);
         strcat(StgFastVolPFFile, ".out");
-        fStgFastVolPF = fopen(StgFastVolPFFile, "r");
-
+        FILE* fStgFastVolPF = fopen(StgFastVolPFFile, "r");
         if (fStgFastVolPF == NULL) {
           neBEMMessage("in neBEMSolve - StgWtFldFastVolPFFile");
           return -1;
@@ -2705,10 +2704,10 @@ int CreateDirStr(void) {
   int CreateOrUseDir(char[]);
   int CreateDirOrQuit(char[]);
 
-  sprintf(strModelCntr, "/Model%d", ModelCntr);
-  sprintf(strMeshCntr, "/M%d", MeshCntr);
-  sprintf(strBCCntr, "/BC%d", BCCntr);
-  sprintf(strPPCntr, "/PP%d", PPCntr);
+  snprintf(strModelCntr, 10, "/Model%d", ModelCntr);
+  snprintf(strMeshCntr, 10, "/M%d", MeshCntr);
+  snprintf(strBCCntr, 10, "/BC%d", BCCntr);
+  snprintf(strPPCntr, 10, "/PP%d", PPCntr);
 
   strcpy(ModelOutDir, DeviceOutDir);
   strcat(ModelOutDir, strModelCntr);
@@ -2815,12 +2814,12 @@ int CreateOrUseDir(char dirname[]) {
   char dirstr[256];
   struct stat st;
 
-  if (stat(dirname, &st) == 0)  // feel safe to use an existing directory
-  {
+  if (stat(dirname, &st) == 0) {
+    // feel safe to use an existing directory
     printf("Previous %s exists ... using the existing directory ... \n",
            dirname);
   } else {
-    sprintf(dirstr, "mkdir -p %s", dirname);
+    snprintf(dirstr, 256, "mkdir -p %s", dirname);
     if (system(dirstr))  // returns 0 if successful
     {
       printf("Cannot create dirname %s ... returning ...\n", dirname);
@@ -2842,7 +2841,7 @@ int CreateDirOrQuit(char dirname[]) {
            dirname);
     return (-1);
   } else {
-    sprintf(dirstr, "mkdir -p %s", dirname);
+    snprintf(dirstr, 256, "mkdir -p %s", dirname);
     if (system(dirstr))  // returns 0 if successful
     {
       printf("Cannot create dirname %s ... returning ...\n", dirname);

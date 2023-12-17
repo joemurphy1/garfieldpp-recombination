@@ -413,7 +413,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   double WireLambda, WireV;
   double WireElX, WireElY, WireElZ, WireElL;
   DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
-  char primstr[10];
+
   char gpElem[256];
   FILE *fPrim, *fElem, *fgpPrim, *fgpElem;
 
@@ -445,7 +445,8 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   }  // if OptPrintVertexAndNormal
 
   // necessary for separating filenames
-  sprintf(primstr, "%d", prim);
+  char primstr[10];
+  snprintf(primstr, 10, "%d", prim);
 
   // in order to avoid warning messages
   fPrim = NULL;
@@ -792,7 +793,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   double SurfX, SurfY, SurfZ, SurfLX, SurfLZ;
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
   DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
-  char primstr[10];
+
   char gpElem[256], gpMesh[256];
   FILE *fPrim, *fElem, *fgpPrim, *fgpElem, *fgpMesh;
 
@@ -812,7 +813,8 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   }  // if OptPrintVertexAndNormal
 
   // necessary for separating filenames
-  sprintf(primstr, "%d", prim);
+  char primstr[10];
+  snprintf(primstr, 10, "%d", prim);
 
   // in order to avoid warning messages
   fPrim = NULL;
@@ -1596,7 +1598,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   double SurfX, SurfY, SurfZ, SurfLX, SurfLZ;
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
   DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
-  char primstr[10];
+
   char gpElem[256], gpMesh[256];
   FILE *fPrim, *fElem, *fgpPrim, *fgpElem, *fgpMesh;
 
@@ -1616,7 +1618,8 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   }  // if OptPrintVertexAndNormal
 
   // necessary for separating filenames
-  sprintf(primstr, "%d", prim);
+  char primstr[10];
+  snprintf(primstr, 10, "%d", prim);
 
   // in order to avoid warning messages
   fPrim = NULL;
@@ -3222,8 +3225,9 @@ int InitChargingUp(void) {
             if (debugFn)  // check electron positions, volume primitives and
                           // elements
             {
-              char elecposdbg[256], enbstr[12];
-              sprintf(enbstr, "%d", electron);
+              char enbstr[12];
+              snprintf(enbstr, 12, "%d", electron);
+              char elecposdbg[256];
               strcpy(elecposdbg, "/tmp/Electron");
               strcat(elecposdbg, enbstr);
               strcat(elecposdbg, ".out");
@@ -3978,8 +3982,9 @@ int InitChargingUp(void) {
 
             if (debugFn)  // check ion positions, volume primitives and elements
             {
-              char ionposdbg[256], inbstr[12];
-              sprintf(inbstr, "%d", ion);
+              char inbstr[12];
+              snprintf(inbstr, 12, "%d", ion);
+              char ionposdbg[256];
               strcpy(ionposdbg, "/tmp/Ion");
               strcat(ionposdbg, inbstr);
               strcat(ionposdbg, ".out");

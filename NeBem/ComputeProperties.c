@@ -3596,7 +3596,7 @@ int CreateWtFldFastVolPF(int IdWtField) {
 
   // stringify the integer
   char stringIdWtField[16];
-  sprintf(stringIdWtField, "%d", IdWtField);
+  snprintf(stringIdWtField, 16, "%d", IdWtField);
 
   char WtFldFastVolPFFile[256];
   strcpy(WtFldFastVolPFFile, BCOutDir);
