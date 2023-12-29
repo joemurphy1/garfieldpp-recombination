@@ -9,16 +9,28 @@ namespace Garfield {
 
 SolidTube::SolidTube(const double cx, const double cy, const double cz,
                      const double rt, const double lz)
-    : Solid(cx, cy, cz, "SolidTube"),
-      m_rMax(rt),
-      m_lZ(lz) {
-  UpdatePolygon();
-}
+    : SolidTube(cx, cy, cz, 0., rt, lz) {}
 
 SolidTube::SolidTube(const double cx, const double cy, const double cz,
                      const double rt, const double lz,
                      const double dx, const double dy, const double dz)
     : SolidTube(cx, cy, cz, rt, lz) {
+  SetDirection(dx, dy, dz);
+}
+
+SolidTube::SolidTube(const double cx, const double cy, const double cz,
+                     const double ri, const double ro, const double lz)
+    : Solid(cx, cy, cz, "SolidTube"),
+      m_rO(ro),
+      m_rI(ri),
+      m_lZ(lz) {
+  UpdatePolygon();
+}
+
+SolidTube::SolidTube(const double cx, const double cy, const double cz,
+                     const double ri, const double ro, const double lz,
+                     const double dx, const double dy, const double dz)
+    : SolidTube(cx, cy, cz, ri, ro, lz) {
   SetDirection(dx, dy, dz);
 }
 
@@ -28,22 +40,31 @@ void SolidTube::UpdatePolygon() {
   const double alpha = Pi / nP;
   const double calpha = cos(alpha);
   // Set the radius of the approximating polygon.
-  m_rp = m_rMax;
+  m_rpO = m_rO;
+  m_rpI = m_rI;
   if (m_average) {
     const double f = 2. / (1. + asinh(tan(alpha)) * calpha / tan(alpha));
-    m_rp *= f;
+    m_rpO *= f;
+    m_rpI *= f;
   } 
   // Set the inradius of the polygon.
-  m_ri = m_rp * calpha;
+  m_riO = m_rpO * calpha;
+  m_riI = m_rpI * calpha;
   // Set the coordinates of the polygon corners.
-  m_xp.clear();
-  m_yp.clear(); 
+  m_xpO.clear();
+  m_ypO.clear(); 
+  m_xpI.clear();
+  m_ypI.clear(); 
   for (unsigned int i = 0; i < nP; ++i) {
     const double phi = m_rot + HalfPi * i / (m_n - 1.);
     const double cphi = cos(phi);
     const double sphi = sin(phi);
-    m_xp.push_back(m_rp * cphi);
-    m_yp.push_back(m_rp * sphi);
+    m_xpO.push_back(m_rpO * cphi);
+    m_ypO.push_back(m_rpO * sphi);
+    if (m_rpI > 0.) {
+      m_xpI.push_back(m_rpI * cphi);
+      m_ypI.push_back(m_rpI * sphi);
+    }
   }
 }
 
@@ -56,29 +77,33 @@ bool SolidTube::IsInside(const double x, const double y, const double z,
   if (fabs(w) > m_lZ) return false;
 
   const double rho = sqrt(u * u + v * v);
-  if (!tesselated) return (rho <= m_rMax);
+  if (!tesselated) return (rho <= m_rO && rho >= m_rI);
  
-  if (rho > m_rp) return false;
-  if (rho < m_ri) return true;
+  if (rho > m_rpO || rho < m_riI) return false;
+  if (rho < m_riO && rho > m_rpI) return true;
   bool inside = false;
   bool edge = false;
-  Polygon::Inside(m_xp, m_yp, u, v, inside, edge);
+  Polygon::Inside(m_xpO, m_ypO, u, v, inside, edge);
+  if (inside && !m_xpI.empty()) {
+    Polygon::Inside(m_xpI, m_ypI, u, v, inside, edge);
+    return !inside;
+  }
   return inside;
 }
 
 bool SolidTube::GetBoundingBox(double& xmin, double& ymin, double& zmin,
                                double& xmax, double& ymax, double& zmax) const {
   if (m_cTheta == 1. && m_cPhi == 1.) {
-    xmin = m_cX - m_rMax;
-    xmax = m_cX + m_rMax;
-    ymin = m_cY - m_rMax;
-    ymax = m_cY + m_rMax;
+    xmin = m_cX - m_rO;
+    xmax = m_cX + m_rO;
+    ymin = m_cY - m_rO;
+    ymax = m_cY + m_rO;
     zmin = m_cZ - m_lZ;
     zmax = m_cZ + m_lZ;
     return true;
   }
 
-  const double dd = sqrt(m_rMax * m_rMax + m_lZ * m_lZ);
+  const double dd = sqrt(m_rO * m_rO + m_lZ * m_lZ);
   xmin = m_cX - dd;
   xmax = m_cX + dd;
   ymin = m_cY - dd;
@@ -93,7 +118,7 @@ void SolidTube::SetRadius(const double r) {
     std::cerr << "SolidTube::SetRadius: Radius must be > 0.\n";
     return;
   }
-  m_rMax = r;
+  m_rO = r;
   UpdatePolygon();
 }
 
@@ -127,98 +152,194 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
     return false;
   }
 
-  double r = m_rp;
   const unsigned int nPoints = 4 * (m_n - 1);
-  // Create the top lid.
+  // Create the top lid(s).
   if (m_toplid) {
-    std::vector<double> xv;
-    std::vector<double> yv;
-    std::vector<double> zv;
-    for (unsigned int i = 1; i <= nPoints; i++) {
-      const double alpha = m_rot + HalfPi * (i - 1.) / (m_n - 1.);
-      // Rotate into place.
-      double x, y, z;
-      ToGlobal(r * cos(alpha), r * sin(alpha), m_lZ, x, y, z);
-      xv.push_back(x);
-      yv.push_back(y);
-      zv.push_back(z);
+    const double a = m_cPhi * m_sTheta;
+    const double b = m_sPhi * m_sTheta;
+    const double c = m_cTheta; 
+    if (m_rI > 0.) {
+      double alpha = m_rot;
+      double calpha = cos(alpha);
+      double salpha = sin(alpha);
+      double xv0, yv0, zv0;
+      ToGlobal(m_rpI * calpha, m_rpI * salpha, +m_lZ, xv0, yv0, zv0);
+      double xv1, yv1, zv1;
+      ToGlobal(m_rpO * calpha, m_rpO * salpha, +m_lZ, xv1, yv1, zv1);
+      // Go around the cylinder.
+      for (unsigned int i = 0; i < nPoints; ++i) {
+        alpha += HalfPi / (m_n - 1.);
+        calpha = cos(alpha);
+        salpha = sin(alpha);
+        double xv2, yv2, zv2;
+        ToGlobal(m_rpO * calpha, m_rpO * salpha, +m_lZ, xv2, yv2, zv2);
+        double xv3, yv3, zv3;
+        ToGlobal(m_rpI * calpha, m_rpI * salpha, +m_lZ, xv3, yv3, zv3);
+        std::vector<double> xv = {xv0, xv1, xv2, xv3};
+        std::vector<double> yv = {yv0, yv1, yv2, yv3};
+        std::vector<double> zv = {zv0, zv1, zv2, zv3};
+        Panel panel;
+        panel.a = a;
+        panel.b = b;
+        panel.c = c;
+        panel.xv = xv;
+        panel.yv = yv;
+        panel.zv = zv;
+        panel.colour = m_colour;
+        panel.volume = id;
+        panels.push_back(std::move(panel));
+        // Shift.
+        xv0 = xv3; 
+        yv0 = yv3;
+        zv0 = zv3;
+        xv1 = xv2;
+        yv1 = yv2;
+        zv1 = zv2;
+      }
+    } else { 
+      std::vector<double> xv;
+      std::vector<double> yv;
+      std::vector<double> zv;
+      const double r = m_rpO;
+      for (unsigned int i = 1; i <= nPoints; i++) {
+        const double alpha = m_rot + HalfPi * (i - 1.) / (m_n - 1.);
+        // Rotate into place.
+        double x, y, z;
+        ToGlobal(r * cos(alpha), r * sin(alpha), m_lZ, x, y, z);
+        xv.push_back(x);
+        yv.push_back(y);
+        zv.push_back(z);
+      }
+      Panel panel;
+      panel.a = a;
+      panel.b = b;
+      panel.c = c;
+      panel.xv = xv;
+      panel.yv = yv;
+      panel.zv = zv;
+      panel.colour = m_colour;
+      panel.volume = id;
+      panels.push_back(std::move(panel));
     }
-    Panel panel;
-    panel.a = m_cPhi * m_sTheta;
-    panel.b = m_sPhi * m_sTheta;
-    panel.c = m_cTheta;
-    panel.xv = xv;
-    panel.yv = yv;
-    panel.zv = zv;
-    panel.colour = m_colour;
-    panel.volume = id;
-    panels.push_back(std::move(panel));
   }
-  // Create the bottom lid.
+  // Create the bottom lid(s).
   if (m_botlid) {
-    std::vector<double> xv;
-    std::vector<double> yv;
-    std::vector<double> zv;
-    for (unsigned int i = 1; i <= nPoints; i++) {
-      const double alpha = m_rot + HalfPi * (i - 1.) / (m_n - 1.);
-      // Rotate into place.
-      double x, y, z;
-      ToGlobal(r * cos(alpha), r * sin(alpha), -m_lZ, x, y, z);
-      xv.push_back(x);
-      yv.push_back(y);
-      zv.push_back(z);
+    const double a = -m_cPhi * m_sTheta;
+    const double b = -m_sPhi * m_sTheta;
+    const double c = -m_cTheta;
+    if (m_rI > 0.) {
+      double alpha = m_rot;
+      double calpha = cos(alpha);
+      double salpha = sin(alpha);
+      double xv0, yv0, zv0;
+      ToGlobal(m_rpI * calpha, m_rpI * salpha, -m_lZ, xv0, yv0, zv0);
+      double xv1, yv1, zv1;
+      ToGlobal(m_rpO * calpha, m_rpO * salpha, -m_lZ, xv1, yv1, zv1);
+      // Go around the cylinder.
+      for (unsigned int i = 0; i < nPoints; ++i) {
+        alpha += HalfPi / (m_n - 1.);
+        calpha = cos(alpha);
+        salpha = sin(alpha);
+        double xv2, yv2, zv2;
+        ToGlobal(m_rpO * calpha, m_rpO * salpha, -m_lZ, xv2, yv2, zv2);
+        double xv3, yv3, zv3;
+        ToGlobal(m_rpI * calpha, m_rpI * salpha, -m_lZ, xv3, yv3, zv3);
+        std::vector<double> xv = {xv0, xv1, xv2, xv3};
+        std::vector<double> yv = {yv0, yv1, yv2, yv3};
+        std::vector<double> zv = {zv0, zv1, zv2, zv3};
+        Panel panel;
+        panel.a = a;
+        panel.b = b;
+        panel.c = c;
+        panel.xv = xv;
+        panel.yv = yv;
+        panel.zv = zv;
+        panel.colour = m_colour;
+        panel.volume = id;
+        panels.push_back(std::move(panel));
+        // Shift.
+        xv0 = xv3; 
+        yv0 = yv3;
+        zv0 = zv3;
+        xv1 = xv2;
+        yv1 = yv2;
+        zv1 = zv2;
+      }
+    } else {
+      std::vector<double> xv;
+      std::vector<double> yv;
+      std::vector<double> zv;
+      const double r = m_rpO;
+      for (unsigned int i = 1; i <= nPoints; i++) {
+        const double alpha = m_rot + HalfPi * (i - 1.) / (m_n - 1.);
+        // Rotate into place.
+        double x, y, z;
+        ToGlobal(r * cos(alpha), r * sin(alpha), -m_lZ, x, y, z);
+        xv.push_back(x);
+        yv.push_back(y);
+        zv.push_back(z);
+      }
+      Panel panel;
+      panel.a = a;
+      panel.b = b;
+      panel.c = c;
+      panel.xv = xv;
+      panel.yv = yv;
+      panel.zv = zv;
+      panel.colour = m_colour;
+      panel.volume = id;
+      panels.push_back(std::move(panel));
     }
-    Panel panel;
-    panel.a = -m_cPhi * m_sTheta;
-    panel.b = -m_sPhi * m_sTheta;
-    panel.c = -m_cTheta;
-    panel.xv = xv;
-    panel.yv = yv;
-    panel.zv = zv;
-    panel.colour = m_colour;
-    panel.volume = id;
-    panels.push_back(std::move(panel));
   }
   // Create the side panels.
-  double u = r * cos(m_rot);
-  double v = r * sin(m_rot);
-  // Rotate into place.
-  double xv0, yv0, zv0;
-  ToGlobal(u, v, -m_lZ, xv0, yv0, zv0);
-  double xv1, yv1, zv1;
-  ToGlobal(u, v, +m_lZ, xv1, yv1, zv1);
-  // Go around the cylinder.
-  for (unsigned int i = 2; i <= nPoints + 1; i++) {
-    // Bottom and top of the line along the axis of the cylinder.
-    double alpha = m_rot + HalfPi * (i - 1.) / (m_n - 1.);
-    u = r * cos(alpha);
-    v = r * sin(alpha);
+  const unsigned int n = m_rpI > 0. ? 2 : 1;
+  for (unsigned int j = 0; j < n; ++j) {
+    const double r = j == 0 ? m_rpO : m_rpI;
+    double u = r * cos(m_rot);
+    double v = r * sin(m_rot);
     // Rotate into place.
-    double xv2, yv2, zv2;
-    ToGlobal(u, v, +m_lZ, xv2, yv2, zv2);
-    double xv3, yv3, zv3;
-    ToGlobal(u, v, -m_lZ, xv3, yv3, zv3);
-    // Store the plane.
-    Panel panel;
-    alpha = m_rot + HalfPi * (i - 1.5) / (m_n - 1.);
-    const double cAlpha = cos(alpha);
-    const double sAlpha = sin(alpha);
-    panel.a = m_cPhi * m_cTheta * cAlpha - m_sPhi * sAlpha;
-    panel.b = m_sPhi * m_cTheta * cAlpha + m_cPhi * sAlpha;
-    panel.c = -m_sTheta * cAlpha;
-    panel.xv = {xv0, xv1, xv2, xv3};
-    panel.yv = {yv0, yv1, yv2, yv3};
-    panel.zv = {zv0, zv1, zv2, zv3};
-    panel.colour = m_colour;
-    panel.volume = id;
-    panels.push_back(std::move(panel));
-    // Shift the points.
-    xv0 = xv3;
-    yv0 = yv3;
-    zv0 = zv3;
-    xv1 = xv2;
-    yv1 = yv2;
-    zv1 = zv2;
+    double xv0, yv0, zv0;
+    ToGlobal(u, v, -m_lZ, xv0, yv0, zv0);
+    double xv1, yv1, zv1;
+    ToGlobal(u, v, +m_lZ, xv1, yv1, zv1);
+    // Go around the cylinder.
+    for (unsigned int i = 2; i <= nPoints + 1; i++) {
+      // Bottom and top of the line along the axis of the cylinder.
+      double alpha = m_rot + HalfPi * (i - 1.) / (m_n - 1.);
+      u = r * cos(alpha);
+      v = r * sin(alpha);
+      // Rotate into place.
+      double xv2, yv2, zv2;
+      ToGlobal(u, v, +m_lZ, xv2, yv2, zv2);
+      double xv3, yv3, zv3;
+      ToGlobal(u, v, -m_lZ, xv3, yv3, zv3);
+      // Store the plane.
+      Panel panel;
+      alpha = m_rot + HalfPi * (i - 1.5) / (m_n - 1.);
+      const double cAlpha = cos(alpha);
+      const double sAlpha = sin(alpha);
+      panel.a = m_cPhi * m_cTheta * cAlpha - m_sPhi * sAlpha;
+      panel.b = m_sPhi * m_cTheta * cAlpha + m_cPhi * sAlpha;
+      panel.c = -m_sTheta * cAlpha;
+      if (j == 1) {
+        panel.a *= -1.;
+        panel.b *= -1.;
+        panel.c *= -1.;
+      }
+      panel.xv = {xv0, xv1, xv2, xv3};
+      panel.yv = {yv0, yv1, yv2, yv3};
+      panel.zv = {zv0, zv1, zv2, zv3};
+      panel.colour = m_colour;
+      panel.volume = id;
+      panels.push_back(std::move(panel));
+      // Shift the points.
+      xv0 = xv3;
+      yv0 = yv3;
+      zv0 = zv3;
+      xv1 = xv2;
+      yv1 = yv2;
+      zv1 = zv2;
+    }
   }
   std::cout << "SolidTube::SolidPanels: " << panels.size() - nPanels
             << " panels.\n";
@@ -249,7 +370,7 @@ void SolidTube::Cut(const double x0, const double y0, const double z0,
   std::vector<double> xv;
   std::vector<double> yv;
   std::vector<double> zv;
-  double r = m_rp;
+  double r = m_rpO;
   const unsigned int nPoints = 4 * (m_n - 1);
   const double dphi = HalfPi / (m_n - 1.);
   // Go through the lines of the top and bottom lids.

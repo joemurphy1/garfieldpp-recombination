@@ -17,6 +17,14 @@ class SolidTube : public Solid {
   /// Constructor from centre, outer radius, half-length and orientation.
   SolidTube(const double cx, const double cy, const double cz, const double r,
             const double lz, const double dx, const double dy, const double dz);
+  /// Constructor from centre, inner radius, outer radius, and half-length.
+  SolidTube(const double cx, const double cy, const double cz, 
+            const double ri, const double ro, const double lz);
+  /// Constructor from centre, inner radius, outer radius, half-length 
+  /// and orientation.
+  SolidTube(const double cx, const double cy, const double cz, 
+            const double ri, const double ro, const double lz, 
+            const double dx, const double dy, const double dz);
   /// Destructor
   ~SolidTube() {}
 
@@ -30,7 +38,7 @@ class SolidTube : public Solid {
   void SetRadius(const double r);
 
   double GetHalfLengthZ() const override { return m_lZ; }
-  double GetRadius() const override { return m_rMax; }
+  double GetRadius() const override { return m_rO; }
 
   /// When calculating the surface panels, the cylinder is
   /// approximated as a polygon with a finite number of panels.
@@ -72,7 +80,9 @@ class SolidTube : public Solid {
   std::mutex m_mutex;
 
   /// Outer radius.
-  double m_rMax;
+  double m_rO;
+  /// Inner radius.
+  double m_rI = 0.;
   /// Half-length
   double m_lZ;
 
@@ -82,14 +92,22 @@ class SolidTube : public Solid {
   unsigned int m_n = 2;
   /// Average chord over the sectors.
   bool m_average = false;
-  /// Radius of the approximating polygon.
-  double m_rp;
-  /// Inradius of the approximating polygon.
-  double m_ri;
-  /// X-coordinates of the approximating polygon.
-  std::vector<double> m_xp;
-  /// Y-coordinates of the approximating polygon.
-  std::vector<double> m_yp;
+  /// Radius of the outer approximating polygon.
+  double m_rpO;
+  /// Radius of the inner approximating polygon.
+  double m_rpI = 0.;
+  /// Inradius of the outer approximating polygon.
+  double m_riO;
+  /// Inradius of the inner approximating polygon.
+  double m_riI = 0.;
+  /// X-coordinates of the outer approximating polygon.
+  std::vector<double> m_xpO;
+  /// Y-coordinates of the outer approximating polygon.
+  std::vector<double> m_ypO;
+  /// X-coordinates of the inner approximating polygon.
+  std::vector<double> m_xpI;
+  /// Y-coordinates of the inner approximating polygon.
+  std::vector<double> m_ypI;
 
   /// Have a top lid?
   bool m_toplid = true;
