@@ -34,11 +34,18 @@ class SolidTube : public Solid {
                       double& ymax, double& zmax) const override;
   bool IsTube() const override { return true; }
 
+  /// Set the half-length of the tube. 
   void SetHalfLength(const double lz);
+  /// Set the outer radius.
   void SetRadius(const double r);
-
+  /// Retrieve the half-length of the tube.
   double GetHalfLengthZ() const override { return m_lZ; }
+  /// Retrieve the outer radius.
   double GetRadius() const override { return m_rO; }
+  /// Retrieve the outer radius.
+  double GetOuterRadius() const override { return m_rO; }
+  /// Retrieve the inner radius.
+  double GetInnerRadius() const override { return m_rI; }
 
   /// When calculating the surface panels, the cylinder is
   /// approximated as a polygon with a finite number of panels.
