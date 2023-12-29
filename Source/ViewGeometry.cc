@@ -8,6 +8,7 @@
 #include <TGeoBoolNode.h>
 #include <TGeoCompositeShape.h>
 #include <TPolyLine.h>
+#include <TPolyLine3D.h>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
@@ -272,6 +273,59 @@ void ViewGeometry::Plot2d() {
         pl.SetLineColor(panel.colour);
       }
       pl.DrawPolyLine(nv + 1, xpl.data(), ypl.data(), "same");
+    }
+  }
+  gPad->Update();
+}
+
+void ViewGeometry::PlotPanels() {
+
+  if (!m_geometry) {
+    std::cerr << m_className << "::PlotPanels: Geometry is not defined.\n";
+    return;
+  }
+
+  const auto nSolids = m_geometry->GetNumberOfSolids();
+  if (nSolids == 0) {
+    std::cerr << m_className << "::PlotPanels: Geometry is empty.\n";
+    return;
+  }
+
+  // Get the bounding box.
+  double xMin = 0., yMin = 0., zMin = 0.;
+  double xMax = 0., yMax = 0., zMax = 0.;
+  if (!m_geometry->GetBoundingBox(xMin, yMin, zMin, xMax, yMax, zMax)) {
+    std::cerr << m_className << "::PlotPanels: Cannot retrieve bounding box.\n";
+    return;
+  }
+  auto pad = GetCanvas();
+  pad->cd();
+
+  for (size_t i = 0; i < nSolids; ++i) {
+    auto solid = m_geometry->GetSolid(i);
+    if (!solid) continue;
+    std::vector<Panel> panels;
+    if (!solid->SolidPanels(panels)) continue;
+    for (const auto& panel : panels) {
+      const auto nv = panel.xv.size();
+      if (nv < 3) continue;
+      std::vector<float> p;
+      for (size_t k = 0; k < nv; ++k) {
+        p.push_back(panel.xv[k]);
+        p.push_back(panel.yv[k]);
+        p.push_back(panel.zv[k]);
+      }
+      p.push_back(panel.xv[0]);
+      p.push_back(panel.yv[0]);
+      p.push_back(panel.zv[0]);
+      TPolyLine3D pl(nv + 1, p.data());
+      pl.SetLineWidth(2);
+      if (panel.colour < 0) {
+        pl.SetLineColor(kBlack);
+      } else {
+        pl.SetLineColor(panel.colour);
+      }
+      pl.DrawPolyLine(nv + 1, p.data(), "same");
     }
   }
   gPad->Update();
