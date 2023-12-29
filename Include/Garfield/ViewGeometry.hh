@@ -30,6 +30,8 @@ class ViewGeometry : public ViewBase {
   void Plot2d();
   /// Draw a three-dimensional view of the geometry.
   void Plot3d();
+  /// Draw the surface panels.
+  void PlotPanels();
 
  private:
   GeometrySimple* m_geometry = nullptr;
