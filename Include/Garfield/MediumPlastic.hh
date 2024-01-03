@@ -9,12 +9,15 @@ namespace Garfield {
 
 class MediumPlastic : public Medium {
  public:
-  // Constructor
-  MediumPlastic() : Medium() {
+  /// Default constructor.
+  MediumPlastic() : MediumPlastic(1.) {}
+  /// Constructor from dielectric constant.
+  MediumPlastic(const double eps) : Medium() {
     m_className = "MediumPlastic";
     m_name = "Plastic";
+    if (eps > 1.) m_epsilon = eps;
   }
-  // Destructor
+  /// Destructor
   virtual ~MediumPlastic() {}
 
   void EnableDrift(const bool /*on*/) override {}
