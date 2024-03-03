@@ -341,28 +341,28 @@ class AvalancheMicroscopic {
   // Switch on/off debugging messages
   bool m_debug = false;
 
-  bool TransportElectrons(std::vector<std::pair<Point, bool> >& stack,
+  bool TransportElectrons(std::vector<std::pair<Point, Particle> >& stack,
                           const bool aval);
   int TransportElectron(const Point& p0, const bool hole, 
                         const bool aval, const bool signal, 
                         std::vector<Point>& path,
-                        std::vector<std::pair<Point, bool> >& newParticles,
+                        std::vector<std::pair<Point, Particle> >& newParticles,
                         double& pathLength);
   int TransportElectronBfield(const Point& p0, const bool hole, 
                         const bool aval, 
                         const bool signal, 
                         std::vector<Point>& path,
-                        std::vector<std::pair<Point, bool> >& newParticles,
+                        std::vector<std::pair<Point, Particle> >& newParticles,
                         double& pathLength);
   int TransportElectronSc(const Point& p0, const bool hole, 
                         const bool aval, 
                         const bool signal, 
                         std::vector<Point>& path,
-                        std::vector<std::pair<Point, bool> >& newParticles,
+                        std::vector<std::pair<Point, Particle> >& newParticles,
                         double& pathLength);
   void TransportPhoton(const double x, const double y, const double z,
                        const double t, const double e,
-                       std::vector<std::pair<Point, bool> >& stack);
+                       std::vector<std::pair<Point, Particle> >& newParticles);
 
   void AddSignal(const double x0, const double y0, const double z0, 
                  const double t0,
@@ -370,14 +370,14 @@ class AvalancheMicroscopic {
                  const double t1, const bool hole) const;
 
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
-                 double& y1, double& z1, double& t1);
+                 double& y1, double& z1, double& t1) const;
 
   void PlotCollision(const int cstype, const size_t did,
                      const double x, const double y, const double z,
                      size_t& nCollPlot) const;
   void FillDistanceHistogram(const int cstype,
                              const double x, const double y, const double z,
-                             double& xLast, double& yLast, double& zLast);
+                             double& xLast, double& yLast, double& zLast) const;
 };
 }
 
