@@ -883,6 +883,10 @@ bool TrackSrim::NewTrack(const double x0, const double y0, const double z0,
       } else {
         step = TerminateBfield(x, v, dt, vmag);
       }
+      if (step < Small) {
+        if (m_debug) std::cout << "    Step size is zero.\n";
+        break;
+      }
       PreciseLoss(step, ekin, deem, dehd);
       if (deem + dehd > ekin) {
         if (m_debug) std::cout << "    Excess loss.\n";
