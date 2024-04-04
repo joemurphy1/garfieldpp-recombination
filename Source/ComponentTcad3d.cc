@@ -67,8 +67,8 @@ void ComponentTcad3d::ElectricField(const double x, const double y,
 
 bool ComponentTcad3d::Interpolate(
     const double xin, const double yin, const double zin,
-    const std::vector<std::array<double, 3> >& field,
-    double& fx, double& fy, double& fz) {
+    const std::vector<std::array<double, 3> >& field, double& fx, double& fy,
+    double& fz) {
 
   if (field.empty()) return false;
   std::array<double, 3> x = {xin, yin, zin};
@@ -95,11 +95,11 @@ bool ComponentTcad3d::Interpolate(
   if (mirr[1]) fy = -fy;
   if (mirr[2]) fz = -fz;
   return true;
-} 
+}
 
-bool ComponentTcad3d::Interpolate(
-    const double xin, const double yin, const double zin,
-    const std::vector<double>& field, double& f) {
+bool ComponentTcad3d::Interpolate(const double xin, const double yin,
+                                  const double zin,
+                                  const std::vector<double>& field, double& f) {
 
   f = 0.;
   if (field.empty()) return false;
@@ -154,8 +154,9 @@ void ComponentTcad3d::FillTree() {
   const float hx = 0.5 * (m_bbMax[0] - m_bbMin[0]);
   const float hy = 0.5 * (m_bbMax[1] - m_bbMin[1]);
   const float hz = 0.5 * (m_bbMax[2] - m_bbMin[2]);
-  m_tree.reset(new TetrahedralTree(Vec3(m_bbMin[0] + hx, m_bbMin[1] + hy, m_bbMin[2] + hz),
-                                   Vec3(hx, hy, hz)));
+  m_tree.reset(new TetrahedralTree(
+      Vec3(m_bbMin[0] + hx, m_bbMin[1] + hy, m_bbMin[2] + hz),
+      Vec3(hx, hy, hz)));
 
   // Insert the mesh nodes in the tree.
   const size_t nVertices = m_vertices.size();
@@ -198,9 +199,9 @@ bool ComponentTcad3d::GetBoundingBox(double& xmin, double& ymin, double& zmin,
   return true;
 }
 
-bool ComponentTcad3d::GetElementaryCell(
-    double& xmin, double& ymin, double& zmin,
-    double& xmax, double& ymax, double& zmax) {
+bool ComponentTcad3d::GetElementaryCell(double& xmin, double& ymin,
+                                        double& zmin, double& xmax,
+                                        double& ymax, double& zmax) {
   if (!m_ready) return false;
   xmin = m_bbMin[0];
   ymin = m_bbMin[1];
@@ -211,9 +212,9 @@ bool ComponentTcad3d::GetElementaryCell(
   return true;
 }
 
-size_t ComponentTcad3d::FindElement(
-    const double x, const double y, const double z,
-    std::array<double, nMaxVertices>& w) const {
+size_t ComponentTcad3d::FindElement(const double x, const double y,
+                                    const double z,
+                                    std::array<double, nMaxVertices>& w) const {
 
   w.fill(0.);
   if (m_tree) {
@@ -235,8 +236,8 @@ size_t ComponentTcad3d::FindElement(
   return m_elements.size();
 }
 
-bool ComponentTcad3d::GetElement(const size_t i, double& vol,
-                                 double& dmin, double& dmax, int& type,
+bool ComponentTcad3d::GetElement(const size_t i, double& vol, double& dmin,
+                                 double& dmax, int& type,
                                  std::vector<size_t>& nodes, int& reg) const {
   nodes.clear();
   if (i >= m_elements.size()) {
@@ -251,18 +252,18 @@ bool ComponentTcad3d::GetElement(const size_t i, double& vol,
     const auto& v0 = m_vertices[element.vertex[0]];
     const auto& v1 = m_vertices[element.vertex[1]];
     const auto& v2 = m_vertices[element.vertex[2]];
-    const double vx = (v1[1] - v0[1]) * (v2[2] - v0[2]) - 
-                      (v1[2] - v0[2]) * (v2[1] - v0[1]);
-    const double vy = (v1[2] - v0[2]) * (v2[0] - v0[0]) - 
-                      (v1[0] - v0[0]) * (v2[2] - v0[2]);
-    const double vz = (v1[0] - v0[0]) * (v2[1] - v0[1]) - 
-                      (v1[1] - v0[1]) * (v2[0] - v0[0]);
+    const double vx =
+        (v1[1] - v0[1]) * (v2[2] - v0[2]) - (v1[2] - v0[2]) * (v2[1] - v0[1]);
+    const double vy =
+        (v1[2] - v0[2]) * (v2[0] - v0[0]) - (v1[0] - v0[0]) * (v2[2] - v0[2]);
+    const double vz =
+        (v1[0] - v0[0]) * (v2[1] - v0[1]) - (v1[1] - v0[1]) * (v2[0] - v0[0]);
     vol = sqrt(vx * vx + vy * vy + vz * vz);
-    const double a = sqrt(pow(v1[0] - v0[0], 2) + pow(v1[1] - v0[1], 2) + 
+    const double a = sqrt(pow(v1[0] - v0[0], 2) + pow(v1[1] - v0[1], 2) +
                           pow(v1[2] - v0[2], 2));
-    const double b = sqrt(pow(v2[0] - v0[0], 2) + pow(v2[1] - v0[1], 2) + 
+    const double b = sqrt(pow(v2[0] - v0[0], 2) + pow(v2[1] - v0[1], 2) +
                           pow(v2[2] - v0[2], 2));
-    const double c = sqrt(pow(v1[0] - v2[0], 2) + pow(v1[1] - v2[1], 2) + 
+    const double c = sqrt(pow(v1[0] - v2[0], 2) + pow(v1[1] - v2[1], 2) +
                           pow(v1[2] - v2[2], 2));
     dmin = std::min({a, b, c});
     dmax = std::max({a, b, c});
@@ -308,8 +309,8 @@ bool ComponentTcad3d::GetElement(const size_t i, double& vol,
   return true;
 }
 
-bool ComponentTcad3d::GetNode(const size_t i, double& x, double& y,
-                              double& z, double& v, double& ex, double& ey,
+bool ComponentTcad3d::GetNode(const size_t i, double& x, double& y, double& z,
+                              double& v, double& ex, double& ey,
                               double& ez) const {
   if (i >= m_vertices.size()) {
     std::cerr << m_className << "::GetNode: Index out of range.\n";
@@ -328,9 +329,9 @@ bool ComponentTcad3d::GetNode(const size_t i, double& x, double& y,
   return true;
 }
 
-bool ComponentTcad3d::InTetrahedron(
-    const double x, const double y, const double z, const Element& element,
-    std::array<double, nMaxVertices>& w) const {
+bool ComponentTcad3d::InTetrahedron(const double x, const double y,
+                                    const double z, const Element& element,
+                                    std::array<double, nMaxVertices>& w) const {
   const auto& v0 = m_vertices[element.vertex[0]];
   const auto& v1 = m_vertices[element.vertex[1]];
   const auto& v2 = m_vertices[element.vertex[2]];
@@ -409,9 +410,9 @@ bool ComponentTcad3d::InTetrahedron(
   return true;
 }
 
-bool ComponentTcad3d::InTriangle(
-    const double x, const double y, const double z, const Element& element,
-    std::array<double, nMaxVertices>& w) const {
+bool ComponentTcad3d::InTriangle(const double x, const double y, const double z,
+                                 const Element& element,
+                                 std::array<double, nMaxVertices>& w) const {
   const auto& v0 = m_vertices[element.vertex[0]];
   const auto& v1 = m_vertices[element.vertex[1]];
   const auto& v2 = m_vertices[element.vertex[2]];
@@ -446,5 +447,4 @@ bool ComponentTcad3d::InTriangle(
 
   return true;
 }
-
 }

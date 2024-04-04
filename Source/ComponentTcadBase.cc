@@ -5,6 +5,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <map>
 
 #include "Garfield/ComponentTcadBase.hh"
 #include "Garfield/GarfieldConstants.hh"
@@ -37,74 +38,82 @@ bool ExtractFromBrackets(std::string& line) {
 void PrintError(const std::string& fcn, const std::string& filename,
                 const unsigned int line) {
   std::cerr << fcn << ":\n"
-            << "    Error reading file " << filename 
-            << " (line " << line << ").\n";
+            << "    Error reading file " << filename << " (line " << line
+            << ").\n";
 }
-
 }
 
 namespace Garfield {
 
-template<size_t N>
-void ComponentTcadBase<N>::WeightingField(
-    const double x, const double y, const double z, 
-    double& wx, double& wy, double& wz, const std::string& label) {
+template <size_t N>
+void ComponentTcadBase<N>::WeightingField(const double x, const double y,
+                                          const double z, double& wx,
+                                          double& wy, double& wz,
+                                          const std::string& label) {
   wx = wy = wz = 0.;
-  if (m_wfield.empty()) {
-    std::cerr << m_className << "::WeightingField: Not available.\n";
+  if (m_wfield[label].empty()) {
+    std::cerr << m_className << "::WeightingField: No fieldmap for " << label
+              << " available.\n";
     return;
   }
   double dx = 0., dy = 0., dz = 0.;
   if (!GetOffset(label, dx, dy, dz)) return;
-  Interpolate(x - dx, y - dy, z - dz, m_wfield, wx, wy, wz);
+  Interpolate(x - dx, y - dy, z - dz, m_wfield[label], wx, wy, wz);
 }
 
-template<size_t N>
-double ComponentTcadBase<N>::WeightingPotential(
-    const double x, const double y, const double z, 
-    const std::string& label) {
+template <size_t N>
+double ComponentTcadBase<N>::WeightingPotential(const double x, const double y,
+                                                const double z,
+                                                const std::string& label) {
 
-  if (m_wpot.empty()) {
-    std::cerr << m_className << "::WeightingPotential: Not available.\n";
+  if (m_wpot[label].empty()) {
+    std::cerr << m_className << "::WeightingPotential: No fieldmap for "
+              << label << " available.\n";
     return 0.;
   }
   double dx = 0., dy = 0., dz = 0.;
   if (!GetOffset(label, dx, dy, dz)) return 0.;
   double v = 0.;
-  Interpolate(x - dx, y - dy, z - dz, m_wpot, v);
+  Interpolate(x - dx, y - dy, z - dz, m_wpot[label], v);
   return v;
 }
 
-template<size_t N>
-void ComponentTcadBase<N>::DelayedWeightingField(
-    const double x, const double y, const double z, const double t, 
-    double& wx, double& wy, double& wz, const std::string& label) {
+template <size_t N>
+void ComponentTcadBase<N>::DelayedWeightingField(const double x, const double y,
+                                                 const double z, const double t,
+                                                 double& wx, double& wy,
+                                                 double& wz,
+                                                 const std::string& label) {
   wx = wy = wz = 0.;
-  if (m_dwf.empty()) {
-    std::cerr << m_className << "::DelayedWeightingField: Not available.\n";
+
+  if (m_dwf[label].empty()) {
+    std::cerr << m_className << "::DelayedWeightingField: No fieldmap for "
+              << label << " available.\n";
     return;
   }
-  if (m_dwtf.empty()) return;
-  if (t < m_dwtf.front() || t > m_dwtf.back()) return;
+
+  if (m_dwtf[label].empty()) return;
+  if (t < m_dwtf[label].front() || t > m_dwtf[label].back()) return;
 
   double dx = 0., dy = 0., dz = 0.;
   if (!GetOffset(label, dx, dy, dz)) return;
 
-  const auto it1 = std::upper_bound(m_dwtf.cbegin(), m_dwtf.cend(), t);
+  const auto it1 =
+      std::upper_bound(m_dwtf[label].cbegin(), m_dwtf[label].cend(), t);
   const auto it0 = std::prev(it1);
   const double dt = t - *it0;
-  const auto i0 = std::distance(m_dwtf.cbegin(), it0);
+  const auto i0 = std::distance(m_dwtf[label].cbegin(), it0);
   double wx0 = 0., wy0 = 0., wz0 = 0.;
-  Interpolate(x - dx, y - dy, z - dz, m_dwf[i0], wx0, wy0, wz0);
-  if (dt < Small || it1 == m_dwtf.cend()) {
+  Interpolate(x - dx, y - dy, z - dz, m_dwf[label][i0], wx0, wy0, wz0);
+  if (dt < Small || it1 == m_dwtf[label].cend()) {
     wx = wx0;
     wy = wy0;
     wz = wz0;
     return;
   }
-  const auto i1 = std::distance(m_dwtf.cbegin(), it1);
+  const auto i1 = std::distance(m_dwtf[label].cbegin(), it1);
   double wx1 = 0., wy1 = 0., wz1 = 0.;
-  Interpolate(x - dx, y - dy, z - dz, m_dwf[i1], wx1, wy1, wz1);
+  Interpolate(x - dx, y - dy, z - dz, m_dwf[label][i1], wx1, wy1, wz1);
   const double f1 = dt / (*it1 - *it0);
   const double f0 = 1. - f1;
   wx = f0 * wx0 + f1 * wx1;
@@ -112,51 +121,54 @@ void ComponentTcadBase<N>::DelayedWeightingField(
   wz = f0 * wz0 + f1 * wz1;
 }
 
-template<size_t N>
+template <size_t N>
 double ComponentTcadBase<N>::DelayedWeightingPotential(
     const double x, const double y, const double z, const double t,
     const std::string& label) {
 
-  if (m_dwp.empty()) {
-    std::cerr << m_className << "::DelayedWeightingPotential: Not available.\n";
+  if (m_dwp[label].empty()) {
+    std::cerr << m_className << "::DelayedWeightingPotential: No fieldmap for "
+              << label << " available.\n";
     return 0.;
   }
-  if (m_dwtp.empty()) return 0.;
-  if (t < m_dwtp.front() || t > m_dwtp.back()) return 0.;
+
+  if (m_dwtp[label].empty()) return 0.;
+  if (t < m_dwtp[label].front() || t > m_dwtp[label].back()) return 0.;
 
   double dx = 0., dy = 0., dz = 0.;
   if (!GetOffset(label, dx, dy, dz)) return 0.;
 
-  const auto it1 = std::upper_bound(m_dwtp.cbegin(), m_dwtp.cend(), t);
+  const auto it1 =
+      std::upper_bound(m_dwtp[label].cbegin(), m_dwtp[label].cend(), t);
   const auto it0 = std::prev(it1);
   const double dt = t - *it0;
-  const auto i0 = std::distance(m_dwtp.cbegin(), it0);
+  const auto i0 = std::distance(m_dwtp[label].cbegin(), it0);
   double v0 = 0.;
-  Interpolate(x - dx, y - dy, z - dz, m_dwp[i0], v0);
-  if (dt < Small || it1 == m_dwtp.cend()) return v0;
+  Interpolate(x - dx, y - dy, z - dz, m_dwp[label][i0], v0);
+  if (dt < Small || it1 == m_dwtp[label].cend()) return v0;
 
-  const auto i1 = std::distance(m_dwtp.cbegin(), it1);
+  const auto i1 = std::distance(m_dwtp[label].cbegin(), it1);
   double v1 = 0.;
-  Interpolate(x - dx, y - dy, z - dz, m_dwp[i1], v1);
+  Interpolate(x - dx, y - dy, z - dz, m_dwp[label][i1], v1);
   const double f1 = dt / (*it1 - *it0);
   const double f0 = 1. - f1;
   return f0 * v0 + f1 * v1;
-} 
+}
 
-template<size_t N>
-bool ComponentTcadBase<N>::GetOffset(
-    const std::string& label, double& dx, double& dy, double& dz) const {
-  
-  const auto it = std::find(m_wlabel.cbegin(), m_wlabel.cend(), label);
-  if (it == m_wlabel.end()) return false;
-  const auto i = std::distance(m_wlabel.begin(), it);
-  dx = m_wshift[i][0]; 
-  dy = m_wshift[i][1];
-  dz = m_wshift[i][2];
+template <size_t N>
+bool ComponentTcadBase<N>::GetOffset(const std::string& label, double& dx,
+                                     double& dy, double& dz) const{
+
+  if (m_wshift.count(label) == 0 || m_wshift.at(label).empty()) return false;
+
+  dx = m_wshift.at(label)[0];
+  dy = m_wshift.at(label)[1];
+  dz = m_wshift.at(label)[2];
+    
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::Initialise(const std::string& gridfilename,
                                       const std::string& datafilename) {
 
@@ -227,7 +239,7 @@ bool ComponentTcadBase<N>::Initialise(const std::string& gridfilename,
   const std::array<std::string, 3> axes = {"x", "y", "z"};
   std::cout << "    Bounding box:\n";
   for (size_t i = 0; i < N; ++i) {
-    std::cout << "      " << m_bbMin[i] << " < " << axes[i] << " [cm] < " 
+    std::cout << "      " << m_bbMin[i] << " < " << axes[i] << " [cm] < "
               << m_bbMax[i] << "\n";
   }
   std::cout << "    Voltage range:\n"
@@ -268,14 +280,14 @@ bool ComponentTcadBase<N>::Initialise(const std::string& gridfilename,
     bool degenerate = false;
     const auto nV = ElementVertices(m_elements[i]);
     for (unsigned int j = 0; j < nV; ++j) {
-      for (unsigned int k = j  + 1; k < nV; ++k) {
+      for (unsigned int k = j + 1; k < nV; ++k) {
         if (element.vertex[j] == element.vertex[k]) {
           degenerate = true;
           break;
         }
       }
       if (degenerate) break;
-    } 
+    }
     if (degenerate) {
       degenerateElements.push_back(i);
     }
@@ -305,16 +317,18 @@ bool ComponentTcadBase<N>::Initialise(const std::string& gridfilename,
     std::cout << ", " << nElementsByRegion[i] << " elements\n";
   }
 
-  std::map<int, std::string> shapes = {
-    {0, "points"}, {1, "lines"}, {2, "triangles"}, {3, "rectangles"},
-    {5, "tetrahedra"}}; 
+  std::map<int, std::string> shapes = {{0, "points"},
+                                       {1, "lines"},
+                                       {2, "triangles"},
+                                       {3, "rectangles"},
+                                       {5, "tetrahedra"}};
 
   std::cout << "    Number of elements: " << nElements << "\n";
   for (const auto& n : nElementsByShape) {
     if (n.second > 0) {
       std::cout << "      " << n.second << " " << shapes[n.first] << "\n";
     }
-  } 
+  }
   if (nElementsOther > 0) {
     std::cerr << "      " << nElementsOther << " elements of unknown type.\n"
               << "      Program bug!\n";
@@ -338,7 +352,7 @@ bool ComponentTcadBase<N>::Initialise(const std::string& gridfilename,
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::GetVoltageRange(double& vmin, double& vmax) {
   if (!m_ready) return false;
   vmin = m_pMin;
@@ -346,7 +360,7 @@ bool ComponentTcadBase<N>::GetVoltageRange(double& vmin, double& vmax) {
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
                                              const std::string& datfile2,
                                              const double dv,
@@ -358,15 +372,27 @@ bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
     return false;
   }
   if (dv < Small) {
-     std::cerr << m_className << "::SetWeightingField:\n"
-               << "    Voltage difference must be > 0.\n";
-     return false;
+    std::cerr << m_className << "::SetWeightingField:\n"
+              << "    Voltage difference must be > 0.\n";
+    return false;
   }
   const double s = 1. / dv;
-  m_wfield.clear();
-  m_wpot.clear();
-  m_wlabel.clear();
-  m_wshift.clear();
+
+  // Check if a weighting field with the same label already exists.
+  if (m_wfield.count(label) > 0) {
+    std::cout << m_className << "::SetWeightingField:\n"
+              << "    Replacing existing weighting field " << label << ".\n";
+    m_wfield[label].clear();
+    m_wpot[label].clear();
+    m_wshift[label].clear();
+  }
+  if (m_dwf.count(label) > 0) {
+    m_dwf[label].clear();
+    m_dwp[label].clear();
+
+    m_dwtf.clear();
+    m_dwtp.clear();
+  }
 
   // Load first the field/potential at nominal bias.
   std::vector<std::array<double, N> > wf1;
@@ -377,8 +403,8 @@ bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
     return false;
   }
 
-  // Then load the field/potential for the configuration with the potential 
-  // at the electrode to be read out increased by small voltage dv. 
+  // Then load the field/potential for the configuration with the potential
+  // at the electrode to be read out increased by small voltage dv.
   std::vector<std::array<double, N> > wf2;
   std::vector<double> wp2;
   if (!LoadWeightingField(datfile2, wf2, wp2)) {
@@ -401,28 +427,30 @@ bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
   }
   if (!foundField && !foundPotential) return false;
   if (foundField) {
-    m_wfield.resize(nVertices);
+    m_wfield[label].resize(nVertices);
     for (size_t i = 0; i < nVertices; ++i) {
       for (size_t j = 0; j < N; ++j) {
-        m_wfield[i][j] = (wf2[i][j] - wf1[i][j]) * s;
-      } 
+        m_wfield[label][i][j] = (wf2[i][j] - wf1[i][j]) * s;
+      }
     }
   }
   if (foundPotential) {
-    m_wpot.assign(nVertices, 0.);
+    m_wpot[label].assign(nVertices, 0.);
     for (size_t i = 0; i < nVertices; ++i) {
-      m_wpot[i] = (wp2[i] - wp1[i]) * s; 
+      m_wpot[label][i] = (wp2[i] - wp1[i]) * s;
     }
   }
-  m_wlabel.push_back(label);
-  m_wshift.push_back({0., 0., 0.});
+
+  m_wshift[label] = {0., 0., 0.};
   return true;
 }
 
-template<size_t N>
-bool ComponentTcadBase<N>::SetWeightingPotential(
-    const std::string& datfile1, const std::string& datfile2,
-    const double dv, const double t, const std::string& label) {
+template <size_t N>
+bool ComponentTcadBase<N>::SetWeightingPotential(const std::string& datfile1,
+                                                 const std::string& datfile2,
+                                                 const double dv,
+                                                 const double t,
+                                                 const std::string& label) {
 
   if (!m_ready) {
     std::cerr << m_className << "::SetWeightingPotential:\n"
@@ -430,21 +458,17 @@ bool ComponentTcadBase<N>::SetWeightingPotential(
     return false;
   }
   if (dv < Small) {
-     std::cerr << m_className << "::SetWeightingPotential:\n"
-               << "    Voltage difference must be > 0.\n";
-     return false;
+    std::cerr << m_className << "::SetWeightingPotential:\n"
+              << "    Voltage difference must be > 0.\n";
+    return false;
   }
   const double s = 1. / dv;
- 
-  if (m_wlabel.empty()) {
+
+  // Check if the prompt weighting potential with the same label already exists.
+  if (m_wpot.count(label) == 0 || m_wpot[label].empty()) {
     std::cerr << m_className << "::SetWeightingPotential:\n"
               << "    Prompt component not present.\n"
               << "    Import the map for t = 0 first.\n";
-    return false;
-  }
-  if (label != m_wlabel.front()) {
-    std::cerr << m_className << "::SetWeightingPotential:\n"
-              << "    Label does not match the existing prompt component.\n";
     return false;
   }
 
@@ -469,34 +493,36 @@ bool ComponentTcadBase<N>::SetWeightingPotential(
     std::cerr << m_className << "::SetWeightingPotential:\n"
               << "    Could not load electrostatic potentials.\n";
     return false;
-  } 
-  if (m_wpot.size() != nVertices) {
+  }
+  if (m_wpot[label].size() != nVertices) {
     std::cerr << m_className << "::SetWeightingPotential:\n"
               << "    Prompt weighting potential not present.\n";
-    return false; 
+    return false;
   }
   std::vector<double> wp(nVertices, 0.);
   for (size_t i = 0; i < nVertices; ++i) {
     wp[i] = (wp2[i] - wp1[i]) * s;
     // Subtract the prompt component.
-    wp[i] -= m_wpot[i]; 
+    wp[i] -= m_wpot[label][i];
   }
-  if (m_dwtp.empty() || t > m_dwtp.back()) {
-    m_dwtp.push_back(t);
-    m_dwp.push_back(std::move(wp));
+  if (m_dwtp[label].empty() || t > m_dwtp[label].back()) {
+    m_dwtp[label].push_back(t);
+    m_dwp[label].push_back(std::move(wp));
   } else {
-    const auto it = std::upper_bound(m_dwtp.begin(), m_dwtp.end(), t);
-    const auto n = std::distance(m_dwtp.begin(), it);
-    m_dwtp.insert(it, t);
-    m_dwp.insert(m_dwp.begin() + n, std::move(wp));
+    const auto it =
+        std::upper_bound(m_dwtp[label].begin(), m_dwtp[label].end(), t);
+    const auto n = std::distance(m_dwtp[label].begin(), it);
+    m_dwtp[label].insert(it, t);
+    m_dwp[label].insert(m_dwp[label].begin() + n, std::move(wp));
   }
   return true;
 }
 
-template<size_t N>
-bool ComponentTcadBase<N>::SetWeightingField(
-    const std::string& datfile1, const std::string& datfile2,
-    const double dv, const double t, const std::string& label) {
+template <size_t N>
+bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
+                                             const std::string& datfile2,
+                                             const double dv, const double t,
+                                             const std::string& label) {
 
   if (!m_ready) {
     std::cerr << m_className << "::SetWeightingField:\n"
@@ -504,21 +530,17 @@ bool ComponentTcadBase<N>::SetWeightingField(
     return false;
   }
   if (dv < Small) {
-     std::cerr << m_className << "::SetWeightingField:\n"
-               << "    Voltage difference must be > 0.\n";
-     return false;
+    std::cerr << m_className << "::SetWeightingField:\n"
+              << "    Voltage difference must be > 0.\n";
+    return false;
   }
   const double s = 1. / dv;
- 
-  if (m_wlabel.empty()) {
+
+  // Check if the prompt weighting potential with the same label already exists.
+  if (m_wfield.count(label) == 0 || m_wfield[label].empty()) {
     std::cerr << m_className << "::SetWeightingField:\n"
               << "    Prompt component not present.\n"
               << "    Import the map for t = 0 first.\n";
-    return false;
-  }
-  if (label != m_wlabel.front()) {
-    std::cerr << m_className << "::SetWeightingField:\n"
-              << "    Label does not match the existing prompt component.\n";
     return false;
   }
 
@@ -544,66 +566,69 @@ bool ComponentTcadBase<N>::SetWeightingField(
               << "    Could not load electric field values.\n";
     return false;
   }
-  if (m_wfield.size() != nVertices) {
+  if (m_wfield[label].size() != nVertices) {
     std::cerr << m_className << "::SetWeightingField:\n"
               << "    Prompt weighting field not present.\n";
-    return false; 
+    return false;
   }
-  std::vector<std::array<double, N> > wf; 
+  std::vector<std::array<double, N> > wf;
   wf.resize(nVertices);
   for (size_t i = 0; i < nVertices; ++i) {
     for (size_t j = 0; j < N; ++j) {
       wf[i][j] = (wf2[i][j] - wf1[i][j]) * s;
-    } 
+    }
   }
-  if (m_dwtf.empty() || t > m_dwtf.back()) {
-    m_dwtf.push_back(t);
-    m_dwf.push_back(std::move(wf));
+  if (m_dwtf[label].empty() || t > m_dwtf[label].back()) {
+    m_dwtf[label].push_back(t);
+    m_dwf[label].push_back(std::move(wf));
   } else {
-    const auto it = std::upper_bound(m_dwtf.begin(), m_dwtf.end(), t);
-    const auto n = std::distance(m_dwtf.begin(), it);
-    m_dwtf.insert(it, t);
-    m_dwf.insert(m_dwf.begin() + n, std::move(wf));
+    const auto it =
+        std::upper_bound(m_dwtf[label].begin(), m_dwtf[label].end(), t);
+    const auto n = std::distance(m_dwtf[label].begin(), it);
+    m_dwtf[label].insert(it, t);
+    m_dwf[label].insert(m_dwf[label].begin() + n, std::move(wf));
   }
   return true;
 }
 
-template<size_t N>
-bool ComponentTcadBase<N>::SetWeightingFieldShift(
-  const std::string& label, const double x, const double y, const double z) {
-  if (m_wlabel.empty()) {
+template <size_t N>
+bool ComponentTcadBase<N>::SetWeightingFieldShift(const std::string& label,
+                                                  const double x,
+                                                  const double y,
+                                                  const double z) {
+
+  if ((m_wfield.count(label) == 0 || m_wfield[label].empty()) &&
+      (m_wpot.count(label) == 0 || m_wpot[label].empty())) {
     std::cerr << m_className << "::SetWeightingFieldShift:\n"
               << "    No map of weighting potentials/fields loaded.\n";
     return false;
   }
-  const size_t n = m_wlabel.size();
-  for (size_t i = 0; i < n; ++i) {
-    if (m_wlabel[i] == label) {
-      m_wshift[i] = {x, y, z};
-      std::cout << m_className << "::SetWeightingFieldShift:\n"
-                << "    Changing offset of electrode \'" << label 
-                << "\' to (" << x << ", " << y << ", " << z << ") cm.\n";
-      return true;
-    }
-  } 
-  m_wlabel.push_back(label);
-  m_wshift.push_back({x, y, z});
-  std::cout << m_className << "::SetWeightingFieldShift:\n"
-            << "    Adding electrode \'" << label << "\' with offset (" 
-            << x << ", " << y << ", " << z << ") cm.\n";
+
+  m_wshift[label] = {x, y, z};
+
+  if (m_wshift.count(label) > 0) {
+    std::cout << m_className << "::SetWeightingFieldShift:\n"
+              << "    Changing offset of electrode \'" << label << "\' to ("
+              << x << ", " << y << ", " << z << ") cm.\n";
+
+  } else {
+    std::cout << m_className << "::SetWeightingFieldShift:\n"
+              << "    Adding electrode \'" << label << "\' with offset (" << x
+              << ", " << y << ", " << z << ") cm.\n";
+  }
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 void ComponentTcadBase<N>::EnableVelocityMap(const bool on) {
   m_useVelocityMap = on;
   if (m_ready && (m_eVelocity.empty() && m_hVelocity.empty())) {
     std::cout << m_className << "::EnableVelocityMap:\n"
-              << "    Warning: current map does not include velocity data.\n"; 
+              << "    Warning: current map does not include velocity data.\n";
   }
-} 
+}
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
   // Open the file containing the mesh description.
   std::ifstream gridfile(filename);
@@ -847,7 +872,8 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
         if (faces[j].type != 3 && faces[j].type != 4) {
           std::cerr << m_className << "::LoadGrid:\n"
                     << "    Face with index " << j
-                    << " has invalid number of edges, " << faces[j].type << ".\n";
+                    << " has invalid number of edges, " << faces[j].type
+                    << ".\n";
           return false;
         }
         for (int k = 0; k < faces[j].type; ++k) {
@@ -895,7 +921,7 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
       if (N == 2) {
         if (type == 0) {
           // Point
-          unsigned int p = 0; 
+          unsigned int p = 0;
           gridfile >> p;
           // Make sure the index is not out of range.
           if (p >= nVertices) {
@@ -944,9 +970,9 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
           }
           // Rearrange vertices such that point 0 is on the left.
           while (m_vertices[m_elements[j].vertex[0]][0] >
-                 m_vertices[m_elements[j].vertex[1]][0] ||
+                     m_vertices[m_elements[j].vertex[1]][0] ||
                  m_vertices[m_elements[j].vertex[0]][0] >
-                 m_vertices[m_elements[j].vertex[2]][0]) {
+                     m_vertices[m_elements[j].vertex[2]][0]) {
             const int tmp = m_elements[j].vertex[0];
             m_elements[j].vertex[0] = m_elements[j].vertex[1];
             m_elements[j].vertex[1] = m_elements[j].vertex[2];
@@ -963,7 +989,7 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
               std::cerr << "    Edge index out of range.\n";
               return false;
             }
-            if (p >= 0) { 
+            if (p >= 0) {
               m_elements[j].vertex[k] = edgeP1[p];
             } else {
               m_elements[j].vertex[k] = edgeP2[-p - 1];
@@ -971,11 +997,11 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
           }
           // Rearrange vertices such that point 0 is on the left.
           while (m_vertices[m_elements[j].vertex[0]][0] >
-                 m_vertices[m_elements[j].vertex[1]][0] ||
+                     m_vertices[m_elements[j].vertex[1]][0] ||
                  m_vertices[m_elements[j].vertex[0]][0] >
-                 m_vertices[m_elements[j].vertex[2]][0] ||
+                     m_vertices[m_elements[j].vertex[2]][0] ||
                  m_vertices[m_elements[j].vertex[0]][0] >
-                 m_vertices[m_elements[j].vertex[3]][0]) {
+                     m_vertices[m_elements[j].vertex[3]][0]) {
             const int tmp = m_elements[j].vertex[0];
             m_elements[j].vertex[0] = m_elements[j].vertex[1];
             m_elements[j].vertex[1] = m_elements[j].vertex[2];
@@ -1003,10 +1029,10 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
           if (edge1 < 0) edge1 = -edge1 - 1;
           if (edge2 < 0) edge2 = -edge2 - 1;
           // Make sure the indices are not out of range.
-          if (edge0 >= (int)nEdges || edge1 >= (int)nEdges || 
+          if (edge0 >= (int)nEdges || edge1 >= (int)nEdges ||
               edge2 >= (int)nEdges) {
-              PrintError(m_className + "::LoadGrid", filename, iLine);
-              std::cerr << "    Edge index out of range.\n";
+            PrintError(m_className + "::LoadGrid", filename, iLine);
+            std::cerr << "    Edge index out of range.\n";
             return false;
           }
           m_elements[j].vertex[0] = edgeP1[edge0];
@@ -1030,7 +1056,7 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
           if (face2 < 0) face2 = -face2 - 1;
           if (face3 < 0) face3 = -face3 - 1;
           // Make sure the face indices are not out of range.
-          if (face0 >= (int)nFaces || face1 >= (int)nFaces || 
+          if (face0 >= (int)nFaces || face1 >= (int)nFaces ||
               face2 >= (int)nFaces || face3 >= (int)nFaces) {
             PrintError(m_className + "::LoadGrid", filename, iLine);
             std::cerr << "    Face index out of range.\n";
@@ -1044,7 +1070,7 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
           if (edge1 < 0) edge1 = -edge1 - 1;
           if (edge2 < 0) edge2 = -edge2 - 1;
           // Make sure the edge indices are not out of range.
-          if (edge0 >= (int)nEdges || edge1 >= (int)nEdges || 
+          if (edge0 >= (int)nEdges || edge1 >= (int)nEdges ||
               edge2 >= (int)nEdges) {
             PrintError(m_className + "::LoadGrid", filename, iLine);
             std::cerr << "    Edge index out of range.\n";
@@ -1069,19 +1095,18 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
           const auto v0 = m_elements[j].vertex[0];
           const auto v1 = m_elements[j].vertex[1];
           const auto v2 = m_elements[j].vertex[2];
-          if (edgeP1[edge0] != v0 && edgeP1[edge0] != v1 && edgeP1[edge0] != v2) {
+          if (edgeP1[edge0] != v0 && edgeP1[edge0] != v1 &&
+              edgeP1[edge0] != v2) {
             m_elements[j].vertex[3] = edgeP1[edge0];
-          } else if (edgeP2[edge0] != v0 && edgeP2[edge0] != v1 && 
+          } else if (edgeP2[edge0] != v0 && edgeP2[edge0] != v1 &&
                      edgeP2[edge0] != v2) {
             m_elements[j].vertex[3] = edgeP2[edge0];
-          } else if (edgeP1[edge1] != v0 &&
-                     edgeP1[edge1] != v1 &&
+          } else if (edgeP1[edge1] != v0 && edgeP1[edge1] != v1 &&
                      edgeP1[edge1] != v2) {
             m_elements[j].vertex[3] = edgeP1[edge1];
-          } else if (edgeP2[edge1] != v0 &&
-                     edgeP2[edge1] != v1 &&
+          } else if (edgeP2[edge1] != v0 && edgeP2[edge1] != v1 &&
                      edgeP2[edge1] != v2) {
-              m_elements[j].vertex[3] = edgeP2[edge1];
+            m_elements[j].vertex[3] = edgeP2[edge1];
           } else {
             PrintError(m_className + "::LoadGrid", filename, iLine);
             std::cerr << "    Face 1 of element " << j << " is degenerate.\n";
@@ -1143,8 +1168,8 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
     std::getline(gridfile, line);
     if (!ExtractFromBrackets(line)) {
       std::cerr << m_className << "::LoadGrid:\n"
-                << "    Could not read number of elements in region " 
-                << name << ".\n";
+                << "    Could not read number of elements in region " << name
+                << ".\n";
       return false;
     }
     int nElementsRegion;
@@ -1156,8 +1181,8 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
       gridfile >> iElement;
       if (iElement >= m_elements.size()) {
         std::cerr << m_className << "::LoadGrid:\n"
-                  << "    Error reading element indices for region " 
-                  << name << ".\n";
+                  << "    Error reading element indices for region " << name
+                  << ".\n";
         return false;
       }
       m_elements[iElement].region = index;
@@ -1171,7 +1196,7 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
 
   std::ifstream datafile(filename);
@@ -1209,8 +1234,8 @@ bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
     data >> dataset;
     data.clear();
     if (m_debug && dataset != "[") {
-      std::cout << m_className << "::LoadData: Found dataset " 
-                << dataset << ".\n";
+      std::cout << m_className << "::LoadData: Found dataset " << dataset
+                << ".\n";
     }
     if (dataset == "ElectrostaticPotential") {
       if (m_epot.empty()) m_epot.assign(nVertices, 0.);
@@ -1298,14 +1323,14 @@ bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::ReadDataset(std::ifstream& datafile,
                                        const std::string& dataset) {
 
   if (!datafile.is_open()) return false;
-  enum DataSet { 
-    ElectrostaticPotential, 
-    EField, 
+  enum DataSet {
+    ElectrostaticPotential,
+    EField,
     eDriftVelocity,
     hDriftVelocity,
     eMobility,
@@ -1316,7 +1341,7 @@ bool ComponentTcadBase<N>::ReadDataset(std::ifstream& datafile,
     hLifetime,
     DonorTrapOccupation,
     AcceptorTrapOccupation,
-    Unknown 
+    Unknown
   };
   DataSet ds = Unknown;
   if (dataset == "ElectrostaticPotential") {
@@ -1379,8 +1404,8 @@ bool ComponentTcadBase<N>::ReadDataset(std::ifstream& datafile,
   }
   if (m_debug) {
     std::cout << m_className << "::ReadDataset:\n"
-              << "    Reading dataset " << dataset << " for region " 
-              << name << ".\n";
+              << "    Reading dataset " << dataset << " for region " << name
+              << ".\n";
   }
   // Get the number of values.
   std::getline(datafile, line);
@@ -1494,10 +1519,10 @@ bool ComponentTcadBase<N>::ReadDataset(std::ifstream& datafile,
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::LoadWeightingField(
-    const std::string& filename,
-    std::vector<std::array<double, N> >& wf, std::vector<double>& wp) {
+    const std::string& filename, std::vector<std::array<double, N> >& wf,
+    std::vector<double>& wp) {
 
   std::ifstream datafile(filename, std::ios::in);
   if (!datafile) {
@@ -1608,7 +1633,8 @@ bool ComponentTcadBase<N>::LoadWeightingField(
       if (ivertex >= nVertices) {
         std::cerr << m_className << "::LoadWeightingField:\n"
                   << "    Dataset " << dataset
-                  << " has more values than vertices in region " << name << "\n";
+                  << " has more values than vertices in region " << name
+                  << "\n";
         ok = false;
         break;
       }
@@ -1629,7 +1655,7 @@ bool ComponentTcadBase<N>::LoadWeightingField(
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 void ComponentTcadBase<N>::PrintRegions() const {
 
   if (m_regions.empty()) {
@@ -1643,9 +1669,9 @@ void ComponentTcadBase<N>::PrintRegions() const {
             << "    Currently " << nRegions << " regions are defined.\n"
             << " Index   Name               Material            Medium\n";
   for (size_t i = 0; i < nRegions; ++i) {
-    std::cout << std::setw(8) << std::right << i << " " 
-              << std::setw(20) << std::left << m_regions[i].name << " "
-              << std::setw(18) << std::left << m_regions[i].material << " ";
+    std::cout << std::setw(8) << std::right << i << " " << std::setw(20)
+              << std::left << m_regions[i].name << " " << std::setw(18)
+              << std::left << m_regions[i].material << " ";
     if (!m_regions[i].medium) {
       std::cout << std::setw(18) << "none";
     } else {
@@ -1659,7 +1685,7 @@ void ComponentTcadBase<N>::PrintRegions() const {
   }
 }
 
-template<size_t N>
+template <size_t N>
 void ComponentTcadBase<N>::GetRegion(const size_t i, std::string& name,
                                      bool& active) const {
   if (i >= m_regions.size()) {
@@ -1670,7 +1696,7 @@ void ComponentTcadBase<N>::GetRegion(const size_t i, std::string& name,
   active = m_regions[i].drift;
 }
 
-template<size_t N>
+template <size_t N>
 void ComponentTcadBase<N>::SetDriftRegion(const size_t i) {
   if (i >= m_regions.size()) {
     std::cerr << m_className << "::SetDriftRegion: Index out of range.\n";
@@ -1679,7 +1705,7 @@ void ComponentTcadBase<N>::SetDriftRegion(const size_t i) {
   m_regions[i].drift = true;
 }
 
-template<size_t N>
+template <size_t N>
 void ComponentTcadBase<N>::UnsetDriftRegion(const size_t i) {
   if (i >= m_regions.size()) {
     std::cerr << m_className << "::UnsetDriftRegion: Index out of range.\n";
@@ -1688,7 +1714,7 @@ void ComponentTcadBase<N>::UnsetDriftRegion(const size_t i) {
   m_regions[i].drift = false;
 }
 
-template<size_t N>
+template <size_t N>
 void ComponentTcadBase<N>::SetMedium(const size_t i, Medium* medium) {
   if (i >= m_regions.size()) {
     std::cerr << m_className << "::SetMedium: Index out of range.\n";
@@ -1701,8 +1727,8 @@ void ComponentTcadBase<N>::SetMedium(const size_t i, Medium* medium) {
   m_regions[i].medium = medium;
 }
 
-template<size_t N>
-void ComponentTcadBase<N>::SetMedium(const std::string& material, 
+template <size_t N>
+void ComponentTcadBase<N>::SetMedium(const std::string& material,
                                      Medium* medium) {
   if (!medium) {
     std::cerr << m_className << "::SetMedium: Null pointer.\n";
@@ -1713,21 +1739,20 @@ void ComponentTcadBase<N>::SetMedium(const std::string& material,
   for (size_t i = 0; i < nRegions; ++i) {
     if (material != m_regions[i].material) continue;
     m_regions[i].medium = medium;
-    std::cout << m_className << "::SetMedium: Associating region " << i
-              << " (" << m_regions[i].name << ") with " 
-              << medium->GetName() << ".\n";
+    std::cout << m_className << "::SetMedium: Associating region " << i << " ("
+              << m_regions[i].name << ") with " << medium->GetName() << ".\n";
     ++nMatch;
   }
   if (nMatch == 0) {
-    std::cerr << m_className << "::SetMedium: Found no region with material " 
+    std::cerr << m_className << "::SetMedium: Found no region with material "
               << material << ".\n";
   }
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::SetDonor(const size_t donorNumber,
-                               const double eXsec, const double hXsec,
-                               const double conc) {
+                                    const double eXsec, const double hXsec,
+                                    const double conc) {
   if (donorNumber >= m_donors.size()) {
     std::cerr << m_className << "::SetDonor: Index out of range.\n";
     return false;
@@ -1740,10 +1765,10 @@ bool ComponentTcadBase<N>::SetDonor(const size_t donorNumber,
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::SetAcceptor(const size_t acceptorNumber,
-                                  const double eXsec, const double hXsec,
-                                  const double conc) {
+                                       const double eXsec, const double hXsec,
+                                       const double conc) {
   if (acceptorNumber >= m_acceptors.size()) {
     std::cerr << m_className << "::SetAcceptor: Index out of range.\n";
     return false;
@@ -1756,73 +1781,73 @@ bool ComponentTcadBase<N>::SetAcceptor(const size_t acceptorNumber,
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::ElectronAttachment(const double x, const double y,
                                               const double z, double& eta) {
   Interpolate(x, y, z, m_eAttachment, eta);
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::HoleAttachment(const double x, const double y,
                                           const double z, double& eta) {
   Interpolate(x, y, z, m_hAttachment, eta);
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::ElectronTownsend(const double x, const double y,
                                             const double z, double& alpha) {
   Interpolate(x, y, z, m_eAlpha, alpha);
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::HoleTownsend(const double x, const double y,
                                         const double z, double& alpha) {
   Interpolate(x, y, z, m_hAlpha, alpha);
   return true;
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::ElectronVelocity(const double x, const double y,
-                                            const double z, double& vx, 
+                                            const double z, double& vx,
                                             double& vy, double& vz) {
   return Interpolate(x, y, z, m_eVelocity, vx, vy, vz);
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::HoleVelocity(const double x, const double y,
-                                        const double z, double& vx, 
-                                        double& vy, double& vz) {
+                                        const double z, double& vx, double& vy,
+                                        double& vz) {
   return Interpolate(x, y, z, m_hVelocity, vx, vy, vz);
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::GetElectronLifetime(const double x, const double y,
                                                const double z, double& tau) {
   return Interpolate(x, y, z, m_eLifetime, tau);
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::GetHoleLifetime(const double x, const double y,
                                            const double z, double& tau) {
   return Interpolate(x, y, z, m_hLifetime, tau);
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::GetElectronMobility(const double x, const double y,
                                                const double z, double& mob) {
   return Interpolate(x, y, z, m_eMobility, mob);
 }
 
-template<size_t N>
+template <size_t N>
 bool ComponentTcadBase<N>::GetHoleMobility(const double x, const double y,
                                            const double z, double& mob) {
   return Interpolate(x, y, z, m_hMobility, mob);
 }
 
-template<size_t N>
+template <size_t N>
 void ComponentTcadBase<N>::UpdatePeriodicity() {
   if (!m_ready) {
     std::cerr << m_className << "::UpdatePeriodicity:\n"
@@ -1839,7 +1864,7 @@ void ComponentTcadBase<N>::UpdatePeriodicity() {
     }
     if (m_axiallyPeriodic[i]) {
       std::cerr << m_className << "::UpdatePeriodicity:\n"
-                 << "    Axial symmetry is not supported. Reset.\n";
+                << "    Axial symmetry is not supported. Reset.\n";
       m_axiallyPeriodic.fill(false);
     }
     if (m_rotationSymmetric[i]) {
@@ -1850,7 +1875,7 @@ void ComponentTcadBase<N>::UpdatePeriodicity() {
   }
 }
 
-template<size_t N>
+template <size_t N>
 void ComponentTcadBase<N>::Cleanup() {
   // Vertices
   m_vertices.clear();
@@ -1864,7 +1889,6 @@ void ComponentTcadBase<N>::Cleanup() {
   // Weighting potential and field.
   m_wpot.clear();
   m_wfield.clear();
-  m_wlabel.clear();
   m_wshift.clear();
   m_dwf.clear();
   m_dwp.clear();
@@ -1888,8 +1912,8 @@ void ComponentTcadBase<N>::Cleanup() {
   m_hAttachment.clear();
 }
 
-template<size_t N>
-void ComponentTcadBase<N>::MapCoordinates(std::array<double, N>& x, 
+template <size_t N>
+void ComponentTcadBase<N>::MapCoordinates(std::array<double, N>& x,
                                           std::array<bool, N>& mirr) const {
   mirr.fill(false);
   for (size_t i = 0; i < N; ++i) {
@@ -1911,7 +1935,7 @@ void ComponentTcadBase<N>::MapCoordinates(std::array<double, N>& x,
   }
 }
 
-template<size_t N>
+template <size_t N>
 size_t ComponentTcadBase<N>::FindRegion(const std::string& name) const {
   const auto nRegions = m_regions.size();
   for (size_t j = 0; j < nRegions; ++j) {
@@ -1920,7 +1944,7 @@ size_t ComponentTcadBase<N>::FindRegion(const std::string& name) const {
   return m_regions.size();
 }
 
-template<size_t N>
+template <size_t N>
 void ComponentTcadBase<N>::UpdateAttachment() {
 
   if (m_vertices.empty()) return;
@@ -1929,7 +1953,7 @@ void ComponentTcadBase<N>::UpdateAttachment() {
   m_hAttachment.assign(nVertices, 0.);
 
   const size_t nAcceptors = m_acceptors.size();
-  for (size_t i = 0; i < nAcceptors; ++i) { 
+  for (size_t i = 0; i < nAcceptors; ++i) {
     const auto& defect = m_acceptors[i];
     if (defect.conc < 0.) continue;
     for (size_t j = 0; j < nVertices; ++j) {
@@ -1947,7 +1971,7 @@ void ComponentTcadBase<N>::UpdateAttachment() {
   for (size_t i = 0; i < nDonors; ++i) {
     const auto& defect = m_donors[i];
     if (defect.conc < 0.) continue;
-    for (size_t j = 0; j < nVertices; ++j) { 
+    for (size_t j = 0; j < nVertices; ++j) {
       const double f = m_donorOcc[j][i];
       if (defect.xsece > 0.) {
         m_eAttachment[j] += defect.conc * defect.xsece * f;

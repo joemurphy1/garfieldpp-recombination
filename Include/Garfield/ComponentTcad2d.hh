@@ -31,10 +31,10 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
     */
   bool GetElement(const size_t i, double& vol, double& dmin, double& dmax,
                   int& type, std::vector<size_t>& nodes, int& reg) const;
-  /// Get the coordinates of a mesh node and the potential 
+  /// Get the coordinates of a mesh node and the potential
   /// and electric field at this node.
-  bool GetNode(const size_t i, double& x, double& y, double& v,
-               double& ex, double& ey) const;
+  bool GetNode(const size_t i, double& x, double& y, double& v, double& ex,
+               double& ey) const;
 
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,
@@ -48,10 +48,11 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
   using Component::ElectricField;
   Medium* GetMedium(const double x, const double y, const double z) override;
 
-  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, 
-                      double& xmax, double& ymax, double& zmax) override;
-  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, 
-                         double& xmax, double& ymax, double& zmax) override;
+  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
+                      double& ymax, double& zmax) override;
+  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, double& xmax,
+                         double& ymax, double& zmax) override;
+
  private:
   // Bounding box
   bool m_hasRangeZ = false;
@@ -83,8 +84,8 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
   bool Interpolate(const double x, const double y, const double z,
                    const std::vector<double>& field, double& f) override;
   bool Interpolate(const double x, const double y, const double z,
-                   const std::vector<std::array<double, 2> >& field, 
-                   double& fx, double& fy, double& fz) override;
+                   const std::vector<std::array<double, 2> >& field, double& fx,
+                   double& fy, double& fz) override;
   void FillTree() override;
 };
 }
