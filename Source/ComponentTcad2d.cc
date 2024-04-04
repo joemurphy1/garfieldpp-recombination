@@ -64,10 +64,10 @@ void ComponentTcad2d::ElectricField(const double xin, const double yin,
   if (!m_regions[element.region].drift || !m) status = -5;
 }
 
-bool ComponentTcad2d::Interpolate(const double xin, const double yin,
-    const double z,
-    const std::vector<std::array<double, 2> >& field,
-    double& fx, double& fy, double& fz) {
+bool ComponentTcad2d::Interpolate(
+    const double xin, const double yin, const double z,
+    const std::vector<std::array<double, 2> >& field, double& fx, double& fy,
+    double& fz) {
 
   fx = fy = fz = 0.;
   if (field.empty()) return false;
@@ -97,8 +97,8 @@ bool ComponentTcad2d::Interpolate(const double xin, const double yin,
 }
 
 bool ComponentTcad2d::Interpolate(const double xin, const double yin,
-    const double z,
-    const std::vector<double>& field, double& f) {
+                                  const double z,
+                                  const std::vector<double>& field, double& f) {
 
   f = 0.;
   if (field.empty()) return false;
@@ -164,11 +164,10 @@ void ComponentTcad2d::FillTree() {
   // Insert the mesh elements in the tree.
   for (size_t i = 0; i < nElements; ++i) {
     const Element& element = m_elements[i];
-    const double bb[4] = {element.bbMin[0], element.bbMin[1], 
+    const double bb[4] = {element.bbMin[0], element.bbMin[1],
                           element.bbMax[0], element.bbMax[1]};
     m_tree->InsertMeshElement(bb, i);
   }
-
 }
 
 bool ComponentTcad2d::GetBoundingBox(double& xmin, double& ymin, double& zmin,
@@ -197,9 +196,9 @@ bool ComponentTcad2d::GetBoundingBox(double& xmin, double& ymin, double& zmin,
   return true;
 }
 
-bool ComponentTcad2d::GetElementaryCell(
-    double& xmin, double& ymin, double& zmin,
-    double& xmax, double& ymax, double& zmax) {
+bool ComponentTcad2d::GetElementaryCell(double& xmin, double& ymin,
+                                        double& zmin, double& xmax,
+                                        double& ymax, double& zmax) {
   if (!m_ready) return false;
   xmin = m_bbMin[0];
   xmax = m_bbMax[0];
@@ -209,8 +208,8 @@ bool ComponentTcad2d::GetElementaryCell(
     zmin = m_bbMin[2];
     zmax = m_bbMax[2];
   } else {
-    const double xymax = std::max({fabs(xmin), fabs(xmax), 
-                                   fabs(ymin), fabs(ymax)});
+    const double xymax =
+        std::max({fabs(xmin), fabs(xmax), fabs(ymin), fabs(ymax)});
     zmin = -xymax;
     zmax = +xymax;
   }
@@ -227,8 +226,8 @@ void ComponentTcad2d::SetRangeZ(const double zmin, const double zmax) {
   m_hasRangeZ = true;
 }
 
-bool ComponentTcad2d::GetElement(const size_t i, double& vol,
-                                 double& dmin, double& dmax, int& type,
+bool ComponentTcad2d::GetElement(const size_t i, double& vol, double& dmin,
+                                 double& dmax, int& type,
                                  std::vector<size_t>& nodes, int& reg) const {
   nodes.clear();
   if (i >= m_elements.size()) {
@@ -249,7 +248,7 @@ bool ComponentTcad2d::GetElement(const size_t i, double& vol,
     const auto& v0 = m_vertices[element.vertex[0]];
     const auto& v1 = m_vertices[element.vertex[1]];
     const auto& v2 = m_vertices[element.vertex[2]];
-    vol = 0.5 * fabs((v2[0] - v0[0]) * (v1[1] - v0[1]) - 
+    vol = 0.5 * fabs((v2[0] - v0[0]) * (v1[1] - v0[1]) -
                      (v2[1] - v0[1]) * (v1[0] - v0[0]));
     const double a = std::hypot(v1[0] - v0[0], v1[1] - v0[1]);
     const double b = std::hypot(v2[0] - v0[0], v2[1] - v0[1]);
@@ -278,8 +277,8 @@ bool ComponentTcad2d::GetElement(const size_t i, double& vol,
   return true;
 }
 
-bool ComponentTcad2d::GetNode(const size_t i, double& x, double& y,
-                              double& v, double& ex, double& ey) const {
+bool ComponentTcad2d::GetNode(const size_t i, double& x, double& y, double& v,
+                              double& ex, double& ey) const {
   if (i >= m_vertices.size()) {
     std::cerr << m_className << "::GetNode: Index out of range.\n";
     return false;
@@ -295,18 +294,18 @@ bool ComponentTcad2d::GetNode(const size_t i, double& x, double& y,
   return true;
 }
 
-size_t ComponentTcad2d::FindElement(const double x, const double y, 
-    std::array<double, nMaxVertices>& w) const {
+size_t ComponentTcad2d::FindElement(const double x, const double y,
+                                    std::array<double, nMaxVertices>& w) const {
 
   w.fill(0.);
   if (m_tree) {
     const auto& elements = m_tree->GetElementsInBlock(x, y);
-    for (const auto i : elements) { 
+    for (const auto i : elements) {
       if (InElement(x, y, m_elements[i], w)) return i;
     }
   } else {
     const size_t nElements = m_elements.size();
-    for (size_t i = 0; i < nElements; ++i) { 
+    for (size_t i = 0; i < nElements; ++i) {
       if (InElement(x, y, m_elements[i], w)) return i;
     }
   }
@@ -321,8 +320,8 @@ size_t ComponentTcad2d::FindElement(const double x, const double y,
 bool ComponentTcad2d::InElement(const double x, const double y,
                                 const Element& element,
                                 std::array<double, nMaxVertices>& w) const {
-  if (x < element.bbMin[0] || x > element.bbMax[0] || 
-      y < element.bbMin[1] || y > element.bbMax[1]) {
+  if (x < element.bbMin[0] || x > element.bbMax[0] || y < element.bbMin[1] ||
+      y > element.bbMax[1]) {
     return false;
   }
   switch (element.type) {
@@ -420,5 +419,4 @@ bool ComponentTcad2d::AtPoint(const double x, const double y,
   w[0] = 1;
   return true;
 }
-
 }

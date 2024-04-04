@@ -28,7 +28,7 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
     */
   bool GetElement(const size_t i, double& vol, double& dmin, double& dmax,
                   int& type, std::vector<size_t>& nodes, int& reg) const;
-  /// Get the coordinates of a mesh node and the potential and 
+  /// Get the coordinates of a mesh node and the potential and
   /// electric field at this node.
   bool GetNode(const size_t i, double& x, double& y, double& z, double& v,
                double& ex, double& ey, double& ez) const;
@@ -41,13 +41,12 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
   using Component::ElectricField;
   Medium* GetMedium(const double x, const double y, const double z) override;
 
-  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, 
-                      double& xmax, double& ymax, double& zmax) override;
-  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, 
-                         double& xmax, double& ymax, double& zmax) override;
+  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
+                      double& ymax, double& zmax) override;
+  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, double& xmax,
+                         double& ymax, double& zmax) override;
 
  private:
-
   // Tetrahedral tree.
   std::unique_ptr<TetrahedralTree> m_tree;
 
@@ -59,11 +58,10 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
   size_t FindElement(const double x, const double y, const double z,
                      std::array<double, nMaxVertices>& w) const;
   bool InElement(const double x, const double y, const double z,
-                 const Element& element, 
+                 const Element& element,
                  std::array<double, nMaxVertices>& w) const {
-    if (x < element.bbMin[0] || x > element.bbMax[0] || 
-        y < element.bbMin[1] || y > element.bbMax[1] || 
-        z < element.bbMin[2] || z > element.bbMax[2]) {
+    if (x < element.bbMin[0] || x > element.bbMax[0] || y < element.bbMin[1] ||
+        y > element.bbMax[1] || z < element.bbMin[2] || z > element.bbMax[2]) {
       return false;
     }
     bool inside = false;
@@ -82,19 +80,18 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
     return inside;
   }
   bool InTetrahedron(const double x, const double y, const double z,
-                     const Element& element, 
+                     const Element& element,
                      std::array<double, nMaxVertices>& w) const;
   bool InTriangle(const double x, const double y, const double z,
-                  const Element& element, 
+                  const Element& element,
                   std::array<double, nMaxVertices>& w) const;
-  
+
   bool Interpolate(const double x, const double y, const double z,
                    const std::vector<double>& field, double& f) override;
   bool Interpolate(const double x, const double y, const double z,
-                   const std::vector<std::array<double, 3> >& field, 
-                   double& fx, double& fy, double& fz) override;
+                   const std::vector<std::array<double, 3> >& field, double& fx,
+                   double& fy, double& fz) override;
   void FillTree() override;
-
 };
 }
 #endif

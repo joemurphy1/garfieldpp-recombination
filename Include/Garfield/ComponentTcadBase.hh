@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <map>
 
 #include "Component.hh"
 
@@ -10,7 +11,7 @@ namespace Garfield {
 
 /// Interpolation in a field map created by Sentaurus Device.
 
-template<size_t N> 
+template <size_t N>
 class ComponentTcadBase : public Component {
  public:
   /// Default constructor
@@ -25,7 +26,7 @@ class ComponentTcadBase : public Component {
   virtual ~ComponentTcadBase() {}
 
   /** Import mesh and field map from files.
-    * \param gridfilename name of the .grd file containing the mesh 
+    * \param gridfilename name of the .grd file containing the mesh
     * \param datafilename name of the .dat file containing the nodal solution
     */
   bool Initialise(const std::string& gridfilename,
@@ -33,22 +34,22 @@ class ComponentTcadBase : public Component {
 
   /** Import field maps defining the prompt weighting field and potential.
     * \param datfile1 .dat file containing the field map at nominal bias.
-    * \param datfile2 .dat file containing the field map for a configuration 
+    * \param datfile2 .dat file containing the field map for a configuration
                       with the potential at the electrode to be read out
                       increased by a small voltage dv.
-    * \param dv increase in electrode potential between the two field maps. 
+    * \param dv increase in electrode potential between the two field maps.
     * \param label name of the electrode
     *
     * The field maps must use the same mesh as the drift field.
-    */ 
+    */
   bool SetWeightingField(const std::string& datfile1,
                          const std::string& datfile2, const double dv,
                          const std::string& label);
-  /// Shift the maps of weighting field/potential for a given electrode 
-  /// with respect to the original mesh. If the electrode does not exist 
-  /// yet, a new one will be added to the list. 
-  bool SetWeightingFieldShift(const std::string& label, 
-                              const double x, const double y, const double z);
+  /// Shift the maps of weighting field/potential for a given electrode
+  /// with respect to the original mesh. If the electrode does not exist
+  /// yet, a new one will be added to the list.
+  bool SetWeightingFieldShift(const std::string& label, const double x,
+                              const double y, const double z);
   /// Import time-dependent weighting potentials at t > 0.
   bool SetWeightingPotential(const std::string& datfile1,
                              const std::string& datfile2, const double dv,
@@ -77,7 +78,7 @@ class ComponentTcadBase : public Component {
   size_t GetNumberOfElements() const { return m_elements.size(); }
   /// Get the number of vertices in the mesh.
   size_t GetNumberOfNodes() const { return m_vertices.size(); }
-  
+
   /// Switch use of the imported velocity map on/off.
   void EnableVelocityMap(const bool on);
 
@@ -105,10 +106,10 @@ class ComponentTcadBase : public Component {
   void EnableAttachmentMap(const bool on) { m_useAttachmentMap = on; }
 
   /// Get the electron mobility at a given point in the mesh.
-  bool GetElectronMobility(const double x, const double y, const double z, 
+  bool GetElectronMobility(const double x, const double y, const double z,
                            double& mob);
   /// Get the hole mobility at a given point in the mesh.
-  bool GetHoleMobility(const double x, const double y, const double z, 
+  bool GetHoleMobility(const double x, const double y, const double z,
                        double& mob);
 
   void WeightingField(const double x, const double y, const double z,
@@ -116,23 +117,22 @@ class ComponentTcadBase : public Component {
                       const std::string& label) override;
   double WeightingPotential(const double x, const double y, const double z,
                             const std::string& label) override;
-  void DelayedWeightingField(const double x, const double y,
-                             const double z, const double t, double& wx,
-                             double& wy, double& wz,
+  void DelayedWeightingField(const double x, const double y, const double z,
+                             const double t, double& wx, double& wy, double& wz,
                              const std::string& label) override;
   double DelayedWeightingPotential(const double x, const double y,
                                    const double z, const double t,
                                    const std::string& label) override;
 
   bool GetVoltageRange(double& vmin, double& vmax) override;
-  
-  bool HasVelocityMap() const override { 
+
+  bool HasVelocityMap() const override {
     return m_useVelocityMap && !(m_eVelocity.empty() && m_hVelocity.empty());
   }
   bool ElectronVelocity(const double x, const double y, const double z,
                         double& vx, double& vy, double& vz) override;
-  bool HoleVelocity(const double x, const double y, const double z, 
-                    double& vx, double& vy, double& vz) override;
+  bool HoleVelocity(const double x, const double y, const double z, double& vx,
+                    double& vy, double& vz) override;
 
   bool HasTownsendMap() const override {
     return m_useAlphaMap && !(m_eAlpha.empty() && m_hAlpha.empty());
@@ -154,7 +154,7 @@ class ComponentTcadBase : public Component {
                         double& alpha) override;
   bool HoleTownsend(const double x, const double y, const double z,
                     double& alpha) override;
-  
+
  protected:
   // Max. number of vertices per element
   static constexpr size_t nMaxVertices = 4;
@@ -208,25 +208,24 @@ class ComponentTcadBase : public Component {
   std::vector<std::array<double, N> > m_efield;
 
   // Weighting field and potential at each vertex.
-  std::vector<std::array<double, N> > m_wfield;
-  std::vector<double> m_wpot;
+  std::map<std::string, std::vector<std::array<double, N> > > m_wfield;
+  std::map<std::string, std::vector<double> > m_wpot;
   // Weighting field labels and offsets.
-  std::vector<std::string> m_wlabel;
-  std::vector<std::array<double, 3> > m_wshift;
+  std::map<std::string, std::vector<double> > m_wshift;
 
   // Delayed weighting field and potential.
-  std::vector<std::vector<std::array<double, N> > > m_dwf;
-  std::vector<std::vector<double> > m_dwp; 
+  std::map<std::string, std::vector<std::vector<std::array<double, N> > > > m_dwf;
+  std::map<std::string, std::vector<std::vector<double> > > m_dwp;
   // Times corresponding to the delayed weighting fields/potentials.
-  std::vector<double> m_dwtf;
-  std::vector<double> m_dwtp;
+  std::map<std::string, std::vector<double> > m_dwtf;
+  std::map<std::string, std::vector<double> > m_dwtp;
 
   // Velocities [cm / ns]
-  std::vector<std::array<double, N> > m_eVelocity; 
+  std::vector<std::array<double, N> > m_eVelocity;
   std::vector<std::array<double, N> > m_hVelocity;
   // Mobilities [cm2 / (V ns)]
   std::vector<double> m_eMobility;
-  std::vector<double> m_hMobility; 
+  std::vector<double> m_hMobility;
   // Impact ionisation coefficients [1 / cm]
   std::vector<double> m_eAlpha;
   std::vector<double> m_hAlpha;
@@ -239,7 +238,7 @@ class ComponentTcadBase : public Component {
   // Attachment coefficients [1 / cm]
   std::vector<double> m_eAttachment;
   std::vector<double> m_hAttachment;
-  
+
   struct Defect {
     // Electron cross-section
     double xsece;
@@ -250,7 +249,7 @@ class ComponentTcadBase : public Component {
   };
   std::vector<Defect> m_donors;
   std::vector<Defect> m_acceptors;
- 
+
   // Use velocity map or not.
   bool m_useVelocityMap = false;
   // Use trapping map or not.
@@ -261,7 +260,7 @@ class ComponentTcadBase : public Component {
   // Bounding box.
   std::array<double, 3> m_bbMin = {{0., 0., 0.}};
   std::array<double, 3> m_bbMax = {{0., 0., 0.}};
-  
+
   // Voltage range
   double m_pMin = 0.;
   double m_pMax = 0.;
@@ -271,8 +270,8 @@ class ComponentTcadBase : public Component {
   void Cleanup();
 
   static unsigned int ElementVertices(const Element& element) {
-    return std::min(element.type + 1, 4U); 
-  } 
+    return std::min(element.type + 1, 4U);
+  }
   virtual bool Interpolate(const double x, const double y, const double z,
                            const std::vector<double>& field, double& f) = 0;
   virtual bool Interpolate(const double x, const double y, const double z,
@@ -281,7 +280,7 @@ class ComponentTcadBase : public Component {
   virtual void FillTree() = 0;
 
   size_t FindRegion(const std::string& name) const;
-  void MapCoordinates(std::array<double, N>& x, 
+  void MapCoordinates(std::array<double, N>& x,
                       std::array<bool, N>& mirr) const;
   bool InBoundingBox(const std::array<double, N>& x) const {
     for (size_t i = 0; i < N; ++i) {
@@ -291,15 +290,14 @@ class ComponentTcadBase : public Component {
   }
   void UpdateAttachment();
 
+  bool GetOffset(const std::string& label, double& dx, double& dy,
+                 double& dz) const;
   bool LoadGrid(const std::string& gridfilename);
-  bool LoadData(const std::string& datafilename); 
+  bool LoadData(const std::string& datafilename);
   bool ReadDataset(std::ifstream& datafile, const std::string& dataset);
   bool LoadWeightingField(const std::string& datafilename,
                           std::vector<std::array<double, N> >& wf,
                           std::vector<double>& wp);
-
-  bool GetOffset(const std::string& label, 
-                 double& dx, double& dy, double& dz) const;
 };
 }
 #endif
