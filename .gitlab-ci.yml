@@ -3,6 +3,25 @@
 
 
 # C++11 images
+build-alma9:
+  stage: build
+  image: rootproject/root:6.30.02-alma9
+  before_script:
+    - yum install libXmu-devel motif-devel -y
+  script:
+    - rm -rf build
+    - mkdir build
+    - cd build
+    - cmake3 -DCMAKE_INSTALL_PREFIX=/usr/local -DROOTSYS=/usr/lib ../
+    - make -j4
+    - make install
+  artifacts:
+    paths:
+      # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
+      # cache:
+      #   paths:
+      #     - "*.o"  
+      
 build-centos7:
   stage: build
   image: rootproject/root:6.22.02-centos7
