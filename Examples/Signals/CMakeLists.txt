@@ -8,6 +8,9 @@ endif()
 add_executable(noise noise.C)
 target_link_libraries(noise Garfield::Garfield)
 
+add_executable(test test.C)
+target_link_libraries(test Garfield::Garfield)
+
 # --- Copy all files locally to the build directory.
 foreach(_file ft.txt)
   configure_file(${_file} ${CMAKE_CURRENT_BINARY_DIR}/${_file} COPYONLY)

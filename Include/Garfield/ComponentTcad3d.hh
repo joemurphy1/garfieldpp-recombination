@@ -40,6 +40,10 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
                      double& ey, double& ez, Medium*& m, int& status) override;
   using Component::ElectricField;
   Medium* GetMedium(const double x, const double y, const double z) override;
+  void DelayedWeightingPotentials(const double x, const double y,
+                                  const double z,
+                                  const std::string& label,
+                                  std::vector<double>& dwp) override;
 
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
                       double& ymax, double& zmax) override;

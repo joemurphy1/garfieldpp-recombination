@@ -131,7 +131,6 @@ class ComponentVoxel : public Component {
   std::vector<std::vector<std::vector<Element> > > m_wfields;
   /// Delayed weighting field values and potentials at each mesh element.
   std::vector<std::vector<std::vector<std::vector<Element> > > > m_wdfields;
-  std::vector<double> m_wdtimes;
 
   // Dimensions of the mesh
   unsigned int m_nX = 0, m_nY = 0, m_nZ = 0;

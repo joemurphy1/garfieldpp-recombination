@@ -101,6 +101,10 @@ class ComponentFieldMap : public Component {
 
   double DelayedWeightingPotential(double x, double y, double z, const double t,
                                    const std::string& label) override;
+  void DelayedWeightingPotentials(const double x, const double y,
+                                  const double z,
+                                  const std::string& label,
+                                  std::vector<double>& dwp) override;
 
   bool IsInBoundingBox(const double x, const double y, const double z) const {
     return x >= m_minBoundingBox[0] && x <= m_maxBoundingBox[0] &&
@@ -197,8 +201,6 @@ class ComponentFieldMap : public Component {
 
   // Weighting potential copies.
   std::map<std::string, WeightingFieldCopy> m_wfieldCopies;
-
-  std::vector<double> m_wdtimes;
 
   // Bounding box
   bool m_hasBoundingBox = false;

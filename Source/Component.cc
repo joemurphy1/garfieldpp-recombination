@@ -98,6 +98,15 @@ double Component::DelayedWeightingPotential(const double /*x*/,
   return 0.;
 }
 
+void Component::DelayedWeightingPotentials(const double x, const double y,
+                                           const double z, 
+                                           const std::string& label,
+                                           std::vector<double>& dwp) {
+  dwp.resize(m_wdtimes.size());
+  for (size_t i = 0; i < m_wdtimes.size(); ++i) {
+    dwp[i] = DelayedWeightingPotential(x, y, z, m_wdtimes[i], label);
+  }
+}
 
 void Component::MagneticField(const double x, const double y, const double z,
                               double& bx, double& by, double& bz, int& status) {

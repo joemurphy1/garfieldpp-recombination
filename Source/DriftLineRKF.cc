@@ -1478,14 +1478,11 @@ void DriftLineRKF::ComputeSignal(const Particle particle, const double scale,
   const double q0 = Charge(particle) * scale;
   
   if (m_useWeightingPotential) {
-    const bool aval = ne.size() == nPoints; 
-    for (size_t i = 0; i < nPoints - 1; ++i) {
-      const auto& x0 = xs[i];
-      const auto& x1 = xs[i + 1];
-      const double q = aval ? q0 * 0.5 * (ne[i] + ne[i + 1]) : q0; 
-      m_sensor->AddSignal(q, ts[i], ts[i + 1], 
-                          x0[0], x0[1], x0[2], x1[0], x1[1], x1[2], 
-                          false, true);
+    const bool aval = ne.size() == nPoints;
+    if (aval) {
+      m_sensor->AddSignalWeightingPotential(q0, ts, xs, ne);
+    } else {
+      m_sensor->AddSignalWeightingPotential(q0, ts, xs);
     }
     return;
   }

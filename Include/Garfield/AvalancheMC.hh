@@ -336,7 +336,7 @@ class AvalancheMC {
                        std::vector<double>& etas) const;
   bool Equilibrate(std::vector<double>& alphas) const;
   /// Compute the induced signal for the current drift line.
-  void ComputeSignal(const Particle particle, const double q,
+  void ComputeSignal(const double q,
                      const std::vector<Point>& path) const;
   /// Compute the induced charge for the current drift line.
   void ComputeInducedCharge(const double q,

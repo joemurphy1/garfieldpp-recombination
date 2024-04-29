@@ -117,6 +117,12 @@ class ComponentTcadBase : public Component {
                       const std::string& label) override;
   double WeightingPotential(const double x, const double y, const double z,
                             const std::string& label) override;
+  const std::vector<double>& DelayedSignalTimes(
+      const std::string& label) override {
+    if (m_dwtp.count(label) > 0) return m_dwtp[label]; 
+    static const std::vector<double> emptyVector;
+    return emptyVector;
+  }
   void DelayedWeightingField(const double x, const double y, const double z,
                              const double t, double& wx, double& wy, double& wz,
                              const std::string& label) override;

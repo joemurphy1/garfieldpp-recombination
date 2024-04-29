@@ -65,6 +65,42 @@ void ComponentTcad3d::ElectricField(const double x, const double y,
   ElectricField(x, y, z, ex, ey, ez, v, m, status);
 }
 
+void ComponentTcad3d::DelayedWeightingPotentials(
+    const double xin, const double yin, const double zin,
+    const std::string& label, std::vector<double>& dwp) {
+
+  if (m_dwtp[label].empty() || m_dwp[label].empty()) {
+    dwp.clear();
+    return;
+  }
+
+  const size_t nt = m_wdtimes.size();
+  dwp.assign(nt, 0.);
+
+  std::array<double, 3> x = {xin, yin, zin};
+  std::array<bool, 3> mirr = {false, false, false};
+  // In case of periodicity, reduce to the cell volume.
+  MapCoordinates(x, mirr);
+  // Make sure the point is inside the bounding box.
+  if (!InBoundingBox(x)) return;
+
+  // Get the element index and the shape functions.
+  std::array<double, nMaxVertices> w;
+  const size_t i = FindElement(x[0], x[1], x[2], w);
+  // Stop if the point is outside the mesh.
+  if (i >= m_elements.size()) return;
+
+  const Element& element = m_elements[i];
+  const size_t nVertices = ElementVertices(element);
+  for (size_t k = 0; k < nt; ++k) {
+    double v = 0.;
+    for (size_t j = 0; j < nVertices; ++j) {
+      v += w[j] * m_dwp[label][k][element.vertex[j]];
+    }
+    dwp[k] = v;
+  }
+}
+
 bool ComponentTcad3d::Interpolate(
     const double xin, const double yin, const double zin,
     const std::vector<std::array<double, 3> >& field, double& fx, double& fy,

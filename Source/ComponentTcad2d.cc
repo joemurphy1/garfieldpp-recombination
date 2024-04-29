@@ -64,6 +64,45 @@ void ComponentTcad2d::ElectricField(const double xin, const double yin,
   if (!m_regions[element.region].drift || !m) status = -5;
 }
 
+void ComponentTcad2d::DelayedWeightingPotentials(
+    const double xin, const double yin, const double zin,
+    const std::string& label, std::vector<double>& dwp) {
+
+  if (m_dwtp[label].empty() || m_dwp[label].empty()) {
+    dwp.clear();
+    return;
+  }
+
+  const size_t nt = m_wdtimes.size();
+  dwp.assign(nt, 0.);
+
+  if (m_hasRangeZ && (zin < m_bbMin[2] || zin > m_bbMax[2])) {
+    return;
+  }
+  // In case of periodicity, reduce to the cell volume.
+  std::array<double, 2> x = {xin, yin};
+  std::array<bool, 2> mirr = {false, false};
+  MapCoordinates(x, mirr);
+  // Make sure the point is inside the bounding box.
+  if (!InBoundingBox(x)) return;
+
+  // Get the element index and the shape functions.
+  std::array<double, nMaxVertices> w;
+  const auto i = FindElement(x[0], x[1], w);
+  // Stop if the point is outside the mesh.
+  if (i >= m_elements.size()) return;
+
+  const Element& element = m_elements[i];
+  const size_t nVertices = ElementVertices(element);
+  for (size_t k = 0; k < nt; ++k) {
+    double v = 0.;
+    for (size_t j = 0; j < nVertices; ++j) {
+      v += w[j] * m_dwp[label][k][element.vertex[j]];
+    }
+    dwp[k] = v;
+  }
+}
+
 bool ComponentTcad2d::Interpolate(
     const double xin, const double yin, const double z,
     const std::vector<std::array<double, 2> >& field, double& fx, double& fy,

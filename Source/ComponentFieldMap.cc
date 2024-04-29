@@ -325,6 +325,86 @@ double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,
   return f0 * dp0 + f1 * dp1;
 }
 
+void ComponentFieldMap::DelayedWeightingPotentials(
+    const double xin, const double yin, const double zin,
+    const std::string& label0, std::vector<double>& dwp) {
+
+  const size_t nt = m_wdtimes.size();
+  dwp.assign(nt, 0.);
+
+  // Do not proceed if not properly initialised.
+  if (!m_ready) return;
+
+  // Copy the coordinates.
+  double x = xin, y = yin, z = zin;
+
+  std::string label = label0;
+  if (m_wfieldCopies.count(label0) > 0) {
+    label = m_wfieldCopies[label0].source;
+    TVectorD pos(3);
+    pos(0) = xin;
+    pos(1) = yin;
+    pos(2) = zin;
+    pos = m_wfieldCopies[label0].rot * pos + m_wfieldCopies[label0].trans;
+    x = pos(0);
+    y = pos(1);
+    z = pos(2);
+  }
+
+  // Do not proceed if the requested weighting field does not exist.
+  if (m_dwpot.count(label) == 0) return;
+  if (m_dwpot[label].empty()) return;
+
+  // Map the coordinates onto field map coordinates.
+  bool xmirr, ymirr, zmirr;
+  double rcoordinate, rotation;
+  MapCoordinates(x, y, z, xmirr, ymirr, zmirr, rcoordinate, rotation);
+
+  if (m_warning) PrintWarning("DelayedWeightingPotentials");
+
+  // Find the element that contains this point.
+  double t1, t2, t3, t4, jac[4][4], det;
+
+  int imap = -1;
+  if (m_elementType == ElementType::Serendipity) {
+    imap = FindElement5(x, y, t1, t2, t3, t4, jac, det);
+  } else if (m_elementType == ElementType::CurvedTetrahedron) {
+    imap = FindElement13(x, y, z, t1, t2, t3, t4, jac, det);
+  }
+  if (imap < 0) return;
+
+  // Get potential value.
+  // TODO: reorder m_dwpot, first time, then nodes.
+  const Element& element = m_elements[imap];
+  if (m_elementType == ElementType::Serendipity) {
+    if (m_degenerate[imap]) {
+      std::array<double, 6> v;
+      for (size_t i = 0; i < m_wdtimes.size(); ++i) {
+        for (size_t j = 0; j < 6; ++j) {
+          v[j] = m_dwpot[label][element.emap[j]][i];
+        }
+        dwp[i] = Potential3(v, {t1, t2, t3});
+      }
+    } else {
+      std::array<double, 8> v;
+      for (size_t i = 0; i < m_wdtimes.size(); ++i) {
+        for (size_t j = 0; j < 8; ++j) {
+          v[j] = m_dwpot[label][element.emap[j]][i];
+        }
+        dwp[i] = Potential5(v, {t1, t2});
+      }
+    }
+  } else if (m_elementType == ElementType::CurvedTetrahedron) {
+    std::array<double, 10> v;
+    for (size_t i = 0; i < m_wdtimes.size(); ++i) {
+      for (size_t j = 0; j < 10; ++j) {
+        v[j] = m_dwpot[label][element.emap[j]][i];
+      }
+      dwp[i] = Potential13(v, {t1, t2, t3, t4});
+    }
+  }
+}
+
 Medium* ComponentFieldMap::GetMedium(const double xin, const double yin,
                                      const double zin) {
   // Copy the coordinates.
