@@ -547,19 +547,29 @@ bool AvalancheMicroscopic::TransportElectrons(
       }
       const bool isHole = (particle.second == Particle::Hole);
       std::vector<Point> path;
-      double pathLength = 0.;
+      std::vector<double> ts;
+      std::vector<std::array<double, 3> > xs;
       int status = 0;
       if (sc) {
         status = TransportElectronSc(particle.first, isHole, aval, 
-                                     signal, path,
-                                     newParticles, pathLength);
+                                     signal, ts, xs, path, 
+                                     newParticles);
       } else if (useBfield) {
         status = TransportElectronBfield(particle.first, isHole, aval, 
-                                         signal, path,
-                                         newParticles, pathLength);
+                                         signal, ts, xs, path, 
+                                         newParticles);
       } else {
         status = TransportElectron(particle.first, isHole, aval, signal, 
-                                   path, newParticles, pathLength);
+                                   ts, xs, path, newParticles);
+      }
+      double pathLength = 0.;
+      if (m_computePathLength && xs.size() > 1) {
+        const size_t ns = xs.size();
+        for (size_t i = 0; i < ns - 1; ++i) {
+          pathLength += Mag(xs[i + 1][0] - xs[i][0], 
+                            xs[i + 1][1] - xs[i][1],
+                            xs[i + 1][2] - xs[i][2]);
+        }
       }
       if (isHole) {
         Electron hole;
@@ -575,6 +585,32 @@ bool AvalancheMicroscopic::TransportElectrons(
         electron.pathLength = pathLength;
         m_electrons.push_back(std::move(electron));
         if (status != StatusAttached) ++m_nElectrons;
+      }
+      if (signal) {
+        const double q = isHole ? 1. : -1.;
+        if (m_useWeightingPotential) {
+          m_sensor->AddSignalWeightingPotential(q, ts, xs);
+        } else {
+          m_sensor->AddSignalWeightingField(q, ts, xs, 
+                                            m_integrateWeightingField);
+        }
+        // Old style:
+        /*
+        const size_t ns = ts.size() - 1;
+        for (size_t i = 0; i < ns; ++i) {
+          const double t0 = ts[i];
+          const double t1 = ts[i + 1];
+          const double x0 = xs[i][0];
+          const double y0 = xs[i][1];
+          const double z0 = xs[i][2];
+          const double x1 = xs[i + 1][0];
+          const double y1 = xs[i + 1][1];
+          const double z1 = xs[i + 1][2];
+          m_sensor->AddSignal(q, t0, t1, x0, y0, z0, x1, y1, z1,
+                              m_integrateWeightingField,
+                              m_useWeightingPotential);
+        }
+        */
       }
     }
     if (!aval) break;
@@ -597,11 +633,10 @@ bool AvalancheMicroscopic::TransportElectrons(
 
 int AvalancheMicroscopic::TransportElectron(const Point& p0,
   const bool hole, const bool aval, const bool signal,
+  std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
   std::vector<Point>& path, 
-  std::vector<std::pair<Point, Particle> >& newParticles,
-  double& pathLength) {
+  std::vector<std::pair<Point, Particle> >& newParticles) {
 
-  pathLength = 0.;
   double x = p0.x;
   double y = p0.y;
   double z = p0.z;
@@ -612,6 +647,8 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
   double ky = p0.ky;
   double kz = p0.kz;
   path.push_back(p0);
+  ts.push_back(t);
+  xs.push_back({x, y, z});
   size_t did = 0;
   if (m_viewer) {
     if (hole) {
@@ -810,11 +847,11 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
       status = StatusHitPlane;
     }
 
-    // If switched on, calculate the induced signal.
-    if (signal) AddSignal(x, y, z, t, x1, y1, z1, t1, hole);
-
+    if (signal || m_computePathLength) {
+      ts.push_back(t1);
+      xs.push_back({x1, y1, z1});
+    }
     // Update the coordinates.
-    if (m_computePathLength) pathLength += Mag(x1 - x, y1 - y, z1 - z);
     x = x1;
     y = y1;
     z = z1;
@@ -1009,11 +1046,10 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
 
 int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
   const bool hole, const bool aval, const bool signal,
+  std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
   std::vector<Point>& path, 
-  std::vector<std::pair<Point, Particle> >& newParticles,
-  double& pathLength) {
+  std::vector<std::pair<Point, Particle> >& newParticles) {
 
-  pathLength = 0.;
   double x = p0.x;
   double y = p0.y;
   double z = p0.z;
@@ -1024,6 +1060,8 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
   double ky = p0.ky;
   double kz = p0.kz;
   path.push_back(p0);
+  ts.push_back(t);
+  xs.push_back({x, y, z});
   size_t did = 0;
   if (m_viewer) {
     if (hole) {
@@ -1271,11 +1309,11 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
       status = StatusHitPlane;
     }
 
-    // If switched on, calculate the induced signal.
-    if (signal) AddSignal(x, y, z, t, x1, y1, z1, t1, hole);
-
+    if (signal || m_computePathLength) {
+      ts.push_back(t1);
+      xs.push_back({x1, y1, z1});
+    }
     // Update the coordinates.
-    if (m_computePathLength) pathLength += Mag(x1 - x, y1 - y, z1 - z);
     x = x1;
     y = y1;
     z = z1;
@@ -1484,11 +1522,10 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
 
 int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
   const bool hole, const bool aval, const bool signal,
+  std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
   std::vector<Point>& path, 
-  std::vector<std::pair<Point, Particle> >& newParticles,
-  double& pathLength) {
+  std::vector<std::pair<Point, Particle> >& newParticles) {
 
-  pathLength = 0.;
   double x = p0.x;
   double y = p0.y;
   double z = p0.z;
@@ -1499,6 +1536,8 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
   double ky = p0.ky;
   double kz = p0.kz;
   path.push_back(p0);
+  ts.push_back(t);
+  xs.push_back({x, y, z});
   size_t did = 0;
   if (m_viewer) {
     if (hole) {
@@ -1701,11 +1740,11 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
       status = StatusHitPlane;
     }
 
-    // If switched on, calculate the induced signal.
-    if (signal) AddSignal(x, y, z, t, x1, y1, z1, t1, hole);
-
+    if (signal || m_computePathLength) {
+      ts.push_back(t1);
+      xs.push_back({x1, y1, z1});
+    }
     // Update the coordinates.
-    if (m_computePathLength) pathLength += Mag(x1 - x, y1 - y, z1 - z);
     x = x1;
     y = y1;
     z = z1;
@@ -1957,17 +1996,6 @@ void AvalancheMicroscopic::FillDistanceHistogram(const int cstype,
     zLast = z;
     return;
   }
-}
-
-void AvalancheMicroscopic::AddSignal(
-  const double x0, const double y0, const double z0, const double t0,
-  const double x1, const double y1, const double z1, const double t1,
-  const bool hole) const {
-
-  const int q = hole ? 1 : -1;
-  m_sensor->AddSignal(q, t0, t1, x0, y0, z0, x1, y1, z1,
-                      m_integrateWeightingField,
-                      m_useWeightingPotential);
 }
 
 void AvalancheMicroscopic::TransportPhoton(

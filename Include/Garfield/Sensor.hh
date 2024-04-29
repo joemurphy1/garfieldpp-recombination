@@ -229,6 +229,18 @@ class Sensor {
   bool GetThresholdCrossing(const unsigned int i, double& time, double& level,
                             bool& rise) const;
 
+  void AddSignalWeightingPotential(const double q, 
+    const std::vector<double>& ts,
+    const std::vector<std::array<double, 3> >& xs);
+  void AddSignalWeightingPotential(const double q, 
+    const std::vector<double>& ts,
+    const std::vector<std::array<double, 3> >& xs,
+    const std::vector<double>& qs);
+  void AddSignalWeightingField(const double q, 
+    const std::vector<double>& ts,
+    const std::vector<std::array<double, 3> >& xs,
+    const bool integrateWeightingField);
+
   /// Add the signal from a charge-carrier step.
   void AddSignal(const double q, const double t0, const double t1,
                  const double x0, const double y0, const double z0,
@@ -240,8 +252,7 @@ class Sensor {
   void AddSignal(const double q, const std::vector<double>& ts,
                  const std::vector<std::array<double, 3> >& xs,
                  const std::vector<std::array<double, 3> >& vs,
-                 const std::vector<double>& ns, const int navg,
-                 const bool useWeightingPotential = false);
+                 const std::vector<double>& ns, const int navg);
 
   /// Plot the induced signal.
   void PlotSignal(const std::string& label, TPad* pad);

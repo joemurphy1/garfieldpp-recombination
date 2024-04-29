@@ -75,6 +75,14 @@ class Component {
    */
   virtual double WeightingPotential(const double x, const double y,
                                     const double z, const std::string& label);
+
+  /** Return the time steps at which the delayed weighting potential/field 
+    * are stored/evaluated.
+    */
+  virtual const std::vector<double>& DelayedSignalTimes(
+      const std::string& /*label*/) {
+    return m_wdtimes;
+  }
   /** Calculate the delayed weighting field at a given point and time
    * and for a given electrode.
    * \param x,y,z coordinates [cm].
@@ -97,6 +105,13 @@ class Component {
                                            const double z, const double t,
                                            const std::string& label);
 
+  /** Calculate the delayed weighting potentials at a given point and
+   * for a given electrode, for a set of pre-defined times.
+   */
+  virtual void DelayedWeightingPotentials(const double x, const double y,
+                                          const double z,
+                                          const std::string& label,
+                                          std::vector<double>& dwp);
   /** Calculate the magnetic field at a given point.
    *
    * \param x,y,z coordinates [cm].
@@ -378,6 +393,9 @@ class Component {
   std::array<bool, 3> m_axiallyPeriodic = {{false, false, false}};
   /// Rotation symmetry around x-axis, y-axis, z-axis.
   std::array<bool, 3> m_rotationSymmetric = {{false, false, false}};
+
+  /// Time steps at which the delayed weighting potentials/fields are stored.
+  std::vector<double> m_wdtimes;
 
   /// Reset the component.
   virtual void Reset() = 0;

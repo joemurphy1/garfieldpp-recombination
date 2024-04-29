@@ -507,7 +507,7 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
   } else if (particle == Particle::NegativeIon) {
     scale = -m_scaleI;
   }
-  if (signal) ComputeSignal(particle, scale, path);
+  if (signal) ComputeSignal(scale, path);
   if (m_doInducedCharge) ComputeInducedCharge(scale, path);
 
   // Plot the drift line if requested.
@@ -1270,38 +1270,27 @@ bool AvalancheMC::Equilibrate(std::vector<double>& alphas) const {
   return true;
 }
 
-void AvalancheMC::ComputeSignal(
-    const Particle particle, const double q,
+void AvalancheMC::ComputeSignal(const double q,
     const std::vector<Point>& path) const {
   const size_t nPoints = path.size();
   if (nPoints < 2) return;
 
-  if (m_useWeightingPotential) {
-    for (size_t i = 0; i < nPoints - 1; ++i) {
-      const auto& p0 = path[i];
-      const auto& p1 = path[i + 1];
-      m_sensor->AddSignal(q, p0.t, p1.t, p0.x, p0.y, p0.z, p1.x, p1.y, p1.z,
-                          false, true);
-    }
-    return;
-  }
-  // Get the drift velocity at each point.
   std::vector<double> ts;
   std::vector<std::array<double, 3> > xs;
-  std::vector<std::array<double, 3> > vs;
+
   for (const auto& p : path) {
-    std::array<double, 3> e;
-    std::array<double, 3> b;
-    Medium* medium = nullptr;
-    int status = GetField({p.x, p.y, p.z}, e, b, medium);
-    if (status != 0) continue;
-    std::array<double, 3> v;
-    if (!GetVelocity(particle, medium, {p.x, p.y, p.z}, e, b, v)) continue;
     ts.push_back(p.t);
     xs.push_back({p.x, p.y, p.z});
-    vs.push_back(std::move(v));
   }
-  m_sensor->AddSignal(q, ts, xs, vs, {}, m_navg);
+  
+  if (m_useWeightingPotential) {
+    m_sensor->AddSignalWeightingPotential(q, ts, xs);
+  } else {
+    constexpr bool integrate = false;
+    m_sensor->AddSignalWeightingField(q, ts, xs, integrate);
+  }
+  // TODO: Keep previous method for calculating the induced current 
+  // using the drift velocity at each drift line point?
 }
 
 void AvalancheMC::ComputeInducedCharge(

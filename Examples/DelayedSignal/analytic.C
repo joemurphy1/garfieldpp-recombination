@@ -85,6 +85,7 @@ int main(int argc, char *argv[]) {
   };
   // cmp.SetDelayedWeightingPotential(dwpot, "front");
   cmp.SetDelayedWeightingPotential("double d = 300.e-4; double d0 = 200.e-4; double tau = 7.9; return y * ((d - d0) / (d * d0)) * (exp(-t / tau) - 1.);", "front");
+  cmp.SetDelayedSignalTimes(times);
 
   Sensor sensor;
   sensor.AddComponent(&cmp);
@@ -93,7 +94,6 @@ int main(int argc, char *argv[]) {
   sensor.AddElectrode(&cmp, "front");
   sensor.SetArea(-d, 0, -d, d, d0 - 1.e-6, d);
   sensor.EnableDelayedSignal();
-  sensor.SetDelayedSignalTimes(times);
 
   AvalancheMC drift(&sensor);
   // drift.UseWeightingPotential(false);

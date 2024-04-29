@@ -221,7 +221,6 @@ class ComponentGrid : public Component {
   std::vector<std::vector<std::vector<Node> > > m_wfields;
   /// Delayed weighting field values and potentials.
   std::vector<std::vector<std::vector<std::vector<Node> > > > m_wdfields;
-  std::vector<double> m_wdtimes;
   /// Attachment maps for electrons and holes.
   std::vector<std::vector<std::vector<double> > > m_eAttachment;
   std::vector<std::vector<std::vector<double> > > m_hAttachment;

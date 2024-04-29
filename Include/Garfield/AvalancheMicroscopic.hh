@@ -297,7 +297,7 @@ class AvalancheMicroscopic {
   TH1* m_histSecondary = nullptr;
 
   bool m_doSignal = true;
-  bool m_useWeightingPotential = false;
+  bool m_useWeightingPotential = true;
   bool m_integrateWeightingField = false;
   bool m_doInducedCharge = false;
 
@@ -344,30 +344,28 @@ class AvalancheMicroscopic {
   bool TransportElectrons(std::vector<std::pair<Point, Particle> >& stack,
                           const bool aval);
   int TransportElectron(const Point& p0, const bool hole, 
-                        const bool aval, const bool signal, 
+                        const bool aval, const bool signal,
+                        std::vector<double>& ts, 
+                        std::vector<std::array<double, 3> >& xs,
                         std::vector<Point>& path,
-                        std::vector<std::pair<Point, Particle> >& newParticles,
-                        double& pathLength);
+                        std::vector<std::pair<Point, Particle> >& newParticles);
   int TransportElectronBfield(const Point& p0, const bool hole, 
-                        const bool aval, 
-                        const bool signal, 
-                        std::vector<Point>& path,
-                        std::vector<std::pair<Point, Particle> >& newParticles,
-                        double& pathLength);
+                              const bool aval, 
+                              const bool signal, 
+                              std::vector<double>& ts, 
+                              std::vector<std::array<double, 3> >& xs,
+                              std::vector<Point>& path,
+                              std::vector<std::pair<Point, Particle> >& newParticles);
   int TransportElectronSc(const Point& p0, const bool hole, 
-                        const bool aval, 
-                        const bool signal, 
-                        std::vector<Point>& path,
-                        std::vector<std::pair<Point, Particle> >& newParticles,
-                        double& pathLength);
+                          const bool aval, 
+                          const bool signal, 
+                          std::vector<double>& ts, 
+                          std::vector<std::array<double, 3> >& xs,
+                          std::vector<Point>& path,
+                          std::vector<std::pair<Point, Particle> >& newParticles);
   void TransportPhoton(const double x, const double y, const double z,
                        const double t, const double e,
                        std::vector<std::pair<Point, Particle> >& newParticles);
-
-  void AddSignal(const double x0, const double y0, const double z0, 
-                 const double t0,
-                 const double x1, const double y1, const double z1, 
-                 const double t1, const bool hole) const;
 
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
                  double& y1, double& z1, double& t1) const;

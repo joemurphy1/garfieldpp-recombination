@@ -67,7 +67,9 @@ class ComponentUser : public Component {
   /// the delayed weighting potential.
   void SetDelayedWeightingPotential(const std::string& expression, 
                                     const std::string& label);
-
+  /// Set the time steps at which to evaluate the delayed weighting
+  /// potential/field.
+  void SetDelayedSignalTimes(const std::vector<double>& ts);
   /// Set the function to be called for calculating the magnetic field.
   void SetMagneticField(
     std::function<void(const double, const double, const double,

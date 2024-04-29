@@ -296,6 +296,15 @@ void ComponentUser::SetWeightingPotential(const std::string& expression,
   m_wpot[label] = f;
 }
 
+void ComponentUser::SetDelayedSignalTimes(const std::vector<double>& ts) {
+  if (!std::is_sorted(ts.begin(), ts.end())) {
+    std::cerr << m_className << "::SetDelayedSignalTimes:\n"
+              << "    Times are not in ascending order.\n";
+    return;
+  }
+  m_wdtimes = ts;
+}
+
 void ComponentUser::SetDelayedWeightingField(
     std::function<void(const double, const double, const double, const double,
                        double&, double&, double&)> f,
