@@ -19,8 +19,7 @@ int main(int argc, char *argv[]) {
   plottingEngine.SetDefaultStyle();
 
   // Define the medium.
-  MediumMagboltz gas;
-  gas.SetComposition("ar");
+  MediumMagboltz gas("ar");
   // Set temperature [K] and pressure [Torr].
   gas.SetPressure(760.0);
   gas.SetTemperature(293.15);
@@ -28,9 +27,9 @@ int main(int argc, char *argv[]) {
   // Make a component (with constant electric field).
   ComponentConstant cmp;
   // Define the active area and medium.
-  constexpr double width = 10.;
+  constexpr double hw = 5.;
   constexpr double length = 1.5;
-  cmp.SetArea(0., -0.5 * width, -0.5 * width, length, 0.5 * width, 0.5 * width);
+  cmp.SetArea(0., -hw, -hw, length, hw, hw);
   cmp.SetMedium(&gas);
   cmp.SetElectricField(1000., 0., 0.);
   

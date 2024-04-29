@@ -19,8 +19,7 @@ int main(int argc, char *argv[]) {
   TApplication app("app", &argc, argv);
 
   // Define the medium.
-  MediumMagboltz gas;
-  gas.SetComposition("ar");
+  MediumMagboltz gas("ar");
   // Set temperature [K] and pressure [Torr].
   gas.SetPressure(760.0);
   gas.SetTemperature(293.15);
@@ -55,7 +54,7 @@ int main(int argc, char *argv[]) {
   // Generate and plot a track.
   ViewDrift viewer;
   tr.EnablePlotting(&viewer);
-  tr.EnableDebugging();
+  // tr.EnableDebugging();
   tr.NewTrack(0., 0., 0., 0., 1., 0., 0.);
   viewer.SetArea(0., -w, w, w);
   viewer.Plot(true, true);
