@@ -46,6 +46,8 @@ class ViewDrift : public ViewBase {
   void SetColourElectrons(const short col) { m_colElectron = col; } 
   /// Set the colour with which to draw hole drift lines.
   void SetColourHoles(const short col) { m_colHole = col; } 
+  /// Set the colour with which to draw negative ion drift lines.
+  void SetColourNegativeIons(const short col) { m_colNegativeIon = col; } 
   /// Set the colour with which to draw ion drift lines.
   void SetColourIons(const short col) { m_colIon = col; } 
   /// Set the colour with which to draw charged particle tracks.
@@ -110,6 +112,7 @@ class ViewDrift : public ViewBase {
   short m_colElectron = kOrange - 3;
   short m_colHole = kRed + 1;
   short m_colIon = kRed + 1;
+  short m_colNegativeIon = kGray + 2;
   short m_colExcitation = kGreen + 3;
   short m_colIonisation = kOrange - 3;
   short m_colAttachment = kCyan + 3;
