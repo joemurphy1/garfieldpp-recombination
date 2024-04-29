@@ -192,18 +192,22 @@ void ViewDrift::Plot2d(const bool axis, const bool snapshot) {
   if (snapshot) {
     std::vector<std::array<float, 3> > electrons;
     std::vector<std::array<float, 3> > holes;
+    std::vector<std::array<float, 3> > negativeIons;
     std::vector<std::array<float, 3> > ions;
     for (const auto& driftLine : m_driftLines) {
       if (driftLine.second == Particle::Electron) {
         electrons.push_back(driftLine.first.back());
       } else if (driftLine.second == Particle::Hole) {
         holes.push_back(driftLine.first.back());
+      } else if (driftLine.second == Particle::NegativeIon) {
+        negativeIons.push_back(driftLine.first.back());
       } else {
         ions.push_back(driftLine.first.back());
       }
     }
     DrawMarkers2d(electrons, m_colElectron, m_markerSizeCollision);
     DrawMarkers2d(holes, m_colHole, m_markerSizeCollision);
+    DrawMarkers2d(negativeIons, m_colNegativeIon, m_markerSizeCollision);
     DrawMarkers2d(ions, m_colIon, m_markerSizeCollision);
   } else {
     for (const auto& driftLine : m_driftLines) {
@@ -212,6 +216,8 @@ void ViewDrift::Plot2d(const bool axis, const bool snapshot) {
         DrawLine(driftLine.first, m_colElectron, lw);
       } else if (driftLine.second == Particle::Hole) {
         DrawLine(driftLine.first, m_colHole, lw);
+      } else if (driftLine.second == Particle::NegativeIon) {
+        DrawLine(driftLine.first, m_colNegativeIon, lw);
       } else {
         DrawLine(driftLine.first, m_colIon, lw);
       }
@@ -294,18 +300,22 @@ void ViewDrift::Plot3d(const bool axis, const bool ogl,
   if (snapshot) {
     std::vector<std::array<float, 3> > electrons;
     std::vector<std::array<float, 3> > holes;
+    std::vector<std::array<float, 3> > negativeIons;
     std::vector<std::array<float, 3> > ions;
     for (const auto& driftLine : m_driftLines) {
       if (driftLine.second == Particle::Electron) {
         electrons.push_back(driftLine.first.back());
       } else if (driftLine.second == Particle::Hole) {
         holes.push_back(driftLine.first.back());
+      } else if (driftLine.second == Particle::NegativeIon) {
+        negativeIons.push_back(driftLine.first.back());
       } else {
         ions.push_back(driftLine.first.back());
       }
     }
     DrawMarkers3d(electrons, m_colElectron, m_markerSizeCollision);
     DrawMarkers3d(holes, m_colHole, m_markerSizeCollision);
+    DrawMarkers3d(negativeIons, m_colNegativeIon, m_markerSizeCollision);
     DrawMarkers3d(ions, m_colIon, m_markerSizeCollision);
   } else {
     for (const auto& driftLine : m_driftLines) {
@@ -321,6 +331,8 @@ void ViewDrift::Plot3d(const bool axis, const bool ogl,
         pl.SetLineColor(m_colElectron);
       } else if (driftLine.second == Particle::Hole) {
         pl.SetLineColor(m_colHole);
+      } else if (driftLine.second == Particle::NegativeIon) {
+        pl.SetLineColor(m_colNegativeIon);
       } else {
         pl.SetLineColor(m_colIon);
       }
