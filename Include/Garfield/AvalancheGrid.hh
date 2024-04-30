@@ -141,6 +141,12 @@ class AvalancheGrid {
 
     bool run = true;  ///< Tracking if the charges are still in the drift gap.
   };
+    
+ struct Path {
+    std::vector<double> ts ={};
+    std::vector< std::array<double, 3> > xs ={};
+    std::vector<double> qs = {};
+ };
 
   struct AvalancheNode {
     double ix = 0;
@@ -164,7 +170,10 @@ class AvalancheGrid {
     bool active = true;
     double dSigmaL = 0;
     double dSigmaT = 0;
+      
+    Path path;
   };
+    
 
   std::vector<AvalancheNode> m_activeNodes = {};
 

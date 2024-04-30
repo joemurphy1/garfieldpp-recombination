@@ -51,6 +51,8 @@ class ComponentComsol : public ComponentFieldMap {
   /// Set the time interval of the time-dependent weighting field.
   void SetTimeInterval(const double mint, const double maxt,
                        const double stept);
+  /// Get times of time-sliced dynamic weighting field.
+  void GetTimeInterval(std::vector<double>& delayedTimes){ delayedTimes = m_wdtimes; }
 
  private:
   double m_unit = 100.;

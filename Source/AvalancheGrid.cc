@@ -217,6 +217,13 @@ void AvalancheGrid::NextAvalancheGridPoint(Grid &av) {
 
     // Get avalanche size.
     Nholder = node.n;
+      if(node.path.xs.empty()){
+          node.path.xs.push_back({av.xgrid[node.ix],
+                                    av.ygrid[node.iy],
+                                    av.zgrid[node.iz]});
+          node.path.ts.push_back(node.time + node.dt);
+          node.path.qs.push_back((Nholder) / 2);
+      }
 
     if (Nholder == 0) continue;  // If empty go to next point.
     // If the total avalanche size is smaller than the set saturation
@@ -248,13 +255,21 @@ void AvalancheGrid::NextAvalancheGridPoint(Grid &av) {
       if (m_SaturationTime == -1) m_SaturationTime = node.time + node.dt;
     }
     // Produce induced signal on readout electrodes.
-
+    
+    node.path.xs.push_back({av.xgrid[node.ix + node.velNormal[0]],
+                              av.ygrid[node.iy + node.velNormal[1]],
+                              av.zgrid[node.iz + node.velNormal[2]]});
+    node.path.ts.push_back(node.time + node.dt);
+    node.path.qs.push_back((Nholder + node.n) / 2);
+      
+    // old version of induced signal calculation
+    /*
     m_sensor->AddSignal(-(Nholder + node.n) / 2, node.time, node.time + node.dt,
                         av.xgrid[node.ix], av.ygrid[node.iy], av.zgrid[node.iz],
                         av.xgrid[node.ix + node.velNormal[0]],
                         av.ygrid[node.iy + node.velNormal[1]],
                         av.zgrid[node.iz + node.velNormal[2]], false, true);
-
+    */
     // Update total number of electrons.
 
     if (m_layerIndix) m_NLayer[node.layer - 1] += node.n - Nholder;
@@ -311,9 +326,14 @@ void AvalancheGrid::DeactivateNode(AvalancheNode &node) {
   if (status == -5 || status == -6) {
     node.active = false;  // If not inside a gas gap return false to terminate
   }
-
-  if (m_debug && !node.active)
-    std::cerr << m_className << "::DeactivateNode: Node deactivated.\n";
+        
+  if(!node.active){
+    // If node has terminated then the signal from the avalanche is calculated
+    m_sensor->AddSignalWeightingPotential(-1,node.path.ts,node.path.xs,
+                                          node.path.qs);
+    if (m_debug)
+        std::cerr << m_className << "::DeactivateNode: Node deactivated.\n";
+  }
 }
 
 void AvalancheGrid::StartGridAvalanche() {
