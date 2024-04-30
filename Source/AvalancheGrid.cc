@@ -262,14 +262,6 @@ void AvalancheGrid::NextAvalancheGridPoint(Grid &av) {
     node.path.ts.push_back(node.time + node.dt);
     node.path.qs.push_back((Nholder + node.n) / 2);
       
-    // old version of induced signal calculation
-    /*
-    m_sensor->AddSignal(-(Nholder + node.n) / 2, node.time, node.time + node.dt,
-                        av.xgrid[node.ix], av.ygrid[node.iy], av.zgrid[node.iz],
-                        av.xgrid[node.ix + node.velNormal[0]],
-                        av.ygrid[node.iy + node.velNormal[1]],
-                        av.zgrid[node.iz + node.velNormal[2]], false, true);
-    */
     // Update total number of electrons.
 
     if (m_layerIndix) m_NLayer[node.layer - 1] += node.n - Nholder;
@@ -277,7 +269,7 @@ void AvalancheGrid::NextAvalancheGridPoint(Grid &av) {
     av.N += node.n - Nholder;
 
     if (m_diffusion) {
-      // TODO: to impliment
+      // TODO: to implement
     }
 
     if (m_debug) std::cerr << "n = " << Nholder << " -> " << node.n << ".\n";

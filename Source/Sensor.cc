@@ -528,7 +528,7 @@ void Sensor::AddSignalWeightingPotential(const double q,
   const bool electron = q < 0;
 
   for (auto &electrode : m_electrodes) {
-    const std::string lbl = electrode.label;
+    const std::string& lbl = electrode.label;
     const auto cmp = electrode.comp;
     if (m_debug) std::cout << "  Electrode " << electrode.label << ":\n";
     // Compute the prompt weighting potentials at each point on the drift line.
@@ -571,7 +571,7 @@ void Sensor::AddSignalWeightingPotential(const double q,
 
   // Calculate the signals for each electrode.
   for (auto &electrode : m_electrodes) {
-    const std::string lbl = electrode.label;
+    const std::string& lbl = electrode.label;
     const auto cmp = electrode.comp;
     const auto& dtimes = cmp->DelayedSignalTimes(lbl);
     if (dtimes.empty()) continue;
@@ -755,223 +755,28 @@ void Sensor::AddSignalWeightingField(const double q,
 
 }
 
-void Sensor::AddSignal(const double q, const double t0, const double t1,
-                       const double x0, const double y0, const double z0,
-                       const double x1, const double y1, const double z1,
-                       const bool integrateWeightingField,
-                       const bool useWeightingPotential) {
-  if (m_debug) std::cout << m_className << "::AddSignal: ";
-  // Get the time bin.
-  const double dt = t1 - t0;
-  if (dt < Small) {
-    if (m_debug) std::cout << "Time step too small.\n";
-    return;
-  }
-  const double invdt = 1. / dt;
-
-  const int bin = int((t0 - m_tStart) / m_tStep);
-  // Check if the starting time is outside the range
-  if (bin < 0 || bin >= (int)m_nTimeBins) {
-    if (m_debug) std::cout << "Bin " << bin << " out of range.\n";
-    return;
-  }
-  if (m_nEvents <= 0) m_nEvents = 1;
-  const bool electron = q < 0;
-  const double dx = x1 - x0;
-  const double dy = y1 - y0;
-  const double dz = z1 - z0;
-  const double vx = dx * invdt;
-  const double vy = dy * invdt;
-  const double vz = dz * invdt;
-  if (m_debug) {
-    std::cout << "  Time: " << t0 << "\n"
-              << "  Step: " << dt << "\n"
-              << "  Charge: " << q << "\n"
-              << "  Velocity: (" << vx << ", " << vy << ", " << vz << ")\n";
-  }
-  // Locations and weights for 6-point Gaussian integration
-  constexpr size_t nG = 6;
-  auto tg = Numerics::GaussLegendreNodes6();
-  auto wg = Numerics::GaussLegendreWeights6();
-  for (auto &electrode : m_electrodes) {
-    const std::string lbl = electrode.label;
-    if (m_debug) std::cout << "  Electrode " << electrode.label << ":\n";
-    // Induced current.
-    double current = 0.;
-    if (useWeightingPotential) {
-      const double w0 = electrode.comp->WeightingPotential(x0, y0, z0, lbl);
-      const double w1 = electrode.comp->WeightingPotential(x1, y1, z1, lbl);
-      if (m_debug) {
-        std::cout << "    Weighting potentials: " << w0 << ", " << w1 << "\n";
-      }
-      if (w0 > -0.5 && w1 > -0.5) current = q * (w1 - w0) * invdt;
-    } else {
-      double wx = 0., wy = 0., wz = 0.;
-      // Calculate the weighting field for this electrode.
-      if (integrateWeightingField) {
-        for (size_t j = 0; j < nG; ++j) {
-          const double s = 0.5 * (1. + tg[j]);
-          const double x = x0 + s * dx;
-          const double y = y0 + s * dy;
-          const double z = z0 + s * dz;
-          double fx = 0., fy = 0., fz = 0.;
-          electrode.comp->WeightingField(x, y, z, fx, fy, fz, lbl);
-          wx += wg[j] * fx;
-          wy += wg[j] * fy;
-          wz += wg[j] * fz;
-        }
-        wx *= 0.5;
-        wy *= 0.5;
-        wz *= 0.5;
-      } else {
-        const double x = x0 + 0.5 * dx;
-        const double y = y0 + 0.5 * dy;
-        const double z = z0 + 0.5 * dz;
-        electrode.comp->WeightingField(x, y, z, wx, wy, wz, lbl);
-      }
-      if (m_debug) {
-        std::cout << "    Weighting field: (" << wx << ", " << wy << ", " << wz
-                  << ")\n";
-      }
-      // Calculate the induced current.
-      current = -q * (wx * vx + wy * vy + wz * vz);
-    }
-    if (m_debug) std::cout << "    Induced charge: " << current * dt << "\n";
-    double delta = m_tStart + (bin + 1) * m_tStep - t0;
-    // Check if the provided timestep extends over more than one time bin
-    if (dt > delta) {
-      FillBin(electrode, bin, current * delta, electron, false);
-      delta = dt - delta;
-      unsigned int j = 1;
-      while (delta > m_tStep && bin + j < m_nTimeBins) {
-        FillBin(electrode, bin + j, current * m_tStep, electron, false);
-        delta -= m_tStep;
-        ++j;
-      }
-      if (bin + j < m_nTimeBins) {
-        FillBin(electrode, bin + j, current * delta, electron, false);
-      }
-    } else {
-      FillBin(electrode, bin, current * dt, electron, false);
-    }
-  }
-  if (!m_delayedSignal) return;
-  if (m_delayedSignalTimes.empty()) return;
-  const size_t nd = m_delayedSignalTimes.size();
-  // Establish the points in time at which we evaluate the delayed signal.
-  std::vector<double> td(nd);
-  for (size_t i = 0; i < nd; ++i) {
-    td[i] = t0 + m_delayedSignalTimes[i];
-  }
-  // Calculate the signals for each electrode.
-  for (auto &electrode : m_electrodes) {
-    const std::string lbl = electrode.label;
-    std::vector<double> id(nd, 0.);
-    if (useWeightingPotential) {
-      // Using the weighting potential.
-      double chargeHolder = 0.;
-      double currentHolder = 0.;
-      int binHolder = 0;
-      // Loop over each time in the given vector of delayed times.
-      for (size_t i = 0; i < nd; ++i) {
-        double delayedtime = m_delayedSignalTimes[i] - t0;  // t - t0
-        if (delayedtime < 0) continue;
-        // Find bin that needs to be filled.
-        int bin2 = int((m_delayedSignalTimes[i] - m_tStart) / m_tStep);
-        // Compute induced charge
-        double dp0 = electrode.comp->DelayedWeightingPotential(
-            x0, y0, z0, delayedtime, lbl);
-        double dp1 = electrode.comp->DelayedWeightingPotential(
-            x1, y1, z1, delayedtime, lbl);
-
-        double charge = q * (dp1 - dp0);
-        // In very rare cases the result is infinity. We do not let this
-        // contribute.
-        if (std::isnan(charge)) {
-          charge = 0.;
-        }
-        // Calculate induced current based on the induced charge.
-        if (i > 0) {
-          // Time difference between previous entry.
-          double dtt = m_delayedSignalTimes[i] - m_delayedSignalTimes[i - 1];
-          // Induced current
-          double current2 = m_tStep * (charge - chargeHolder) / dtt;
-          // Fill bins
-          if (std::abs(current2) < 1e-16) current2 = 0.;
-          electrode.delayedSignal[bin2] += current2;
-          electrode.signal[bin2] += current2;
-          if (q < 0) {
-            electrode.electronSignal[bin2] += current2;
-            electrode.delayedElectronSignal[bin2] += current2;
-          } else {
-            electrode.ionSignal[bin2] += current2;
-            electrode.delayedIonSignal[bin2] += current2;
-          }
-          // Linear interpolation if the current is calculated from the induced
-          // charge of two non-subsequent bins.
-          if (binHolder > 0 && binHolder + 1 < bin2) {
-            const int diffBin = bin2 - binHolder;
-            for (int j = binHolder + 1; j < bin2; j++) {
-              electrode.delayedSignal[j] +=
-                  (j - binHolder) * (current2 - currentHolder) / diffBin +
-                  currentHolder;
-              electrode.signal[j] +=
-                  (j - binHolder) * (current2 - currentHolder) / diffBin +
-                  currentHolder;
-            }
-          }
-          currentHolder = current2;
-        }
-        // Hold information for next current calculation and interpolation.
-        binHolder = bin2;
-        chargeHolder = charge;
-      }
-    } else {
-      // Using the weighting field.
-      for (size_t i = 0; i < nd; ++i) {
-        // Integrate over the drift line segment.
-        const double step = std::min(m_delayedSignalTimes[i], dt);
-        const double scale = step / dt;
-        double sum = 0.;
-        for (size_t j = 0; j < 6; ++j) {
-          double s = 0.5 * (1. + tg[j]);
-          const double t = m_delayedSignalTimes[i] - s * step;
-          s *= scale;
-          const double x = x0 + s * dx;
-          const double y = y0 + s * dy;
-          const double z = z0 + s * dz;
-          // Calculate the delayed weighting field.
-          double wx = 0., wy = 0., wz = 0.;
-          electrode.comp->DelayedWeightingField(x, y, z, t, wx, wy, wz, lbl);
-          sum += (wx * vx + wy * vy + wz * vz) * wg[j];
-        }
-        id[i] = -q * 0.5 * sum * step;
-      }
-      FillSignal(electrode, q, td, id, m_nAvgDelayedSignal, true);
-    }
-  }
-}
-
-void Sensor::AddSignal(const double q, const std::vector<double> &ts,
-                       const std::vector<std::array<double, 3>> &xs,
-                       const std::vector<std::array<double, 3>> &vs,
-                       const std::vector<double> &ns, const int navg) {
+void Sensor::AddSignalWeightingField(const double q, 
+    const std::vector<double> &ts,
+    const std::vector<std::array<double, 3>> &xs,
+    const std::vector<std::array<double, 3>> &vs,
+    const std::vector<double> &ns, const int navg) {
   // Don't do anything if there are no points on the signal.
   if (ts.size() < 2) return;
   if (ts.size() != xs.size() || ts.size() != vs.size()) {
-    std::cerr << m_className << "::AddSignal: Mismatch in vector size.\n";
+    std::cerr << m_className 
+              << "::AddSignalWeightingField: Mismatch in vector size.\n";
     return;
   }
   const bool aval = ns.size() == ts.size();
   const size_t nPoints = ts.size();
   if (m_debug) {
-    std::cout << m_className << "::AddSignal: Adding a " << nPoints
-              << "-vector (charge " << q << ").\n";
+    std::cout << m_className << "::AddSignalWeightingField: Adding a " 
+              << nPoints << "-vector (charge " << q << ").\n";
   }
 
   if (m_nEvents <= 0) m_nEvents = 1;
   for (auto &electrode : m_electrodes) {
-    const std::string lbl = electrode.label;
+    const std::string& lbl = electrode.label;
     const auto cmp = electrode.comp;
     std::vector<double> signal(nPoints, 0.);
     for (size_t i = 0; i < nPoints; ++i) {
@@ -995,7 +800,7 @@ void Sensor::AddSignal(const double q, const std::vector<double> &ts,
 
   // Calculate the delayed signals for each electrode.
   for (auto &electrode : m_electrodes) {
-    const std::string lbl = electrode.label;
+    const std::string& lbl = electrode.label;
     const auto cmp = electrode.comp;
     const auto& dtimes = cmp->DelayedSignalTimes(lbl);
     if (dtimes.empty()) continue;
