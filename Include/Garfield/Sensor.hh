@@ -229,30 +229,31 @@ class Sensor {
   bool GetThresholdCrossing(const unsigned int i, double& time, double& level,
                             bool& rise) const;
 
+  /// Calculate the signal from a drift line using the 
+  /// weighting potential method.
   void AddSignalWeightingPotential(const double q, 
     const std::vector<double>& ts,
     const std::vector<std::array<double, 3> >& xs);
+  /// Calculate the signal from an avalanche using the 
+  /// weighting potential method.
   void AddSignalWeightingPotential(const double q, 
     const std::vector<double>& ts,
     const std::vector<std::array<double, 3> >& xs,
     const std::vector<double>& qs);
+  /// Calculate the signal from a drift line using the 
+  /// weighting field method.
   void AddSignalWeightingField(const double q, 
     const std::vector<double>& ts,
     const std::vector<std::array<double, 3> >& xs,
     const bool integrateWeightingField);
-
-  /// Add the signal from a charge-carrier step.
-  void AddSignal(const double q, const double t0, const double t1,
-                 const double x0, const double y0, const double z0,
-                 const double x1, const double y1, const double z1,
-                 const bool integrateWeightingField,
-                 const bool useWeightingPotential = false);
-
-  /// Add the signal from a drift line.
-  void AddSignal(const double q, const std::vector<double>& ts,
-                 const std::vector<std::array<double, 3> >& xs,
-                 const std::vector<std::array<double, 3> >& vs,
-                 const std::vector<double>& ns, const int navg);
+  /// Calculate the signal from a drift line using the 
+  /// weighting field method, given the drift velocities at each 
+  /// drift line point.
+  void AddSignalWeightingField(const double q, 
+    const std::vector<double>& ts,
+    const std::vector<std::array<double, 3> >& xs,
+    const std::vector<std::array<double, 3> >& vs,
+    const std::vector<double>& ns, const int navg);
 
   /// Plot the induced signal.
   void PlotSignal(const std::string& label, TPad* pad);

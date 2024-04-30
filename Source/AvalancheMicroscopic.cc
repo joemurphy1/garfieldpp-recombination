@@ -594,23 +594,6 @@ bool AvalancheMicroscopic::TransportElectrons(
           m_sensor->AddSignalWeightingField(q, ts, xs, 
                                             m_integrateWeightingField);
         }
-        // Old style:
-        /*
-        const size_t ns = ts.size() - 1;
-        for (size_t i = 0; i < ns; ++i) {
-          const double t0 = ts[i];
-          const double t1 = ts[i + 1];
-          const double x0 = xs[i][0];
-          const double y0 = xs[i][1];
-          const double z0 = xs[i][2];
-          const double x1 = xs[i + 1][0];
-          const double y1 = xs[i + 1][1];
-          const double z1 = xs[i + 1][2];
-          m_sensor->AddSignal(q, t0, t1, x0, y0, z0, x1, y1, z1,
-                              m_integrateWeightingField,
-                              m_useWeightingPotential);
-        }
-        */
       }
     }
     if (!aval) break;
