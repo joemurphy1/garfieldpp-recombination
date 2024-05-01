@@ -1818,58 +1818,41 @@ int neBEMSolve(void) {
     neBEMMessage("             Please put TimeStep = 1 for static problems.\n");
   }
 
-  if ((neBEMState == 5) || (neBEMState == 8)) {
-    if (neBEMState == 8)  // neBEMState 8 must have inverted flag on
-    {  // so it must be a case looking for solution with a NewBC
-      if (NewBC == 0) {
-        neBEMMessage("neBEMSolve - NewBC zero for neBEMState = 8!");
-        neBEMMessage("           - Nothing to be done ... returning.");
-        return -1;
-      }
-    }
-
-    if (NewModel) {  // effectively, NewMesh = NewBC = NewPP = 1;
-      int fstatus = ComputeSolution();
-      if (fstatus != 0) {
-        neBEMMessage("neBEMSolve - NewModel");
-        return -1;
-      }
-    } else {  // NewModel == 0
-      if (NewMesh) {
-        // effectively, NewBC = NewPP = 1;
-        int fstatus = ComputeSolution();
-        if (fstatus != 0) {
-          neBEMMessage("neBEMSolve - NewMesh");
-          return -1;
-        }
-      } else {        // NewModel == NewMesh == 0
-        if (NewBC) {  // effectively, NewPP = 1;
-          int fstatus = ComputeSolution();
-          if (fstatus != 0) {
-            neBEMMessage("neBEMSolve - Failure computing new solution");
-            return -1;
-          }
-        } else {  // NewBC == 0
-          if (NewPP) {
-            int fstatus = ReadSolution();
-            if (fstatus != 0) {
-              neBEMMessage("neBEMSolve - Failure reading solution");
-              return (-1);
-            }
-          } else {  // NewPP == 0
-            printf("neBEMSolve: Nothing to do ... returning ...\n");
-            return (-1);
-          }  // NewPP == 0
-        }    // NewBC == 0
-      }      // NewModel == NewDiscretization == 0
-    }        // NewModel == 0
-
-    neBEMState = 9;
-  } else {
+  if (neBEMState != 5 && neBEMState != 8) {
     printf("neBEMSolve: neBEMSolve can be called only in state 5 / 8 ...\n");
     printf("returning ...\n");
     return (-1);
   }
+
+  if (neBEMState == 8) {
+    // neBEMState 8 must have inverted flag on
+    // so it must be a case looking for solution with a NewBC
+    if (NewBC == 0) {
+      neBEMMessage("neBEMSolve - NewBC zero for neBEMState = 8!");
+      neBEMMessage("           - Nothing to be done ... returning.");
+      return -1;
+    }
+  }
+
+  if (NewModel || NewMesh || NewBC) {
+    if (ComputeSolution() != 0) {
+      neBEMMessage("neBEMSolve - Failure computing new solution.\n");
+      return -1;
+    }
+  } else {
+    // NewModel == NewMesh == NewBC == 0
+    if (NewPP) {
+      if (ReadSolution() != 0) {
+        neBEMMessage("neBEMSolve - Failure reading solution");
+        return -1;
+      }
+    } else {  // NewPP == 0
+      printf("neBEMSolve: Nothing to do ... returning ...\n");
+      return -1;
+    }
+  }
+
+  neBEMState = 9;
 
   if (FailureCntr) {
     printf(
@@ -2166,9 +2149,8 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
         "fields.\n",
         MAXWtFld);
     return -1;
-  } else {
-    printf("\nPreparing weighting field for %d-th set.\n", IdWtField);
-  }  // else within MaxWtField
+  }
+  printf("\nPreparing weighting field for set %d.\n", IdWtField);
 
   // Allocate a new column to store this solution set
   WtFieldChDen[IdWtField] = (double *)malloc((NbElements + 2) * sizeof(double));
@@ -3005,7 +2987,6 @@ int ReadPrimitives(void) {
   int dbgFn = 0;
 
   char PrimitiveFile[256];
-
   strcpy(PrimitiveFile, ModelOutDir);
   strcat(PrimitiveFile, "/Primitives/StorePrims.out");
 
@@ -3036,6 +3017,8 @@ int ReadPrimitives(void) {
   NbSurfSegZ = ivector(1, NbPrimitives);
   NbWireSeg = ivector(1, NbPrimitives);  // little memory misuse
   InterfaceType = ivector(1, NbPrimitives);
+  Epsilon1 = dvector(1, NbPrimitives);
+  Epsilon2 = dvector(1, NbPrimitives);
   Lambda = dvector(1, NbPrimitives);
   ApplPot = dvector(1, NbPrimitives);
   ApplCh = dvector(1, NbPrimitives);
@@ -3051,23 +3034,24 @@ int ReadPrimitives(void) {
   MirrorDistXFromOrigin = dvector(1, NbPrimitives);
   MirrorDistYFromOrigin = dvector(1, NbPrimitives);
   MirrorDistZFromOrigin = dvector(1, NbPrimitives);
+  // HS: What about *BndPlane*? 
+  ElementBgn = ivector(1, NbPrimitives);
+  ElementEnd = ivector(1, NbPrimitives);
+  AvChDen = dvector(1, NbPrimitives);
+  AvAsgndChDen = dvector(1, NbPrimitives);
 
   for (int prim = 1; prim <= NbPrimitives; ++prim) {
     fscanf(fStrPrm, "%d\n", &PrimType[prim]);
     fscanf(fStrPrm, "%d\n", &InterfaceType[prim]);
     fscanf(fStrPrm, "%d\n", &NbVertices[prim]);
-
     for (int vert = 0; vert < NbVertices[prim]; ++vert) {
       fscanf(fStrPrm, "%le %le %le\n", &XVertex[prim][vert],
              &YVertex[prim][vert], &ZVertex[prim][vert]);
     }  // vert loop
-
     fscanf(fStrPrm, "%le %le %le\n", &XNorm[prim], &YNorm[prim], &ZNorm[prim]);
     fscanf(fStrPrm, "%le\n", &Radius[prim]);
-
     fscanf(fStrPrm, "%le %le %le %le %le\n", &Epsilon1[prim], &Epsilon2[prim],
            &Lambda[prim], &ApplPot[prim], &ApplCh[prim]);
-
     fscanf(fStrPrm, "%d %d\n", &VolRef1[prim], &VolRef2[prim]);
 
     fscanf(fStrPrm, "%d %d %d\n", &PeriodicTypeX[prim], &PeriodicTypeY[prim],
@@ -3079,6 +3063,12 @@ int ReadPrimitives(void) {
     fscanf(fStrPrm, "%le %le %le\n", &MirrorDistXFromOrigin[prim],
            &MirrorDistYFromOrigin[prim], &MirrorDistZFromOrigin[prim]);
   }  // prim loop
+
+  // Initialise ElementBgn, ElementEnd.
+  for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    ElementBgn[prim] = 0;
+    ElementEnd[prim] = 0;
+  }
 
   volRef = ivector(0, VolMax);
   volShape = ivector(0, VolMax);
@@ -3125,31 +3115,31 @@ int ReadElements(void) {
 
   fscanf(fStrEle, "%d\n", &NbElements);
 
-  if (neBEMState == 3) {
-    if (EleArr) {
-      Element *tmp = (Element *)realloc(EleArr, NbElements * sizeof(Element));
-      if (tmp != NULL) {
-        EleArr = tmp;
-        EleCntr = 0;
-      } else {
-        free(EleArr);
-        printf("neBEMDiscretize: Re-allocating EleArr failed.\n");
-        fclose(fStrEle);
-        return (1);
-      }
-      printf("neBEMDiscretize: Re-allocated EleArr.\n");
-    }  // if EleArr => re-allocation
-    else {
-      EleArr = (Element *)malloc(NbElements * sizeof(Element));
-      if (EleArr == NULL) {
-        neBEMMessage("neBEMDiscretize - EleArr malloc");
-        return -1;
-      }
-    }  // else EleArr => fresh allocation
-  } else {
+  if (neBEMState != 3) {
     neBEMMessage("neBEMDiscretize - EleArr malloc; neBEMState mismatch!");
     return -1;
-  }  // else neBEMState == 3
+  }
+  if (EleArr) {
+    // Re-allocate.
+    Element *tmp = (Element *)realloc(EleArr, NbElements * sizeof(Element));
+    if (tmp != NULL) {
+      EleArr = tmp;
+      EleCntr = 0;
+    } else {
+      free(EleArr);
+      printf("neBEMDiscretize: Re-allocating EleArr failed.\n");
+      fclose(fStrEle);
+      return (1);
+    }
+    printf("neBEMDiscretize: Re-allocated EleArr.\n");
+  } else {
+    // Fresh allocation.
+    EleArr = (Element *)malloc(NbElements * sizeof(Element));
+    if (EleArr == NULL) {
+      neBEMMessage("neBEMDiscretize - EleArr malloc");
+      return -1;
+    }
+  }
 
   for (int ele = 1; ele <= NbElements; ++ele) {
     fscanf(fStrEle, "%hd %d %d %d %d\n", &(EleArr + ele - 1)->DeviceNb,
@@ -3176,6 +3166,14 @@ int ReadElements(void) {
            &(EleArr + ele - 1)->BC.CollPt.Z, &(EleArr + ele - 1)->BC.Value);
     fscanf(fStrEle, "%le %le\n", &(EleArr + ele - 1)->Solution,
            &(EleArr + ele - 1)->Assigned);
+  }
+  // Determine first/last element indices for each primitive.
+  for (int ele = 1; ele <= NbElements; ++ele) {
+    int prim = (EleArr + ele - 1)->PrimitiveNb;
+    if (ElementBgn[prim] == 0 || ele < ElementBgn[prim]) {
+      ElementBgn[prim] = ele;
+    }
+    if (ele > ElementEnd[prim]) ElementEnd[prim] = ele;
   }
 
   fscanf(fStrEle, "%d %d %d %d\n", &NbPointsKnCh, &NbLinesKnCh, &NbAreasKnCh,
