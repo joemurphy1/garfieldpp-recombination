@@ -97,18 +97,16 @@ int ComputeSolution(void) {
     printf("                 Returning ...\n");
     return (-1);
   }
-  if (OptSystemChargeZero)  // Constraint making total charge on the sysyem,
-                            // zero
-  {
+  if (OptSystemChargeZero) {
+     // Constraint making total charge on the system zero.
     ++NbConstraints;
     NbUnknowns = NbElements + NbConstraints;
     NbEqns = NbElements + NbConstraints;
-    NbSystemChargeZero =
-        NbUnknowns;          // which equation & unknown relates to this
-  }                          // constraint
-  if (NbFloatingConductors)  // Number of floating conductors now restricted to
-                             // one
-  {
+    // Which equation and unknown relates to this contraint.
+    NbSystemChargeZero = NbUnknowns;          
+  }
+  if (NbFloatingConductors) { 
+    // Number of floating conductors now restricted to one.
     if (NbFloatingConductors > 1) {
       printf("Number of floating conductors > 1! ... not yet implemented.\n");
       printf("Returning\n");
@@ -117,8 +115,9 @@ int ComputeSolution(void) {
     ++NbConstraints;
     NbUnknowns = NbElements + NbConstraints;
     NbEqns = NbElements + NbConstraints;
-    NbFloatCon = NbUnknowns;  // which equation and unknown relates to this
-  }                           // floating conductor
+    // Which equation and unknown relates to this floating conductor. 
+    NbFloatCon = NbUnknowns; 
+  }
 
   if (NewModel || NewMesh) {
     OptValidateSolution = 1;
@@ -1636,9 +1635,7 @@ int ReadInvertedMatrix(void) {
     }
 
     fclose(fInv);
-  }                             // if OptFormattedFile
-  else if (OptUnformattedFile)  // both can not be true!
-  {
+  } else if (OptUnformattedFile) {
     // not implemented
     neBEMMessage("ReadInvertedMatrix - Binary read not yet implemented.");
     return (-1);
@@ -3967,16 +3964,18 @@ int ReadSolution(void) {
   FILE *fSoln = fopen(SolnFile, "r");
   // assert(fSoln != NULL);
   if (fSoln == NULL) {
-    neBEMMessage("ReadSoln - unable to open solution file.");
+    neBEMMessage("ReadSolution - unable to open solution file.");
     return -1;
   }
 
-  int itmp;
-  double dtmp, sol;
   char instr[256];
   fgets(instr, 256, fSoln);
   for (int ele = 1; ele <= NbElements; ++ele) {
-    fscanf(fSoln, "%d %lg %lg %lg %lg\n", &itmp, &dtmp, &dtmp, &dtmp, &sol);
+    int itmp = 0;
+    double x = 0., y = 0., z = 0.;
+    double sol = 0., assigned = 0., total = 0.;
+    fscanf(fSoln, "%d %lg %lg %lg %lg %lg %lg\n", 
+           &itmp, &x, &y, &z, &sol, &assigned, &total);
     // assert(ele == itmp);
     if (ele != itmp) {
       neBEMMessage("ReadSolution - ele_itmp in ReadSolution");
@@ -3984,27 +3983,37 @@ int ReadSolution(void) {
       return -1;
     }
     (EleArr + ele - 1)->Solution = sol;
+    (EleArr + ele - 1)->Assigned = assigned;
   }
   printf("\nReadSolution: Solution read in for all elements ...\n");
   fflush(stdout);
-
-  if (NbConstraints) {
-    if (OptSystemChargeZero) {
+  OptSystemChargeZero = 0;
+  NbConstraints = 0;
+  NbFloatingConductors = 0;
+  // Try to read the next line.
+  if (fgets(instr, 256, fSoln) != NULL) {
+    if (strstr(instr, "NbSystemChargeZero") != NULL) {
+      OptSystemChargeZero = 1;
+      ++NbConstraints;
       fgets(instr, 256, fSoln);
       fscanf(fSoln, "%d %lg\n", &NbSystemChargeZero, &VSystemChargeZero);
       printf(
           "ReadSolution: Read in voltage shift to ensure system charge "
           "zero.\n");
-    }
-    if (NbFloatingConductors) {
+    } else if (strstr(instr, "NbFloatCon") != NULL) {
+      NbFloatingConductors = 1;
+      ++NbConstraints;
       fgets(instr, 256, fSoln);
       fscanf(fSoln, "%d %lg\n", &NbFloatCon, &VFloatCon);
       printf("ReadSolution: Read in voltage on floating conductor.\n");
     }
-    fflush(stdout);
-  }  // if NbConstraints
+  }
+  fflush(stdout);
 
   fclose(fSoln);
+
+  NbUnknowns = NbElements + NbConstraints;
+  NbEqns = NbElements + NbConstraints;
 
   // Find primitive related charge densities
   // OMPCheck - may be parallelized
@@ -4012,7 +4021,6 @@ int ReadSolution(void) {
     double area = 0.0;  // need area of the primitive as well!
     AvChDen[prim] = 0.0;
     AvAsgndChDen[prim] = 0.0;
-
     for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim]; ++ele) {
       const double dA = (EleArr + ele - 1)->G.dA;
       area += dA;
@@ -4025,7 +4033,6 @@ int ReadSolution(void) {
   }
 
   neBEMState = 9;
-
   return (0);
 }  // end of neBEMReadSolution
 
@@ -4033,26 +4040,34 @@ int ReadSolution(void) {
 // TryWtField is a script that elucidates the idea.
 int WeightingFieldSolution(int NbPrimsWtField, int PrimListWtField[],
                            double solnarray[]) {
+
+  if (!InvMat && OptReadInvMatrix) {
+    printf("WeightingFieldSolution: Reading inverted matrix...\n");
+    if (ReadInvertedMatrix() != 0) {
+      printf("Reading inverted matrix failed.\n");
+      return -1;
+    }
+  }
   // Check for the inverted matrix
   if (!InvMat) {
     printf(
         "WeightingFieldSolution: Capacitance matrix not in memory, can not "
         "calculate weighting charges.\n");
-    return (-1);
+    return -1;
   }
 
   for (int i = 1; i <= NbUnknowns; i++) solnarray[i] = 0.0;
 
-  for (int ele = 1, InList; ele <= NbElements; ++ele) {
+  for (int ele = 1; ele <= NbElements; ++ele) {
     int prim = (EleArr + ele - 1)->PrimitiveNb;
 
-    InList = 0;  // assume that this prim is not in the list
+    int InList = 0;  // assume that this prim is not in the list
     for (int primwtfl = 0; primwtfl < NbPrimsWtField; ++primwtfl) {
       if (prim == PrimListWtField[primwtfl]) {
         InList = 1;
         break;  // get out of the for loop
       }
-    }  // for primwtfl
+    }
 
     if (InList) {
       for (int i = 1; i <= NbUnknowns; ++i) {
@@ -4061,7 +4076,7 @@ int WeightingFieldSolution(int NbPrimsWtField, int PrimListWtField[],
     }
   }  // for ele
 
-  return (0);
+  return 0;
 }  // WtFieldSolution ends
 
 // Create a function for Reflect to get the effect of given mirrors - this
