@@ -1641,9 +1641,9 @@ int ReadInvertedMatrix(void) {
     return (-1);
   }
 
-  neBEMState = 7;
+  if (neBEMState < 7) neBEMState = 7;
 
-  return (0);
+  return 0;
 }  // end of ReadInvertedMatrix
 
 double ComputeInfluence(int elefld, int elesrc, Point3D *localP,
@@ -3985,7 +3985,7 @@ int ReadSolution(void) {
     (EleArr + ele - 1)->Solution = sol;
     (EleArr + ele - 1)->Assigned = assigned;
   }
-  printf("\nReadSolution: Solution read in for all elements ...\n");
+  printf("\nReadSolution: Read solution for all elements.\n");
   fflush(stdout);
   OptSystemChargeZero = 0;
   NbConstraints = 0;
@@ -4015,25 +4015,32 @@ int ReadSolution(void) {
   NbUnknowns = NbElements + NbConstraints;
   NbEqns = NbElements + NbConstraints;
 
-  // Find primitive related charge densities
-  // OMPCheck - may be parallelized
-  for (int prim = 1; prim <= NbPrimitives; ++prim) {
-    double area = 0.0;  // need area of the primitive as well!
-    AvChDen[prim] = 0.0;
-    AvAsgndChDen[prim] = 0.0;
-    for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim]; ++ele) {
-      const double dA = (EleArr + ele - 1)->G.dA;
-      area += dA;
-      AvChDen[prim] += (EleArr + ele - 1)->Solution * dA;
-      AvAsgndChDen[prim] += (EleArr + ele - 1)->Assigned * dA;
-    }
-
-    AvChDen[prim] /= area;
-    AvAsgndChDen[prim] /= area;
+  char PrimSolnFile[256];
+  strcpy(PrimSolnFile, BCOutDir);
+  strcat(PrimSolnFile, "/PrimSoln.out");
+  FILE *fPrimSoln = fopen(PrimSolnFile, "r");
+  if (fPrimSoln == NULL) {
+    neBEMMessage("ReadSolution - unable to open primitive solution file.");
+    return -1;
   }
+  fgets(instr, 256, fPrimSoln);
+  for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    int itmp = 0, eleBgn = 0, eleEnd = 0;
+    double x = 0., y = 0., z = 0.;
+    double rho = 0., rhoa = 0.; 
+    fscanf(fPrimSoln, "%d %d %d %lg %lg %lg %lg %lg\n",
+           &itmp, &eleBgn, &eleEnd, &x, &y, &z, &rho, &rhoa);
+    PrimOriginX[prim] = x;
+    PrimOriginY[prim] = y;
+    PrimOriginZ[prim] = z;
+    AvChDen[prim] = rho;
+    AvAsgndChDen[prim] = rhoa;
+  }
+  fclose(fPrimSoln);
+  printf("ReadSolution: Read solution for all primitives.\n");
 
   neBEMState = 9;
-  return (0);
+  return 0;
 }  // end of neBEMReadSolution
 
 // Error estimate is easy here - check that the integration yields unity!
