@@ -414,9 +414,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   double WireElX, WireElY, WireElZ, WireElL;
   DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
 
-  char gpElem[256];
-  FILE *fPrim, *fElem, *fgpPrim, *fgpElem;
-
   // Check inputs
   if (PrimType[prim] != 2) {
     neBEMMessage("DiscretizeWire - PrimType in DiscretizeWire");
@@ -447,11 +444,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   // necessary for separating filenames
   char primstr[10];
   snprintf(primstr, 10, "%d", prim);
-
-  // in order to avoid warning messages
-  fPrim = NULL;
-  fElem = NULL;
-  fgpElem = NULL;
 
   WireParentObj = 1;  // ParentObj not being used now
 
@@ -570,6 +562,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   WireLambda = lambda;
 
   // file output for a primitive
+  FILE *fPrim = NULL;
   if (OptPrimitiveFiles) {
     char OutPrim[256];
     strcpy(OutPrim, ModelOutDir);
@@ -602,6 +595,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   }
 
   // necessary for gnuplot
+  FILE* fgpPrim = NULL;
   if (OptGnuplot && OptGnuplotPrimitives) {
     char gpPrim[256];
     strcpy(gpPrim, MeshOutDir);
@@ -625,6 +619,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   }
 
   // file outputs for elements on primitive
+  FILE* fElem = NULL;
   if (OptElementFiles) {
     char OutElem[256];
     strcpy(OutElem, MeshOutDir);
@@ -638,7 +633,9 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     }
   }
   // gnuplot friendly file outputs for elements on primitive
+  FILE* fgpElem = NULL;
   if (OptGnuplot && OptGnuplotElements) {
+    char gpElem[256];
     strcpy(gpElem, MeshOutDir);
     strcat(gpElem, "/GViewDir/gpElemOnPrim");
     strcat(gpElem, primstr);
@@ -794,9 +791,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
   DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
 
-  char gpElem[256], gpMesh[256];
-  FILE *fPrim, *fElem, *fgpPrim, *fgpElem, *fgpMesh;
-
   // Check inputs
   if ((NbSegX <= 0) || (NbSegZ <= 0)) {
     printf("segmentation input wrong in DiscretizeTriangle ...\n");
@@ -815,12 +809,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   // necessary for separating filenames
   char primstr[10];
   snprintf(primstr, 10, "%d", prim);
-
-  // in order to avoid warning messages
-  fPrim = NULL;
-  fElem = NULL;
-  fgpMesh = NULL;
-  fgpElem = NULL;
 
   // Compute all the properties of this surface
   // Boundary types from 1 to 7 have been defined
@@ -931,6 +919,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   double SurfV = potential;
 
   // file output for a primitive
+  FILE* fPrim = NULL;
   if (OptPrimitiveFiles) {
     char OutPrim[256];
     strcpy(OutPrim, ModelOutDir);
@@ -967,6 +956,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   }
 
   // necessary for gnuplot
+  FILE* fgpPrim = NULL;
   if (OptGnuplot && OptGnuplotPrimitives) {
     char gpPrim[256];
     strcpy(gpPrim, MeshOutDir);
@@ -992,6 +982,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   }
 
   // file outputs for elements on primitive
+  FILE* fElem = NULL;
   if (OptElementFiles) {
     char OutElem[256];
     strcpy(OutElem, MeshOutDir);
@@ -1005,6 +996,9 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     }
   }
   // gnuplot friendly file outputs for elements on primitive
+  FILE* fgpElem = NULL;
+  FILE* fgpMesh = NULL;
+  char gpElem[256], gpMesh[256]; 
   if (OptGnuplot && OptGnuplotElements) {
     strcpy(gpElem, MeshOutDir);
     strcat(gpElem, "/GViewDir/gpElemOnPrim");
@@ -1599,9 +1593,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
   DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
 
-  char gpElem[256], gpMesh[256];
-  FILE *fPrim, *fElem, *fgpPrim, *fgpElem, *fgpMesh;
-
   // Check inputs
   if ((NbSegX <= 0) || (NbSegZ <= 0)) {
     printf("segmentation input wrong in DiscretizeRectangle ...\n");
@@ -1620,12 +1611,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   // necessary for separating filenames
   char primstr[10];
   snprintf(primstr, 10, "%d", prim);
-
-  // in order to avoid warning messages
-  fPrim = NULL;
-  fElem = NULL;
-  fgpMesh = NULL;
-  fgpElem = NULL;
 
   // Get volume information, to begin with
   // int shape, material, boundarytype;
@@ -1683,6 +1668,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   double SurfV = potential;
 
   // file output for a primitive
+  FILE* fPrim = NULL;
   if (OptPrimitiveFiles) {
     char OutPrim[256];
     strcpy(OutPrim, ModelOutDir);
@@ -1722,6 +1708,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   }  // if OptPrimitiveFiles
 
   // necessary for gnuplot
+  FILE* fgpPrim = NULL;
   if (OptGnuplot && OptGnuplotPrimitives) {
     char gpPrim[256];
     strcpy(gpPrim, MeshOutDir);
@@ -1748,6 +1735,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   }  // if OptGnuplot && OptGnuplotPrimitives
 
   // file outputs for elements on primitive
+  FILE* fElem = NULL;
   if (OptElementFiles) {
     char OutElem[256];
     strcpy(OutElem, MeshOutDir);
@@ -1763,7 +1751,11 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   }  // if OptElementFiles
 
   // gnuplot friendly file outputs for elements on primitive
+  FILE* fgpElem = NULL;
+  FILE* fgpMesh = NULL;
+  char gpElem[256], gpMesh[256];
   if (OptGnuplot && OptGnuplotElements) {
+
     strcpy(gpElem, MeshOutDir);
     strcat(gpElem, "/GViewDir/gpElemOnPrim");
     strcat(gpElem, primstr);

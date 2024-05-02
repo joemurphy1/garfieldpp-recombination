@@ -2989,7 +2989,6 @@ int ReadPrimitives(void) {
   char PrimitiveFile[256];
   strcpy(PrimitiveFile, ModelOutDir);
   strcat(PrimitiveFile, "/Primitives/StorePrims.out");
-
   FILE *fStrPrm = fopen(PrimitiveFile, "r");
   if (fStrPrm == NULL) {
     neBEMMessage("ReadPrimitives - Could not open file to read primitives");
@@ -3010,7 +3009,11 @@ int ReadPrimitives(void) {
   XNorm = dvector(1, NbPrimitives);
   YNorm = dvector(1, NbPrimitives);
   ZNorm = dvector(1, NbPrimitives);
-  Radius = dvector(1, NbPrimitives);  // can lead to a little memory misuse
+  Radius = dvector(1, NbPrimitives);
+  PrimOriginX = dvector(1, NbPrimitives);
+  PrimOriginY = dvector(1, NbPrimitives);
+  PrimOriginZ = dvector(1, NbPrimitives);
+  PrimDC = (DirnCosn3D *)malloc((NbPrimitives + 1) * sizeof(DirnCosn3D));
   VolRef1 = ivector(1, NbPrimitives);
   VolRef2 = ivector(1, NbPrimitives);
   NbSurfSegX = ivector(1, NbPrimitives);
@@ -3031,6 +3034,9 @@ int ReadPrimitives(void) {
   XPeriod = dvector(1, NbPrimitives);
   YPeriod = dvector(1, NbPrimitives);
   ZPeriod = dvector(1, NbPrimitives);
+  MirrorTypeX = ivector(1, NbPrimitives);
+  MirrorTypeY = ivector(1, NbPrimitives);
+  MirrorTypeZ = ivector(1, NbPrimitives);
   MirrorDistXFromOrigin = dvector(1, NbPrimitives);
   MirrorDistYFromOrigin = dvector(1, NbPrimitives);
   MirrorDistZFromOrigin = dvector(1, NbPrimitives);
@@ -3064,12 +3070,6 @@ int ReadPrimitives(void) {
            &MirrorDistYFromOrigin[prim], &MirrorDistZFromOrigin[prim]);
   }  // prim loop
 
-  // Initialise ElementBgn, ElementEnd.
-  for (int prim = 1; prim <= NbPrimitives; ++prim) {
-    ElementBgn[prim] = 0;
-    ElementEnd[prim] = 0;
-  }
-
   volRef = ivector(0, VolMax);
   volShape = ivector(0, VolMax);
   volMaterial = ivector(0, VolMax);
@@ -3092,6 +3092,43 @@ int ReadPrimitives(void) {
 
   fclose(fStrPrm);
 
+  for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    ElementBgn[prim] = 0;
+    ElementEnd[prim] = 0;
+    MirrorTypeX[prim] = 0;
+    MirrorTypeY[prim] = 0;
+    MirrorTypeZ[prim] = 0;
+    char PrimFile[256];
+    snprintf(PrimFile, 256, "%s/Primitives/Primitive%d.out",
+             ModelOutDir, prim);
+    FILE *fPrim = fopen(PrimFile, "r");
+    if (fPrim == NULL) {
+      printf("Could not open file for primitive %d.\n", prim);
+      continue;
+    }
+    char line[256];
+    while (fgets(line, 256, fPrim)) {
+      if (strstr(line, "DirnCosn")) {
+        DirnCosn3D dc;
+        fscanf(fPrim, "%lg, %lg, %lg\n", 
+               &dc.XUnit.X, &dc.XUnit.Y, &dc.XUnit.Z);
+        fscanf(fPrim, "%lg, %lg, %lg\n", 
+               &dc.YUnit.X, &dc.YUnit.Y, &dc.YUnit.Z);
+        fscanf(fPrim, "%lg, %lg, %lg\n", 
+               &dc.ZUnit.X, &dc.ZUnit.Y, &dc.ZUnit.Z);
+        PrimDC[prim].XUnit.X = dc.XUnit.X ;
+        PrimDC[prim].XUnit.Y = dc.XUnit.Y;
+        PrimDC[prim].XUnit.Z = dc.XUnit.Z;
+        PrimDC[prim].YUnit.X = dc.YUnit.X;
+        PrimDC[prim].YUnit.Y = dc.YUnit.Y;
+        PrimDC[prim].YUnit.Z = dc.YUnit.Z;
+        PrimDC[prim].ZUnit.X = dc.ZUnit.X;
+        PrimDC[prim].ZUnit.Y = dc.ZUnit.Y;
+        PrimDC[prim].ZUnit.Z = dc.ZUnit.Z;
+      }
+    }
+    fclose(fPrim);
+  }
   return 0;
 }  // ReadPrimitives ends
 
