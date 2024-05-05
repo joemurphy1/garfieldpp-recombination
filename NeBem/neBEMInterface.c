@@ -2912,9 +2912,8 @@ int WriteElements(void) {
 
   for (int ele = 1; ele <= NbElements; ++ele) {
     const int prim = (EleArr + ele - 1)->PrimitiveNb;
-    fprintf(fStrEle, "%d %d %d %d %d\n", (EleArr + ele - 1)->DeviceNb,
-            (EleArr + ele - 1)->ComponentNb, (EleArr + ele - 1)->PrimitiveNb,
-            (EleArr + ele - 1)->InterfaceId, (EleArr + ele - 1)->Id);
+    fprintf(fStrEle, "%d %d %d %d %d\n", 1, 1,
+            (EleArr + ele - 1)->PrimitiveNb, 1, ele);
     fprintf(fStrEle, "%d %le %le %le %le %le %le\n", (EleArr + ele - 1)->G.Type,
             (EleArr + ele - 1)->G.Origin.X, (EleArr + ele - 1)->G.Origin.Y,
             (EleArr + ele - 1)->G.Origin.Z, (EleArr + ele - 1)->G.LX,
@@ -3180,10 +3179,12 @@ int ReadElements(void) {
   }
 
   for (int ele = 1; ele <= NbElements; ++ele) {
+    // Unused variables.
+    short int devicenb = 0;
+    int componentnb = 0, interfaceid, elementid = 0;
     DirnCosn3D dc;
-    fscanf(fStrEle, "%hd %d %d %d %d\n", &(EleArr + ele - 1)->DeviceNb,
-           &(EleArr + ele - 1)->ComponentNb, &(EleArr + ele - 1)->PrimitiveNb,
-           &(EleArr + ele - 1)->InterfaceId, &(EleArr + ele - 1)->Id);
+    fscanf(fStrEle, "%hd %d %d %d %d\n", &devicenb, &componentnb,
+           &(EleArr + ele - 1)->PrimitiveNb, &interfaceid, &elementid);
     fscanf(fStrEle, "%hd %le %le %le %le %le %le\n",
            &(EleArr + ele - 1)->G.Type, &(EleArr + ele - 1)->G.Origin.X,
            &(EleArr + ele - 1)->G.Origin.Y, &(EleArr + ele - 1)->G.Origin.Z,

@@ -160,11 +160,7 @@ typedef struct {
 // we need a reference to the volumes (volref1 and volref2) that an element
 // belongs to
 typedef struct {
-  short int DeviceNb;  // each setup can be made of several devices
-  int ComponentNb;     // each device made of several components
   int PrimitiveNb;     // each component can be made of several primitives
-  int InterfaceId;
-  int Id;  // element id number - each made of several elements
   // Point3D Vertex[4];	// since we consider only upto rectangles: within G
   GeomProp G;  // geomtype, origin, vertex, lengths, area, direction cosines
   ElecProp E;  // electype, BC value

@@ -408,7 +408,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
                    double zvert[], double radius, int volref1, int volref2,
                    int inttype, double potential, double charge, double lambda,
                    int NbSegs) {
-  int WireParentObj, WireEType;
+  int WireEType;
   double WireR, WireL;
   double WireLambda, WireV;
   double WireElX, WireElY, WireElZ, WireElL;
@@ -444,8 +444,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   // necessary for separating filenames
   char primstr[10];
   snprintf(primstr, 10, "%d", prim);
-
-  WireParentObj = 1;  // ParentObj not being used now
 
   WireL = sqrt((xvert[1] - xvert[0]) * (xvert[1] - xvert[0])  // length of wire
                + (yvert[1] - yvert[0]) * (yvert[1] - yvert[0]) +
@@ -589,7 +587,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
             PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
     fprintf(fPrim, "#volref1: %d, volref2: %d\n", volref1, volref2);
     fprintf(fPrim, "#NbSegs: %d\n", NbSegs);
-    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", WireParentObj, WireEType);
+    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, WireEType);
     fprintf(fPrim, "#WireR: %lg\tWireL: %lg\n", WireR, WireL);
     fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", WireLambda, WireV);
   }
@@ -675,11 +673,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
       return -1;
     }
 
-    (EleArr + EleCntr - 1)->DeviceNb =
-        1;  // At present, there is only one device
-    (EleArr + EleCntr - 1)->ComponentNb = WireParentObj;
     (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-    (EleArr + EleCntr - 1)->Id = EleCntr;
     (EleArr + EleCntr - 1)->G.Type = 2;  // linear (wire) here
     (EleArr + EleCntr - 1)->G.Origin.X = WireElX;
     (EleArr + EleCntr - 1)->G.Origin.Y = WireElY;
@@ -713,9 +707,8 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     if (OptElementFiles) {
       fprintf(fElem, "##Element Counter: %d\n", EleCntr);
       fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-      fprintf(fElem, "%d\t%d\t%d\t%d\n", (EleArr + EleCntr - 1)->DeviceNb,
-              (EleArr + EleCntr - 1)->ComponentNb,
-              (EleArr + EleCntr - 1)->PrimitiveNb, (EleArr + EleCntr - 1)->Id);
+      fprintf(fElem, "%d\t%d\t%d\t%d\n", 1, 1,
+              (EleArr + EleCntr - 1)->PrimitiveNb, EleCntr);
       fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
       fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
               (EleArr + EleCntr - 1)->G.Type,
@@ -777,7 +770,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                        double zvert[], double xnorm, double ynorm, double znorm,
                        int volref1, int volref2, int inttype, double potential,
                        double charge, double lambda, int NbSegX, int NbSegZ) {
-  int SurfParentObj, SurfEType;
+  int SurfEType;
   double SurfX, SurfY, SurfZ, SurfLX, SurfLZ;
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
   DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
@@ -803,7 +796,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
 
   // Compute all the properties of this surface
   // Boundary types from 1 to 7 have been defined
-  SurfParentObj = 1;
   SurfEType = inttype;
   if ((SurfEType <= 0) || (SurfEType >= 8)) {
     printf("Wrong SurfEType for prim %d\n", prim);
@@ -932,7 +924,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     fprintf(fPrim, "Norm: %lg\t%lg\t%lg\n", xnorm, ynorm, znorm);
     fprintf(fPrim, "#volref1: %d, volref2: %d\n", volref1, volref2);
     fprintf(fPrim, "#NbSegX: %d, NbSegZ: %d (check note!)\n", NbSegX, NbSegZ);
-    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", SurfParentObj, SurfEType);
+    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, SurfEType);
     fprintf(fPrim, "#SurfX\tSurfY\tSurfZ\tSurfLX\tSurfLZ (Rt. Corner)\n");
     fprintf(fPrim, "%lg\t%lg\t%lg\t%lg\t%lg\n", SurfX, SurfY, SurfZ, SurfLX,
             SurfLZ);
@@ -1145,11 +1137,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       return -1;
     }
 
-    (EleArr + EleCntr - 1)->DeviceNb =
-        1;  // At present, there is only one device
-    (EleArr + EleCntr - 1)->ComponentNb = SurfParentObj;
     (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-    (EleArr + EleCntr - 1)->Id = EleCntr;
     (EleArr + EleCntr - 1)->G.Type = 3;  // triangular here
     (EleArr + EleCntr - 1)->G.Origin.X = SurfElX;
     (EleArr + EleCntr - 1)->G.Origin.Y = SurfElY;
@@ -1204,7 +1192,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
 
     if (DebugLevel == 201) {
       printf("Primitive nb: %d\n", (EleArr + EleCntr - 1)->PrimitiveNb);
-      printf("Element id: %d\n", (EleArr + EleCntr - 1)->Id);
+      printf("Element id: %d\n", EleCntr);
       printf("Element X, Y, Z: %lg %lg %lg\n",
              (EleArr + EleCntr - 1)->G.Origin.X,
              (EleArr + EleCntr - 1)->G.Origin.Y,
@@ -1254,9 +1242,8 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     if (OptElementFiles) {
       fprintf(fElem, "##Element Counter: %d\n", EleCntr);
       fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-      fprintf(fElem, "%d\t%d\t%d\t%d\n", (EleArr + EleCntr - 1)->DeviceNb,
-              (EleArr + EleCntr - 1)->ComponentNb,
-              (EleArr + EleCntr - 1)->PrimitiveNb, (EleArr + EleCntr - 1)->Id);
+      fprintf(fElem, "%d\t%d\t%d\t%d\n", 1, 1,
+              (EleArr + EleCntr - 1)->PrimitiveNb, EleCntr);
       fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
       fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
               (EleArr + EleCntr - 1)->G.Type,
@@ -1358,11 +1345,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         return -1;
       }
 
-      (EleArr + EleCntr - 1)->DeviceNb =
-          1;  // At present, there is only one device
-      (EleArr + EleCntr - 1)->ComponentNb = SurfParentObj;
       (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-      (EleArr + EleCntr - 1)->Id = EleCntr;
       (EleArr + EleCntr - 1)->G.Type = 4;  // rectagnular here
       (EleArr + EleCntr - 1)->G.Origin.X = SurfElX;
       (EleArr + EleCntr - 1)->G.Origin.Y = SurfElY;
@@ -1468,10 +1451,9 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       if (OptElementFiles) {
         fprintf(fElem, "##Element Counter: %d\n", EleCntr);
         fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-        fprintf(fElem, "%d\t%d\t%d\t%d\n", (EleArr + EleCntr - 1)->DeviceNb,
-                (EleArr + EleCntr - 1)->ComponentNb,
+        fprintf(fElem, "%d\t%d\t%d\t%d\n", 1, 1,
                 (EleArr + EleCntr - 1)->PrimitiveNb,
-                (EleArr + EleCntr - 1)->Id);
+                EleCntr);
         fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
         fprintf(
             fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
@@ -1558,7 +1540,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
                         double znorm, int volref1, int volref2, int inttype,
                         double potential, double charge, double lambda,
                         int NbSegX, int NbSegZ) {
-  int SurfParentObj, SurfEType;
+  int SurfEType;
   double SurfX, SurfY, SurfZ, SurfLX, SurfLZ;
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
   DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
@@ -1589,7 +1571,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   // &eps, &potential, &charge, &boundarytype);
 
   // compute all the properties of this surface
-  SurfParentObj = 1;
   SurfEType = inttype;
   if (SurfEType == 0) {
     printf("Wrong SurfEType for prim %d\n", prim);
@@ -1661,7 +1642,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     fprintf(fPrim, "Norm: %lg\t%lg\t%lg\n", xnorm, ynorm, znorm);
     fprintf(fPrim, "#volref1: %d, volref2: %d\n", volref1, volref2);
     fprintf(fPrim, "#NbSegX: %d, NbSegZ: %d\n", NbSegX, NbSegZ);
-    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", SurfParentObj, SurfEType);
+    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, SurfEType);
     fprintf(fPrim, "#SurfX\tSurfY\tSurfZ\tSurfLZ\tSurfLZ\n");
     fprintf(fPrim, "%lg\t%lg\t%lg\t%lg\t%lg\n", SurfX, SurfY, SurfZ, SurfLX,
             SurfLZ);
@@ -1862,11 +1843,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
         return -1;
       }
 
-      (EleArr + EleCntr - 1)->DeviceNb =
-          1;  // At present, there is only one device
-      (EleArr + EleCntr - 1)->ComponentNb = SurfParentObj;
       (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-      (EleArr + EleCntr - 1)->Id = EleCntr;
       (EleArr + EleCntr - 1)->G.Type = 4;  // rectangular here
       (EleArr + EleCntr - 1)->G.Origin.X = SurfElX;
       (EleArr + EleCntr - 1)->G.Origin.Y = SurfElY;
@@ -1968,10 +1945,9 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       if (OptElementFiles) {
         fprintf(fElem, "##Element Counter: %d\n", EleCntr);
         fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-        fprintf(fElem, "%d\t%d\t%d\t%d\n", (EleArr + EleCntr - 1)->DeviceNb,
-                (EleArr + EleCntr - 1)->ComponentNb,
+        fprintf(fElem, "%d\t%d\t%d\t%d\n", 1, 1,
                 (EleArr + EleCntr - 1)->PrimitiveNb,
-                (EleArr + EleCntr - 1)->Id);
+                EleCntr);
         fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
         fprintf(
             fElem, "%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n",

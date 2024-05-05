@@ -372,10 +372,8 @@ int LHMatrix(void) {
         const double zsrc = (EleArr + elesrc - 1)->G.Origin.Z;
         DirnCosn3D* dcsrc = &PrimDC[primsrc];
         if ((EleArr + elesrc - 1)->E.Type == 0) {
-          printf(
-              "LHMatrix: Wrong EType for elesrc %d element %d on %dth "
-              "primitive!\n",
-              elesrc, (EleArr + elesrc - 1)->Id, primsrc);
+          printf("LHMatrix: Wrong EType for element %d (primitive %d)!\n",
+                 elesrc, primsrc);
           exit(-1);
         }
 
@@ -2141,8 +2139,8 @@ double ValueKnCh(int elefld) {
     DirnCosn3D* dcsrc = &PrimDC[primsrc];
 
     if ((EleArr + elesrc - 1)->E.Type == 0) {
-      printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-             elesrc, (EleArr + elesrc - 1)->Id, primsrc);
+      printf("Wrong EType for element %d (primitive %d)!\n",
+             elesrc, primsrc);
       exit(-1);
     }
 
@@ -2315,9 +2313,8 @@ double ContinuityKnCh(int elefld) {
 
     // Retrieve element properties from the structure
     if ((EleArr + elesrc - 1)->E.Type == 0) {
-      printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-             elesrc, (EleArr + elesrc - 1)->Id,
-             primsrc);
+      printf("Wrong EType for element %d (primitive %d)!\n",
+             elesrc, primsrc);
       exit(-1);
     }
 
@@ -2362,8 +2359,8 @@ double ContinuityKnCh(int elefld) {
     } else {
       // Retrieve element properties from the structure
       if ((EleArr + elesrc - 1)->E.Type == 0) {
-        printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-               elesrc, (EleArr + elesrc - 1)->Id, primsrc);
+        printf("Wrong EType for element %d (primitive %d)!\n",
+               elesrc, primsrc);
         exit(-1);
       }
 
@@ -2493,8 +2490,8 @@ double ValueChUp(int elefld) {
     DirnCosn3D* dcsrc = &PrimDC[primsrc];
 
     if ((EleArr + elesrc - 1)->E.Type == 0) {
-      printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-             elesrc, (EleArr + elesrc - 1)->Id, primsrc);
+      printf("Wrong EType for element %d (primitive %d)!\n",
+             elesrc, primsrc);
       exit(-1);
     }
 
@@ -2640,8 +2637,7 @@ double ContinuityChUp(int elefld) {
 
     // Retrieve element properties from the structure
     if ((EleArr + elesrc - 1)->E.Type == 0) {
-      printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-             elesrc, (EleArr + elesrc - 1)->Id, primsrc);
+      printf("Wrong EType for element %d (primitive %d)!\n", elesrc, primsrc);
       exit(-1);
     }
 
@@ -2686,8 +2682,8 @@ double ContinuityChUp(int elefld) {
     } else {
       // Retrieve element properties from the structure
       if ((EleArr + elesrc - 1)->E.Type == 0) {
-        printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-               elesrc, (EleArr + elesrc - 1)->Id, primsrc);
+        printf("Wrong EType for element %d (primitive %d)!\n",
+               elesrc, primsrc);
         exit(-1);
       }
 
