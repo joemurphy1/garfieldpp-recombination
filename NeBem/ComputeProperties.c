@@ -195,8 +195,8 @@ void GetFluxGCS(int ele, Point3D *localP, Vector3D *globalF) {
       exit(-1);
       break;  // never comes here
   }           // switch over gtsrc ends
-
-  (*globalF) = RotateVector3D(&localF, &(EleArr + ele - 1)->G.DC, local2global);
+  const int prim = (EleArr + ele - 1)->PrimitiveNb;
+  (*globalF) = RotateVector3D(&localF, &PrimDC[prim], local2global);
 }  // end of GetFluxGCS
 
 // Flux per unit charge density on an element returned as localF

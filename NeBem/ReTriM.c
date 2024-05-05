@@ -694,15 +694,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->G.LZ = WireElL;  // wire element length
     (EleArr + EleCntr - 1)->G.dA = 2.0 * MyPI * (EleArr + EleCntr - 1)->G.LX *
                                    (EleArr + EleCntr - 1)->G.LZ;
-    (EleArr + EleCntr - 1)->G.DC.XUnit.X = PrimDirnCosn.XUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.XUnit.Y = PrimDirnCosn.XUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.XUnit.Z = PrimDirnCosn.XUnit.Z;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.X = PrimDirnCosn.YUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.Y = PrimDirnCosn.YUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.Z = PrimDirnCosn.YUnit.Z;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.X = PrimDirnCosn.ZUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.Z = PrimDirnCosn.ZUnit.Z;
     (EleArr + EleCntr - 1)->E.Type = WireEType;
     (EleArr + EleCntr - 1)->E.Lambda = WireLambda;
     (EleArr + EleCntr - 1)->Solution = 0.0;
@@ -733,15 +724,15 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
               (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
               (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
       fprintf(fElem, "#DirnCosn: \n");
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.XUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.XUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.XUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.YUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.YUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.YUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.ZUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.ZUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.ZUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
+              PrimDC[prim].XUnit.Y,
+              PrimDC[prim].XUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].YUnit.X,
+              PrimDC[prim].YUnit.Y,
+              PrimDC[prim].YUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].ZUnit.X,
+              PrimDC[prim].ZUnit.Y,
+              PrimDC[prim].ZUnit.Z);
       fprintf(fElem, "#EType\tLambda\n");
       fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
               (EleArr + EleCntr - 1)->E.Lambda);
@@ -1174,15 +1165,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         0.5 * (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
     // Safe to use the direction cosines obtained for the triangular primitive
     // since they are bound to remain unchanged for the rectangular sub-elements
-    (EleArr + EleCntr - 1)->G.DC.XUnit.X = PrimDirnCosn.XUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.XUnit.Y = PrimDirnCosn.XUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.XUnit.Z = PrimDirnCosn.XUnit.Z;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.X = PrimDirnCosn.YUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.Y = PrimDirnCosn.YUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.Z = PrimDirnCosn.YUnit.Z;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.X = PrimDirnCosn.ZUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.Z = PrimDirnCosn.ZUnit.Z;
     (EleArr + EleCntr - 1)->E.Type = SurfEType;
     (EleArr + EleCntr - 1)->E.Lambda = SurfLambda;
     (EleArr + EleCntr - 1)->Solution = 0.0;
@@ -1195,17 +1177,17 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     yv0 = (EleArr + EleCntr - 1)->G.Origin.Y;
     zv0 = (EleArr + EleCntr - 1)->G.Origin.Z;
     xv1 = (EleArr + EleCntr - 1)->G.Origin.X +
-          (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.DC.XUnit.X;
+          (EleArr + EleCntr - 1)->G.LX * PrimDC[prim].XUnit.X;
     yv1 = (EleArr + EleCntr - 1)->G.Origin.Y +
-          (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.DC.XUnit.Y;
+          (EleArr + EleCntr - 1)->G.LX * PrimDC[prim].XUnit.Y;
     zv1 = (EleArr + EleCntr - 1)->G.Origin.Z +
-          (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.DC.XUnit.Z;
+          (EleArr + EleCntr - 1)->G.LX * PrimDC[prim].XUnit.Z;
     xv2 = (EleArr + EleCntr - 1)->G.Origin.X +
-          (EleArr + EleCntr - 1)->G.LZ * (EleArr + EleCntr - 1)->G.DC.ZUnit.X;
+          (EleArr + EleCntr - 1)->G.LZ * PrimDC[prim].ZUnit.X;
     yv2 = (EleArr + EleCntr - 1)->G.Origin.Y +
-          (EleArr + EleCntr - 1)->G.LZ * (EleArr + EleCntr - 1)->G.DC.ZUnit.Y;
+          (EleArr + EleCntr - 1)->G.LZ * PrimDC[prim].ZUnit.Y;
     zv2 = (EleArr + EleCntr - 1)->G.Origin.Z +
-          (EleArr + EleCntr - 1)->G.LZ * (EleArr + EleCntr - 1)->G.DC.ZUnit.Z;
+          (EleArr + EleCntr - 1)->G.LZ * PrimDC[prim].ZUnit.Z;
     // assign vertices of the element
     (EleArr + EleCntr - 1)->G.Vertex[0].X = xv0;
     (EleArr + EleCntr - 1)->G.Vertex[0].Y = yv0;
@@ -1283,15 +1265,15 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
               (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
               (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
       fprintf(fElem, "#DirnCosn: \n");
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.XUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.XUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.XUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.YUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.YUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.YUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.ZUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.ZUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.ZUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
+              PrimDC[prim].XUnit.Y,
+              PrimDC[prim].XUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].YUnit.X,
+              PrimDC[prim].YUnit.Y,
+              PrimDC[prim].YUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].ZUnit.X,
+              PrimDC[prim].ZUnit.Y,
+              PrimDC[prim].ZUnit.Z);
       fprintf(fElem, "#EType\tLambda\n");
       fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
               (EleArr + EleCntr - 1)->E.Lambda);
@@ -1391,18 +1373,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
           zhipt - zlopt;  // to be on the safe side! 21/2/14
       (EleArr + EleCntr - 1)->G.dA =
           (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
-      // Safe to use the direction cosines obtained for the triangular primitive
-      // since they are bound to remain unchanged for the triangular
-      // sub-elements
-      (EleArr + EleCntr - 1)->G.DC.XUnit.X = PrimDirnCosn.XUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.XUnit.Y = PrimDirnCosn.XUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.XUnit.Z = PrimDirnCosn.XUnit.Z;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.X = PrimDirnCosn.YUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.Y = PrimDirnCosn.YUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.Z = PrimDirnCosn.YUnit.Z;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.X = PrimDirnCosn.ZUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.Z = PrimDirnCosn.ZUnit.Z;
       (EleArr + EleCntr - 1)->E.Type = SurfEType;
       (EleArr + EleCntr - 1)->E.Lambda = SurfLambda;
       (EleArr + EleCntr - 1)->Solution = 0.0;
@@ -1510,15 +1480,15 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
             (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
             (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
         fprintf(fElem, "#DirnCosn: \n");
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.XUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.XUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.XUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.YUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.YUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.YUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.ZUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.ZUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.ZUnit.Z);
+        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
+                PrimDC[prim].XUnit.Y,
+                PrimDC[prim].XUnit.Z);
+        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].YUnit.X,
+                PrimDC[prim].YUnit.Y,
+                PrimDC[prim].YUnit.Z);
+        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].ZUnit.X,
+                PrimDC[prim].ZUnit.Y,
+                PrimDC[prim].ZUnit.Z);
         fprintf(fElem, "#EType\tLambda\n");
         fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
                 (EleArr + EleCntr - 1)->E.Lambda);
@@ -1905,15 +1875,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
       (EleArr + EleCntr - 1)->G.dA =
           (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
-      (EleArr + EleCntr - 1)->G.DC.XUnit.X = PrimDirnCosn.XUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.XUnit.Y = PrimDirnCosn.XUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.XUnit.Z = PrimDirnCosn.XUnit.Z;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.X = PrimDirnCosn.YUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.Y = PrimDirnCosn.YUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.Z = PrimDirnCosn.YUnit.Z;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.X = PrimDirnCosn.ZUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.Z = PrimDirnCosn.ZUnit.Z;
       (EleArr + EleCntr - 1)->E.Type = SurfEType;
       (EleArr + EleCntr - 1)->E.Lambda = SurfLambda;
       (EleArr + EleCntr - 1)->Solution = 0.0;
@@ -2019,15 +1980,15 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
             (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
             (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
         fprintf(fElem, "#DirnCosn: \n");
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.XUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.XUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.XUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.YUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.YUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.YUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.ZUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.ZUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.ZUnit.Z);
+        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
+                PrimDC[prim].XUnit.Y,
+                PrimDC[prim].XUnit.Z);
+        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].YUnit.X,
+                PrimDC[prim].YUnit.Y,
+                PrimDC[prim].YUnit.Z);
+        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].ZUnit.X,
+                PrimDC[prim].ZUnit.Y,
+                PrimDC[prim].ZUnit.Z);
         fprintf(fElem, "#EType\tLambda\n");
         fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
                 (EleArr + EleCntr - 1)->E.Lambda);

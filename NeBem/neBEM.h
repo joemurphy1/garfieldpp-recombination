@@ -140,7 +140,7 @@ typedef struct {
   Point3D Vertex[4];  // element vertex begins with index 0 and goes to max 3
   double LX, LZ;      // length, breadth / base, height / radius, length
   double dA;          // area
-  DirnCosn3D DC;      // Direction cosines
+  // DirnCosn3D DC;      // Direction cosines
 } GeomProp;
 
 // 1: conductor at known potential, 2: charged conductor, 3: floating conductor

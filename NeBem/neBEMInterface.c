@@ -2911,6 +2911,7 @@ int WriteElements(void) {
   fprintf(fStrEle, "%d\n", NbElements);
 
   for (int ele = 1; ele <= NbElements; ++ele) {
+    const int prim = (EleArr + ele - 1)->PrimitiveNb;
     fprintf(fStrEle, "%d %d %d %d %d\n", (EleArr + ele - 1)->DeviceNb,
             (EleArr + ele - 1)->ComponentNb, (EleArr + ele - 1)->PrimitiveNb,
             (EleArr + ele - 1)->InterfaceId, (EleArr + ele - 1)->Id);
@@ -2918,12 +2919,12 @@ int WriteElements(void) {
             (EleArr + ele - 1)->G.Origin.X, (EleArr + ele - 1)->G.Origin.Y,
             (EleArr + ele - 1)->G.Origin.Z, (EleArr + ele - 1)->G.LX,
             (EleArr + ele - 1)->G.LZ, (EleArr + ele - 1)->G.dA);
-    fprintf(fStrEle, "%le %le %le\n", (EleArr + ele - 1)->G.DC.XUnit.X,
-            (EleArr + ele - 1)->G.DC.XUnit.Y, (EleArr + ele - 1)->G.DC.XUnit.Z);
-    fprintf(fStrEle, "%le %le %le\n", (EleArr + ele - 1)->G.DC.YUnit.X,
-            (EleArr + ele - 1)->G.DC.YUnit.Y, (EleArr + ele - 1)->G.DC.YUnit.Z);
-    fprintf(fStrEle, "%le %le %le\n", (EleArr + ele - 1)->G.DC.ZUnit.X,
-            (EleArr + ele - 1)->G.DC.ZUnit.Y, (EleArr + ele - 1)->G.DC.ZUnit.Z);
+    fprintf(fStrEle, "%le %le %le\n", PrimDC[prim].XUnit.X,
+            PrimDC[prim].XUnit.Y, PrimDC[prim].XUnit.Z);
+    fprintf(fStrEle, "%le %le %le\n", PrimDC[prim].YUnit.X,
+            PrimDC[prim].YUnit.Y, PrimDC[prim].YUnit.Z);
+    fprintf(fStrEle, "%le %le %le\n", PrimDC[prim].ZUnit.X,
+            PrimDC[prim].ZUnit.Y, PrimDC[prim].ZUnit.Z);
     fprintf(fStrEle, "%d %le\n", (EleArr + ele - 1)->E.Type,
             (EleArr + ele - 1)->E.Lambda);
     fprintf(fStrEle, "%d %le %le %le %le\n", (EleArr + ele - 1)->BC.NbOfBCs,
@@ -3179,6 +3180,7 @@ int ReadElements(void) {
   }
 
   for (int ele = 1; ele <= NbElements; ++ele) {
+    DirnCosn3D dc;
     fscanf(fStrEle, "%hd %d %d %d %d\n", &(EleArr + ele - 1)->DeviceNb,
            &(EleArr + ele - 1)->ComponentNb, &(EleArr + ele - 1)->PrimitiveNb,
            &(EleArr + ele - 1)->InterfaceId, &(EleArr + ele - 1)->Id);
@@ -3187,15 +3189,15 @@ int ReadElements(void) {
            &(EleArr + ele - 1)->G.Origin.Y, &(EleArr + ele - 1)->G.Origin.Z,
            &(EleArr + ele - 1)->G.LX, &(EleArr + ele - 1)->G.LZ,
            &(EleArr + ele - 1)->G.dA);
-    fscanf(fStrEle, "%le %le %le\n", &(EleArr + ele - 1)->G.DC.XUnit.X,
-           &(EleArr + ele - 1)->G.DC.XUnit.Y,
-           &(EleArr + ele - 1)->G.DC.XUnit.Z);
-    fscanf(fStrEle, "%le %le %le\n", &(EleArr + ele - 1)->G.DC.YUnit.X,
-           &(EleArr + ele - 1)->G.DC.YUnit.Y,
-           &(EleArr + ele - 1)->G.DC.YUnit.Z);
-    fscanf(fStrEle, "%le %le %le\n", &(EleArr + ele - 1)->G.DC.ZUnit.X,
-           &(EleArr + ele - 1)->G.DC.ZUnit.Y,
-           &(EleArr + ele - 1)->G.DC.ZUnit.Z);
+    fscanf(fStrEle, "%le %le %le\n", &dc.XUnit.X,
+           &dc.XUnit.Y,
+           &dc.XUnit.Z);
+    fscanf(fStrEle, "%le %le %le\n", &dc.YUnit.X,
+           &dc.YUnit.Y,
+           &dc.YUnit.Z);
+    fscanf(fStrEle, "%le %le %le\n", &dc.ZUnit.X,
+           &dc.ZUnit.Y,
+           &dc.ZUnit.Z);
     fscanf(fStrEle, "%hd %le\n", &(EleArr + ele - 1)->E.Type,
            &(EleArr + ele - 1)->E.Lambda);
     fscanf(fStrEle, "%hd %le %le %le %le\n", &(EleArr + ele - 1)->BC.NbOfBCs,
