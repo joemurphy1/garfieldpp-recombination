@@ -1762,14 +1762,8 @@ int neBEMBoundaryInitialConditions(void) {
   // boundary condition for a device having same geometry (hence, the same
   // inverted influence coefficient matrix)
   if ((neBEMState == 4) || (neBEMState == 7)) {
-    int fstatus = BoundaryConditions();
-    if (fstatus != 0) {
-      neBEMMessage("neBEMBondaryInitialConditions - BoundaryConditions");
-      return -1;
-    }
-    fstatus = InitialConditions();
-    if (fstatus != 0) {
-      neBEMMessage("neBEMBondaryInitialConditions - InitialConditions");
+    if (InitialConditions() != 0) {
+      neBEMMessage("neBEMBoundaryInitialConditions - InitialConditions");
       return -1;
     }
     if (neBEMState == 4) neBEMState = 5;  // create LHMatrix, invert etc
@@ -2927,7 +2921,7 @@ int WriteElements(void) {
     fprintf(fStrEle, "%d %le\n", InterfaceType[prim], Lambda[prim]);
     fprintf(fStrEle, "%d %le %le %le %le\n", 1,
             (EleArr + ele - 1)->BC.CollPt.X, (EleArr + ele - 1)->BC.CollPt.Y,
-            (EleArr + ele - 1)->BC.CollPt.Z, (EleArr + ele - 1)->BC.Value);
+            (EleArr + ele - 1)->BC.CollPt.Z, ApplPot[prim]);
     fprintf(fStrEle, "%le %le\n", (EleArr + ele - 1)->Solution,
             (EleArr + ele - 1)->Assigned);
   }
@@ -3185,6 +3179,7 @@ int ReadElements(void) {
     double lambda;
     short int etype;
     short int nbcs;
+    double bcvalue;
     fscanf(fStrEle, "%hd %d %d %d %d\n", &devicenb, &componentnb,
            &(EleArr + ele - 1)->PrimitiveNb, &interfaceid, &elementid);
     fscanf(fStrEle, "%hd %le %le %le %le %le %le\n",
@@ -3198,7 +3193,7 @@ int ReadElements(void) {
     fscanf(fStrEle, "%hd %le\n", &etype, &lambda);
     fscanf(fStrEle, "%hd %le %le %le %le\n", &nbcs,
            &(EleArr + ele - 1)->BC.CollPt.X, &(EleArr + ele - 1)->BC.CollPt.Y,
-           &(EleArr + ele - 1)->BC.CollPt.Z, &(EleArr + ele - 1)->BC.Value);
+           &(EleArr + ele - 1)->BC.CollPt.Z, &bcvalue);
     fscanf(fStrEle, "%le %le\n", &(EleArr + ele - 1)->Solution,
            &(EleArr + ele - 1)->Assigned);
   }
