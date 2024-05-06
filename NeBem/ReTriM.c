@@ -721,7 +721,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
               (EleArr + EleCntr - 1)->BC.CollPt.X,
               (EleArr + EleCntr - 1)->BC.CollPt.Y,
               (EleArr + EleCntr - 1)->BC.CollPt.Z,
-              (EleArr + EleCntr - 1)->BC.Value);
+              ApplPot[prim]);
     }  // if OptElementFiles
        //
     // mark centroid
@@ -1217,7 +1217,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                (EleArr + EleCntr - 1)->BC.CollPt.Z);
       }
     }  // vector rotation over
-    // (EleArr+EleCntr-1)->BC.Value = SurfV; // assigned in BoundaryConditions
 
     if (OptElementFiles) {
       fprintf(fElem, "##Element Counter: %d\n", EleCntr);
@@ -1248,7 +1247,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
               (EleArr + EleCntr - 1)->BC.CollPt.X,
               (EleArr + EleCntr - 1)->BC.CollPt.Y,
               (EleArr + EleCntr - 1)->BC.CollPt.Z,
-              (EleArr + EleCntr - 1)->BC.Value);
+              ApplPot[prim]);
     }  // if OptElementFiles
 
     // mark bary-center and draw mesh
@@ -1453,7 +1452,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                 (EleArr + EleCntr - 1)->BC.CollPt.X,
                 (EleArr + EleCntr - 1)->BC.CollPt.Y,
                 (EleArr + EleCntr - 1)->BC.CollPt.Z,
-                (EleArr + EleCntr - 1)->BC.Value);
+                ApplPot[prim]);
       }  // if OptElementFiles
 
       // draw centroid and mesh
@@ -1939,7 +1938,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
                 (EleArr + EleCntr - 1)->BC.CollPt.X,
                 (EleArr + EleCntr - 1)->BC.CollPt.Y,
                 (EleArr + EleCntr - 1)->BC.CollPt.Z,
-                (EleArr + EleCntr - 1)->BC.Value);
+                ApplPot[prim]);
       }  // if OptElementFiles
 
       // mark centroid
@@ -2015,33 +2014,6 @@ int DiscretizePolygon(int /*prim*/, int /*nvertex*/, double /*xvert*/[],
 
   return (0);
 }  // end of DiscretizePolygon
-
-int BoundaryConditions(void) {
-  // Loop over all the elements of all the primitives.
-  // Some of the primitives do not have a boundary condition to be satisfied
-  // We'll omit these primitives but before doing that we need to know to
-  // which primitive a particular element belongs to.
-  // The RHS will also need to be modified to accommodate the presence of
-  // floating conductors and charged (known) substances.
-  // Looping on primitives (rather than elements) can save precious time!
-  for (int ele = 1; ele <= NbElements; ++ele) {
-    int prim = (EleArr + ele - 1)->PrimitiveNb;
-    // Note this condition is pure geometry, not electric!
-    switch (PrimType[prim]) {
-      case 2:
-      case 3:  // for floating conductor and for dielectric-dielectric intfc
-      case 4:  // the BC is zero (may be modified due to known charges, later)
-        (EleArr + ele - 1)->BC.Value = ApplPot[prim];
-        break;
-
-      default:
-        printf("Primitive out of range in BoundaryConditions ... returning\n");
-        return (-1);
-    }  // switch on PrimType over
-  }    // ele loop over
-
-  return (0);
-}  // end of BoundaryConditions
 
 // Set up initial conditions (C styling to be fixed)
 int InitialConditions(void) {

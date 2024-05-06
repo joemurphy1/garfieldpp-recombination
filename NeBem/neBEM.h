@@ -148,7 +148,7 @@ typedef struct {
 
 typedef struct {
   Point3D CollPt;     // Collocation (only one, for the time being)
-  double Value;       // potential / charge density
+  // double Value;       // potential / charge density
 } BCProp;
 
 // we need a reference to the volumes (volref1 and volref2) that an element
@@ -222,7 +222,6 @@ neBEMGLOBAL int WireElements(int prim, int nvertex, double xvert[],
                              int volref1, int volref2, int inttype,
                              double potential, double charge, double lambda,
                              int NbWireSeg);
-neBEMGLOBAL int BoundaryConditions(void);
 neBEMGLOBAL int InitialConditions(void);
 // Initiate known charge(s) / charge density (ies) within the device.
 neBEMGLOBAL int InitKnownCharges(void);
