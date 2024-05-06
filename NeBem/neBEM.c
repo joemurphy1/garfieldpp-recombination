@@ -1381,9 +1381,8 @@ int InvertMatrix(void) {
     tmpmat = dmatrix(1, NbEqns, 1, NbUnknowns);
 
     // calculate w+ (transpose)u
-    for (int j = 1; j <= NbUnknowns;
-         j++) {  // w+ is obtained by replacing every non-zero diagonal entry of
-                 // [W]
+    for (int j = 1; j <= NbUnknowns; j++) {  
+      // w+ is obtained by replacing every non-zero diagonal entry of [W]
       int i;
 #ifdef _OPENMP
 #pragma omp parallel for private(i)
@@ -1447,8 +1446,8 @@ int InvertMatrix(void) {
     fflush(stdout);
     ludcmp(tmpInf, NbUnknowns, index, &d);  // The tmpInf matrix over-written
 
-    for (int j = 1; j <= NbUnknowns; j++)  // Find inverse by columns.
-    {
+    for (int j = 1; j <= NbUnknowns; j++) { 
+      // Find inverse by columns.
       int i;
 #ifdef _OPENMP
 #pragma omp parallel for private(i)
@@ -3236,8 +3235,8 @@ int Solve(void) {
               zerrMax = zb;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
             double xplus = xb + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
             xplus += PrimDC[prim].ZUnit.X * normdisp;
@@ -3315,8 +3314,8 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
             xplus += PrimDC[prim].ZUnit.X * normdisp;
@@ -3467,8 +3466,8 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
             xplus += PrimDC[prim].ZUnit.X * normdisp;
@@ -3652,8 +3651,8 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
             xplus += PrimDC[prim].ZUnit.X * normdisp;
@@ -3728,8 +3727,8 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
             xplus += PrimDC[prim].ZUnit.X * normdisp;
@@ -3804,8 +3803,8 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
             xplus += PrimDC[prim].ZUnit.X * normdisp;
@@ -3819,9 +3818,8 @@ int Solve(void) {
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
             double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
             xminus -= PrimDC[prim].YUnit.X * normdisp;
@@ -3836,9 +3834,8 @@ int Solve(void) {
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
@@ -3880,8 +3877,8 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
             xplus += PrimDC[prim].ZUnit.X * normdisp;
@@ -3895,9 +3892,8 @@ int Solve(void) {
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
             double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
             xminus -= PrimDC[prim].YUnit.X * normdisp;
@@ -3912,9 +3908,8 @@ int Solve(void) {
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);

@@ -78,8 +78,9 @@ neBEMGLOBAL int *PrimType;
 neBEMGLOBAL int *InterfaceType;
 neBEMGLOBAL int **OrgnlToEffPrim;
 neBEMGLOBAL int *NbVertices;
-neBEMGLOBAL double **XVertex, **YVertex, **ZVertex, *XNorm, *YNorm, *ZNorm,
-    *PrimLX, *PrimLZ, *Radius;
+neBEMGLOBAL double **XVertex, **YVertex, **ZVertex;
+neBEMGLOBAL double *XNorm, *YNorm, *ZNorm;
+neBEMGLOBAL double *PrimLX, *PrimLZ, *Radius;
 neBEMGLOBAL double *PrimOriginX, *PrimOriginY, *PrimOriginZ;
 neBEMGLOBAL DirnCosn3D *PrimDC;
 neBEMGLOBAL double *Epsilon1, *Epsilon2;
