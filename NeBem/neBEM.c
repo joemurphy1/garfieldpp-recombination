@@ -527,7 +527,7 @@ int LHMatrix(void) {
           // (at present assumed to be along one of the coordinate axes, but
           // this constraint can be easily relaxed later - we can have a
           // direction cosine along which the elements may be repeated) and the
-          // distance of repeatition. Thus, for each repeated element, we need
+          // distance of repetition. Thus, for each repeated element, we need
           // to compute its position and the rest remains identical as above.
           // The influence, evaluated as a temporary double, can be added to the
           // base value computed above. PeriodicInX etc are either zero or +ve
@@ -697,7 +697,6 @@ int LHMatrix(void) {
       // printf("\b\b\b\b\b\b");
     }  // loop for elefld, field element (influenced)
   }    // pragma omp parallel
-
   // Enforce total charge on the system to be zero.
   // All the voltages in the system need to be shifted by an unknown amount
   // V_shift
@@ -707,7 +706,7 @@ int LHMatrix(void) {
   // Please note that charge = Element Charge Density * Element Area
   if (OptSystemChargeZero) {
     // an additional column
-    for (int row = 1; row <= NbEqns; ++row) {
+    for (int row = 1; row < NbEqns; ++row) {
       const int prim = (EleArr + row - 1)->PrimitiveNb;
       // The VSystemChargeZero is subtracted only from potentials.
       if ((InterfaceType[prim] == 1) || (InterfaceType[prim] == 3)) {
@@ -716,24 +715,23 @@ int LHMatrix(void) {
         Inf[row][NbUnknowns] = 0.0;
       }
     }
-
     // an additional row
-    for (int col = 1; col <= NbUnknowns; ++col)
-      Inf[NbEqns][col] =
-          (EleArr + col - 1)->G.dA;  // if charge density is computed
-    // Inf[NbEqns][col] = 1.0;	// if charge is computed
-
+    for (int col = 1; col < NbUnknowns; ++col) {
+      // If charge density is computed:
+      Inf[NbEqns][col] = (EleArr + col - 1)->G.dA;
+      // If charge is computed:
+      // Inf[NbEqns][col] = 1.0;
+    }
     // the last element
     Inf[NbEqns][NbUnknowns] = 0.0;
-  }  // if(OptSystemChargeZero)
-  else {
+  } else {
     VSystemChargeZero = 0.0;
   }
 
   if (NbFloatingConductors) {
     // assume only one floating conductor
     // an additional column
-    for (int row = 1; row <= NbEqns; ++row) {
+    for (int row = 1; row < NbEqns; ++row) {
       const int prim = (EleArr + row - 1)->PrimitiveNb;
       if (InterfaceType[prim] == 3) {
         // element of a floating conductor
@@ -744,7 +742,7 @@ int LHMatrix(void) {
     }  // additional column
 
     // an additional row
-    for (int col = 1; col <= NbUnknowns; ++col) {
+    for (int col = 1; col < NbUnknowns; ++col) {
       const int prim = (EleArr + col - 1)->PrimitiveNb;
       if (InterfaceType[prim] == 3) {
         // element of a floating conductor
@@ -1988,12 +1986,10 @@ int RHVector(void) {
   for (int elefld = 1; elefld <= NbElements; ++elefld) {
     if (0) printf("\nIn RHVector, elefld: %d\n", elefld);
     value = valueKnCh = valueChUp = 0.0;
-    value = (EleArr + elefld - 1)
-                ->BC.Value;  // previouly this line was within case 1
     const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
+    value = ApplPot[primfld];
     switch (InterfaceType[primfld]) {
       case 1:  // Conducting surfaces
-        // value = (EleArr+elefld-1)->BC.Value;
         if (OptKnCh) {
           valueKnCh = ValueKnCh(elefld);  // effect of all known charges
           if (isnan(valueKnCh)) exit(-1);
@@ -2051,10 +2047,9 @@ int RHVector(void) {
           if (isinf(valueChUp)) exit(-1);
         }
         RHS[elefld] = value - valueKnCh - valueChUp;  // Check Bardhan's eqn 16
-        RHS[elefld] +=
-            (EleArr + elefld - 1)->Assigned;  // effect due to assigned
-        // charge; what happens when assigned elements are charged up in
-        // addition?
+        // Add effect due to assigned charge; 
+        // what happens when assigned elements are charged up in addition?
+        RHS[elefld] += (EleArr + elefld - 1)->Assigned;  
         break;
       case 6:  // E parallel symmetry boundary
         printf("Symmetry boundary, E parallel not implemented yet.\n");
