@@ -12,8 +12,6 @@
 #include "neBEM.h"
 #include "neBEMInterface.h"
 
-#define MyPI 3.14159265358979323846
-
 #ifdef __cplusplus
 namespace neBEM {
 #endif
@@ -409,7 +407,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
                    int inttype, double potential, double charge, double lambda,
                    int NbSegs) {
   double WireElX, WireElY, WireElZ;
-  DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
 
   // Check inputs
   if (PrimType[prim] != 2) {
@@ -451,9 +448,10 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   // Direction cosines along the wire - note difference from surface primitives!
   // The direction along the wire is considered to be the z axis of the LCS
   // So, let us fix that axial vector first
-  PrimDirnCosn.ZUnit.X = (xvert[1] - xvert[0]) / WireL;  // useful
-  PrimDirnCosn.ZUnit.Y = (yvert[1] - yvert[0]) / WireL;
-  PrimDirnCosn.ZUnit.Z = (zvert[1] - zvert[0]) / WireL;  // useful
+  DirnCosn3D pdc;
+  pdc.ZUnit.X = (xvert[1] - xvert[0]) / WireL;  // useful
+  pdc.ZUnit.Y = (yvert[1] - yvert[0]) / WireL;
+  pdc.ZUnit.Z = (zvert[1] - zvert[0]) / WireL;  // useful
   // Next, let us find out the coefficients of a plane that passes through the
   // wire centroid and is normal to the axis of the wire. This is basically the
   // mid-plane of the cylindrical wire
@@ -461,7 +459,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   // \vec{OR} . \vec{OA} = 0
   // where O is the wire centroid, A is a point on the axis and R is a point on
   // the cylindrical surface of the wire. \vec{OA} can be easily replaced by the
-  // axial vector that is equivalent to the vector PrimDirnCosn.ZUnit
+  // axial vector that is equivalent to the vector pdc.ZUnit
   // The equation of the plane can be shown to be:
   // XCoef * X + YCoef * Y + ZCoef * Z = Const
   // double XCoef, YCoef, ZCoef, Const; - not needed any more
@@ -471,9 +469,9 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   // O = CreatePoint3D(WireX, WireY, WireZ);
   {
     Vector3D XUnit, YUnit, ZUnit;
-    ZUnit.X = PrimDirnCosn.ZUnit.X;
-    ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-    ZUnit.Z = PrimDirnCosn.ZUnit.Z;
+    ZUnit.X = pdc.ZUnit.X;
+    ZUnit.Y = pdc.ZUnit.Y;
+    ZUnit.Z = pdc.ZUnit.Z;
 
     /* old code	- abs instead of fabs??!!
     XCoef = ZUnit.X;
@@ -526,24 +524,24 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     YUnit = UnitVector3D(&YUnit);
     // end of replacement
 
-    PrimDirnCosn.XUnit.X = XUnit.X;
-    PrimDirnCosn.XUnit.Y = XUnit.Y;
-    PrimDirnCosn.XUnit.Z = XUnit.Z;
-    PrimDirnCosn.YUnit.X = YUnit.X;
-    PrimDirnCosn.YUnit.Y = YUnit.Y;
-    PrimDirnCosn.YUnit.Z = YUnit.Z;
+    pdc.XUnit.X = XUnit.X;
+    pdc.XUnit.Y = XUnit.Y;
+    pdc.XUnit.Z = XUnit.Z;
+    pdc.YUnit.X = YUnit.X;
+    pdc.YUnit.Y = YUnit.Y;
+    pdc.YUnit.Z = YUnit.Z;
   }  // X and Y direction cosines computed
 
   // primitive direction cosine assignments
-  PrimDC[prim].XUnit.X = PrimDirnCosn.XUnit.X;
-  PrimDC[prim].XUnit.Y = PrimDirnCosn.XUnit.Y;
-  PrimDC[prim].XUnit.Z = PrimDirnCosn.XUnit.Z;
-  PrimDC[prim].YUnit.X = PrimDirnCosn.YUnit.X;
-  PrimDC[prim].YUnit.Y = PrimDirnCosn.YUnit.Y;
-  PrimDC[prim].YUnit.Z = PrimDirnCosn.YUnit.Z;
-  PrimDC[prim].ZUnit.X = PrimDirnCosn.ZUnit.X;
-  PrimDC[prim].ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-  PrimDC[prim].ZUnit.Z = PrimDirnCosn.ZUnit.Z;
+  PrimDC[prim].XUnit.X = pdc.XUnit.X;
+  PrimDC[prim].XUnit.Y = pdc.XUnit.Y;
+  PrimDC[prim].XUnit.Z = pdc.XUnit.Z;
+  PrimDC[prim].YUnit.X = pdc.YUnit.X;
+  PrimDC[prim].YUnit.Y = pdc.YUnit.Y;
+  PrimDC[prim].YUnit.Z = pdc.YUnit.Z;
+  PrimDC[prim].ZUnit.X = pdc.ZUnit.X;
+  PrimDC[prim].ZUnit.Y = pdc.ZUnit.Y;
+  PrimDC[prim].ZUnit.Z = pdc.ZUnit.Z;
 
   // primitive origin: also the barycenter for a wire element
   PrimOriginX[prim] = 0.5 * (xvert[0] + xvert[1]);
@@ -572,12 +570,9 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
             PrimOriginY[prim], PrimOriginZ[prim]);
     fprintf(fPrim, "Primitive lengths: %lg\t%lg\n", PrimLX[prim], PrimLZ[prim]);
     fprintf(fPrim, "#DirnCosn: \n");
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.XUnit.X,
-            PrimDirnCosn.XUnit.Y, PrimDirnCosn.XUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.YUnit.X,
-            PrimDirnCosn.YUnit.Y, PrimDirnCosn.YUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.ZUnit.X,
-            PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
     fprintf(fPrim, "#volref1: %d, volref2: %d\n", volref1, volref2);
     fprintf(fPrim, "#NbSegs: %d\n", NbSegs);
     fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, inttype);
@@ -679,8 +674,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->G.Vertex[1].Z = zv1;
     (EleArr + EleCntr - 1)->G.LX = radius;    // radius of the wire element
     (EleArr + EleCntr - 1)->G.LZ = WireElL;  // wire element length
-    (EleArr + EleCntr - 1)->G.dA = 2.0 * MyPI * (EleArr + EleCntr - 1)->G.LX *
-                                   (EleArr + EleCntr - 1)->G.LZ;
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
     // Modify collocation point to be on the surface?
@@ -703,7 +696,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
               (EleArr + EleCntr - 1)->G.Origin.X,
               (EleArr + EleCntr - 1)->G.Origin.Y,
               (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
-              (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
+              (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
       fprintf(fElem, "#DirnCosn: \n");
       fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
               PrimDC[prim].XUnit.Y,
@@ -756,9 +749,8 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                        double zvert[], double xnorm, double ynorm, double znorm,
                        int volref1, int volref2, int inttype, double potential,
                        double charge, double lambda, int NbSegX, int NbSegZ) {
-  double SurfX, SurfY, SurfZ, SurfLX, SurfLZ;
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
-  DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
+
 
   // Check inputs
   if ((NbSegX <= 0) || (NbSegZ <= 0)) {
@@ -786,9 +778,9 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     exit(-1);
   }
   // Origin of the local coordinate center is at the right angle corner
-  SurfX = xvert[1];
-  SurfY = yvert[1];
-  SurfZ = zvert[1];
+  double SurfX = xvert[1];
+  double SurfY = yvert[1];
+  double SurfZ = zvert[1];
 
   // Find the proper direction cosines first - little more tricky that in the
   // rectangular case
@@ -796,28 +788,28 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   // We begin with trial 1: one of the possible orientations
   // Intially, the lengths are necessary
   // lengths of the sides - note that right angle corner is [1]-th element
-  SurfLX = sqrt((xvert[0] - xvert[1]) * (xvert[0] - xvert[1]) +
-                (yvert[0] - yvert[1]) * (yvert[0] - yvert[1]) +
-                (zvert[0] - zvert[1]) * (zvert[0] - zvert[1]));
-  SurfLZ = sqrt((xvert[2] - xvert[1]) * (xvert[2] - xvert[1]) +
-                (yvert[2] - yvert[1]) * (yvert[2] - yvert[1]) +
-                (zvert[2] - zvert[1]) * (zvert[2] - zvert[1]));
+  double SurfLX = sqrt((xvert[0] - xvert[1]) * (xvert[0] - xvert[1]) +
+                       (yvert[0] - yvert[1]) * (yvert[0] - yvert[1]) +
+                       (zvert[0] - zvert[1]) * (zvert[0] - zvert[1]));
+  double SurfLZ = sqrt((xvert[2] - xvert[1]) * (xvert[2] - xvert[1]) +
+                       (yvert[2] - yvert[1]) * (yvert[2] - yvert[1]) +
+                       (zvert[2] - zvert[1]) * (zvert[2] - zvert[1]));
   // Direction cosines - note that right angle corner is [1]-th element
-  PrimDirnCosn.XUnit.X = (xvert[0] - xvert[1]) / SurfLX;
-  PrimDirnCosn.XUnit.Y = (yvert[0] - yvert[1]) / SurfLX;
-  PrimDirnCosn.XUnit.Z = (zvert[0] - zvert[1]) / SurfLX;
-  PrimDirnCosn.ZUnit.X = (xvert[2] - xvert[1]) / SurfLZ;
-  PrimDirnCosn.ZUnit.Y = (yvert[2] - yvert[1]) / SurfLZ;
-  PrimDirnCosn.ZUnit.Z = (zvert[2] - zvert[1]) / SurfLZ;
-  PrimDirnCosn.YUnit =
-      Vector3DCrossProduct(&PrimDirnCosn.ZUnit, &PrimDirnCosn.XUnit);
-  if ((fabs(PrimDirnCosn.YUnit.X - xnorm) <= 1.0e-3) &&
-      (fabs(PrimDirnCosn.YUnit.Y - ynorm) <= 1.0e-3) &&
-      (fabs(PrimDirnCosn.YUnit.Z - znorm) <= 1.0e-3))
+  DirnCosn3D pdc;
+  pdc.XUnit.X = (xvert[0] - xvert[1]) / SurfLX;
+  pdc.XUnit.Y = (yvert[0] - yvert[1]) / SurfLX;
+  pdc.XUnit.Z = (zvert[0] - zvert[1]) / SurfLX;
+  pdc.ZUnit.X = (xvert[2] - xvert[1]) / SurfLZ;
+  pdc.ZUnit.Y = (yvert[2] - yvert[1]) / SurfLZ;
+  pdc.ZUnit.Z = (zvert[2] - zvert[1]) / SurfLZ;
+  pdc.YUnit = Vector3DCrossProduct(&pdc.ZUnit, &pdc.XUnit);
+  if ((fabs(pdc.YUnit.X - xnorm) <= 1.0e-3) &&
+      (fabs(pdc.YUnit.Y - ynorm) <= 1.0e-3) &&
+      (fabs(pdc.YUnit.Z - znorm) <= 1.0e-3))
     flagDC = 1;
   if (DebugLevel == 202) {
     printf("First attempt: \n");
-    PrintDirnCosn3D(PrimDirnCosn);
+    PrintDirnCosn3D(pdc);
     printf("\n");
   }
 
@@ -830,21 +822,20 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                   (yvert[0] - yvert[1]) * (yvert[0] - yvert[1]) +
                   (zvert[0] - zvert[1]) * (zvert[0] - zvert[1]));
     // Direction cosines - note that right angle corner is [1]-th element
-    PrimDirnCosn.XUnit.X = (xvert[2] - xvert[1]) / SurfLX;
-    PrimDirnCosn.XUnit.Y = (yvert[2] - yvert[1]) / SurfLX;
-    PrimDirnCosn.XUnit.Z = (zvert[2] - zvert[1]) / SurfLX;
-    PrimDirnCosn.ZUnit.X = (xvert[0] - xvert[1]) / SurfLZ;
-    PrimDirnCosn.ZUnit.Y = (yvert[0] - yvert[1]) / SurfLZ;
-    PrimDirnCosn.ZUnit.Z = (zvert[0] - zvert[1]) / SurfLZ;
-    PrimDirnCosn.YUnit =
-        Vector3DCrossProduct(&PrimDirnCosn.ZUnit, &PrimDirnCosn.XUnit);
-    if ((fabs(PrimDirnCosn.YUnit.X - xnorm) <= 1.0e-3) &&
-        (fabs(PrimDirnCosn.YUnit.Y - ynorm) <= 1.0e-3) &&
-        (fabs(PrimDirnCosn.YUnit.Z - znorm) <= 1.0e-3))
+    pdc.XUnit.X = (xvert[2] - xvert[1]) / SurfLX;
+    pdc.XUnit.Y = (yvert[2] - yvert[1]) / SurfLX;
+    pdc.XUnit.Z = (zvert[2] - zvert[1]) / SurfLX;
+    pdc.ZUnit.X = (xvert[0] - xvert[1]) / SurfLZ;
+    pdc.ZUnit.Y = (yvert[0] - yvert[1]) / SurfLZ;
+    pdc.ZUnit.Z = (zvert[0] - zvert[1]) / SurfLZ;
+    pdc.YUnit = Vector3DCrossProduct(&pdc.ZUnit, &pdc.XUnit);
+    if ((fabs(pdc.YUnit.X - xnorm) <= 1.0e-3) &&
+        (fabs(pdc.YUnit.Y - ynorm) <= 1.0e-3) &&
+        (fabs(pdc.YUnit.Z - znorm) <= 1.0e-3))
       flagDC = 2;
     if (DebugLevel == 202) {
       printf("Second attempt: \n");
-      PrintDirnCosn3D(PrimDirnCosn);
+      PrintDirnCosn3D(pdc);
       printf("\n");
     }
   }
@@ -857,15 +848,15 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   }
 
   // primitive direction cosine assignments
-  PrimDC[prim].XUnit.X = PrimDirnCosn.XUnit.X;
-  PrimDC[prim].XUnit.Y = PrimDirnCosn.XUnit.Y;
-  PrimDC[prim].XUnit.Z = PrimDirnCosn.XUnit.Z;
-  PrimDC[prim].YUnit.X = PrimDirnCosn.YUnit.X;
-  PrimDC[prim].YUnit.Y = PrimDirnCosn.YUnit.Y;
-  PrimDC[prim].YUnit.Z = PrimDirnCosn.YUnit.Z;
-  PrimDC[prim].ZUnit.X = PrimDirnCosn.ZUnit.X;
-  PrimDC[prim].ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-  PrimDC[prim].ZUnit.Z = PrimDirnCosn.ZUnit.Z;
+  PrimDC[prim].XUnit.X = pdc.XUnit.X;
+  PrimDC[prim].XUnit.Y = pdc.XUnit.Y;
+  PrimDC[prim].XUnit.Z = pdc.XUnit.Z;
+  PrimDC[prim].YUnit.X = pdc.YUnit.X;
+  PrimDC[prim].YUnit.Y = pdc.YUnit.Y;
+  PrimDC[prim].YUnit.Z = pdc.YUnit.Z;
+  PrimDC[prim].ZUnit.X = pdc.ZUnit.X;
+  PrimDC[prim].ZUnit.Y = pdc.ZUnit.Y;
+  PrimDC[prim].ZUnit.Z = pdc.ZUnit.Z;
 
   // primitive origin - for a triangle, origin is at the right corner
   PrimOriginX[prim] = SurfX;
@@ -881,8 +872,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     Epsilon1[prim] = Epsilon2[prim];
     Epsilon2[prim] = tmpEpsilon1;
   }
-
-  double SurfV = potential;
 
   // file output for a primitive
   FILE* fPrim = NULL;
@@ -912,13 +901,10 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     fprintf(fPrim, "%lg\t%lg\t%lg\t%lg\t%lg\n", SurfX, SurfY, SurfZ, SurfLX,
             SurfLZ);
     fprintf(fPrim, "#DirnCosn: \n");
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.XUnit.X,
-            PrimDirnCosn.XUnit.Y, PrimDirnCosn.XUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.YUnit.X,
-            PrimDirnCosn.YUnit.Y, PrimDirnCosn.YUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.ZUnit.X,
-            PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
-    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, SurfV);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
+    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, potential);
   }
 
   // necessary for gnuplot
@@ -1103,11 +1089,11 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       localDisp.X = xtorigin;
       localDisp.Y = ytorigin;
       localDisp.Z = ztorigin;
-      globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-      SurfElX =
-          SurfX + globalDisp.X;  // these are the coords in GCS of origin of
-      SurfElY =
-          SurfY + globalDisp.Y;  // the triangluar element under consideration
+      globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
+      // These are the coords in GCS of origin of
+      // the triangluar element under consideration:
+      SurfElX = SurfX + globalDisp.X;  
+      SurfElY = SurfY + globalDisp.Y;  
       SurfElZ = SurfZ + globalDisp.Z;
     }  // vector rotation over
 
@@ -1132,8 +1118,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
     (EleArr + EleCntr - 1)->G.LZ =
         zhipt - zlopt;  // to be on the safe side, 21/2/14
-    (EleArr + EleCntr - 1)->G.dA =
-        0.5 * (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
     // Safe to use the direction cosines obtained for the triangular primitive
     // since they are bound to remain unchanged for the rectangular sub-elements
     (EleArr + EleCntr - 1)->Solution = 0.0;
@@ -1180,11 +1164,11 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       printf("Element LX, LZ: %lg %lg\n", (EleArr + EleCntr - 1)->G.LX,
              (EleArr + EleCntr - 1)->G.LZ);
       printf("Element (primitive) X axis dirn cosines: %lg, %lg, %lg\n",
-             PrimDirnCosn.XUnit.X, PrimDirnCosn.XUnit.Y, PrimDirnCosn.XUnit.Z);
+             pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
       printf("Element (primitive) Y axis dirn cosines: %lg, %lg, %lg\n",
-             PrimDirnCosn.YUnit.X, PrimDirnCosn.YUnit.Y, PrimDirnCosn.YUnit.Z);
+             pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
       printf("Element (primitive) Z axis dirn cosines: %lg, %lg, %lg\n",
-             PrimDirnCosn.ZUnit.X, PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
+             pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
     }
     // Following are the location in the ECS
     double dxl = (EleArr + EleCntr - 1)->G.LX / 3.0;
@@ -1201,7 +1185,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                localDisp.Z);
       }
 
-      globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
+      globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
       (EleArr + EleCntr - 1)->BC.CollPt.X =
           (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
       (EleArr + EleCntr - 1)->BC.CollPt.Y =
@@ -1229,7 +1213,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
               (EleArr + EleCntr - 1)->G.Origin.X,
               (EleArr + EleCntr - 1)->G.Origin.Y,
               (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
-              (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
+              (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
       fprintf(fElem, "#DirnCosn: \n");
       fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
               PrimDC[prim].XUnit.Y,
@@ -1305,7 +1289,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         localDisp.X = xorigin;
         localDisp.Y = yorigin;
         localDisp.Z = zorigin;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
+        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
         SurfElX = SurfX + globalDisp.X;  // GCS
         SurfElY = SurfY + globalDisp.Y;
         SurfElZ = SurfZ + globalDisp.Z;
@@ -1323,7 +1307,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       }
 
       (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-      (EleArr + EleCntr - 1)->G.Type = 4;  // rectagnular here
+      (EleArr + EleCntr - 1)->G.Type = 4;  // rectangular here
       (EleArr + EleCntr - 1)->G.Origin.X = SurfElX;
       (EleArr + EleCntr - 1)->G.Origin.Y = SurfElY;
       (EleArr + EleCntr - 1)->G.Origin.Z = SurfElZ;
@@ -1331,8 +1315,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
       (EleArr + EleCntr - 1)->G.LZ =
           zhipt - zlopt;  // to be on the safe side! 21/2/14
-      (EleArr + EleCntr - 1)->G.dA =
-          (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
       // Boundary condition is applied at the origin for this rectangular
@@ -1356,7 +1338,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         localDisp.X = x0;
         localDisp.Y = y0;
         localDisp.Z = z0;  // displacement in GCS
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
+        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
         x0 = (EleArr + EleCntr - 1)->G.Origin.X +
              globalDisp.X;  // xyz position in GCS
         y0 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
@@ -1372,7 +1354,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         localDisp.X = x1;
         localDisp.Y = y1;
         localDisp.Z = z1;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
+        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
         x1 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
         y1 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
         z1 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
@@ -1387,7 +1369,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         localDisp.X = x2;
         localDisp.Y = y2;
         localDisp.Z = z2;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
+        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
         x2 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
         y2 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
         z2 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
@@ -1402,7 +1384,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         localDisp.X = x3;
         localDisp.Y = y3;
         localDisp.Z = z3;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
+        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
         x3 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
         y3 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
         z3 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
@@ -1434,7 +1416,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
             (EleArr + EleCntr - 1)->G.Type, (EleArr + EleCntr - 1)->G.Origin.X,
             (EleArr + EleCntr - 1)->G.Origin.Y,
             (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
-            (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
+            (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
         fprintf(fElem, "#DirnCosn: \n");
         fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
                 PrimDC[prim].XUnit.Y,
@@ -1512,9 +1494,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
                         double znorm, int volref1, int volref2, int inttype,
                         double potential, double charge, double lambda,
                         int NbSegX, int NbSegZ) {
-  double SurfX, SurfY, SurfZ, SurfLX, SurfLZ;
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
-  DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
 
   // Check inputs
   if ((NbSegX <= 0) || (NbSegZ <= 0)) {
@@ -1547,36 +1527,37 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     exit(-1);
   }
   // centroid of the local coordinate system
-  SurfX = 0.25 * (xvert[0] + xvert[1] + xvert[2] + xvert[3]);
-  SurfY = 0.25 * (yvert[0] + yvert[1] + yvert[2] + yvert[3]);
-  SurfZ = 0.25 * (zvert[0] + zvert[1] + zvert[2] + zvert[3]);
+  double SurfX = 0.25 * (xvert[0] + xvert[1] + xvert[2] + xvert[3]);
+  double SurfY = 0.25 * (yvert[0] + yvert[1] + yvert[2] + yvert[3]);
+  double SurfZ = 0.25 * (zvert[0] + zvert[1] + zvert[2] + zvert[3]);
   // lengths of the sides
-  SurfLX = sqrt((xvert[1] - xvert[0]) * (xvert[1] - xvert[0]) +
-                (yvert[1] - yvert[0]) * (yvert[1] - yvert[0]) +
-                (zvert[1] - zvert[0]) * (zvert[1] - zvert[0]));
-  SurfLZ = sqrt((xvert[2] - xvert[1]) * (xvert[2] - xvert[1]) +
-                (yvert[2] - yvert[1]) * (yvert[2] - yvert[1]) +
-                (zvert[2] - zvert[1]) * (zvert[2] - zvert[1]));
+  double SurfLX = sqrt((xvert[1] - xvert[0]) * (xvert[1] - xvert[0]) +
+                       (yvert[1] - yvert[0]) * (yvert[1] - yvert[0]) +
+                       (zvert[1] - zvert[0]) * (zvert[1] - zvert[0]));
+  double SurfLZ = sqrt((xvert[2] - xvert[1]) * (xvert[2] - xvert[1]) +
+                       (yvert[2] - yvert[1]) * (yvert[2] - yvert[1]) +
+                       (zvert[2] - zvert[1]) * (zvert[2] - zvert[1]));
   // Direction cosines
-  PrimDirnCosn.XUnit.X = (xvert[1] - xvert[0]) / SurfLX;
-  PrimDirnCosn.XUnit.Y = (yvert[1] - yvert[0]) / SurfLX;
-  PrimDirnCosn.XUnit.Z = (zvert[1] - zvert[0]) / SurfLX;
-  PrimDirnCosn.YUnit.X = xnorm;
-  PrimDirnCosn.YUnit.Y = ynorm;
-  PrimDirnCosn.YUnit.Z = znorm;
-  PrimDirnCosn.ZUnit =
-      Vector3DCrossProduct(&PrimDirnCosn.XUnit, &PrimDirnCosn.YUnit);
+  DirnCosn3D pdc;
+  pdc.XUnit.X = (xvert[1] - xvert[0]) / SurfLX;
+  pdc.XUnit.Y = (yvert[1] - yvert[0]) / SurfLX;
+  pdc.XUnit.Z = (zvert[1] - zvert[0]) / SurfLX;
+  pdc.YUnit.X = xnorm;
+  pdc.YUnit.Y = ynorm;
+  pdc.YUnit.Z = znorm;
+  pdc.ZUnit =
+      Vector3DCrossProduct(&pdc.XUnit, &pdc.YUnit);
 
   // primitive direction cosine assignments
-  PrimDC[prim].XUnit.X = PrimDirnCosn.XUnit.X;
-  PrimDC[prim].XUnit.Y = PrimDirnCosn.XUnit.Y;
-  PrimDC[prim].XUnit.Z = PrimDirnCosn.XUnit.Z;
-  PrimDC[prim].YUnit.X = PrimDirnCosn.YUnit.X;
-  PrimDC[prim].YUnit.Y = PrimDirnCosn.YUnit.Y;
-  PrimDC[prim].YUnit.Z = PrimDirnCosn.YUnit.Z;
-  PrimDC[prim].ZUnit.X = PrimDirnCosn.ZUnit.X;
-  PrimDC[prim].ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-  PrimDC[prim].ZUnit.Z = PrimDirnCosn.ZUnit.Z;
+  PrimDC[prim].XUnit.X = pdc.XUnit.X;
+  PrimDC[prim].XUnit.Y = pdc.XUnit.Y;
+  PrimDC[prim].XUnit.Z = pdc.XUnit.Z;
+  PrimDC[prim].YUnit.X = pdc.YUnit.X;
+  PrimDC[prim].YUnit.Y = pdc.YUnit.Y;
+  PrimDC[prim].YUnit.Z = pdc.YUnit.Z;
+  PrimDC[prim].ZUnit.X = pdc.ZUnit.X;
+  PrimDC[prim].ZUnit.Y = pdc.ZUnit.Y;
+  PrimDC[prim].ZUnit.Z = pdc.ZUnit.Z;
 
   // primitive origin: also the barcenter for a rectangular element
   PrimOriginX[prim] = SurfX;
@@ -1584,8 +1565,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   PrimOriginZ[prim] = SurfZ;
   PrimLX[prim] = SurfLX;
   PrimLZ[prim] = SurfLZ;
-
-  double SurfV = potential;
 
   // file output for a primitive
   FILE* fPrim = NULL;
@@ -1618,13 +1597,13 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     // fprintf(fPrim, "#SurfRX: %lg\tSurfRY: %lg\tSurfRZ: %lg\n",
     // SurfRX, SurfRY, SurfRZ);
     fprintf(fPrim, "#DirnCosn: \n");
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.XUnit.X,
-            PrimDirnCosn.XUnit.Y, PrimDirnCosn.XUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.YUnit.X,
-            PrimDirnCosn.YUnit.Y, PrimDirnCosn.YUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.ZUnit.X,
-            PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
-    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, SurfV);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.XUnit.X,
+            pdc.XUnit.Y, pdc.XUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.YUnit.X,
+            pdc.YUnit.Y, pdc.YUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.ZUnit.X,
+            pdc.ZUnit.Y, pdc.ZUnit.Z);
+    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, potential);
   }  // if OptPrimitiveFiles
 
   // necessary for gnuplot
@@ -1798,7 +1777,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
         localDisp.X = xav;
         localDisp.Y = 0.0;
         localDisp.Z = zav;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
+        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
         SurfElX = SurfX + globalDisp.X;
         SurfElY = SurfY + globalDisp.Y;
         SurfElZ = SurfZ + globalDisp.Z;
@@ -1819,8 +1798,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->G.Origin.Z = SurfElZ;
       (EleArr + EleCntr - 1)->G.LX = SurfElLX;
       (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
-      (EleArr + EleCntr - 1)->G.dA =
-          (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
       (EleArr + EleCntr - 1)->BC.CollPt.X = (EleArr + EleCntr - 1)->G.Origin.X;
@@ -1842,7 +1819,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
         localDisp.X = x0;
         localDisp.Y = y0;
         localDisp.Z = z0;  // displacement in GCS
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
+        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
         x0 = (EleArr + EleCntr - 1)->G.Origin.X +
              globalDisp.X;  // xyz position in GCS
         y0 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
@@ -1858,7 +1835,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
         localDisp.X = x1;
         localDisp.Y = y1;
         localDisp.Z = z1;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
+        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
         x1 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
         y1 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
         z1 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
@@ -1873,7 +1850,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
         localDisp.X = x2;
         localDisp.Y = y2;
         localDisp.Z = z2;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
+        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
         x2 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
         y2 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
         z2 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
@@ -1888,7 +1865,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
         localDisp.X = x3;
         localDisp.Y = y3;
         localDisp.Z = z3;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
+        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
         x3 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
         y3 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
         z3 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
@@ -1920,7 +1897,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
             (EleArr + EleCntr - 1)->G.Type, (EleArr + EleCntr - 1)->G.Origin.X,
             (EleArr + EleCntr - 1)->G.Origin.Y,
             (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
-            (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
+            (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
         fprintf(fElem, "#DirnCosn: \n");
         fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
                 PrimDC[prim].XUnit.Y,
@@ -3183,7 +3160,7 @@ int InitChargingUp(void) {
           }
           for (int ele = 1; ele <= NbElements; ++ele) {
             (EleArr + ele - 1)->Assigned +=
-                ChUpFactor * Q_E * NbChUpEonEle[ele] / (EleArr + ele - 1)->G.dA;
+                ChUpFactor * Q_E * NbChUpEonEle[ele] / ElementArea(ele);
             fprintf(fEleEChUpMap, "%d %lg %lg %lg %d %lg\n", ele,
                     (EleArr + ele - 1)->G.Origin.X,
                     (EleArr + ele - 1)->G.Origin.Y,
@@ -3938,7 +3915,7 @@ int InitChargingUp(void) {
           }
           for (int ele = 1; ele <= NbElements; ++ele) {
             (EleArr + ele - 1)->Assigned +=
-                ChUpFactor * Q_I * NbChUpIonEle[ele] / (EleArr + ele - 1)->G.dA;
+                ChUpFactor * Q_I * NbChUpIonEle[ele] / ElementArea(ele);
             fprintf(fEleEIChUpMap, "%d %lg %lg %lg %d %lg\n", ele,
                     (EleArr + ele - 1)->G.Origin.X,
                     (EleArr + ele - 1)->G.Origin.Y,

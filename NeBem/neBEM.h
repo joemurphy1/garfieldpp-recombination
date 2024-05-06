@@ -143,19 +143,15 @@ typedef struct {
   Point3D Origin;     // centroid / barycenter / axis-center (local origin)
   Point3D Vertex[4];  // element vertex begins with index 0 and goes to max 3
   double LX, LZ;      // length, breadth / base, height / radius, length
-  double dA;          // area
 } GeomProp;
 
 typedef struct {
   Point3D CollPt;     // Collocation (only one, for the time being)
-  // double Value;       // potential / charge density
 } BCProp;
 
-// we need a reference to the volumes (volref1 and volref2) that an element
-// belongs to
 typedef struct {
-  int PrimitiveNb;     // each component can be made of several primitives
-  GeomProp G;  // geomtype, origin, vertex, lengths, area, direction cosines
+  int PrimitiveNb;    // Index of the primitive to which the element belongs
+  GeomProp G;  // geomtype, origin, vertex, lengths, area
   BCProp BC;   // boundary condn properties (should this BC thing be freed?)
   double Solution;  // accumulated charge, or similar solution
   double Assigned;  // assigned charge, or similar property
@@ -326,6 +322,7 @@ neBEMGLOBAL double ContinuityChUp(int fld);
 neBEMGLOBAL double EffectKnCh(int fld);
 neBEMGLOBAL double ValueKnCh(int fld);
 neBEMGLOBAL double ContinuityKnCh(int fld);
+neBEMGLOBAL double ElementArea(int ele);
 
 // Weighting field charge density solution
 // arguments: boundary condition array, and the solution (charge density, for
@@ -538,13 +535,13 @@ neBEMGLOBAL int WtFldPFAtPoint(Point3D *globalPt, double *Pot, Vector3D *Flux,
                                int Id);
 
 // Compute potential at xlocal, ylocal, zlocal due to an element defined by
-// gtsrc (type), lxsrc (dimension), lzsrc (dimension), (length), dA (area)
+// gtsrc (type), lxsrc (dimension), lzsrc (dimension)
 // xlocal, ylocal, zlocal are measured in the element local coordinate system
 // and the charge on the element is assumed to be unity
 neBEMGLOBAL double GetPotential(int src, Point3D *localPt);
 
 // Flux components at xlocal, ylocal, zlocal due to an element defined by
-// gtsrc (type), lxsrc (dimension), lzsrc (dimension), (length), dA (area)
+// gtsrc (type), lxsrc (dimension), lzsrc (dimension)
 // xlocal, ylocal, zlocal and flux components are in the element local
 // coordinate system and the charge on the element is assumed to be unity
 neBEMGLOBAL void GetFluxGCS(int src, Point3D *localPt, Vector3D *Flux);

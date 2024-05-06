@@ -2165,9 +2165,9 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
     AvWtChDen[IdWtField][prim] = 0.0;
 
     for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim]; ++ele) {
-      area += (EleArr + ele - 1)->G.dA;
-      AvWtChDen[IdWtField][prim] +=
-          WtFieldChDen[IdWtField][ele] * (EleArr + ele - 1)->G.dA;
+      double dA = ElementArea(ele);
+      area += dA;
+      AvWtChDen[IdWtField][prim] += WtFieldChDen[IdWtField][ele] * dA;
     }
 
     AvWtChDen[IdWtField][prim] /= area;
@@ -2648,8 +2648,7 @@ double neBEMVolumeCharge(int volume) {
     // Add the charge
     // printf("Element: %d, volume: %d, charge: %g\n", elem, volref,
     //    (EleArr+elem-1)->Solution * (EleArr+elem-1)->G.dA);
-    sumcharge +=
-        rptCnt * (EleArr + elem - 1)->Solution * (EleArr + elem - 1)->G.dA;
+    sumcharge += rptCnt * (EleArr + elem - 1)->Solution * ElementArea(elem);
   }  // loop over elements
 
   // Return the result
@@ -2911,7 +2910,7 @@ int WriteElements(void) {
     fprintf(fStrEle, "%d %le %le %le %le %le %le\n", (EleArr + ele - 1)->G.Type,
             (EleArr + ele - 1)->G.Origin.X, (EleArr + ele - 1)->G.Origin.Y,
             (EleArr + ele - 1)->G.Origin.Z, (EleArr + ele - 1)->G.LX,
-            (EleArr + ele - 1)->G.LZ, (EleArr + ele - 1)->G.dA);
+            (EleArr + ele - 1)->G.LZ, ElementArea(ele));
     fprintf(fStrEle, "%le %le %le\n", PrimDC[prim].XUnit.X,
             PrimDC[prim].XUnit.Y, PrimDC[prim].XUnit.Z);
     fprintf(fStrEle, "%le %le %le\n", PrimDC[prim].YUnit.X,
@@ -3175,6 +3174,7 @@ int ReadElements(void) {
     // Unused variables.
     short int devicenb = 0;
     int componentnb = 0, interfaceid, elementid = 0;
+    double da = 0.;
     DirnCosn3D dc;
     double lambda;
     short int etype;
@@ -3185,8 +3185,7 @@ int ReadElements(void) {
     fscanf(fStrEle, "%hd %le %le %le %le %le %le\n",
            &(EleArr + ele - 1)->G.Type, &(EleArr + ele - 1)->G.Origin.X,
            &(EleArr + ele - 1)->G.Origin.Y, &(EleArr + ele - 1)->G.Origin.Z,
-           &(EleArr + ele - 1)->G.LX, &(EleArr + ele - 1)->G.LZ,
-           &(EleArr + ele - 1)->G.dA);
+           &(EleArr + ele - 1)->G.LX, &(EleArr + ele - 1)->G.LZ, &da);
     fscanf(fStrEle, "%le %le %le\n", &dc.XUnit.X, &dc.XUnit.Y, &dc.XUnit.Z);
     fscanf(fStrEle, "%le %le %le\n", &dc.YUnit.X, &dc.YUnit.Y, &dc.YUnit.Z);
     fscanf(fStrEle, "%le %le %le\n", &dc.ZUnit.X, &dc.ZUnit.Y, &dc.ZUnit.Z);

@@ -22,6 +22,8 @@
 #include "neBEM.h"
 #include "neBEMInterface.h"
 
+#define MyPI 3.14159265358979323846
+
 #ifdef __cplusplus
 namespace neBEM {
 #endif
@@ -718,7 +720,7 @@ int LHMatrix(void) {
     // an additional row
     for (int col = 1; col < NbUnknowns; ++col) {
       // If charge density is computed:
-      Inf[NbEqns][col] = (EleArr + col - 1)->G.dA;
+      Inf[NbEqns][col] = ElementArea(col);
       // If charge is computed:
       // Inf[NbEqns][col] = 1.0;
     }
@@ -747,7 +749,7 @@ int LHMatrix(void) {
       if (InterfaceType[prim] == 3) {
         // element of a floating conductor
         // If charge density is computed:
-        Inf[NbEqns][col] = (EleArr + col - 1)->G.dA;  
+        Inf[NbEqns][col] = ElementArea(col);
         // Inf[NbEqns][col] = 1.0;	// if charge is computed
       } else {
         Inf[NbEqns][col] = 0.0;
@@ -1653,9 +1655,9 @@ double ComputeInfluence(int elefld, int elesrc, Point3D *localP,
 
   if (0) {
     printf("\nContinuity satisfaction using following parameters ...\n");
-    printf("gtsrc: %d, lxsrc: %lg, lzsrc% lg, dA: %lg\n",
+    printf("gtsrc: %d, lxsrc: %lg, lzsrc% lg\n",
            (EleArr + elesrc - 1)->G.Type, (EleArr + elesrc - 1)->G.LX,
-           (EleArr + elesrc - 1)->G.LZ, (EleArr + elesrc - 1)->G.dA);
+           (EleArr + elesrc - 1)->G.LZ);
     printf("xlocal: %lg, ylocal: %lg, zlocal: %lg\n", localP->X, localP->Y,
            localP->Z);
   }
@@ -2073,20 +2075,16 @@ int RHVector(void) {
   // Floating conductor are long neglected. Needs close inspection.
   if (NbConstraints) {
     for (int eqn = NbElements + 1; eqn <= NbEqns; ++eqn) {
-      if (eqn ==
-          NbSystemChargeZero)  // if row corresponds to zero-charge condition
-      {
-        double assigned, dA, SumAssigned = 0.0;
+      if (eqn == NbSystemChargeZero) {
+        // if row corresponds to zero-charge condition
+        double SumAssigned = 0.0;
         // can be parallelized
         for (int ele = 1; ele <= NbElements; ++ele) {
-          assigned = (EleArr + ele - 1)->Assigned;
-          dA = (EleArr + ele - 1)->G.dA;
-          SumAssigned += assigned * dA;  // charge density * element area
+          double assigned = (EleArr + ele - 1)->Assigned;
+          SumAssigned += assigned * ElementArea(ele);  // charge density * element area
         }
-        RHS[eqn] =
-            -SumAssigned;  // applied charge considered - too small change
-        RHS[eqn] =
-            0.0;  // applied charge not considered while meeting constraint
+        RHS[eqn] = -SumAssigned;  // applied charge considered - too small change
+        RHS[eqn] = 0.0;  // applied charge not considered while meeting constraint
       }           // if eqn == NbSystemChargeZero
       else {
         RHS[eqn] = 0.0;
@@ -2454,6 +2452,29 @@ double ContinuityKnCh(int elefld) {
   value /= MyFACTOR; // factored in
   return (value);
 }  // end of ContinuityKnCh
+
+double ElementArea(int ele) {
+  Element* eleptr = EleArr + ele - 1;
+  double area = 0.;
+  switch (eleptr->G.Type) {
+    case 2:
+      // Wire
+      area = 2. * MyPI * eleptr->G.LX * eleptr->G.LZ;
+      break;
+    case 3: 
+      // Triangle
+      area = 0.5 * eleptr->G.LX * eleptr->G.LZ;
+      break;
+    case 4:
+      // Rectangle
+      area = eleptr->G.LX * eleptr->G.LZ;
+      break;
+    default:
+      printf("Geometrical type out of range!\n");
+      break;
+  }
+  return area;
+}
 
 // Effect of charging up on the Dirichlet boundary conditions
 double ValueChUp(int elefld) {
@@ -2859,10 +2880,10 @@ int Solve(void) {
     AvAsgndChDen[prim] = 0.0;
 
     for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim]; ++ele) {
-      area += (EleArr + ele - 1)->G.dA;
-      AvChDen[prim] += (EleArr + ele - 1)->Solution * (EleArr + ele - 1)->G.dA;
-      AvAsgndChDen[prim] +=
-          (EleArr + ele - 1)->Assigned * (EleArr + ele - 1)->G.dA;
+      double dA = ElementArea(ele);
+      area += dA;
+      AvChDen[prim] += (EleArr + ele - 1)->Solution * dA;
+      AvAsgndChDen[prim] += (EleArr + ele - 1)->Assigned * dA;
     }
 
     AvChDen[prim] /= area;
@@ -3262,9 +3283,8 @@ int Solve(void) {
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
@@ -3385,8 +3405,8 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
+          if (InterfaceType[prim] == 4) {
+            // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
             xplus += PrimDC[prim].ZUnit.X * normdisp;
@@ -3493,9 +3513,8 @@ int Solve(void) {
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
