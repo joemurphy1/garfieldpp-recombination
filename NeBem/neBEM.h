@@ -71,15 +71,21 @@ neBEMGLOBAL int *volRef, *volShape, *volMaterial, *volBoundaryType;
 neBEMGLOBAL double *volEpsilon, *volPotential, *volCharge;
 
 // Related to primitives
-neBEMGLOBAL int *PrimType,
-    *InterfaceType;  // removed redundant *PrimCnt in V1.7.2
+neBEMGLOBAL int *PrimType;
+// 1: conductor at known potential, 2: charged conductor, 3: floating conductor
+// 4: DD interface satisfying continuity, 5: charged DD interface
+// 6: E parallel symmetry, 7: E perpendicular symmetry.
+neBEMGLOBAL int *InterfaceType;
 neBEMGLOBAL int **OrgnlToEffPrim;
 neBEMGLOBAL int *NbVertices;
 neBEMGLOBAL double **XVertex, **YVertex, **ZVertex, *XNorm, *YNorm, *ZNorm,
     *PrimLX, *PrimLZ, *Radius;
 neBEMGLOBAL double *PrimOriginX, *PrimOriginY, *PrimOriginZ;
 neBEMGLOBAL DirnCosn3D *PrimDC;
-neBEMGLOBAL double *Epsilon1, *Epsilon2, *Lambda, *ApplPot, *ApplCh;
+neBEMGLOBAL double *Epsilon1, *Epsilon2;
+// Ratio of dielectric permittivities.
+neBEMGLOBAL double *Lambda;
+neBEMGLOBAL double *ApplPot, *ApplCh;
 neBEMGLOBAL int *VolRef1, *VolRef2;
 neBEMGLOBAL int VolMax;
 neBEMGLOBAL int *PeriodicTypeX, *PeriodicTypeY, *PeriodicTypeZ;
@@ -140,16 +146,7 @@ typedef struct {
   Point3D Vertex[4];  // element vertex begins with index 0 and goes to max 3
   double LX, LZ;      // length, breadth / base, height / radius, length
   double dA;          // area
-  // DirnCosn3D DC;      // Direction cosines
 } GeomProp;
-
-// 1: conductor at known potential, 2: charged conductor, 3: floating conductor
-// 4: DD interface satisfying continuity, 5: charged DD interface
-// 6: E parallel symmetry, 7: E perpendicular symmetry.
-typedef struct {
-  short int Type;
-  double Lambda;  // ratio of dielectric permiitivites
-} ElecProp;
 
 typedef struct {
   short int NbOfBCs;  // nb of boundary conditions on this element
@@ -161,9 +158,7 @@ typedef struct {
 // belongs to
 typedef struct {
   int PrimitiveNb;     // each component can be made of several primitives
-  // Point3D Vertex[4];	// since we consider only upto rectangles: within G
   GeomProp G;  // geomtype, origin, vertex, lengths, area, direction cosines
-  ElecProp E;  // electype, BC value
   BCProp BC;   // boundary condn properties (should this BC thing be freed?)
   double Solution;  // accumulated charge, or similar solution
   double Assigned;  // assigned charge, or similar property

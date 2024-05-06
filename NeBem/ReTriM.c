@@ -158,14 +158,14 @@ int AnalyzePrimitive(int prim, int *NbSegCoord1, int *NbSegCoord2) {
 int AnalyzeWire(int prim, int *NbSeg) {
   int nb = *NbSeg;
 
-  if (nb < 1)  // absurd! use the trio: target, min, max
-  {
+  if (nb < 1) {
+    // absurd! use the trio: target, min, max
     double lWire = (XVertex[prim][1] - XVertex[prim][0]) *
-                       (XVertex[prim][1] - XVertex[prim][0]) +
+                   (XVertex[prim][1] - XVertex[prim][0]) +
                    (YVertex[prim][1] - YVertex[prim][0]) *
-                       (YVertex[prim][1] - YVertex[prim][0]) +
+                   (YVertex[prim][1] - YVertex[prim][0]) +
                    (ZVertex[prim][1] - ZVertex[prim][0]) *
-                       (ZVertex[prim][1] - ZVertex[prim][0]);
+                   (ZVertex[prim][1] - ZVertex[prim][0]);
     lWire = sqrt(lWire);
 
     nb = (int)(lWire / ElementLengthRqstd);
@@ -206,11 +206,11 @@ int AnalyzeWire(int prim, int *NbSeg) {
             prim, *NbSeg);
   } else {  // number of dicretization specified by user
     double lWire = (XVertex[prim][1] - XVertex[prim][0]) *
-                       (XVertex[prim][1] - XVertex[prim][0]) +
+                   (XVertex[prim][1] - XVertex[prim][0]) +
                    (YVertex[prim][1] - YVertex[prim][0]) *
-                       (YVertex[prim][1] - YVertex[prim][0]) +
+                   (YVertex[prim][1] - YVertex[prim][0]) +
                    (ZVertex[prim][1] - ZVertex[prim][0]) *
-                       (ZVertex[prim][1] - ZVertex[prim][0]);
+                   (ZVertex[prim][1] - ZVertex[prim][0]);
     lWire = sqrt(lWire);
 
     double ellength = lWire / (double)nb;
@@ -250,18 +250,18 @@ int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2) {
   {
     // Triangle primitives have their right angle on vertex 1
     double l1 = (XVertex[prim][0] - XVertex[prim][1]) *
-                    (XVertex[prim][0] - XVertex[prim][1]) +
+                (XVertex[prim][0] - XVertex[prim][1]) +
                 (YVertex[prim][0] - YVertex[prim][1]) *
-                    (YVertex[prim][0] - YVertex[prim][1]) +
+                (YVertex[prim][0] - YVertex[prim][1]) +
                 (ZVertex[prim][0] - ZVertex[prim][1]) *
-                    (ZVertex[prim][0] - ZVertex[prim][1]);
+                (ZVertex[prim][0] - ZVertex[prim][1]);
     l1 = sqrt(l1);
     double l2 = (XVertex[prim][2] - XVertex[prim][1]) *
-                    (XVertex[prim][2] - XVertex[prim][1]) +
+                (XVertex[prim][2] - XVertex[prim][1]) +
                 (YVertex[prim][2] - YVertex[prim][1]) *
-                    (YVertex[prim][2] - YVertex[prim][1]) +
+                (YVertex[prim][2] - YVertex[prim][1]) +
                 (ZVertex[prim][2] - ZVertex[prim][1]) *
-                    (ZVertex[prim][2] - ZVertex[prim][1]);
+                (ZVertex[prim][2] - ZVertex[prim][1]);
     l2 = sqrt(l2);
 
     // We can use the lengths independently and forget about area
@@ -337,18 +337,18 @@ int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2) {
   } else {  // number of discretization specified by the user
     // Triangle primitives have their right angle on the vertex 1
     double l1 = (XVertex[prim][0] - XVertex[prim][1]) *
-                    (XVertex[prim][0] - XVertex[prim][1]) +
+                (XVertex[prim][0] - XVertex[prim][1]) +
                 (YVertex[prim][0] - YVertex[prim][1]) *
-                    (YVertex[prim][0] - YVertex[prim][1]) +
+                (YVertex[prim][0] - YVertex[prim][1]) +
                 (ZVertex[prim][0] - ZVertex[prim][1]) *
-                    (ZVertex[prim][0] - ZVertex[prim][1]);
+                (ZVertex[prim][0] - ZVertex[prim][1]);
     l1 = sqrt(l1);
     double l2 = (XVertex[prim][2] - XVertex[prim][1]) *
-                    (XVertex[prim][2] - XVertex[prim][1]) +
+                (XVertex[prim][2] - XVertex[prim][1]) +
                 (YVertex[prim][2] - YVertex[prim][1]) *
-                    (YVertex[prim][2] - YVertex[prim][1]) +
+                (YVertex[prim][2] - YVertex[prim][1]) +
                 (ZVertex[prim][2] - ZVertex[prim][1]) *
-                    (ZVertex[prim][2] - ZVertex[prim][1]);
+                (ZVertex[prim][2] - ZVertex[prim][1]);
     l2 = sqrt(l2);
 
     if (l1 > l2) {
@@ -408,10 +408,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
                    double zvert[], double radius, int volref1, int volref2,
                    int inttype, double potential, double charge, double lambda,
                    int NbSegs) {
-  int WireEType;
-  double WireR, WireL;
-  double WireLambda, WireV;
-  double WireElX, WireElY, WireElZ, WireElL;
+  double WireElX, WireElY, WireElZ;
   DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
 
   // Check inputs
@@ -445,11 +442,11 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   char primstr[10];
   snprintf(primstr, 10, "%d", prim);
 
-  WireL = sqrt((xvert[1] - xvert[0]) * (xvert[1] - xvert[0])  // length of wire
-               + (yvert[1] - yvert[0]) * (yvert[1] - yvert[0]) +
-               (zvert[1] - zvert[0]) * (zvert[1] - zvert[0]));
-  WireR = radius;
-  WireElL = WireL / NbSegs;  // length of each wire element
+  // length of wire
+  double WireL = sqrt((xvert[1] - xvert[0]) * (xvert[1] - xvert[0]) + 
+                      (yvert[1] - yvert[0]) * (yvert[1] - yvert[0]) +
+                      (zvert[1] - zvert[0]) * (zvert[1] - zvert[0]));
+  double WireElL = WireL / NbSegs;  // length of each wire element
 
   // Direction cosines along the wire - note difference from surface primitives!
   // The direction along the wire is considered to be the z axis of the LCS
@@ -552,12 +549,8 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   PrimOriginX[prim] = 0.5 * (xvert[0] + xvert[1]);
   PrimOriginY[prim] = 0.5 * (yvert[0] + yvert[1]);
   PrimOriginZ[prim] = 0.5 * (zvert[0] + zvert[1]);
-  PrimLX[prim] = WireR;  // radius for wire
+  PrimLX[prim] = radius;  // radius for wire
   PrimLZ[prim] = WireL;  // length of wire
-
-  WireEType = inttype;
-  WireV = potential;
-  WireLambda = lambda;
 
   // file output for a primitive
   FILE *fPrim = NULL;
@@ -587,9 +580,9 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
             PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
     fprintf(fPrim, "#volref1: %d, volref2: %d\n", volref1, volref2);
     fprintf(fPrim, "#NbSegs: %d\n", NbSegs);
-    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, WireEType);
-    fprintf(fPrim, "#WireR: %lg\tWireL: %lg\n", WireR, WireL);
-    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", WireLambda, WireV);
+    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, inttype);
+    fprintf(fPrim, "#WireR: %lg\tWireL: %lg\n", radius, WireL);
+    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, potential);
   }
 
   // necessary for gnuplot
@@ -684,12 +677,10 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->G.Vertex[1].X = xv1;
     (EleArr + EleCntr - 1)->G.Vertex[1].Y = yv1;
     (EleArr + EleCntr - 1)->G.Vertex[1].Z = zv1;
-    (EleArr + EleCntr - 1)->G.LX = WireR;    // radius of the wire element
+    (EleArr + EleCntr - 1)->G.LX = radius;    // radius of the wire element
     (EleArr + EleCntr - 1)->G.LZ = WireElL;  // wire element length
     (EleArr + EleCntr - 1)->G.dA = 2.0 * MyPI * (EleArr + EleCntr - 1)->G.LX *
                                    (EleArr + EleCntr - 1)->G.LZ;
-    (EleArr + EleCntr - 1)->E.Type = WireEType;
-    (EleArr + EleCntr - 1)->E.Lambda = WireLambda;
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
     (EleArr + EleCntr - 1)->BC.NbOfBCs = 1;  // assume one BC per element
@@ -727,8 +718,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
               PrimDC[prim].ZUnit.Y,
               PrimDC[prim].ZUnit.Z);
       fprintf(fElem, "#EType\tLambda\n");
-      fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
-              (EleArr + EleCntr - 1)->E.Lambda);
+      fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
       fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
       fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n",
               (EleArr + EleCntr - 1)->BC.NbOfBCs,
@@ -770,7 +760,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                        double zvert[], double xnorm, double ynorm, double znorm,
                        int volref1, int volref2, int inttype, double potential,
                        double charge, double lambda, int NbSegX, int NbSegZ) {
-  int SurfEType;
   double SurfX, SurfY, SurfZ, SurfLX, SurfLZ;
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
   DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
@@ -796,9 +785,8 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
 
   // Compute all the properties of this surface
   // Boundary types from 1 to 7 have been defined
-  SurfEType = inttype;
-  if ((SurfEType <= 0) || (SurfEType >= 8)) {
-    printf("Wrong SurfEType for prim %d\n", prim);
+  if ((inttype <= 0) || (inttype >= 8)) {
+    printf("Wrong interface type for prim %d\n", prim);
     exit(-1);
   }
   // Origin of the local coordinate center is at the right angle corner
@@ -898,7 +886,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     Epsilon2[prim] = tmpEpsilon1;
   }
 
-  double SurfLambda = lambda;
   double SurfV = potential;
 
   // file output for a primitive
@@ -924,7 +911,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     fprintf(fPrim, "Norm: %lg\t%lg\t%lg\n", xnorm, ynorm, znorm);
     fprintf(fPrim, "#volref1: %d, volref2: %d\n", volref1, volref2);
     fprintf(fPrim, "#NbSegX: %d, NbSegZ: %d (check note!)\n", NbSegX, NbSegZ);
-    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, SurfEType);
+    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, inttype);
     fprintf(fPrim, "#SurfX\tSurfY\tSurfZ\tSurfLX\tSurfLZ (Rt. Corner)\n");
     fprintf(fPrim, "%lg\t%lg\t%lg\t%lg\t%lg\n", SurfX, SurfY, SurfZ, SurfLX,
             SurfLZ);
@@ -935,7 +922,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
             PrimDirnCosn.YUnit.Y, PrimDirnCosn.YUnit.Z);
     fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.ZUnit.X,
             PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
-    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", SurfLambda, SurfV);
+    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, SurfV);
   }
 
   // necessary for gnuplot
@@ -1153,8 +1140,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         0.5 * (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
     // Safe to use the direction cosines obtained for the triangular primitive
     // since they are bound to remain unchanged for the rectangular sub-elements
-    (EleArr + EleCntr - 1)->E.Type = SurfEType;
-    (EleArr + EleCntr - 1)->E.Lambda = SurfLambda;
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
     // Boundary condition is applied at the barycenter, not at the origin
@@ -1262,8 +1247,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
               PrimDC[prim].ZUnit.Y,
               PrimDC[prim].ZUnit.Z);
       fprintf(fElem, "#EType\tLambda\n");
-      fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
-              (EleArr + EleCntr - 1)->E.Lambda);
+      fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
       fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
       fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n",
               (EleArr + EleCntr - 1)->BC.NbOfBCs,
@@ -1356,8 +1340,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
           zhipt - zlopt;  // to be on the safe side! 21/2/14
       (EleArr + EleCntr - 1)->G.dA =
           (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
-      (EleArr + EleCntr - 1)->E.Type = SurfEType;
-      (EleArr + EleCntr - 1)->E.Lambda = SurfLambda;
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
       // Boundary condition is applied at the origin for this rectangular
@@ -1472,8 +1454,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                 PrimDC[prim].ZUnit.Y,
                 PrimDC[prim].ZUnit.Z);
         fprintf(fElem, "#EType\tLambda\n");
-        fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
-                (EleArr + EleCntr - 1)->E.Lambda);
+        fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
         fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
         fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n",
                 (EleArr + EleCntr - 1)->BC.NbOfBCs,
@@ -1540,7 +1521,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
                         double znorm, int volref1, int volref2, int inttype,
                         double potential, double charge, double lambda,
                         int NbSegX, int NbSegZ) {
-  int SurfEType;
   double SurfX, SurfY, SurfZ, SurfLX, SurfLZ;
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
   DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
@@ -1571,9 +1551,8 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   // &eps, &potential, &charge, &boundarytype);
 
   // compute all the properties of this surface
-  SurfEType = inttype;
-  if (SurfEType == 0) {
-    printf("Wrong SurfEType for prim %d\n", prim);
+  if (inttype == 0) {
+    printf("Wrong interface type for prim %d\n", prim);
     exit(-1);
   }
   // centroid of the local coordinate system
@@ -1615,7 +1594,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   PrimLX[prim] = SurfLX;
   PrimLZ[prim] = SurfLZ;
 
-  double SurfLambda = lambda;
   double SurfV = potential;
 
   // file output for a primitive
@@ -1642,7 +1620,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     fprintf(fPrim, "Norm: %lg\t%lg\t%lg\n", xnorm, ynorm, znorm);
     fprintf(fPrim, "#volref1: %d, volref2: %d\n", volref1, volref2);
     fprintf(fPrim, "#NbSegX: %d, NbSegZ: %d\n", NbSegX, NbSegZ);
-    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, SurfEType);
+    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, inttype);
     fprintf(fPrim, "#SurfX\tSurfY\tSurfZ\tSurfLZ\tSurfLZ\n");
     fprintf(fPrim, "%lg\t%lg\t%lg\t%lg\t%lg\n", SurfX, SurfY, SurfZ, SurfLX,
             SurfLZ);
@@ -1655,7 +1633,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
             PrimDirnCosn.YUnit.Y, PrimDirnCosn.YUnit.Z);
     fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.ZUnit.X,
             PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
-    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", SurfLambda, SurfV);
+    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, SurfV);
   }  // if OptPrimitiveFiles
 
   // necessary for gnuplot
@@ -1852,8 +1830,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
       (EleArr + EleCntr - 1)->G.dA =
           (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
-      (EleArr + EleCntr - 1)->E.Type = SurfEType;
-      (EleArr + EleCntr - 1)->E.Lambda = SurfLambda;
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
       (EleArr + EleCntr - 1)->BC.NbOfBCs = 1;  // assume one BC per element
@@ -1966,8 +1942,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
                 PrimDC[prim].ZUnit.Y,
                 PrimDC[prim].ZUnit.Z);
         fprintf(fElem, "#EType\tLambda\n");
-        fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
-                (EleArr + EleCntr - 1)->E.Lambda);
+        fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
         fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
         fprintf(fElem, "%d\t%lg\t%lg\t%lg\t%lg\n",
                 (EleArr + EleCntr - 1)->BC.NbOfBCs,

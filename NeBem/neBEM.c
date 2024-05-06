@@ -371,7 +371,7 @@ int LHMatrix(void) {
         const double ysrc = (EleArr + elesrc - 1)->G.Origin.Y;
         const double zsrc = (EleArr + elesrc - 1)->G.Origin.Z;
         DirnCosn3D* dcsrc = &PrimDC[primsrc];
-        if ((EleArr + elesrc - 1)->E.Type == 0) {
+        if (InterfaceType[primsrc] == 0) {
           printf("LHMatrix: Wrong EType for element %d (primitive %d)!\n",
                  elesrc, primsrc);
           exit(-1);
@@ -708,11 +708,13 @@ int LHMatrix(void) {
   if (OptSystemChargeZero) {
     // an additional column
     for (int row = 1; row <= NbEqns; ++row) {
-      if (((EleArr + row - 1)->E.Type == 1) ||
-          ((EleArr + row - 1)->E.Type == 3))  // The
-        Inf[row][NbUnknowns] = 1.0;  // VSystemChargeZero is subtracted only
-      else                           // from potentials
+      const int prim = (EleArr + row - 1)->PrimitiveNb;
+      // The VSystemChargeZero is subtracted only from potentials.
+      if ((InterfaceType[prim] == 1) || (InterfaceType[prim] == 3)) {
+        Inf[row][NbUnknowns] = 1.0;
+      } else {
         Inf[row][NbUnknowns] = 0.0;
+      }
     }
 
     // an additional row
@@ -728,28 +730,29 @@ int LHMatrix(void) {
     VSystemChargeZero = 0.0;
   }
 
-  if (NbFloatingConductors)  // assume only one floating conductor
-  {
+  if (NbFloatingConductors) {
+    // assume only one floating conductor
     // an additional column
     for (int row = 1; row <= NbEqns; ++row) {
-      int etfld = (EleArr + row - 1)->E.Type;
-      if (etfld == 3)  // element of a floating conductor
+      const int prim = (EleArr + row - 1)->PrimitiveNb;
+      if (InterfaceType[prim] == 3) {
+        // element of a floating conductor
         Inf[row][NbUnknowns] = -1.0;
-      else
+      } else {
         Inf[row][NbUnknowns] = 0.0;
+      }
     }  // additional column
 
     // an additional row
     for (int col = 1; col <= NbUnknowns; ++col) {
-      int etfld = (EleArr + col - 1)->E.Type;
-      if (etfld == 3)  // element of a floating conductor
-      {
-        Inf[NbEqns][col] =
-            (EleArr + col - 1)->G.dA;  // if charge density is computed
+      const int prim = (EleArr + col - 1)->PrimitiveNb;
+      if (InterfaceType[prim] == 3) {
+        // element of a floating conductor
+        // If charge density is computed:
+        Inf[NbEqns][col] = (EleArr + col - 1)->G.dA;  
         // Inf[NbEqns][col] = 1.0;	// if charge is computed
       } else {
-        Inf[NbEqns][col] = 0.0;  // if charge density is computed
-        // Inf[NbEqns][col] = 0.0;	// if charge is computed
+        Inf[NbEqns][col] = 0.0;
       }
     }  // additional row
 
@@ -1659,10 +1662,10 @@ double ComputeInfluence(int elefld, int elesrc, Point3D *localP,
     printf("xlocal: %lg, ylocal: %lg, zlocal: %lg\n", localP->X, localP->Y,
            localP->Z);
   }
-
-  switch ((EleArr + elefld - 1)
-              ->E.Type)  // depending on the etype at the field point
-  {                      // different boundary conditions need to be applied
+  const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
+  switch (InterfaceType[primfld]) {
+    // Depending on the interface type at the field point
+    // different boundary conditions need to be applied
     case 1:              // conductor with known potential
       value = SatisfyValue(elesrc, localP);
       return (value);
@@ -1707,7 +1710,7 @@ double ComputeInfluence(int elefld, int elesrc, Point3D *localP,
 
     default:
       printf("Electric type %d out of range! ... exiting.\n",
-             (EleArr + elefld - 1)->E.Type);
+             InterfaceType[primfld]);
       return (-1);
       break;  // unreachable
   }           // switch on etfld ends
@@ -1817,7 +1820,8 @@ double SatisfyContinuity(int elefld, int elesrc, Point3D *localP,
       (fabs(localP->Z) <
        (EleArr + elesrc - 1)->G.LZ / 2.0))  // self-inf for DD intrfc
   {  // consistent with eqn 18 of Bardhan's paper where lmsrc is inverse
-    value = 1.0 / (2.0 * EPS0 * (EleArr + elesrc - 1)->E.Lambda);
+    const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
+    value = 1.0 / (2.0 * EPS0 * Lambda[primsrc]);
   }  // of the multiplying factor of roe(r). EPS0 arises due to electrostatics.
   else {
     value = 0.0;
@@ -1987,8 +1991,8 @@ int RHVector(void) {
     value = valueKnCh = valueChUp = 0.0;
     value = (EleArr + elefld - 1)
                 ->BC.Value;  // previouly this line was within case 1
-
-    switch ((EleArr + elefld - 1)->E.Type) {
+    const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
+    switch (InterfaceType[primfld]) {
       case 1:  // Conducting surfaces
         // value = (EleArr+elefld-1)->BC.Value;
         if (OptKnCh) {
@@ -2138,7 +2142,7 @@ double ValueKnCh(int elefld) {
     const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
     DirnCosn3D* dcsrc = &PrimDC[primsrc];
 
-    if ((EleArr + elesrc - 1)->E.Type == 0) {
+    if (InterfaceType[primsrc] == 0) {
       printf("Wrong EType for element %d (primitive %d)!\n",
              elesrc, primsrc);
       exit(-1);
@@ -2312,7 +2316,7 @@ double ContinuityKnCh(int elefld) {
     DirnCosn3D* dcsrc = &PrimDC[primsrc];
 
     // Retrieve element properties from the structure
-    if ((EleArr + elesrc - 1)->E.Type == 0) {
+    if (InterfaceType[primsrc] == 0) {
       printf("Wrong EType for element %d (primitive %d)!\n",
              elesrc, primsrc);
       exit(-1);
@@ -2355,10 +2359,10 @@ double ContinuityKnCh(int elefld) {
         (fabs(localP.X) < (EleArr + elesrc - 1)->G.LX / 2.0) &&
         (fabs(localP.Y) < MINDIST) &&
         (fabs(localP.Z) < (EleArr + elesrc - 1)->G.LZ / 2.0)) {
-      value += assigned * 1.0 / (2.0 * EPS0 * (EleArr + elesrc - 1)->E.Lambda);
+      value += assigned / (2. * EPS0 * Lambda[primsrc]);
     } else {
       // Retrieve element properties from the structure
-      if ((EleArr + elesrc - 1)->E.Type == 0) {
+      if (InterfaceType[primsrc] == 0) {
         printf("Wrong EType for element %d (primitive %d)!\n",
                elesrc, primsrc);
         exit(-1);
@@ -2489,7 +2493,7 @@ double ValueChUp(int elefld) {
     const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
     DirnCosn3D* dcsrc = &PrimDC[primsrc];
 
-    if ((EleArr + elesrc - 1)->E.Type == 0) {
+    if (InterfaceType[primsrc] == 0) {
       printf("Wrong EType for element %d (primitive %d)!\n",
              elesrc, primsrc);
       exit(-1);
@@ -2636,7 +2640,7 @@ double ContinuityChUp(int elefld) {
     DirnCosn3D* dcsrc = &PrimDC[primsrc];
 
     // Retrieve element properties from the structure
-    if ((EleArr + elesrc - 1)->E.Type == 0) {
+    if (InterfaceType[primsrc] == 0) {
       printf("Wrong EType for element %d (primitive %d)!\n", elesrc, primsrc);
       exit(-1);
     }
@@ -2678,15 +2682,14 @@ double ContinuityChUp(int elefld) {
         (fabs(localP.X) < (EleArr + elesrc - 1)->G.LX / 2.0) &&
         (fabs(localP.Y) < MINDIST) &&
         (fabs(localP.Z) < (EleArr + elesrc - 1)->G.LZ / 2.0)) {
-      value += assigned * 1.0 / (2.0 * EPS0 * (EleArr + elesrc - 1)->E.Lambda);
+      value += assigned / (2.0 * EPS0 * Lambda[primsrc]);
     } else {
-      // Retrieve element properties from the structure
-      if ((EleArr + elesrc - 1)->E.Type == 0) {
+      if (InterfaceType[primsrc] == 0) {
         printf("Wrong EType for element %d (primitive %d)!\n",
                elesrc, primsrc);
         exit(-1);
       }
-
+      // Retrieve element properties from the structure
       switch ((EleArr + elesrc - 1)->G.Type) {
         case 4:  // rectangular element
           RecFlux(elesrc, &localP, &localF);

@@ -2924,8 +2924,7 @@ int WriteElements(void) {
             PrimDC[prim].YUnit.Y, PrimDC[prim].YUnit.Z);
     fprintf(fStrEle, "%le %le %le\n", PrimDC[prim].ZUnit.X,
             PrimDC[prim].ZUnit.Y, PrimDC[prim].ZUnit.Z);
-    fprintf(fStrEle, "%d %le\n", (EleArr + ele - 1)->E.Type,
-            (EleArr + ele - 1)->E.Lambda);
+    fprintf(fStrEle, "%d %le\n", InterfaceType[prim], Lambda[prim]);
     fprintf(fStrEle, "%d %le %le %le %le\n", (EleArr + ele - 1)->BC.NbOfBCs,
             (EleArr + ele - 1)->BC.CollPt.X, (EleArr + ele - 1)->BC.CollPt.Y,
             (EleArr + ele - 1)->BC.CollPt.Z, (EleArr + ele - 1)->BC.Value);
@@ -3183,6 +3182,8 @@ int ReadElements(void) {
     short int devicenb = 0;
     int componentnb = 0, interfaceid, elementid = 0;
     DirnCosn3D dc;
+    double lambda;
+    short int etype;
     fscanf(fStrEle, "%hd %d %d %d %d\n", &devicenb, &componentnb,
            &(EleArr + ele - 1)->PrimitiveNb, &interfaceid, &elementid);
     fscanf(fStrEle, "%hd %le %le %le %le %le %le\n",
@@ -3199,8 +3200,7 @@ int ReadElements(void) {
     fscanf(fStrEle, "%le %le %le\n", &dc.ZUnit.X,
            &dc.ZUnit.Y,
            &dc.ZUnit.Z);
-    fscanf(fStrEle, "%hd %le\n", &(EleArr + ele - 1)->E.Type,
-           &(EleArr + ele - 1)->E.Lambda);
+    fscanf(fStrEle, "%hd %le\n", &etype, &lambda);
     fscanf(fStrEle, "%hd %le %le %le %le\n", &(EleArr + ele - 1)->BC.NbOfBCs,
            &(EleArr + ele - 1)->BC.CollPt.X, &(EleArr + ele - 1)->BC.CollPt.Y,
            &(EleArr + ele - 1)->BC.CollPt.Z, &(EleArr + ele - 1)->BC.Value);
