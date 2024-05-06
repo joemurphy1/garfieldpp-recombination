@@ -2925,7 +2925,7 @@ int WriteElements(void) {
     fprintf(fStrEle, "%le %le %le\n", PrimDC[prim].ZUnit.X,
             PrimDC[prim].ZUnit.Y, PrimDC[prim].ZUnit.Z);
     fprintf(fStrEle, "%d %le\n", InterfaceType[prim], Lambda[prim]);
-    fprintf(fStrEle, "%d %le %le %le %le\n", (EleArr + ele - 1)->BC.NbOfBCs,
+    fprintf(fStrEle, "%d %le %le %le %le\n", 1,
             (EleArr + ele - 1)->BC.CollPt.X, (EleArr + ele - 1)->BC.CollPt.Y,
             (EleArr + ele - 1)->BC.CollPt.Z, (EleArr + ele - 1)->BC.Value);
     fprintf(fStrEle, "%le %le\n", (EleArr + ele - 1)->Solution,
@@ -3184,6 +3184,7 @@ int ReadElements(void) {
     DirnCosn3D dc;
     double lambda;
     short int etype;
+    short int nbcs;
     fscanf(fStrEle, "%hd %d %d %d %d\n", &devicenb, &componentnb,
            &(EleArr + ele - 1)->PrimitiveNb, &interfaceid, &elementid);
     fscanf(fStrEle, "%hd %le %le %le %le %le %le\n",
@@ -3191,17 +3192,11 @@ int ReadElements(void) {
            &(EleArr + ele - 1)->G.Origin.Y, &(EleArr + ele - 1)->G.Origin.Z,
            &(EleArr + ele - 1)->G.LX, &(EleArr + ele - 1)->G.LZ,
            &(EleArr + ele - 1)->G.dA);
-    fscanf(fStrEle, "%le %le %le\n", &dc.XUnit.X,
-           &dc.XUnit.Y,
-           &dc.XUnit.Z);
-    fscanf(fStrEle, "%le %le %le\n", &dc.YUnit.X,
-           &dc.YUnit.Y,
-           &dc.YUnit.Z);
-    fscanf(fStrEle, "%le %le %le\n", &dc.ZUnit.X,
-           &dc.ZUnit.Y,
-           &dc.ZUnit.Z);
+    fscanf(fStrEle, "%le %le %le\n", &dc.XUnit.X, &dc.XUnit.Y, &dc.XUnit.Z);
+    fscanf(fStrEle, "%le %le %le\n", &dc.YUnit.X, &dc.YUnit.Y, &dc.YUnit.Z);
+    fscanf(fStrEle, "%le %le %le\n", &dc.ZUnit.X, &dc.ZUnit.Y, &dc.ZUnit.Z);
     fscanf(fStrEle, "%hd %le\n", &etype, &lambda);
-    fscanf(fStrEle, "%hd %le %le %le %le\n", &(EleArr + ele - 1)->BC.NbOfBCs,
+    fscanf(fStrEle, "%hd %le %le %le %le\n", &nbcs,
            &(EleArr + ele - 1)->BC.CollPt.X, &(EleArr + ele - 1)->BC.CollPt.Y,
            &(EleArr + ele - 1)->BC.CollPt.Z, &(EleArr + ele - 1)->BC.Value);
     fscanf(fStrEle, "%le %le\n", &(EleArr + ele - 1)->Solution,

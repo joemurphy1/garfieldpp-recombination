@@ -683,13 +683,10 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
                                    (EleArr + EleCntr - 1)->G.LZ;
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
-    (EleArr + EleCntr - 1)->BC.NbOfBCs = 1;  // assume one BC per element
-    (EleArr + EleCntr - 1)->BC.CollPt.X =
-        (EleArr + EleCntr - 1)->G.Origin.X;  // modify
-    (EleArr + EleCntr - 1)->BC.CollPt.Y =
-        (EleArr + EleCntr - 1)->G.Origin.Y;  // to be on
-    (EleArr + EleCntr - 1)->BC.CollPt.Z =
-        (EleArr + EleCntr - 1)->G.Origin.Z;  // surface?
+    // Modify collocation point to be on the surface?
+    (EleArr + EleCntr - 1)->BC.CollPt.X = (EleArr + EleCntr - 1)->G.Origin.X;
+    (EleArr + EleCntr - 1)->BC.CollPt.Y = (EleArr + EleCntr - 1)->G.Origin.Y;
+    (EleArr + EleCntr - 1)->BC.CollPt.Z = (EleArr + EleCntr - 1)->G.Origin.Z;
 
     // File operations begin
     // rfw = fwrite(&Ele, sizeof(Element), 1, fpEle);
@@ -720,8 +717,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
       fprintf(fElem, "#EType\tLambda\n");
       fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
       fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n",
-              (EleArr + EleCntr - 1)->BC.NbOfBCs,
+      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n", 1,
               (EleArr + EleCntr - 1)->BC.CollPt.X,
               (EleArr + EleCntr - 1)->BC.CollPt.Y,
               (EleArr + EleCntr - 1)->BC.CollPt.Z,
@@ -1144,7 +1140,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->Assigned = charge;
     // Boundary condition is applied at the barycenter, not at the origin
     // of the element coordinate system (ECS) which is at the right corner
-    (EleArr + EleCntr - 1)->BC.NbOfBCs = 1;  // assume one BC per element
 
     xv0 = (EleArr + EleCntr - 1)->G.Origin.X;
     yv0 = (EleArr + EleCntr - 1)->G.Origin.Y;
@@ -1249,8 +1244,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       fprintf(fElem, "#EType\tLambda\n");
       fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
       fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n",
-              (EleArr + EleCntr - 1)->BC.NbOfBCs,
+      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n", 1,
               (EleArr + EleCntr - 1)->BC.CollPt.X,
               (EleArr + EleCntr - 1)->BC.CollPt.Y,
               (EleArr + EleCntr - 1)->BC.CollPt.Z,
@@ -1344,7 +1338,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->Assigned = charge;
       // Boundary condition is applied at the origin for this rectangular
       // element coordinate system (ECS)
-      (EleArr + EleCntr - 1)->BC.NbOfBCs = 1;  // assume one BC per element
       // Following are the location in the ECS
       (EleArr + EleCntr - 1)->BC.CollPt.X = (EleArr + EleCntr - 1)->G.Origin.X;
       (EleArr + EleCntr - 1)->BC.CollPt.Y = (EleArr + EleCntr - 1)->G.Origin.Y;
@@ -1456,8 +1449,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         fprintf(fElem, "#EType\tLambda\n");
         fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
         fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-        fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n",
-                (EleArr + EleCntr - 1)->BC.NbOfBCs,
+        fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n", 1,
                 (EleArr + EleCntr - 1)->BC.CollPt.X,
                 (EleArr + EleCntr - 1)->BC.CollPt.Y,
                 (EleArr + EleCntr - 1)->BC.CollPt.Z,
@@ -1832,7 +1824,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
           (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
-      (EleArr + EleCntr - 1)->BC.NbOfBCs = 1;  // assume one BC per element
       (EleArr + EleCntr - 1)->BC.CollPt.X = (EleArr + EleCntr - 1)->G.Origin.X;
       (EleArr + EleCntr - 1)->BC.CollPt.Y = (EleArr + EleCntr - 1)->G.Origin.Y;
       (EleArr + EleCntr - 1)->BC.CollPt.Z = (EleArr + EleCntr - 1)->G.Origin.Z;
@@ -1944,8 +1935,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
         fprintf(fElem, "#EType\tLambda\n");
         fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
         fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-        fprintf(fElem, "%d\t%lg\t%lg\t%lg\t%lg\n",
-                (EleArr + EleCntr - 1)->BC.NbOfBCs,
+        fprintf(fElem, "%d\t%lg\t%lg\t%lg\t%lg\n", 1,
                 (EleArr + EleCntr - 1)->BC.CollPt.X,
                 (EleArr + EleCntr - 1)->BC.CollPt.Y,
                 (EleArr + EleCntr - 1)->BC.CollPt.Z,

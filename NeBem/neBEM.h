@@ -119,9 +119,6 @@ neBEMGLOBAL int MaxNbElementsOnLength;
 // user requested length of along Length
 neBEMGLOBAL double ElementLengthRqstd;
 
-// int MinNbElementsOnSurface;	// minimum number of elements allowed on a
-// surface int MaxNbElementsOnSurface;	// maximum number of elements allowed on
-// a surface double ElementAreaRqstd;	// user requested area of each element
 neBEMGLOBAL int EleCntr;     // Element counter
 neBEMGLOBAL int NbElements;  // total number of elements
 neBEMGLOBAL FILE *fMeshLog;
@@ -149,7 +146,6 @@ typedef struct {
 } GeomProp;
 
 typedef struct {
-  short int NbOfBCs;  // nb of boundary conditions on this element
   Point3D CollPt;     // Collocation (only one, for the time being)
   double Value;       // potential / charge density
 } BCProp;
