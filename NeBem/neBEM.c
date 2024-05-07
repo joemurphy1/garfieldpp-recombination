@@ -2174,15 +2174,12 @@ double ValueKnCh(int elefld) {
     switch ((EleArr + elesrc - 1)->G.Type) {
       case 4:  // rectangular element
         value += assigned * RecPot(elesrc, &localP);
-        // return(value/dA);
         break;
       case 3:  // triangular element
         value += assigned * TriPot(elesrc, &localP);
-        // return(value/dA);
         break;
       case 2:  // linear (wire) element
         value += assigned * WirePot(elesrc, &localP);
-        // return(value/dA);
         break;
       default:
         printf("Geometrical type out of range! ... exiting ...\n");
@@ -2191,6 +2188,7 @@ double ValueKnCh(int elefld) {
     }           // switch over gtsrc ends
   }             // for all source elements - elesrc
 
+  // HS: Shouldn't this be "*= MyFACTOR"?
   value += MyFACTOR;  // in order reduce divisions by MyFACTOR later
   if (dbgFn) {
     printf("value after known charges on elements (* MyFACTOR): %g\n", value);

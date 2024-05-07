@@ -213,21 +213,20 @@ int AnalyzeWire(int prim, int *NbSeg) {
 
     double ellength = lWire / (double)nb;
 
-    if (lWire < MINDIST)  // at least one element is a necessity
-    {
+    if (lWire < MINDIST) {
+      // at least one element is a necessity
       nb = 1;
       fprintf(fMeshLog, "Fatal: Wire element too small on primitive %d!\n",
               prim);
-    }                             // if lWire < MINDIST
-    else if (ellength < MINDIST)  // element length more than twice MINDIST
-    {
+    } else if (ellength < MINDIST) {
+      // element length must be more than twice MINDIST
       nb = (int)(lWire / (2.0 * MINDIST));
       if (nb < 1) {
         nb = 1;
         fprintf(fMeshLog, "Fatal: Wire element too small on primitive %d!\n",
                 prim);
       }
-    }  // if ellength < MINDIST
+    }
 
     *NbSeg = nb;
 
@@ -244,8 +243,8 @@ int AnalyzeWire(int prim, int *NbSeg) {
 int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2) {
   int nb1 = *NbSegCoord1, nb2 = *NbSegCoord2;
 
-  if ((nb1 < 1) || (nb2 < 1))  // absurd! use the trio: target, min, max
-  {
+  if ((nb1 < 1) || (nb2 < 1)) {
+    // absurd! use the trio: target, min, max
     // Triangle primitives have their right angle on vertex 1
     double l1 = (XVertex[prim][0] - XVertex[prim][1]) *
                 (XVertex[prim][0] - XVertex[prim][1]) +
@@ -364,8 +363,8 @@ int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2) {
     if (l1 < MINDIST) {
       nb1 = 1;
       fprintf(fMeshLog, "Fatal: Side length l1 too small! prim: %d\n", prim);
-    } else if (ellength1 < MINDIST)  // element length more than twice MINDIST
-    {
+    } else if (ellength1 < MINDIST) {
+      // element length must be more than twice MINDIST
       nb1 = (int)(l1 / (2.0 * MINDIST));
       if (nb1 < 1) {
         nb1 = 1;
@@ -377,8 +376,8 @@ int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2) {
     if (l2 < MINDIST) {
       nb2 = 1;
       fprintf(fMeshLog, "Fatal: Side length l2 too small! prim: %d\n", prim);
-    } else if (ellength2 < MINDIST)  // element length more than twice MINDIST
-    {
+    } else if (ellength2 < MINDIST) {
+      // element length must be more than twice MINDIST
       nb2 = (int)(l2 / (2.0 * MINDIST));
       if (nb2 < 1) {
         nb2 = 1;
@@ -672,7 +671,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->G.Vertex[1].X = xv1;
     (EleArr + EleCntr - 1)->G.Vertex[1].Y = yv1;
     (EleArr + EleCntr - 1)->G.Vertex[1].Z = zv1;
-    (EleArr + EleCntr - 1)->G.LX = radius;    // radius of the wire element
+    (EleArr + EleCntr - 1)->G.LX = radius;   // radius of the wire element
     (EleArr + EleCntr - 1)->G.LZ = WireElL;  // wire element length
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
@@ -751,7 +750,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                        double charge, double lambda, int NbSegX, int NbSegZ) {
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
 
-
   // Check inputs
   if ((NbSegX <= 0) || (NbSegZ <= 0)) {
     printf("segmentation input wrong in DiscretizeTriangle ...\n");
@@ -813,8 +811,8 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     printf("\n");
   }
 
-  if (!flagDC)  // if DC search is unsuccessful, try the other orientation
-  {
+  if (!flagDC) {
+    // if DC search is unsuccessful, try the other orientation
     SurfLX = sqrt((xvert[2] - xvert[1]) * (xvert[2] - xvert[1]) +
                   (yvert[2] - yvert[1]) * (yvert[2] - yvert[1]) +
                   (zvert[2] - zvert[1]) * (zvert[2] - zvert[1]));
@@ -840,8 +838,8 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     }
   }
 
-  if (!flagDC)  // No other possibility, DC search failed!!!
-  {
+  if (!flagDC) {
+    // No other possibility, DC search failed!!!
     printf("Triangle DC problem ... returning ...\n");
     // getchar();
     return -1;
@@ -1000,8 +998,8 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     if (SurfLX > SurfLZ) {
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
-    } else  // interchange NbSegX and NbSegZ
-    {
+    } else {
+      // interchange NbSegX and NbSegZ
       int tmp = NbSegZ;
       NbSegZ = NbSegX;
       NbSegX = tmp;
@@ -1014,8 +1012,8 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     if (SurfLX < SurfLZ) {
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
-    } else  // interchange NbSegX and NbSegZ
-    {
+    } else {
+      // interchange NbSegX and NbSegZ
       int tmp = NbSegZ;
       NbSegZ = NbSegX;
       NbSegX = tmp;
@@ -1038,15 +1036,15 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
             "NbSegX: %d, SurfElLX: %lg, NbSegZ: %d, SurfElLZ: %lg, AR: %lg\n",
             NbSegX, SurfElLX, NbSegZ, SurfElLZ, AR);
   }
-  if (AR > 10.0)  // NbSegZ needs to be reduced
-  {
-    double tmpElLZ = SurfElLX / 10.0;
+  if (AR > 10.0) {
+    // NbSegZ needs to be reduced
+    double tmpElLZ = 0.1 * SurfElLX;
     NbSegZ = (int)(SurfLZ / tmpElLZ);
     if (NbSegZ <= 0) NbSegZ = 1;
     SurfElLZ = SurfLZ / NbSegZ;
   }
-  if (AR < 0.1)  // NbSegX need to be reduced
-  {
+  if (AR < 0.1) {
+    // NbSegX need to be reduced
     double tmpElLX = SurfElLZ * 0.1;
     NbSegX = (int)(SurfLX / tmpElLX);
     if (NbSegX <= 0) NbSegX = 1;
@@ -1091,7 +1089,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       localDisp.Z = ztorigin;
       globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
       // These are the coords in GCS of origin of
-      // the triangluar element under consideration:
+      // the triangular element under consideration:
       SurfElX = SurfX + globalDisp.X;  
       SurfElY = SurfY + globalDisp.Y;  
       SurfElZ = SurfZ + globalDisp.Z;
@@ -1698,8 +1696,8 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     if (SurfLX > SurfLZ) {
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
-    } else  // interchange NbSegX and NbSegZ
-    {
+    } else {
+      // interchange NbSegX and NbSegZ
       int tmp = NbSegZ;
       NbSegZ = NbSegX;
       NbSegX = tmp;
@@ -1712,8 +1710,8 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     if (SurfLX < SurfLZ) {
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
-    } else  // interchange NbSegX and NbSegZ
-    {
+    } else {
+      // interchange NbSegX and NbSegZ
       int tmp = NbSegZ;
       NbSegZ = NbSegX;
       NbSegX = tmp;
@@ -1736,15 +1734,15 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
             "NbSegX: %d, SurfElLX: %lg, NbSegZ: %d, SurfElLZ: %lg, AR: %lg\n",
             NbSegX, SurfElLX, NbSegZ, SurfElLZ, AR);
   }
-  if (AR > 10.0)  // NbSegZ needs to be reduced
-  {
+  if (AR > 10.0) {
+    // NbSegZ needs to be reduced
     double tmpElLZ = SurfElLX / 10.0;
     NbSegZ = (int)(SurfLZ / tmpElLZ);
     if (NbSegZ <= 0) NbSegZ = 1;
     SurfElLZ = SurfLZ / NbSegZ;
   }
-  if (AR < 0.1)  // NbSegX need to be reduced
-  {
+  if (AR < 0.1) {
+    // NbSegX need to be reduced
     double tmpElLX = SurfElLZ * 0.1;
     NbSegX = (int)(SurfLX / tmpElLX);
     if (NbSegX <= 0) NbSegX = 1;
@@ -1761,14 +1759,14 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   double x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, xav, zav;
   ElementBgn[prim] = EleCntr + 1;
   for (int i = 1; i <= NbSegX; ++i) {
-    x1 = -SurfLX / 2.0 +
-         (double)(i - 1) * SurfElLX;  // assuming centroid at 0,0,0
-    x2 = -SurfLX / 2.0 + (double)(i)*SurfElLX;
+    // assuming centroid at 0,0,0
+    x1 = -0.5 * SurfLX + (double)(i - 1) * SurfElLX;  
+    x2 = -0.5 * SurfLX + (double)(i)*SurfElLX;
     xav = 0.5 * (x1 + x2);
 
     for (int k = 1; k <= NbSegZ; ++k) {
-      z1 = -SurfLZ / 2.0 + (double)(k - 1) * SurfElLZ;
-      z2 = -SurfLZ / 2.0 + (double)(k)*SurfElLZ;
+      z1 = -0.5 * SurfLZ + (double)(k - 1) * SurfElLZ;
+      z2 = -0.5 * SurfLZ + (double)(k)*SurfElLZ;
       zav = 0.5 * (z1 + z2);
 
       {  // Separate block for position rotation - local2global
@@ -1809,8 +1807,8 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       // 2) this vector is transformed to the GCS
       // 3) the global displacement vector, when added to the centroid in GCS,
       // gives the node positions in GCS.
-      x0 = -0.5 *
-           (EleArr + EleCntr - 1)->G.LX;  // xyz displacement of node wrt ECS
+      // xyz displacement of node wrt ECS
+      x0 = -0.5 * (EleArr + EleCntr - 1)->G.LX;  
       y0 = 0.0;
       z0 = -0.5 * (EleArr + EleCntr - 1)->G.LZ;
       {  // Separate block for position rotation - local2global
@@ -1994,14 +1992,13 @@ int DiscretizePolygon(int /*prim*/, int /*nvertex*/, double /*xvert*/[],
 
 // Set up initial conditions (C styling to be fixed)
 int InitialConditions(void) {
-  int fstatus = 0;
 
   // Known charges
   if (OptKnCh) {
     startClock = clock();
     printf("InitialConditions: InitKnownCharges ... ");
     fflush(stdout);
-    fstatus = InitKnownCharges();
+    int fstatus = InitKnownCharges();
     if (fstatus != 0) {
       neBEMMessage("InitialConditions - InitKnownCharges");
       return -1;
@@ -2018,7 +2015,7 @@ int InitialConditions(void) {
     startClock = clock();
     printf("InitialConditions: InitChargingUp ... ");
     fflush(stdout);
-    fstatus = InitChargingUp();
+    int fstatus = InitChargingUp();
     if (fstatus != 0) {
       neBEMMessage("InitialConditions - InitChargingUp");
       return -1;

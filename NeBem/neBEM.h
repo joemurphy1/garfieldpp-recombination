@@ -175,8 +175,8 @@ neBEMGLOBAL int ModelCntr, MeshCntr, BCCntr, PPCntr;
 // One for each element that carries an unknown charge density
 // One for each unknown related to each constraint equation
 neBEMGLOBAL int NbConstraints;  // Arising of different physical considerations
-neBEMGLOBAL int NbEqns, NbUnknowns,  // rows and columns in [Inf]
-    DebugLevel;
+neBEMGLOBAL int NbEqns, NbUnknowns;  // rows and columns in [Inf]
+neBEMGLOBAL int DebugLevel;
 neBEMGLOBAL int OptSVD, OptLU, OptGSL;  // option SVD, LU and GSL decompositions
 neBEMGLOBAL double **Inf, **InvMat, *RHS, *Solution;
 neBEMGLOBAL double LengthScale;
