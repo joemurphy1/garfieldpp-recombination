@@ -2,14 +2,14 @@
 
 #include <TAxis.h>
 #include <TGraph.h>
+#include <TLegend.h>
+#include <TPaveLabel.h>
 
 #include <iostream>
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
-#include "TLegend.h"
-#include "TPaveLabel.h"
 
 namespace Garfield {
 

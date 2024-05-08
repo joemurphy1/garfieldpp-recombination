@@ -12,6 +12,8 @@
 #include <TCanvas.h>
 #include <TGraph.h>
 #include <TH1F.h>
+#include <TLegend.h>
+#include <TLegendEntry.h>
 #include <TMath.h>
 
 #include "Garfield/FundamentalConstants.hh"
@@ -1872,15 +1874,27 @@ void MediumMagboltz::PlotElectronCrossSections() {
 
   if (!Update()) return;
 
+  const double density = GetNumberDensity();
+
+  // Kinetic energies.
   std::array<float, Magboltz::nEnergySteps> en;
+  // Total cross-sections [Mbarn].
+  std::array<float, Magboltz::nEnergySteps> cstot; 
   for (unsigned int k = 0; k < Magboltz::nEnergySteps; ++k) {
     en[k] = (k + 0.5) * m_eStep;
-  } 
+    double v = SpeedOfLight * sqrt(2. * en[k] / ElectronMass);
+    // Conversion factor from collision frequency to cross section.
+    double s = 1. / (density * v);
+    if (en[k] > 1.e3) {
+      const double re = en[k] / ElectronMass;
+      s *= (1. + re) / sqrt(1. + 0.5 * re);
+    } 
+    cstot[k] = 1.e18 * m_cfTot[k] * s;
+  }
   std::array<std::array<float, Magboltz::nEnergySteps>, 5> cs;
   for (unsigned int i = 0; i < m_nComponents; ++i) {
     for (size_t j = 0; j < 5; ++j) cs[j].fill(0.);
-    const double density = GetNumberDensity() * m_fraction[i];
-    const double scale = sqrt(0.5 * ElectronMass) / (density * SpeedOfLight);
+    const double scale = 1. / m_fraction[i];
     for (unsigned int j = 0; j < m_nTerms; ++j) {
       if (int(m_csType[j] / nCsTypes) != int(i)) continue;
       int cstype = m_csType[j] % nCsTypes;
@@ -1890,8 +1904,15 @@ void MediumMagboltz::PlotElectronCrossSections() {
       for (unsigned int k = 0; k < Magboltz::nEnergySteps; ++k) {
         double cf = m_cf[k][j];
         if (j > 0) cf -= m_cf[k][j - 1]; 
-        cs[cstype][k] += cf * 1.e18 * scale;
+        cs[cstype][k] += cf * cstot[k] * scale;
       }
+    }
+    // Determine the plot range.
+    double ymin = 0.01;
+    double ymax = 100.;
+    for (size_t j = 0; j < 5; ++j) {
+      double csmax = *std::max_element(cs[j].begin(), cs[j].end());
+      if (csmax > ymax) ymax = 100. * std::ceil(csmax /100.);
     }
     const std::string name = ViewBase::FindUnusedCanvasName("cCs");
     TCanvas* canvas = new TCanvas(name.c_str(), m_gas[i].c_str(), 800, 600);
@@ -1900,17 +1921,28 @@ void MediumMagboltz::PlotElectronCrossSections() {
     canvas->SetLogy();
     canvas->SetGridx();
     canvas->SetGridy();
-    canvas->DrawFrame(en[0], 0.01, en.back(), 100., 
-                      ";energy [eV];#sigma [Mbarn]");
+    auto frame = canvas->DrawFrame(en[0], ymin, en.back(), ymax, 
+                                   ";energy [eV];#sigma [Mbarn]");
+    frame->GetXaxis()->SetTitleOffset(1.2);
+    auto legend = new TLegend(0.1, 0.1, 0.4, 0.4);
+    legend->SetFillStyle(0);
+    legend->SetBorderSize(0);
+    legend->SetTextSize(0.04);
     TGraph gr(Magboltz::nEnergySteps);
     gr.SetLineWidth(3);
     const std::array<short, 5> cols = {kBlack, kCyan - 2, kRed + 2, 
                                        kGreen + 3, kMagenta + 3}; 
+    const std::array<std::string, 5> labels = {"Elastic", "Ionisation", 
+                                               "Attachment", "Inelastic",
+                                               "Excitation"}; 
     for (size_t j = 0; j < 5; ++j) {
       if (*std::max_element(cs[j].begin(), cs[j].end()) < 1.e-10) continue;
       gr.SetLineColor(cols[j]);
       gr.DrawGraph(Magboltz::nEnergySteps, en.data(), cs[j].data(), "lsame");
+      auto entry = legend->AddEntry((TObject*)nullptr, labels[j].c_str(), "");
+      entry->SetTextColor(cols[j]);
     }
+    legend->Draw();
     canvas->Update();
   }
 
