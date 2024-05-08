@@ -57,9 +57,20 @@ build-centos7:
 #    - make -j4
 #    - make install
 
-build-ubuntu:
+build-ubuntu23:
   stage: build
   #image: rootproject/root:latest
+  image: rootproject/root:6.30.06-ubuntu23.10
+  script:
+    - rm -rf build
+    - mkdir build
+    - cd build
+    - cmake -DROOTSYS=/usr/lib ../
+    - make -j4
+    - make install
+
+build-ubuntu22:
+  stage: build
   image: rootproject/root:6.28.10-ubuntu22.04
   script:
     - rm -rf build
@@ -81,6 +92,17 @@ build-fedora32:
     - make -j4
     - make install
 
+build-fedora37:
+  stage: build
+  image: rootproject/root:6.28.04-fedora37
+  script:
+    - rm -rf build
+    - mkdir build
+    - cd build
+    - cmake -DROOTSYS=/usr/lib ../
+    - make -j4
+    - make install
+    
 build-fedora33:
   stage: build
   image: rootproject/root:6.22.06-fedora33
