@@ -91,17 +91,6 @@ build-fedora32:
     - cmake -DROOTSYS=/usr/lib ../
     - make -j4
     - make install
-
-build-fedora37:
-  stage: build
-  image: rootproject/root:6.28.04-fedora37
-  script:
-    - rm -rf build
-    - mkdir build
-    - cd build
-    - cmake -DROOTSYS=/usr/lib ../
-    - make -j4
-    - make install
     
 build-fedora33:
   stage: build
