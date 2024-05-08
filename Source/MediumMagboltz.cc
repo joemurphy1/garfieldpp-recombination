@@ -8,8 +8,10 @@
 #include <iostream>
 #include <map>
 #include <numeric>
+#include <regex>
 
 #include <TCanvas.h>
+#include <TColor.h>
 #include <TGraph.h>
 #include <TH1F.h>
 #include <TLegend.h>
@@ -1945,6 +1947,89 @@ void MediumMagboltz::PlotElectronCrossSections() {
     legend->Draw();
     canvas->Update();
   }
+
+}
+void MediumMagboltz::PlotElectronCollisionRates() {
+
+  if (!Update()) return;
+
+  // Kinetic energies.
+  std::array<float, Magboltz::nEnergySteps> en;
+  for (unsigned int k = 0; k < Magboltz::nEnergySteps; ++k) {
+    en[k] = (k + 0.5) * m_eStep;
+  }
+  std::vector<std::array<std::array<float, Magboltz::nEnergySteps>, 4> > cf;
+  cf.resize(m_nComponents);
+  // Plot range.
+  double ymin = std::numeric_limits<double>::max();
+  double ymax = std::numeric_limits<double>::min();
+  for (unsigned int i = 0; i < m_nComponents; ++i) {
+    for (size_t j = 0; j < 4; ++j) cf[i][j].fill(0.);
+    for (unsigned int j = 0; j < m_nTerms; ++j) {
+      if (int(m_csType[j] / nCsTypes) != int(i)) continue;
+      int cstype = m_csType[j] % nCsTypes;
+      if (cstype >= ElectronCollisionTypeVirtual) continue;
+      // Group inelastic collisions, excitations and superelastic collisions.
+      if (cstype > 3) cstype = 3;
+      for (unsigned int k = 0; k < Magboltz::nEnergySteps; ++k) {
+        double r = m_cf[k][j];
+        if (j > 0) r -= m_cf[k][j - 1]; 
+        cf[i][cstype][k] += r;
+        if (r > ymax) ymax = r;
+        if (r > 0 && r < ymin) ymin = r;
+      }
+    }
+  }
+  const std::string name = ViewBase::FindUnusedCanvasName("cCollisionRates");
+  TCanvas* canvas = new TCanvas(name.c_str(), m_name.c_str(), 800, 600);
+  canvas->cd();
+  canvas->SetLogx();
+  canvas->SetLogy();
+  canvas->SetGridx();
+  canvas->SetGridy();
+  auto frame = canvas->DrawFrame(en[0], ymin, en.back(), ymax, 
+                                 ";energy [eV];collision rate [ns^{-1}]");
+  frame->GetXaxis()->SetTitleOffset(1.2);
+  auto legend = new TLegend(0.1, 0.1, 0.4, 0.5);
+  legend->SetFillStyle(0);
+  legend->SetBorderSize(0);
+  legend->SetTextSize(0.04);
+  TGraph gr(Magboltz::nEnergySteps);
+  gr.SetLineWidth(3);
+  const std::array<std::string, 4> labels = {"Elastic", "Ionisation", 
+                                             "Attachment", "Inelastic"};
+  unsigned int nCurves = 0;
+  for (unsigned int i = 0; i < m_nComponents; ++i) {
+    for (size_t j = 0; j < 4; ++j) {
+      if (*std::max_element(cf[i][j].begin(), cf[i][j].end()) > 0.) {
+        ++nCurves;
+      }
+    }
+  }
+  int colstep = 0;
+  if (nCurves > 0) colstep = int(256 / nCurves);
+  int curve = 0;
+  std::regex reg("([0-9]+)");
+  for (unsigned int i = 0; i < m_nComponents; ++i) {
+    for (size_t j = 0; j < 4; ++j) {
+      if (*std::max_element(cf[i][j].begin(), cf[i][j].end()) < 1.e-10) {
+        continue;
+      }
+      auto col = TColor::GetColorPalette(curve * colstep);
+      ++curve;
+      gr.SetLineColor(col);
+      gr.DrawGraph(Magboltz::nEnergySteps, en.data(), cf[i][j].data(), "lsame pfc");
+      std::string label = m_gas[i];
+      if (label != "He-3") {
+        label = std::regex_replace(m_gas[i], reg, "_{$1}");
+      }
+      label = labels[j] + " (" + label + ")";
+      auto entry = legend->AddEntry((TObject*)nullptr, label.c_str(), "");
+      entry->SetTextColor(col);
+    }
+  }
+  legend->Draw();
+  canvas->Update();
 
 }
 

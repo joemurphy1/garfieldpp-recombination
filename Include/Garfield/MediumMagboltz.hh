@@ -178,6 +178,7 @@ class MediumMagboltz : public MediumGas {
                         const bool verbose = true);
 
   void PlotElectronCrossSections();
+  void PlotElectronCollisionRates();
 
   static int GetGasNumberMagboltz(const std::string& input);
  private:
