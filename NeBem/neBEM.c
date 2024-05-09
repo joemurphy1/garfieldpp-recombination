@@ -359,6 +359,7 @@ int LHMatrix(void) {
       const double xfld = collPt.X;
       const double yfld = collPt.Y;
       const double zfld = collPt.Z;
+
 #ifdef _OPENMP
 #pragma omp for
 #endif
@@ -3327,15 +3328,17 @@ int Solve(void) {
           Point3D globalP;
           double Potential;
           Vector3D globalF, localF;
-          double x0 = (EleArr + ele - 1)->G.Vertex[0].X;
-          double y0 = (EleArr + ele - 1)->G.Vertex[0].Y;
-          double z0 = (EleArr + ele - 1)->G.Vertex[0].Z;
-          double x1 = (EleArr + ele - 1)->G.Vertex[1].X;
-          double y1 = (EleArr + ele - 1)->G.Vertex[1].Y;
-          double z1 = (EleArr + ele - 1)->G.Vertex[1].Z;
-          double x2 = (EleArr + ele - 1)->G.Vertex[2].X;
-          double y2 = (EleArr + ele - 1)->G.Vertex[2].Y;
-          double z2 = (EleArr + ele - 1)->G.Vertex[2].Z;
+          Point3D vertices[4];
+          ElementVertices(ele, vertices);
+          double x0 = vertices[0].X;
+          double y0 = vertices[0].Y;
+          double z0 = vertices[0].Z;
+          double x1 = vertices[1].X;
+          double y1 = vertices[1].Y;
+          double z1 = vertices[1].Z;
+          double x2 = vertices[2].X;
+          double y2 = vertices[2].Y;
+          double z2 = vertices[2].Z;
           double xb = (x0 + x1 + x2) / 3.0;  // b for barycentre
           double yb = (y0 + y1 + y2) / 3.0;  // b for barycentre
           double zb = (z0 + z1 + z2) / 3.0;  // b for barycentre
@@ -3642,19 +3645,20 @@ int Solve(void) {
           Point3D globalP;
           double Potential;
           Vector3D globalF, localF;
-
-          double x0 = (EleArr + ele - 1)->G.Vertex[0].X;
-          double y0 = (EleArr + ele - 1)->G.Vertex[0].Y;
-          double z0 = (EleArr + ele - 1)->G.Vertex[0].Z;
-          double x1 = (EleArr + ele - 1)->G.Vertex[1].X;
-          double y1 = (EleArr + ele - 1)->G.Vertex[1].Y;
-          double z1 = (EleArr + ele - 1)->G.Vertex[1].Z;
-          double x2 = (EleArr + ele - 1)->G.Vertex[2].X;
-          double y2 = (EleArr + ele - 1)->G.Vertex[2].Y;
-          double z2 = (EleArr + ele - 1)->G.Vertex[2].Z;
-          double x3 = (EleArr + ele - 1)->G.Vertex[3].X;
-          double y3 = (EleArr + ele - 1)->G.Vertex[3].Y;
-          double z3 = (EleArr + ele - 1)->G.Vertex[3].Z;
+          Point3D vertices[4];
+          ElementVertices(ele, vertices);
+          double x0 = vertices[0].X;
+          double y0 = vertices[0].Y;
+          double z0 = vertices[0].Z;
+          double x1 = vertices[1].X;
+          double y1 = vertices[1].Y;
+          double z1 = vertices[1].Z;
+          double x2 = vertices[2].X;
+          double y2 = vertices[2].Y;
+          double z2 = vertices[2].Z;
+          double x3 = vertices[3].X;
+          double y3 = vertices[3].Y;
+          double z3 = vertices[3].Z;
           double xo = 0.25 * (x0 + x1 + x2 + x3);  // o for origin
           double yo = 0.25 * (y0 + y1 + y2 + y3);  // o for origin
           double zo = 0.25 * (z0 + z1 + z2 + z3);  // o for origin
@@ -3692,9 +3696,8 @@ int Solve(void) {
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double dispfld1 = Epsilon1[prim] * localF.Y;
             double xminus = xo - PrimDC[prim].XUnit.X * normdisp;
             xminus -= PrimDC[prim].YUnit.X * normdisp;

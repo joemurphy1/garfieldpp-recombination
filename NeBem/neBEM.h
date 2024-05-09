@@ -141,13 +141,12 @@ neBEMGLOBAL double VFloatCon;
 typedef struct {
   short int Type;     // 4: rectangular, 3: triangular, 2: linear (wire)
   Point3D Origin;     // centroid / barycenter / axis-center (local origin)
-  Point3D Vertex[4];  // element vertex begins with index 0 and goes to max 3
   double LX, LZ;      // length, breadth / base, height / radius, length
 } GeomProp;
 
 typedef struct {
   int PrimitiveNb;    // Index of the primitive to which the element belongs
-  GeomProp G;  // geomtype, origin, vertex, lengths, area
+  GeomProp G;  // geomtype, origin, lengths, area
   double Solution;  // accumulated charge, or similar solution
   double Assigned;  // assigned charge, or similar property
 } Element;

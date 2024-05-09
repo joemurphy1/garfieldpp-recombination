@@ -405,7 +405,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
                    double zvert[], double radius, int volref1, int volref2,
                    int inttype, double potential, double charge, double lambda,
                    int NbSegs) {
-  double WireElX, WireElY, WireElZ;
 
   // Check inputs
   if (PrimType[prim] != 2) {
@@ -448,9 +447,9 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   // The direction along the wire is considered to be the z axis of the LCS
   // So, let us fix that axial vector first
   DirnCosn3D pdc;
-  pdc.ZUnit.X = (xvert[1] - xvert[0]) / WireL;  // useful
+  pdc.ZUnit.X = (xvert[1] - xvert[0]) / WireL;
   pdc.ZUnit.Y = (yvert[1] - yvert[0]) / WireL;
-  pdc.ZUnit.Z = (zvert[1] - zvert[0]) / WireL;  // useful
+  pdc.ZUnit.Z = (zvert[1] - zvert[0]) / WireL;
   // Next, let us find out the coefficients of a plane that passes through the
   // wire centroid and is normal to the axis of the wire. This is basically the
   // mid-plane of the cylindrical wire
@@ -638,17 +637,10 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   double zincr = (zvert[1] - zvert[0]) / (double)NbSegs;
 
   ElementBgn[prim] = EleCntr + 1;
-  double xv0, yv0, zv0, xv1, yv1, zv1;
   for (int seg = 1; seg <= NbSegs; ++seg) {
-    xv0 = xvert[0] + ((double)seg - 1.0) * xincr;
-    yv0 = yvert[0] + ((double)seg - 1.0) * yincr;
-    zv0 = zvert[0] + ((double)seg - 1.0) * zincr;
-    xv1 = xvert[0] + ((double)seg) * xincr;
-    yv1 = yvert[0] + ((double)seg) * yincr;
-    zv1 = zvert[0] + ((double)seg) * zincr;
-    WireElX = xvert[0] + ((double)seg - 1.0) * xincr + 0.5 * xincr;
-    WireElY = yvert[0] + ((double)seg - 1.0) * yincr + 0.5 * yincr;
-    WireElZ = zvert[0] + ((double)seg - 1.0) * zincr + 0.5 * zincr;
+    double WireElX = xvert[0] + ((double)seg - 1.0) * xincr + 0.5 * xincr;
+    double WireElY = yvert[0] + ((double)seg - 1.0) * yincr + 0.5 * yincr;
+    double WireElZ = zvert[0] + ((double)seg - 1.0) * zincr + 0.5 * zincr;
 
     // Assign element values and write in the file
     // If element counter exceeds the maximum allowed number of elements, warn!
@@ -665,12 +657,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->G.Origin.X = WireElX;
     (EleArr + EleCntr - 1)->G.Origin.Y = WireElY;
     (EleArr + EleCntr - 1)->G.Origin.Z = WireElZ;
-    (EleArr + EleCntr - 1)->G.Vertex[0].X = xv0;
-    (EleArr + EleCntr - 1)->G.Vertex[0].Y = yv0;
-    (EleArr + EleCntr - 1)->G.Vertex[0].Z = zv0;
-    (EleArr + EleCntr - 1)->G.Vertex[1].X = xv1;
-    (EleArr + EleCntr - 1)->G.Vertex[1].Y = yv1;
-    (EleArr + EleCntr - 1)->G.Vertex[1].Z = zv1;
     (EleArr + EleCntr - 1)->G.LX = radius;   // radius of the wire element
     (EleArr + EleCntr - 1)->G.LZ = WireElL;  // wire element length
     (EleArr + EleCntr - 1)->Solution = 0.0;
@@ -690,7 +676,8 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
               (EleArr + EleCntr - 1)->G.Type,
               (EleArr + EleCntr - 1)->G.Origin.X,
               (EleArr + EleCntr - 1)->G.Origin.Y,
-              (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
+              (EleArr + EleCntr - 1)->G.Origin.Z, 
+              (EleArr + EleCntr - 1)->G.LX,
               (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
       fprintf(fElem, "#DirnCosn: \n");
       fprintf(fElem, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
@@ -702,11 +689,11 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
       fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n", 1,
               collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
     }  // if OptElementFiles
-       //
-    // mark centroid
+
     if (OptGnuplot && OptGnuplotElements) {
+      // Mark centroid
       fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
-    }  // if OptElementFiles
+    }
        // File operations end
   }    // seg loop for wire elements
   ElementEnd[prim] = EleCntr;
@@ -1052,10 +1039,9 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   // been determined above.
   // First we create the triangular element and then move on to create the
   // rectangular ones.
-  double xv0, yv0, zv0, xv1, yv1, zv1, xv2, yv2, zv2;
   ElementBgn[prim] = EleCntr + 1;
-  for (int k = 1; k <= NbSegZ; ++k)  // consider the k-th row
-  {
+  for (int k = 1; k <= NbSegZ; ++k) {
+    // consider the k-th row
     double grad = (SurfLZ / SurfLX);
     double zlopt = (k - 1) * SurfElLZ;
     double zhipt = (k)*SurfElLZ;
@@ -1063,15 +1049,12 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     double xhipt = (SurfLZ - zhipt) / grad;
 
     // the triangular element on the k-th row can now be specified in PCS
-    double xtorigin = xhipt;
-    double ytorigin = 0.0;
-    double ztorigin = zlopt;
     {  // Separate block for position rotation - local2global
       Point3D localDisp, globalDisp;
 
-      localDisp.X = xtorigin;
-      localDisp.Y = ytorigin;
-      localDisp.Z = ztorigin;
+      localDisp.X = xhipt;
+      localDisp.Y = 0.0;
+      localDisp.Z = zlopt;
       globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
       // These are the coords in GCS of origin of
       // the triangular element under consideration:
@@ -1094,48 +1077,14 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->G.Origin.X = SurfElX;
     (EleArr + EleCntr - 1)->G.Origin.Y = SurfElY;
     (EleArr + EleCntr - 1)->G.Origin.Z = SurfElZ;
-    // (EleArr+EleCntr-1)->G.LX = SurfElLX;	// previously written as xlopt -
-    // xhipt;
-    (EleArr + EleCntr - 1)->G.LX =
-        xlopt - xhipt;  // back to old ways on 21 Feb 2014
+    // (EleArr+EleCntr-1)->G.LX = SurfElLX;	// previously written as xlopt - xhipt;
+    (EleArr + EleCntr - 1)->G.LX = xlopt - xhipt;  // back to old ways on 21 Feb 2014
     (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
-    (EleArr + EleCntr - 1)->G.LZ =
-        zhipt - zlopt;  // to be on the safe side, 21/2/14
-    // Safe to use the direction cosines obtained for the triangular primitive
-    // since they are bound to remain unchanged for the rectangular sub-elements
+    (EleArr + EleCntr - 1)->G.LZ = zhipt - zlopt;  // to be on the safe side, 21/2/14
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
     // Boundary condition is applied at the barycenter, not at the origin
     // of the element coordinate system (ECS) which is at the right corner
-
-    xv0 = (EleArr + EleCntr - 1)->G.Origin.X;
-    yv0 = (EleArr + EleCntr - 1)->G.Origin.Y;
-    zv0 = (EleArr + EleCntr - 1)->G.Origin.Z;
-    xv1 = (EleArr + EleCntr - 1)->G.Origin.X +
-          (EleArr + EleCntr - 1)->G.LX * PrimDC[prim].XUnit.X;
-    yv1 = (EleArr + EleCntr - 1)->G.Origin.Y +
-          (EleArr + EleCntr - 1)->G.LX * PrimDC[prim].XUnit.Y;
-    zv1 = (EleArr + EleCntr - 1)->G.Origin.Z +
-          (EleArr + EleCntr - 1)->G.LX * PrimDC[prim].XUnit.Z;
-    xv2 = (EleArr + EleCntr - 1)->G.Origin.X +
-          (EleArr + EleCntr - 1)->G.LZ * PrimDC[prim].ZUnit.X;
-    yv2 = (EleArr + EleCntr - 1)->G.Origin.Y +
-          (EleArr + EleCntr - 1)->G.LZ * PrimDC[prim].ZUnit.Y;
-    zv2 = (EleArr + EleCntr - 1)->G.Origin.Z +
-          (EleArr + EleCntr - 1)->G.LZ * PrimDC[prim].ZUnit.Z;
-    // assign vertices of the element
-    (EleArr + EleCntr - 1)->G.Vertex[0].X = xv0;
-    (EleArr + EleCntr - 1)->G.Vertex[0].Y = yv0;
-    (EleArr + EleCntr - 1)->G.Vertex[0].Z = zv0;
-    (EleArr + EleCntr - 1)->G.Vertex[1].X = xv1;
-    (EleArr + EleCntr - 1)->G.Vertex[1].Y = yv1;
-    (EleArr + EleCntr - 1)->G.Vertex[1].Z = zv1;
-    (EleArr + EleCntr - 1)->G.Vertex[2].X = xv2;
-    (EleArr + EleCntr - 1)->G.Vertex[2].Y = yv2;
-    (EleArr + EleCntr - 1)->G.Vertex[2].Z = zv2;
-    (EleArr + EleCntr - 1)->G.Vertex[3].X = 0.0;
-    (EleArr + EleCntr - 1)->G.Vertex[3].Y = 0.0;
-    (EleArr + EleCntr - 1)->G.Vertex[3].Z = 0.0;
 
     if (DebugLevel == 201) {
       printf("Primitive nb: %d\n", (EleArr + EleCntr - 1)->PrimitiveNb);
@@ -1181,27 +1130,17 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     // mark bary-center and draw mesh
     if (OptGnuplot && OptGnuplotElements) {
       fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
-
-      // draw mesh
-      // assign vertices of the element
-      xv0 = (EleArr + EleCntr - 1)->G.Vertex[0].X;
-      yv0 = (EleArr + EleCntr - 1)->G.Vertex[0].Y;
-      zv0 = (EleArr + EleCntr - 1)->G.Vertex[0].Z;
-      xv1 = (EleArr + EleCntr - 1)->G.Vertex[1].X;
-      yv1 = (EleArr + EleCntr - 1)->G.Vertex[1].Y;
-      zv1 = (EleArr + EleCntr - 1)->G.Vertex[1].Z;
-      xv2 = (EleArr + EleCntr - 1)->G.Vertex[2].X;
-      yv2 = (EleArr + EleCntr - 1)->G.Vertex[2].Y;
-      zv2 = (EleArr + EleCntr - 1)->G.Vertex[2].Z;
-
-      fprintf(fgpMesh, "%g\t%g\t%g\n", xv0, yv0, zv0);
-      fprintf(fgpMesh, "%g\t%g\t%g\n", xv1, yv1, zv1);
-      fprintf(fgpMesh, "%g\t%g\t%g\n", xv2, yv2, zv2);
-      fprintf(fgpMesh, "%g\t%g\t%g\n\n", xv0, yv0, zv0);
+      // Draw mesh
+      Point3D vtx[4];
+      ElementVertices(EleCntr, vtx);
+      fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
+      fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[1].X, vtx[1].Y, vtx[1].Z);
+      fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[2].X, vtx[2].Y, vtx[2].Z);
+      fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
+      fprintf(fgpMesh, "\n");
     }  // if OptGnuplotElements
 
-    if (k == NbSegZ)  // no rectangular element on this row
-      continue;
+    if (k == NbSegZ) continue; // no rectangular element on this row
 
     // determine NbSegXOnThisRow and ElLXOnThisRow for the rectagnular elements
     // and then loop.
@@ -1215,10 +1154,10 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       NbSegXOnThisRow = (int)(RowLX / SurfElLX);
       ElLXOnThisRow = RowLX / NbSegXOnThisRow;
     }
-    double x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3;
     for (int i = 1; i <= NbSegXOnThisRow; ++i) {
-      double xorigin = (i - 1) * ElLXOnThisRow + 0.5 * ElLXOnThisRow;  // PCS
-      double yorigin = 0.0;  // centroid of the rectangular element
+      // PCS centroid of the rectangular element
+      double xorigin = (i - 1) * ElLXOnThisRow + 0.5 * ElLXOnThisRow;  
+      double yorigin = 0.0;
       double zorigin = 0.5 * (zlopt + zhipt);
       // printf("k: %d, i: %d, xo: %lg, yo: %lg, zo: %lg\n", k, i,
       // xorigin, yorigin, zorigin);
@@ -1236,10 +1175,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         SurfElY = SurfY + globalDisp.Y;
         SurfElZ = SurfZ + globalDisp.Z;
       }  // vector rotation over
-      // printf("SurfX: %lg, SurfY: %lg, SurfZ: %lg\n",
-      // SurfX, SurfY, SurfZ);
-      // printf("SurfElX: %lg, SurfElY: %lg, SurfElZ: %lg\n",
-      // SurfElX, SurfElY, SurfElZ);
 
       // Assign element values and write in the file
       ++EleCntr;
@@ -1255,90 +1190,9 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->G.Origin.Z = SurfElZ;
       (EleArr + EleCntr - 1)->G.LX = ElLXOnThisRow;
       (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
-      (EleArr + EleCntr - 1)->G.LZ =
-          zhipt - zlopt;  // to be on the safe side! 21/2/14
+      (EleArr + EleCntr - 1)->G.LZ = zhipt - zlopt;  // to be on the safe side! 21/2/14
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
-      // find element vertices
-      // 1) displacement vector in the ECS is first identified
-      // 2) this vector is transformed to the GCS
-      // 3) the global displacement vector, when added to the centroid in GCS,
-      // gives the node positions in GCS.
-      x0 = -0.5 *
-           (EleArr + EleCntr - 1)->G.LX;  // xyz displacement of node wrt ECS
-      y0 = 0.0;
-      z0 = -0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x0;
-        localDisp.Y = y0;
-        localDisp.Z = z0;  // displacement in GCS
-        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
-        x0 = (EleArr + EleCntr - 1)->G.Origin.X +
-             globalDisp.X;  // xyz position in GCS
-        y0 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z0 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x1 = 0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y1 = 0.0;
-      z1 = -0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x1;
-        localDisp.Y = y1;
-        localDisp.Z = z1;
-        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
-        x1 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y1 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z1 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x2 = 0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y2 = 0.0;
-      z2 = 0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x2;
-        localDisp.Y = y2;
-        localDisp.Z = z2;
-        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
-        x2 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y2 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z2 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x3 = -0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y3 = 0.0;
-      z3 = 0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x3;
-        localDisp.Y = y3;
-        localDisp.Z = z3;
-        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
-        x3 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y3 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z3 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      // assign vertices of the element
-      (EleArr + EleCntr - 1)->G.Vertex[0].X = x0;
-      (EleArr + EleCntr - 1)->G.Vertex[0].Y = y0;
-      (EleArr + EleCntr - 1)->G.Vertex[0].Z = z0;
-      (EleArr + EleCntr - 1)->G.Vertex[1].X = x1;
-      (EleArr + EleCntr - 1)->G.Vertex[1].Y = y1;
-      (EleArr + EleCntr - 1)->G.Vertex[1].Z = z1;
-      (EleArr + EleCntr - 1)->G.Vertex[2].X = x2;
-      (EleArr + EleCntr - 1)->G.Vertex[2].Y = y2;
-      (EleArr + EleCntr - 1)->G.Vertex[2].Z = z2;
-      (EleArr + EleCntr - 1)->G.Vertex[3].X = x3;
-      (EleArr + EleCntr - 1)->G.Vertex[3].Y = y3;
-      (EleArr + EleCntr - 1)->G.Vertex[3].Z = z3;
 
       if (OptElementFiles) {
         fprintf(fElem, "##Element Counter: %d\n", EleCntr);
@@ -1364,17 +1218,17 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                 collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
       }  // if OptElementFiles
 
-      // draw centroid and mesh
-      if (OptGnuplot && OptGnuplotElements) {
-        fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
-      }  // if OptGnuplot && OptGnuplotElements
 
       if (OptGnuplot && OptGnuplotElements) {
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x0, y0, z0);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x1, y1, z1);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x2, y2, z2);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x3, y3, z3);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x0, y0, z0);
+        // Draw centroid and mesh
+        fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
+        Point3D vtx[4];
+        ElementVertices(EleCntr, vtx);
+        fprintf(fgpMesh, "%g\t%g\t%g\n\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
+        fprintf(fgpMesh, "%g\t%g\t%g\n\n", vtx[1].X, vtx[1].Y, vtx[1].Z);
+        fprintf(fgpMesh, "%g\t%g\t%g\n\n", vtx[2].X, vtx[2].Y, vtx[2].Z);
+        fprintf(fgpMesh, "%g\t%g\t%g\n\n", vtx[3].X, vtx[3].Y, vtx[3].Z);
+        fprintf(fgpMesh, "%g\t%g\t%g\n\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
       }  // if OptGnuplot && OptGnuplotElements
     }    // for i
   }      // for k
@@ -1419,7 +1273,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
                         double znorm, int volref1, int volref2, int inttype,
                         double potential, double charge, double lambda,
                         int NbSegX, int NbSegZ) {
-  double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
 
   // Check inputs
   if ((NbSegX <= 0) || (NbSegZ <= 0)) {
@@ -1470,8 +1323,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   pdc.YUnit.X = xnorm;
   pdc.YUnit.Y = ynorm;
   pdc.YUnit.Z = znorm;
-  pdc.ZUnit =
-      Vector3DCrossProduct(&pdc.XUnit, &pdc.YUnit);
+  pdc.ZUnit = Vector3DCrossProduct(&pdc.XUnit, &pdc.YUnit);
 
   // primitive direction cosine assignments
   PrimDC[prim].XUnit.X = pdc.XUnit.X;
@@ -1484,7 +1336,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   PrimDC[prim].ZUnit.Y = pdc.ZUnit.Y;
   PrimDC[prim].ZUnit.Z = pdc.ZUnit.Z;
 
-  // primitive origin: also the barcenter for a rectangular element
+  // primitive origin: also the barycenter for a rectangular element
   PrimOriginX[prim] = SurfX;
   PrimOriginY[prim] = SurfY;
   PrimOriginZ[prim] = SurfZ;
@@ -1522,12 +1374,9 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     // fprintf(fPrim, "#SurfRX: %lg\tSurfRY: %lg\tSurfRZ: %lg\n",
     // SurfRX, SurfRY, SurfRZ);
     fprintf(fPrim, "#DirnCosn: \n");
-    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.XUnit.X,
-            pdc.XUnit.Y, pdc.XUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.YUnit.X,
-            pdc.YUnit.Y, pdc.YUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.ZUnit.X,
-            pdc.ZUnit.Y, pdc.ZUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
     fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, potential);
   }  // if OptPrimitiveFiles
 
@@ -1616,6 +1465,8 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   // number is being used to discretize the longer side - can be OverSmart in
   // certain cases - there may be cases where smaller number of elements suffice
   // for a longer side
+  double SurfElLX = 0.;
+  double SurfElLZ = 0.;
   if (NbSegX == NbSegZ) {
     SurfElLX = SurfLX / NbSegX;  // element sizes
     SurfElLZ = SurfLZ / NbSegZ;
@@ -1683,30 +1534,25 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
             NbSegX, SurfElLX, NbSegZ, SurfElLZ, AR);
   }
 
-  double x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, xav, zav;
   ElementBgn[prim] = EleCntr + 1;
   for (int i = 1; i <= NbSegX; ++i) {
     // assuming centroid at 0,0,0
-    x1 = -0.5 * SurfLX + (double)(i - 1) * SurfElLX;  
-    x2 = -0.5 * SurfLX + (double)(i)*SurfElLX;
-    xav = 0.5 * (x1 + x2);
+    double x1 = -0.5 * SurfLX + (double)(i - 1) * SurfElLX;  
+    double x2 = -0.5 * SurfLX + (double)(i)*SurfElLX;
+    double xav = 0.5 * (x1 + x2);
 
     for (int k = 1; k <= NbSegZ; ++k) {
-      z1 = -0.5 * SurfLZ + (double)(k - 1) * SurfElLZ;
-      z2 = -0.5 * SurfLZ + (double)(k)*SurfElLZ;
-      zav = 0.5 * (z1 + z2);
-
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = xav;
-        localDisp.Y = 0.0;
-        localDisp.Z = zav;
-        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
-        SurfElX = SurfX + globalDisp.X;
-        SurfElY = SurfY + globalDisp.Y;
-        SurfElZ = SurfZ + globalDisp.Z;
-      }  // vector rotation over
+      double z1 = -0.5 * SurfLZ + (double)(k - 1) * SurfElLZ;
+      double z2 = -0.5 * SurfLZ + (double)(k)*SurfElLZ;
+      double zav = 0.5 * (z1 + z2);
+      Point3D localDisp;
+      localDisp.X = xav;
+      localDisp.Y = 0.0;
+      localDisp.Z = zav;
+      Point3D globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
+      double SurfElX = SurfX + globalDisp.X;
+      double SurfElY = SurfY + globalDisp.Y;
+      double SurfElZ = SurfZ + globalDisp.Z;
 
       // Assign element values and write in the file
       ++EleCntr;
@@ -1727,100 +1573,20 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->Assigned = charge;
 
       Point3D collPt = CollocationPoint(EleCntr);
-      // find element vertices
-      // 1) displacement vector in the ECS is first identified
-      // 2) this vector is transformed to the GCS
-      // 3) the global displacement vector, when added to the centroid in GCS,
-      // gives the node positions in GCS.
-      // xyz displacement of node wrt ECS
-      x0 = -0.5 * (EleArr + EleCntr - 1)->G.LX;  
-      y0 = 0.0;
-      z0 = -0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x0;
-        localDisp.Y = y0;
-        localDisp.Z = z0;  // displacement in GCS
-        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
-        x0 = (EleArr + EleCntr - 1)->G.Origin.X +
-             globalDisp.X;  // xyz position in GCS
-        y0 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z0 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x1 = 0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y1 = 0.0;
-      z1 = -0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x1;
-        localDisp.Y = y1;
-        localDisp.Z = z1;
-        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
-        x1 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y1 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z1 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x2 = 0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y2 = 0.0;
-      z2 = 0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x2;
-        localDisp.Y = y2;
-        localDisp.Z = z2;
-        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
-        x2 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y2 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z2 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x3 = -0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y3 = 0.0;
-      z3 = 0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x3;
-        localDisp.Y = y3;
-        localDisp.Z = z3;
-        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
-        x3 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y3 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z3 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      // assign vertices of the element
-      (EleArr + EleCntr - 1)->G.Vertex[0].X = x0;
-      (EleArr + EleCntr - 1)->G.Vertex[0].Y = y0;
-      (EleArr + EleCntr - 1)->G.Vertex[0].Z = z0;
-      (EleArr + EleCntr - 1)->G.Vertex[1].X = x1;
-      (EleArr + EleCntr - 1)->G.Vertex[1].Y = y1;
-      (EleArr + EleCntr - 1)->G.Vertex[1].Z = z1;
-      (EleArr + EleCntr - 1)->G.Vertex[2].X = x2;
-      (EleArr + EleCntr - 1)->G.Vertex[2].Y = y2;
-      (EleArr + EleCntr - 1)->G.Vertex[2].Z = z2;
-      (EleArr + EleCntr - 1)->G.Vertex[3].X = x3;
-      (EleArr + EleCntr - 1)->G.Vertex[3].Y = y3;
-      (EleArr + EleCntr - 1)->G.Vertex[3].Z = z3;
 
       if (OptElementFiles) {
         fprintf(fElem, "##Element Counter: %d\n", EleCntr);
         fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
         fprintf(fElem, "%d\t%d\t%d\t%d\n", 1, 1,
-                (EleArr + EleCntr - 1)->PrimitiveNb,
-                EleCntr);
+                (EleArr + EleCntr - 1)->PrimitiveNb, EleCntr);
         fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
-        fprintf(
-            fElem, "%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n",
-            (EleArr + EleCntr - 1)->G.Type, (EleArr + EleCntr - 1)->G.Origin.X,
-            (EleArr + EleCntr - 1)->G.Origin.Y,
-            (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
-            (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
+        fprintf(fElem, "%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n",
+                (EleArr + EleCntr - 1)->G.Type, 
+                (EleArr + EleCntr - 1)->G.Origin.X,
+                (EleArr + EleCntr - 1)->G.Origin.Y,
+                (EleArr + EleCntr - 1)->G.Origin.Z, 
+                (EleArr + EleCntr - 1)->G.LX,
+                (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
         fprintf(fElem, "#DirnCosn: \n");
         fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
                 PrimDC[prim].XUnit.Y,
@@ -1838,27 +1604,18 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
                 collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
       }  // if OptElementFiles
 
-      // mark centroid
-      if (OptGnuplot && OptGnuplotElements) {
-        fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
-      }  // if OptGnuplot && OptGnuplotElements
 
       if (OptGnuplot && OptGnuplotElements) {
-        fprintf(fgpMesh, "%g\t%g\t%g\n", x0, y0, z0);
-        fprintf(fgpMesh, "%g\t%g\t%g\n", x1, y1, z1);
-        fprintf(fgpMesh, "%g\t%g\t%g\n", x2, y2, z2);
-        fprintf(fgpMesh, "%g\t%g\t%g\n", x3, y3, z3);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x0, y0, z0);
-        /*
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n", x0, y0, z0, 1);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n\n", x1, y1, z1, 2);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n", x2, y2, z2, 1);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n\n\n", x2, y2, z2, 2);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n", x0, y0, z0, 1);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n\n", x3, y3, z3, 2);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n", x2, y2, z2, 1);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n\n\n", x2, y2, z2, 2);
-        */
+        // Mark centroid.
+        fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
+        Point3D vtx[4];
+        ElementVertices(EleCntr, vtx); 
+        fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
+        fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[1].X, vtx[1].Y, vtx[1].Z);
+        fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[2].X, vtx[2].Y, vtx[2].Z);
+        fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[3].X, vtx[3].Y, vtx[3].Z);
+        fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
+        fprintf(fgpMesh, "\n");
       }  // if(OptGnuplot && OptGnuplotElements)
     }    // for k
   }      // for i
@@ -2675,21 +2432,7 @@ int InitChargingUp(void) {
                       fclose(fPtEChUpMap);
                       return -20;
                     }
-
-                    polynode[0].X = (EleArr + ele - 1)->G.Vertex[0].X;
-                    polynode[0].Y = (EleArr + ele - 1)->G.Vertex[0].Y;
-                    polynode[0].Z = (EleArr + ele - 1)->G.Vertex[0].Z;
-                    polynode[1].X = (EleArr + ele - 1)->G.Vertex[1].X;
-                    polynode[1].Y = (EleArr + ele - 1)->G.Vertex[1].Y;
-                    polynode[1].Z = (EleArr + ele - 1)->G.Vertex[1].Z;
-                    polynode[2].X = (EleArr + ele - 1)->G.Vertex[2].X;
-                    polynode[2].Y = (EleArr + ele - 1)->G.Vertex[2].Y;
-                    polynode[2].Z = (EleArr + ele - 1)->G.Vertex[2].Z;
-                    if (nvert == 4) {
-                      polynode[3].X = (EleArr + ele - 1)->G.Vertex[3].X;
-                      polynode[3].Y = (EleArr + ele - 1)->G.Vertex[3].Y;
-                      polynode[3].Z = (EleArr + ele - 1)->G.Vertex[3].Z;
-                    }
+                    ElementVertices(ele, polynode);
 
                     // printf("neBEMChkInPoly for element %d\n", ele);
                     SumOfAngles = neBEMChkInPoly(nvert, polynode, ptintsct);
@@ -2947,20 +2690,7 @@ int InitChargingUp(void) {
                   fflush(stdout);
 
                   fprintf(ftmpEF, "#Element: %d\n", EleIntsctd);
-                  polynode[0].X = (EleArr + EleIntsctd - 1)->G.Vertex[0].X;
-                  polynode[0].Y = (EleArr + EleIntsctd - 1)->G.Vertex[0].Y;
-                  polynode[0].Z = (EleArr + EleIntsctd - 1)->G.Vertex[0].Z;
-                  polynode[1].X = (EleArr + EleIntsctd - 1)->G.Vertex[1].X;
-                  polynode[1].Y = (EleArr + EleIntsctd - 1)->G.Vertex[1].Y;
-                  polynode[1].Z = (EleArr + EleIntsctd - 1)->G.Vertex[1].Z;
-                  polynode[2].X = (EleArr + EleIntsctd - 1)->G.Vertex[2].X;
-                  polynode[2].Y = (EleArr + EleIntsctd - 1)->G.Vertex[2].Y;
-                  polynode[2].Z = (EleArr + EleIntsctd - 1)->G.Vertex[2].Z;
-                  if (nvert == 4) {
-                    polynode[3].X = (EleArr + EleIntsctd - 1)->G.Vertex[3].X;
-                    polynode[3].Y = (EleArr + EleIntsctd - 1)->G.Vertex[3].Y;
-                    polynode[3].Z = (EleArr + EleIntsctd - 1)->G.Vertex[3].Z;
-                  }
+                  ElementVertices(EleIntsctd, polynode);
                   fprintf(ftmpEF, "%lg %lg %lg\n", polynode[0].X, polynode[0].Y,
                           polynode[0].Z);
                   fprintf(ftmpEF, "%lg %lg %lg\n", polynode[1].X, polynode[1].Y,
@@ -3035,25 +2765,15 @@ int InitChargingUp(void) {
                 int gtype = (EleArr + EleIntsctd - 1)->G.Type;
                 fprintf(fepd, "#EleType: %d\n", gtype);
                 fprintf(fepd, "#element vertices:\n");
-                double x0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].X;
-                double y0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].Y;
-                double z0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].Z;
-                double x1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].X;
-                double y1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].Y;
-                double z1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].Z;
-                double x2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].X;
-                double y2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].Y;
-                double z2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].Z;
-                fprintf(fepd, "%lg %lg %lg\n", x0, y0, z0);
-                fprintf(fepd, "%lg %lg %lg\n", x1, y1, z1);
-                fprintf(fepd, "%lg %lg %lg\n", x2, y2, z2);
+                Point3D vtx[4];
+                ElementVertices(EleIntsctd, vtx);
+                fprintf(fepd, "%lg %lg %lg\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
+                fprintf(fepd, "%lg %lg %lg\n", vtx[1].X, vtx[1].Y, vtx[1].Z);
+                fprintf(fepd, "%lg %lg %lg\n", vtx[2].X, vtx[2].Y, vtx[2].Z);
                 if (gtype == 4) {
-                  double x3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].X;
-                  double y3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].Y;
-                  double z3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].Z;
-                  fprintf(fepd, "%lg %lg %lg\n", x3, y3, z3);
+                  fprintf(fepd, "%lg %lg %lg\n", vtx[3].X, vtx[3].Y, vtx[3].Z);
                 }
-                fprintf(fepd, "%lg %lg %lg\n", x0, y0, z0);
+                fprintf(fepd, "%lg %lg %lg\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
                 fprintf(fepd, "\n");
 
                 fprintf(fepd, "#ptintsct:\n");
@@ -3432,22 +3152,7 @@ int InitChargingUp(void) {
                     fclose(fPtIChUpMap);
                     return -20;
                   }
-
-                  polynode[0].X = (EleArr + ele - 1)->G.Vertex[0].X;
-                  polynode[0].Y = (EleArr + ele - 1)->G.Vertex[0].Y;
-                  polynode[0].Z = (EleArr + ele - 1)->G.Vertex[0].Z;
-                  polynode[1].X = (EleArr + ele - 1)->G.Vertex[1].X;
-                  polynode[1].Y = (EleArr + ele - 1)->G.Vertex[1].Y;
-                  polynode[1].Z = (EleArr + ele - 1)->G.Vertex[1].Z;
-                  polynode[2].X = (EleArr + ele - 1)->G.Vertex[2].X;
-                  polynode[2].Y = (EleArr + ele - 1)->G.Vertex[2].Y;
-                  polynode[2].Z = (EleArr + ele - 1)->G.Vertex[2].Z;
-                  if (nvert == 4) {
-                    polynode[3].X = (EleArr + ele - 1)->G.Vertex[3].X;
-                    polynode[3].Y = (EleArr + ele - 1)->G.Vertex[3].Y;
-                    polynode[3].Z = (EleArr + ele - 1)->G.Vertex[3].Z;
-                  }
-
+                  ElementVertices(ele, polynode);
                   // printf("neBEMChkInPoly for element %d\n", ele);
                   SumOfAngles = neBEMChkInPoly(nvert, polynode, ptintsct);
                   if (fabs(fabs(SumOfAngles) - neBEMtwopi) <= 1.0e-8) InEle = 1;
@@ -3707,20 +3412,7 @@ int InitChargingUp(void) {
                   printf("#NbChUpIonEle on element: %d\n",
                          NbChUpIonEle[EleIntsctd]);
                   fprintf(ftmpIF, "#Element: %d\n", EleIntsctd);
-                  polynode[0].X = (EleArr + EleIntsctd - 1)->G.Vertex[0].X;
-                  polynode[0].Y = (EleArr + EleIntsctd - 1)->G.Vertex[0].Y;
-                  polynode[0].Z = (EleArr + EleIntsctd - 1)->G.Vertex[0].Z;
-                  polynode[1].X = (EleArr + EleIntsctd - 1)->G.Vertex[1].X;
-                  polynode[1].Y = (EleArr + EleIntsctd - 1)->G.Vertex[1].Y;
-                  polynode[1].Z = (EleArr + EleIntsctd - 1)->G.Vertex[1].Z;
-                  polynode[2].X = (EleArr + EleIntsctd - 1)->G.Vertex[2].X;
-                  polynode[2].Y = (EleArr + EleIntsctd - 1)->G.Vertex[2].Y;
-                  polynode[2].Z = (EleArr + EleIntsctd - 1)->G.Vertex[2].Z;
-                  if (nvert == 4) {
-                    polynode[3].X = (EleArr + EleIntsctd - 1)->G.Vertex[3].X;
-                    polynode[3].Y = (EleArr + EleIntsctd - 1)->G.Vertex[3].Y;
-                    polynode[3].Z = (EleArr + EleIntsctd - 1)->G.Vertex[3].Z;
-                  }
+                  ElementVertices(EleIntsctd, polynode);
                   fprintf(ftmpIF, "%lg %lg %lg\n", polynode[0].X, polynode[0].Y,
                           polynode[0].Z);
                   fprintf(ftmpIF, "%lg %lg %lg\n", polynode[1].X, polynode[1].Y,
@@ -3792,25 +3484,15 @@ int InitChargingUp(void) {
                 int gtype = (EleArr + EleIntsctd - 1)->G.Type;
                 fprintf(fipd, "#EleType: %d\n", gtype);
                 fprintf(fipd, "#element vertices:\n");
-                double x0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].X;
-                double y0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].Y;
-                double z0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].Z;
-                double x1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].X;
-                double y1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].Y;
-                double z1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].Z;
-                double x2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].X;
-                double y2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].Y;
-                double z2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].Z;
-                fprintf(fipd, "%lg %lg %lg\n", x0, y0, z0);
-                fprintf(fipd, "%lg %lg %lg\n", x1, y1, z1);
-                fprintf(fipd, "%lg %lg %lg\n", x2, y2, z2);
+                Point3D vtx[4];
+                ElementVertices(EleIntsctd, vtx);
+                fprintf(fipd, "%lg %lg %lg\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
+                fprintf(fipd, "%lg %lg %lg\n", vtx[1].X, vtx[1].Y, vtx[1].Z);
+                fprintf(fipd, "%lg %lg %lg\n", vtx[2].X, vtx[2].Y, vtx[2].Z);
                 if (gtype == 4) {
-                  double x3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].X;
-                  double y3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].Y;
-                  double z3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].Z;
-                  fprintf(fipd, "%lg %lg %lg\n", x3, y3, z3);
+                  fprintf(fipd, "%lg %lg %lg\n", vtx[3].X, vtx[3].Y, vtx[3].Z);
                 }
-                fprintf(fipd, "%lg %lg %lg\n", x0, y0, z0);
+                fprintf(fipd, "%lg %lg %lg\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
                 fprintf(fipd, "\n");
 
                 fprintf(fipd, "#ptintsct:\n");
