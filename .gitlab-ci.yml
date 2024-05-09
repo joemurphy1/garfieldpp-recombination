@@ -21,25 +21,6 @@ build-alma9:
       #   paths:
       #     - "*.o"  
       
-build-centos7:
-  stage: build
-  image: rootproject/root:6.24.06-centos7
-  before_script:
-    - yum install libXmu-devel motif-devel -y
-  script:
-    - rm -rf build
-    - mkdir build
-    - cd build
-    - cmake3 -DCMAKE_INSTALL_PREFIX=/usr/local -DROOTSYS=/usr/lib ../
-    - make -j4
-    - make install
-  artifacts:
-    paths:
-      # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
-      # cache:
-      #   paths:
-      #     - "*.o"
-
 # Docker image chosen to match build instructions at:
 # https://garfieldpp.web.cern.ch/garfieldpp/getting-started/
 #build-centos7-view97:
