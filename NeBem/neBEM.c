@@ -355,10 +355,10 @@ int LHMatrix(void) {
 
       // Retrieve element properties at the field point
       // boundary condn applied at collocation point
-      const double xfld = (EleArr + elefld - 1)->BC.CollPt.X;
-      const double yfld = (EleArr + elefld - 1)->BC.CollPt.Y;
-      const double zfld = (EleArr + elefld - 1)->BC.CollPt.Z;
-
+      Point3D collPt = CollocationPoint(elefld);
+      const double xfld = collPt.X;
+      const double yfld = collPt.Y;
+      const double zfld = collPt.Z;
 #ifdef _OPENMP
 #pragma omp for
 #endif
@@ -2114,9 +2114,10 @@ double ValueKnCh(int elefld) {
 
   double value = 0.0;
   double assigned = 0.0;
-  double xfld = (EleArr + elefld - 1)->BC.CollPt.X;
-  double yfld = (EleArr + elefld - 1)->BC.CollPt.Y;
-  double zfld = (EleArr + elefld - 1)->BC.CollPt.Z;
+  Point3D collPt = CollocationPoint(elefld);
+  double xfld = collPt.X;
+  double yfld = collPt.Y;
+  double zfld = collPt.Z;
 
   // Retrieve element properties at the field point
   // Location needed for Dirichlet (potential)
@@ -2283,9 +2284,10 @@ double ContinuityKnCh(int elefld) {
 
   double value = 0.0;
   double assigned = 0.0;
-  double xfld = (EleArr + elefld - 1)->BC.CollPt.X;
-  double yfld = (EleArr + elefld - 1)->BC.CollPt.Y;
-  double zfld = (EleArr + elefld - 1)->BC.CollPt.Z;
+  Point3D collPt = CollocationPoint(elefld);
+  double xfld = collPt.X;
+  double yfld = collPt.Y;
+  double zfld = collPt.Z;
   const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
   DirnCosn3D* dcfld = &PrimDC[primfld];
 
@@ -2474,6 +2476,37 @@ double ElementArea(int ele) {
   return area;
 }
 
+Point3D CollocationPoint(int ele) {
+  Point3D pt;
+  Element* eleptr = EleArr + ele - 1;
+  if (eleptr->G.Type == 2 || eleptr->G.Type == 4) {
+    // For wires and rectangles, the collocation point is 
+    // identical to the origin.
+    pt.X = eleptr->G.Origin.X;
+    pt.Y = eleptr->G.Origin.Y;
+    pt.Z = eleptr->G.Origin.Z;
+  } else if (eleptr->G.Type == 3) {
+    // Triangle
+    // Barycenter location in the ECS
+    Point3D localDisp;
+    localDisp.X = eleptr->G.LX / 3.;
+    localDisp.Y = 0.;
+    localDisp.Z = eleptr->G.LZ / 3.;
+    // Rotate into the global frame.
+    const int prim = eleptr->PrimitiveNb;
+    Point3D globalDisp = RotatePoint3D(&localDisp, &PrimDC[prim], local2global);
+    pt.X = eleptr->G.Origin.X + globalDisp.X;
+    pt.Y = eleptr->G.Origin.Y + globalDisp.Y;
+    pt.Z = eleptr->G.Origin.Z + globalDisp.Z;
+  } else {
+    printf("Geometrical type out of range!\n");
+    pt.X = eleptr->G.Origin.X;
+    pt.Y = eleptr->G.Origin.Y;
+    pt.Z = eleptr->G.Origin.Z;
+  }
+  return pt;
+}
+
 // Effect of charging up on the Dirichlet boundary conditions
 double ValueChUp(int elefld) {
   int dbgFn = 0;
@@ -2485,9 +2518,10 @@ double ValueChUp(int elefld) {
 
   double value = 0.0;
   double assigned = 0.0;
-  double xfld = (EleArr + elefld - 1)->BC.CollPt.X;
-  double yfld = (EleArr + elefld - 1)->BC.CollPt.Y;
-  double zfld = (EleArr + elefld - 1)->BC.CollPt.Z;
+  Point3D collPt = CollocationPoint(elefld);
+  const double xfld = collPt.X;
+  const double yfld = collPt.Y;
+  const double zfld = collPt.Z;
 
   // Retrieve element properties at the field point
   // Location needed for Dirichlet (potential)
@@ -2631,9 +2665,10 @@ double ContinuityChUp(int elefld) {
 
   double value = 0.0;
   double assigned = 0.0;
-  double xfld = (EleArr + elefld - 1)->BC.CollPt.X;
-  double yfld = (EleArr + elefld - 1)->BC.CollPt.Y;
-  double zfld = (EleArr + elefld - 1)->BC.CollPt.Z;
+  Point3D collPt = CollocationPoint(elefld);
+  const double xfld = collPt.X;
+  const double yfld = collPt.Y;
+  const double zfld = collPt.Z;
   const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
   DirnCosn3D* dcfld = &PrimDC[primfld];
 
@@ -3264,9 +3299,8 @@ int Solve(void) {
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
             double xminus = xb - PrimDC[prim].XUnit.X * normdisp;
             xminus -= PrimDC[prim].YUnit.X * normdisp;
@@ -3494,9 +3528,8 @@ int Solve(void) {
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
             double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
             xminus -= PrimDC[prim].YUnit.X * normdisp;
@@ -3602,17 +3635,15 @@ int Solve(void) {
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double dispfld2 = Epsilon2[prim] * localF.Y;
             globalP.X = xo;
             globalP.Y = yo;
             globalP.Z = zo;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double dispfldo = Epsilon1[prim] * localF.Y;
             Err = (dispfld2 - dispfld1) /
                   dispfldo;  // - (&(EleArr+ele-1)->Assigned);
@@ -3678,9 +3709,8 @@ int Solve(void) {
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
             double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
             xminus -= PrimDC[prim].YUnit.X * normdisp;
@@ -3695,9 +3725,8 @@ int Solve(void) {
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
@@ -3754,9 +3783,8 @@ int Solve(void) {
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
             double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
             xminus -= PrimDC[prim].YUnit.X * normdisp;
@@ -3771,9 +3799,8 @@ int Solve(void) {
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);

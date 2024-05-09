@@ -720,7 +720,7 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                              ele - EleArr + 1, vL[0], vL[1], vL[2]);
                       printf("    Solution: %g\n", qel);
                       printf("    tPot: %lg, tFx: %lg, tFy: %lg, tFz: %lg\n",
-                             tPot, tF.X, tF.Y, tF.Z, qel);
+                             tPot, tF.X, tF.Y, tF.Z);
                       printf("    ePot: %lg, eFx: %lg, eFy: %lg, eFz: %lg\n",
                              erPot, erF.X, erF.Y, erF.Z);
                       fflush(stdout);

@@ -675,15 +675,11 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->G.LZ = WireElL;  // wire element length
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
-    // Modify collocation point to be on the surface?
-    (EleArr + EleCntr - 1)->BC.CollPt.X = (EleArr + EleCntr - 1)->G.Origin.X;
-    (EleArr + EleCntr - 1)->BC.CollPt.Y = (EleArr + EleCntr - 1)->G.Origin.Y;
-    (EleArr + EleCntr - 1)->BC.CollPt.Z = (EleArr + EleCntr - 1)->G.Origin.Z;
 
     // File operations begin
     // rfw = fwrite(&Ele, sizeof(Element), 1, fpEle);
     // printf("Return of fwrite is %d\n", rfw);
-
+    Point3D collPt = CollocationPoint(EleCntr);
     if (OptElementFiles) {
       fprintf(fElem, "##Element Counter: %d\n", EleCntr);
       fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
@@ -710,17 +706,12 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
       fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
       fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
       fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n", 1,
-              (EleArr + EleCntr - 1)->BC.CollPt.X,
-              (EleArr + EleCntr - 1)->BC.CollPt.Y,
-              (EleArr + EleCntr - 1)->BC.CollPt.Z,
-              ApplPot[prim]);
+              collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
     }  // if OptElementFiles
        //
     // mark centroid
     if (OptGnuplot && OptGnuplotElements) {
-      fprintf(fgpElem, "%g\t%g\t%g\n", (EleArr + EleCntr - 1)->BC.CollPt.X,
-              (EleArr + EleCntr - 1)->BC.CollPt.Y,
-              (EleArr + EleCntr - 1)->BC.CollPt.Z);
+      fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
     }  // if OptElementFiles
        // File operations end
   }    // seg loop for wire elements
@@ -1168,38 +1159,8 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       printf("Element (primitive) Z axis dirn cosines: %lg, %lg, %lg\n",
              pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
     }
-    // Following are the location in the ECS
-    double dxl = (EleArr + EleCntr - 1)->G.LX / 3.0;
-    double dyl = 0.0;
-    double dzl = (EleArr + EleCntr - 1)->G.LZ / 3.0;
-    {  // Separate block for position rotation - local2global
-      Point3D localDisp, globalDisp;
 
-      localDisp.X = dxl;
-      localDisp.Y = dyl;
-      localDisp.Z = dzl;
-      if (DebugLevel == 201) {
-        printf("Element dxl, dxy, dxz: %lg %lg %lg\n", localDisp.X, localDisp.Y,
-               localDisp.Z);
-      }
-
-      globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
-      (EleArr + EleCntr - 1)->BC.CollPt.X =
-          (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-      (EleArr + EleCntr - 1)->BC.CollPt.Y =
-          (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-      (EleArr + EleCntr - 1)->BC.CollPt.Z =
-          (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      if (DebugLevel == 201) {
-        printf("Element global dxl, dxy, dxz: %lg %lg %lg\n", globalDisp.X,
-               globalDisp.Y, globalDisp.Z);
-        printf("Element BCX, BCY, BCZ: %lg %lg %lg\n",
-               (EleArr + EleCntr - 1)->BC.CollPt.X,
-               (EleArr + EleCntr - 1)->BC.CollPt.Y,
-               (EleArr + EleCntr - 1)->BC.CollPt.Z);
-      }
-    }  // vector rotation over
-
+    Point3D collPt = CollocationPoint(EleCntr);
     if (OptElementFiles) {
       fprintf(fElem, "##Element Counter: %d\n", EleCntr);
       fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
@@ -1226,17 +1187,12 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
       fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
       fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n", 1,
-              (EleArr + EleCntr - 1)->BC.CollPt.X,
-              (EleArr + EleCntr - 1)->BC.CollPt.Y,
-              (EleArr + EleCntr - 1)->BC.CollPt.Z,
-              ApplPot[prim]);
+              collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
     }  // if OptElementFiles
 
     // mark bary-center and draw mesh
     if (OptGnuplot && OptGnuplotElements) {
-      fprintf(fgpElem, "%g\t%g\t%g\n", (EleArr + EleCntr - 1)->BC.CollPt.X,
-              (EleArr + EleCntr - 1)->BC.CollPt.Y,
-              (EleArr + EleCntr - 1)->BC.CollPt.Z);
+      fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
 
       // draw mesh
       // assign vertices of the element
@@ -1315,12 +1271,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
           zhipt - zlopt;  // to be on the safe side! 21/2/14
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
-      // Boundary condition is applied at the origin for this rectangular
-      // element coordinate system (ECS)
-      // Following are the location in the ECS
-      (EleArr + EleCntr - 1)->BC.CollPt.X = (EleArr + EleCntr - 1)->G.Origin.X;
-      (EleArr + EleCntr - 1)->BC.CollPt.Y = (EleArr + EleCntr - 1)->G.Origin.Y;
-      (EleArr + EleCntr - 1)->BC.CollPt.Z = (EleArr + EleCntr - 1)->G.Origin.Z;
       // find element vertices
       // 1) displacement vector in the ECS is first identified
       // 2) this vector is transformed to the GCS
@@ -1429,17 +1379,12 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
         fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
         fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n", 1,
-                (EleArr + EleCntr - 1)->BC.CollPt.X,
-                (EleArr + EleCntr - 1)->BC.CollPt.Y,
-                (EleArr + EleCntr - 1)->BC.CollPt.Z,
-                ApplPot[prim]);
+                collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
       }  // if OptElementFiles
 
       // draw centroid and mesh
       if (OptGnuplot && OptGnuplotElements) {
-        fprintf(fgpElem, "%g\t%g\t%g\n", (EleArr + EleCntr - 1)->BC.CollPt.X,
-                (EleArr + EleCntr - 1)->BC.CollPt.Y,
-                (EleArr + EleCntr - 1)->BC.CollPt.Z);
+        fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
       }  // if OptGnuplot && OptGnuplotElements
 
       if (OptGnuplot && OptGnuplotElements) {
@@ -1798,10 +1743,8 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
-      (EleArr + EleCntr - 1)->BC.CollPt.X = (EleArr + EleCntr - 1)->G.Origin.X;
-      (EleArr + EleCntr - 1)->BC.CollPt.Y = (EleArr + EleCntr - 1)->G.Origin.Y;
-      (EleArr + EleCntr - 1)->BC.CollPt.Z = (EleArr + EleCntr - 1)->G.Origin.Z;
 
+      Point3D collPt = CollocationPoint(EleCntr);
       // find element vertices
       // 1) displacement vector in the ECS is first identified
       // 2) this vector is transformed to the GCS
@@ -1910,17 +1853,12 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
         fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
         fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
         fprintf(fElem, "%d\t%lg\t%lg\t%lg\t%lg\n", 1,
-                (EleArr + EleCntr - 1)->BC.CollPt.X,
-                (EleArr + EleCntr - 1)->BC.CollPt.Y,
-                (EleArr + EleCntr - 1)->BC.CollPt.Z,
-                ApplPot[prim]);
+                collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
       }  // if OptElementFiles
 
       // mark centroid
       if (OptGnuplot && OptGnuplotElements) {
-        fprintf(fgpElem, "%g\t%g\t%g\n", (EleArr + EleCntr - 1)->BC.CollPt.X,
-                (EleArr + EleCntr - 1)->BC.CollPt.Y,
-                (EleArr + EleCntr - 1)->BC.CollPt.Z);
+        fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
       }  // if OptGnuplot && OptGnuplotElements
 
       if (OptGnuplot && OptGnuplotElements) {

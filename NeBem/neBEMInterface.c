@@ -1681,19 +1681,11 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
 
   // Check whether collocation points overlap
   {
-    int startcntr = 1, cntr1, cntr2;
-    Point3D pt1, pt2;
-    double dist;
-    for (cntr1 = startcntr; cntr1 <= EleCntr; ++cntr1) {
-      pt1.X = (EleArr + cntr1 - 1)->BC.CollPt.X;
-      pt1.Y = (EleArr + cntr1 - 1)->BC.CollPt.Y;
-      pt1.Z = (EleArr + cntr1 - 1)->BC.CollPt.Z;
-      for (cntr2 = cntr1 + 1; cntr2 <= EleCntr; ++cntr2) {
-        pt2.X = (EleArr + cntr2 - 1)->BC.CollPt.X;
-        pt2.Y = (EleArr + cntr2 - 1)->BC.CollPt.Y;
-        pt2.Z = (EleArr + cntr2 - 1)->BC.CollPt.Z;
-
-        dist = GetDistancePoint3D(&pt1, &pt2);
+    for (int cntr1 = 1; cntr1 <= EleCntr; ++cntr1) {
+      Point3D pt1 = CollocationPoint(cntr1); 
+      for (int cntr2 = cntr1 + 1; cntr2 <= EleCntr; ++cntr2) {
+        Point3D pt2 = CollocationPoint(cntr2); 
+        double dist = GetDistancePoint3D(&pt1, &pt2);
         if (dist <= MINDIST)  {
           // we need a linked-list here so that the overlapped
           // element is easily deleted and the rest upgraded immediately
@@ -2905,6 +2897,7 @@ int WriteElements(void) {
 
   for (int ele = 1; ele <= NbElements; ++ele) {
     const int prim = (EleArr + ele - 1)->PrimitiveNb;
+    Point3D collPt = CollocationPoint(ele);
     fprintf(fStrEle, "%d %d %d %d %d\n", 1, 1,
             (EleArr + ele - 1)->PrimitiveNb, 1, ele);
     fprintf(fStrEle, "%d %le %le %le %le %le %le\n", (EleArr + ele - 1)->G.Type,
@@ -2919,8 +2912,7 @@ int WriteElements(void) {
             PrimDC[prim].ZUnit.Y, PrimDC[prim].ZUnit.Z);
     fprintf(fStrEle, "%d %le\n", InterfaceType[prim], Lambda[prim]);
     fprintf(fStrEle, "%d %le %le %le %le\n", 1,
-            (EleArr + ele - 1)->BC.CollPt.X, (EleArr + ele - 1)->BC.CollPt.Y,
-            (EleArr + ele - 1)->BC.CollPt.Z, ApplPot[prim]);
+            collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
     fprintf(fStrEle, "%le %le\n", (EleArr + ele - 1)->Solution,
             (EleArr + ele - 1)->Assigned);
   }
@@ -3179,6 +3171,7 @@ int ReadElements(void) {
     double lambda;
     short int etype;
     short int nbcs;
+    double cptx, cpty, cptz;
     double bcvalue;
     fscanf(fStrEle, "%hd %d %d %d %d\n", &devicenb, &componentnb,
            &(EleArr + ele - 1)->PrimitiveNb, &interfaceid, &elementid);
@@ -3191,8 +3184,7 @@ int ReadElements(void) {
     fscanf(fStrEle, "%le %le %le\n", &dc.ZUnit.X, &dc.ZUnit.Y, &dc.ZUnit.Z);
     fscanf(fStrEle, "%hd %le\n", &etype, &lambda);
     fscanf(fStrEle, "%hd %le %le %le %le\n", &nbcs,
-           &(EleArr + ele - 1)->BC.CollPt.X, &(EleArr + ele - 1)->BC.CollPt.Y,
-           &(EleArr + ele - 1)->BC.CollPt.Z, &bcvalue);
+           &cptx, &cpty, &cptz, &bcvalue);
     fscanf(fStrEle, "%le %le\n", &(EleArr + ele - 1)->Solution,
            &(EleArr + ele - 1)->Assigned);
   }

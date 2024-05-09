@@ -146,13 +146,8 @@ typedef struct {
 } GeomProp;
 
 typedef struct {
-  Point3D CollPt;     // Collocation (only one, for the time being)
-} BCProp;
-
-typedef struct {
   int PrimitiveNb;    // Index of the primitive to which the element belongs
   GeomProp G;  // geomtype, origin, vertex, lengths, area
-  BCProp BC;   // boundary condn properties (should this BC thing be freed?)
   double Solution;  // accumulated charge, or similar solution
   double Assigned;  // assigned charge, or similar property
 } Element;
@@ -323,7 +318,7 @@ neBEMGLOBAL double EffectKnCh(int fld);
 neBEMGLOBAL double ValueKnCh(int fld);
 neBEMGLOBAL double ContinuityKnCh(int fld);
 neBEMGLOBAL double ElementArea(int ele);
-
+neBEMGLOBAL Point3D CollocationPoint(int ele);
 // Weighting field charge density solution
 // arguments: boundary condition array, and the solution (charge density, for
 // electrostatic problems) array; returns success (0) or failure (non-zero)
