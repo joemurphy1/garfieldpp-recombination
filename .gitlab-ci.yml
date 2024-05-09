@@ -24,7 +24,7 @@ build-alma9:
       
 build-centos7:
   stage: build
-  image: rootproject/root:6.22.02-centos7
+  image: rootproject/root:6.24.06-centos7
   before_script:
     - yum install libXmu-devel motif-devel -y
   script:
