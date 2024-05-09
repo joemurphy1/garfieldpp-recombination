@@ -319,6 +319,8 @@ neBEMGLOBAL double ValueKnCh(int fld);
 neBEMGLOBAL double ContinuityKnCh(int fld);
 neBEMGLOBAL double ElementArea(int ele);
 neBEMGLOBAL Point3D CollocationPoint(int ele);
+neBEMGLOBAL void ElementVertices(int ele, Point3D vertices[4]);
+
 // Weighting field charge density solution
 // arguments: boundary condition array, and the solution (charge density, for
 // electrostatic problems) array; returns success (0) or failure (non-zero)

@@ -2488,16 +2488,16 @@ Point3D CollocationPoint(int ele) {
   } else if (eleptr->G.Type == 3) {
     // Triangle
     // Barycenter location in the ECS
-    Point3D localDisp;
-    localDisp.X = eleptr->G.LX / 3.;
-    localDisp.Y = 0.;
-    localDisp.Z = eleptr->G.LZ / 3.;
+    Point3D vL;
+    vL.X = eleptr->G.LX / 3.;
+    vL.Y = 0.;
+    vL.Z = eleptr->G.LZ / 3.;
     // Rotate into the global frame.
     const int prim = eleptr->PrimitiveNb;
-    Point3D globalDisp = RotatePoint3D(&localDisp, &PrimDC[prim], local2global);
-    pt.X = eleptr->G.Origin.X + globalDisp.X;
-    pt.Y = eleptr->G.Origin.Y + globalDisp.Y;
-    pt.Z = eleptr->G.Origin.Z + globalDisp.Z;
+    Point3D vG = RotatePoint3D(&vL, &PrimDC[prim], local2global);
+    pt.X = eleptr->G.Origin.X + vG.X;
+    pt.Y = eleptr->G.Origin.Y + vG.Y;
+    pt.Z = eleptr->G.Origin.Z + vG.Z;
   } else {
     printf("Geometrical type out of range!\n");
     pt.X = eleptr->G.Origin.X;
@@ -2505,6 +2505,80 @@ Point3D CollocationPoint(int ele) {
     pt.Z = eleptr->G.Origin.Z;
   }
   return pt;
+}
+
+void ElementVertices(int ele, Point3D vertices[4]) {
+
+  Element* eleptr = EleArr + ele - 1;
+  const int prim = eleptr->PrimitiveNb;
+  const double x0 = eleptr->G.Origin.X;
+  const double y0 = eleptr->G.Origin.Y;
+  const double z0 = eleptr->G.Origin.Z;
+  if (eleptr->G.Type == 2) {
+    // Wire
+    const double dx = PrimDC[prim].ZUnit.X;
+    const double dy = PrimDC[prim].ZUnit.Y;
+    const double dz = PrimDC[prim].ZUnit.Z;
+    const double h = 0.5 * eleptr->G.LZ;
+    vertices[0].X = x0 - h * dx;
+    vertices[0].Y = y0 - h * dy;
+    vertices[0].Z = z0 - h * dz;
+    vertices[1].X = x0 + h * dx;
+    vertices[1].Y = y0 + h * dy;
+    vertices[1].Z = z0 + h * dz;
+    vertices[2].X = vertices[2].Y = vertices[2].Z = 0.;
+    vertices[3].X = vertices[3].Y = vertices[3].Z = 0.;
+  } else if (eleptr->G.Type == 3) {
+    // Triangle
+    vertices[0].X = x0;
+    vertices[0].Y = y0;
+    vertices[0].Z = z0;
+    vertices[1].X = x0 + eleptr->G.LX * PrimDC[prim].XUnit.X;
+    vertices[1].Y = y0 + eleptr->G.LX * PrimDC[prim].XUnit.Y;
+    vertices[1].Z = z0 + eleptr->G.LX * PrimDC[prim].XUnit.Z;
+    vertices[2].X = x0 + eleptr->G.LZ * PrimDC[prim].ZUnit.X;
+    vertices[2].Y = y0 + eleptr->G.LZ * PrimDC[prim].ZUnit.Y;
+    vertices[2].Z = z0 + eleptr->G.LZ * PrimDC[prim].ZUnit.Z;
+    vertices[3].X = 0.;
+    vertices[3].Y = 0.;
+    vertices[3].Z = 0.;
+  } else if (eleptr->G.Type == 4) {
+    // Rectangle
+    // Half-widths
+    const double hx = 0.5 * eleptr->G.LX;
+    const double hz = 0.5 * eleptr->G.LZ;
+    Point3D vL;
+    vL.X = -hx;
+    vL.Y = 0.;
+    vL.Z = -hz;
+    Point3D vG = RotatePoint3D(&vL, &PrimDC[prim], local2global);
+    vertices[0].X = x0 + vG.X;
+    vertices[0].Y = y0 + vG.Y;
+    vertices[0].Z = z0 + vG.Z;
+
+    vL.X = hx;
+    vL.Z = -hz;
+    vG = RotatePoint3D(&vL, &PrimDC[prim], local2global);
+    vertices[1].X = x0 + vG.X;
+    vertices[1].Y = y0 + vG.Y;
+    vertices[1].Z = z0 + vG.Z;
+
+    vL.X = hx;
+    vL.Z = hz;
+    vG = RotatePoint3D(&vL, &PrimDC[prim], local2global);
+    vertices[2].X = x0 + vG.X;
+    vertices[2].Y = y0 + vG.Y;
+    vertices[2].Z = z0 + vG.Z;
+
+    vL.X = -hx;
+    vL.Z = hz;
+    vG = RotatePoint3D(&vL, &PrimDC[prim], local2global);
+    vertices[3].X = x0 + vG.X;
+    vertices[3].Y = y0 + vG.Y;
+    vertices[3].Z = z0 + vG.Z;
+  } else {
+    printf("Geometrical type out of range!\n");
+  }
 }
 
 // Effect of charging up on the Dirichlet boundary conditions

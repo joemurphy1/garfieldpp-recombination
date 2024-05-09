@@ -693,15 +693,9 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
               (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
               (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
       fprintf(fElem, "#DirnCosn: \n");
-      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
-              PrimDC[prim].XUnit.Y,
-              PrimDC[prim].XUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].YUnit.X,
-              PrimDC[prim].YUnit.Y,
-              PrimDC[prim].YUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].ZUnit.X,
-              PrimDC[prim].ZUnit.Y,
-              PrimDC[prim].ZUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
       fprintf(fElem, "#EType\tLambda\n");
       fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
       fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
@@ -1174,15 +1168,9 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
               (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
               (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
       fprintf(fElem, "#DirnCosn: \n");
-      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
-              PrimDC[prim].XUnit.Y,
-              PrimDC[prim].XUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].YUnit.X,
-              PrimDC[prim].YUnit.Y,
-              PrimDC[prim].YUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].ZUnit.X,
-              PrimDC[prim].ZUnit.Y,
-              PrimDC[prim].ZUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
       fprintf(fElem, "#EType\tLambda\n");
       fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
       fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
@@ -1230,7 +1218,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     double x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3;
     for (int i = 1; i <= NbSegXOnThisRow; ++i) {
       double xorigin = (i - 1) * ElLXOnThisRow + 0.5 * ElLXOnThisRow;  // PCS
-      double yorigin = 0.0;  // centroid of the rectagnular element
+      double yorigin = 0.0;  // centroid of the rectangular element
       double zorigin = 0.5 * (zlopt + zhipt);
       // printf("k: %d, i: %d, xo: %lg, yo: %lg, zo: %lg\n", k, i,
       // xorigin, yorigin, zorigin);
@@ -1366,15 +1354,9 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
             (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
             (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
         fprintf(fElem, "#DirnCosn: \n");
-        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
-                PrimDC[prim].XUnit.Y,
-                PrimDC[prim].XUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].YUnit.X,
-                PrimDC[prim].YUnit.Y,
-                PrimDC[prim].YUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].ZUnit.X,
-                PrimDC[prim].ZUnit.Y,
-                PrimDC[prim].ZUnit.Z);
+        fprintf(fElem, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
+        fprintf(fElem, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
+        fprintf(fElem, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
         fprintf(fElem, "#EType\tLambda\n");
         fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
         fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
