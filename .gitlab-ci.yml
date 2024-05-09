@@ -2,7 +2,6 @@
 # https://github.com/root-project/root-docker
 
 
-# C++11 images
 build-alma9:
   stage: build
   image: rootproject/root:6.30.02-alma9
@@ -80,7 +79,6 @@ build-ubuntu22:
     - make -j4
     - make install
 
-# C++14 images
 build-fedora32:
   stage: build
   image: rootproject/root:6.22.02-fedora32
