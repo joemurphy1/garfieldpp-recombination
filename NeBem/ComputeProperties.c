@@ -549,14 +549,13 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
         eF.X = 0.0;
         eF.Y = 0.0;
         eF.Z = 0.0;
-        const int eleMin = ElementBgn[primsrc];
-        const int eleMax = ElementEnd[primsrc];
-        for (int ele = eleMin; ele <= eleMax; ++ele) {
-          const double xsrc = (EleArr + ele - 1)->G.Origin.X;
-          const double ysrc = (EleArr + ele - 1)->G.Origin.Y;
-          const double zsrc = (EleArr + ele - 1)->G.Origin.Z;
+        const Element* eleBgn = EleArr + ElementBgn[primsrc] - 1;
+        const Element* eleEnd = EleArr + ElementEnd[primsrc] - 1;
+        for (const Element* ele = eleBgn; ele <= eleEnd; ++ele) {
           // Rotate from global to local system; matrix as for primitive
-          double vG[3] = {xfld - xsrc, yfld - ysrc, zfld - zsrc};
+          double vG[3] = {xfld - ele->G.Origin.X, 
+                          yfld - ele->G.Origin.Y, 
+                          zfld - ele->G.Origin.Z};
           double vL[3] = {0., 0., 0.};
           for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
@@ -564,12 +563,8 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
             }
           }
           // Potential and flux (local system) due to base primitive
-          const int type = (EleArr + ele - 1)->G.Type;
-          const double a = (EleArr + ele - 1)->G.LX;
-          const double b = (EleArr + ele - 1)->G.LZ;
-          GetPF(type, a, b, vL[0], vL[1], vL[2], &tPot, &tF);
-          const double qel =
-              (EleArr + ele - 1)->Solution + (EleArr + ele - 1)->Assigned;
+          GetPF(ele->G.Type, ele->G.LX, ele->G.LZ, vL[0], vL[1], vL[2], &tPot, &tF);
+          const double qel = ele->Solution + ele->Assigned;
           ePot += qel * tPot;
           eF.X += qel * tF.X;
           eF.Y += qel * tF.Y;
@@ -577,13 +572,12 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
           // if(DebugLevel == 301)
           if (dbgFn) {
             printf("PFAtPoint base primitive:%d\n", primsrc);
-            printf("ele: %d, xlocal: %lg, ylocal: %lg, zlocal %lg\n", ele,
-                   vL[0], vL[1], vL[2]);
-            printf(
-                "ele: %d, tPot: %lg, tFx: %lg, tFy: %lg, tFz: %lg, Solution: "
-                "%g\n",
-                ele, tPot, tF.X, tF.Y, tF.Z, qel);
-            printf("ele: %d, ePot: %lg, eFx: %lg, eFy: %lg, eFz: %lg\n", ele,
+            printf("Element: %ld, xlocal: %lg, ylocal: %lg, zlocal %lg\n", 
+                   ele - EleArr + 1, vL[0], vL[1], vL[2]);
+            printf("    Solution: %g\n", qel);
+            printf("    tPot: %lg, tFx: %lg, tFy: %lg, tFz: %lg\n",
+                   tPot, tF.X, tF.Y, tF.Z);
+            printf("    ePot: %lg, eFx: %lg, eFy: %lg, eFz: %lg\n", 
                    ePot, eF.X, eF.Y, eF.Z);
             fflush(stdout);
           }
@@ -695,16 +689,12 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                   erF.X = 0.0;
                   erF.Y = 0.0;
                   erF.Z = 0.0;
-                  const int eleMin = ElementBgn[primsrc];
-                  const int eleMax = ElementEnd[primsrc];
-                  for (int ele = eleMin; ele <= eleMax; ++ele) {
-                    const double xrsrc = (EleArr + ele - 1)->G.Origin.X;
-                    const double yrsrc = (EleArr + ele - 1)->G.Origin.Y;
-                    const double zrsrc = (EleArr + ele - 1)->G.Origin.Z;
-
-                    const double XEOfRpt = xrsrc + xShift;
-                    const double YEOfRpt = yrsrc + yShift;
-                    const double ZEOfRpt = zrsrc + zShift;
+                  const Element* eleBgn = EleArr + ElementBgn[primsrc] - 1;
+                  const Element* eleEnd = EleArr + ElementEnd[primsrc] - 1;
+                  for (const Element* ele = eleBgn; ele <= eleEnd; ++ele) {
+                    const double XEOfRpt = ele->G.Origin.X + xShift;
+                    const double YEOfRpt = ele->G.Origin.Y + yShift;
+                    const double ZEOfRpt = ele->G.Origin.Z + zShift;
                     // Rotate from global to local system
                     double vG[3] = {xfld - XEOfRpt, yfld - YEOfRpt,
                                     zfld - ZEOfRpt};
@@ -717,12 +707,8 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                     // Allowed, because all the local coordinates have the
                     // same orientations. Only the origins are mutually
                     // displaced along a line.
-                    const int type = (EleArr + ele - 1)->G.Type;
-                    const double a = (EleArr + ele - 1)->G.LX;
-                    const double b = (EleArr + ele - 1)->G.LZ;
-                    GetPF(type, a, b, vL[0], vL[1], vL[2], &tPot, &tF);
-                    const double qel = (EleArr + ele - 1)->Solution +
-                                       (EleArr + ele - 1)->Assigned;
+                    GetPF(ele->G.Type, ele->G.LX, ele->G.LZ, vL[0], vL[1], vL[2], &tPot, &tF);
+                    const double qel = ele->Solution + ele->Assigned;
                     erPot += qel * tPot;
                     erF.X += qel * tF.X;
                     erF.Y += qel * tF.Y;
@@ -730,15 +716,13 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                     // if(DebugLevel == 301)
                     if (dbgFn) {
                       printf("PFAtPoint base primitive:%d\n", primsrc);
-                      printf("ele: %d, xlocal: %lg, ylocal: %lg, zlocal %lg\n",
-                             ele, vL[0], vL[1], vL[2]);
-                      printf(
-                          "ele: %d, tPot: %lg, tFx: %lg, tFy: %lg, tFz: %lg, "
-                          "Solution: %g\n",
-                          ele, tPot, tF.X, tF.Y, tF.Z, qel);
-                      printf(
-                          "ele: %d, ePot: %lg, eFx: %lg, eFy: %lg, eFz: %lg\n",
-                          ele, erPot, erF.X, erF.Y, erF.Z);
+                      printf("Element: %ld, xlocal: %lg, ylocal: %lg, zlocal %lg\n",
+                             ele - EleArr + 1, vL[0], vL[1], vL[2]);
+                      printf("    Solution: %g\n", qel);
+                      printf("    tPot: %lg, tFx: %lg, tFy: %lg, tFz: %lg\n",
+                             tPot, tF.X, tF.Y, tF.Z, qel);
+                      printf("    ePot: %lg, eFx: %lg, eFy: %lg, eFz: %lg\n",
+                             erPot, erF.X, erF.Y, erF.Z);
                       fflush(stdout);
                     }
                   }  // for all the elements on this primsrc repeated
