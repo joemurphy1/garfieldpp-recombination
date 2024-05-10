@@ -3082,8 +3082,8 @@ int ReadPrimitives(void) {
     MirrorTypeX[prim] = 0;
     MirrorTypeY[prim] = 0;
     MirrorTypeZ[prim] = 0;
-    char PrimFile[256];
-    snprintf(PrimFile, 256, "%s/Primitives/Primitive%d.out",
+    char PrimFile[300];
+    snprintf(PrimFile, 300, "%s/Primitives/Primitive%d.out",
              ModelOutDir, prim);
     FILE *fPrim = fopen(PrimFile, "r");
     if (fPrim == NULL) {
