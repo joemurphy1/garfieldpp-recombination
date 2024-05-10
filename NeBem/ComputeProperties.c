@@ -562,8 +562,11 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
               vL[i] += TransformationMatrix[i][j] * vG[j];
             }
           }
-          // Potential and flux (local system) due to base primitive
-          GetPF(ele->GType, ele->LX, ele->LZ, vL[0], vL[1], vL[2], &tPot, &tF);
+          // Potential and flux (local system) due to base primitive.
+          const int type = ele->GType;
+          const double a = ele->LX;
+          const double b = ele->LZ;
+          GetPF(type, a, b, vL[0], vL[1], vL[2], &tPot, &tF);
           const double qel = ele->Solution + ele->Assigned;
           ePot += qel * tPot;
           eF.X += qel * tF.X;
@@ -707,7 +710,10 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                     // Allowed, because all the local coordinates have the
                     // same orientations. Only the origins are mutually
                     // displaced along a line.
-                    GetPF(ele->GType, ele->LX, ele->LZ, vL[0], vL[1], vL[2], &tPot, &tF);
+                    const int type = ele->GType;
+                    const double a = ele->LX;
+                    const double b = ele->LZ;
+                    GetPF(type, a, b, vL[0], vL[1], vL[2], &tPot, &tF);
                     const double qel = ele->Solution + ele->Assigned;
                     erPot += qel * tPot;
                     erF.X += qel * tF.X;
