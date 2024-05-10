@@ -33,7 +33,7 @@ namespace neBEM {
 double GetPotential(int ele, Point3D *localP) {
   double value;
 
-  switch ((EleArr + ele - 1)->G.Type) {
+  switch ((EleArr + ele - 1)->GType) {
     case 4:  // rectangular element
       value = RecPot(ele, localP);
       break;
@@ -64,8 +64,8 @@ double RecPot(int ele, Point3D *localP) {
   double ypt = localP->Y;
   double zpt = localP->Z;
 
-  double a = (EleArr + ele - 1)->G.LX;
-  double b = (EleArr + ele - 1)->G.LZ;
+  double a = (EleArr + ele - 1)->LX;
+  double b = (EleArr + ele - 1)->LZ;
   double diag = sqrt(a * a + b * b);  // diagonal of the element
 
   // distance of field point from element centroid
@@ -107,8 +107,8 @@ double TriPot(int ele, Point3D *localP) {
   double zpt = localP->Z;
 
   // distance of field point from element centroid
-  double a = (EleArr + ele - 1)->G.LX;
-  double b = (EleArr + ele - 1)->G.LZ;
+  double a = (EleArr + ele - 1)->LX;
+  double b = (EleArr + ele - 1)->LZ;
   // largest side (hypotenuse) of the element
   double diag = sqrt(a * a + b * b);
 
@@ -149,8 +149,8 @@ double WirePot(int ele, Point3D *localP) {
   double ypt = localP->Y;
   double zpt = localP->Z;
 
-  double rW = (EleArr + ele - 1)->G.LX;
-  double lW = (EleArr + ele - 1)->G.LZ;
+  double rW = (EleArr + ele - 1)->LX;
+  double lW = (EleArr + ele - 1)->LZ;
 
   // field point from element centroid
   double dist = sqrt(xpt * xpt + ypt * ypt + zpt * zpt);
@@ -180,7 +180,7 @@ double WirePot(int ele, Point3D *localP) {
 void GetFluxGCS(int ele, Point3D *localP, Vector3D *globalF) {
   Vector3D localF;
 
-  switch ((EleArr + ele - 1)->G.Type) {
+  switch ((EleArr + ele - 1)->GType) {
     case 4:  // rectangular element
       RecFlux(ele, localP, &localF);
       break;
@@ -202,7 +202,7 @@ void GetFluxGCS(int ele, Point3D *localP, Vector3D *globalF) {
 // Flux per unit charge density on an element returned as localF
 // in the local coordiante system
 void GetFlux(int ele, Point3D *localP, Vector3D *localF) {
-  switch ((EleArr + ele - 1)->G.Type) {
+  switch ((EleArr + ele - 1)->GType) {
     case 4:  // rectangular element
       RecFlux(ele, localP, localF);
       break;
@@ -229,8 +229,8 @@ void RecFlux(int ele, Point3D *localP, Vector3D *localF) {
   double ypt = localP->Y;
   double zpt = localP->Z;
 
-  double a = (EleArr + ele - 1)->G.LX;
-  double b = (EleArr + ele - 1)->G.LZ;
+  double a = (EleArr + ele - 1)->LX;
+  double b = (EleArr + ele - 1)->LZ;
   double diag = sqrt(a * a + b * b);  // diagonal of the element
 
   // distance of field point from element centroid
@@ -274,8 +274,8 @@ void TriFlux(int ele, Point3D *localP, Vector3D *localF) {
   double ypt = localP->Y;
   double zpt = localP->Z;
 
-  double a = (EleArr + ele - 1)->G.LX;
-  double b = (EleArr + ele - 1)->G.LZ;
+  double a = (EleArr + ele - 1)->LX;
+  double b = (EleArr + ele - 1)->LZ;
   double diag = sqrt(a * a + b * b);  // diagonal of the element
 
   // printf("In TriFlux\n");
@@ -325,8 +325,8 @@ void WireFlux(int ele, Point3D *localP, Vector3D *localF) {
   double xpt = localP->X;
   double ypt = localP->Y;
   double zpt = localP->Z;
-  double rW = (EleArr + ele - 1)->G.LX;
-  double lW = (EleArr + ele - 1)->G.LZ;
+  double rW = (EleArr + ele - 1)->LX;
+  double lW = (EleArr + ele - 1)->LZ;
 
   // field point from element centroid
   double dist = sqrt(xpt * xpt + ypt * ypt + zpt * zpt);
@@ -553,9 +553,9 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
         const Element* eleEnd = EleArr + ElementEnd[primsrc] - 1;
         for (const Element* ele = eleBgn; ele <= eleEnd; ++ele) {
           // Rotate from global to local system; matrix as for primitive
-          double vG[3] = {xfld - ele->G.Origin.X, 
-                          yfld - ele->G.Origin.Y, 
-                          zfld - ele->G.Origin.Z};
+          double vG[3] = {xfld - ele->Origin.X, 
+                          yfld - ele->Origin.Y, 
+                          zfld - ele->Origin.Z};
           double vL[3] = {0., 0., 0.};
           for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
@@ -563,7 +563,7 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
             }
           }
           // Potential and flux (local system) due to base primitive
-          GetPF(ele->G.Type, ele->G.LX, ele->G.LZ, vL[0], vL[1], vL[2], &tPot, &tF);
+          GetPF(ele->GType, ele->LX, ele->LZ, vL[0], vL[1], vL[2], &tPot, &tF);
           const double qel = ele->Solution + ele->Assigned;
           ePot += qel * tPot;
           eF.X += qel * tF.X;
@@ -692,9 +692,9 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                   const Element* eleBgn = EleArr + ElementBgn[primsrc] - 1;
                   const Element* eleEnd = EleArr + ElementEnd[primsrc] - 1;
                   for (const Element* ele = eleBgn; ele <= eleEnd; ++ele) {
-                    const double XEOfRpt = ele->G.Origin.X + xShift;
-                    const double YEOfRpt = ele->G.Origin.Y + yShift;
-                    const double ZEOfRpt = ele->G.Origin.Z + zShift;
+                    const double XEOfRpt = ele->Origin.X + xShift;
+                    const double YEOfRpt = ele->Origin.Y + yShift;
+                    const double ZEOfRpt = ele->Origin.Z + zShift;
                     // Rotate from global to local system
                     double vG[3] = {xfld - XEOfRpt, yfld - YEOfRpt,
                                     zfld - ZEOfRpt};
@@ -707,7 +707,7 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                     // Allowed, because all the local coordinates have the
                     // same orientations. Only the origins are mutually
                     // displaced along a line.
-                    GetPF(ele->G.Type, ele->G.LX, ele->G.LZ, vL[0], vL[1], vL[2], &tPot, &tF);
+                    GetPF(ele->GType, ele->LX, ele->LZ, vL[0], vL[1], vL[2], &tPot, &tF);
                     const double qel = ele->Solution + ele->Assigned;
                     erPot += qel * tPot;
                     erF.X += qel * tF.X;
@@ -804,9 +804,9 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                       const int eleMin = ElementBgn[primsrc];
                       const int eleMax = ElementEnd[primsrc];
                       for (int ele = eleMin; ele <= eleMax; ++ele) {
-                        const double xsrc = (EleArr + ele - 1)->G.Origin.X;
-                        const double ysrc = (EleArr + ele - 1)->G.Origin.Y;
-                        const double zsrc = (EleArr + ele - 1)->G.Origin.Z;
+                        const double xsrc = (EleArr + ele - 1)->Origin.X;
+                        const double ysrc = (EleArr + ele - 1)->Origin.Y;
+                        const double zsrc = (EleArr + ele - 1)->Origin.Z;
 
                         const double XEOfRpt = xsrc + xShift;
                         const double YEOfRpt = ysrc + yShift;
@@ -819,9 +819,9 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                         localPERM = ReflectOnMirror(
                             'X', ele, srcpte, fldpt,
                             MirrorDistXFromOrigin[primsrc], &DirCos);
-                        const int type = (EleArr + ele - 1)->G.Type;
-                        const double a = (EleArr + ele - 1)->G.LX;
-                        const double b = (EleArr + ele - 1)->G.LZ;
+                        const int type = (EleArr + ele - 1)->GType;
+                        const double a = (EleArr + ele - 1)->LX;
+                        const double b = (EleArr + ele - 1)->LZ;
                         GetPFGCS(type, a, b, &localPERM, &tmpPot, &tmpF,
                                  &DirCos);  // force?
                         const double qel = (EleArr + ele - 1)->Solution +
@@ -875,9 +875,9 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                       const int eleMin = ElementBgn[primsrc];
                       const int eleMax = ElementEnd[primsrc];
                       for (int ele = eleMin; ele <= eleMax; ++ele) {
-                        const double xsrc = (EleArr + ele - 1)->G.Origin.X;
-                        const double ysrc = (EleArr + ele - 1)->G.Origin.Y;
-                        const double zsrc = (EleArr + ele - 1)->G.Origin.Z;
+                        const double xsrc = (EleArr + ele - 1)->Origin.X;
+                        const double ysrc = (EleArr + ele - 1)->Origin.Y;
+                        const double zsrc = (EleArr + ele - 1)->Origin.Z;
 
                         const double XEOfRpt = xsrc + xShift;
                         const double YEOfRpt = ysrc + yShift;
@@ -890,9 +890,9 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                         localPERM = ReflectOnMirror(
                             'Y', ele, srcpte, fldpt,
                             MirrorDistYFromOrigin[primsrc], &DirCos);
-                        const int type = (EleArr + ele - 1)->G.Type;
-                        const double a = (EleArr + ele - 1)->G.LX;
-                        const double b = (EleArr + ele - 1)->G.LZ;
+                        const int type = (EleArr + ele - 1)->GType;
+                        const double a = (EleArr + ele - 1)->LX;
+                        const double b = (EleArr + ele - 1)->LZ;
                         GetPFGCS(type, a, b, &localPERM, &tmpPot, &tmpF,
                                  &DirCos);
                         const double qel = (EleArr + ele - 1)->Solution +
@@ -947,9 +947,9 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                       const int eleMin = ElementBgn[primsrc];
                       const int eleMax = ElementEnd[primsrc];
                       for (int ele = eleMin; ele <= eleMax; ++ele) {
-                        const double xsrc = (EleArr + ele - 1)->G.Origin.X;
-                        const double ysrc = (EleArr + ele - 1)->G.Origin.Y;
-                        const double zsrc = (EleArr + ele - 1)->G.Origin.Z;
+                        const double xsrc = (EleArr + ele - 1)->Origin.X;
+                        const double ysrc = (EleArr + ele - 1)->Origin.Y;
+                        const double zsrc = (EleArr + ele - 1)->Origin.Z;
 
                         const double XEOfRpt = xsrc + xShift;
                         const double YEOfRpt = ysrc + yShift;
@@ -962,9 +962,9 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                         localPERM = ReflectOnMirror(
                             'Z', ele, srcpte, fldpt,
                             MirrorDistZFromOrigin[primsrc], &DirCos);
-                        const int type = (EleArr + ele - 1)->G.Type;
-                        const double a = (EleArr + ele - 1)->G.LX;
-                        const double b = (EleArr + ele - 1)->G.LZ;
+                        const int type = (EleArr + ele - 1)->GType;
+                        const double a = (EleArr + ele - 1)->LX;
+                        const double b = (EleArr + ele - 1)->LZ;
                         GetPFGCS(type, a, b, &localPERM, &tmpPot, &tmpF,
                                  &DirCos);
                         const double qel = (EleArr + ele - 1)->Solution +
@@ -3221,9 +3221,9 @@ int WtFldPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF,
           const int eleMin = ElementBgn[primsrc];
           const int eleMax = ElementEnd[primsrc];
           for (int ele = eleMin; ele <= eleMax; ++ele) {
-            const double xsrc = (EleArr + ele - 1)->G.Origin.X;
-            const double ysrc = (EleArr + ele - 1)->G.Origin.Y;
-            const double zsrc = (EleArr + ele - 1)->G.Origin.Z;
+            const double xsrc = (EleArr + ele - 1)->Origin.X;
+            const double ysrc = (EleArr + ele - 1)->Origin.Y;
+            const double zsrc = (EleArr + ele - 1)->Origin.Z;
             // Rotate vector from global to local system; matrix as for
             // primitive
             double vG[3] = {xfld - xsrc, yfld - ysrc, zfld - zsrc};
@@ -3234,9 +3234,9 @@ int WtFldPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF,
               }
             }
             // Potential and flux (local system) due to base primitive
-            const int type = (EleArr + ele - 1)->G.Type;
-            const double a = (EleArr + ele - 1)->G.LX;
-            const double b = (EleArr + ele - 1)->G.LZ;
+            const int type = (EleArr + ele - 1)->GType;
+            const double a = (EleArr + ele - 1)->LX;
+            const double b = (EleArr + ele - 1)->LZ;
             GetPF(type, a, b, vL[0], vL[1], vL[2], &tPot, &tF);
             const double qel = WtFieldChDen[IdWtField][ele];
             ePot += qel * tPot;
@@ -3374,9 +3374,9 @@ int WtFldPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF,
                     const int eleMin = ElementBgn[primsrc];
                     const int eleMax = ElementEnd[primsrc];
                     for (int ele = eleMin; ele <= eleMax; ++ele) {
-                      const double xrsrc = (EleArr + ele - 1)->G.Origin.X;
-                      const double yrsrc = (EleArr + ele - 1)->G.Origin.Y;
-                      const double zrsrc = (EleArr + ele - 1)->G.Origin.Z;
+                      const double xrsrc = (EleArr + ele - 1)->Origin.X;
+                      const double yrsrc = (EleArr + ele - 1)->Origin.Y;
+                      const double zrsrc = (EleArr + ele - 1)->Origin.Z;
 
                       const double XEOfRpt = xrsrc + xShift;
                       const double YEOfRpt = yrsrc + yShift;
@@ -3394,9 +3394,9 @@ int WtFldPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF,
                       // Allowed, because all the local coordinates have the
                       // same orientations. Only the origins are mutually
                       // displaced along a line.
-                      const int type = (EleArr + ele - 1)->G.Type;
-                      const double a = (EleArr + ele - 1)->G.LX;
-                      const double b = (EleArr + ele - 1)->G.LZ;
+                      const int type = (EleArr + ele - 1)->GType;
+                      const double a = (EleArr + ele - 1)->LX;
+                      const double b = (EleArr + ele - 1)->LZ;
                       GetPF(type, a, b, vL[0], vL[1], vL[2], &tPot, &tF);
                       const double qel = WtFieldChDen[IdWtField][ele];
                       erPot += qel * tPot;

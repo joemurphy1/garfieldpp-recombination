@@ -653,12 +653,12 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     }
 
     (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-    (EleArr + EleCntr - 1)->G.Type = 2;  // linear (wire) here
-    (EleArr + EleCntr - 1)->G.Origin.X = WireElX;
-    (EleArr + EleCntr - 1)->G.Origin.Y = WireElY;
-    (EleArr + EleCntr - 1)->G.Origin.Z = WireElZ;
-    (EleArr + EleCntr - 1)->G.LX = radius;   // radius of the wire element
-    (EleArr + EleCntr - 1)->G.LZ = WireElL;  // wire element length
+    (EleArr + EleCntr - 1)->GType = 2;  // linear (wire) here
+    (EleArr + EleCntr - 1)->Origin.X = WireElX;
+    (EleArr + EleCntr - 1)->Origin.Y = WireElY;
+    (EleArr + EleCntr - 1)->Origin.Z = WireElZ;
+    (EleArr + EleCntr - 1)->LX = radius;   // radius of the wire element
+    (EleArr + EleCntr - 1)->LZ = WireElL;  // wire element length
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
 
@@ -673,12 +673,12 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
               (EleArr + EleCntr - 1)->PrimitiveNb, EleCntr);
       fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
       fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
-              (EleArr + EleCntr - 1)->G.Type,
-              (EleArr + EleCntr - 1)->G.Origin.X,
-              (EleArr + EleCntr - 1)->G.Origin.Y,
-              (EleArr + EleCntr - 1)->G.Origin.Z, 
-              (EleArr + EleCntr - 1)->G.LX,
-              (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
+              (EleArr + EleCntr - 1)->GType,
+              (EleArr + EleCntr - 1)->Origin.X,
+              (EleArr + EleCntr - 1)->Origin.Y,
+              (EleArr + EleCntr - 1)->Origin.Z, 
+              (EleArr + EleCntr - 1)->LX,
+              (EleArr + EleCntr - 1)->LZ, ElementArea(EleCntr));
       fprintf(fElem, "#DirnCosn: \n");
       fprintf(fElem, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
       fprintf(fElem, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
@@ -1073,14 +1073,14 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     }
 
     (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-    (EleArr + EleCntr - 1)->G.Type = 3;  // triangular here
-    (EleArr + EleCntr - 1)->G.Origin.X = SurfElX;
-    (EleArr + EleCntr - 1)->G.Origin.Y = SurfElY;
-    (EleArr + EleCntr - 1)->G.Origin.Z = SurfElZ;
-    // (EleArr+EleCntr-1)->G.LX = SurfElLX;	// previously written as xlopt - xhipt;
-    (EleArr + EleCntr - 1)->G.LX = xlopt - xhipt;  // back to old ways on 21 Feb 2014
-    (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
-    (EleArr + EleCntr - 1)->G.LZ = zhipt - zlopt;  // to be on the safe side, 21/2/14
+    (EleArr + EleCntr - 1)->GType = 3;  // triangular here
+    (EleArr + EleCntr - 1)->Origin.X = SurfElX;
+    (EleArr + EleCntr - 1)->Origin.Y = SurfElY;
+    (EleArr + EleCntr - 1)->Origin.Z = SurfElZ;
+    // (EleArr+EleCntr-1)->LX = SurfElLX;	// previously written as xlopt - xhipt;
+    (EleArr + EleCntr - 1)->LX = xlopt - xhipt;  // back to old ways on 21 Feb 2014
+    (EleArr + EleCntr - 1)->LZ = SurfElLZ;
+    (EleArr + EleCntr - 1)->LZ = zhipt - zlopt;  // to be on the safe side, 21/2/14
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
     // Boundary condition is applied at the barycenter, not at the origin
@@ -1090,11 +1090,11 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       printf("Primitive nb: %d\n", (EleArr + EleCntr - 1)->PrimitiveNb);
       printf("Element id: %d\n", EleCntr);
       printf("Element X, Y, Z: %lg %lg %lg\n",
-             (EleArr + EleCntr - 1)->G.Origin.X,
-             (EleArr + EleCntr - 1)->G.Origin.Y,
-             (EleArr + EleCntr - 1)->G.Origin.Z);
-      printf("Element LX, LZ: %lg %lg\n", (EleArr + EleCntr - 1)->G.LX,
-             (EleArr + EleCntr - 1)->G.LZ);
+             (EleArr + EleCntr - 1)->Origin.X,
+             (EleArr + EleCntr - 1)->Origin.Y,
+             (EleArr + EleCntr - 1)->Origin.Z);
+      printf("Element LX, LZ: %lg %lg\n", (EleArr + EleCntr - 1)->LX,
+             (EleArr + EleCntr - 1)->LZ);
       printf("Element (primitive) X axis dirn cosines: %lg, %lg, %lg\n",
              pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
       printf("Element (primitive) Y axis dirn cosines: %lg, %lg, %lg\n",
@@ -1111,11 +1111,11 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
               (EleArr + EleCntr - 1)->PrimitiveNb, EleCntr);
       fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
       fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
-              (EleArr + EleCntr - 1)->G.Type,
-              (EleArr + EleCntr - 1)->G.Origin.X,
-              (EleArr + EleCntr - 1)->G.Origin.Y,
-              (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
-              (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
+              (EleArr + EleCntr - 1)->GType,
+              (EleArr + EleCntr - 1)->Origin.X,
+              (EleArr + EleCntr - 1)->Origin.Y,
+              (EleArr + EleCntr - 1)->Origin.Z, (EleArr + EleCntr - 1)->LX,
+              (EleArr + EleCntr - 1)->LZ, ElementArea(EleCntr));
       fprintf(fElem, "#DirnCosn: \n");
       fprintf(fElem, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
       fprintf(fElem, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
@@ -1184,13 +1184,13 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       }
 
       (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-      (EleArr + EleCntr - 1)->G.Type = 4;  // rectangular here
-      (EleArr + EleCntr - 1)->G.Origin.X = SurfElX;
-      (EleArr + EleCntr - 1)->G.Origin.Y = SurfElY;
-      (EleArr + EleCntr - 1)->G.Origin.Z = SurfElZ;
-      (EleArr + EleCntr - 1)->G.LX = ElLXOnThisRow;
-      (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
-      (EleArr + EleCntr - 1)->G.LZ = zhipt - zlopt;  // to be on the safe side! 21/2/14
+      (EleArr + EleCntr - 1)->GType = 4;  // rectangular here
+      (EleArr + EleCntr - 1)->Origin.X = SurfElX;
+      (EleArr + EleCntr - 1)->Origin.Y = SurfElY;
+      (EleArr + EleCntr - 1)->Origin.Z = SurfElZ;
+      (EleArr + EleCntr - 1)->LX = ElLXOnThisRow;
+      (EleArr + EleCntr - 1)->LZ = SurfElLZ;
+      (EleArr + EleCntr - 1)->LZ = zhipt - zlopt;  // to be on the safe side! 21/2/14
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
 
@@ -1203,10 +1203,10 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
         fprintf(
             fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
-            (EleArr + EleCntr - 1)->G.Type, (EleArr + EleCntr - 1)->G.Origin.X,
-            (EleArr + EleCntr - 1)->G.Origin.Y,
-            (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
-            (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
+            (EleArr + EleCntr - 1)->GType, (EleArr + EleCntr - 1)->Origin.X,
+            (EleArr + EleCntr - 1)->Origin.Y,
+            (EleArr + EleCntr - 1)->Origin.Z, (EleArr + EleCntr - 1)->LX,
+            (EleArr + EleCntr - 1)->LZ, ElementArea(EleCntr));
         fprintf(fElem, "#DirnCosn: \n");
         fprintf(fElem, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
         fprintf(fElem, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
@@ -1563,12 +1563,12 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       }
 
       (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-      (EleArr + EleCntr - 1)->G.Type = 4;  // rectangular here
-      (EleArr + EleCntr - 1)->G.Origin.X = SurfElX;
-      (EleArr + EleCntr - 1)->G.Origin.Y = SurfElY;
-      (EleArr + EleCntr - 1)->G.Origin.Z = SurfElZ;
-      (EleArr + EleCntr - 1)->G.LX = SurfElLX;
-      (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
+      (EleArr + EleCntr - 1)->GType = 4;  // rectangular here
+      (EleArr + EleCntr - 1)->Origin.X = SurfElX;
+      (EleArr + EleCntr - 1)->Origin.Y = SurfElY;
+      (EleArr + EleCntr - 1)->Origin.Z = SurfElZ;
+      (EleArr + EleCntr - 1)->LX = SurfElLX;
+      (EleArr + EleCntr - 1)->LZ = SurfElLZ;
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
 
@@ -1581,12 +1581,12 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
                 (EleArr + EleCntr - 1)->PrimitiveNb, EleCntr);
         fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
         fprintf(fElem, "%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n",
-                (EleArr + EleCntr - 1)->G.Type, 
-                (EleArr + EleCntr - 1)->G.Origin.X,
-                (EleArr + EleCntr - 1)->G.Origin.Y,
-                (EleArr + EleCntr - 1)->G.Origin.Z, 
-                (EleArr + EleCntr - 1)->G.LX,
-                (EleArr + EleCntr - 1)->G.LZ, ElementArea(EleCntr));
+                (EleArr + EleCntr - 1)->GType, 
+                (EleArr + EleCntr - 1)->Origin.X,
+                (EleArr + EleCntr - 1)->Origin.Y,
+                (EleArr + EleCntr - 1)->Origin.Z, 
+                (EleArr + EleCntr - 1)->LX,
+                (EleArr + EleCntr - 1)->LZ, ElementArea(EleCntr));
         fprintf(fElem, "#DirnCosn: \n");
         fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
                 PrimDC[prim].XUnit.Y,
@@ -1723,35 +1723,31 @@ int InitKnownCharges(void) {
 
   /*
   // How to check that the pointer points to a valid function?
-  if(Pt2UserFunction == NULL)
-          {
-          printf("Not a valid function ... returning ...\n");
-          return(-1);
-          }
-  else
-          {
-          // printf("Pt2UserFunction points to %p\n", Pt2UserFunction);
-          }
+  if (Pt2UserFunction == NULL) {
+    printf("Not a valid function ... returning ...\n");
+    return(-1);
+  } else {
+    // printf("Pt2UserFunction points to %p\n", Pt2UserFunction);
+  }
 
   // Status of the known charges conditions is meaningful only after the
   // element discretization has been completed, i.e., beyond the 5th state.
-  if(neBEMState >= 5)
-          {	// the following function is declared in the Interface.h.
-          int fstatus = (*Pt2UserFunction)();	// user to supply function
-          if(fstatus != 0)
-                  {
-                  neBEMMessage("neBEMKnownCharges - Pt2UserFunction");
-                  return -1;
-                  }
-          if(neBEMState > 5)	// assume LHS and inversion to be over?
-                  neBEMState = 8;
-          }
-  else
-          {
-          printf("Known charges are meaningful only beyond state 4 ...\n");
-          printf("returning ...\n");
-          return(-1);
-          }
+  if (neBEMState >= 5) {
+    // the following function is declared in the Interface.h.
+    int fstatus = (*Pt2UserFunction)();	// user to supply function
+    if (fstatus != 0) {
+      neBEMMessage("neBEMKnownCharges - Pt2UserFunction");
+      return -1;
+    }
+    if (neBEMState > 5)	{
+      // assume LHS and inversion to be over?
+      neBEMState = 8;
+    }
+  } else {
+    printf("Known charges are meaningful only beyond state 4 ...\n");
+    printf("returning ...\n");
+    return(-1);
+  }
   */
 
   // Set up parameters related to known charge calculations
@@ -2424,8 +2420,8 @@ int InitChargingUp(void) {
                   for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim];
                        ++ele) {
                     nvert = 0;
-                    if ((EleArr + ele - 1)->G.Type == 3) nvert = 3;
-                    if ((EleArr + ele - 1)->G.Type == 4) nvert = 4;
+                    if ((EleArr + ele - 1)->GType == 3) nvert = 3;
+                    if ((EleArr + ele - 1)->GType == 4) nvert = 4;
                     if (!nvert) {
                       neBEMMessage(
                           "no vertex in element! ... neBEMKnownCharges ...\n");
@@ -2459,9 +2455,9 @@ int InitChargingUp(void) {
                       fflush(stdout);
                     }
                     if (InEle) {
-                      ptintsct.X = (EleArr + ele - 1)->G.Origin.X;
-                      ptintsct.Y = (EleArr + ele - 1)->G.Origin.Y;
-                      ptintsct.Z = (EleArr + ele - 1)->G.Origin.Z;
+                      ptintsct.X = (EleArr + ele - 1)->Origin.X;
+                      ptintsct.Y = (EleArr + ele - 1)->Origin.Y;
+                      ptintsct.Z = (EleArr + ele - 1)->Origin.Z;
                       // Associate this electron to the identified element
                       EleIntsctd = ele;
                       NbChUpEonEle[ele]++;
@@ -2479,9 +2475,9 @@ int InitChargingUp(void) {
                         printf(
                             "# Associated element and origin: %d, %lg, %lg, "
                             "%lg\n",
-                            ele, (EleArr + ele - 1)->G.Origin.X,
-                            (EleArr + ele - 1)->G.Origin.Y,
-                            (EleArr + ele - 1)->G.Origin.Z);
+                            ele, (EleArr + ele - 1)->Origin.X,
+                            (EleArr + ele - 1)->Origin.Y,
+                            (EleArr + ele - 1)->Origin.Z);
                         printf("#NbChUpEonEle on element: %d\n",
                                NbChUpEonEle[ele]);
                         fprintf(ftmpEF, "#Element: %d\n", ele);
@@ -2547,8 +2543,8 @@ int InitChargingUp(void) {
                 for (int ele = ElementBgn[nearestprim];  // check all elements
                      ele <= ElementEnd[nearestprim]; ++ele) {
                   nvert = 0;
-                  if ((EleArr + ele - 1)->G.Type == 3) nvert = 3;
-                  if ((EleArr + ele - 1)->G.Type == 4) nvert = 4;
+                  if ((EleArr + ele - 1)->GType == 3) nvert = 3;
+                  if ((EleArr + ele - 1)->GType == 4) nvert = 4;
                   if (!nvert) {
                     neBEMMessage(
                         "no vertex element! ... neBEMKnownCharges ...\n");
@@ -2628,9 +2624,9 @@ int InitChargingUp(void) {
                           */
 
                   Vector3D eleOrigin;
-                  eleOrigin.X = (EleArr + ele - 1)->G.Origin.X;
-                  eleOrigin.Y = (EleArr + ele - 1)->G.Origin.Y;
-                  eleOrigin.Z = (EleArr + ele - 1)->G.Origin.Z;
+                  eleOrigin.X = (EleArr + ele - 1)->Origin.X;
+                  eleOrigin.Y = (EleArr + ele - 1)->Origin.Y;
+                  eleOrigin.Z = (EleArr + ele - 1)->Origin.Z;
                   distele = (eleOrigin.X - xend) * (eleOrigin.X - xend) +
                             (eleOrigin.Y - yend) * (eleOrigin.Y - yend) +
                             (eleOrigin.Z - zend) * (eleOrigin.Z - zend);
@@ -2665,9 +2661,9 @@ int InitChargingUp(void) {
                 // {
                 EleIntsctd = nearestele;
                 InEle = 1;
-                ptintsct.X = (EleArr + EleIntsctd - 1)->G.Origin.X;
-                ptintsct.Y = (EleArr + EleIntsctd - 1)->G.Origin.Y;
-                ptintsct.Z = (EleArr + EleIntsctd - 1)->G.Origin.Z;
+                ptintsct.X = (EleArr + EleIntsctd - 1)->Origin.X;
+                ptintsct.Y = (EleArr + EleIntsctd - 1)->Origin.Y;
+                ptintsct.Z = (EleArr + EleIntsctd - 1)->Origin.Z;
                 NbChUpEonEle[EleIntsctd]++;
 
                 fprintf(fPtEChUpMap, "%d %lg %lg %lg %d %d %d %d\n", electron,
@@ -2682,9 +2678,9 @@ int InitChargingUp(void) {
                   printf("%lg, %lg, %lg\n", ptintsct.X, ptintsct.Y, ptintsct.Z);
                   printf("# Associated primitive: %d\n", PrimIntsctd);
                   printf("# Associated element and origin: %d, %lg, %lg, %lg\n",
-                         EleIntsctd, (EleArr + EleIntsctd - 1)->G.Origin.X,
-                         (EleArr + EleIntsctd - 1)->G.Origin.Y,
-                         (EleArr + EleIntsctd - 1)->G.Origin.Z);
+                         EleIntsctd, (EleArr + EleIntsctd - 1)->Origin.X,
+                         (EleArr + EleIntsctd - 1)->Origin.Y,
+                         (EleArr + EleIntsctd - 1)->Origin.Z);
                   printf("#NbChUpEonEle on element: %d\n",
                          NbChUpEonEle[EleIntsctd]);
                   fflush(stdout);
@@ -2762,7 +2758,7 @@ int InitChargingUp(void) {
               }
               fprintf(fepd, "#intersected element number: %d\n", EleIntsctd);
               if (EleIntsctd >= 1) {
-                int gtype = (EleArr + EleIntsctd - 1)->G.Type;
+                int gtype = (EleArr + EleIntsctd - 1)->GType;
                 fprintf(fepd, "#EleType: %d\n", gtype);
                 fprintf(fepd, "#element vertices:\n");
                 Point3D vtx[4];
@@ -2799,9 +2795,9 @@ int InitChargingUp(void) {
             (EleArr + ele - 1)->Assigned +=
                 ChUpFactor * Q_E * NbChUpEonEle[ele] / ElementArea(ele);
             fprintf(fEleEChUpMap, "%d %lg %lg %lg %d %lg\n", ele,
-                    (EleArr + ele - 1)->G.Origin.X,
-                    (EleArr + ele - 1)->G.Origin.Y,
-                    (EleArr + ele - 1)->G.Origin.Z, NbChUpEonEle[ele],
+                    (EleArr + ele - 1)->Origin.X,
+                    (EleArr + ele - 1)->Origin.Y,
+                    (EleArr + ele - 1)->Origin.Z, NbChUpEonEle[ele],
                     (EleArr + ele - 1)->Assigned);
           }
           fclose(fEleEChUpMap);
@@ -3144,8 +3140,8 @@ int InitChargingUp(void) {
                 for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim];
                      ++ele) {
                   nvert = 0;
-                  if ((EleArr + ele - 1)->G.Type == 3) nvert = 3;
-                  if ((EleArr + ele - 1)->G.Type == 4) nvert = 4;
+                  if ((EleArr + ele - 1)->GType == 3) nvert = 3;
+                  if ((EleArr + ele - 1)->GType == 4) nvert = 4;
                   if (!nvert) {
                     neBEMMessage(
                         "no vertex in element! ... neBEMKnownCharges ...\n");
@@ -3176,9 +3172,9 @@ int InitChargingUp(void) {
                     fflush(stdout);
                   }
                   if (InEle) {
-                    ptintsct.X = (EleArr + ele - 1)->G.Origin.X;
-                    ptintsct.Y = (EleArr + ele - 1)->G.Origin.Y;
-                    ptintsct.Z = (EleArr + ele - 1)->G.Origin.Z;
+                    ptintsct.X = (EleArr + ele - 1)->Origin.X;
+                    ptintsct.Y = (EleArr + ele - 1)->Origin.Y;
+                    ptintsct.Z = (EleArr + ele - 1)->Origin.Z;
                     EleIntsctd = ele;
                     // Associate this electron to the identified element
                     NbChUpIonEle[ele]++;
@@ -3196,9 +3192,9 @@ int InitChargingUp(void) {
                       printf(
                           "# Associated element and origin: %d, %lg, %lg, "
                           "%lg\n",
-                          ele, (EleArr + ele - 1)->G.Origin.X,
-                          (EleArr + ele - 1)->G.Origin.Y,
-                          (EleArr + ele - 1)->G.Origin.Z);
+                          ele, (EleArr + ele - 1)->Origin.X,
+                          (EleArr + ele - 1)->Origin.Y,
+                          (EleArr + ele - 1)->Origin.Z);
                       printf("#NbChUpIonEle on element: %d\n",
                              NbChUpIonEle[ele]);
                       fprintf(ftmpIF, "#Element: %d\n", ele);
@@ -3263,8 +3259,8 @@ int InitChargingUp(void) {
                 for (int ele = ElementBgn[nearestprim];  // check all elements
                      ele <= ElementEnd[nearestprim]; ++ele) {
                   nvert = 0;
-                  if ((EleArr + ele - 1)->G.Type == 3) nvert = 3;
-                  if ((EleArr + ele - 1)->G.Type == 4) nvert = 4;
+                  if ((EleArr + ele - 1)->GType == 3) nvert = 3;
+                  if ((EleArr + ele - 1)->GType == 4) nvert = 4;
                   if (!nvert) {
                     neBEMMessage(
                         "no vertex element! ... neBEMKnownCharges ...\n");
@@ -3353,9 +3349,9 @@ int InitChargingUp(void) {
                           */
 
                   Vector3D eleOrigin;
-                  eleOrigin.X = (EleArr + ele - 1)->G.Origin.X;
-                  eleOrigin.Y = (EleArr + ele - 1)->G.Origin.Y;
-                  eleOrigin.Z = (EleArr + ele - 1)->G.Origin.Z;
+                  eleOrigin.X = (EleArr + ele - 1)->Origin.X;
+                  eleOrigin.Y = (EleArr + ele - 1)->Origin.Y;
+                  eleOrigin.Z = (EleArr + ele - 1)->Origin.Z;
                   distele = (eleOrigin.X - xend) * (eleOrigin.X - xend) +
                             (eleOrigin.Y - yend) * (eleOrigin.Y - yend) +
                             (eleOrigin.Z - zend) * (eleOrigin.Z - zend);
@@ -3389,9 +3385,9 @@ int InitChargingUp(void) {
                 // {
                 EleIntsctd = nearestele;
                 InEle = 1;
-                ptintsct.X = (EleArr + EleIntsctd - 1)->G.Origin.X;
-                ptintsct.Y = (EleArr + EleIntsctd - 1)->G.Origin.Y;
-                ptintsct.Z = (EleArr + EleIntsctd - 1)->G.Origin.Z;
+                ptintsct.X = (EleArr + EleIntsctd - 1)->Origin.X;
+                ptintsct.Y = (EleArr + EleIntsctd - 1)->Origin.Y;
+                ptintsct.Z = (EleArr + EleIntsctd - 1)->Origin.Z;
                 NbChUpIonEle[EleIntsctd]++;
 
                 fprintf(fPtIChUpMap, "%d %lg %lg %lg %d %d %d %d\n", ion,
@@ -3406,9 +3402,9 @@ int InitChargingUp(void) {
                   printf("%lg, %lg, %lg\n", ptintsct.X, ptintsct.Y, ptintsct.Z);
                   printf("# Associated primitive: %d\n", PrimIntsctd);
                   printf("# Associated element and origin: %d, %lg, %lg, %lg\n",
-                         EleIntsctd, (EleArr + EleIntsctd - 1)->G.Origin.X,
-                         (EleArr + EleIntsctd - 1)->G.Origin.Y,
-                         (EleArr + EleIntsctd - 1)->G.Origin.Z);
+                         EleIntsctd, (EleArr + EleIntsctd - 1)->Origin.X,
+                         (EleArr + EleIntsctd - 1)->Origin.Y,
+                         (EleArr + EleIntsctd - 1)->Origin.Z);
                   printf("#NbChUpIonEle on element: %d\n",
                          NbChUpIonEle[EleIntsctd]);
                   fprintf(ftmpIF, "#Element: %d\n", EleIntsctd);
@@ -3481,7 +3477,7 @@ int InitChargingUp(void) {
 
               fprintf(fipd, "#intersected element number: %d\n", EleIntsctd);
               if (EleIntsctd >= 1) {
-                int gtype = (EleArr + EleIntsctd - 1)->G.Type;
+                int gtype = (EleArr + EleIntsctd - 1)->GType;
                 fprintf(fipd, "#EleType: %d\n", gtype);
                 fprintf(fipd, "#element vertices:\n");
                 Point3D vtx[4];
@@ -3516,9 +3512,9 @@ int InitChargingUp(void) {
             (EleArr + ele - 1)->Assigned +=
                 ChUpFactor * Q_I * NbChUpIonEle[ele] / ElementArea(ele);
             fprintf(fEleEIChUpMap, "%d %lg %lg %lg %d %lg\n", ele,
-                    (EleArr + ele - 1)->G.Origin.X,
-                    (EleArr + ele - 1)->G.Origin.Y,
-                    (EleArr + ele - 1)->G.Origin.Z, NbChUpIonEle[ele],
+                    (EleArr + ele - 1)->Origin.X,
+                    (EleArr + ele - 1)->Origin.Y,
+                    (EleArr + ele - 1)->Origin.Z, NbChUpIonEle[ele],
                     (EleArr + ele - 1)->Assigned);
           }
           fclose(fEleEIChUpMap);

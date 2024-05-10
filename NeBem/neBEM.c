@@ -370,9 +370,9 @@ int LHMatrix(void) {
 
         // Retrieve element properties at the field point
         const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
-        const double xsrc = (EleArr + elesrc - 1)->G.Origin.X;
-        const double ysrc = (EleArr + elesrc - 1)->G.Origin.Y;
-        const double zsrc = (EleArr + elesrc - 1)->G.Origin.Z;
+        const double xsrc = (EleArr + elesrc - 1)->Origin.X;
+        const double ysrc = (EleArr + elesrc - 1)->Origin.Y;
+        const double zsrc = (EleArr + elesrc - 1)->Origin.Z;
         DirnCosn3D* dcsrc = &PrimDC[primsrc];
         if (InterfaceType[primsrc] == 0) {
           printf("LHMatrix: Wrong EType for element %d (primitive %d)!\n",
@@ -881,9 +881,9 @@ Vector1D* InflVec(Point3D fldpt, DirnCosn3D *fldDC, int Pot0Cont1) {
 
     // Retrieve element properties at the field point
     int primsrc = (EleArr+elesrc-1)->PrimitiveNb;
-    double xsrc = (EleArr+elesrc-1)->G.Origin.X;
-    double ysrc = (EleArr+elesrc-1)->G.Origin.Y;
-    double zsrc = (EleArr+elesrc-1)->G.Origin.Z;
+    double xsrc = (EleArr+elesrc-1)->Origin.X;
+    double ysrc = (EleArr+elesrc-1)->Origin.Y;
+    double zsrc = (EleArr+elesrc-1)->Origin.Z;
 
                 // The total influence is due to elements on the basic device
 and due to
@@ -1657,8 +1657,8 @@ double ComputeInfluence(int elefld, int elesrc, Point3D *localP,
   if (0) {
     printf("\nContinuity satisfaction using following parameters ...\n");
     printf("gtsrc: %d, lxsrc: %lg, lzsrc% lg\n",
-           (EleArr + elesrc - 1)->G.Type, (EleArr + elesrc - 1)->G.LX,
-           (EleArr + elesrc - 1)->G.LZ);
+           (EleArr + elesrc - 1)->GType, (EleArr + elesrc - 1)->LX,
+           (EleArr + elesrc - 1)->LZ);
     printf("xlocal: %lg, ylocal: %lg, zlocal: %lg\n", localP->X, localP->Y,
            localP->Z);
   }
@@ -1730,8 +1730,8 @@ if(0)
         {
         printf("\nContinuity satisfaction using following parameters ...\n");
         printf("gtsrc: %d, lxsrc: %lg, lzsrc% lg, dA: %lg\n",
-                                        (EleArr+srcEle-1)->G.Type,
-(EleArr+srcEle-1)->G.LX, (EleArr+srcEle-1)->G.LZ, (EleArr+srcEle-1)->G.dA);
+                                        (EleArr+srcEle-1)->GType,
+(EleArr+srcEle-1)->LX, (EleArr+srcEle-1)->LZ, (EleArr+srcEle-1)->G.dA);
         printf("xlocal: %lg, ylocal: %lg, zlocal: %lg\n",
                                         localP->X, localP->Y, localP->Z);
         }
@@ -1760,7 +1760,7 @@ double SatisfyValue(int elesrc, Point3D *localP) {
 
   double value;
 
-  switch ((EleArr + elesrc - 1)->G.Type) {
+  switch ((EleArr + elesrc - 1)->GType) {
     case 4:  // rectangular element
       value = RecPot(elesrc, localP);
       return (value);
@@ -1815,10 +1815,10 @@ double SatisfyContinuity(int elefld, int elesrc, Point3D *localP,
   // separate if blocks are merged into one.
   // Check for other "special" cases!
   if ((elefld == elesrc) &&
-      (fabs(localP->X) < (EleArr + elesrc - 1)->G.LX / 2.0) &&
+      (fabs(localP->X) < (EleArr + elesrc - 1)->LX / 2.0) &&
       (fabs(localP->Y) < MINDIST) &&
       (fabs(localP->Z) <
-       (EleArr + elesrc - 1)->G.LZ / 2.0))  // self-inf for DD intrfc
+       (EleArr + elesrc - 1)->LZ / 2.0))  // self-inf for DD intrfc
   {  // consistent with eqn 18 of Bardhan's paper where lmsrc is inverse
     const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
     value = 1.0 / (2.0 * EPS0 * Lambda[primsrc]);
@@ -1826,7 +1826,7 @@ double SatisfyContinuity(int elefld, int elesrc, Point3D *localP,
   else {
     value = 0.0;
     // Following fluxes in the influencing ECS
-    switch ((EleArr + elesrc - 1)->G.Type) {
+    switch ((EleArr + elesrc - 1)->GType) {
       case 4:  // rectangular element
         RecFlux(elesrc, localP, &localF);
         break;
@@ -1868,7 +1868,7 @@ if(DebugLevel == 301) { printf("In EleSatisfyValue ...\n"); }
 
 double value;
 
-switch((EleArr+srcEle-1)->G.Type)
+switch((EleArr+srcEle-1)->GType)
         {
         case 4:		// rectangular element
                 value = RecPot(srcEle, fldPt);
@@ -1923,16 +1923,16 @@ Vector3D localF, globalF;
 // 4 or 5. So, the check on the value of etsrc is superfluous, and two
 // separate if blocks are merged into one.
 // Check for other "special" cases!
-if((fabs(fldPt->X) < (EleArr+srcEle-1)->G.LX/2.0)
+if((fabs(fldPt->X) < (EleArr+srcEle-1)->LX/2.0)
                 && (fabs(fldPt->Y) < MINDIST)
-                && (fabs(fldPt->Z) < (EleArr+srcEle-1)->G.LZ/2.0))// self-inf
+                && (fabs(fldPt->Z) < (EleArr+srcEle-1)->LZ/2.0))// self-inf
 for DD intrfc {	// consistent with eqn 18 of Bardhan's paper where lmsrc is
 inverse value = 1.0 / (2.0*EPS0*(EleArr+srcEle-1)->E.Lambda); }	// of the
 multiplying factor of roe(r). EPS0 arises due to electrostatics. else
         {
         value = 0.0;
         // Following fluxes in the influencing ECS
-        switch((EleArr+srcEle-1)->G.Type)
+        switch((EleArr+srcEle-1)->GType)
                 {
                 case 4:		// rectangular element
                         RecFlux(srcEle, fldPt, &localF);
@@ -2067,9 +2067,9 @@ int RHVector(void) {
         return -1;
     }
     fprintf(fout, "%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", elefld,
-            (EleArr + elefld - 1)->G.Origin.X,
-            (EleArr + elefld - 1)->G.Origin.Y,
-            (EleArr + elefld - 1)->G.Origin.Z, (EleArr + elefld - 1)->Assigned,
+            (EleArr + elefld - 1)->Origin.X,
+            (EleArr + elefld - 1)->Origin.Y,
+            (EleArr + elefld - 1)->Origin.Z, (EleArr + elefld - 1)->Assigned,
             value, valueKnCh, valueChUp, RHS[elefld]);
   }  // for elefld ends
 
@@ -2142,7 +2142,7 @@ double ValueKnCh(int elefld) {
       exit(-1);
     }
 
-    Point3D *pOrigin = &(EleArr + elesrc - 1)->G.Origin;
+    Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
 
     {  // Rotate point3D from global to local system
       double InitialVector[3] =
@@ -2173,7 +2173,7 @@ double ValueKnCh(int elefld) {
       localP.Z = FinalVector[2];
     }  // Point3D rotated
 
-    switch ((EleArr + elesrc - 1)->G.Type) {
+    switch ((EleArr + elesrc - 1)->GType) {
       case 4:  // rectangular element
         value += assigned * RecPot(elesrc, &localP);
         break;
@@ -2303,7 +2303,7 @@ double ContinuityKnCh(int elefld) {
     assigned = (EleArr + elesrc - 1)->Assigned;
     if (fabs(assigned) <= 1.0e-16) continue;
 
-    Point3D *pOrigin = &(EleArr + elesrc - 1)->G.Origin;
+    Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
 
     const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
     DirnCosn3D* dcsrc = &PrimDC[primsrc];
@@ -2349,9 +2349,9 @@ double ContinuityKnCh(int elefld) {
     // || (((EleArr+elesrc-1)->E.Type == 5) && (elefld == elesrc))) // DD intfce
     // For self-influence, lmsrc is equal to lmfld which allows the following.
     if ((elefld == elesrc) &&
-        (fabs(localP.X) < (EleArr + elesrc - 1)->G.LX / 2.0) &&
+        (fabs(localP.X) < (EleArr + elesrc - 1)->LX / 2.0) &&
         (fabs(localP.Y) < MINDIST) &&
-        (fabs(localP.Z) < (EleArr + elesrc - 1)->G.LZ / 2.0)) {
+        (fabs(localP.Z) < (EleArr + elesrc - 1)->LZ / 2.0)) {
       value += assigned / (2. * EPS0 * Lambda[primsrc]);
     } else {
       // Retrieve element properties from the structure
@@ -2362,7 +2362,7 @@ double ContinuityKnCh(int elefld) {
       }
 
       // Following fluxes in the influencing ECS
-      switch ((EleArr + elesrc - 1)->G.Type) {
+      switch ((EleArr + elesrc - 1)->GType) {
         case 4:  // rectangular element
           RecFlux(elesrc, &localP, &localF);
           break;
@@ -2457,18 +2457,18 @@ double ContinuityKnCh(int elefld) {
 double ElementArea(int ele) {
   Element* eleptr = EleArr + ele - 1;
   double area = 0.;
-  switch (eleptr->G.Type) {
+  switch (eleptr->GType) {
     case 2:
       // Wire
-      area = 2. * MyPI * eleptr->G.LX * eleptr->G.LZ;
+      area = 2. * MyPI * eleptr->LX * eleptr->LZ;
       break;
     case 3: 
       // Triangle
-      area = 0.5 * eleptr->G.LX * eleptr->G.LZ;
+      area = 0.5 * eleptr->LX * eleptr->LZ;
       break;
     case 4:
       // Rectangle
-      area = eleptr->G.LX * eleptr->G.LZ;
+      area = eleptr->LX * eleptr->LZ;
       break;
     default:
       printf("Geometrical type out of range!\n");
@@ -2480,30 +2480,30 @@ double ElementArea(int ele) {
 Point3D CollocationPoint(int ele) {
   Point3D pt;
   Element* eleptr = EleArr + ele - 1;
-  if (eleptr->G.Type == 2 || eleptr->G.Type == 4) {
+  if (eleptr->GType == 2 || eleptr->GType == 4) {
     // For wires and rectangles, the collocation point is 
     // identical to the origin.
-    pt.X = eleptr->G.Origin.X;
-    pt.Y = eleptr->G.Origin.Y;
-    pt.Z = eleptr->G.Origin.Z;
-  } else if (eleptr->G.Type == 3) {
+    pt.X = eleptr->Origin.X;
+    pt.Y = eleptr->Origin.Y;
+    pt.Z = eleptr->Origin.Z;
+  } else if (eleptr->GType == 3) {
     // Triangle
     // Barycenter location in the ECS
     Point3D vL;
-    vL.X = eleptr->G.LX / 3.;
+    vL.X = eleptr->LX / 3.;
     vL.Y = 0.;
-    vL.Z = eleptr->G.LZ / 3.;
+    vL.Z = eleptr->LZ / 3.;
     // Rotate into the global frame.
     const int prim = eleptr->PrimitiveNb;
     Point3D vG = RotatePoint3D(&vL, &PrimDC[prim], local2global);
-    pt.X = eleptr->G.Origin.X + vG.X;
-    pt.Y = eleptr->G.Origin.Y + vG.Y;
-    pt.Z = eleptr->G.Origin.Z + vG.Z;
+    pt.X = eleptr->Origin.X + vG.X;
+    pt.Y = eleptr->Origin.Y + vG.Y;
+    pt.Z = eleptr->Origin.Z + vG.Z;
   } else {
     printf("Geometrical type out of range!\n");
-    pt.X = eleptr->G.Origin.X;
-    pt.Y = eleptr->G.Origin.Y;
-    pt.Z = eleptr->G.Origin.Z;
+    pt.X = eleptr->Origin.X;
+    pt.Y = eleptr->Origin.Y;
+    pt.Z = eleptr->Origin.Z;
   }
   return pt;
 }
@@ -2512,15 +2512,15 @@ void ElementVertices(int ele, Point3D vertices[4]) {
 
   Element* eleptr = EleArr + ele - 1;
   const int prim = eleptr->PrimitiveNb;
-  const double x0 = eleptr->G.Origin.X;
-  const double y0 = eleptr->G.Origin.Y;
-  const double z0 = eleptr->G.Origin.Z;
-  if (eleptr->G.Type == 2) {
+  const double x0 = eleptr->Origin.X;
+  const double y0 = eleptr->Origin.Y;
+  const double z0 = eleptr->Origin.Z;
+  if (eleptr->GType == 2) {
     // Wire
     const double dx = PrimDC[prim].ZUnit.X;
     const double dy = PrimDC[prim].ZUnit.Y;
     const double dz = PrimDC[prim].ZUnit.Z;
-    const double h = 0.5 * eleptr->G.LZ;
+    const double h = 0.5 * eleptr->LZ;
     vertices[0].X = x0 - h * dx;
     vertices[0].Y = y0 - h * dy;
     vertices[0].Z = z0 - h * dz;
@@ -2529,25 +2529,25 @@ void ElementVertices(int ele, Point3D vertices[4]) {
     vertices[1].Z = z0 + h * dz;
     vertices[2].X = vertices[2].Y = vertices[2].Z = 0.;
     vertices[3].X = vertices[3].Y = vertices[3].Z = 0.;
-  } else if (eleptr->G.Type == 3) {
+  } else if (eleptr->GType == 3) {
     // Triangle
     vertices[0].X = x0;
     vertices[0].Y = y0;
     vertices[0].Z = z0;
-    vertices[1].X = x0 + eleptr->G.LX * PrimDC[prim].XUnit.X;
-    vertices[1].Y = y0 + eleptr->G.LX * PrimDC[prim].XUnit.Y;
-    vertices[1].Z = z0 + eleptr->G.LX * PrimDC[prim].XUnit.Z;
-    vertices[2].X = x0 + eleptr->G.LZ * PrimDC[prim].ZUnit.X;
-    vertices[2].Y = y0 + eleptr->G.LZ * PrimDC[prim].ZUnit.Y;
-    vertices[2].Z = z0 + eleptr->G.LZ * PrimDC[prim].ZUnit.Z;
+    vertices[1].X = x0 + eleptr->LX * PrimDC[prim].XUnit.X;
+    vertices[1].Y = y0 + eleptr->LX * PrimDC[prim].XUnit.Y;
+    vertices[1].Z = z0 + eleptr->LX * PrimDC[prim].XUnit.Z;
+    vertices[2].X = x0 + eleptr->LZ * PrimDC[prim].ZUnit.X;
+    vertices[2].Y = y0 + eleptr->LZ * PrimDC[prim].ZUnit.Y;
+    vertices[2].Z = z0 + eleptr->LZ * PrimDC[prim].ZUnit.Z;
     vertices[3].X = 0.;
     vertices[3].Y = 0.;
     vertices[3].Z = 0.;
-  } else if (eleptr->G.Type == 4) {
+  } else if (eleptr->GType == 4) {
     // Rectangle
     // Half-widths
-    const double hx = 0.5 * eleptr->G.LX;
-    const double hz = 0.5 * eleptr->G.LZ;
+    const double hx = 0.5 * eleptr->LX;
+    const double hz = 0.5 * eleptr->LZ;
     Point3D vL;
     vL.X = -hx;
     vL.Y = 0.;
@@ -2611,7 +2611,7 @@ double ValueChUp(int elefld) {
     if (fabs(assigned) <= 1.0e-16) continue;
 
     // Retrieve element properties from the structure
-    Point3D *pOrigin = &(EleArr + elesrc - 1)->G.Origin;
+    Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
     const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
     DirnCosn3D* dcsrc = &PrimDC[primsrc];
 
@@ -2650,7 +2650,7 @@ double ValueChUp(int elefld) {
       localP.Z = FinalVector[2];
     }  // Point3D rotated
 
-    switch ((EleArr + elesrc - 1)->G.Type) {
+    switch ((EleArr + elesrc - 1)->GType) {
       case 4:  // rectangular element
         value += assigned * RecPot(elesrc, &localP);
         // return(value/dA);
@@ -2758,7 +2758,7 @@ double ContinuityChUp(int elefld) {
     assigned = (EleArr + elesrc - 1)->Assigned;
     if (fabs(assigned) <= 1.0e-16) continue;
 
-    Point3D *pOrigin = &(EleArr + elesrc - 1)->G.Origin;
+    Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
     const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
     DirnCosn3D* dcsrc = &PrimDC[primsrc];
 
@@ -2802,9 +2802,9 @@ double ContinuityChUp(int elefld) {
     // || (((EleArr+elesrc-1)->E.Type == 5) && (elefld == elesrc))) // DD intfce
     // For self-influence, lmsrc is equal to lmfld which allows the following.
     if ((elefld == elesrc) &&
-        (fabs(localP.X) < (EleArr + elesrc - 1)->G.LX / 2.0) &&
+        (fabs(localP.X) < (EleArr + elesrc - 1)->LX / 2.0) &&
         (fabs(localP.Y) < MINDIST) &&
-        (fabs(localP.Z) < (EleArr + elesrc - 1)->G.LZ / 2.0)) {
+        (fabs(localP.Z) < (EleArr + elesrc - 1)->LZ / 2.0)) {
       value += assigned / (2.0 * EPS0 * Lambda[primsrc]);
     } else {
       if (InterfaceType[primsrc] == 0) {
@@ -2813,7 +2813,7 @@ double ContinuityChUp(int elefld) {
         exit(-1);
       }
       // Retrieve element properties from the structure
-      switch ((EleArr + elesrc - 1)->G.Type) {
+      switch ((EleArr + elesrc - 1)->GType) {
         case 4:  // rectangular element
           RecFlux(elesrc, &localP, &localF);
           break;
@@ -2951,8 +2951,8 @@ int Solve(void) {
   for (int ele = 1; ele <= NbElements; ++ele) {
     (EleArr + ele - 1)->Solution = Solution[ele];
     fprintf(fSoln, "%d\t%lg\t%lg\t%lg\t%.16lg\t%.16lg\t%.16lg\n", ele,
-            (EleArr + ele - 1)->G.Origin.X, (EleArr + ele - 1)->G.Origin.Y,
-            (EleArr + ele - 1)->G.Origin.Z, (EleArr + ele - 1)->Solution,
+            (EleArr + ele - 1)->Origin.X, (EleArr + ele - 1)->Origin.Y,
+            (EleArr + ele - 1)->Origin.Z, (EleArr + ele - 1)->Solution,
             (EleArr + ele - 1)->Assigned,
             ((EleArr + ele - 1)->Solution + (EleArr + ele - 1)->Assigned));
   }
@@ -3321,9 +3321,9 @@ int Solve(void) {
 
         // find relevant points for this element; compute PF and cross-check
         // with BC
-        if ((EleArr + ele - 1)->G.Type == 2) continue;
+        if ((EleArr + ele - 1)->GType == 2) continue;
 
-        if ((EleArr + ele - 1)->G.Type == 3)  // triangle
+        if ((EleArr + ele - 1)->GType == 3)  // triangle
         {  // 3 points need to be considered for estimating error (above fig)
           Point3D globalP;
           double Potential;
@@ -3640,8 +3640,9 @@ int Solve(void) {
           }
         }  // if triangle
 
-        if ((EleArr + ele - 1)->G.Type == 4)  // rectangle
-        {  // 4 points need to be considered for estimating error (above fig)
+        if ((EleArr + ele - 1)->GType == 4) {
+          // rectangle
+          // 4 points need to be considered for estimating error (above fig)
           Point3D globalP;
           double Potential;
           Vector3D globalF, localF;

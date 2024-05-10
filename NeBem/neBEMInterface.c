@@ -2900,10 +2900,10 @@ int WriteElements(void) {
     Point3D collPt = CollocationPoint(ele);
     fprintf(fStrEle, "%d %d %d %d %d\n", 1, 1,
             (EleArr + ele - 1)->PrimitiveNb, 1, ele);
-    fprintf(fStrEle, "%d %le %le %le %le %le %le\n", (EleArr + ele - 1)->G.Type,
-            (EleArr + ele - 1)->G.Origin.X, (EleArr + ele - 1)->G.Origin.Y,
-            (EleArr + ele - 1)->G.Origin.Z, (EleArr + ele - 1)->G.LX,
-            (EleArr + ele - 1)->G.LZ, ElementArea(ele));
+    fprintf(fStrEle, "%d %le %le %le %le %le %le\n", (EleArr + ele - 1)->GType,
+            (EleArr + ele - 1)->Origin.X, (EleArr + ele - 1)->Origin.Y,
+            (EleArr + ele - 1)->Origin.Z, (EleArr + ele - 1)->LX,
+            (EleArr + ele - 1)->LZ, ElementArea(ele));
     fprintf(fStrEle, "%le %le %le\n", PrimDC[prim].XUnit.X,
             PrimDC[prim].XUnit.Y, PrimDC[prim].XUnit.Z);
     fprintf(fStrEle, "%le %le %le\n", PrimDC[prim].YUnit.X,
@@ -3176,9 +3176,9 @@ int ReadElements(void) {
     fscanf(fStrEle, "%hd %d %d %d %d\n", &devicenb, &componentnb,
            &(EleArr + ele - 1)->PrimitiveNb, &interfaceid, &elementid);
     fscanf(fStrEle, "%hd %le %le %le %le %le %le\n",
-           &(EleArr + ele - 1)->G.Type, &(EleArr + ele - 1)->G.Origin.X,
-           &(EleArr + ele - 1)->G.Origin.Y, &(EleArr + ele - 1)->G.Origin.Z,
-           &(EleArr + ele - 1)->G.LX, &(EleArr + ele - 1)->G.LZ, &da);
+           &(EleArr + ele - 1)->GType, &(EleArr + ele - 1)->Origin.X,
+           &(EleArr + ele - 1)->Origin.Y, &(EleArr + ele - 1)->Origin.Z,
+           &(EleArr + ele - 1)->LX, &(EleArr + ele - 1)->LZ, &da);
     fscanf(fStrEle, "%le %le %le\n", &dc.XUnit.X, &dc.XUnit.Y, &dc.XUnit.Z);
     fscanf(fStrEle, "%le %le %le\n", &dc.YUnit.X, &dc.YUnit.Y, &dc.YUnit.Z);
     fscanf(fStrEle, "%le %le %le\n", &dc.ZUnit.X, &dc.ZUnit.Y, &dc.ZUnit.Z);

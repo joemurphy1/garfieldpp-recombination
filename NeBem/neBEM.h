@@ -139,14 +139,10 @@ neBEMGLOBAL int NbFloatCon;
 neBEMGLOBAL double VFloatCon;
 
 typedef struct {
-  short int Type;     // 4: rectangular, 3: triangular, 2: linear (wire)
-  Point3D Origin;     // centroid / barycenter / axis-center (local origin)
+  int PrimitiveNb;  // Index of the primitive to which the element belongs
+  short int GType;  // 4: rectangular, 3: triangular, 2: linear (wire)
+  Point3D Origin;   // centroid / barycenter / axis-center
   double LX, LZ;      // length, breadth / base, height / radius, length
-} GeomProp;
-
-typedef struct {
-  int PrimitiveNb;    // Index of the primitive to which the element belongs
-  GeomProp G;  // geomtype, origin, lengths, area
   double Solution;  // accumulated charge, or similar solution
   double Assigned;  // assigned charge, or similar property
 } Element;
@@ -316,6 +312,7 @@ neBEMGLOBAL double ContinuityChUp(int fld);
 neBEMGLOBAL double EffectKnCh(int fld);
 neBEMGLOBAL double ValueKnCh(int fld);
 neBEMGLOBAL double ContinuityKnCh(int fld);
+
 neBEMGLOBAL double ElementArea(int ele);
 neBEMGLOBAL Point3D CollocationPoint(int ele);
 neBEMGLOBAL void ElementVertices(int ele, Point3D vertices[4]);
