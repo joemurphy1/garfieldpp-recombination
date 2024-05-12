@@ -911,14 +911,9 @@ int ElePFAtPoint1(Point3D *globalP, double *Potential, Vector3D *globalF) {
                   vL[i] += rot[i][j] * vG[j];
                 }
               }
-              double r2 = 0.;
-              if (type == 3) {
-                const double xm = vL[0] - a / 3.;
-                const double zm = vL[2] - b / 3.;
-                r2 = xm * xm + vL[1] * vL[1] + zm * zm;
-              } else {
-                r2 = vL[0] * vL[0] + vL[1] * vL[1] + vL[2] * vL[2];
-              }
+              const double xm = type == 3 ? vL[0] - a / 3. : vL[0];
+	      const double zm = type == 3 ? vL[2] - b / 3. : vL[2];
+              const double r2 = xm * xm + vL[1] * vL[1] + zm * zm;
               if (r2 >= far2) {
                 const double v = area / sqrt(r2);
                 const double f = v / r2;
