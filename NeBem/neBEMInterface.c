@@ -49,7 +49,7 @@ int neBEMInitialize(void) {
   // are being set, and what they mean.
   int fstatus = neBEMSetDefaults();
   if (fstatus != 0) {
-    neBEMMessage("neBEMInitialize - neBEMSetDefaults");
+    printf("neBEMInitialize: neBEMSetDefaults failed.\n");
     return -1;
   }
 
@@ -65,7 +65,7 @@ int neBEMInitialize(void) {
     printf("Reading geometry details from %s\n", DeviceInputFile);
     fstatus = neBEMGetInputsFromFiles();
     if (fstatus != 0) {
-      neBEMMessage("neBEMInitialize - neBEMGetInputFromFiles");
+      printf("neBEMInitialize: neBEMGetInputsFromFiles failed.\n");
       return -1;
     }
   }
@@ -74,7 +74,7 @@ int neBEMInitialize(void) {
   if (neBEMState == 0) {
     fstatus = CreateDirStr();
     if (fstatus != 0) {
-      neBEMMessage("neBEMInitialize - CreateDirStr");
+      printf("neBEMInitialize: CreateDirStr failed.\n");
       return -1;
     }
   }
@@ -86,7 +86,7 @@ int neBEMInitialize(void) {
   strcat(IslesFile, "/Isles.log");
   fIsles = fopen(IslesFile, "w");
   if (fIsles == NULL) {
-    neBEMMessage("neBEMInitialize - IslesFile");
+    printf("neBEMInitialize: Cannot open Isles log file.\n");
     return -1;
   }
 
@@ -148,7 +148,7 @@ int neBEMInitialize(void) {
   // To be removed soon
   FILE *voxelInpFile = fopen("neBEMInp/neBEMVoxel.inp", "r");
   if (voxelInpFile == NULL) {
-    printf("neBEMVoxel.inp absent ... assuming OptVoxel = 0 ...\n");
+    printf("neBEMInitialize: neBEMVoxel.inp absent. Assuming OptVoxel = 0.\n");
     OptVoxel = 0;
     OptStaggerVoxel = 0;
   } else {
@@ -173,7 +173,7 @@ int neBEMInitialize(void) {
   // To be removed soon
   FILE *mapInpFile = fopen("neBEMInp/neBEMMap.inp", "r");
   if (mapInpFile == NULL) {
-    printf("neBEMMap.inp absent ... assuming OptMap = 0 ...\n");
+    printf("neBEMInitialize: neBEMMap.inp absent. Assuming OptMap = 0.\n");
     OptMap = 0;
     OptStaggerMap = 0;
   } else {
@@ -201,7 +201,7 @@ int neBEMInitialize(void) {
   if (OptFastVol) {
     FILE *fastInpFile = fopen("neBEMInp/neBEMFastVol.inp", "r");
     if (fastInpFile == NULL) {
-      printf("neBEMFastVol.inp absent ... assuming OptFastVol = 0 ...\n");
+      printf("neBEMInitialize: neBEMFastVol.inp absent. Assuming OptFastVol = 0.\n");
       OptFastVol = 0;
       OptStaggerFastVol = 0;
       OptCreateFastPF = 0;
@@ -287,13 +287,11 @@ int neBEMInitialize(void) {
     }  // else fastInpFile
   }    // if OptFastVol
 
-  printf("neBEM initialized ...\n");
-  fflush(stdout);
+  printf("neBEMInitialize: Initialization finished.\n");
   sleep(3);  // wait for three seconds so that the user gets time to react
 
   neBEMState = 1;  // state 1 implied initialization of neBEM completed
 
-  // announce success - later, add the name of the calling code
   return (0);
 }  // neBEMInitialize ends
 
@@ -314,24 +312,23 @@ int neBEMReadGeometry(void) {
   if ((!NewModel) && (!NewBC) && (OptStorePrimitives)) {
     fstatus = ReadPrimitives();
     if (fstatus) {
-      neBEMMessage("neBEMReadGeometry - problem reading stored Primitives.\n");
+      printf("neBEMReadGeometry: ReadPrimitives failed.\n");
       return -1;
     }
     neBEMState = 3;  // primitives read in after initialization and Nbs
     return 0;
   }
 
-  printf("geometry inputs ...\n");
   if (neBEMState != 1) {
-    printf("reading geometry possible only after initialization ...\n");
+    printf("neBEMReadGeometry: Reading geometry possible only after initialization.\n");
     return -1;
   }
-
+  printf("neBEMReadGeometry: Retrieving geometry...\n");
   NbPrimitives = neBEMGetNbPrimitives();
   OrgnlNbPrimitives = NbPrimitives;
   if (NbPrimitives == 0) {
     // nothing to do - return control to calling routine
-    neBEMMessage("neBEMReadGeometry - no primitive.\n");
+    printf("neBEMReadGeometry: no primitive.\n");
     return (-1);  // for the time being
   }
 
@@ -433,7 +430,7 @@ int neBEMReadGeometry(void) {
                                 &xnorm, &ynorm, &znorm, &volref1, &volref2);
 #endif
     if (fstatus != 0) {
-      neBEMMessage("neBEMReadGeometry - neBEMGetPrimitve");
+      printf("neBEMReadGeometry: neBEMGetPrimitive failed.\n");
       return -1;
     }
     if (volmax < volref1) {
@@ -444,10 +441,9 @@ int neBEMReadGeometry(void) {
     }  // maxm nb of volumes
 
     if (nvertex > MaxNbVertices) {
-      printf("Number of vertices for primitive %d exceeds %d!\n", prim,
-             MaxNbVertices);
-      printf("Returning to garfield ...\n");
-      return (-1);
+      printf("neBEMReadGeometry: Number of vertices for primitive %d exceeds %d!\n", 
+             prim, MaxNbVertices);
+      return -1;
     }
 
     PrimType[prim] = nvertex;  // wire:2, triangle:3, rectangle:4
@@ -576,8 +572,9 @@ int neBEMReadGeometry(void) {
           ApplPot[prim] = potential1;
         } else if (boundarytype2 == 1) {
           // conductor-conductor
-          if (fabs(potential1 - potential2)  // same potential
-              < 1e-6 * (1 + fabs(potential1) + fabs(potential2))) {
+          if (fabs(potential1 - potential2) < 
+              1.e-6 * (1. + fabs(potential1) + fabs(potential2))) {
+            // same potential
             printf("neBEMReadGeometry: identical potentials; skipped.\n");
             printf("Primitive skipped: #%d\n", prim);
             InterfaceType[prim] = 0;
@@ -752,7 +749,7 @@ int neBEMReadGeometry(void) {
       fstatus = neBEMGetPeriodicities(prim, &ix, &jx, &sx, &iy, &jy, &sy, &iz,
                                       &jz, &sz);
       if (fstatus != 0) {
-        neBEMMessage("neBEMReadGeometry - neBEMGetPeriodicities");
+        printf("neBEMReadGeometry: neBEMGetPeriodicities failed.\n");
         return -1;
       }
       if (jx < 0) jx = 0;
@@ -808,7 +805,7 @@ int neBEMReadGeometry(void) {
       fstatus =
           neBEMGetMirror(prim, &ix, &jx, &sx, &iy, &jy, &sy, &iz, &jz, &sz);
       if (fstatus != 0) {
-        neBEMMessage("neBEMReadGeometry - neBEMGetMirror");
+        printf("neBEMReadGeometry: neBEMGetMirror failed.\n");
         return -1;
       }
       if (jx < 0) jx = 0;
@@ -1046,8 +1043,8 @@ int neBEMReadGeometry(void) {
         }
       }  // loop over primitives to remove the skipped primitives
       NbPrimitives -= NbSkipped;
-      printf("Number of primitives skipped: %d, Effective NbPrimitives: %d\n",
-             NbSkipped, NbPrimitives);
+      printf("neBEMReadGeometry: Skipped %d primitives. ", NbSkipped);
+      printf("Effective number of primitives: %d\n", NbPrimitives);
     }  // Skip primitives
 
     if (OptRmPrim) {
@@ -1300,7 +1297,7 @@ int neBEMReadGeometry(void) {
   }  // Ignore unnecessary primitives from the final count
 
   // Reduced-Order Modelling information
-  printf("ROM: switch to primitive representation after %d repetitions.\n",
+  printf("neBEMReadGeometry: Switch to primitive representation after %d repetitions.\n",
          PrimAfter);
 
   // Store model data in native neBEM format
@@ -1426,14 +1423,13 @@ int neBEMReadGeometry(void) {
     if (OptFormattedFile) {
       fstatus = WritePrimitives();
       if (fstatus) {
-        neBEMMessage("neBEMReadGeometry - problem writing Primtives.\n");
+        printf("neBEMReadGeometry: WritePrimitives failed.\n");
         return -1;
       }
     }  // formatted file
 
     if (OptUnformattedFile) {
-      neBEMMessage(
-          "neBEMReadGeometry - unformatted write not inplemented yet.\n");
+      printf("neBEMReadGeometry: unformatted write not inplemented yet.\n");
       return -1;
     }  // unformatted file
   }    // store primitives
@@ -1463,7 +1459,7 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
   if ((!NewModel) && (!NewMesh) && (!NewBC) && (OptStoreElements)) {
     int fstatus = ReadElements();
     if (fstatus) {
-      neBEMMessage("neBEMDiscretize - problem reading stored Elements.\n");
+      printf("neBEMDiscretize: ReadElements failed.\n");
       return -1;
     }
     neBEMState = 4;
@@ -1472,7 +1468,7 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
 
   // Otherwise, continue with fresh discretization
   if (neBEMState != 3) {
-    printf("discretization can continue only in State 3 ...\n");
+    printf("neBEMDiscretize: Discretization can continue only in State 3.\n");
     return -1;
   }
 
@@ -1507,24 +1503,13 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
   fprintf(fMeshLog, "Details of primitive discretization\n");
 
   for (int prim = 1; prim <= NbPrimitives; ++prim) {
-    if (NbVertices[prim] == 4) {
+    if (NbVertices[prim] == 3  || NbVertices[prim] == 4) {
       NbSurfSegX[prim] = NbElemsOnPrimitives[prim][1];
       NbSurfSegZ[prim] = NbElemsOnPrimitives[prim][2];
       int fstatus =
           AnalyzePrimitive(prim, &NbSurfSegX[prim], &NbSurfSegZ[prim]);
       if (fstatus == 0) {
-        neBEMMessage("neBEMDiscretize - AnalyzePrimitve");
-        return -1;
-      }
-      NbElements += (NbSurfSegX[prim] + 1) * (NbSurfSegZ[prim] + 1);
-    }
-    if (NbVertices[prim] == 3) {
-      NbSurfSegX[prim] = NbElemsOnPrimitives[prim][1];
-      NbSurfSegZ[prim] = NbElemsOnPrimitives[prim][2];
-      int fstatus =
-          AnalyzePrimitive(prim, &NbSurfSegX[prim], &NbSurfSegZ[prim]);
-      if (fstatus == 0) {
-        neBEMMessage("neBEMDiscretize - AnalyzePrimitive");
+        printf("neBEMDiscretize: AnalyzePrimitive failed.\n");
         return -1;
       }
       NbElements += (NbSurfSegX[prim] + 1) * (NbSurfSegZ[prim] + 1);
@@ -1534,7 +1519,7 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
       NbWireSeg[prim] = NbElemsOnPrimitives[prim][1];
       int fstatus = AnalyzePrimitive(prim, &NbWireSeg[prim], &itmp);
       if (fstatus == 0) {
-        neBEMMessage("neBEMDiscretize - AnalyzePrimitive");
+        printf("neBEMDiscretize: AnalyzePrimitive failed.\n");
         return -1;
       }
       NbElements += (NbWireSeg[prim] + 1);
@@ -1549,12 +1534,11 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
       }
     }
   }
-  printf("Memory allocated for maximum %d elements.\n", NbElements);
   fclose(fMeshLog);
 
   // Allocate enough space to store all the elements
   if (neBEMState == 3) {
-    printf("neBEMDiscretize: NbElements = %d, sizeof(Element) = %zu\n",
+    printf("neBEMDiscretize: Allocating memory for %d elements of size %zu.\n",
            NbElements, sizeof(Element));
     if (EleArr) {
       Element *tmp = (Element *)realloc(EleArr, NbElements * sizeof(Element));
@@ -1571,7 +1555,7 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
     else {
       EleArr = (Element *)malloc(NbElements * sizeof(Element));
       if (EleArr == NULL) {
-        neBEMMessage("neBEMDiscretize - EleArr malloc");
+        printf("neBEMDiscretize: Allocation of EleArr failed.\n");
         return -1;
       }
     }  // else EleArr => fresh allocation
@@ -1642,7 +1626,7 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
             InterfaceType[prim], ApplPot[prim], ApplCh[prim], Lambda[prim],
             NbSurfSegX[prim], NbSurfSegZ[prim]);
         if (fstatus != 0) {
-          neBEMMessage("neBEMDiscretize - SurfaceElements");
+          printf("neBEMDiscretize: SurfaceElements failed.\n");
           return -1;
         }
         break;
@@ -1653,13 +1637,13 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
             Radius[prim], VolRef1[prim], VolRef2[prim], InterfaceType[prim],
             ApplPot[prim], ApplCh[prim], Lambda[prim], NbWireSeg[prim]);
         if (fstatus != 0) {
-          neBEMMessage("neBEMDiscretize - WireElements");
+          printf("neBEMDiscretize: WireElements failed.\n");
           return -1;
         }
         break;
 
       default:
-        printf("PrimType out of range in CreateElements ... exiting ...\n");
+        printf("neBEMDiscretize: PrimType out of range. Exiting.\n");
         exit(-1);
     }  // switch PrimType ends
   }    // loop on prim number ends
@@ -1675,64 +1659,60 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
 
   // If the required memory exceeds the maximum allowed number of elements
   if (EleCntr > NbElements) {
-    neBEMMessage("neBEMDiscretize - EleCntr more than NbElements!");
+    printf("neBEMDiscretize: Number of elements exceeds allocated memory.\n");
     return -1;
   }
 
   // Check whether collocation points overlap
-  {
-    for (int cntr1 = 1; cntr1 <= EleCntr; ++cntr1) {
-      Point3D pt1 = CollocationPoint(cntr1); 
-      for (int cntr2 = cntr1 + 1; cntr2 <= EleCntr; ++cntr2) {
-        Point3D pt2 = CollocationPoint(cntr2); 
-        double dist = GetDistancePoint3D(&pt1, &pt2);
-        if (dist <= MINDIST)  {
-          // we need a linked-list here so that the overlapped
-          // element is easily deleted and the rest upgraded immediately
+  for (int cntr1 = 1; cntr1 <= EleCntr; ++cntr1) {
+    Point3D pt1 = CollocationPoint(cntr1); 
+    for (int cntr2 = cntr1 + 1; cntr2 <= EleCntr; ++cntr2) {
+      Point3D pt2 = CollocationPoint(cntr2); 
+      double dist = GetDistancePoint3D(&pt1, &pt2);
+      if (dist > MINDIST) continue;
+      // we need a linked-list here so that the overlapped
+      // element is easily deleted and the rest upgraded immediately
 
-          // Upgrade the element array manually, starting from cntr2 and restart
-          // the overlap check. At present it is only a warning to the user with
-          // some relevant information.
-          // Find the primitives and volumes for the overlapping elements
-          // The element structure should also maintain information on the
-          // volumes that an element belongs to.
-          int prim1 = (EleArr + cntr1 - 1)->PrimitiveNb;
-          int volele1 = VolRef1[prim1];
-          int prim2 = (EleArr + cntr2 - 1)->PrimitiveNb;
-          int volele2 = VolRef1[prim2];
+      // Upgrade the element array manually, starting from cntr2 and restart
+      // the overlap check. At present it is only a warning to the user with
+      // some relevant information.
+      // Find the primitives and volumes for the overlapping elements
+      // The element structure should also maintain information on the
+      // volumes that an element belongs to.
+      int prim1 = (EleArr + cntr1 - 1)->PrimitiveNb;
+      int volele1 = VolRef1[prim1];
+      int prim2 = (EleArr + cntr2 - 1)->PrimitiveNb;
+      int volele2 = VolRef1[prim2];
 
-          neBEMMessage("neBEMDiscretize - Overlapping collocation points!");
-          printf("Element %d, primitive %d, volume %d overlaps with\n", cntr1,
-                 prim1, volele1);
-          printf("\telement %d, primitive %d, volume %d.\n", cntr2, prim2,
-                 volele2);
-          printf("\tposition 1: (%g , %g , %g) micron,\n", 1e6 * pt1.X,
-                 1e6 * pt1.Y, 1e6 * pt1.Z);
-          printf("\tposition 2: (%g , %g , %g) micron.\n", 1e6 * pt2.X,
-                 1e6 * pt2.Y, 1e6 * pt2.Z);
-          printf("Please redo the geometry.\n");
-          return -1;
-        }  // if dist <= MINDIST
-      }    // for cntr2
-    }      // for cntr1
-  }        // check collocation point overlap
+      printf("neBEMDiscretize: Overlapping collocation points!");
+      printf("  Element %d, primitive %d, volume %d overlaps with\n", 
+             cntr1, prim1, volele1);
+      printf("  element %d, primitive %d, volume %d.\n", 
+             cntr2, prim2, volele2);
+      printf("\tposition 1: (%g , %g , %g) micron,\n", 1e6 * pt1.X,
+             1e6 * pt1.Y, 1e6 * pt1.Z);
+      printf("\tposition 2: (%g , %g , %g) micron.\n", 1e6 * pt2.X,
+             1e6 * pt2.Y, 1e6 * pt2.Z);
+      printf("Please redo the geometry.\n");
+      return -1;
+    }    // for cntr2
+  }      // for cntr1
 
   NbElements = EleCntr;  // the final number of elements
-  printf("Total final number of elements: %d\n", NbElements);
+  printf("neBEMDiscretize: Final number of elements: %d\n", NbElements);
 
   // Store element related data in a file for a new mesh created, if opted for
   if (NewMesh && OptStoreElements) {
     if (OptFormattedFile) {
       int fstatus = WriteElements();
       if (fstatus) {
-        neBEMMessage("neBEMDiscretize - problem writing Elements.\n");
+        printf("neBEMDiscretize: WriteElements failed.\n");
         return -1;
       }
     }  // formatted file
 
     if (OptUnformattedFile) {
-      neBEMMessage(
-          "neBEMDiscretize - unformatted write not inplemented yet.\n");
+      printf("neBEMDiscretize: unformatted write not inplemented yet.\n");
       return -1;
     }  // unformatted file
   }    // store elements
@@ -2116,7 +2096,7 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
   if (neBEMState < 7) {
     printf(
         "neBEMPrepareWeightingField: Weighting computations only meaningful "
-        "beyond neBEMState 7 ...\n");
+        "beyond neBEMState 7.\n");
     return -1;
   }
 
@@ -2136,7 +2116,8 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
         MAXWtFld);
     return -1;
   }
-  printf("\nPreparing weighting field for set %d.\n", IdWtField);
+  printf("neBEMPrepareWeightingField: Preparing weighting field for set %d.\n",
+         IdWtField);
 
   // Allocate a new column to store this solution set
   WtFieldChDen[IdWtField] = (double *)malloc((NbElements + 2) * sizeof(double));
@@ -2144,10 +2125,10 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
 
   fstatus = WeightingFieldSolution(nprim, primlist, WtFieldChDen[IdWtField]);
   if (fstatus) {
-    neBEMMessage("neBEMPrepareWeightingField - WeightingFieldSolution");
+    printf("neBEMPrepareWeightingField: WeightingFieldSolution failed.\n");
     return -1;
   } else {
-    printf("Computed weighting field solution\n");
+    printf("neBEMPrepareWeightingField: Computed weighting field solution\n");
   }
 
   // estimate primitive related avrg wt field charge densities
@@ -2164,7 +2145,8 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
 
     AvWtChDen[IdWtField][prim] /= area;
   }
-  printf("Computed primitive-averaged weighting field solutions\n");
+  printf("neBEMPrepareWeightingField: Computed primitive-averaged "
+         "weighting field solutions\n");
 
   // stringify the integer
   char strIdWtField[5];
@@ -2783,8 +2765,7 @@ int CreateOrUseDir(char dirname[]) {
 
   if (stat(dirname, &st) == 0) {
     // feel safe to use an existing directory
-    printf("Previous %s exists ... using the existing directory ... \n",
-           dirname);
+    printf("  Using existing directory %s\n", dirname);
   } else {
     snprintf(dirstr, 256, "mkdir -p %s", dirname);
     if (system(dirstr))  // returns 0 if successful
@@ -3123,7 +3104,7 @@ int ReadElements(void) {
 
   FILE *fStrEle = fopen(ElementFile, "r");
   if (fStrEle == NULL) {
-    neBEMMessage("ReadElements - Could not open file to read elements");
+    printf("ReadElements: Could not open file to read elements.");
     return -1;
   }
 
@@ -3137,7 +3118,7 @@ int ReadElements(void) {
   fscanf(fStrEle, "%d\n", &NbElements);
 
   if (neBEMState != 3) {
-    neBEMMessage("neBEMDiscretize - EleArr malloc; neBEMState mismatch!");
+    printf("ReadElements: neBEMState mismatch!");
     return -1;
   }
   if (EleArr) {
@@ -3148,16 +3129,16 @@ int ReadElements(void) {
       EleCntr = 0;
     } else {
       free(EleArr);
-      printf("neBEMDiscretize: Re-allocating EleArr failed.\n");
+      printf("ReadElements: Re-allocating EleArr failed.\n");
       fclose(fStrEle);
       return (1);
     }
-    printf("neBEMDiscretize: Re-allocated EleArr.\n");
+    printf("ReadElements: Re-allocated EleArr.\n");
   } else {
     // Fresh allocation.
     EleArr = (Element *)malloc(NbElements * sizeof(Element));
     if (EleArr == NULL) {
-      neBEMMessage("neBEMDiscretize - EleArr malloc");
+      printf("ReadElements: Allocation EleArr failed.\n");
       return -1;
     }
   }

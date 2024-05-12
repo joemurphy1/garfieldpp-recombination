@@ -77,15 +77,15 @@ int ComputeSolution(void) {
       OptGSL = 0;
   }
   if ((OptSVD == 0) && (OptLU == 0) && (OptGSL == 0)) {
-    printf("Cannot proceed with OptSVD, OptLU and OptGSL zero.\n");
-    printf("Assuming the safer option OptSVD = 1.\n");
+    printf("ComputeSolution: Cannot proceed with OptSVD, OptLU and OptGSL zero.\n");
+    printf("                 Assuming the safer option OptSVD = 1.\n");
     OptLU = 0;
     OptSVD = 1;
     OptGSL = 0;
   }
   if ((OptSVD == 1) && (OptLU == 1) && (OptGSL == 1)) {
-    printf("Cannot proceed with all OptSVD, OptLU and OptGSL one.\n");
-    printf("Assuming the safer option OptSVD = 1.\n");
+    printf("ComputeSolution: Cannot proceed with all OptSVD, OptLU and OptGSL one.\n");
+    printf("                 Assuming the safer option OptSVD = 1.\n");
     OptLU = 0;
     OptSVD = 1;
     OptGSL = 0;
@@ -110,8 +110,8 @@ int ComputeSolution(void) {
   if (NbFloatingConductors) { 
     // Number of floating conductors now restricted to one.
     if (NbFloatingConductors > 1) {
-      printf("Number of floating conductors > 1! ... not yet implemented.\n");
-      printf("Returning\n");
+      printf("ComputeSolution: Number of floating conductors > 1!\n");
+      printf("                 Not yet implemented. Returning.\n");
       return -1;
     }
     ++NbConstraints;
@@ -137,7 +137,7 @@ int ComputeSolution(void) {
   if (TimeStep == 1) {
     if (InfluenceMatrixFlag) {
       startClock = clock();
-      printf("ComputeSolution: LHMatrix ... ");
+      printf("ComputeSolution: Computing influence matrix...\n");
       fflush(stdout);
 #ifdef _OPENMP
       time_begin = omp_get_wtime();
@@ -148,7 +148,7 @@ int ComputeSolution(void) {
       printf("Elapsed time: %lg\n", time_end - time_begin);
 #endif
       if (fstatus != 0) {
-        neBEMMessage("ComputeSolution - LHMatrix");
+        printf("ComputeSolution: LHMatrix failed.");
         return -1;
       }
       printf("ComputeSolution: LHMatrix done!\n");
@@ -158,11 +158,11 @@ int ComputeSolution(void) {
       printf("to setup influence matrix.\n");
 
       startClock = clock();
-      printf("ComputeSolution: Inverting influence matrix ...\n");
+      printf("ComputeSolution: Inverting influence matrix...\n");
       fflush(stdout);
       fstatus = InvertMatrix();
       if (fstatus != 0) {
-        neBEMMessage("ComputeSolution - InvertMatrix");
+        printf("ComputeSolution: InvertMatrix failed.\n");
         return -1;
       }
       printf("ComputeSolution: Matrix inversion over.\n");
@@ -175,19 +175,19 @@ int ComputeSolution(void) {
       if (OptReadInvMatrix) {
         startClock = clock();
         printf(
-            "ComputeSolution: Reading inverted matrix ... will take time ...");
+            "ComputeSolution: Reading inverted matrix, will take time...\n");
         int fstatus = ReadInvertedMatrix();
         if (fstatus != 0) {
-          neBEMMessage("ComputeSolution - ReadInvertedMatrix");
+          printf("ComputeSolution: ReadInvertedMatrix failed.\n");
           return -1;
         }
-        printf("                 done!\n");
+        printf("                Done!\n");
         stopClock = clock();
         neBEMTimeElapsed(startClock, stopClock);
         printf("to read inverted influence matrix.\n");
       } else {
-        neBEMMessage("ComputeSolution - NewBC but no InvMat ... ");
-        neBEMMessage("don't know how to proceed!\n");
+        printf("ComputeSolution: NewBC but no InvMat.\n");
+        printf("                 Don't know how to proceed!\n");
         return -1;
       }
     }  // if (!InfluenceMatrixFlag) && NewBC
@@ -200,11 +200,11 @@ int ComputeSolution(void) {
   // Update known charges
   if (OptKnCh) {
     startClock = clock();
-    printf("ComputeSolution: UpdateKnownCharges ... ");
+    printf("ComputeSolution: UpdateKnownCharges...\n");
     fflush(stdout);
     fstatus = UpdateKnownCharges();
     if (fstatus != 0) {
-      neBEMMessage("ComputeSolution - UpdateKnownCharges");
+      printf("ComputeSolution: UpdateKnownCharges failed.\n");
       return -1;
     }
     printf("ComputeSolution: UpdateKnownCharges done!\n");
@@ -217,11 +217,11 @@ int ComputeSolution(void) {
   // Update charging up
   if (OptChargingUp) {
     startClock = clock();
-    printf("ComputeSolution: UpdateChargingUp ... ");
+    printf("ComputeSolution: UpdateChargingUp...\n");
     fflush(stdout);
     fstatus = UpdateChargingUp();
     if (fstatus != 0) {
-      neBEMMessage("ComputeSolution - UpdateChargingUp");
+      printf("ComputeSolution: UpdateChargingUp failed.\n");
       return -1;
     }
     printf("ComputeSolution: UpdateChargingUp done!\n");
@@ -233,11 +233,11 @@ int ComputeSolution(void) {
 
   // RHS
   startClock = clock();
-  printf("ComputeSolution: RHVector ... ");
+  printf("ComputeSolution: Setting up right-hand side vector...\n");
   fflush(stdout);
   fstatus = RHVector();
   if (fstatus != 0) {
-    neBEMMessage("ComputeSolution - RHVector");
+    printf("ComputeSolution: RHVector failed.\n");
     return -1;
   }
   printf("ComputeSolution: RHVector done!\n");
@@ -250,8 +250,7 @@ int ComputeSolution(void) {
   // The Solve routine simply involves the matrix
   // multiplication of inverted matrix and the current RHVector.
   startClock = clock();
-  printf("ComputeSolution: Solve ... ");
-  fflush(stdout);
+  printf("ComputeSolution: Solve ...\n");
 #ifdef _OPENMP
   time_begin = omp_get_wtime();
 #endif
@@ -261,7 +260,7 @@ int ComputeSolution(void) {
   printf("Elapsed time: %lg\n", time_end - time_begin);
 #endif
   if (fstatus != 0) {
-    neBEMMessage("ComputeSolution - Solve");
+    printf("ComputeSolution: Solve failed.\n");
     return -1;
   }
   printf("ComputeSolution: Solve done!\n");
@@ -310,7 +309,7 @@ int LHMatrix(void) {
   int dbgFn = 0;
 #endif
   printf(
-      "\nLHMatrix: The size of the Influence coefficient matrix is %d X %d\n",
+      "LHMatrix: The size of the influence coefficient matrix is %d X %d\n",
       NbEqns, NbUnknowns);
   fflush(stdout);
 
@@ -329,7 +328,7 @@ int LHMatrix(void) {
   // The field points are followed using elefld (field counter) and the
   // source elements are followed using elesrc (source counter)
   // printf("field point: ");	// do not remove
-  printf("Computing influence coefficient matrix ... will take time ...\n");
+  printf("LHMatrix: Computing influence coefficient matrix, will take time ...\n");
 
 #ifdef _OPENMP
   int nthreads = 1, tid = 0;
@@ -762,7 +761,7 @@ int LHMatrix(void) {
   }  // if NbFloatingConductors
 
   if (OptStoreInflMatrix && OptFormattedFile) {
-    printf("storing the influence matrix in a formatted file ...\n");
+    printf("LHMatrix: Storing the influence matrix in a formatted file.\n");
     fflush(stdout);
 
     char InflFile[256];
@@ -770,7 +769,7 @@ int LHMatrix(void) {
     strcat(InflFile, "/Infl.out");
     FILE *fInf = fopen(InflFile, "w+");
     if (fInf == NULL) {
-      neBEMMessage("LHMatrix - InflFile");
+      printf("LHMatrix: Cannot open Infl.out.\n");
       return -1;
     }
     fprintf(fInf, "%d %d\n", NbEqns, NbUnknowns);
@@ -787,8 +786,8 @@ int LHMatrix(void) {
   if (OptStoreInflMatrix &&
       OptUnformattedFile)  // Raw cannot be implemented now.
   {  // It may be because of the memory allocation using the NR routines -
-    neBEMMessage(
-        "LHMatrix - Binary write of Infl matrix not implemented yet.\n");
+    printf(
+        "LHMatrix: Binary write of Infl matrix not implemented yet.\n");
     return -1;
 
     char InflFile[256];
@@ -796,7 +795,7 @@ int LHMatrix(void) {
     strcat(InflFile, "/RawInfl.out");
     FILE *fInf = fopen(InflFile, "wb");
     if (fInf == NULL) {
-      neBEMMessage("LHMatrix - RawInflFile");
+      printf("LHMatrix: Cannot open RawInfl.out.\n");
       return -1;
     }
     printf("\nfInf: %p\n", (void *)fInf);
@@ -1312,8 +1311,8 @@ int InvertMatrix(void) {
   InvMat = dmatrix(1, NbUnknowns, 1, NbEqns);
 
   if (OptGSL) {
-    printf("InvertMatrix: matrix decomposition using GSL ... ");
-    printf("no OpenMP implementation ...");
+    printf("InvertMatrix: Matrix decomposition using GSL.\n");
+    printf("              No OpenMP implementation.\n");
     fflush(stdout);
 
     int s;  // signum for LU decomposition
@@ -1338,16 +1337,16 @@ int InvertMatrix(void) {
 
     gsl_matrix_free(m);
     gsl_matrix_free(inverse);
-    printf("InvertMatrix: ... completed using GSL\n");
+    printf("InvertMatrix: ... completed using GSL.\n");
   }  // if OptGSL
 
   if (OptSVD) {
-    printf("InvertMatrix: matrix decomposition using SVD ... ");
-    printf("no OpenMP implementation ...");
+    printf("InvertMatrix: Matrix decomposition using SVD.\n");
+    printf("              No OpenMP implementation.\n");
     fflush(stdout);
 
     clock_t SVDstartClock = clock();
-    printf("ComputeSolution: Decomposing influence matrix ...\n");
+    printf("InvertMatrix: Decomposing influence matrix...\n");
     fflush(stdout);
 
     // These may as well be declared in neBEM.h because a signicant amount
@@ -1369,10 +1368,10 @@ int InvertMatrix(void) {
 
     int fstatus = DecomposeMatrixSVD(SVDInf, SVDw, SVDv);
     if (fstatus != 0) {
-      neBEMMessage("ComputeSolution - DecomposeMatrixSVD");
+      printf("InvertMatrix: DecomposeMatrixSVD failed.\n");
       return -1;
     }
-    printf("ComputeSolution: Matrix decomposition over.\n");
+    printf("InvertMatrix: Matrix decomposition over.\n");
     clock_t SVDstopClock = clock();
     neBEMTimeElapsed(SVDstartClock, SVDstopClock);
     printf("to singular value decompose the influence matrix.\n");
@@ -1420,7 +1419,7 @@ int InvertMatrix(void) {
     free_dmatrix(SVDInf, 1, NbEqns, 1, NbUnknowns);
     free_dvector(SVDw, 1, NbUnknowns);
     free_dmatrix(SVDv, 1, NbUnknowns, 1, NbUnknowns);
-    printf("InvertMatrix: completed using SVD ...\n");
+    printf("InvertMatrix: ... completed using SVD.\n");
     fflush(stdout);
   }  // if OptSVD
 
@@ -1443,7 +1442,7 @@ int InvertMatrix(void) {
         tmpInf[i][j] = Inf[i][j];  // end of omp parallel for
     }
 
-    printf("InvertMatrix: matrix decomposition using LU ... ");
+    printf("InvertMatrix: Matrix decomposition using LU.\n");
     fflush(stdout);
     ludcmp(tmpInf, NbUnknowns, index, &d);  // The tmpInf matrix over-written
 
@@ -1474,7 +1473,7 @@ int InvertMatrix(void) {
     free_dmatrix(y, 1, NbUnknowns, 1, NbUnknowns);
     free_dmatrix(tmpInf, 1, NbEqns, 1, NbUnknowns);
 
-    printf("InvertMatrix: completed using LU ...\n");
+    printf("InvertMatrix: ... completed using LU.\n");
     fflush(stdout);
   }  // if OptLU
 
@@ -1487,18 +1486,14 @@ int InvertMatrix(void) {
 
   // It is necessary to write this file always if we want to avoid
   // matrix inversion for analyzing the same device with a different BC
-  printf("OptStoreInvMatrix: %d, OptFormattedFile: %d\n", OptStoreInvMatrix,
-         OptFormattedFile);
-
   if (OptStoreInvMatrix && OptFormattedFile) {
-    printf("storing the inverted matrix in a formatted file ...\n");
+    printf("InvertMatrix: Storing the inverted matrix in a formatted file.\n");
     fflush(stdout);
 
-    FILE *fInv;  // can be a very large file - change to raw and zipped format
     char InvMFile[256];
     strcpy(InvMFile, MeshOutDir);
     strcat(InvMFile, "/InvMat.out");
-    fInv = fopen(InvMFile, "w");
+    FILE *fInv = fopen(InvMFile, "w");
 
     // following line may be removed after the dimension issue is resolved.
     fprintf(fInv, "%d %d\n", NbEqns, NbUnknowns);
@@ -1511,9 +1506,8 @@ int InvertMatrix(void) {
 
   if (OptStoreInvMatrix && OptUnformattedFile) {
     // not implemented yet
-    // not implemented
-    neBEMMessage("InvertMatrix - Binary write not yet implemented.");
-    return (-1);
+    printf("InvertMatrix: Binary write not yet implemented.\n");
+    return -1;
   }
 
   neBEMState = 7;
@@ -1527,10 +1521,10 @@ int DecomposeMatrixSVD(double **SVDInf, double *SVDw, double **SVDv) {
   // The following needs optimization - wmin, wmax etc.
   double wmin, wmax;
 
-  printf("DecomposeMatrix: matrix decomposition using SVD ... ");
+  printf("DecomposeMatrix: Matrix decomposition using SVD...\n");
   fflush(stdout);
   svdcmp(SVDInf, NbEqns, NbUnknowns, SVDw, SVDv);  // SVDInf matrix over-written
-  printf("DecomposeMatrix: decomposition completed ...\n");
+  printf("DecomposeMatrix: Decomposition completed.\n");
   fflush(stdout);
 
   wmax = SVDw[1];  // Will be the maximum singular value obtained - changed 0.0
@@ -1983,7 +1977,7 @@ int RHVector(void) {
   fprintf(fout, "#BCondn Vector\n");
   fprintf(fout, "#elefld\tAssigned\tBC\tKnCh\tChUp\tRHValue\n");
 
-  printf("created BCondns.out file ...\n");
+  printf("RHVector: Created BCondns.out file.\n");
   fflush(stdout);
 
   for (int elefld = 1; elefld <= NbElements; ++elefld) {
@@ -2006,7 +2000,7 @@ int RHVector(void) {
         RHS[elefld] = value - valueKnCh - valueChUp;
         break;
       case 2:  // Conducting surfaces with known charge
-        printf("Conducting surface with charge not implemented.\n");
+        printf("RHVector: Conducting surface with charge not implemented.\n");
         fclose(fout);
         return -1;
         break;  // NOTE: no RHVector
@@ -2055,15 +2049,15 @@ int RHVector(void) {
         RHS[elefld] += (EleArr + elefld - 1)->Assigned;  
         break;
       case 6:  // E parallel symmetry boundary
-        printf("Symmetry boundary, E parallel not implemented yet.\n");
+        printf("RHVector: Symmetry boundary, E parallel not implemented yet.\n");
         return -1;
         break;
       case 7:  // E perpendicular symmetry boundary
-        printf("Symmetry boundary, E perpendicular not implemented yet.\n");
+        printf("RHVector: Symmetry boundary, E perpendicular not implemented yet.\n");
         return -1;
         break;
       default:
-        printf("elefld in RHVector out of range ... returning\n");
+        printf("RHVector: Interface type out of range.\n");
         return -1;
     }
     fprintf(fout, "%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", elefld,
@@ -2093,7 +2087,7 @@ int RHVector(void) {
     }
   }  // if NbConstraints
 
-  printf("computations for RHVector completed ...\n");
+  printf("RHVector: Computations completed.\n");
   fflush(stdout);
 
   fclose(fout);
@@ -2899,7 +2893,7 @@ int Solve(void) {
   Solution = dvector(1, NbUnknowns);
   // printf("Solution array allocated\n"); fflush(stdout);
 
-  printf("\ncomputing solution for each element: ");
+  printf("Solve: computing solution for each element: ");
 
   for (int i = 1; i <= NbUnknowns; i++) {
     printf("%6d ...", i);
@@ -2919,22 +2913,18 @@ int Solve(void) {
   }
   fflush(stdout);
 
-  printf("\nsolution over for all elements ...\n");
+  printf("\nSolve: Solution over for all elements.\n");
   fflush(stdout);
 
   if (NbConstraints) {
     if (OptSystemChargeZero) {
+      printf("Solve: System charge zero constraint.\n");
       VSystemChargeZero = Solution[NbSystemChargeZero];
-      printf("\nsolution over for system charge zero constraint ...\n");
-      fflush(stdout);
     }
 
     if (NbFloatingConductors) {
+      printf("Solve: Floating conductor charge zero constraint.\n");
       VFloatCon = Solution[NbFloatCon];
-      printf(
-          "\nsolution over for floating conductor charge zero constraint "
-          "...\n");
-      fflush(stdout);
     }
   }  // if NbConstraints
 
@@ -2944,7 +2934,7 @@ int Solve(void) {
   strcat(SolnFile, "/Soln.out");
   FILE *fSoln = fopen(SolnFile, "w");
   if (fSoln == NULL) {
-    neBEMMessage("Solve - SolnFile");
+    neBEMMessage("Solve: Cannot open Soln.out.\n");
     return -1;
   }
   fprintf(fSoln, "#EleNb\tX\tY\tZ\tSolution\tAssigned\tTotal\n");
@@ -2976,7 +2966,7 @@ int Solve(void) {
   strcat(PrimSolnFile, "/PrimSoln.out");
   FILE *fPrimSoln = fopen(PrimSolnFile, "w");
   if (fPrimSoln == NULL) {
-    neBEMMessage("Solve - PrimSolnFile");
+    printf("Solve: Cannot open PrimSoln.out.\n");
     return -1;
   }
   fprintf(fPrimSoln,
@@ -3013,13 +3003,12 @@ int Solve(void) {
   // reason (such as a repeat calculation), the influence coefficient matrix is
   // not available, it can be retrieved by carrying out the computation once
   // again, reading it from a formatted or an unformatted file.
-  printf("OptValidateSolution: %d\n", OptValidateSolution);
   if (OptValidateSolution) {
-    printf("Computing solution at the collocation points for comparison.\n");
+    printf("Solve: Computing solution at the collocation points for comparison.\n");
     fflush(stdout);
 
     if (InfluenceMatrixFlag) {
-      printf("Influence matrix in memory ...\n");
+      printf("Solve: Influence matrix in memory.\n");
     }
 
     // Only when InfluenceMatrixFlag is false, the influence coefficient
@@ -3028,24 +3017,24 @@ int Solve(void) {
     if (!InfluenceMatrixFlag) {
       if (TimeStep != 1) {
         // influence matrix to be computed only in the first time step
-        printf("Influence matrix in memory ...\n");
+        printf("Solve: Influence matrix in memory.\n");
       } else {
-        printf("Influence matrix NOT in memory ...\n");
+        printf("Solve: Influence matrix NOT in memory.\n");
 
         if (OptRepeatLHMatrix) {
-          printf("repeating influence coefficient matrix computation ...\n");
+          printf("Solve: Repeating influence coefficient matrix computation...\n");
 
           int fstatus = LHMatrix();
           // assert(fstatus == 0);
           if (fstatus != 0) {
-            neBEMMessage("Solve - LHMatrix in OptRepeatLHMatrix");
+            printf("Solve: LHMatrix failed (in OptRepeatLHMatrix).\n");
             return -1;
           }
         }
 
         if (OptStoreInflMatrix && OptFormattedFile) {
           printf(
-              "reading influence coefficient matrix from formatted file...\n");
+              "Solve: Reading influence coefficient matrix from formatted file...\n");
 
           char InflFile[256];
           strcpy(InflFile, MeshOutDir);
@@ -3053,14 +3042,14 @@ int Solve(void) {
           FILE *fInf = fopen(InflFile, "r");
           // assert(fInf != NULL);
           if (fInf == NULL) {
-            neBEMMessage("Solve - InflFile in OptValidate.");
+            printf("Solve: Cannot open Infl.out (in OptValidate).\n");
             return 1;
           }
 
           int chkNbEqns, chkNbUnknowns;
           fscanf(fInf, "%d %d\n", &chkNbEqns, &chkNbUnknowns);
           if ((chkNbEqns != NbEqns) || (chkNbUnknowns != NbUnknowns)) {
-            neBEMMessage("Solve - matrix dimension do not match!");
+            printf("Solve: Matrix dimensions do not match!\n");
             fclose(fInf);
             return (-1);
           }
@@ -3077,8 +3066,7 @@ int Solve(void) {
         }  // stored influence matrix and formatted file
 
         if (OptStoreInflMatrix && OptUnformattedFile) {
-          neBEMMessage(
-              "Solve - Binary read of Infl matrix not implemented yet.\n");
+          printf("Solve: Binary read of Infl matrix not implemented yet.\n");
           return -1;
 
           RawInf = dmatrix(1, NbEqns, 1, NbUnknowns);
@@ -3124,7 +3112,7 @@ int Solve(void) {
       strcat(Chkfile, "/XChk.out");
       FILE *fChk = fopen(Chkfile, "w");  // assert(fChk != NULL);
       if (fChk == NULL) {
-        neBEMMessage("Solve - ChkFile");
+        printf("Solve: Cannot open XChk.out.\n");
         return -1;
       }
       fprintf(fChk, "#Row\tGivenPot\tError\n");
@@ -3156,8 +3144,8 @@ int Solve(void) {
         fprintf(fChk, "%d\t%lg\t%lg\n", elefld, RHS[elefld], Error[elefld]);
       free_dvector(Error, 1, NbEqns);
 
-      printf("Computed values at the collocation points for comparison.\n");
-      printf("Error maximum on element %d and its magnitude is %lg.\n",
+      printf("Solve: Computed values at the collocation points for comparison.\n");
+      printf("Solve: Error maximum on element %d and its magnitude is %lg.\n",
              ElementOfMaxError, MaxError);
       fflush(stdout);
 
@@ -3174,12 +3162,11 @@ int Solve(void) {
     }  // if(Inf || RawInf)
     else {
       if (OptForceValidation) {
-        neBEMMessage(
-            "Solve - Infl matrix not available, re-computation forced.\n");
+        printf("Solve: Infl matrix not available, re-computation forced.\n");
 
         int fstatus = LHMatrix();
         if (fstatus != 0) {
-          neBEMMessage("Solve - LHMatrix in forced OptRepeatLHMatrix");
+          printf("Solve: LHMatrix failed (in forced OptRepeatLHMatrix)");
           return -1;
         }
 
@@ -3212,8 +3199,8 @@ int Solve(void) {
           }
         }
 
-        printf("Computed values at the collocation points for comparison.\n");
-        printf("Error maximum on element %d and its magnitude is %lg.\n",
+        printf("Solve: Computed values at the collocation points for comparison.\n");
+        printf("Solve: Error maximum on element %d and its magnitude is %lg.\n",
                ElementOfMaxError, MaxError);
         fflush(stdout);
 
@@ -3224,7 +3211,7 @@ int Solve(void) {
 
         free_dmatrix(Inf, 1, NbEqns, 1, NbUnknowns);
       } else {  // this is not an error, though
-        neBEMMessage("Solve - Infl matrix not available, no validation.\n");
+        printf("Solve: Infl matrix not available, no validation.\n");
       }
     }  // else (Inf || RawInf)
   }    // if(OptValidateSolution)
@@ -3268,11 +3255,10 @@ int Solve(void) {
   */
 
   OptEstimateError = 0;  // temporary measure
-  printf("OptEstimateError: %d\n", OptEstimateError);
   if (OptEstimateError) {
     printf(
-        "Properties at non-collocation points on element for estimating "
-        "error.\n");
+        "Solve: Properties at non-collocation points on element for "
+        "estimating error.\n");
     fflush(stdout);
 
     double Err;
@@ -3286,7 +3272,7 @@ int Solve(void) {
     strcat(Errfile, "/Errors.out");
     FILE *fErr = fopen(Errfile, "w");
     if (fErr == NULL) {
-      neBEMMessage("Solve - ErrFile");
+      printf("Solve: Cannot open Errors.out.\n");
       return -1;
     }
     fprintf(fErr,
@@ -4067,7 +4053,7 @@ int ReadSolution(void) {
   FILE *fSoln = fopen(SolnFile, "r");
   // assert(fSoln != NULL);
   if (fSoln == NULL) {
-    neBEMMessage("ReadSolution - unable to open solution file.");
+    printf("ReadSolution: Unable to open solution file.\n");
     return -1;
   }
 
@@ -4123,7 +4109,7 @@ int ReadSolution(void) {
   strcat(PrimSolnFile, "/PrimSoln.out");
   FILE *fPrimSoln = fopen(PrimSolnFile, "r");
   if (fPrimSoln == NULL) {
-    neBEMMessage("ReadSolution - unable to open primitive solution file.");
+    printf("ReadSolution: Unable to open primitive solution file.\n");
     return -1;
   }
   fgets(instr, 256, fPrimSoln);
