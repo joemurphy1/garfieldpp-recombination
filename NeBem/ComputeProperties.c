@@ -882,6 +882,9 @@ int ElePFAtPoint1(Point3D *globalP, double *Potential, Vector3D *globalF) {
       const Element* eleBgn = EleArr + ElementBgn[primsrc] - 1;
       const Element* eleEnd = EleArr + ElementEnd[primsrc] - 1;
       for (const Element* ele = eleBgn; ele <= eleEnd; ++ele) {
+	const double xO = ele->Origin.X;
+	const double yO = ele->Origin.Y;
+	const double zO = ele->Origin.Z;
         const int type = ele->GType;
         assert(type == 2 || type == 3 || type == 4);
         const double a = ele->LX;
@@ -895,32 +898,32 @@ int ElePFAtPoint1(Point3D *globalP, double *Potential, Vector3D *globalF) {
           area *= 0.5;
         } 
         double ePot = 0.;
-        Vector3D eF;
-        eF.X = eF.Y = eF.Z = 0.;
+        double eFx = 0.;
+        double eFy = 0.;
+        double eFz = 0.;
         for (int kx = -perx; kx <= perx; ++kx) {
-          const double xsrc = ele->Origin.X + sx * kx;
+          const double xsrc = xO + sx * kx;
           for (int ky = -pery; ky <= pery; ++ky) {
-            const double ysrc = ele->Origin.Y + sy * ky;
+            const double ysrc = yO + sy * ky;
             for (int kz = -perz; kz <= perz; ++kz) {
-              const double zsrc = ele->Origin.Z + sz * kz;
-              // Rotate from global to local system
-              double vG[3] = {xfld - xsrc, yfld - ysrc, zfld - zsrc};
-              double vL[3] = {0., 0., 0.};
-              for (int i = 0; i < 3; ++i) {
-                for (int j = 0; j < 3; ++j) {
-                  vL[i] += rot[i][j] * vG[j];
-                }
-              }
-              const double xm = type == 3 ? vL[0] - a / 3. : vL[0];
-	      const double zm = type == 3 ? vL[2] - b / 3. : vL[2];
-              const double r2 = xm * xm + vL[1] * vL[1] + zm * zm;
+              const double zsrc = zO + sz * kz;
+              // Rotate from global to local system.
+              const double xG = xfld - xsrc;
+	      const double yG = yfld - ysrc;
+	      const double zG = zfld - zsrc;
+              const double x = rot[0][0] * xG + rot[0][1] * yG + rot[0][2] * zG;
+              const double y = rot[1][0] * xG + rot[1][1] * yG + rot[1][2] * zG;
+              const double z = rot[2][0] * xG + rot[2][1] * yG + rot[2][2] * zG;
+              const double xm = type == 3 ? x - a / 3. : x;
+	      const double zm = type == 3 ? z - b / 3. : z;
+              const double r2 = xm * xm + y * y + zm * zm;
               if (r2 >= far2) {
                 const double v = area / sqrt(r2);
                 const double f = v / r2;
                 ePot += v;
-                eF.X += vL[0] * f;
-                eF.Y += vL[1] * f;
-                eF.Z += vL[2] * f;
+                eFx += x * f;
+                eFy += y * f;
+                eFz += z * f;
                 continue;
               } 
               double tPot = 0.;
@@ -928,49 +931,49 @@ int ElePFAtPoint1(Point3D *globalP, double *Potential, Vector3D *globalF) {
               tF.X = tF.Y = tF.Z = 0.;
               switch (type) {
                 case 4:
-                  if (ExactRecSurf(vL[0] / a, vL[1] / a, vL[2] / a, 
-                                   -0.5, -(b / a) / 2.0, 0.5,
-                                   (b / a) / 2.0, &tPot, &tF)) {
+                  if (ExactRecSurf(x / a, y / a, z / a, 
+                                   -0.5, -(b / a) / 2.0, 0.5, (b / a) / 2.0, 
+				   &tPot, &tF)) {
                     printf("Problem with ExactRecSurf.\n");
                   }
                   // Rescale.
                   tPot *= a;
                   break;
                 case 3:
-                  if (ExactTriSurf(b / a, vL[0] / a, vL[1] / a, vL[2] / a, &tPot, &tF)) {
+                  if (ExactTriSurf(b / a, x / a, y / a, z / a, &tPot, &tF)) {
                     printf("Problem with ExactTriSurf.\n");
                   }
                   // Rescale.
                   tPot *= a;
                   break;
                 case 2:
-                  if ((fabs(vL[0]) < MINDIST) && (fabs(vL[1]) < MINDIST)) {
-                    if (fabs(vL[2]) < MINDIST) {
+                  if ((fabs(x) < MINDIST) && (fabs(y) < MINDIST)) {
+                    if (fabs(z) < MINDIST) {
                       tPot = ExactCentroidalP_W(a, b);
                     } else {
-                      tPot = ExactAxialP_W(a, b, vL[2]);
+                      tPot = ExactAxialP_W(a, b, z);
                     }
                     tF.X = tF.Y = 0.;
-                    tF.Z = ExactThinFZ_W(a, b, vL[0], vL[1], vL[2]);
+                    tF.Z = ExactThinFZ_W(a, b, x, y, z);
                   } else {
-                    ExactThinWire(a, b, vL[0], vL[1], vL[2], &tPot, &tF);
+                    ExactThinWire(a, b, x, y, z, &tPot, &tF);
                   }
                   break;
                 default:
                   break;
               }
               ePot += tPot;
-              eF.X += tF.X;
-              eF.Y += tF.Y;
-              eF.Z += tF.Z;
+              eFx += tF.X;
+              eFy += tF.Y;
+              eFz += tF.Z;
             } // z
           } // y
         } // x
         const double q = ele->Solution + ele->Assigned;
         pPot[primsrc] += q * ePot;
-        lFx += q * eF.X;
-        lFy += q * eF.Y;
-        lFz += q * eF.Z;
+        lFx += q * eFx;
+        lFy += q * eFy;
+        lFz += q * eFz;
       }
       Vector3D localF;
       localF.X = lFx;
