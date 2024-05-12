@@ -400,8 +400,11 @@ int PFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
 // coordinate system only due to all the interface elements.
 // Multi-threading implemented in the following routine
 int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
+#ifdef __cplusplus
+  constexpr int dbgFn = 0;
+#else
   int dbgFn = 0;
-
+#endif
   const double xfld = globalP->X;
   const double yfld = globalP->Y;
   const double zfld = globalP->Z;
