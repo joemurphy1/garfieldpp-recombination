@@ -1,6 +1,7 @@
 /*
 (c) 2005, Supratik Mukhopadhayay, Nayana Majumdar
 */
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -366,11 +367,16 @@ void WireFlux(int ele, Point3D *localP, Vector3D *localF) {
 int PFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
   double ElePot;
   Vector3D EleglobalF;
-  int fstatus = ElePFAtPoint(globalP, &ElePot, &EleglobalF);
-  if (fstatus) {
-    printf(
-        "Problem in ElePFAtPoint being called from PFAtPoint ... returning\n");
-    return (-1);
+  if (PrimAfter < 0) {
+    if (ElePFAtPoint1(globalP, &ElePot, &EleglobalF)) {
+      printf("Problem in ElePFAtPoint1 being called from PFAtPoint.\n");
+      return -1;
+    }
+  } else {
+    if (ElePFAtPoint(globalP, &ElePot, &EleglobalF)) {
+      printf("Problem in ElePFAtPoint being called from PFAtPoint.\n");
+      return (-1);
+    }
   }
   *Potential = ElePot;
   globalF->X = EleglobalF.X;
@@ -380,8 +386,7 @@ int PFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
   if (OptKnCh) {
     double KnChPot;
     Vector3D KnChglobalF;
-    fstatus = KnChPFAtPoint(globalP, &KnChPot, &KnChglobalF);
-    if (fstatus) {
+    if (KnChPFAtPoint(globalP, &KnChPot, &KnChglobalF)) {
       printf(
           "Problem in KnChPFAtPoint being called from PFAtPoint ... "
           "returning\n");
@@ -400,11 +405,8 @@ int PFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
 // coordinate system only due to all the interface elements.
 // Multi-threading implemented in the following routine
 int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
-#ifdef __cplusplus
-  constexpr int dbgFn = 0;
-#else
   int dbgFn = 0;
-#endif
+
   const double xfld = globalP->X;
   const double yfld = globalP->Y;
   const double zfld = globalP->Z;
@@ -752,6 +754,229 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
           }      // for xrpt
         }        // PeriodicInX || PeriodicInY || PeriodicInZ
       }          // PeriodicType == 1
+      Vector3D localF;
+      localF.X = lFx;
+      localF.Y = lFy;
+      localF.Z = lFz;
+      Vector3D tmpF = RotateVector3D(&localF, &PrimDC[primsrc], local2global);
+      plFx[primsrc] = tmpF.X;
+      plFy[primsrc] = tmpF.Y;
+      plFz[primsrc] = tmpF.Z;
+    }  // for all primitives: basic device, mirror reflections and repetitions
+  }    // pragma omp parallel
+
+  double totPot = 0.0;
+  Vector3D totF;
+  totF.X = totF.Y = totF.Z = 0.0;
+  for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    totPot += pPot[prim];
+    totF.X += plFx[prim];
+    totF.Y += plFy[prim];
+    totF.Z += plFz[prim];
+  }
+
+  // This is done at the end of the function - before freeing memory
+#ifdef __cplusplus
+  *Potential = totPot * InvFourPiEps0;
+  globalF->X = totF.X * InvFourPiEps0;
+  globalF->Y = totF.Y * InvFourPiEps0;
+  globalF->Z = totF.Z * InvFourPiEps0;
+#else
+  *Potential = totPot / MyFACTOR;
+  globalF->X = totF.X / MyFACTOR;
+  globalF->Y = totF.Y / MyFACTOR;
+  globalF->Z = totF.Z / MyFACTOR;
+#endif
+  (*Potential) += VSystemChargeZero;  // respect total system charge constraint
+
+  if (dbgFn) {
+    printf("Final values due to all primitives: ");
+    // printf("xfld\tyfld\tzfld\tPot\tFx\tFy\tFz\n");	// refer, do not
+    // uncomment
+    printf("%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n\n", xfld, yfld, zfld,
+           (*Potential), globalF->X, globalF->Y, globalF->Z);
+    fflush(stdout);
+  }
+
+  free_dvector(pPot, 1, NbPrimitives);
+  free_dvector(plFx, 1, NbPrimitives);
+  free_dvector(plFy, 1, NbPrimitives);
+  free_dvector(plFz, 1, NbPrimitives);
+
+  return (0);
+}  // end of ElePFAtPoint
+
+// Gives three components of the total Potential and flux in the global
+// coordinate system only due to all the interface elements.
+// Multi-threading implemented in the following routine
+int ElePFAtPoint1(Point3D *globalP, double *Potential, Vector3D *globalF) {
+#ifdef __cplusplus
+  constexpr int dbgFn = 0;
+#else
+  int dbgFn = 0;
+#endif
+  const double xfld = globalP->X;
+  const double yfld = globalP->Y;
+  const double zfld = globalP->Z;
+
+  *Potential = globalF->X = globalF->Y = globalF->Z = 0.0;
+
+  double *pPot = dvector(1, NbPrimitives);
+  double *plFx = dvector(1, NbPrimitives);
+  double *plFy = dvector(1, NbPrimitives);
+  double *plFz = dvector(1, NbPrimitives);
+
+  for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    pPot[prim] = plFx[prim] = plFy[prim] = plFz[prim] = 0.0;
+  }
+
+#ifdef _OPENMP
+  int tid = 0, nthreads = 1;
+#pragma omp parallel private(tid, nthreads)
+#endif
+  {
+#ifdef _OPENMP
+    if (dbgFn) {
+      tid = omp_get_thread_num();
+      if (tid == 0) {
+        nthreads = omp_get_num_threads();
+        printf("PFAtPoint computation with %d threads\n", nthreads);
+      }
+    }
+#endif
+// by default, nested parallelization is off in C
+#ifdef _OPENMP
+#pragma omp for
+#endif
+    for (int primsrc = 1; primsrc <= NbPrimitives; ++primsrc) {
+      if (dbgFn) {
+        printf("Evaluating effect of primsrc %d using on %lg, %lg, %lg\n",
+               primsrc, xfld, yfld, zfld);
+        fflush(stdout);
+      }
+
+      // Field in the local frame.
+      double lFx = 0.;
+      double lFy = 0.;
+      double lFz = 0.;
+
+      // Set up transform matrix for this primitive, which is also the same
+      // for all the elements belonging to this primitive.
+      double rot[3][3];
+      rot[0][0] = PrimDC[primsrc].XUnit.X;
+      rot[0][1] = PrimDC[primsrc].XUnit.Y;
+      rot[0][2] = PrimDC[primsrc].XUnit.Z;
+      rot[1][0] = PrimDC[primsrc].YUnit.X;
+      rot[1][1] = PrimDC[primsrc].YUnit.Y;
+      rot[1][2] = PrimDC[primsrc].YUnit.Z;
+      rot[2][0] = PrimDC[primsrc].ZUnit.X;
+      rot[2][1] = PrimDC[primsrc].ZUnit.Y;
+      rot[2][2] = PrimDC[primsrc].ZUnit.Z;
+
+      const int perx = PeriodicInX[primsrc];
+      const int pery = PeriodicInY[primsrc];
+      const int perz = PeriodicInZ[primsrc];
+      const double sx = perx > 0 ? XPeriod[primsrc] : 0.;
+      const double sy = pery > 0 ? YPeriod[primsrc] : 0.;
+      const double sz = perz > 0 ? ZPeriod[primsrc] : 0.;
+      const Element* eleBgn = EleArr + ElementBgn[primsrc] - 1;
+      const Element* eleEnd = EleArr + ElementEnd[primsrc] - 1;
+      for (const Element* ele = eleBgn; ele <= eleEnd; ++ele) {
+        const int type = ele->GType;
+        assert(type == 2 || type == 3 || type == 4);
+        const double a = ele->LX;
+        const double b = ele->LZ;
+        const double far2 = type == 2 ? FarField2 * b * b : 
+                                        FarField2 * (a * a + b * b);
+        double area = a * b;
+        if (type == 2) {
+          area *= 2. * ST_PI;
+        } else if (type == 3) {
+          area *= 0.5;
+        } 
+        double ePot = 0.;
+        Vector3D eF;
+        eF.X = eF.Y = eF.Z = 0.;
+        for (int kx = -perx; kx <= perx; ++kx) {
+          const double xsrc = ele->Origin.X + sx * kx;
+          for (int ky = -pery; ky <= pery; ++ky) {
+            const double ysrc = ele->Origin.Y + sy * ky;
+            for (int kz = -perz; kz <= perz; ++kz) {
+              const double zsrc = ele->Origin.Z + sz * kz;
+              // Rotate from global to local system
+              double vG[3] = {xfld - xsrc, yfld - ysrc, zfld - zsrc};
+              double vL[3] = {0., 0., 0.};
+              for (int i = 0; i < 3; ++i) {
+                for (int j = 0; j < 3; ++j) {
+                  vL[i] += rot[i][j] * vG[j];
+                }
+              }
+              double r2 = 0.;
+              if (type == 3) {
+                const double xm = vL[0] - a / 3.;
+                const double zm = vL[2] - b / 3.;
+                r2 = xm * xm + vL[1] * vL[1] + zm * zm;
+              } else {
+                r2 = vL[0] * vL[0] + vL[1] * vL[1] + vL[2] * vL[2];
+              }
+              if (r2 >= far2) {
+                const double v = area / sqrt(r2);
+                const double f = v / r2;
+                ePot += v;
+                eF.X += vL[0] * f;
+                eF.Y += vL[1] * f;
+                eF.Z += vL[2] * f;
+                continue;
+              } 
+              double tPot = 0.;
+              Vector3D tF;
+              tF.X = tF.Y = tF.Z = 0.;
+              switch (type) {
+                case 4:
+                  if (ExactRecSurf(vL[0] / a, vL[1] / a, vL[2] / a, 
+                                   -0.5, -(b / a) / 2.0, 0.5,
+                                   (b / a) / 2.0, &tPot, &tF)) {
+                    printf("Problem with ExactRecSurf.\n");
+                  }
+                  // Rescale.
+                  tPot *= a;
+                  break;
+                case 3:
+                  if (ExactTriSurf(b / a, vL[0] / a, vL[1] / a, vL[2] / a, &tPot, &tF)) {
+                    printf("Problem with ExactTriSurf.\n");
+                  }
+                  // Rescale.
+                  tPot *= a;
+                  break;
+                case 2:
+                  if ((fabs(vL[0]) < MINDIST) && (fabs(vL[1]) < MINDIST)) {
+                    if (fabs(vL[2]) < MINDIST) {
+                      tPot = ExactCentroidalP_W(a, b);
+                    } else {
+                      tPot = ExactAxialP_W(a, b, vL[2]);
+                    }
+                    tF.X = tF.Y = 0.;
+                    tF.Z = ExactThinFZ_W(a, b, vL[0], vL[1], vL[2]);
+                  } else {
+                    ExactThinWire(a, b, vL[0], vL[1], vL[2], &tPot, &tF);
+                  }
+                  break;
+                default:
+                  break;
+              }
+              ePot += tPot;
+              eF.X += tF.X;
+              eF.Y += tF.Y;
+              eF.Z += tF.Z;
+            } // z
+          } // y
+        } // x
+        const double q = ele->Solution + ele->Assigned;
+        pPot[primsrc] += q * ePot;
+        lFx += q * eF.X;
+        lFy += q * eF.Y;
+        lFz += q * eF.Z;
+      }
       Vector3D localF;
       localF.X = lFx;
       localF.Y = lFy;
@@ -1621,7 +1846,6 @@ int CreateFastVolElePF(void) {
             if (omitFlag) {
               potential = field.X = field.Y = field.Z = 0.0;
             } else {
-              // fstatus = ElePFAtPoint(&point, &potential, &field);
               fstatus =
                   PFAtPoint(&point, &potential, &field);  // both ele and KnCh
               if (fstatus != 0) {
@@ -1819,7 +2043,6 @@ int CreateFastVolElePF(void) {
               if (omitFlag) {
                 potential = field.X = field.Y = field.Z = 0.0;
               } else {
-                // fstatus = ElePFAtPoint(&point, &potential, &field);
                 fstatus =
                     PFAtPoint(&point, &potential, &field);  // both ele & KnCh
                 if (fstatus != 0) {

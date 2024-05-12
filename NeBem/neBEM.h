@@ -335,6 +335,7 @@ neBEMGLOBAL Point3D ReflectOnMirror(char Axis, int elesrc, Point3D srcpt,
 // Compute potential and flux components at globalPt due to all elements
 neBEMGLOBAL int PFAtPoint(Point3D *globalPt, double *Pot, Vector3D *Flux);
 neBEMGLOBAL int ElePFAtPoint(Point3D *globalPt, double *Pot, Vector3D *Flux);
+neBEMGLOBAL int ElePFAtPoint1(Point3D *globalPt, double *Pot, Vector3D *Flux);
 neBEMGLOBAL int KnChPFAtPoint(Point3D *globalPt, double *Pot, Vector3D *Flux);
 
 // Choose between element and primitive representations
