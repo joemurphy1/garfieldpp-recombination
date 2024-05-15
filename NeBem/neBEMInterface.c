@@ -2857,13 +2857,11 @@ int WritePrimitives(void) {
 
 int WriteElements(void) {
   char ElementFile[256];
-
   strcpy(ElementFile, MeshOutDir);
   strcat(ElementFile, "/Elements/StoreElems.out");
-
   FILE *fStrEle = fopen(ElementFile, "w");
   if (fStrEle == NULL) {
-    neBEMMessage("WriteElements - Could not create file to store elements");
+    printf("WriteElements: Could not create file to store elements.\n");
     return -1;
   }
 
@@ -2945,7 +2943,51 @@ int WriteElements(void) {
 
   fclose(fStrEle);
 
+  if (!OptElementFiles) return 0;
+
+  for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    char primstr[10];
+    snprintf(primstr, 10, "%d", prim);
+    char OutElem[256];
+    strcpy(OutElem, MeshOutDir);
+    strcat(OutElem, "/Elements/ElemOnPrim");
+    strcat(OutElem, primstr);
+    strcat(OutElem, ".out");
+    FILE* fElem = fopen(OutElem, "w");
+    if (fElem == NULL) {
+      printf("WriteElements: Cannot open output file for primitive %d.\n",
+             prim);
+      continue;
+    }
+    for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim]; ++ele) {
+      Element* elePtr = (EleArr + ele - 1);
+      Point3D collPt = CollocationPoint(ele);
+      fprintf(fElem, "##Element Counter: %d\n", ele);
+      fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
+      fprintf(fElem, "%d\t%d\t%d\t%d\n", 1, 1, prim, ele);
+      fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
+      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
+              elePtr->GType,
+              elePtr->Origin.X, elePtr->Origin.Y, elePtr->Origin.Z, 
+              elePtr->LX, elePtr->LZ, ElementArea(ele));
+      fprintf(fElem, "#DirnCosn: \n");
+      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
+              PrimDC[prim].XUnit.Y, PrimDC[prim].XUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].YUnit.X,
+              PrimDC[prim].YUnit.Y, PrimDC[prim].YUnit.Z);
+      fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].ZUnit.X,
+              PrimDC[prim].ZUnit.Y, PrimDC[prim].ZUnit.Z);
+      fprintf(fElem, "#EType\tLambda\n");
+      fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
+      fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
+      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n", 1,
+              collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
+    }
+    fclose(fElem);
+  }
+
   return 0;
+
 }  // WriteElements ends
 
 int ReadPrimitives(void) {

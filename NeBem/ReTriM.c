@@ -479,23 +479,20 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     double WireY = 0.5 * (yvert[1] + yvert[0]);
     double WireZ = 0.5 * (zvert[1] + zvert[0]);
     Const = WireX * ZUnit.X + WireY * ZUnit.Y + WireZ * ZUnit.Z;
-    if(abs(XCoef) < 1.0e-12)	// X can be anything!
-            {
-            XUnit.X = 1.0;
-            XUnit.Y = 0.0;
-            XUnit.Z = 0.0;
-            YUnit = Vector3DCrossProduct(ZUnit, XUnit);
-            }
-    else
-            {
-            // For a point on the above surface where both Y and Z are zero
-            O = CreatePoint3D(WireX, WireY, WireZ);
-            R = CreatePoint3D(Const, 0, 0);
-            // Create the vector joining O and R; find X and Y unit vectors
-            OR = CreateDistanceVector3D(O,R);
-            XUnit = UnitVector3D(OR);
-            YUnit = Vector3DCrossProduct(ZUnit, XUnit);
-            }
+    if(abs(XCoef) < 1.0e-12) { // X can be anything!
+      XUnit.X = 1.0;
+      XUnit.Y = 0.0;
+      XUnit.Z = 0.0;
+      YUnit = Vector3DCrossProduct(ZUnit, XUnit);
+    } else { 
+      // For a point on the above surface where both Y and Z are zero
+      O = CreatePoint3D(WireX, WireY, WireZ);
+      R = CreatePoint3D(Const, 0, 0);
+      // Create the vector joining O and R; find X and Y unit vectors
+      OR = CreateDistanceVector3D(O,R);
+      XUnit = UnitVector3D(OR);
+      YUnit = Vector3DCrossProduct(ZUnit, XUnit);
+    }
     old code */
 
     // replaced following Rob's suggestions (used functions instead of direct
@@ -603,19 +600,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   }
 
   // file outputs for elements on primitive
-  FILE* fElem = NULL;
-  if (OptElementFiles) {
-    char OutElem[256];
-    strcpy(OutElem, MeshOutDir);
-    strcat(OutElem, "/Elements/ElemOnPrim");
-    strcat(OutElem, primstr);
-    strcat(OutElem, ".out");
-    fElem = fopen(OutElem, "w");
-    if (fElem == NULL) {
-      neBEMMessage("DiscretizeWire - OutElem");
-      return -1;
-    }
-  }
   // gnuplot friendly file outputs for elements on primitive
   FILE* fgpElem = NULL;
   if (OptGnuplot && OptGnuplotElements) {
@@ -627,7 +611,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     fgpElem = fopen(gpElem, "w");
     if (fgpElem == NULL) {
       neBEMMessage("DiscretizeWire - OutgpElem");
-      if (fElem) fclose(fElem);
       return -1;
     }
   }
@@ -648,7 +631,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     if (EleCntr > NbElements) {
       neBEMMessage("DiscretizeWire - EleCntr more than NbElements!");
       if (fgpElem) fclose(fgpElem);
-      if (fElem) fclose(fElem);
       return -1;
     }
 
@@ -666,30 +648,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     // rfw = fwrite(&Ele, sizeof(Element), 1, fpEle);
     // printf("Return of fwrite is %d\n", rfw);
     Point3D collPt = CollocationPoint(EleCntr);
-    if (OptElementFiles) {
-      fprintf(fElem, "##Element Counter: %d\n", EleCntr);
-      fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-      fprintf(fElem, "%d\t%d\t%d\t%d\n", 1, 1,
-              (EleArr + EleCntr - 1)->PrimitiveNb, EleCntr);
-      fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
-      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
-              (EleArr + EleCntr - 1)->GType,
-              (EleArr + EleCntr - 1)->Origin.X,
-              (EleArr + EleCntr - 1)->Origin.Y,
-              (EleArr + EleCntr - 1)->Origin.Z, 
-              (EleArr + EleCntr - 1)->LX,
-              (EleArr + EleCntr - 1)->LZ, ElementArea(EleCntr));
-      fprintf(fElem, "#DirnCosn: \n");
-      fprintf(fElem, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
-      fprintf(fElem, "#EType\tLambda\n");
-      fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
-      fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n", 1,
-              collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
-    }  // if OptElementFiles
-
     if (OptGnuplot && OptGnuplotElements) {
       // Mark centroid
       fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
@@ -707,7 +665,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     fclose(fPrim);
   }
 
-  if (OptElementFiles) fclose(fElem);
+
   if (OptGnuplot && OptGnuplotElements) fclose(fgpElem);
 
   return (0);
@@ -903,20 +861,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       fprintf(fgnuPrim, ", \\\n \'%s\' w l", gpPrim);
   }
 
-  // file outputs for elements on primitive
-  FILE* fElem = NULL;
-  if (OptElementFiles) {
-    char OutElem[256];
-    strcpy(OutElem, MeshOutDir);
-    strcat(OutElem, "/Elements/ElemOnPrim");
-    strcat(OutElem, primstr);
-    strcat(OutElem, ".out");
-    fElem = fopen(OutElem, "w");
-    if (fElem == NULL) {
-      neBEMMessage("DiscretizeTriangle - OutElem");
-      return -1;
-    }
-  }
   // gnuplot friendly file outputs for elements on primitive
   FILE* fgpElem = NULL;
   FILE* fgpMesh = NULL;
@@ -930,7 +874,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     // assert(fgpElem != NULL);
     if (fgpElem == NULL) {
       neBEMMessage("DiscretizeTriangle - OutgpElem");
-      if (fElem) fclose(fElem);
       return -1;
     }
     // gnuplot friendly file outputs for elements on primitive
@@ -942,7 +885,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     if (fgpMesh == NULL) {
       neBEMMessage("DiscretizeTriangle - OutgpMesh");
       fclose(fgpElem);
-      if (fElem) fclose(fElem);
       return -1;
     }
   }
@@ -1104,28 +1046,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     }
 
     Point3D collPt = CollocationPoint(EleCntr);
-    if (OptElementFiles) {
-      fprintf(fElem, "##Element Counter: %d\n", EleCntr);
-      fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-      fprintf(fElem, "%d\t%d\t%d\t%d\n", 1, 1,
-              (EleArr + EleCntr - 1)->PrimitiveNb, EleCntr);
-      fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
-      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
-              (EleArr + EleCntr - 1)->GType,
-              (EleArr + EleCntr - 1)->Origin.X,
-              (EleArr + EleCntr - 1)->Origin.Y,
-              (EleArr + EleCntr - 1)->Origin.Z, (EleArr + EleCntr - 1)->LX,
-              (EleArr + EleCntr - 1)->LZ, ElementArea(EleCntr));
-      fprintf(fElem, "#DirnCosn: \n");
-      fprintf(fElem, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
-      fprintf(fElem, "#EType\tLambda\n");
-      fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
-      fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n", 1,
-              collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
-    }  // if OptElementFiles
 
     // mark bary-center and draw mesh
     if (OptGnuplot && OptGnuplotElements) {
@@ -1194,31 +1114,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
 
-      if (OptElementFiles) {
-        fprintf(fElem, "##Element Counter: %d\n", EleCntr);
-        fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-        fprintf(fElem, "%d\t%d\t%d\t%d\n", 1, 1,
-                (EleArr + EleCntr - 1)->PrimitiveNb,
-                EleCntr);
-        fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
-        fprintf(
-            fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
-            (EleArr + EleCntr - 1)->GType, (EleArr + EleCntr - 1)->Origin.X,
-            (EleArr + EleCntr - 1)->Origin.Y,
-            (EleArr + EleCntr - 1)->Origin.Z, (EleArr + EleCntr - 1)->LX,
-            (EleArr + EleCntr - 1)->LZ, ElementArea(EleCntr));
-        fprintf(fElem, "#DirnCosn: \n");
-        fprintf(fElem, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
-        fprintf(fElem, "#EType\tLambda\n");
-        fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
-        fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-        fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n", 1,
-                collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
-      }  // if OptElementFiles
-
-
       if (OptGnuplot && OptGnuplotElements) {
         // Draw centroid and mesh
         fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
@@ -1260,9 +1155,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     fclose(fgpMesh);
   }  // if OptGnuplot && OptGnuplotElements
 
-  if (OptElementFiles) fclose(fElem);
-
-  return (0);
+  return 0;
 }  // end of DiscretizeTriangles
 
 // It may be noted here that the direction cosines of a given primitive are
@@ -1407,22 +1300,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       fprintf(fgnuPrim, ", \\\n \'%s\' w l", gpPrim);
   }  // if OptGnuplot && OptGnuplotPrimitives
 
-  // file outputs for elements on primitive
-  FILE* fElem = NULL;
-  if (OptElementFiles) {
-    char OutElem[256];
-    strcpy(OutElem, MeshOutDir);
-    strcat(OutElem, "/Elements/ElemOnPrim");
-    strcat(OutElem, primstr);
-    strcat(OutElem, ".out");
-    fElem = fopen(OutElem, "w");
-    // assert(fElem != NULL);
-    if (fElem == NULL) {
-      neBEMMessage("DiscretizeRectangle - OutElem");
-      return -1;
-    }
-  }  // if OptElementFiles
-
   // gnuplot friendly file outputs for elements on primitive
   FILE* fgpElem = NULL;
   FILE* fgpMesh = NULL;
@@ -1437,7 +1314,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     // assert(fgpElem != NULL);
     if (fgpElem == NULL) {
       neBEMMessage("DiscretizeRectangle - OutgpElem");
-      if (fElem) fclose(fElem);
       return -1;
     }
     // gnuplot friendly file outputs for elements on primitive
@@ -1574,37 +1450,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
 
       Point3D collPt = CollocationPoint(EleCntr);
 
-      if (OptElementFiles) {
-        fprintf(fElem, "##Element Counter: %d\n", EleCntr);
-        fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-        fprintf(fElem, "%d\t%d\t%d\t%d\n", 1, 1,
-                (EleArr + EleCntr - 1)->PrimitiveNb, EleCntr);
-        fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
-        fprintf(fElem, "%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n",
-                (EleArr + EleCntr - 1)->GType, 
-                (EleArr + EleCntr - 1)->Origin.X,
-                (EleArr + EleCntr - 1)->Origin.Y,
-                (EleArr + EleCntr - 1)->Origin.Z, 
-                (EleArr + EleCntr - 1)->LX,
-                (EleArr + EleCntr - 1)->LZ, ElementArea(EleCntr));
-        fprintf(fElem, "#DirnCosn: \n");
-        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].XUnit.X,
-                PrimDC[prim].XUnit.Y,
-                PrimDC[prim].XUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].YUnit.X,
-                PrimDC[prim].YUnit.Y,
-                PrimDC[prim].YUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", PrimDC[prim].ZUnit.X,
-                PrimDC[prim].ZUnit.Y,
-                PrimDC[prim].ZUnit.Z);
-        fprintf(fElem, "#EType\tLambda\n");
-        fprintf(fElem, "%d\t%lg\n", InterfaceType[prim], Lambda[prim]);
-        fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-        fprintf(fElem, "%d\t%lg\t%lg\t%lg\t%lg\n", 1,
-                collPt.X, collPt.Y, collPt.Z, ApplPot[prim]);
-      }  // if OptElementFiles
-
-
       if (OptGnuplot && OptGnuplotElements) {
         // Mark centroid.
         fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
@@ -1629,8 +1474,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
             NbElmntsOnPrim[prim]);
     fclose(fPrim);
   }
-
-  if (OptElementFiles) fclose(fElem);
 
   if (OptGnuplot && OptGnuplotElements) {
     if (prim == 1)
