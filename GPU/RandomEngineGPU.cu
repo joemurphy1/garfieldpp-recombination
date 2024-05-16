@@ -4,8 +4,6 @@
 
 namespace Garfield {
 
-#ifndef USEPRECALCRNG
-
     static constexpr double Pi = 3.1415926535897932384626433832795;
     static constexpr double TwoPi = 2. * Pi;
 
@@ -45,7 +43,6 @@ namespace Garfield {
     __device__ void ResetSeed() {
 
     }
-#endif
 
     RandomEngineGPU::RandomEngineGPU(){
     }
@@ -56,18 +53,14 @@ namespace Garfield {
 
     double RandomEngineGPU::initCURandStates(const unsigned int seed)
     {
-#ifndef USEPRECALCRNG
         checkCudaErrors( cudaMalloc( &d_curand_states, MAXSTACKSIZE * sizeof(curandState) ) );
         initCURandStates_d<<< 1 + MAXSTACKSIZE/256, 256 >>> (d_curand_states, (seed == 0 ? time(NULL) : seed));
-#endif
         return MAXSTACKSIZE * sizeof(curandState);
     }
 
     void RandomEngineGPU::setRandomEngineOnDevice()
     {
-#ifndef USEPRECALCRNG
         setRandomEngine_d<<<1,1>>>(this);
-#endif
     }
 
     __device__ GPUFLOAT RandomEngineGPU::Draw()

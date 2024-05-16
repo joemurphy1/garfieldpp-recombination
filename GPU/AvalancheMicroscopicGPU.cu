@@ -11,8 +11,6 @@
 #include "SensorGPU.h"
 #undef __GPUCOMPILE__
 #include "Garfield/Random.hh"
-#include "RandomEnginePreCalcGPU.h"
-#include "Garfield/RandomEnginePreCalc.hh"
 #include "RandomEngineGPU.h"
 #include "GPUFunctions.h"
 #include "RandomGPU.h"
@@ -255,12 +253,8 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
         std::cout << "Transferring internal data to GPU..." << std::endl;
         memUsageSensor = src->m_sensor->CreateGPUTransferObject(m_sensor);
 
-#ifdef USEPRECALCRNG
-        memRNG = randomEngine.CreateGPUTransferObject(m_randomEngine);
-#else
         checkCudaErrors( cudaMallocManaged( &m_randomEngine, sizeof(RandomEngineGPU) ) );
         memRNG = sizeof(RandomEngineGPU) + m_randomEngine->initCURandStates(randomEngine.GetSeed());
-#endif
         m_randomEngine->setRandomEngineOnDevice();
 
         std::cout << "--------------- AvalancheMicroscopic Internals Transferred:" << std::endl;

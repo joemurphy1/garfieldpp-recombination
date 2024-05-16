@@ -571,9 +571,6 @@ bool AvalancheMicroscopic::TransportElectrons(
       const double kmag = Mag(p.first.kx, p.first.ky, p.first.kz);
       if (fabs(kmag) < Small) {
         // Direction has zero norm, draw a random direction.
-#ifdef USEPRECALCRNG
-        randomEngine.Seed(0);
-#endif
         RndmDirection(p.first.kx, p.first.ky, p.first.kz);
       } else {
         // Normalise the direction to 1.
@@ -879,10 +876,7 @@ bool AvalancheMicroscopic::transportParticleStack(const bool aval,
   // Loop over the particles in the avalanche.
   int rng_idx = 0;
   for (const auto& particle : particles) {
-
-#ifdef USEPRECALCRNG
-    randomEngine.Seed(rng_idx);
-#endif
+    // TODO TN GPU: Check if rng_idx still needed after precalc rng removed
     rng_idx++;
     if (particle.second == Particle::Ion) {
       ++m_nIons;

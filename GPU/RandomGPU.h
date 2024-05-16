@@ -2,7 +2,6 @@
 #define G_RANDOMGPU_H
 
 #include "GPUInterface.hh"
-#include "RandomEnginePreCalcGPU.h"
 
 namespace Garfield {
 

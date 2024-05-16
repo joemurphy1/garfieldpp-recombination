@@ -145,7 +145,6 @@ target_sources(
           Source/QuadTree.cc
           Source/Random.cc
           Source/RandomEngineRoot.cc
-          Source/RandomEnginePreCalc.cc
           Source/Sensor.cc
           Source/Shaper.cc
           Source/Solid.cc
@@ -190,7 +189,6 @@ if (USEGPU)
     GPU/GPUFunctions.cu
     GPU/MediumGPU.cu
     GPU/RandomEngineGPU.cu
-    GPU/RandomEnginePreCalcGPU.cu
     GPU/SensorGPU.cu
     GPU/TetrahedralTreeGPU.cu)
 

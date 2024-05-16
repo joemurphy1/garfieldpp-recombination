@@ -4,17 +4,12 @@
 #include <cmath>
 #include "FundamentalConstants.hh"
 #include "RandomEngineRoot.hh"
-#include "RandomEnginePreCalc.hh"
 #include "GPUInterface.hh"
 
 namespace Garfield {
 
 /// Random number generator
-#ifdef USEPRECALCRNG
-extern RandomEnginePreCalc randomEngine;
-#else
 extern RandomEngineRoot randomEngine;
-#endif
 
 /// Draw a random number uniformly distributed in the range [0, 1).
 inline double RndmUniform() { return randomEngine.Draw(); }

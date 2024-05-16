@@ -5,7 +5,6 @@
 
 namespace Garfield {
 
-    class RandomEnginePreCalcGPU;
     class RandomEngineGPU;
 
     class AvalancheMicroscopicGPU {
@@ -79,12 +78,7 @@ namespace Garfield {
 
         // Internal GPU transfer classes
         SensorGPU *m_sensor{nullptr};
-    #ifdef USEPRECALCRNG
-        RandomEnginePreCalcGPU *m_randomEngine{nullptr};
-    #else
         RandomEngineGPU *m_randomEngine{nullptr};
-    #endif
-
     };
 }
 

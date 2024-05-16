@@ -10,20 +10,13 @@
 // * Disable rounding code
 //#define GPUOPTIMISE
 
-//#define USEPRECALCRNG
 #define MAXRNGDRAWS 14000
 
 // Some constants for memory allocation
 // should be dependent on hardware and dynamic, etc.
 #define MAXCREATEDPARTICLES 2
-
-#ifdef USEPRECALCRNG
-#define MAXPARTICLES 250000
-#define MAXSTACKSIZE 135000
-#else
 #define MAXPARTICLES 750000
 #define MAXSTACKSIZE 500000
-#endif
 
 static const GPUFLOAT SmallGPU = 1.e-20;
 
