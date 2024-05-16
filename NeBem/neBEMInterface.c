@@ -1561,59 +1561,6 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
     }  // else EleArr => fresh allocation
   }    // neBEMState == 3
 
-  // Prepare a data file that will contain the plotting information of the
-  // the primitives and the elements
-  if (OptGnuplot) {
-    char GnuFile[256];
-    strcpy(GnuFile, MeshOutDir);
-    strcat(GnuFile, "/GViewDir/gPrimView.gp");
-    fgnuPrim = fopen(GnuFile, "w");
-    fprintf(fgnuPrim, "set title \"neBEM primitives in gnuplot VIEWER\"\n");
-    // fprintf(fgnu, "#set label 1 \'LengthScale = %d\', LengthScale, right\n");
-    fprintf(fgnuPrim, "#set pm3d\n");
-    fprintf(fgnuPrim, "#set style data pm3d\n");
-    fprintf(fgnuPrim, "#set palette model CMY\n");
-    fprintf(fgnuPrim, "set hidden3d\n");
-    fprintf(fgnuPrim, "set nokey\n");
-    fprintf(fgnuPrim, "set xlabel \"X\"\n");
-    fprintf(fgnuPrim, "set ylabel \"Y\"\n");
-    fprintf(fgnuPrim, "set zlabel \"Z\"\n");
-    fprintf(fgnuPrim, "set view 70, 335, 1, 1\n");
-    fprintf(fgnuPrim, "\nsplot \\\n");
-
-    strcpy(GnuFile, MeshOutDir);
-    strcat(GnuFile, "/GViewDir/gElemView.gp");
-    fgnuElem = fopen(GnuFile, "w");
-    fprintf(fgnuElem, "set title \"neBEM elements in gnuplot VIEWER\"\n");
-    // fprintf(fgnu, "#set label 1 \'LengthScale = %d\', LengthScale, right\n");
-    fprintf(fgnuElem, "#set pm3d\n");
-    fprintf(fgnuElem, "#set style data pm3d\n");
-    fprintf(fgnuElem, "#set palette model CMY\n");
-    fprintf(fgnuElem, "set hidden3d\n");
-    fprintf(fgnuElem, "set nokey\n");
-    fprintf(fgnuElem, "set xlabel \"X\"\n");
-    fprintf(fgnuElem, "set ylabel \"Y\"\n");
-    fprintf(fgnuElem, "set zlabel \"Z\"\n");
-    fprintf(fgnuElem, "set view 70, 335, 1, 1\n");
-    fprintf(fgnuElem, "\nsplot \\\n");
-
-    strcpy(GnuFile, MeshOutDir);
-    strcat(GnuFile, "/GViewDir/gMeshView.gp");
-    fgnuMesh = fopen(GnuFile, "w");
-    fprintf(fgnuMesh, "set title \"neBEM mesh in gnuplot VIEWER\"\n");
-    // fprintf(fgnu, "#set label 1 \'LengthScale = %d\', LengthScale, right\n");
-    fprintf(fgnuMesh, "#set pm3d\n");
-    fprintf(fgnuMesh, "#set style data pm3d\n");
-    fprintf(fgnuMesh, "#set palette model CMY\n");
-    fprintf(fgnuMesh, "set hidden3d\n");
-    fprintf(fgnuMesh, "set nokey\n");
-    fprintf(fgnuMesh, "set xlabel \"X\"\n");
-    fprintf(fgnuMesh, "set ylabel \"Y\"\n");
-    fprintf(fgnuMesh, "set zlabel \"Z\"\n");
-    fprintf(fgnuMesh, "set view 70, 335, 1, 1\n");
-    fprintf(fgnuMesh, "\nsplot \\\n");
-  }
-
   for (int prim = 1; prim <= NbPrimitives; ++prim) {
     switch (PrimType[prim]) {
       int fstatus;
@@ -1649,12 +1596,7 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
   }    // loop on prim number ends
 
   if (OptGnuplot) {
-    fprintf(fgnuPrim, "\n\npause-1");
-    fclose(fgnuPrim);
-    fprintf(fgnuElem, "\n\npause-1");
-    fclose(fgnuElem);
-    fprintf(fgnuMesh, "\n\npause-1");
-    fclose(fgnuMesh);
+    WriteGnuplotOutput();
   }
 
   // If the required memory exceeds the maximum allowed number of elements
@@ -2989,6 +2931,166 @@ int WriteElements(void) {
   return 0;
 
 }  // WriteElements ends
+
+void WriteGnuplotOutput() {
+
+  // Prepare a data file that will contain the plotting information of the
+  // the primitives and the elements.
+  char GnuFile[256];
+  strcpy(GnuFile, MeshOutDir);
+  strcat(GnuFile, "/GViewDir/gPrimView.gp");
+  FILE *fgnuPrim = fopen(GnuFile, "w");
+  if (!fgnuPrim) {
+    printf("WriteGnuplotOutput: Cannot open %s.\n", GnuFile);
+    return;
+  }
+  fprintf(fgnuPrim, "set title \"neBEM primitives in gnuplot VIEWER\"\n");
+  // fprintf(fgnu, "#set label 1 \'LengthScale = %d\', LengthScale, right\n");
+  fprintf(fgnuPrim, "#set pm3d\n");
+  fprintf(fgnuPrim, "#set style data pm3d\n");
+  fprintf(fgnuPrim, "#set palette model CMY\n");
+  fprintf(fgnuPrim, "set hidden3d\n");
+  fprintf(fgnuPrim, "set nokey\n");
+  fprintf(fgnuPrim, "set xlabel \"X\"\n");
+  fprintf(fgnuPrim, "set ylabel \"Y\"\n");
+  fprintf(fgnuPrim, "set zlabel \"Z\"\n");
+  fprintf(fgnuPrim, "set view 70, 335, 1, 1\n");
+  fprintf(fgnuPrim, "\nsplot \\\n");
+
+  strcpy(GnuFile, MeshOutDir);
+  strcat(GnuFile, "/GViewDir/gElemView.gp");
+  FILE *fgnuElem = fopen(GnuFile, "w");
+  if (!fgnuElem) {
+    printf("WriteGnuplotOutput: Cannot open %s.\n", GnuFile);
+    fclose(fgnuPrim);
+    return;
+  }
+  fprintf(fgnuElem, "set title \"neBEM elements in gnuplot VIEWER\"\n");
+  // fprintf(fgnu, "#set label 1 \'LengthScale = %d\', LengthScale, right\n");
+  fprintf(fgnuElem, "#set pm3d\n");
+  fprintf(fgnuElem, "#set style data pm3d\n");
+  fprintf(fgnuElem, "#set palette model CMY\n");
+  fprintf(fgnuElem, "set hidden3d\n");
+  fprintf(fgnuElem, "set nokey\n");
+  fprintf(fgnuElem, "set xlabel \"X\"\n");
+  fprintf(fgnuElem, "set ylabel \"Y\"\n");
+  fprintf(fgnuElem, "set zlabel \"Z\"\n");
+  fprintf(fgnuElem, "set view 70, 335, 1, 1\n");
+  fprintf(fgnuElem, "\nsplot \\\n");
+
+  strcpy(GnuFile, MeshOutDir);
+  strcat(GnuFile, "/GViewDir/gMeshView.gp");
+  FILE *fgnuMesh = fopen(GnuFile, "w");
+  if (!fgnuMesh) {
+    printf("WriteGnuplotOutput: Cannot open %s.\n", GnuFile);
+    fclose(fgnuPrim);
+    fclose(fgnuElem);
+    return;
+  }
+  fprintf(fgnuMesh, "set title \"neBEM mesh in gnuplot VIEWER\"\n");
+  // fprintf(fgnu, "#set label 1 \'LengthScale = %d\', LengthScale, right\n");
+  fprintf(fgnuMesh, "#set pm3d\n");
+  fprintf(fgnuMesh, "#set style data pm3d\n");
+  fprintf(fgnuMesh, "#set palette model CMY\n");
+  fprintf(fgnuMesh, "set hidden3d\n");
+  fprintf(fgnuMesh, "set nokey\n");
+  fprintf(fgnuMesh, "set xlabel \"X\"\n");
+  fprintf(fgnuMesh, "set ylabel \"Y\"\n");
+  fprintf(fgnuMesh, "set zlabel \"Z\"\n");
+  fprintf(fgnuMesh, "set view 70, 335, 1, 1\n");
+  fprintf(fgnuMesh, "\nsplot \\\n");
+
+  for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    char primstr[10];
+    snprintf(primstr, 10, "%d", prim);
+    if (OptGnuplotPrimitives) {
+      char gpPrim[256];
+      strcpy(gpPrim, MeshOutDir);
+      strcat(gpPrim, "/GViewDir/gpPrim");
+      strcat(gpPrim, primstr);
+      strcat(gpPrim, ".out");
+      FILE *fgpPrim = fopen(gpPrim, "w");
+      if (fgpPrim == NULL) {
+        printf("WriteGnuplotOutput: Cannot open %s.\n", gpPrim);
+        continue;
+      }
+      const int nv = NbVertices[prim];
+      for (int j = 0; j < nv; ++j) {
+        fprintf(fgpPrim, "%g\t%g\t%g\n\n", 
+                XVertex[prim][j], YVertex[prim][j], ZVertex[prim][j]);
+      }
+      if (PrimType[prim] == 3 || PrimType[prim] == 4) {
+        fprintf(fgpPrim, "%g\t%g\t%g\n", 
+                XVertex[prim][0], YVertex[prim][0], ZVertex[prim][0]);
+      }
+      fclose(fgpPrim);
+      if (prim == 1) {
+        fprintf(fgnuPrim, " '%s\' w l", gpPrim);
+      } else {
+        fprintf(fgnuPrim, ", \\\n \'%s\' w l", gpPrim);
+      }
+    }
+    if (!OptGnuplotElements) continue;
+    char gpElem[256];
+    strcpy(gpElem, MeshOutDir);
+    strcat(gpElem, "/GViewDir/gpElemOnPrim");
+    strcat(gpElem, primstr);
+    strcat(gpElem, ".out");
+    FILE* fgpElem = fopen(gpElem, "w");
+    if (fgpElem == NULL) {
+      printf("WriteGnuplotOutput: Cannot open %s.\n", gpElem);
+      continue;
+    }
+    for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim]; ++ele) {
+      Point3D collPt = CollocationPoint(ele);
+      // Mark centroid/bary-center.
+      fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
+    }
+    fclose(fgpElem);
+    if (prim == 1) {
+      fprintf(fgnuElem, " '%s\' w p", gpElem);
+    } else {
+      fprintf(fgnuElem, ", \\\n \'%s\' w p", gpElem);
+    }
+    if (PrimType[prim] == 2) continue;
+    char gpMesh[256]; 
+    strcpy(gpMesh, MeshOutDir);
+    strcat(gpMesh, "/GViewDir/gpMeshOnPrim");
+    strcat(gpMesh, primstr);
+    strcat(gpMesh, ".out");
+    FILE *fgpMesh = fopen(gpMesh, "w");
+    if (fgpMesh == NULL) {
+      printf("WriteGnuplotOutput: Cannot open %s.\n", gpMesh);
+      continue;
+    }
+    for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim]; ++ele) {
+      // Draw mesh
+      Point3D vtx[4];
+      ElementVertices(ele, vtx);
+      const int gtype = (EleArr + ele - 1)->GType;
+      for (int j = 0; j < gtype; ++j) {
+        fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[j].X, vtx[j].Y, vtx[j].Z);
+        if (PrimType[prim] == 3 && gtype == 4) fprintf(fgpMesh, "\n");
+      }
+      fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
+      fprintf(fgpMesh, "\n");
+    }
+    if (prim == 1) {
+      fprintf(fgnuMesh, " '%s\' w l", gpMesh);
+      fprintf(fgnuMesh, ", \\\n \'%s\' w p ps 1", gpElem);
+    } else {
+      fprintf(fgnuMesh, ", \\\n \'%s\' w l", gpMesh);
+      fprintf(fgnuMesh, ", \\\n \'%s\' w p ps 1", gpElem);
+    }
+  }
+
+  fprintf(fgnuPrim, "\n\npause-1");
+  fclose(fgnuPrim);
+  fprintf(fgnuElem, "\n\npause-1");
+  fclose(fgnuElem);
+  fprintf(fgnuMesh, "\n\npause-1");
+  fclose(fgnuMesh);
+}
 
 int ReadPrimitives(void) {
   int dbgFn = 0;

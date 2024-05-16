@@ -175,9 +175,6 @@ neBEMGLOBAL double LengthScale;
 neBEMGLOBAL int TimeStep, EndOfTime;
 neBEMGLOBAL char TimeStr[256];
 
-// Variables related to geometry viewing
-neBEMGLOBAL char GnuplotTmpDir[256], GnuplotScriptFile[256];  // Dirs and files
-
 // Outputs are written in various subdirectories.
 // DeviceOutDir:
 // The top level directory for a device under study.

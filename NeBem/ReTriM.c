@@ -575,46 +575,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, potential);
   }
 
-  // necessary for gnuplot
-  FILE* fgpPrim = NULL;
-  if (OptGnuplot && OptGnuplotPrimitives) {
-    char gpPrim[256];
-    strcpy(gpPrim, MeshOutDir);
-    strcat(gpPrim, "/GViewDir/gpPrim");
-    strcat(gpPrim, primstr);
-    strcat(gpPrim, ".out");
-    fgpPrim = fopen(gpPrim, "w");
-    if (fgpPrim == NULL) {
-      neBEMMessage("DiscretizeWire - OutgpPrim");
-      fclose(fPrim);
-      return -1;
-    }
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[0], yvert[0], zvert[0]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[1], yvert[1], zvert[1]);
-    fclose(fgpPrim);
-
-    if (prim == 1)
-      fprintf(fgnuPrim, " '%s\' w l", gpPrim);
-    else
-      fprintf(fgnuPrim, ", \\\n \'%s\' w l", gpPrim);
-  }
-
-  // file outputs for elements on primitive
-  // gnuplot friendly file outputs for elements on primitive
-  FILE* fgpElem = NULL;
-  if (OptGnuplot && OptGnuplotElements) {
-    char gpElem[256];
-    strcpy(gpElem, MeshOutDir);
-    strcat(gpElem, "/GViewDir/gpElemOnPrim");
-    strcat(gpElem, primstr);
-    strcat(gpElem, ".out");
-    fgpElem = fopen(gpElem, "w");
-    if (fgpElem == NULL) {
-      neBEMMessage("DiscretizeWire - OutgpElem");
-      return -1;
-    }
-  }
-
   double xincr = (xvert[1] - xvert[0]) / (double)NbSegs;
   double yincr = (yvert[1] - yvert[0]) / (double)NbSegs;
   double zincr = (zvert[1] - zvert[0]) / (double)NbSegs;
@@ -630,7 +590,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     ++EleCntr;
     if (EleCntr > NbElements) {
       neBEMMessage("DiscretizeWire - EleCntr more than NbElements!");
-      if (fgpElem) fclose(fgpElem);
       return -1;
     }
 
@@ -644,15 +603,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
 
-    // File operations begin
-    // rfw = fwrite(&Ele, sizeof(Element), 1, fpEle);
-    // printf("Return of fwrite is %d\n", rfw);
-    Point3D collPt = CollocationPoint(EleCntr);
-    if (OptGnuplot && OptGnuplotElements) {
-      // Mark centroid
-      fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
-    }
-       // File operations end
   }    // seg loop for wire elements
   ElementEnd[prim] = EleCntr;
   NbElmntsOnPrim[prim] = ElementEnd[prim] - ElementBgn[prim] + 1;
@@ -665,10 +615,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     fclose(fPrim);
   }
 
-
-  if (OptGnuplot && OptGnuplotElements) fclose(fgpElem);
-
-  return (0);
+  return 0;
 }  // end of DiscretizeWire
 
 // NbSegX is considered to be the number of rectangular + one triangular
@@ -835,60 +782,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, potential);
   }
 
-  // necessary for gnuplot
-  FILE* fgpPrim = NULL;
-  if (OptGnuplot && OptGnuplotPrimitives) {
-    char gpPrim[256];
-    strcpy(gpPrim, MeshOutDir);
-    strcat(gpPrim, "/GViewDir/gpPrim");
-    strcat(gpPrim, primstr);
-    strcat(gpPrim, ".out");
-    fgpPrim = fopen(gpPrim, "w");
-    if (fgpPrim == NULL) {
-      neBEMMessage("DiscretizeTriangle - OutgpPrim");
-      fclose(fPrim);
-      return -1;
-    }
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[0], yvert[0], zvert[0]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[1], yvert[1], zvert[1]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[2], yvert[2], zvert[2]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n", xvert[0], yvert[0], zvert[0]);
-    fclose(fgpPrim);
-
-    if (prim == 1)
-      fprintf(fgnuPrim, " '%s\' w l", gpPrim);
-    else
-      fprintf(fgnuPrim, ", \\\n \'%s\' w l", gpPrim);
-  }
-
-  // gnuplot friendly file outputs for elements on primitive
-  FILE* fgpElem = NULL;
-  FILE* fgpMesh = NULL;
-  char gpElem[256], gpMesh[256]; 
-  if (OptGnuplot && OptGnuplotElements) {
-    strcpy(gpElem, MeshOutDir);
-    strcat(gpElem, "/GViewDir/gpElemOnPrim");
-    strcat(gpElem, primstr);
-    strcat(gpElem, ".out");
-    fgpElem = fopen(gpElem, "w");
-    // assert(fgpElem != NULL);
-    if (fgpElem == NULL) {
-      neBEMMessage("DiscretizeTriangle - OutgpElem");
-      return -1;
-    }
-    // gnuplot friendly file outputs for elements on primitive
-    strcpy(gpMesh, MeshOutDir);
-    strcat(gpMesh, "/GViewDir/gpMeshOnPrim");
-    strcat(gpMesh, primstr);
-    strcat(gpMesh, ".out");
-    fgpMesh = fopen(gpMesh, "w");
-    if (fgpMesh == NULL) {
-      neBEMMessage("DiscretizeTriangle - OutgpMesh");
-      fclose(fgpElem);
-      return -1;
-    }
-  }
-
   // Compute element positions (CGs) in primitive local coordinate system (PCS).
   // Then map these CGs to the global coordinate system.
   // (xav, 0, zav) is the CG of an element wrt the primitive coordinate system
@@ -920,9 +813,8 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
     }
-  }     // NbSegX > NbSegZ
-  else  // NbSegX < NbSegZ
-  {
+  } else {
+    // NbSegX < NbSegZ
     if (SurfLX < SurfLZ) {
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
@@ -1009,8 +901,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     ++EleCntr;
     if (EleCntr > NbElements) {
       neBEMMessage("DiscretizeTriangle - EleCntr more than NbElements 1!");
-      if (fgpElem) fclose(fgpElem);
-      if (fgpMesh) fclose(fgpMesh);
       return -1;
     }
 
@@ -1044,21 +934,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       printf("Element (primitive) Z axis dirn cosines: %lg, %lg, %lg\n",
              pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
     }
-
-    Point3D collPt = CollocationPoint(EleCntr);
-
-    // mark bary-center and draw mesh
-    if (OptGnuplot && OptGnuplotElements) {
-      fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
-      // Draw mesh
-      Point3D vtx[4];
-      ElementVertices(EleCntr, vtx);
-      fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
-      fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[1].X, vtx[1].Y, vtx[1].Z);
-      fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[2].X, vtx[2].Y, vtx[2].Z);
-      fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
-      fprintf(fgpMesh, "\n");
-    }  // if OptGnuplotElements
 
     if (k == NbSegZ) continue; // no rectangular element on this row
 
@@ -1113,18 +988,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->LZ = zhipt - zlopt;  // to be on the safe side! 21/2/14
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
-
-      if (OptGnuplot && OptGnuplotElements) {
-        // Draw centroid and mesh
-        fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
-        Point3D vtx[4];
-        ElementVertices(EleCntr, vtx);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", vtx[1].X, vtx[1].Y, vtx[1].Z);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", vtx[2].X, vtx[2].Y, vtx[2].Z);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", vtx[3].X, vtx[3].Y, vtx[3].Z);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
-      }  // if OptGnuplot && OptGnuplotElements
     }    // for i
   }      // for k
   ElementEnd[prim] = EleCntr;
@@ -1137,23 +1000,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
             NbElmntsOnPrim[prim]);
     fclose(fPrim);
   }
-
-  if (OptGnuplot && OptGnuplotElements) {
-    if (prim == 1)
-      fprintf(fgnuElem, " '%s\' w p", gpElem);
-    else
-      fprintf(fgnuElem, ", \\\n \'%s\' w p", gpElem);
-    if (prim == 1) {
-      fprintf(fgnuMesh, " '%s\' w l", gpMesh);
-      fprintf(fgnuMesh, ", \\\n \'%s\' w p ps 1", gpElem);
-    } else {
-      fprintf(fgnuMesh, ", \\\n \'%s\' w l", gpMesh);
-      fprintf(fgnuMesh, ", \\\n \'%s\' w p ps 1", gpElem);
-    }
-
-    fclose(fgpElem);
-    fclose(fgpMesh);
-  }  // if OptGnuplot && OptGnuplotElements
 
   return 0;
 }  // end of DiscretizeTriangles
@@ -1273,62 +1119,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, potential);
   }  // if OptPrimitiveFiles
 
-  // necessary for gnuplot
-  FILE* fgpPrim = NULL;
-  if (OptGnuplot && OptGnuplotPrimitives) {
-    char gpPrim[256];
-    strcpy(gpPrim, MeshOutDir);
-    strcat(gpPrim, "/GViewDir/gpPrim");
-    strcat(gpPrim, primstr);
-    strcat(gpPrim, ".out");
-    fgpPrim = fopen(gpPrim, "w");
-    if (fgpPrim == NULL) {
-      neBEMMessage("DiscretizeRectangle - OutgpPrim");
-      fclose(fPrim);
-      return -1;
-    }
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[0], yvert[0], zvert[0]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[1], yvert[1], zvert[1]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[2], yvert[2], zvert[2]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[3], yvert[3], zvert[3]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n", xvert[0], yvert[0], zvert[0]);
-    fclose(fgpPrim);
-
-    if (prim == 1)
-      fprintf(fgnuPrim, " '%s\' w l", gpPrim);
-    else
-      fprintf(fgnuPrim, ", \\\n \'%s\' w l", gpPrim);
-  }  // if OptGnuplot && OptGnuplotPrimitives
-
-  // gnuplot friendly file outputs for elements on primitive
-  FILE* fgpElem = NULL;
-  FILE* fgpMesh = NULL;
-  char gpElem[256], gpMesh[256];
-  if (OptGnuplot && OptGnuplotElements) {
-
-    strcpy(gpElem, MeshOutDir);
-    strcat(gpElem, "/GViewDir/gpElemOnPrim");
-    strcat(gpElem, primstr);
-    strcat(gpElem, ".out");
-    fgpElem = fopen(gpElem, "w");
-    // assert(fgpElem != NULL);
-    if (fgpElem == NULL) {
-      neBEMMessage("DiscretizeRectangle - OutgpElem");
-      return -1;
-    }
-    // gnuplot friendly file outputs for elements on primitive
-    strcpy(gpMesh, MeshOutDir);
-    strcat(gpMesh, "/GViewDir/gpMeshOnPrim");
-    strcat(gpMesh, primstr);
-    strcat(gpMesh, ".out");
-    fgpMesh = fopen(gpMesh, "w");
-    if (fgpMesh == NULL) {
-      neBEMMessage("DiscretizeRectangle - OutgpMesh");
-      fclose(fgpElem);
-      return -1;
-    }
-  }  // if OptGnuplot && OptElements
-
   // Compute element positions (CGs) in the primitive local coordinate system.
   // Then map these CGs to the global coordinate system.
   // (xav, 0, zav) is the CG of an element wrt the primitive coordinate system
@@ -1434,7 +1224,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       ++EleCntr;
       if (EleCntr > NbElements) {
         neBEMMessage("DiscretizeRectangle - EleCntr more than NbElements!");
-        if (fgpMesh) fclose(fgpMesh);
         return -1;
       }
 
@@ -1450,18 +1239,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
 
       Point3D collPt = CollocationPoint(EleCntr);
 
-      if (OptGnuplot && OptGnuplotElements) {
-        // Mark centroid.
-        fprintf(fgpElem, "%g\t%g\t%g\n", collPt.X, collPt.Y, collPt.Z);
-        Point3D vtx[4];
-        ElementVertices(EleCntr, vtx); 
-        fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
-        fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[1].X, vtx[1].Y, vtx[1].Z);
-        fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[2].X, vtx[2].Y, vtx[2].Z);
-        fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[3].X, vtx[3].Y, vtx[3].Z);
-        fprintf(fgpMesh, "%g\t%g\t%g\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
-        fprintf(fgpMesh, "\n");
-      }  // if(OptGnuplot && OptGnuplotElements)
     }    // for k
   }      // for i
   ElementEnd[prim] = EleCntr;
@@ -1473,23 +1250,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     fprintf(fPrim, "Number of elements on primitive: %d\n",
             NbElmntsOnPrim[prim]);
     fclose(fPrim);
-  }
-
-  if (OptGnuplot && OptGnuplotElements) {
-    if (prim == 1)
-      fprintf(fgnuElem, " '%s\' w p", gpElem);
-    else
-      fprintf(fgnuElem, ", \\\n \'%s\' w p", gpElem);
-    if (prim == 1) {
-      fprintf(fgnuMesh, " '%s\' w l", gpMesh);
-      fprintf(fgnuMesh, ", \\\n \'%s\' w p ps 1", gpElem);
-    } else {
-      fprintf(fgnuMesh, ", \\\n \'%s\' w l", gpMesh);
-      fprintf(fgnuMesh, ", \\\n \'%s\' w p ps 1", gpElem);
-    }
-
-    fclose(fgpElem);
-    fclose(fgpMesh);
   }
 
   return (0);
