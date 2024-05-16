@@ -216,7 +216,6 @@ class ComponentFieldMap : public Component {
     // Coordinates
     double x, y, z;
   };
-
   #ifdef __GPUCOMPILE__
   Node *m_nodes = nullptr;
   int numNodes = 0;
@@ -489,17 +488,17 @@ protected:
                     double& t1, double& t2, double& t3, double& t4, 
                     double jac[4][4], double& det, 
                     #ifdef __GPUCOMPILE__
-                     const double xn[10],
-                     const double yn[10],
-                     const double zn[10],
-                     GPUFLOAT** w
-                     #else
-                     const std::array<double, 10>& xn,
-                     const std::array<double, 10>& yn,
-                     const std::array<double, 10>& zn,
-                     const std::array<std::array<double, 3>, 4>& w
-                     #endif
-                     ) const;
+                    const double xn[10],
+                    const double yn[10],
+                    const double zn[10],
+                    GPUFLOAT** w
+                    #else
+                    const std::array<double, 10>& xn,
+                    const std::array<double, 10>& yn,
+                    const std::array<double, 10>& zn,
+                    const std::array<std::array<double, 3>, 4>& w
+                    #endif
+                    ) const;
 
   #ifndef __GPUCOMPILE__
   /// Calculate local coordinates for a cube.
@@ -520,7 +519,8 @@ protected:
   #endif
 
   /// Calculate Jacobian for curved quadratic tetrahedra.
-  __GPULABEL__ static void Jacobian13(
+  __GPULABEL__ 
+  static void Jacobian13(
                          #ifdef __GPUCOMPILE__
                          const double xn[10],
                          const double yn[10],

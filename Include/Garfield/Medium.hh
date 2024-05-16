@@ -196,13 +196,14 @@ class __MEDIUMCLASS__ {
 
   __device__ GPUFLOAT GetElectronCollisionRate(const GPUFLOAT e, const int band);
 
-  __device__ bool ElectronCollision(const GPUFLOAT e, int& type, int& level, GPUFLOAT& e1, GPUFLOAT& dx, GPUFLOAT& dy,
-    GPUFLOAT& dz, Particle *secondaries_type, GPUFLOAT *secondaries_energy, int &num_secondaries, int& ndxc,
-    int& band);
+  __device__ bool ElectronCollision(
+      const GPUFLOAT e, int& type, int& level, GPUFLOAT& e1,
+      GPUFLOAT& dx, GPUFLOAT& dy, GPUFLOAT& dz,
+      Particle *secondaries_type, GPUFLOAT *secondaries_energy, int &num_secondaries, int& ndxc,
+      int& band);
 #else
   /// Collision rate [ns-1] for given electron energy
   virtual double GetElectronCollisionRate(const double e, const int band = 0);
-
   /// Sample the collision type. Update energy and direction vector.
   virtual bool ElectronCollision(
       const double e, int& type, int& level, double& e1, 
@@ -773,21 +774,21 @@ class __MEDIUMCLASS__ {
 
 #else
 
-  #include "MediumGas.hh"
-  #include "MediumMagboltz.hh"
-  
-  friend class MediumGas;
-  friend class MediumMagboltz;
+#include "MediumGas.hh"
+#include "MediumMagboltz.hh"
 
-    // enum to mimic polymorphism
-  enum class MediumType
-  {
-    Medium = 0,
-    MediumGas,
-    MediumMagboltz
-  };
+friend class MediumGas;
+friend class MediumMagboltz;
 
-  MediumType m_MediumType{MediumType::Medium};
+  // enum to mimic polymorphism
+enum class MediumType
+{
+  Medium = 0,
+  MediumGas,
+  MediumMagboltz
+};
+
+MediumType m_MediumType{MediumType::Medium};
 
 #endif
 };

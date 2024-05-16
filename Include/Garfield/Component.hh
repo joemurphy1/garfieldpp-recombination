@@ -79,9 +79,8 @@ class __COMPONENTCLASS__ {
 
   #ifdef __GPUCOMPILE__
   __device__ void ElectricField(const GPUFLOAT xin, const GPUFLOAT yin,
-                                  const GPUFLOAT zin, GPUFLOAT& ex, GPUFLOAT& ey,
-                                  GPUFLOAT& ez, MediumGPU*& m, int& status);
-
+                                const GPUFLOAT zin, GPUFLOAT& ex, GPUFLOAT& ey,
+                                GPUFLOAT& ez, MediumGPU*& m, int& status);
   #else
   virtual void ElectricField(const double x, const double y, const double z,
                              double& ex, double& ey, double& ez, Medium*& m,
@@ -125,7 +124,6 @@ class __COMPONENTCLASS__ {
       const std::string& /*label*/) {
     return m_wdtimes;
   }
-                                   
   /** Calculate the delayed weighting field at a given point and time
    * and for a given electrode.
    * \param x,y,z coordinates [cm].
@@ -473,19 +471,19 @@ class __COMPONENTCLASS__ {
 #include "ComponentFieldMap.hh"
 #include "ComponentAnsys123.hh"
 
-  friend class ComponentAnsys123;
-  friend class ComponentFieldMap;
-  friend class Component;
+friend class ComponentAnsys123;
+friend class ComponentFieldMap;
+friend class Component;
 
-  // enum to mimic polymorphism
-  enum class ComponentType
-  {
-    Component = 0,
-    ComponentFieldMap,
-    ComponentAnsys123
-  };
+// enum to mimic polymorphism
+enum class ComponentType
+{
+  Component = 0,
+  ComponentFieldMap,
+  ComponentAnsys123
+};
 
-  ComponentType m_ComponentType{ComponentType::Component};
+ComponentType m_ComponentType{ComponentType::Component};
 
 #endif
 

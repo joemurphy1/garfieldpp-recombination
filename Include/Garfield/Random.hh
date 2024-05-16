@@ -4,7 +4,6 @@
 #include <cmath>
 #include "FundamentalConstants.hh"
 #include "RandomEngineRoot.hh"
-#include "GPUInterface.hh"
 
 namespace Garfield {
 

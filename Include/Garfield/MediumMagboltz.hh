@@ -4,16 +4,13 @@
 #define G_MEDIUM_MAGBOLTZ_9
 #endif
 
-#ifdef __GPUCOMPILE__
-
-#else
+#ifndef __GPUCOMPILE__
 #include <mutex>
 #include <array>
+
 #include "MagboltzInterface.hh"
 #include "MediumGas.hh"
-
 #endif
-
 
 #ifndef __GPUCOMPILE__
 

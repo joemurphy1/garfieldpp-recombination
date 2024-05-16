@@ -17,10 +17,7 @@
 
 #endif
 
-
 #ifndef __GPUCOMPILE__
-
-
 namespace Garfield {
 
 /// Base class for gas media.
