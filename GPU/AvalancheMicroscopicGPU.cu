@@ -472,11 +472,8 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
         // reset new particle info
         for (int i=0; i < MAXCREATEDPARTICLES; i++)
         {
-	  new_status_array[thread_idx*MAXCREATEDPARTICLES+i] = (MAXSTACKSIZE * 2) +1;
+            new_status_array[thread_idx*MAXCREATEDPARTICLES+i] = (MAXSTACKSIZE * 2) +1;
         }
-
-        // sort out the RNG
-        ResetSeed();
 
         // reset new particles
         unsigned int num_new_particles{0};

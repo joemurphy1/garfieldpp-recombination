@@ -40,10 +40,6 @@ namespace Garfield {
         if (tid < MAXSTACKSIZE) curand_init(seed, tid, 0, &state[tid]);
     }
 
-    __device__ void ResetSeed() {
-
-    }
-
     RandomEngineGPU::RandomEngineGPU(){
     }
 
