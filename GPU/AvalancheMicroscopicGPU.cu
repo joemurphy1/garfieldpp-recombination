@@ -86,7 +86,7 @@ namespace Garfield {
         checkCudaErrors( cudaMalloc(&stack.ptype, (num)*sizeof(Particle)));
         stack.stack_size = 0;
 
-        return num * sizeof(double) * 16;
+        return (num * sizeof(double) * 13) + (num * sizeof(int) * 2) + (num * sizeof(Particle));
     }
 
     void AvalancheMicroscopicGPU::FreeGPUParticleStack(ParticleStack &stack) {
