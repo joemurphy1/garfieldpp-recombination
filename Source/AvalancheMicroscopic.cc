@@ -1244,7 +1244,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
             const double tp = t + tdx;
             const double ep = std::max(edx, Small);
             newParticles.emplace_back(std::make_pair(
-            MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
+              MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
             newParticles.emplace_back(std::make_pair(
               MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
           } else if (typedx == DxcProdTypePhoton && m_usePhotons &&
@@ -2079,7 +2079,7 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs), Particle::Hole));
           } else if (secondary.first == Particle::Ion) {
-             newParticles.emplace_back(std::make_pair(
+            newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, 0.), Particle::Ion));
           }
         }
@@ -2266,7 +2266,7 @@ void AvalancheMicroscopic::FillDistanceHistogram(const int cstype,
 
 void AvalancheMicroscopic::TransportPhoton(
     const double x0, const double y0, const double z0, const double t0,
-    const double e0,
+    const double e0, 
     std::vector<std::pair<Point, Particle> > & newParticles) {
   // Make sure that the sensor is defined.
   if (!m_sensor) {
