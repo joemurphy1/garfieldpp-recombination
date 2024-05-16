@@ -405,7 +405,7 @@ class AvalancheMicroscopic {
                         std::vector<std::array<double, 3> >& xs,
                         std::vector<Point>& path,
                         std::vector<std::pair<Point, Particle> >& newParticles,
-                        int rng_idx, int debug_electron);
+                        int debug_electron);
   int TransportElectronBfield(const Point& p0, const bool hole, 
                               const bool aval, 
                               const bool signal, 

@@ -824,10 +824,7 @@ bool AvalancheMicroscopic::transportParticleStack(const bool aval,
 {
   newParticles.clear();
   // Loop over the particles in the avalanche.
-  int rng_idx = 0;
   for (const auto& particle : particles) {
-    // TODO TN GPU: Check if rng_idx still needed after precalc rng removed
-    rng_idx++;
     if (particle.second == Particle::Ion) {
       ++m_nIons;
       continue;
@@ -858,7 +855,7 @@ bool AvalancheMicroscopic::transportParticleStack(const bool aval,
       } else {
         status = TransportElectron(particle.first, isHole, aval, signal, 
                                    ts, xs, path, newParticles,
-                                   rng_idx, debug_electron);
+                                   debug_electron);
       }
       double pathLength = 0.;
       if (m_computePathLength && xs.size() > 1) {
@@ -904,7 +901,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
   std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
   std::vector<Point>& path, 
   std::vector<std::pair<Point, Particle> >& newParticles,
-  int rng_idx, int debug_electron) {
+  int debug_electron) {
 
   double x = p0.x;
   double y = p0.y;
