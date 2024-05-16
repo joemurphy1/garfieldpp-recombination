@@ -2955,8 +2955,8 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
     w = 20.0; // rough estimate (twice the ionisation potential)
     f = 0.23; // Krajcar-Bronic relation 
   } else if (gasname == "DME") {
-    a = 4 * 12.0107 + 10 * 1.00794 + 2 * 15.9994;
-    z = 4 * 6 + 10 + 2 * 8;
+    a = 2 * 12.0107 + 6 * 1.00794 + 15.9994;
+    z = 2 * 6 + 6 + 8;
     // DOI 10.1063/1.365787
     w = 27.7;
     f = 0.285;
@@ -3312,7 +3312,7 @@ const std::vector<std::string> MediumGas::GetAliases(const std::string& gas) {
             "methyl-ether", "methylether", "methyl ether", 
             "wood-ether", "woodether", "wood ether",
             "dimethyl oxide", "dimethyl-oxide", "Demeon",
-            "methoxymethane", "C4H10O2"};
+            "methoxymethane"};
   } else if (gas == "Reid-Step") {
     return {};
   } else if (gas == "Maxwell-Model") {
