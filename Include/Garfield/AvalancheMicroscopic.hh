@@ -294,7 +294,6 @@ class AvalancheMicroscopic {
   void SetMaxNumShowerLoops(int max_loops) {m_maxNumShowerLoops = max_loops;}
   void SetShowProgress(bool show_progress) {m_showProgress = show_progress;}
   void SetDebugShowerIterationAndElectronID(int iter_num, int elec_id) {m_debugShowerLoopNum = iter_num; m_debugElectronID = elec_id;}
-  void PrintComparisonStats();
 
  private:
   std::string m_className = "AvalancheMicroscopic";
