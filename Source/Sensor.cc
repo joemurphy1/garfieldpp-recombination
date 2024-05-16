@@ -25,9 +25,6 @@
 #endif
 
 #ifndef __GPUCOMPILE__
-
-#define LOG(x) std::cout << m_className <<": "<<x<<"\n"<<std::endl
-
 namespace {
 
 double Interpolate(const std::vector<double> &y, const std::vector<double> &x,
