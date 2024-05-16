@@ -3620,4 +3620,13 @@ bool MediumGas::GetPhotoAbsorptionCrossSection(const double e, double& sigma,
   double eta = 0.;
   return OpticalData::PhotoabsorptionCrossSection(m_gas[i], e, sigma, eta);
 }
+
+#ifndef USEGPU
+double MediumGas::CreateGPUTransferObject(MediumGPU *&/*med_gpu*/)
+{
+  return 0;
+}
+#endif
+
+
 }

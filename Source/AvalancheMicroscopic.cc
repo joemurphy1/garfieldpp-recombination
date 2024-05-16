@@ -3,10 +3,20 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include <chrono>
+#include <fstream>
+#include <iomanip>
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Random.hh"
+
+#define __GPUCOMPILE__
+#include "AvalancheMicroscopicGPU.h"
+#undef __GPUCOMPILE__
+
+using highres_clock_t = std::chrono::high_resolution_clock;
+using second_t = std::chrono::duration<double, std::ratio<1> >;
 
 namespace {
 
@@ -117,6 +127,15 @@ Garfield::AvalancheMicroscopic::Point MakePoint(
   Garfield::RndmDirection(dx, dy, dz);
   return MakePoint(x, y, z, t, energy, dx, dy, dz, 0);
 }
+
+void PrintStatus(const std::string& hdr, const std::string& status,
+                 const double x, const double y, const double z,
+                 const bool hole) {
+  const std::string eh = hole ? "Hole " : "Electron ";
+  std::cout << hdr << eh << status << " at " << x << ", " << y << ", " << z
+            << "\n";
+}
+
 
 }  // namespace
 
@@ -279,6 +298,36 @@ void AvalancheMicroscopic::GetElectronEndpoint(const size_t i,
   t1 = m_electrons[i].path.back().t;
   e1 = m_electrons[i].path.back().energy;
   status = m_electrons[i].status;
+}
+
+void AvalancheMicroscopic::GetElectronEndpointGPU(const size_t i, double& x0,
+                                               double& y0, double& z0,
+                                               double& t0, double& e0,
+                                               double& x1, double& y1,
+                                               double& z1, double& t1,
+                                               double& e1, int& status) const {
+  if (i >= m_electrons_gpu.size()) {
+    std::cerr << m_className << "::GetElectronEndpoint: Index out of range.\n";
+    status = -3;
+    return;
+  }
+
+  if (m_electrons_gpu[i].path.empty()) {
+    std::cerr << m_className << "::GetElectronEndpoint: Empty drift line.\n";
+    status = -3;
+  }
+
+  x0 = m_electrons_gpu[i].path[0].x;
+  y0 = m_electrons_gpu[i].path[0].y;
+  z0 = m_electrons_gpu[i].path[0].z;
+  t0 = m_electrons_gpu[i].path[0].t;
+  e0 = m_electrons_gpu[i].path[0].energy;
+  x1 = m_electrons_gpu[i].path.back().x;
+  y1 = m_electrons_gpu[i].path.back().y;
+  z1 = m_electrons_gpu[i].path.back().z;
+  t1 = m_electrons_gpu[i].path.back().t;
+  e1 = m_electrons_gpu[i].path.back().energy;
+  status = m_electrons_gpu[i].status;
 }
 
 void AvalancheMicroscopic::GetHoleEndpoint(const size_t i, 
@@ -522,6 +571,9 @@ bool AvalancheMicroscopic::TransportElectrons(
       const double kmag = Mag(p.first.kx, p.first.ky, p.first.kz);
       if (fabs(kmag) < Small) {
         // Direction has zero norm, draw a random direction.
+#ifdef USEPRECALCRNG
+        randomEngine.Seed(0);
+#endif
         RndmDirection(p.first.kx, p.first.ky, p.first.kz);
       } else {
         // Normalise the direction to 1.
@@ -532,20 +584,321 @@ bool AvalancheMicroscopic::TransportElectrons(
       }
     }
   }
+
+  // Numerical prefactors in equation of motion
+  const double c1 = SpeedOfLight * sqrt(2. / ElectronMass);
+  const double c2 = 0.25 * c1 * c1;
+
   std::vector<std::pair<Point, Particle> > newParticles;
-  while (!particles.empty()) {
-    newParticles.clear();
-    // Loop over the particles in the avalanche.
-    for (const auto& particle : particles) {
-      if (particle.second == Particle::Ion) {
-        ++m_nIons;
-        continue;
+  std::vector<std::pair<double, double> > stackPhotons;
+  std::vector<std::pair<Particle, double> > secondaries;
+
+  m_stats.gpu_stack_process_time.clear();
+  m_stats.cpu_stack_process_time.clear();
+  m_stats.gpu_stack_transport_time.clear();
+  m_stats.cpu_stack_transport_time.clear();
+  m_stats.stack_old_size.clear();
+  m_stats.stack_new_size.clear();
+
+  // GPUREMOVE: Note that the change below means that the transferred variables (medium, id, etc.) are not updated within the transport
+  // loops so will have to be recalculated more than normal. This will affect both CPU and GPU versions.
+  int loop_count = 0;
+
+  if ((m_runMode == MPRunMode::GPUWhenAppropriate) ||
+      (m_runMode == MPRunMode::GPUExclusive) ||
+      (m_runMode == MPRunMode::CPUGPUComparison))
+  {
+#ifdef USEGPU
+    if (!m_gpuInterface) {
+      m_gpuInterface = new AvalancheMicroscopicGPU;
+      m_gpuInterface->SetCUDADevice(m_cudaDevice);
+      m_gpuInterface->TransferClassInternalInfo(this);
+    }
+    m_gpuInterface->TransferStackFromCPUToGPU(particles);
+#else
+    std::cout << "ERROR: GPU use requested but Garfield has not been built with GPU support" << std::endl;
+    return false;
+#endif
+  }
+
+  std::chrono::time_point< highres_clock_t > start;
+  double process_time_cpu{0};
+  double stack_time_cpu{0};
+  double process_time_gpu{0};
+  double stack_time_gpu{0};
+  unsigned int num_new_particles{0};
+  unsigned int num_curr_particles{0};
+  unsigned int num_new_particles_gpu{0};
+  unsigned int num_curr_particles_gpu{0};
+
+  while ((m_maxNumShowerLoops == -1) || (loop_count < m_maxNumShowerLoops)) {
+    if (m_showProgress){
+      std::cout << "--------------------------------------------------------------" << std::endl;
+      std::cout << "Starting Shower iteration:         " << loop_count << std::endl;
+    }
+
+    // --------------------------------------------
+    // Process and transport the particle stack depending on GPU config
+    if (m_runMode == MPRunMode::Normal)
+    {
+      start = highres_clock_t::now();
+      num_new_particles = newParticles.size();
+
+      // this is all the processing of the particle stack that's needed
+      if (loop_count) particles.swap(newParticles);
+
+      if (particles.size() == 0)
+        break;
+
+      process_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+      start = highres_clock_t::now();
+
+      num_curr_particles = particles.size();
+
+      if (!transportParticleStack(aval, particles, newParticles, nullptr, 0, false, c1, c2, 0, 0, useBfield, sc))
+        return false;
+
+      stack_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+    } 
+    else if (m_runMode == MPRunMode::GPUWhenAppropriate)
+    {
+      std::cout << "Run Mode 'GPUWhenAppropriate' NOT IMPLEMENTED YET!" << std::endl;
+      return false;
+      /*if (gpuReady)
+      {
+        size_t stack_size = processParticleStackGPU();
+
+        if (stack_size < gpu_config.stack_cut_off)
+        {
+          freeGPU();
+          gpuReady = false;
+        }
+
+        if (stack_size == 0)
+          break;
+
+      } else {
+        if (processParticleStack(aval, stack, stackNew) == 0)
+          break;
+
+        if (stack.size() > gpu_config.stack_cut_off)
+        {
+          prepareGPU(stack, gpu_config);
+          gpuReady = true;
+        }
       }
-      if (aval && m_sizeCut > 0 && m_nElectrons >= (int)m_sizeCut) { 
+
+      if (gpuReady)
+      {
+        if (!transportParticleStackGPU(aval, stack, stackNew, medium, id,  false, c1, c2, fLim, fInv, useBfield))
+          return false;
+      }
+      else
+      {
+        if (!transportParticleStack(aval, stack, stackNew, medium, id, false, c1, c2, fLim, fInv, useBfield))
+          return false;
+      }*/
+    } 
+    else if (m_runMode == MPRunMode::GPUExclusive)
+    {
+#ifdef USEGPU
+      start = highres_clock_t::now();
+
+      if (m_gpuInterface->processParticleStack(num_curr_particles_gpu, num_new_particles_gpu) == 0)
+      {
+        break;
+      }
+
+      process_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+      start = highres_clock_t::now();
+
+      // TODO: TN GPU: Fix arguments (medium, ID, useBandStructure, Flim, Finv all set
+      // to constant values)
+      if (!m_gpuInterface->transportParticleStack(aval, this, 0, false, c1, c2, 0, 0, useBfield, sc))
+        return false;
+
+      stack_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+
+#endif
+    } 
+    else if (m_runMode == MPRunMode::CPUGPUComparison)
+    {
+#ifdef USEGPU
+      // ----------------------------------------------
+      // Run GPU first
+      start = highres_clock_t::now();
+
+      if (m_gpuInterface->processParticleStack(num_curr_particles_gpu, num_new_particles_gpu) == 0) break;
+
+      process_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+      start = highres_clock_t::now();
+
+      // TODO: TN GPU: Fix arguments (medium, ID, useBandStructure, Flim, Finv all set
+      // to constant values)
+      if (!m_gpuInterface->transportParticleStack(aval, this, 0, false, c1, c2, 0, 0, useBfield, sc,
+            (m_debugShowerLoopNum == loop_count ? m_debugElectronID : -1)))
+        return false;
+
+      stack_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+
+      // ----------------------------------------------
+      // Now run CPU
+      start = highres_clock_t::now();
+      num_new_particles = newParticles.size();
+
+      // this is all the processing of the particle stack that's needed
+      particles.swap(newParticles);
+
+      if (particles.size() == 0)
+  break;
+
+      num_curr_particles = particles.size();
+
+      // set a high res timer going to record how long each iteration takes
+      process_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+      start = highres_clock_t::now();
+
+      if (!transportParticleStack(aval, particles, newParticles, nullptr, 0, false, c1, c2, 0, 0, useBfield,
+            sc,
+            (m_debugShowerLoopNum == loop_count ? m_debugElectronID : -1)))
+        return false;
+
+      stack_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+      #endif
+    } 
+
+    loop_count++;    
+
+    if (m_showProgress){
+      if ((m_runMode == MPRunMode::GPUWhenAppropriate) ||
+        (m_runMode == MPRunMode::Normal) ||
+        (m_runMode == MPRunMode::CPUGPUComparison))
+        std::cout << "    - Current particle stack size (CPU): " << num_curr_particles << std::endl;
+      if ((m_runMode == MPRunMode::GPUWhenAppropriate) ||
+        (m_runMode == MPRunMode::GPUExclusive) ||
+        (m_runMode == MPRunMode::CPUGPUComparison))
+        std::cout << "    - Current particle stack size (GPU): " << num_curr_particles_gpu << std::endl;
+
+      if (m_stats.cpu_stack_transport_time.size() > 0)
+      {
+        std::cout << "CPU Stats: Stk (" << *(m_stats.cpu_stack_process_time.end()-1) << 
+                  "),  Tpt (" << *(m_stats.cpu_stack_transport_time.end()-1) << ")" << std::endl;
+      }
+
+      if (m_stats.gpu_stack_transport_time.size() > 0)
+      {
+        std::cout << "GPU Stats: Stk (" << *(m_stats.gpu_stack_process_time.end()-1) << 
+                  "),  Tpt (" << *(m_stats.gpu_stack_transport_time.end()-1) << ")" << std::endl;
+      }
+      std::cout << "--------------------------------------------------------------" << std::endl;
+    }
+
+    // add to stats
+    if (m_runMode == MPRunMode::GPUExclusive)
+    {
+      m_stats.stack_old_size.push_back(num_curr_particles_gpu);
+      m_stats.stack_new_size.push_back(num_new_particles_gpu);
+    }
+    else
+    {
+      m_stats.stack_old_size.push_back(num_curr_particles);
+      m_stats.stack_new_size.push_back(num_new_particles_gpu);
+    }
+    
+    if (stack_time_cpu > 0)
+    {
+      m_stats.cpu_stack_transport_time.push_back(stack_time_cpu);
+      m_stats.cpu_stack_process_time.push_back(process_time_cpu);
+    }
+
+    if (stack_time_gpu > 0)
+    {      
+      m_stats.gpu_stack_transport_time.push_back(stack_time_gpu);
+      m_stats.gpu_stack_process_time.push_back(process_time_gpu);
+    }
+  }
+
+  // Multiprocessor clean up
+  if ((m_runMode == MPRunMode::GPUWhenAppropriate) ||
+      (m_runMode == MPRunMode::GPUExclusive) ||
+      (m_runMode == MPRunMode::CPUGPUComparison))
+  {
+#ifdef USEGPU
+
+    // copy over stack if there's any to compare
+    if (m_maxNumShowerLoops > -1) {
+      m_gpuInterface->TransferStackFromGPUToCPU(m_stackStoreGPU, false);  
+      m_stackStoreCPU = particles;
+    }
+
+    // Copy endpoints over
+    m_gpuInterface->TransferStackFromGPUToCPU(m_electrons_gpu, true);
+
+#else
+    std::cout << "ERROR: GPU use requested but Garfield has not been built with GPU support" << std::endl;
+    return false;
+#endif
+
+  }
+
+  // Calculate the induced charge.
+  if (m_doInducedCharge) {
+    for (const auto& p : m_electrons) {
+      m_sensor->AddInducedCharge(-1, p.path[0].x, p.path[0].y, p.path[0].z, 
+                                 p.path.back().x, p.path.back().y, p.path.back().z);
+    }
+    for (const auto& p : m_holes) {
+      m_sensor->AddInducedCharge(+1, p.path[0].x, p.path[0].y, p.path[0].z, 
+                                 p.path.back().x, p.path.back().y, p.path.back().z);
+    }
+  }
+  return true;
+}
+
+// TODO: TN GPU: 
+// - To complete the merge, a number of the arguments of this function have
+//   modified. This will impact the results (they will almost certainly be
+//   wrong, so make sure this is FIXED in the future!!) 
+// - I've added the useBfield parameter to ensure this compiles, but this should
+//   be tidied up in the future
+bool AvalancheMicroscopic::transportParticleStack(const bool aval,
+              std::vector<std::pair<Point, Particle> > &particles,
+              std::vector<std::pair<Point, Particle> > &newParticles, 
+              Medium */*medium*/,
+              int /*id*/,
+              bool /*useBandStructure*/,
+              const double c1,
+              const double c2,
+              double /*fLim*/,
+              double /*fInv*/,
+              bool useBfield,
+              bool sc,
+              int debug_electron)
+{
+  newParticles.clear();
+  // Loop over the particles in the avalanche.
+  int rng_idx = 0;
+  for (const auto& particle : particles) {
+
+#ifdef USEPRECALCRNG
+    randomEngine.Seed(rng_idx);
+#endif
+    rng_idx++;
+    if (particle.second == Particle::Ion) {
+      ++m_nIons;
+      continue;
+    }
+
+    if (aval && m_sizeCut > 0 && m_nElectrons >= (int)m_sizeCut) { 
         newParticles.clear();
         break;
       }
-      const bool isHole = (particle.second == Particle::Hole);
+    const bool isHole = (particle.second == Particle::Hole);
+
+      // TODO TN GPU: Readding this here to make the code compile, 
+      // Do we need to compute the induced signal?
+      const bool signal = m_doSignal && (m_sensor->GetNumberOfElectrodes() > 0);
+
       std::vector<Point> path;
       std::vector<double> ts;
       std::vector<std::array<double, 3> > xs;
@@ -560,7 +913,8 @@ bool AvalancheMicroscopic::TransportElectrons(
                                          newParticles);
       } else {
         status = TransportElectron(particle.first, isHole, aval, signal, 
-                                   ts, xs, path, newParticles);
+                                   ts, xs, path, newParticles,
+                                   rng_idx, debug_electron);
       }
       double pathLength = 0.;
       if (m_computePathLength && xs.size() > 1) {
@@ -596,29 +950,17 @@ bool AvalancheMicroscopic::TransportElectrons(
         }
       }
     }
-    if (!aval) break;
-    particles.swap(newParticles);
-  }
-
-  // Calculate the induced charge.
-  if (m_doInducedCharge) {
-    for (const auto& p : m_electrons) {
-      m_sensor->AddInducedCharge(-1, p.path[0].x, p.path[0].y, p.path[0].z, 
-                                 p.path.back().x, p.path.back().y, p.path.back().z);
-    }
-    for (const auto& p : m_holes) {
-      m_sensor->AddInducedCharge(+1, p.path[0].x, p.path[0].y, p.path[0].z, 
-                                 p.path.back().x, p.path.back().y, p.path.back().z);
-    }
-  }
+  // TODO TN GPU: Garfield++ now has a break here (the line below) 
+  // but I'm not sure yet where exactly it should go in our version
+  // if (!aval) break;
   return true;
 }
-
 int AvalancheMicroscopic::TransportElectron(const Point& p0,
   const bool hole, const bool aval, const bool signal,
   std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
   std::vector<Point>& path, 
-  std::vector<std::pair<Point, Particle> >& newParticles) {
+  std::vector<std::pair<Point, Particle> >& newParticles,
+  int rng_idx, int debug_electron) {
 
   double x = p0.x;
   double y = p0.y;
@@ -961,7 +1303,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
             const double tp = t + tdx;
             const double ep = std::max(edx, Small);
             newParticles.emplace_back(std::make_pair(
-              MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
+            MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
             newParticles.emplace_back(std::make_pair(
               MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
           } else if (typedx == DxcProdTypePhoton && m_usePhotons &&
@@ -1796,7 +2138,7 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs), Particle::Hole));
           } else if (secondary.first == Particle::Ion) {
-            newParticles.emplace_back(std::make_pair(
+             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, 0.), Particle::Ion));
           }
         }
@@ -1983,7 +2325,7 @@ void AvalancheMicroscopic::FillDistanceHistogram(const int cstype,
 
 void AvalancheMicroscopic::TransportPhoton(
     const double x0, const double y0, const double z0, const double t0,
-    const double e0, 
+    const double e0,
     std::vector<std::pair<Point, Particle> > & newParticles) {
   // Make sure that the sensor is defined.
   if (!m_sensor) {
@@ -2185,4 +2527,87 @@ void AvalancheMicroscopic::Terminate(double x0, double y0, double z0, double t0,
   }
 }
 
+void AvalancheMicroscopic::SetRunModeOptions(MPRunMode mode, int device) {
+  m_runMode = mode;
+  m_cudaDevice = device;
+}
+
+void AvalancheMicroscopic::PrintComparisonStats()
+{
+  std::cout << "--------------------------------------------------------------------------" << std::endl;
+  std::cout << "BENCHMARKS AND STATS" << std::endl << std::endl;
+  std::cout << std::setw(14) << "Iter" << std::setw(14) << "OldSize" << 
+              std::setw(14) << "NewSize" << std::setw(14) << "stack" << 
+              std::setw(14) << "transport" << std::setw(14) << "stack gpu" << 
+              std::setw(14) << "transport gpu" << std::setw(14) << "stack ratio" << 
+              std::setw(14) << "transport ratio" << std::endl;
+
+  double total_process_gpu = 0, total_transport_gpu = 0;
+  double total_process_cpu = 0, total_transport_cpu = 0;
+  for (unsigned int i = 0; i < std::max(m_stats.cpu_stack_process_time.size(), m_stats.gpu_stack_process_time.size()); i++)
+  {
+    std::cout << ">>" << std::setw(14) << i; 
+    std::cout << std::setw(14) << m_stats.stack_old_size[i];
+    std::cout << std::setw(14) << m_stats.stack_new_size[i];
+    if (i < m_stats.cpu_stack_process_time.size())
+    {
+      std::cout << std::setw(14) << m_stats.cpu_stack_process_time[i];
+      std::cout << std::setw(14) << m_stats.cpu_stack_transport_time[i];
+      total_process_cpu += m_stats.cpu_stack_process_time[i];
+      total_transport_cpu += m_stats.cpu_stack_transport_time[i];
+    } else {
+      std::cout << std::setw(14) << "N/A";
+      std::cout << std::setw(14) << "N/A";
+    }
+
+    if (i < m_stats.gpu_stack_process_time.size())
+    {
+      std::cout << std::setw(14) << m_stats.gpu_stack_process_time[i];
+      std::cout << std::setw(14) << m_stats.gpu_stack_transport_time[i];
+      total_process_gpu += m_stats.gpu_stack_process_time[i];
+      total_transport_gpu += m_stats.gpu_stack_transport_time[i];
+
+    } else {
+      std::cout << std::setw(14) << "N/A";
+      std::cout << std::setw(14) << "N/A";
+    }
+
+    if ((i < m_stats.cpu_stack_process_time.size()) && (i < m_stats.gpu_stack_process_time.size()))
+    {
+      std::cout << std::setw(14) << m_stats.cpu_stack_process_time[i] / m_stats.gpu_stack_process_time[i];
+      std::cout << std::setw(14) << m_stats.cpu_stack_transport_time[i] / m_stats.gpu_stack_transport_time[i];
+    } else {
+      std::cout << std::setw(14) << "N/A";
+      std::cout << std::setw(14) << "N/A";
+    }
+    
+    std::cout << std::endl;
+  }
+
+  std::cout << std::endl;
+  std::cout << std::setw(14) << "Sub Totals:";
+  std::cout << std::setw(14) << " " << std::setw(14) << " ";
+  std::cout << std::setw(14) << total_process_cpu;
+  std::cout << std::setw(14) << total_transport_cpu;
+  std::cout << std::setw(14) << total_process_gpu;
+  std::cout << std::setw(14) << total_transport_gpu;
+  std::cout << std::setw(14) << total_process_cpu / total_process_gpu;
+  std::cout << std::setw(14) << total_transport_cpu / total_transport_gpu;
+  std::cout << std::endl;
+
+  std::cout << std::endl;
+  std::cout << std::setw(14) << "Totals:";
+  std::cout << std::setw(14) << " " << std::setw(14) << " ";
+  std::cout << std::setw(14) << total_process_cpu + total_transport_cpu;
+  std::cout << std::setw(14) << " ";
+  std::cout << std::setw(14) << total_process_gpu + total_transport_gpu;
+  std::cout << std::setw(14) << " ";
+  std::cout << std::setw(14) << (total_process_cpu + total_transport_cpu) / (total_process_gpu + total_transport_gpu);
+  std::cout << std::endl;
+        
+}
+
+#ifndef USEGPU
+
+#endif
 }  // namespace Garfield

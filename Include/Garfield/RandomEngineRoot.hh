@@ -22,6 +22,9 @@ class RandomEngineRoot : public RandomEngine {
   /// Print information about the generator used and the seed. 
   void Print() override;
 
+  /// Retrieve the seed that was used
+  unsigned int GetSeed() override {return m_rng.GetSeed(); }
+  
  private:
   TRandom3 m_rng;
 };

@@ -1,9 +1,17 @@
+#ifdef __GPUCOMPILE__
+
+#else
+
 #include <math.h>
 #include <stdlib.h>
 #include <fstream>
 #include <iostream>
 
 #include "Garfield/ComponentAnsys123.hh"
+
+#endif
+
+#ifndef __GPUCOMPILE__
 
 namespace Garfield {
 
@@ -563,4 +571,14 @@ bool ComponentAnsys123::SetWeightingField(const std::string& prnsol,
   return true;
 }
 
+#ifndef USEGPU
+double ComponentAnsys123::CreateGPUTransferObject(ComponentGPU *&comp_gpu)
+{
+  comp_gpu = nullptr;
+  return 0;
 }
+#endif
+
+}
+
+#endif

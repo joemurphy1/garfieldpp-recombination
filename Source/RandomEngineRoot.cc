@@ -1,9 +1,13 @@
 #include "Garfield/RandomEngineRoot.hh"
+#include "GPUInterface.hh"
+
 #include <iostream>
 
 namespace Garfield {
 
+#ifndef USEPRECALCRNG
 RandomEngineRoot randomEngine;
+#endif
 
 RandomEngineRoot::RandomEngineRoot() : RandomEngine(), m_rng(0) {}
 

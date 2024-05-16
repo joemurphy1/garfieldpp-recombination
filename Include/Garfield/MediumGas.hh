@@ -1,5 +1,12 @@
-#ifndef G_MEDIUM_GAS_H
+#if defined(__GPUCOMPILE__) || !defined(G_MEDIUM_GAS_H)
+
+#if !defined(__GPUCOMPILE__) && !defined(G_MEDIUM_GAS_H)
 #define G_MEDIUM_GAS_H
+#endif
+
+#ifdef __GPUCOMPILE__
+
+#else
 
 #include <array>
 #include <cmath>
@@ -7,6 +14,12 @@
 #include <bitset>
 
 #include "Medium.hh"
+
+#endif
+
+
+#ifndef __GPUCOMPILE__
+
 
 namespace Garfield {
 
@@ -157,9 +170,15 @@ class MediumGas : public Medium {
   bool GetPhotoAbsorptionCrossSection(const double e, double& sigma,
                                       const unsigned int i) override;
 
+  /// Create and initialise GPU Transfer class
+  virtual double CreateGPUTransferObject(MediumGPU *&med_gpu) override;
+
  protected:
+ #endif
+
   static constexpr unsigned int m_nMaxGases = 6;
 
+#ifndef __GPUCOMPILE__
   // Gas mixture
   std::array<std::string, m_nMaxGases> m_gas;
   std::array<double, m_nMaxGases> m_fraction;
@@ -259,4 +278,5 @@ class MediumGas : public Medium {
 };
 }
 
+#endif
 #endif

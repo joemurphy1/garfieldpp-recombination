@@ -9,8 +9,13 @@
 #include "GarfieldConstants.hh"
 #include "Sensor.hh"
 #include "ViewDrift.hh"
+#include "GPUInterface.hh"
+
+#include "MultiProcessInterface.hh"
 
 namespace Garfield {
+
+  class AvalancheMicroscopicGPU;
 
 /// Calculate electron drift lines and avalanches using microscopic tracking.
 
@@ -144,6 +149,11 @@ class AvalancheMicroscopic {
     nh = m_nHoles;
     ni = m_nIons;
   }
+  /// Return the number of electrons and ions in the avalanche.
+  void GetAvalancheSizeGPU(int& ne, int& ni) const {
+    ne = m_nElectronsGPU;
+    ni = m_nIonsGPU;
+  }
 
   struct Point {
     double x, y, z;    ///< Coordinates.
@@ -166,6 +176,9 @@ class AvalancheMicroscopic {
   size_t GetNumberOfElectronEndpoints() const {
     return m_electrons.size();
   }
+  unsigned int GetNumberOfElectronEndpointsGPU() const {
+    return m_electrons_gpu.size();
+  }
   /** Return the coordinates and time of start and end point of a given
    * electron drift line.
    * \param i index of the drift line
@@ -175,6 +188,10 @@ class AvalancheMicroscopic {
    * \param status status code (see GarfieldConstants.hh)
    */
   void GetElectronEndpoint(const size_t i, double& x0, double& y0,
+                           double& z0, double& t0, double& e0, double& x1,
+                           double& y1, double& z1, double& t1, double& e1,
+                           int& status) const;
+  void GetElectronEndpointGPU(const size_t i, double& x0, double& y0,
                            double& z0, double& t0, double& e0, double& x1,
                            double& y1, double& z1, double& t1, double& e1,
                            int& status) const;
@@ -260,13 +277,46 @@ class AvalancheMicroscopic {
   void EnableDebugging() { m_debug = true; }
   void DisableDebugging() { m_debug = false; }
 
+  // class to store CPU/GPU benchmark comparisons
+  struct Statistics {
+    std::vector<double> gpu_stack_process_time;
+    std::vector<double> cpu_stack_process_time;
+    std::vector<double> gpu_stack_transport_time;
+    std::vector<double> cpu_stack_transport_time;
+
+    std::vector<size_t> stack_old_size;
+    std::vector<size_t> stack_new_size;
+  };
+
+  Statistics GetStatistics() { return m_stats; }
+  
+  void SetRunModeOptions(MPRunMode mode, int device = -1);
+  void SetMaxNumShowerLoops(int max_loops) {m_maxNumShowerLoops = max_loops;}
+  void SetShowProgress(bool show_progress) {m_showProgress = show_progress;}
+  void SetDebugShowerIterationAndElectronID(int iter_num, int elec_id) {m_debugShowerLoopNum = iter_num; m_debugElectronID = elec_id;}
+  void PrintComparisonStats();
+
  private:
   std::string m_className = "AvalancheMicroscopic";
 
+  MPRunMode m_runMode{MPRunMode::Normal};
+  int m_cudaDevice{-1};
+  int m_maxNumShowerLoops{-1};
+  int m_debugElectronID{-1};
+  int m_debugShowerLoopNum{-1};
+  bool m_showProgress{false};
+  AvalancheMicroscopicGPU *m_gpuInterface{nullptr};
+
+  Statistics m_stats;
+  
   Sensor* m_sensor = nullptr;
 
   std::vector<Electron> m_electrons;
+  std::vector<Electron> m_electrons_gpu;
   std::vector<Electron> m_holes;
+
+  std::vector<std::pair<Point, Particle> > m_stackStoreCPU;
+  std::vector<Electron> m_stackStoreGPU;
 
   struct photon {
     int status;             ///< Status
@@ -282,6 +332,13 @@ class AvalancheMicroscopic {
   int m_nHoles = 0;
   /// Number of ions produced
   int m_nIons = 0;
+
+  /// Number of electrons produced
+  int m_nElectronsGPU = 0;
+  /// Number of holes produced
+  int m_nHolesGPU = 0;
+  /// Number of ions produced
+  int m_nIonsGPU = 0;
 
   ViewDrift* m_viewer = nullptr;
   bool m_plotExcitations = true;
@@ -344,11 +401,12 @@ class AvalancheMicroscopic {
   bool TransportElectrons(std::vector<std::pair<Point, Particle> >& stack,
                           const bool aval);
   int TransportElectron(const Point& p0, const bool hole, 
-                        const bool aval, const bool signal,
+                        const bool aval, const bool signal, 
                         std::vector<double>& ts, 
                         std::vector<std::array<double, 3> >& xs,
                         std::vector<Point>& path,
-                        std::vector<std::pair<Point, Particle> >& newParticles);
+                        std::vector<std::pair<Point, Particle> >& newParticles,
+                        int rng_idx, int debug_electron);
   int TransportElectronBfield(const Point& p0, const bool hole, 
                               const bool aval, 
                               const bool signal, 
@@ -367,6 +425,43 @@ class AvalancheMicroscopic {
                        const double t, const double e,
                        std::vector<std::pair<Point, Particle> >& newParticles);
 
+  bool transportParticleStack(const bool aval,
+                              std::vector<std::pair<Point, Particle> > &particles, 
+                              std::vector<std::pair<Point, Particle> > &newParticles,
+                              Medium *medium,
+                              int id,
+                              bool useBandStructure,
+                              const double c1,
+                              const double c2,
+                              double fLim,
+                              double fInv,
+                              bool useBfield,
+                              bool sc,
+                              int debug_electron = -1);
+
+  static bool IsInactive(const Electron& item) {
+    return item.status == StatusLeftDriftMedium ||
+           item.status == StatusBelowTransportCut ||
+           item.status == StatusOutsideTimeWindow ||
+           item.status == StatusLeftDriftArea || 
+           item.status == StatusAttached ||
+           item.status == StatusHitPlane;
+  }
+  void Update(std::vector<Electron>::iterator it, const double x,
+              const double y, const double z, const double t,
+              const double energy, const double kx, const double ky,
+              const double kz, const int band);
+  void AddToEndPoints(const Electron& item, const bool hole) {
+    Electron electron;
+    electron.status = item.status;
+    electron.path = item.path;
+    if (hole) {
+      m_holes.push_back(std::move(electron));
+    } else {
+      m_electrons.push_back(std::move(electron));
+    }
+  }
+
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
                  double& y1, double& z1, double& t1) const;
 
@@ -376,6 +471,12 @@ class AvalancheMicroscopic {
   void FillDistanceHistogram(const int cstype,
                              const double x, const double y, const double z,
                              double& xLast, double& yLast, double& zLast) const;
+
+public:
+  std::vector<std::pair<Point, Particle> > GetStackOld() { return m_stackStoreCPU; }
+  std::vector<Electron> GetStackOldGPU() {return m_stackStoreGPU; }
+
+friend class AvalancheMicroscopicGPU;
 };
 }
 

@@ -1,5 +1,11 @@
-#ifndef G_COMPONENT_ANSYS123_H
+#if defined(__GPUCOMPILE__) || !defined(G_COMPONENT_ANSYS123_H)
+
+#if !defined(__GPUCOMPILE__) && !defined(G_COMPONENT_ANSYS123_H)
 #define G_COMPONENT_ANSYS123_H
+#endif
+
+
+#ifndef __GPUCOMPILE__
 
 #include "ComponentFieldMap.hh"
 
@@ -33,9 +39,14 @@ class ComponentAnsys123 : public ComponentFieldMap {
     return SetWeightingField(prnsol, label);
   } 
   bool SetWeightingField(const std::string& prnsol, const std::string& label);
+
+   /// Create and initialise GPU Transfer class
+  double CreateGPUTransferObject(ComponentGPU *&comp_gpu) override;
+
  private:
   bool LoadPotentials(const std::string prnsol,
                       std::vector<double>& pot);
 };
 }
+#endif
 #endif

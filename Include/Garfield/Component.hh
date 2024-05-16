@@ -1,24 +1,55 @@
-#ifndef G_COMPONENT_H
+// Include this header if we're compiling with the GPU or this is the first time without
+#if defined(__GPUCOMPILE__) || !defined(G_COMPONENT_H)
+
+#if !defined(__GPUCOMPILE__) && !defined(G_COMPONENT_H)
 #define G_COMPONENT_H
+#endif
+
+#ifdef __GPUCOMPILE__
+
+#include "TetrahedralTreeGPU.h"
+#include "MediumGPU.h"
+
+#else
 
 #include <array>
 #include <string>
 
 #include "Geometry.hh"
 
+#endif
+
 namespace Garfield {
 
+// undefine everything first 
+#ifdef __COMPONENTCLASS__
+#undef __COMPONENTCLASS__
+#endif
+
+// setup class names depending on if this is compiling the GPU static version or not
+#ifdef __GPUCOMPILE__
+#define __COMPONENTCLASS__ ComponentGPU
+#else
+#define __COMPONENTCLASS__ Component
+  class ComponentGPU;
+#endif
+
 /// Abstract base class for components.
-
-class Component {
+class __COMPONENTCLASS__ {
  public:
-  /// Default constructor.
-  Component() = delete;
-  /// Constructor
-  Component(const std::string& name);
-  /// Destructor
-  virtual ~Component() {}
 
+  #ifdef __GPUCOMPILE__
+  __COMPONENTCLASS__() = default;
+  #else
+  /// Default constructor.
+  __COMPONENTCLASS__() = delete;
+  /// Constructor
+  __COMPONENTCLASS__(const std::string& name);
+  #endif
+  /// Destructor
+  virtual ~__COMPONENTCLASS__() {};
+
+#ifndef __GPUCOMPILE__
   /// Define the geometry.
   virtual void SetGeometry(Geometry* geo);
   /// Reset.
@@ -44,6 +75,14 @@ class Component {
    *           -10: Unknown potential type (should not occur)
    *         other: Other cases (should not occur)
    */
+  #endif
+
+  #ifdef __GPUCOMPILE__
+  __device__ void ElectricField(const GPUFLOAT xin, const GPUFLOAT yin,
+                                  const GPUFLOAT zin, GPUFLOAT& ex, GPUFLOAT& ey,
+                                  GPUFLOAT& ez, MediumGPU*& m, int& status);
+
+  #else
   virtual void ElectricField(const double x, const double y, const double z,
                              double& ex, double& ey, double& ez, Medium*& m,
                              int& status) = 0;
@@ -51,6 +90,9 @@ class Component {
   virtual void ElectricField(const double x, const double y, const double z,
                              double& ex, double& ey, double& ez, double& v,
                              Medium*& m, int& status) = 0;
+  #endif
+
+#ifndef __GPUCOMPILE__
   /// Calculate the drift field [V/cm] at (x, y, z).
   std::array<double, 3> ElectricField(const double x, const double y,
                                       const double z); 
@@ -83,6 +125,7 @@ class Component {
       const std::string& /*label*/) {
     return m_wdtimes;
   }
+                                   
   /** Calculate the delayed weighting field at a given point and time
    * and for a given electrode.
    * \param x,y,z coordinates [cm].
@@ -369,6 +412,9 @@ class Component {
 
   virtual double StepSizeHint() { return -1.; }
 
+  /// Create and initialise GPU Transfer class
+  virtual double CreateGPUTransferObject(ComponentGPU *&comp_gpu);
+
  protected:
   /// Class name.
   std::string m_className = "Component";
@@ -378,10 +424,21 @@ class Component {
 
   /// Constant magnetic field.
   std::array<double, 3> m_b0 = {{0., 0., 0.}};
-
+#endif
   /// Ready for use?
   bool m_ready = false;
 
+
+#ifdef __GPUCOMPILE__
+  /// Simple periodicity in x, y, z.
+  bool m_periodic[3] = {false, false, false};
+  /// Mirror periodicity in x, y, z.
+  bool m_mirrorPeriodic[3] = {false, false, false};
+  /// Axial periodicity in x, y, z.
+  bool m_axiallyPeriodic[3] = {false, false, false};
+  /// Rotation symmetry around x-axis, y-axis, z-axis.
+  bool m_rotationSymmetric[3] = {false, false, false};
+#else
   /// Switch on/off debugging messages
   bool m_debug = false;
 
@@ -393,8 +450,10 @@ class Component {
   std::array<bool, 3> m_axiallyPeriodic = {{false, false, false}};
   /// Rotation symmetry around x-axis, y-axis, z-axis.
   std::array<bool, 3> m_rotationSymmetric = {{false, false, false}};
+#endif
 
-  /// Time steps at which the delayed weighting potentials/fields are stored.
+#ifndef __GPUCOMPILE__
+ /// Time steps at which the delayed weighting potentials/fields are stored.
   std::vector<double> m_wdtimes;
 
   /// Reset the component.
@@ -408,6 +467,27 @@ class Component {
       const double dy1, const double dz1, const double dx2, const double dy2,
       const double dz2, const unsigned int nU, const unsigned int nV,
       const bool wfield, const std::string& label);
+#else
+
+// include parts from derived class due to big performance hit from using virtual methods
+#include "ComponentFieldMap.hh"
+#include "ComponentAnsys123.hh"
+
+  friend class ComponentAnsys123;
+  friend class ComponentFieldMap;
+  friend class Component;
+
+  // enum to mimic polymorphism
+  enum class ComponentType
+  {
+    Component = 0,
+    ComponentFieldMap,
+    ComponentAnsys123
+  };
+
+  ComponentType m_ComponentType{ComponentType::Component};
+
+#endif
 
 };
 }  // namespace Garfield
