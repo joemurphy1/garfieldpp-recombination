@@ -601,10 +601,7 @@ bool AvalancheMicroscopic::TransportElectrons(
   // loops so will have to be recalculated more than normal. This will affect both CPU and GPU versions.
   int loop_count = 0;
 
-  if ((m_runMode == MPRunMode::GPUWhenAppropriate) ||
-      (m_runMode == MPRunMode::GPUExclusive) ||
-      (m_runMode == MPRunMode::CPUGPUComparison))
-  {
+  if ((m_runMode == MPRunMode::GPUExclusive) || (m_runMode == MPRunMode::CPUGPUComparison)) {
 #ifdef USEGPU
     if (!m_gpuInterface) {
       m_gpuInterface = new AvalancheMicroscopicGPU;
@@ -656,45 +653,6 @@ bool AvalancheMicroscopic::TransportElectrons(
         return false;
 
       stack_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
-    } 
-    else if (m_runMode == MPRunMode::GPUWhenAppropriate)
-    {
-      std::cout << "Run Mode 'GPUWhenAppropriate' NOT IMPLEMENTED YET!" << std::endl;
-      return false;
-      /*if (gpuReady)
-      {
-        size_t stack_size = processParticleStackGPU();
-
-        if (stack_size < gpu_config.stack_cut_off)
-        {
-          freeGPU();
-          gpuReady = false;
-        }
-
-        if (stack_size == 0)
-          break;
-
-      } else {
-        if (processParticleStack(aval, stack, stackNew) == 0)
-          break;
-
-        if (stack.size() > gpu_config.stack_cut_off)
-        {
-          prepareGPU(stack, gpu_config);
-          gpuReady = true;
-        }
-      }
-
-      if (gpuReady)
-      {
-        if (!transportParticleStackGPU(aval, stack, stackNew, medium, id,  false, c1, c2, fLim, fInv, useBfield))
-          return false;
-      }
-      else
-      {
-        if (!transportParticleStack(aval, stack, stackNew, medium, id, false, c1, c2, fLim, fInv, useBfield))
-          return false;
-      }*/
     } 
     else if (m_runMode == MPRunMode::GPUExclusive)
     {
@@ -766,14 +724,10 @@ bool AvalancheMicroscopic::TransportElectrons(
 
     loop_count++;    
 
-    if (m_showProgress){
-      if ((m_runMode == MPRunMode::GPUWhenAppropriate) ||
-        (m_runMode == MPRunMode::Normal) ||
-        (m_runMode == MPRunMode::CPUGPUComparison))
+    if (m_showProgress) {
+      if ((m_runMode == MPRunMode::Normal) || (m_runMode == MPRunMode::CPUGPUComparison))
         std::cout << "    - Current particle stack size (CPU): " << num_curr_particles << std::endl;
-      if ((m_runMode == MPRunMode::GPUWhenAppropriate) ||
-        (m_runMode == MPRunMode::GPUExclusive) ||
-        (m_runMode == MPRunMode::CPUGPUComparison))
+      if ((m_runMode == MPRunMode::GPUExclusive) || (m_runMode == MPRunMode::CPUGPUComparison))
         std::cout << "    - Current particle stack size (GPU): " << num_curr_particles_gpu << std::endl;
 
       if (m_stats.cpu_stack_transport_time.size() > 0)
@@ -816,10 +770,7 @@ bool AvalancheMicroscopic::TransportElectrons(
   }
 
   // Multiprocessor clean up
-  if ((m_runMode == MPRunMode::GPUWhenAppropriate) ||
-      (m_runMode == MPRunMode::GPUExclusive) ||
-      (m_runMode == MPRunMode::CPUGPUComparison))
-  {
+  if ((m_runMode == MPRunMode::GPUExclusive) || (m_runMode == MPRunMode::CPUGPUComparison)) {
 #ifdef USEGPU
 
     // copy over stack if there's any to compare
@@ -854,8 +805,7 @@ bool AvalancheMicroscopic::TransportElectrons(
 
 // TODO: TN GPU: 
 // - To complete the merge, a number of the arguments of this function have
-//   modified. This will impact the results (they will almost certainly be
-//   wrong, so make sure this is FIXED in the future!!) 
+//   modified.
 // - I've added the useBfield parameter to ensure this compiles, but this should
 //   be tidied up in the future
 bool AvalancheMicroscopic::transportParticleStack(const bool aval,

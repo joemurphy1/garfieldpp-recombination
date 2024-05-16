@@ -400,7 +400,7 @@ class AvalancheMicroscopic {
   bool TransportElectrons(std::vector<std::pair<Point, Particle> >& stack,
                           const bool aval);
   int TransportElectron(const Point& p0, const bool hole, 
-                        const bool aval, const bool signal, 
+                        const bool aval, const bool signal,
                         std::vector<double>& ts, 
                         std::vector<std::array<double, 3> >& xs,
                         std::vector<Point>& path,
