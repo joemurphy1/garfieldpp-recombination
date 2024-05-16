@@ -15,8 +15,8 @@
 // Some constants for memory allocation
 // should be dependent on hardware and dynamic, etc.
 #define MAXCREATEDPARTICLES 2
-#define MAXPARTICLES 750000
-#define MAXSTACKSIZE 500000
+#define MAXPARTICLES 7500000
+#define MAXSTACKSIZE 5000000
 
 static const GPUFLOAT SmallGPU = 1.e-20;
 
