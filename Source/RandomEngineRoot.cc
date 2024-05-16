@@ -1,5 +1,4 @@
 #include "Garfield/RandomEngineRoot.hh"
-
 #include <iostream>
 
 namespace Garfield {
