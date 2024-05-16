@@ -315,7 +315,7 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
         elec.path.resize(2);
         stack.clear();
         transferParticleStack(stackTransfer, 0, stackOldGPU, stackOldGPU.stack_size, AvalancheMicroscopicGPU::TransferType::DeviceToHost);
-        for (int i = 0; i < stackOldGPU.stack_size; i++)
+        for (unsigned int i = 0; i < stackOldGPU.stack_size; i++)
         {
             if (((!end_points) && (stackTransfer.status[i] == 0)) ||
                 ((end_points) && (stackTransfer.status[i] != 0)))
@@ -438,21 +438,21 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
         }
     }
 
-    __global__ void transportSingleParticleGPU(AvalancheMicroscopicGPU::ParticleStack raw_ptr_stack,
-                                                AvalancheMicroscopicGPU::ParticleStack raw_ptr_stack_new,
-                                                int *all_status_array,
-                                                int *new_status_array,
-                                                SensorGPU *m_sensor,
-                                                GPUFLOAT m_deltaCut,
-                                                int /*id*/,
-                                                bool /*useBandStructure*/,
-                                                GPUFLOAT c1,
-                                                GPUFLOAT c2,
-                                                GPUFLOAT /*fLim*/,
-                                                GPUFLOAT /*fInv*/,
-                                                unsigned int max_thread_idx,
-                                                int debug_electron = -1
-                                                )
+    __global__ void TransportElectron(AvalancheMicroscopicGPU::ParticleStack raw_ptr_stack,
+                                      AvalancheMicroscopicGPU::ParticleStack raw_ptr_stack_new,
+                                      int *all_status_array,
+                                      int *new_status_array,
+                                      SensorGPU *m_sensor,
+                                      GPUFLOAT m_deltaCut,
+                                      int /*id*/,
+                                      bool /*useBandStructure*/,
+                                      GPUFLOAT c1,
+                                      GPUFLOAT c2,
+                                      GPUFLOAT /*fLim*/,
+                                      GPUFLOAT /*fInv*/,
+                                      unsigned int max_thread_idx,
+                                      int debug_electron = -1
+                                      )
     {
         //GPU_REMOVE: std::vector<std::pair<double, double> > stackPhotons;
         //GPU_REMOVE: std::vector<std::pair<int, double> > secondaries;
@@ -996,7 +996,7 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
         }
 
         // Send off the threads to transport each particle
-        transportSingleParticleGPU<<<1 + numActiveParticles / 256, 256>>>(stackOldGPU,
+        TransportElectron<<<1 + numActiveParticles / 256, 256>>>(stackOldGPU,
             stackNewGPU,
             activeIndexArray,
             newIndexArray,

@@ -62,7 +62,7 @@ namespace Garfield {
         void FreeGPUParticleStack(ParticleStack &stack);
         void InitialiseCPUParticleStack(ParticleStack &stack, unsigned int num);
         void FreeCPUParticleStack(ParticleStack &stack);
-      void TransferStackFromCPUToGPU(std::vector<std::pair<AvalancheMicroscopic::Point, Particle> > &particles);
+        void TransferStackFromCPUToGPU(std::vector<std::pair<AvalancheMicroscopic::Point, Particle> > &particles);
         void TransferStackFromGPUToCPU(std::vector<AvalancheMicroscopic::Electron> &stack, bool end_points);
         void TransferClassInternalInfo(AvalancheMicroscopic *src);
         void transferParticleStack(ParticleStack dest, unsigned int offset, ParticleStack source,
