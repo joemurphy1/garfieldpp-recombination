@@ -1,21 +1,17 @@
 #ifdef __GPUCOMPILE__
-
 #include "GPUInterface.hh"
 #include "TetrahedralTreeGPU.h"
-
 #include "GPUFunctions.h"
-
 #else
-
 #include "Garfield/TetrahedralTree.hh"
 #include <iostream>
-
 #endif
 
 namespace Garfield {
 
 #ifndef __GPUCOMPILE__
 std::vector<int> TetrahedralTree::emptyBlock = {};
+
 /**
 TetrahedralTree.cc
 This class stores the mesh nodes and elements in an Octree data
@@ -126,13 +122,13 @@ void TetrahedralTree::InsertMeshElement(const double bb[6], const int index) {
 #ifdef __GPUCOMPILE__
 __device__ void TetrahedralTreeGPU::GetElementsInBlock(const Vec3GPU& point, const int *&tet_list_elems, int &num_elems) const {
     const TetrahedralTreeGPU* octreeNode = GetBlockFromPoint(point);
-  
+
     if (octreeNode) {
         tet_list_elems = octreeNode->elements;
         num_elems = octreeNode->numelements;
         return;
     }
-  
+
     tet_list_elems = nullptr;
     num_elems = 0;
   }
@@ -178,19 +174,13 @@ __GPULABEL__ const __TETRAHEDRALTREECLASS__* __TETRAHEDRALTREECLASS__::GetBlockF
   int octant = GetOctantContainingPoint(point);
   return children[octant]->GetBlockFromPointHelper(point);
 }
-
 #ifndef __GPUCOMPILE__
-
 #ifndef USEGPU
-
 double TetrahedralTree::CreateGPUTransferObject(TetrahedralTreeGPU *&tree_gpu)
 {
   tree_gpu = nullptr;
   return 0;
 }
-
 #endif
-
 #endif
-
 }

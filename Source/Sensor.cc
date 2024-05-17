@@ -1,10 +1,7 @@
 #ifdef __GPUCOMPILE__
-
 #include "GPUInterface.hh"
 #include "SensorGPU.h"
-
 #include "GPUFunctions.h"
-
 #else
 #include "Garfield/Sensor.hh"
 
@@ -1895,12 +1892,8 @@ double Sensor::GetTotalInducedCharge(const std::string &label) {
   }
   return 0.;
 }
-
 #ifndef USEGPU
-double Sensor::CreateGPUTransferObject(SensorGPU *&/*sensor_gpu*/) {
-  return 0;
-}
+double Sensor::CreateGPUTransferObject(SensorGPU *&/*sensor_gpu*/) { return 0; }
 #endif
 #endif  // __GPUCOMPILE__
-
 }  // namespace Garfield

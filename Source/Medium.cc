@@ -1429,12 +1429,7 @@ void Medium::Init(
                      nA, std::vector<std::vector<double> >(
                              nB, std::vector<double>(nE, val))));
 }
-
 #ifndef USEGPU
-double Medium::CreateGPUTransferObject(MediumGPU *&/*med_gpu*/)
-{
-  return 0;
-}
+double Medium::CreateGPUTransferObject(MediumGPU *&/*med_gpu*/) { return 0; }
 #endif
-
 }

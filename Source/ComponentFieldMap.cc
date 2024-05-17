@@ -1,7 +1,4 @@
-#ifdef __GPUCOMPILE__
-
-#else
-
+#ifndef __GPUCOMPILE__
 #include "Garfield/ComponentFieldMap.hh"
 
 #include <TCanvas.h>
@@ -17,10 +14,6 @@
 #include <string>
 
 #include "Garfield/FundamentalConstants.hh"
-
-#endif
-
-#ifndef __GPUCOMPILE__
 
 namespace Garfield {
 
@@ -44,9 +37,9 @@ void ComponentFieldMap::ElectricField(const double x, const double y,
 
 #ifdef __GPUCOMPILE__
 __device__ void ComponentGPU::ElectricField(const double xin, const double yin,
-                                      const double zin, double& ex, double& ey,
-                                      double& ez, MediumGPU*& m,
-                                      int& status)
+                                            const double zin, double& ex, double& ey,
+                                            double& ez, MediumGPU*& m,
+                                            int& status)
 #else
 void ComponentFieldMap::ElectricField(const double xin, const double yin,
                                       const double zin, double& ex, double& ey,

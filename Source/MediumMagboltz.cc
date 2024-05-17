@@ -1,7 +1,6 @@
 #ifdef __GPUCOMPILE__
 #define __RNDMUNIFORM__ RndmUniformGPU
 #else
-
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -32,7 +31,6 @@
 #include "Garfield/ViewBase.hh"
 
 #define __RNDMUNIFORM__ RndmUniform
-
 #endif
 
 #ifndef __GPUCOMPILE__
@@ -532,7 +530,6 @@ double MediumMagboltz::GetElectronNullCollisionRate(const int /*band*/)
 {
   #ifndef __GPUCOMPILE__
   // TODO GPU: We don't update the collision rates table on the GPU
-  
   // If necessary, update the collision rates table.
   if (!Update()) return 0.;
   #endif
@@ -541,7 +538,7 @@ double MediumMagboltz::GetElectronNullCollisionRate(const int /*band*/)
 
 #ifdef __GPUCOMPILE__
 __device__ double MediumGPU::GetElectronCollisionRate__MediumMagboltz(const double e,
-    const int /*band*/)
+                                                                      const int /*band*/)
 #else
 double MediumMagboltz::GetElectronCollisionRate(const double e,
                                                 const int /*band*/)
@@ -752,7 +749,7 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
       esec = w * tan(__RNDMUNIFORM__() * atan(0.5 * (e - loss) / w));
       // Rescaling (SST)
       // esec = w * pow(esec / w, 0.9524);
-    } 
+    }
     #ifndef __GPUCOMPILE__
     else if (m_useGreenSawada) {
       const double gs = m_parGreenSawada[igas][0];
@@ -770,19 +767,16 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
       esec = RndmUniform() * (e - loss);
     }
     #endif
-
     if (esec <= 0) esec = Small;
     loss += esec;
 
     #ifdef __GPUCOMPILE__
-    // Add the secondary electron.                                                                                                                                                                                                                                     
+    // Add the secondary electron.
     secondaries_type[num_secondaries] = Particle::Electron;
     secondaries_energy[num_secondaries++] = esec;
-
-    // Add the ion.                                                                                                                                                                                                                                                    
+    // Add the ion
     secondaries_type[num_secondaries] = Particle::Ion;
     secondaries_energy[num_secondaries++] = 0;
-
     #else
     // Add the secondary electron.
     secondaries.emplace_back(std::make_pair(Particle::Electron, esec));
@@ -802,7 +796,7 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
         for (unsigned int i = 0; i < m_nAuger2[level]; ++i) {
           #ifdef __GPUCOMPILE__
           secondaries_type[num_secondaries] = Particle::Electron;
-          secondaries_energy[num_secondaries++] = eav;  
+          secondaries_energy[num_secondaries++] = eav;
           #else
           secondaries.emplace_back(std::make_pair(Particle::Electron, eav));
           #endif
@@ -813,7 +807,7 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
         for (unsigned int i = 0; i < m_nFluorescence[level]; ++i) {
           #ifdef __GPUCOMPILE__
           secondaries_type[num_secondaries] = Particle::Electron;
-          secondaries_energy[num_secondaries++] = eav;  
+          secondaries_energy[num_secondaries++] = eav;
           #else
           secondaries.emplace_back(std::make_pair(Particle::Electron, eav));
           #endif
@@ -824,7 +818,7 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
       for (unsigned int i = 0; i < m_nAuger1[level]; ++i) {
         #ifdef __GPUCOMPILE__
         secondaries_type[num_secondaries] = Particle::Electron;
-        secondaries_energy[num_secondaries++] = eav;  
+        secondaries_energy[num_secondaries++] = eav;
         #else
         secondaries.emplace_back(std::make_pair(Particle::Electron, eav));
         #endif
@@ -913,7 +907,7 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
   #endif
 
   const double d = 1. - ctheta0 * sqrt(arg);
-  
+
   // Update the energy.
   #ifdef __GPUCOMPILE__
   e1 = fmax(e * ((double)1. - loss / (s1 * e) - (double)2. * d * m_s2[igas]), SmallGPU);
