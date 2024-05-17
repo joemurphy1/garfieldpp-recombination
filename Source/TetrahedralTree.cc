@@ -56,13 +56,13 @@ __GPULABEL__ int __TETRAHEDRALTREECLASS__::GetOctantContainingPoint(const __VEC3
   return oct;
 }
 
-#ifndef __GPUCOMPILE__
-bool TetrahedralTree::IsLeafNode() const {
+__GPULABEL__ bool __TETRAHEDRALTREECLASS__::IsLeafNode() const {
   // We are a leaf if we have no children. Since we either have none, or
   // all eight, it is sufficient to just check the first.
   return children[0] == nullptr;
 }
 
+#ifndef __GPUCOMPILE__
 void TetrahedralTree::InsertMeshNode(Vec3 point, const int index) {
   // Check if it is a leaf node.
   if (!IsLeafNode()) {
@@ -113,7 +113,6 @@ void TetrahedralTree::InsertMeshElement(const double bb[6], const int index) {
     children[i]->InsertMeshElement(bb, index);
   }
 }
-
 #endif
 
 // It returns the list of tetrahedrons that intersects in a bounding box (Octree

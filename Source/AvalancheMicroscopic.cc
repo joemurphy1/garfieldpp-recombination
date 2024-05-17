@@ -581,11 +581,7 @@ bool AvalancheMicroscopic::TransportElectrons(
       }
     }
   }
-
   std::vector<std::pair<Point, Particle> > newParticles;
-  std::vector<std::pair<double, double> > stackPhotons;
-  std::vector<std::pair<Particle, double> > secondaries;
-
   m_stats.gpu_stack_process_time.clear();
   m_stats.cpu_stack_process_time.clear();
   m_stats.gpu_stack_transport_time.clear();

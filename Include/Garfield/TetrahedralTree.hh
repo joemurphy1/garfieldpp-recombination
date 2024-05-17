@@ -14,7 +14,6 @@
 
 #ifdef __GPUCOMPILE__
 
-
 #define __TETRAHEDRALTREECLASS__ TetrahedralTreeGPU
 #define __VEC3CLASS__ Vec3GPU
 #define __GPULABEL__ __device__
@@ -105,8 +104,8 @@ class __TETRAHEDRALTREECLASS__ {
   /// Insert a mesh element with given bounding box and index to the tree.
   void InsertMeshElement(const double bb[6], const int index);
 
- /// Create and initialise GPU Transfer class
- double CreateGPUTransferObject(TetrahedralTreeGPU *&tree_gpu);
+  /// Create and initialise GPU Transfer class
+  double CreateGPUTransferObject(TetrahedralTreeGPU *&tree_gpu);
   #endif
 
  private:
@@ -144,38 +143,32 @@ class __TETRAHEDRALTREECLASS__ {
 
   static const size_t BlockCapacity = 10;
 
-#ifndef __GPUCOMPILE__
+  #ifndef __GPUCOMPILE__
   // Check if the given box overlaps with this tree node.
   bool DoesBoxOverlap(const double bb[6]) const;
-
+  #endif
   // Check if this tree node is a leaf or intermediate node.
-  bool IsLeafNode() const;
-#endif
+  __GPULABEL__ bool IsLeafNode() const;
 
-#ifdef __GPUCOMPILE__
-public:
-    __device__ void GetElementsInBlock(const Vec3GPU& point, const int *&tet_list_elems, int &num_elems) const;
 
-private:
-    __device__ const TetrahedralTreeGPU* GetBlockFromPoint(const Vec3GPU& point) const;
-    __device__ const TetrahedralTreeGPU* GetBlockFromPointHelper(const Vec3GPU& point) const;
-    __device__ int GetOctantContainingPoint(const Vec3GPU& point) const;
-
-  friend class TetrahedralTree;
-#else
 public:
   // Get all tetrahedra linked to a block corresponding to the given point
+  #ifdef __GPUCOMPILE__
+  __device__ void GetElementsInBlock(const Vec3GPU& point, const int *&tet_list_elems, int &num_elems) const;
+  #else
   const std::vector<int>& GetElementsInBlock(const Vec3& point) const;
+  #endif
+
 private:
-  int GetOctantContainingPoint(const Vec3& point) const;
-
+  __GPULABEL__ int GetOctantContainingPoint(const __VEC3CLASS__& point) const;
   // Get a block containing the input point
-  const TetrahedralTree* GetBlockFromPoint(const Vec3& point) const;
-
+  __GPULABEL__ const __TETRAHEDRALTREECLASS__* GetBlockFromPoint(const __VEC3CLASS__& point) const;
   // A helper function used by the function above.
   // Called recursively on the child nodes.
-  const TetrahedralTree* GetBlockFromPointHelper(const Vec3& point) const;
+  __GPULABEL__ const __TETRAHEDRALTREECLASS__* GetBlockFromPointHelper(const __VEC3CLASS__& point) const;  
 
+#ifdef __GPUCOMPILE__
+  friend class TetrahedralTree;
 #endif
 };
 
