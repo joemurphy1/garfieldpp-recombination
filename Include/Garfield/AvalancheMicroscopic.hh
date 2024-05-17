@@ -404,8 +404,7 @@ class AvalancheMicroscopic {
                         std::vector<double>& ts, 
                         std::vector<std::array<double, 3> >& xs,
                         std::vector<Point>& path,
-                        std::vector<std::pair<Point, Particle> >& newParticles,
-                        int debug_electron);
+                        std::vector<std::pair<Point, Particle> >& newParticles);
   int TransportElectronBfield(const Point& p0, const bool hole, 
                               const bool aval, 
                               const bool signal, 
@@ -427,16 +426,9 @@ class AvalancheMicroscopic {
   bool transportParticleStack(const bool aval,
                               std::vector<std::pair<Point, Particle> > &particles, 
                               std::vector<std::pair<Point, Particle> > &newParticles,
-                              Medium *medium,
-                              int id,
-                              bool useBandStructure,
-                              const double c1,
-                              const double c2,
-                              double fLim,
-                              double fInv,
-                              bool useBfield,
-                              bool sc,
-                              int debug_electron = -1);
+                              const bool signal,
+                              const bool useBfield,
+                              const bool sc);
 
   static bool IsInactive(const Electron& item) {
     return item.status == StatusLeftDriftMedium ||

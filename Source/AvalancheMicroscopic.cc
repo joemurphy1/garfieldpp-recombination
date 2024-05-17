@@ -649,7 +649,7 @@ bool AvalancheMicroscopic::TransportElectrons(
 
       num_curr_particles = particles.size();
 
-      if (!transportParticleStack(aval, particles, newParticles, nullptr, 0, false, c1, c2, 0, 0, useBfield, sc))
+      if (!transportParticleStack(aval, particles, newParticles, signal, useBfield, sc))
         return false;
 
       stack_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
@@ -713,9 +713,7 @@ bool AvalancheMicroscopic::TransportElectrons(
       process_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
       start = highres_clock_t::now();
 
-      if (!transportParticleStack(aval, particles, newParticles, nullptr, 0, false, c1, c2, 0, 0, useBfield,
-            sc,
-            (m_debugShowerLoopNum == loop_count ? m_debugElectronID : -1)))
+      if (!transportParticleStack(aval, particles, newParticles, signal, useBfield, sc))
         return false;
 
       stack_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
@@ -803,25 +801,13 @@ bool AvalancheMicroscopic::TransportElectrons(
   return true;
 }
 
-// TODO: TN GPU: 
-// - To complete the merge, a number of the arguments of this function have
-//   modified.
-// - I've added the useBfield parameter to ensure this compiles, but this should
-//   be tidied up in the future
-bool AvalancheMicroscopic::transportParticleStack(const bool aval,
-              std::vector<std::pair<Point, Particle> > &particles,
-              std::vector<std::pair<Point, Particle> > &newParticles, 
-              Medium */*medium*/,
-              int /*id*/,
-              bool /*useBandStructure*/,
-              const double c1,
-              const double c2,
-              double /*fLim*/,
-              double /*fInv*/,
-              bool useBfield,
-              bool sc,
-              int debug_electron)
-{
+bool AvalancheMicroscopic::transportParticleStack(
+  const bool aval,
+  std::vector<std::pair<Point, Particle> > &particles,
+  std::vector<std::pair<Point, Particle> > &newParticles,
+  const bool signal,
+  const bool useBfield,
+  const bool sc) {
   newParticles.clear();
   // Loop over the particles in the avalanche.
   for (const auto& particle : particles) {
@@ -829,79 +815,72 @@ bool AvalancheMicroscopic::transportParticleStack(const bool aval,
       ++m_nIons;
       continue;
     }
-
     if (aval && m_sizeCut > 0 && m_nElectrons >= (int)m_sizeCut) { 
         newParticles.clear();
         break;
-      }
+    }
     const bool isHole = (particle.second == Particle::Hole);
-
-      // TODO TN GPU: Readding this here to make the code compile, 
-      // Do we need to compute the induced signal?
-      const bool signal = m_doSignal && (m_sensor->GetNumberOfElectrodes() > 0);
-
-      std::vector<Point> path;
-      std::vector<double> ts;
-      std::vector<std::array<double, 3> > xs;
-      int status = 0;
-      if (sc) {
-        status = TransportElectronSc(particle.first, isHole, aval, 
-                                     signal, ts, xs, path, 
-                                     newParticles);
-      } else if (useBfield) {
-        status = TransportElectronBfield(particle.first, isHole, aval, 
-                                         signal, ts, xs, path, 
-                                         newParticles);
-      } else {
-        status = TransportElectron(particle.first, isHole, aval, signal, 
-                                   ts, xs, path, newParticles,
-                                   debug_electron);
-      }
-      double pathLength = 0.;
-      if (m_computePathLength && xs.size() > 1) {
-        const size_t ns = xs.size();
-        for (size_t i = 0; i < ns - 1; ++i) {
-          pathLength += Mag(xs[i + 1][0] - xs[i][0], 
-                            xs[i + 1][1] - xs[i][1],
-                            xs[i + 1][2] - xs[i][2]);
-        }
-      }
-      if (isHole) {
-        Electron hole;
-        hole.status = status;
-        hole.path = std::move(path);
-        hole.pathLength = pathLength;
-        m_holes.push_back(std::move(hole));
-        if (status != StatusAttached) ++m_nHoles;
-      } else {
-        Electron electron;
-        electron.status = status;
-        electron.path = std::move(path);
-        electron.pathLength = pathLength;
-        m_electrons.push_back(std::move(electron));
-        if (status != StatusAttached) ++m_nElectrons;
-      }
-      if (signal) {
-        const double q = isHole ? 1. : -1.;
-        if (m_useWeightingPotential) {
-          m_sensor->AddSignalWeightingPotential(q, ts, xs);
-        } else {
-          m_sensor->AddSignalWeightingField(q, ts, xs, 
-                                            m_integrateWeightingField);
-        }
+    std::vector<Point> path;
+    std::vector<double> ts;
+    std::vector<std::array<double, 3> > xs;
+    int status = 0;
+    if (sc) {
+      status = TransportElectronSc(particle.first, isHole, aval, 
+                                    signal, ts, xs, path, 
+                                    newParticles);
+    } else if (useBfield) {
+      status = TransportElectronBfield(particle.first, isHole, aval, 
+                                        signal, ts, xs, path, 
+                                        newParticles);
+    } else {
+      status = TransportElectron(particle.first, isHole, aval, signal, 
+                                  ts, xs, path, newParticles);
+    }
+    double pathLength = 0.;
+    if (m_computePathLength && xs.size() > 1) {
+      const size_t ns = xs.size();
+      for (size_t i = 0; i < ns - 1; ++i) {
+        pathLength += Mag(xs[i + 1][0] - xs[i][0], 
+                          xs[i + 1][1] - xs[i][1],
+                          xs[i + 1][2] - xs[i][2]);
       }
     }
+    if (isHole) {
+      Electron hole;
+      hole.status = status;
+      hole.path = std::move(path);
+      hole.pathLength = pathLength;
+      m_holes.push_back(std::move(hole));
+      if (status != StatusAttached) ++m_nHoles;
+    } else {
+      Electron electron;
+      electron.status = status;
+      electron.path = std::move(path);
+      electron.pathLength = pathLength;
+      m_electrons.push_back(std::move(electron));
+      if (status != StatusAttached) ++m_nElectrons;
+    }
+    if (signal) {
+      const double q = isHole ? 1. : -1.;
+      if (m_useWeightingPotential) {
+        m_sensor->AddSignalWeightingPotential(q, ts, xs);
+      } else {
+        m_sensor->AddSignalWeightingField(q, ts, xs, 
+                                          m_integrateWeightingField);
+      }
+    }
+  }
   // TODO TN GPU: Garfield++ now has a break here (the line below) 
   // but I'm not sure yet where exactly it should go in our version
   // if (!aval) break;
   return true;
 }
+
 int AvalancheMicroscopic::TransportElectron(const Point& p0,
   const bool hole, const bool aval, const bool signal,
   std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
   std::vector<Point>& path, 
-  std::vector<std::pair<Point, Particle> >& newParticles,
-  int debug_electron) {
+  std::vector<std::pair<Point, Particle> >& newParticles) {
 
   double x = p0.x;
   double y = p0.y;
@@ -2472,8 +2451,4 @@ void AvalancheMicroscopic::SetRunModeOptions(MPRunMode mode, int device) {
   m_runMode = mode;
   m_cudaDevice = device;
 }
-
-#ifndef USEGPU
-
-#endif
 }  // namespace Garfield
