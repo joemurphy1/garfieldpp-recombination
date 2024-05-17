@@ -582,10 +582,6 @@ bool AvalancheMicroscopic::TransportElectrons(
     }
   }
 
-  // Numerical prefactors in equation of motion
-  const double c1 = SpeedOfLight * sqrt(2. / ElectronMass);
-  const double c2 = 0.25 * c1 * c1;
-
   std::vector<std::pair<Point, Particle> > newParticles;
   std::vector<std::pair<double, double> > stackPhotons;
   std::vector<std::pair<Particle, double> > secondaries;
@@ -669,7 +665,7 @@ bool AvalancheMicroscopic::TransportElectrons(
 
       // TODO: TN GPU: Fix arguments (medium, ID, useBandStructure, Flim, Finv all set
       // to constant values)
-      if (!m_gpuInterface->transportParticleStack(aval, this, 0, false, c1, c2, 0, 0, useBfield, sc))
+      if (!m_gpuInterface->transportParticleStack(aval, this, 0, false, 0, 0, 0, 0, useBfield, sc))
         return false;
 
       stack_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
@@ -690,7 +686,7 @@ bool AvalancheMicroscopic::TransportElectrons(
 
       // TODO: TN GPU: Fix arguments (medium, ID, useBandStructure, Flim, Finv all set
       // to constant values)
-      if (!m_gpuInterface->transportParticleStack(aval, this, 0, false, c1, c2, 0, 0, useBfield, sc,
+      if (!m_gpuInterface->transportParticleStack(aval, this, 0, false, 0, 0, 0, 0, useBfield, sc,
             (m_debugShowerLoopNum == loop_count ? m_debugElectronID : -1)))
         return false;
 

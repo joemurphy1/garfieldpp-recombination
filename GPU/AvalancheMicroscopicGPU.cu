@@ -10,6 +10,7 @@
 #define __GPUCOMPILE__
 #include "SensorGPU.h"
 #undef __GPUCOMPILE__
+#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Random.hh"
 #include "RandomEngineGPU.h"
 #include "GPUFunctions.h"
@@ -983,7 +984,7 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
 
 
     bool AvalancheMicroscopicGPU::transportParticleStack(const bool aval, AvalancheMicroscopic *aval_ptr, int id, bool useBandStructure,
-                              const double c1, const double c2, double fLim, double fInv, bool useBfield, bool sc, int debug_electron) {
+                              const double /*c1*/, const double /*c2*/, double fLim, double fInv, bool useBfield, bool sc, int debug_electron) {
 
         // check we have enough space
         if (stackOldGPU.stack_size > MAXPARTICLES)
@@ -991,6 +992,10 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
             std::cout << "ERROR:  particle stack overflow. Please increase MAXPARTICLES and recompile." << std::endl;
             return false;
         }
+
+        // Numerical prefactors in equation of motion
+        const double c1 = SpeedOfLight * sqrt(2. / ElectronMass);
+        const double c2 = 0.25 * c1 * c1;
 
         // Send off the threads to transport each particle
         TransportElectron<<<1 + numActiveParticles / 256, 256>>>(stackOldGPU,
