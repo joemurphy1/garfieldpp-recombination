@@ -332,8 +332,6 @@ int neBEMReadGeometry(void) {
     return (-1);  // for the time being
   }
 
-  NbSurfs = 0;
-  NbWires = 0;
   neBEMState = 2;
 
   // Allocate memory for storing the geometry primitives till the elements are
@@ -1473,8 +1471,6 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
 
   // Only the number of primitives has been ascertained.
   // All the rest globally important numbers will be determined in this function
-  NbSurfs = 0;
-  NbWires = 0;
   NbElements = 0;
 
   // Here, the primitive can be analyzed and the elements necessary to
@@ -1565,7 +1561,6 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
       int fstatus;
       case 3:  // triangular surface
       case 4:  // rectangular surface
-        ++NbSurfs;
         fstatus = SurfaceElements(
             prim, NbVertices[prim], XVertex[prim], YVertex[prim], ZVertex[prim],
             XNorm[prim], YNorm[prim], ZNorm[prim], VolRef1[prim], VolRef2[prim],
@@ -1576,8 +1571,8 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
           return -1;
         }
         break;
-      case 2:       // wire - a wire presumably has only 2 vertices
-        ++NbWires;  // it has one radius and one segmentation information
+      case 2:
+        // Wire (two vertices; one radius and one segmentation information)
         fstatus = WireElements(
             prim, NbVertices[prim], XVertex[prim], YVertex[prim], ZVertex[prim],
             Radius[prim], VolRef1[prim], VolRef2[prim], InterfaceType[prim],
@@ -2806,7 +2801,25 @@ int WriteElements(void) {
     return -1;
   }
 
-  fprintf(fStrEle, "%d %d\n", NbSurfs, NbWires);
+  // Count the number of wires and triangular/rectangular surfaces.
+  int nbSurfs = 0;
+  int nbWires = 0;
+  for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    switch (PrimType[prim]) {
+      case 2:
+        ++nbWires;
+        break;
+      case 3:
+      case 4:
+        ++nbSurfs;
+        break;
+      default:
+        printf("WriteElements: Unexpected primitive type %d.\n", 
+               PrimType[prim]);
+        break;
+    }
+  }
+  fprintf(fStrEle, "%d %d\n", nbSurfs, nbWires);
 
   for (int prim = 1; prim <= NbPrimitives; ++prim) {
     fprintf(fStrEle, "%d %d\n", NbSurfSegX[prim], NbSurfSegZ[prim]);
@@ -3251,7 +3264,8 @@ int ReadElements(void) {
     return -1;
   }
 
-  fscanf(fStrEle, "%d %d\n", &NbSurfs, &NbWires);
+  int nbSurfs = 0, nbWires = 0;
+  fscanf(fStrEle, "%d %d\n", &nbSurfs, &nbWires);
 
   for (int prim = 1; prim <= NbPrimitives; ++prim) {
     fscanf(fStrEle, "%d %d\n", &NbSurfSegX[prim], &NbSurfSegZ[prim]);

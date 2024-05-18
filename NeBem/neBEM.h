@@ -108,7 +108,6 @@ neBEMGLOBAL double *AvChDen, *AvAsgndChDen;
 neBEMGLOBAL int *ElementBgn, *ElementEnd;
 
 // Related to surfaces and wires
-neBEMGLOBAL int NbSurfs, NbWires;
 neBEMGLOBAL int *NbSurfSegX, *NbSurfSegZ;
 neBEMGLOBAL int *NbWireSeg;
 
