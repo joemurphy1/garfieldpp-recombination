@@ -104,8 +104,8 @@ neBEMGLOBAL double *VBndPlaneInXMax, *VBndPlaneInYMax, *VBndPlaneInZMax;
 neBEMGLOBAL double *AvChDen, *AvAsgndChDen;
 
 // Related to both primitives and elements
-// Beginning and ending element numbers on a griven primitive
-neBEMGLOBAL int *NbElmntsOnPrim, *ElementBgn, *ElementEnd;
+// Beginning and ending element numbers on each primitive
+neBEMGLOBAL int *ElementBgn, *ElementEnd;
 
 // Related to surfaces and wires
 neBEMGLOBAL int NbSurfs, NbWires;

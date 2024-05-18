@@ -605,13 +605,12 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
 
   }    // seg loop for wire elements
   ElementEnd[prim] = EleCntr;
-  NbElmntsOnPrim[prim] = ElementEnd[prim] - ElementBgn[prim] + 1;
 
   if (OptPrimitiveFiles) {
     fprintf(fPrim, "Element begin: %d, Element end: %d\n", ElementBgn[prim],
             ElementEnd[prim]);
-    fprintf(fPrim, "Number of elements on primitive: %d\n",
-            NbElmntsOnPrim[prim]);
+    const int nbElements = ElementEnd[prim] - ElementBgn[prim] + 1;
+    fprintf(fPrim, "Number of elements on primitive: %d\n", nbElements);
     fclose(fPrim);
   }
 
@@ -991,13 +990,12 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     }    // for i
   }      // for k
   ElementEnd[prim] = EleCntr;
-  NbElmntsOnPrim[prim] = ElementEnd[prim] - ElementBgn[prim] + 1;
 
   if (OptPrimitiveFiles) {
     fprintf(fPrim, "Element begin: %d, Element end: %d\n", ElementBgn[prim],
             ElementEnd[prim]);
-    fprintf(fPrim, "Number of elements on primitive: %d\n",
-            NbElmntsOnPrim[prim]);
+    const int nbElements = ElementEnd[prim] - ElementBgn[prim] + 1;
+    fprintf(fPrim, "Number of elements on primitive: %d\n", nbElements);
     fclose(fPrim);
   }
 
@@ -1237,18 +1235,14 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
 
-      Point3D collPt = CollocationPoint(EleCntr);
-
     }    // for k
   }      // for i
   ElementEnd[prim] = EleCntr;
-  NbElmntsOnPrim[prim] = ElementEnd[prim] - ElementBgn[prim] + 1;
-
   if (OptPrimitiveFiles) {
     fprintf(fPrim, "Element begin: %d, Element end: %d\n", ElementBgn[prim],
             ElementEnd[prim]);
-    fprintf(fPrim, "Number of elements on primitive: %d\n",
-            NbElmntsOnPrim[prim]);
+    const int nbElements = ElementEnd[prim] - ElementBgn[prim] + 1;
+    fprintf(fPrim, "Number of elements on primitive: %d\n", nbElements);
     fclose(fPrim);
   }
 

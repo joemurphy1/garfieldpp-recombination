@@ -404,7 +404,6 @@ int neBEMReadGeometry(void) {
   VBndPlaneInYMax = dvector(1, NbPrimitives);
   VBndPlaneInZMin = dvector(1, NbPrimitives);
   VBndPlaneInZMax = dvector(1, NbPrimitives);
-  NbElmntsOnPrim = ivector(1, NbPrimitives);
   ElementBgn = ivector(1, NbPrimitives);
   ElementEnd = ivector(1, NbPrimitives);
   AvChDen = dvector(1, NbPrimitives);
