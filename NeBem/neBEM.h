@@ -62,21 +62,25 @@ neBEMGLOBAL int OptChargingUp;
 // Geometry variables
 neBEMGLOBAL int NbVolumes;
 neBEMGLOBAL int NbPrimitives;
-neBEMGLOBAL int OrgnlNbPrimitives;  // original nmbr may be less than effective
 neBEMGLOBAL int MaxNbVertices;  // maximum allowed number (only 4, at present)
                                 // allocation from 0 to MaxNbVertices - 1
 
 // Related to volumes
+neBEMGLOBAL int VolMax;
 neBEMGLOBAL int *volRef, *volShape, *volMaterial, *volBoundaryType;
 neBEMGLOBAL double *volEpsilon, *volPotential, *volCharge;
 
 // Related to primitives
+// Geometric type.
 neBEMGLOBAL int *PrimType;
-// 1: conductor at known potential, 2: charged conductor, 3: floating conductor
-// 4: DD interface satisfying continuity, 5: charged DD interface
-// 6: E parallel symmetry, 7: E perpendicular symmetry.
+// 1: conductor at known potential
+// 2: charged conductor
+// 3: floating conductor
+// 4: DD interface satisfying continuity
+// 5: charged DD interface
+// 6: E parallel symmetry
+// 7: E perpendicular symmetry.
 neBEMGLOBAL int *InterfaceType;
-neBEMGLOBAL int **OrgnlToEffPrim;
 neBEMGLOBAL int *NbVertices;
 neBEMGLOBAL double **XVertex, **YVertex, **ZVertex;
 neBEMGLOBAL double *XNorm, *YNorm, *ZNorm;
@@ -88,7 +92,6 @@ neBEMGLOBAL double *Epsilon1, *Epsilon2;
 neBEMGLOBAL double *Lambda;
 neBEMGLOBAL double *ApplPot, *ApplCh;
 neBEMGLOBAL int *VolRef1, *VolRef2;
-neBEMGLOBAL int VolMax;
 neBEMGLOBAL int *PeriodicTypeX, *PeriodicTypeY, *PeriodicTypeZ;
 neBEMGLOBAL int *PeriodicInX, *PeriodicInY, *PeriodicInZ;
 neBEMGLOBAL double *XPeriod, *YPeriod, *ZPeriod;
@@ -309,6 +312,7 @@ neBEMGLOBAL double EffectKnCh(int fld);
 neBEMGLOBAL double ValueKnCh(int fld);
 neBEMGLOBAL double ContinuityKnCh(int fld);
 
+// Helper functions.
 neBEMGLOBAL double ElementArea(int ele);
 neBEMGLOBAL Point3D CollocationPoint(int ele);
 neBEMGLOBAL void ElementVertices(int ele, Point3D vertices[4]);

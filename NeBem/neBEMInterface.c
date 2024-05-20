@@ -325,7 +325,7 @@ int neBEMReadGeometry(void) {
   }
   printf("neBEMReadGeometry: Retrieving geometry...\n");
   NbPrimitives = neBEMGetNbPrimitives();
-  OrgnlNbPrimitives = NbPrimitives;
+
   if (NbPrimitives == 0) {
     // nothing to do - return control to calling routine
     printf("neBEMReadGeometry: no primitive.\n");
@@ -344,7 +344,6 @@ int neBEMReadGeometry(void) {
   // neBEM has been initialized, NbPrimitives set
   PrimType = ivector(1, NbPrimitives);
   NbVertices = ivector(1, NbPrimitives);
-  OrgnlToEffPrim = imatrix(1, NbPrimitives, 0, 2);  // 0 init, 1 intrfc, 2 rmv
   XVertex = dmatrix(1, NbPrimitives, 0, MaxNbVertices - 1);
   YVertex = dmatrix(1, NbPrimitives, 0, MaxNbVertices - 1);
   ZVertex = dmatrix(1, NbPrimitives, 0, MaxNbVertices - 1);
@@ -408,7 +407,7 @@ int neBEMReadGeometry(void) {
   AvAsgndChDen = dvector(1, NbPrimitives);
 
   // Loop over the primitives - major loop
-  int nvertex, volref1, volref2, volmax = 0;
+  int volmax = 0;
 #ifdef __cplusplus
   std::vector<double> xvert(MaxNbVertices, 0.);
   std::vector<double> yvert(MaxNbVertices, 0.);
@@ -416,26 +415,26 @@ int neBEMReadGeometry(void) {
 #else
   double xvert[MaxNbVertices], yvert[MaxNbVertices], zvert[MaxNbVertices];
 #endif
-  double xnorm, ynorm, znorm;  // in case of wire , radius is read as xnorm
+
   for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    int nvertex, volref1, volref2;
+    // Normal vector (in case of wire, radius is read as xnorm).
+    double xnorm, ynorm, znorm;  
 #ifdef __cplusplus
     fstatus = neBEMGetPrimitive(prim, &nvertex, xvert.data(), yvert.data(),
                                 zvert.data(), &xnorm, &ynorm, &znorm, &volref1,
                                 &volref2);
 #else
-    fstatus = neBEMGetPrimitive(prim, &nvertex, xvert, yvert, zvert,  // arrays
+    fstatus = neBEMGetPrimitive(prim, &nvertex, xvert, yvert, zvert,
                                 &xnorm, &ynorm, &znorm, &volref1, &volref2);
 #endif
     if (fstatus != 0) {
       printf("neBEMReadGeometry: neBEMGetPrimitive failed.\n");
       return -1;
     }
-    if (volmax < volref1) {
-      volmax = volref1;
-    }  // maxm nb of volumes
-    if (volmax < volref2) {
-      volmax = volref2;
-    }  // maxm nb of volumes
+    // Keep track of the highest volume number.
+    if (volmax < volref1) volmax = volref1;
+    if (volmax < volref2) volmax = volref2;
 
     if (nvertex > MaxNbVertices) {
       printf("neBEMReadGeometry: Number of vertices for primitive %d exceeds %d!\n", 
@@ -485,42 +484,41 @@ int neBEMReadGeometry(void) {
     // Note that materials from 1 to 10 are conductors and
     // 										 from 11 to 20
     // are dielectrics
-    int shape1, material1, boundarytype1;
-    double epsilon1, potential1, charge1;
     if (volref1 == -1) {
       // Must be an error, since no device is made of vacuum
-      neBEMMessage("neBEMReadGeometry - volref1 = -1!");
+      printf("neBEMReadGeometry: volref1 = -1!\n");
       return -1;
-    } else {
-      neBEMVolumeDescription(volref1, &shape1, &material1, &epsilon1,
-                             &potential1, &charge1, &boundarytype1);
     }
+    int shape1, material1, boundarytype1;
+    double eps1, potential1, charge1;
+    neBEMVolumeDescription(volref1, &shape1, &material1, &eps1,
+                           &potential1, &charge1, &boundarytype1);
     if (OptPrintVolumeDetails) {
       printf("\tvolref1: %d\n", volref1);
       printf("\t\tboundarytype1: %d, shape1: %d, material1: %d\n",
              boundarytype1, shape1, material1);
-      printf("\t\tepsilon1: %lg, potential1: %lg, charge1: %lg\n", epsilon1,
+      printf("\t\tepsilon1: %lg, potential1: %lg, charge1: %lg\n", eps1,
              potential1, charge1);
     }
     // in the -ve normal direction - properties of the external volume
     int shape2, material2, boundarytype2;
-    double epsilon2, potential2, charge2;
+    double eps2, potential2, charge2;
     if (volref2 == -1) {
       shape2 = 0;
       material2 = 11;
-      epsilon2 = 1.0;
+      eps2 = 1.0;
       potential2 = 0.0;
       charge2 = 0.0;
       boundarytype2 = 0;
     } else {
-      neBEMVolumeDescription(volref2, &shape2, &material2, &epsilon2,
+      neBEMVolumeDescription(volref2, &shape2, &material2, &eps2,
                              &potential2, &charge2, &boundarytype2);
     }
     if (OptPrintVolumeDetails) {
       printf("\tvolref2: %d\n", volref2);
       printf("\t\tboundarytype2: %d, shape2: %d, material2: %d\n",
              boundarytype2, shape2, material2);
-      printf("\t\tepsilon2: %lg, potential2: %lg, charge2: %lg\n", epsilon2,
+      printf("\t\teps2: %lg, potential2: %lg, charge2: %lg\n", eps2,
              potential2, charge2);
     }
 
@@ -529,8 +527,8 @@ int neBEMReadGeometry(void) {
     // At present, they even seem necessary. For example, for floating
     // conductors or dielectric-dielectric interface, the formulation requires
     // that the RHS is zero (may be modified by the effect of known charges).
-    Epsilon1[prim] = epsilon1;
-    Epsilon2[prim] = epsilon2;  // 1: self, 2: external
+    Epsilon1[prim] = eps1;
+    Epsilon2[prim] = eps2;  // 1: self, 2: external
     ApplPot[prim] = 0.0;
     Lambda[prim] = 0.0;
     ApplCh[prim] = 0.0;
@@ -562,7 +560,8 @@ int neBEMReadGeometry(void) {
     // THE JOURNAL OF CHEMICAL PHYSICS 130, 094102 (2009)
 
     switch (boundarytype1) {  // the volume itself is volref1
-      case 1:                 // conductor at specified potential
+      case 1:                 
+        // Conductor at specified potential
         if (boundarytype2 == 0 || boundarytype2 == 4) {
           // dielectric-conductor
           InterfaceType[prim] = 1;
@@ -588,8 +587,9 @@ int neBEMReadGeometry(void) {
         }
         break;
 
-      case 2:  // conductor with a specified charge
-        if ((boundarytype2 == 0) || (boundarytype2 == 4)) {
+      case 2:  
+        // Conductor with a specified charge
+        if (boundarytype2 == 0 || boundarytype2 == 4) {
           // conductor-dielectric
           InterfaceType[prim] = 2;
           ApplCh[prim] = charge1;
@@ -599,25 +599,29 @@ int neBEMReadGeometry(void) {
         }
         break;
 
-      case 3:  // floating conductor (zero charge, perpendicular E)
-        if ((boundarytype2 == 0) || (boundarytype2 == 4)) {
+      case 3:  
+        // Floating conductor (zero charge, perpendicular E)
+        if (boundarytype2 == 0 || boundarytype2 == 4) {
           // conductor-dielectric
           InterfaceType[prim] = 3;
-          if (!NbFloatingConductors)   // assuming only one floating conductor
-            NbFloatingConductors = 1;  // in the system
+          if (!NbFloatingConductors) {
+            // Assuming only one floating conductor in the system.
+            NbFloatingConductors = 1;
+          }
         } else {
           printf("neBEMReadGeometry: floating conductor; rejected.\n");
           return -1;
         }
         break;
 
-      case 4:  // dielectric interface (plastic-plastic) without "manual" charge
+      case 4:  
+        // Dielectric interface (plastic-plastic) without "manual" charge
         if (boundarytype2 == 0) {
           // dielectric-vacuum
-          // epsilon1 is self dielectric-constant
-          // epsilon2 is towards positive normal
+          // eps1 is self dielectric-constant
+          // eps2 is towards positive normal
           InterfaceType[prim] = 4;
-          Lambda[prim] = (epsilon1 - epsilon2) / (epsilon1 + epsilon2);
+          Lambda[prim] = (eps1 - eps2) / (eps1 + eps2);
           // consistent with Bardhan's eqn 16 where (1 / (2*Lambda)) is used
         } else if (boundarytype2 == 1) {
           // dielectric-conductor
@@ -632,34 +636,33 @@ int neBEMReadGeometry(void) {
           InterfaceType[prim] = 3;  // conductor at floating potential
         } else if (boundarytype2 == 4) {
           // dielectric-dielectric
-          if (fabs(epsilon1 - epsilon2) <
-              1e-6 * (1 + fabs(epsilon1) + fabs(epsilon2))) {
+          if (fabs(eps1 - eps2) < 1e-6 * (1 + fabs(eps1) + fabs(eps2))) {
             // identical dielectrica
-            printf(
-                "neBEMReadGeometry: between identical dielectrica; skipd.\n");
-            printf("Primitive skipped: #%d\n", prim);
-            InterfaceType[prim] = 0;
-          } else {
-            // distinctly different dielectrica
-            // epsilon1 is self dielectric-constant
-            // epsilon2 towards positive normal
-            InterfaceType[prim] = 4;
-            Lambda[prim] = (epsilon1 - epsilon2) / (epsilon1 + epsilon2);
-            // consistent with Bardhan's paper (1 / Lambda)
-          }
-        } else if (boundarytype2 == 5) {
-          // dielectric-dielectric with charge
-          if (fabs(epsilon1 - epsilon2)  // identical dielectrica
-              < 1e-6 * (1 + fabs(epsilon1) + fabs(epsilon2))) {
             printf(
                 "neBEMReadGeometry: between identical dielectrica; skipped.\n");
             printf("Primitive skipped: #%d\n", prim);
             InterfaceType[prim] = 0;
           } else {
             // distinctly different dielectrica
-            InterfaceType[prim] = 5;  // epsilon2 towards positive normal
+            // eps1 is self dielectric-constant
+            // eps2 towards positive normal
+            InterfaceType[prim] = 4;
+            Lambda[prim] = (eps1 - eps2) / (eps1 + eps2);
+            // consistent with Bardhan's paper (1 / Lambda)
+          }
+        } else if (boundarytype2 == 5) {
+          // dielectric-dielectric with charge
+          if (fabs(eps1 - eps2) < 1e-6 * (1 + fabs(eps1) + fabs(eps2))) {
+            // identical dielectrica
+            printf(
+                "neBEMReadGeometry: between identical dielectrica; skipped.\n");
+            printf("Primitive skipped: #%d\n", prim);
+            InterfaceType[prim] = 0;
+          } else {
+            // distinctly different dielectrica
+            InterfaceType[prim] = 5;  // eps2 towards positive normal
             ApplCh[prim] = charge2;
-            Lambda[prim] = (epsilon1 - epsilon2) / (epsilon1 + epsilon2);
+            Lambda[prim] = (eps1 - eps2) / (eps1 + eps2);
           }
         }       // if-else if boundarytypes 0 and 4
         else {  // dielectric-unknown
@@ -668,15 +671,15 @@ int neBEMReadGeometry(void) {
         }
         break;
 
-      case 5:  // dielectric with surface charge (plastic-gas, typically)
+      case 5:  
+        // Dielectric with surface charge (plastic-gas, typically)
         if (boundarytype2 == 0) {   // dielectric-vacuum
-          InterfaceType[prim] = 5;  // epsilon2 is towards +ve normal
+          InterfaceType[prim] = 5;  // eps2 is towards +ve normal
           ApplCh[prim] = charge1;
-          Lambda[prim] = (epsilon1 - epsilon2) / (epsilon1 + epsilon2);
+          Lambda[prim] = (eps1 - eps2) / (eps1 + eps2);
           // consistent with Bardhan's paper (1 / Lambda)
         } else if (boundarytype2 == 4) {  // dielectric-dielectric
-          if (fabs(epsilon1 - epsilon2) <
-              1e-6 * (1 + fabs(epsilon1) + fabs(epsilon2))) {
+          if (fabs(eps1 - eps2) < 1e-6 * (1 + fabs(eps1) + fabs(eps2))) {
             // identical dielectrica
             printf(
                 "neBEMReadGeometry: between identical dielectrica; skipd.\n");
@@ -684,9 +687,9 @@ int neBEMReadGeometry(void) {
             InterfaceType[prim] = 0;
           } else {
             // distinctly different dielectrica
-            InterfaceType[prim] = 5;  // epsilon2 towards positive normal
+            InterfaceType[prim] = 5;  // eps2 towards positive normal
             ApplCh[prim] = charge1;
-            Lambda[prim] = (epsilon1 - epsilon2) / (epsilon1 + epsilon2);
+            Lambda[prim] = (eps1 - eps2) / (eps1 + eps2);
             // consistent with Bardhan's paper (1 / Lambda)
           }
         }  // if-else if boundarytypes 0 and 4
@@ -698,7 +701,8 @@ int neBEMReadGeometry(void) {
         }
         break;
 
-      case 6:  // symmetry boundary, E parallel
+      case 6:  
+        // Symmetry boundary, E parallel
         if (boundarytype2 == 0) {
           InterfaceType[prim] = 6;
         } else {
@@ -707,7 +711,8 @@ int neBEMReadGeometry(void) {
         }
         break;
 
-      case 7:  // symmetry boundary, E perpendicular
+      case 7:  
+        // Symmetry boundary, E perpendicular
         if (boundarytype2 == 0) {
           InterfaceType[prim] = 7;
         } else {
@@ -932,366 +937,357 @@ int neBEMReadGeometry(void) {
   // Ignore unnecessary primitives from the final count
   // Ideally, all the removal conditions for a primitive should be checked in
   // one loop and the list should be updated in one single go.
-  {
-    for (int prim = 1; prim <= NbPrimitives; ++prim) {
-      OrgnlToEffPrim[prim][0] = prim;
-      OrgnlToEffPrim[prim][1] = prim;
-      OrgnlToEffPrim[prim][2] = prim;
+  int OrgnlNbPrimitives = NbPrimitives;
+  int **OrgnlToEffPrim = imatrix(1, NbPrimitives, 0, 2);  // 0 init, 1 intrfc, 2 rmv
+  for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    OrgnlToEffPrim[prim][0] = prim;
+    OrgnlToEffPrim[prim][1] = prim;
+    OrgnlToEffPrim[prim][2] = prim;
+  }
+  // Remove skipped primitives having InterfaceType == 0.
+  // Also remove primitives having too small dimensions.
+  int NbSkipped = 0;
+  for (int prim = 1; prim <= NbPrimitives; ++prim) {
+    int effprim = prim - NbSkipped;
+    double minDVertex = 0.0;
+    // Check dimensions of the primitive
+    for (int vert = 0; vert < NbVertices[prim] - 1; ++vert) {
+      double DVertex =
+            sqrt(((XVertex[prim][vert + 1] - XVertex[prim][vert]) *
+                  (XVertex[prim][vert + 1] - XVertex[prim][vert])) +
+                 ((YVertex[prim][vert + 1] - YVertex[prim][vert]) *
+                  (YVertex[prim][vert + 1] - YVertex[prim][vert])) +
+                 ((ZVertex[prim][vert + 1] - ZVertex[prim][vert]) *
+                  (ZVertex[prim][vert + 1] - ZVertex[prim][vert])));
+      if (vert == 0) {
+        minDVertex = DVertex;
+      } else {
+        if (DVertex < minDVertex) minDVertex = DVertex;
+      }
     }
 
-    {  // Skip primitive
-      // Remove skipped primitives having InterfaceType == 0.
-      // Also remove primitives having too small dimensions.
-      int NbSkipped = 0, effprim;
-      double DVertex[4], minDVertex = 0.0;  // maximum number of vertices is 4
-      for (int prim = 1; prim <= NbPrimitives; ++prim) {
-        effprim = prim - NbSkipped;
+    if ((InterfaceType[prim]) && (minDVertex > MINDIST)) {
+      OrgnlToEffPrim[prim][1] = effprim;
+      OrgnlToEffPrim[prim][2] = effprim;
+      PrimType[effprim] = PrimType[prim];
+      NbVertices[effprim] = NbVertices[prim];
+      for (int vert = 0; vert < NbVertices[effprim]; ++vert) {
+        XVertex[effprim][vert] = XVertex[prim][vert];
+        YVertex[effprim][vert] = YVertex[prim][vert];
+        ZVertex[effprim][vert] = ZVertex[prim][vert];
+      }
+      if (PrimType[effprim] == 2) {
+        // wire
+        XNorm[effprim] = 0.0;  // modulus not 1 - an absurd trio!
+        YNorm[effprim] = 0.0;
+        ZNorm[effprim] = 0.0;
+        Radius[effprim] = Radius[prim];
+      }
+      if (PrimType[effprim] == 3 || PrimType[effprim] == 4) {
+        XNorm[effprim] = XNorm[prim];
+        YNorm[effprim] = YNorm[prim];
+        ZNorm[effprim] = ZNorm[prim];
+        Radius[effprim] = 0.0;  // absurd radius!
+      }
+      VolRef1[effprim] = VolRef1[prim];
+      VolRef2[effprim] = VolRef2[prim];
 
-        // Check dimensions of the primitive
-        for (int vert = 0; vert < NbVertices[prim] - 1; ++vert) {
-          DVertex[vert] =
-              sqrt(((XVertex[prim][vert + 1] - XVertex[prim][vert]) *
-                    (XVertex[prim][vert + 1] - XVertex[prim][vert])) +
-                   ((YVertex[prim][vert + 1] - YVertex[prim][vert]) *
-                    (YVertex[prim][vert + 1] - YVertex[prim][vert])) +
-                   ((ZVertex[prim][vert + 1] - ZVertex[prim][vert]) *
-                    (ZVertex[prim][vert + 1] - ZVertex[prim][vert])));
-          if (vert == 0)
-            minDVertex = DVertex[vert];
-          else {
-            if (DVertex[vert] < minDVertex) minDVertex = DVertex[vert];
-          }
-        }
+      InterfaceType[effprim] = InterfaceType[prim];
+      Epsilon1[effprim] = Epsilon1[prim];
+      Epsilon2[effprim] = Epsilon2[prim];
+      Lambda[effprim] = Lambda[prim];
+      ApplPot[effprim] = ApplPot[prim];
+      ApplCh[effprim] = ApplCh[prim];
+      PeriodicTypeX[effprim] = PeriodicTypeX[prim];
+      PeriodicTypeY[effprim] = PeriodicTypeY[prim];
+      PeriodicTypeZ[effprim] = PeriodicTypeZ[prim];
+      PeriodicInX[effprim] = PeriodicInX[prim];
+      PeriodicInY[effprim] = PeriodicInY[prim];
+      PeriodicInZ[effprim] = PeriodicInZ[prim];
+      XPeriod[effprim] = XPeriod[prim];
+      YPeriod[effprim] = YPeriod[prim];
+      ZPeriod[effprim] = ZPeriod[prim];
+      MirrorTypeX[effprim] = MirrorTypeX[prim];
+      MirrorTypeY[effprim] = MirrorTypeY[prim];
+      MirrorTypeZ[effprim] = MirrorTypeZ[prim];
+      MirrorDistXFromOrigin[effprim] = MirrorDistXFromOrigin[prim];
+      MirrorDistYFromOrigin[effprim] = MirrorDistYFromOrigin[prim];
+      MirrorDistZFromOrigin[effprim] = MirrorDistZFromOrigin[prim];
+      BndPlaneInXMin[effprim] = BndPlaneInXMin[prim];
+      BndPlaneInXMax[effprim] = BndPlaneInXMax[prim];
+      BndPlaneInYMin[effprim] = BndPlaneInYMin[prim];
+      BndPlaneInYMax[effprim] = BndPlaneInYMax[prim];
+      BndPlaneInZMin[effprim] = BndPlaneInZMin[prim];
+      BndPlaneInZMax[effprim] = BndPlaneInZMax[prim];
+      XBndPlaneInXMin[effprim] = XBndPlaneInXMin[prim];
+      XBndPlaneInXMax[effprim] = XBndPlaneInXMax[prim];
+      YBndPlaneInYMin[effprim] = YBndPlaneInYMin[prim];
+      YBndPlaneInYMax[effprim] = YBndPlaneInYMax[prim];
+      ZBndPlaneInZMin[effprim] = ZBndPlaneInZMin[prim];
+      ZBndPlaneInZMax[effprim] = ZBndPlaneInZMax[prim];
+      VBndPlaneInXMin[effprim] = VBndPlaneInXMin[prim];
+      VBndPlaneInXMax[effprim] = VBndPlaneInXMax[prim];
+      VBndPlaneInYMin[effprim] = VBndPlaneInYMin[prim];
+      VBndPlaneInYMax[effprim] = VBndPlaneInYMax[prim];
+      VBndPlaneInZMin[effprim] = VBndPlaneInZMin[prim];
+      VBndPlaneInZMax[effprim] = VBndPlaneInZMax[prim];
+    } else {
+      OrgnlToEffPrim[prim][1] = 0;  // removed from the list
+      OrgnlToEffPrim[prim][2] = 0;
+      ++NbSkipped;
+      if (DebugLevel == 101) {
+        printf("Skipped primitive %d, InterfaceType: %d, minDVertex: %lg\n",
+               prim, InterfaceType[prim], minDVertex);
+      }
+    }
+  }  // loop over primitives to remove the skipped primitives
+  NbPrimitives -= NbSkipped;
+  printf("neBEMReadGeometry: Skipped %d primitives. ", NbSkipped);
+  printf("Effective number of primitives: %d\n", NbPrimitives);
 
-        if ((InterfaceType[prim]) && (minDVertex > MINDIST)) {
-          OrgnlToEffPrim[prim][1] = effprim;
-          OrgnlToEffPrim[prim][2] = effprim;
-          PrimType[effprim] = PrimType[prim];
-          NbVertices[effprim] = NbVertices[prim];
-          for (int vert = 0; vert < NbVertices[effprim]; ++vert) {
-            XVertex[effprim][vert] = XVertex[prim][vert];
-            YVertex[effprim][vert] = YVertex[prim][vert];
-            ZVertex[effprim][vert] = ZVertex[prim][vert];
-          }
-          if (PrimType[effprim] == 2)  // wire
-          {
-            XNorm[effprim] = 0.0;  // modulus not 1 - an absurd trio!
-            YNorm[effprim] = 0.0;
-            ZNorm[effprim] = 0.0;
-            Radius[effprim] = Radius[prim];
-          }
-          if ((PrimType[effprim] == 3) || (PrimType[effprim] == 4)) {
-            XNorm[effprim] = XNorm[prim];
-            YNorm[effprim] = YNorm[prim];
-            ZNorm[effprim] = ZNorm[prim];
-            Radius[effprim] = 0.0;  // absurd radius!
-          }
-          VolRef1[effprim] = VolRef1[prim];
-          VolRef2[effprim] = VolRef2[prim];
-
-          InterfaceType[effprim] = InterfaceType[prim];
-          Epsilon1[effprim] = Epsilon1[prim];
-          Epsilon2[effprim] = Epsilon2[prim];
-          Lambda[effprim] = Lambda[prim];
-          ApplPot[effprim] = ApplPot[prim];
-          ApplCh[effprim] = ApplCh[prim];
-          PeriodicTypeX[effprim] = PeriodicTypeX[prim];
-          PeriodicTypeY[effprim] = PeriodicTypeY[prim];
-          PeriodicTypeZ[effprim] = PeriodicTypeZ[prim];
-          PeriodicInX[effprim] = PeriodicInX[prim];
-          PeriodicInY[effprim] = PeriodicInY[prim];
-          PeriodicInZ[effprim] = PeriodicInZ[prim];
-          XPeriod[effprim] = XPeriod[prim];
-          YPeriod[effprim] = YPeriod[prim];
-          ZPeriod[effprim] = ZPeriod[prim];
-          MirrorTypeX[effprim] = MirrorTypeX[prim];
-          MirrorTypeY[effprim] = MirrorTypeY[prim];
-          MirrorTypeZ[effprim] = MirrorTypeZ[prim];
-          MirrorDistXFromOrigin[effprim] = MirrorDistXFromOrigin[prim];
-          MirrorDistYFromOrigin[effprim] = MirrorDistYFromOrigin[prim];
-          MirrorDistZFromOrigin[effprim] = MirrorDistZFromOrigin[prim];
-          BndPlaneInXMin[effprim] = BndPlaneInXMin[prim];
-          BndPlaneInXMax[effprim] = BndPlaneInXMax[prim];
-          BndPlaneInYMin[effprim] = BndPlaneInYMin[prim];
-          BndPlaneInYMax[effprim] = BndPlaneInYMax[prim];
-          BndPlaneInZMin[effprim] = BndPlaneInZMin[prim];
-          BndPlaneInZMax[effprim] = BndPlaneInZMax[prim];
-          XBndPlaneInXMin[effprim] = XBndPlaneInXMin[prim];
-          XBndPlaneInXMax[effprim] = XBndPlaneInXMax[prim];
-          YBndPlaneInYMin[effprim] = YBndPlaneInYMin[prim];
-          YBndPlaneInYMax[effprim] = YBndPlaneInYMax[prim];
-          ZBndPlaneInZMin[effprim] = ZBndPlaneInZMin[prim];
-          ZBndPlaneInZMax[effprim] = ZBndPlaneInZMax[prim];
-          VBndPlaneInXMin[effprim] = VBndPlaneInXMin[prim];
-          VBndPlaneInXMax[effprim] = VBndPlaneInXMax[prim];
-          VBndPlaneInYMin[effprim] = VBndPlaneInYMin[prim];
-          VBndPlaneInYMax[effprim] = VBndPlaneInYMax[prim];
-          VBndPlaneInZMin[effprim] = VBndPlaneInZMin[prim];
-          VBndPlaneInZMax[effprim] = VBndPlaneInZMax[prim];
-        }  // InterfaceType
-        else {
-          OrgnlToEffPrim[prim][1] = 0;  // removed from the list
-          OrgnlToEffPrim[prim][2] = 0;
-          ++NbSkipped;
-          if (DebugLevel == 101) {
-            printf("Skipped primitive %d, InterfaceType: %d, minDVertex: %lg\n",
-                   prim, InterfaceType[prim], minDVertex);
-          }
-        }
-      }  // loop over primitives to remove the skipped primitives
-      NbPrimitives -= NbSkipped;
-      printf("neBEMReadGeometry: Skipped %d primitives. ", NbSkipped);
-      printf("Effective number of primitives: %d\n", NbPrimitives);
-    }  // Skip primitives
-
-    if (OptRmPrim) {
-      int NbRmPrims;
-      FILE *rmprimFile = fopen("neBEMInp/neBEMRmPrim.inp", "r");
-      if (rmprimFile == NULL) {
-        printf("neBEMRmPrim.inp absent ... assuming defaults ...\n");
-        NbRmPrims = 0;
-      } else {
-        fscanf(rmprimFile, "NbRmPrims: %d\n", &NbRmPrims);
-        if (NbRmPrims) {
+  if (OptRmPrim) {
+    int NbRmPrims;
+    FILE *rmprimFile = fopen("neBEMInp/neBEMRmPrim.inp", "r");
+    if (rmprimFile == NULL) {
+      printf("neBEMRmPrim.inp absent ... assuming defaults ...\n");
+      NbRmPrims = 0;
+    } else {
+      fscanf(rmprimFile, "NbRmPrims: %d\n", &NbRmPrims);
+      if (NbRmPrims) {
+#ifdef __cplusplus
+        std::vector<double> rmXNorm(NbRmPrims + 1, 0.);
+        std::vector<double> rmYNorm(NbRmPrims + 1, 0.);
+        std::vector<double> rmZNorm(NbRmPrims + 1, 0.);
+        std::vector<double> rmXVert(NbRmPrims + 1, 0.);
+        std::vector<double> rmYVert(NbRmPrims + 1, 0.);
+        std::vector<double> rmZVert(NbRmPrims + 1, 0.);
+#else
+        double rmXNorm[NbRmPrims + 1], rmYNorm[NbRmPrims + 1];
+        double rmZNorm[NbRmPrims + 1];
+        double rmXVert[NbRmPrims + 1], rmYVert[NbRmPrims + 1];
+        double rmZVert[NbRmPrims + 1];
+#endif
+        for (int rmprim = 1; rmprim <= NbRmPrims; ++rmprim) {
           int tint;
+          fscanf(rmprimFile, "Prim: %d\n", &tint);
+          fscanf(rmprimFile, "rmXNorm: %le\n", &rmXNorm[rmprim]);
+          fscanf(rmprimFile, "rmYNorm: %le\n", &rmYNorm[rmprim]);
+          fscanf(rmprimFile, "rmZNorm: %le\n", &rmZNorm[rmprim]);
+          fscanf(rmprimFile, "rmXVert: %le\n", &rmXVert[rmprim]);
+          fscanf(rmprimFile, "rmYVert: %le\n", &rmYVert[rmprim]);
+          fscanf(rmprimFile, "rmZVert: %le\n", &rmZVert[rmprim]);
+          printf(
+              "rmprim: %d, rmXNorm: %lg, rmYNorm: %lg, rmZNorm: %lg, "
+              "rmXVert: %lg, rmYVert: %lg, rmZVert: %lg\n",
+              rmprim, rmXNorm[rmprim], rmYNorm[rmprim], rmZNorm[rmprim],
+              rmXVert[rmprim], rmYVert[rmprim], rmZVert[rmprim]);
+        }
 #ifdef __cplusplus
-          std::vector<double> rmXNorm(NbRmPrims + 1, 0.);
-          std::vector<double> rmYNorm(NbRmPrims + 1, 0.);
-          std::vector<double> rmZNorm(NbRmPrims + 1, 0.);
-          std::vector<double> rmXVert(NbRmPrims + 1, 0.);
-          std::vector<double> rmYVert(NbRmPrims + 1, 0.);
-          std::vector<double> rmZVert(NbRmPrims + 1, 0.);
+        std::vector<int> remove(NbPrimitives + 1, 0);
 #else
-          double rmXNorm[NbRmPrims + 1], rmYNorm[NbRmPrims + 1];
-          double rmZNorm[NbRmPrims + 1];
-          double rmXVert[NbRmPrims + 1], rmYVert[NbRmPrims + 1];
-          double rmZVert[NbRmPrims + 1];
+        int remove[NbPrimitives + 1];
 #endif
-          for (int rmprim = 1; rmprim <= NbRmPrims; ++rmprim) {
-            fscanf(rmprimFile, "Prim: %d\n", &tint);
-            fscanf(rmprimFile, "rmXNorm: %le\n", &rmXNorm[rmprim]);
-            fscanf(rmprimFile, "rmYNorm: %le\n", &rmYNorm[rmprim]);
-            fscanf(rmprimFile, "rmZNorm: %le\n", &rmZNorm[rmprim]);
-            fscanf(rmprimFile, "rmXVert: %le\n", &rmXVert[rmprim]);
-            fscanf(rmprimFile, "rmYVert: %le\n", &rmYVert[rmprim]);
-            fscanf(rmprimFile, "rmZVert: %le\n", &rmZVert[rmprim]);
-            printf(
-                "rmprim: %d, rmXNorm: %lg, rmYNorm: %lg, rmZNorm: %lg, "
-                "rmXVert: %lg, rmYVert: %lg, rmZVert: %lg\n",
-                rmprim, rmXNorm[rmprim], rmYNorm[rmprim], rmZNorm[rmprim],
-                rmXVert[rmprim], rmYVert[rmprim], rmZVert[rmprim]);
+        // Check updated prim list
+        for (int prim = 1; prim <= NbPrimitives; ++prim) {
+          remove[prim] = 0;
+          if (dbgFn) {
+            printf("\n\nprim: %d, XVertex: %lg, YVertex: %lg, ZVertex: %lg\n",
+                   prim, XVertex[prim][0], YVertex[prim][0], ZVertex[prim][0]);
+            printf("XNorm: %lg, YNorm: %lg, ZNorm: %lg\n", XNorm[prim],
+                   YNorm[prim], ZNorm[prim]);
           }
-#ifdef __cplusplus
-          std::vector<int> remove(NbPrimitives + 1, 0);
-#else
-          int remove[NbPrimitives + 1];
-#endif
-          // Check updated prim list
-          for (int prim = 1; prim <= NbPrimitives; ++prim) {
-            remove[prim] = 0;
+
+          for (int rmprim = 1; rmprim <= NbRmPrims; ++rmprim) {
             if (dbgFn) {
-              printf("\n\nprim: %d, XVertex: %lg, YVertex: %lg, ZVertex: %lg\n",
-                     prim, XVertex[prim][0], YVertex[prim][0],
-                     ZVertex[prim][0]);
-              printf("XNorm: %lg, YNorm: %lg, ZNorm: %lg\n", XNorm[prim],
-                     YNorm[prim], ZNorm[prim]);
+              printf(
+                  "rmprim: %d, rmXVertex: %lg, rmYVertex: %lg, rmZVertex: "
+                  "%lg\n",
+                  rmprim, rmXVert[rmprim], rmYVert[rmprim], rmZVert[rmprim]);
+              printf("rmXNorm: %lg, rmYNorm: %lg, rmZNorm: %lg\n",
+                     rmXNorm[rmprim], rmYNorm[rmprim], rmZNorm[rmprim]);
             }
 
-            for (int rmprim = 1; rmprim <= NbRmPrims; ++rmprim) {
-              if (dbgFn) {
-                printf(
-                    "rmprim: %d, rmXVertex: %lg, rmYVertex: %lg, rmZVertex: "
-                    "%lg\n",
-                    rmprim, rmXVert[rmprim], rmYVert[rmprim], rmZVert[rmprim]);
-                printf("rmXNorm: %lg, rmYNorm: %lg, rmZNorm: %lg\n",
-                       rmXNorm[rmprim], rmYNorm[rmprim], rmZNorm[rmprim]);
-              }
-
-              // check the normal
-              if ((fabs(fabs(XNorm[prim]) - fabs(rmXNorm[rmprim])) <=
-                   MINDIST) &&
-                  (fabs(fabs(YNorm[prim]) - fabs(rmYNorm[rmprim])) <=
-                   MINDIST) &&
-                  (fabs(fabs(ZNorm[prim]) - fabs(rmZNorm[rmprim])) <=
-                   MINDIST)) {  // prim and rmprim are parallel
-                // coplanarity check to be implemented later.
-                // For the time-being, we will assume that the planes to be
-                // removed have their normals parallel to a given axis. So, we
-                // only check that and remove the primitive if the distace along
-                // that axis match. Possible pitfall => the primitives may be
-                // coplanar but non-overlapping!
-                if (fabs(fabs(XNorm[prim]) - 1.0) <= 1.0e-12) {
-                  // primitive || to YZ
-                  if (fabs(XVertex[prim][0] - rmXVert[rmprim]) <= MINDIST) {
-                    remove[prim] = 1;
-                  }
+            // check the normal
+            if ((fabs(fabs(XNorm[prim]) - fabs(rmXNorm[rmprim])) <= MINDIST) &&
+                (fabs(fabs(YNorm[prim]) - fabs(rmYNorm[rmprim])) <= MINDIST) &&
+                (fabs(fabs(ZNorm[prim]) - fabs(rmZNorm[rmprim])) <= MINDIST)) {  
+              // prim and rmprim are parallel
+              // coplanarity check to be implemented later.
+              // For the time-being, we will assume that the planes to be
+              // removed have their normals parallel to a given axis. So, we
+              // only check that and remove the primitive if the distace along
+              // that axis match. Possible pitfall => the primitives may be
+              // coplanar but non-overlapping!
+              if (fabs(fabs(XNorm[prim]) - 1.0) <= 1.0e-12) {
+                // primitive || to YZ
+                if (fabs(XVertex[prim][0] - rmXVert[rmprim]) <= MINDIST) {
+                  remove[prim] = 1;
                 }
-                if (fabs(fabs(YNorm[prim]) - 1.0) <= 1.0e-12) {
-                  // primitive || to XZ
-                  if (fabs(YVertex[prim][0] - rmYVert[rmprim]) <= MINDIST) {
-                    remove[prim] = 1;
-                  }
-                }
-                if (fabs(fabs(ZNorm[prim]) - 1.0) <= 1.0e-12) {
-                  // primitive || to XY
-                  if (fabs(ZVertex[prim][0] - rmZVert[rmprim]) <= MINDIST) {
-                    remove[prim] = 1;
-                  }
-                }
-              }  // case where prim and rmprim are parallel
-              if (dbgFn) {
-                printf("prim: %d, rmprim: %d, remove: %d\n", prim, rmprim,
-                       remove[prim]);
               }
-              if (remove[prim] == 1)
-                break;  // once removed, no point checking others
-            }           // for rmprim - loop over all removal specification
-
-          }  // for prim loop over all primitives
-
-          int NbRemoved = 0;
-          char RmPrimFile[256];
-          strcpy(RmPrimFile, NativePrimDir);
-          strcat(RmPrimFile, "/RmPrims.info");
-          FILE *fprrm = fopen(RmPrimFile, "w");
-          if (fprrm == NULL) {
-            printf(
-                "error opening RmPrims.info file in write mode ... "
-                "returning\n");
-
-            fclose(rmprimFile);
-            return (-1);
-          }
-          // Note that some of the original primitives have already been removed
-          // based on interface and dimension considerations
-          int orgnlNb = 0;
-          for (int prim = 1; prim <= NbPrimitives; ++prim) {
-            // identify primitive number in the original list
-            for (int orgnlprim = 1; orgnlprim <= OrgnlNbPrimitives;
-                 ++orgnlprim) {
-              if (OrgnlToEffPrim[orgnlprim][1] ==
-                  prim)  // number updated for intrfc
-              {
-                orgnlNb = orgnlprim;
-                break;
+              if (fabs(fabs(YNorm[prim]) - 1.0) <= 1.0e-12) {
+                // primitive || to XZ
+                if (fabs(YVertex[prim][0] - rmYVert[rmprim]) <= MINDIST) {
+                  remove[prim] = 1;
+                }
               }
-            }  // loop for finding out its position in the original list
-
+              if (fabs(fabs(ZNorm[prim]) - 1.0) <= 1.0e-12) {
+                // primitive || to XY
+                if (fabs(ZVertex[prim][0] - rmZVert[rmprim]) <= MINDIST) {
+                  remove[prim] = 1;
+                }
+              }
+            }  // case where prim and rmprim are parallel
+            if (dbgFn) {
+              printf("prim: %d, rmprim: %d, remove: %d\n", prim, rmprim,
+                     remove[prim]);
+            }
             if (remove[prim] == 1) {
-              ++NbRemoved;
-              OrgnlToEffPrim[orgnlNb][2] = 0;
-              fprintf(fprrm, "NbRemoved: %d, Removed primitive: %d\n",
-                      NbRemoved, prim);
-              fprintf(fprrm, "PrimType: %d\n", PrimType[prim]);
-              fprintf(fprrm, "NbVertices: %d\n", NbVertices[prim]);
-              for (int vert = 0; vert < NbVertices[prim]; ++vert) {
-                fprintf(fprrm, "Vertx %d: %lg, %lg, %lg\n", vert,
-                        XVertex[prim][vert], YVertex[prim][vert],
-                        ZVertex[prim][vert]);
-              }
-              fprintf(fprrm, "Normals: %lg, %lg, %lg\n", XNorm[prim],
-                      YNorm[prim], ZNorm[prim]);
-              continue;
-            }       // if remove
-            else {  // keep this one in the updated list of primitives
-              int effprim = prim - NbRemoved;
+              // once removed, no point checking others
+              break;  
+            }
+          }           // for rmprim - loop over all removal specification
+        }  // for prim loop over all primitives
 
-              OrgnlToEffPrim[orgnlNb][2] = effprim;
-              PrimType[effprim] = PrimType[prim];
-              NbVertices[effprim] = NbVertices[prim];
-              for (int vert = 0; vert < NbVertices[effprim]; ++vert) {
-                XVertex[effprim][vert] = XVertex[prim][vert];
-                YVertex[effprim][vert] = YVertex[prim][vert];
-                ZVertex[effprim][vert] = ZVertex[prim][vert];
-              }
-              if (PrimType[effprim] == 2) {
-                // wire
-                XNorm[effprim] = 0.0;  // modulus not 1 - an absurd trio!
-                YNorm[effprim] = 0.0;
-                ZNorm[effprim] = 0.0;
-                Radius[effprim] = Radius[prim];
-              }
-              if ((PrimType[effprim] == 3) || (PrimType[effprim] == 4)) {
-                XNorm[effprim] = XNorm[prim];
-                YNorm[effprim] = YNorm[prim];
-                ZNorm[effprim] = ZNorm[prim];
-                Radius[effprim] = 0.0;  // absurd radius!
-              }
-              VolRef1[effprim] = VolRef1[prim];
-              VolRef2[effprim] = VolRef2[prim];
+        int NbRemoved = 0;
+        char RmPrimFile[256];
+        strcpy(RmPrimFile, NativePrimDir);
+        strcat(RmPrimFile, "/RmPrims.info");
+        FILE *fprrm = fopen(RmPrimFile, "w");
+        if (fprrm == NULL) {
+          printf("Error opening RmPrims.info file in write mode. Returning.\n");
 
-              InterfaceType[effprim] = InterfaceType[prim];
-              Epsilon1[effprim] = Epsilon1[prim];
-              Epsilon2[effprim] = Epsilon2[prim];
-              Lambda[effprim] = Lambda[prim];
-              ApplPot[effprim] = ApplPot[prim];
-              ApplCh[effprim] = ApplCh[prim];
-              PeriodicTypeX[effprim] = PeriodicTypeX[prim];
-              PeriodicTypeY[effprim] = PeriodicTypeY[prim];
-              PeriodicTypeZ[effprim] = PeriodicTypeZ[prim];
-              PeriodicInX[effprim] = PeriodicInX[prim];
-              PeriodicInY[effprim] = PeriodicInY[prim];
-              PeriodicInZ[effprim] = PeriodicInZ[prim];
-              XPeriod[effprim] = XPeriod[prim];
-              YPeriod[effprim] = YPeriod[prim];
-              ZPeriod[effprim] = ZPeriod[prim];
-              MirrorTypeX[effprim] = MirrorTypeX[prim];
-              MirrorTypeY[effprim] = MirrorTypeY[prim];
-              MirrorTypeZ[effprim] = MirrorTypeZ[prim];
-              MirrorDistXFromOrigin[effprim] = MirrorDistXFromOrigin[prim];
-              MirrorDistYFromOrigin[effprim] = MirrorDistYFromOrigin[prim];
-              MirrorDistZFromOrigin[effprim] = MirrorDistZFromOrigin[prim];
-              BndPlaneInXMin[effprim] = BndPlaneInXMin[prim];
-              BndPlaneInXMax[effprim] = BndPlaneInXMax[prim];
-              BndPlaneInYMin[effprim] = BndPlaneInYMin[prim];
-              BndPlaneInYMax[effprim] = BndPlaneInYMax[prim];
-              BndPlaneInZMin[effprim] = BndPlaneInZMin[prim];
-              BndPlaneInZMax[effprim] = BndPlaneInZMax[prim];
-              XBndPlaneInXMin[effprim] = XBndPlaneInXMin[prim];
-              XBndPlaneInXMax[effprim] = XBndPlaneInXMax[prim];
-              YBndPlaneInYMin[effprim] = YBndPlaneInYMin[prim];
-              YBndPlaneInYMax[effprim] = YBndPlaneInYMax[prim];
-              ZBndPlaneInZMin[effprim] = ZBndPlaneInZMin[prim];
-              ZBndPlaneInZMax[effprim] = ZBndPlaneInZMax[prim];
-              VBndPlaneInXMin[effprim] = VBndPlaneInXMin[prim];
-              VBndPlaneInXMax[effprim] = VBndPlaneInXMax[prim];
-              VBndPlaneInYMin[effprim] = VBndPlaneInYMin[prim];
-              VBndPlaneInYMax[effprim] = VBndPlaneInYMax[prim];
-              VBndPlaneInZMin[effprim] = VBndPlaneInZMin[prim];
-              VBndPlaneInZMax[effprim] = VBndPlaneInZMax[prim];
-            }  // else remove == 0
-          }    // loop over primitives to remove the primitives tagged to be
-               // removed
-          fclose(fprrm);
+          fclose(rmprimFile);
+          return (-1);
+        }
+        // Note that some of the original primitives have already been removed
+        // based on interface and dimension considerations
+        int orgnlNb = 0;
+        for (int prim = 1; prim <= NbPrimitives; ++prim) {
+          // identify primitive number in the original list
+          for (int oprim = 1; oprim <= OrgnlNbPrimitives; ++oprim) {
+            if (OrgnlToEffPrim[oprim][1] == prim) {
+              // number updated for intrfc
+              orgnlNb = oprim;
+              break;
+            }
+          }  // loop for finding out its position in the original list
 
-          NbPrimitives -= NbRemoved;
-          printf(
-              "Number of primitives removed: %d, Effective NbPrimitives: %d\n",
-              NbRemoved, NbPrimitives);
-          fflush(stdout);
-        }  // if NbRmPrims true, implying primitives need to be removed
-        fclose(rmprimFile);
-      }  // if the rmprimFile is not NULL, prepare to remove primitives
-    }    // if OptRmPrim: remove primitives as desired by the user
+          if (remove[prim] == 1) {
+            ++NbRemoved;
+            OrgnlToEffPrim[orgnlNb][2] = 0;
+            fprintf(fprrm, "NbRemoved: %d, Removed primitive: %d\n",
+                    NbRemoved, prim);
+            fprintf(fprrm, "PrimType: %d\n", PrimType[prim]);
+            fprintf(fprrm, "NbVertices: %d\n", NbVertices[prim]);
+            for (int vert = 0; vert < NbVertices[prim]; ++vert) {
+              fprintf(fprrm, "Vertx %d: %lg, %lg, %lg\n", vert,
+                      XVertex[prim][vert], YVertex[prim][vert],
+                      ZVertex[prim][vert]);
+            }
+            fprintf(fprrm, "Normals: %lg, %lg, %lg\n", XNorm[prim],
+                    YNorm[prim], ZNorm[prim]);
+            continue;
+          }       // if remove
+          else {  // keep this one in the updated list of primitives
+            int effprim = prim - NbRemoved;
 
-    // Information about primitives which are being ignored
-    char IgnorePrimFile[256];
-    strcpy(IgnorePrimFile, NativePrimDir);
-    strcat(IgnorePrimFile, "/IgnorePrims.info");
-    FILE *fignore = fopen(IgnorePrimFile, "w");
-    if (fignore == NULL) {
-      printf(
-          "error opening IgnorePrims.info file in write mode ... returning\n");
-      return (-1);
-    }
+            OrgnlToEffPrim[orgnlNb][2] = effprim;
+            PrimType[effprim] = PrimType[prim];
+            NbVertices[effprim] = NbVertices[prim];
+            for (int vert = 0; vert < NbVertices[effprim]; ++vert) {
+              XVertex[effprim][vert] = XVertex[prim][vert];
+              YVertex[effprim][vert] = YVertex[prim][vert];
+              ZVertex[effprim][vert] = ZVertex[prim][vert];
+            }
+            if (PrimType[effprim] == 2) {
+              // wire
+              XNorm[effprim] = 0.0;  // modulus not 1 - an absurd trio!
+              YNorm[effprim] = 0.0;
+              ZNorm[effprim] = 0.0;
+              Radius[effprim] = Radius[prim];
+            }
+            if ((PrimType[effprim] == 3) || (PrimType[effprim] == 4)) {
+              XNorm[effprim] = XNorm[prim];
+              YNorm[effprim] = YNorm[prim];
+              ZNorm[effprim] = ZNorm[prim];
+              Radius[effprim] = 0.0;  // absurd radius!
+            }
+            VolRef1[effprim] = VolRef1[prim];
+            VolRef2[effprim] = VolRef2[prim];
 
-    for (int prim = 1; prim <= OrgnlNbPrimitives; ++prim) {
-      fprintf(fignore, "%d %d %d\n", OrgnlToEffPrim[prim][0],
-              OrgnlToEffPrim[prim][1], OrgnlToEffPrim[prim][2]);
-    }
+            InterfaceType[effprim] = InterfaceType[prim];
+            Epsilon1[effprim] = Epsilon1[prim];
+            Epsilon2[effprim] = Epsilon2[prim];
+            Lambda[effprim] = Lambda[prim];
+            ApplPot[effprim] = ApplPot[prim];
+            ApplCh[effprim] = ApplCh[prim];
+            PeriodicTypeX[effprim] = PeriodicTypeX[prim];
+            PeriodicTypeY[effprim] = PeriodicTypeY[prim];
+            PeriodicTypeZ[effprim] = PeriodicTypeZ[prim];
+            PeriodicInX[effprim] = PeriodicInX[prim];
+            PeriodicInY[effprim] = PeriodicInY[prim];
+            PeriodicInZ[effprim] = PeriodicInZ[prim];
+            XPeriod[effprim] = XPeriod[prim];
+            YPeriod[effprim] = YPeriod[prim];
+            ZPeriod[effprim] = ZPeriod[prim];
+            MirrorTypeX[effprim] = MirrorTypeX[prim];
+            MirrorTypeY[effprim] = MirrorTypeY[prim];
+            MirrorTypeZ[effprim] = MirrorTypeZ[prim];
+            MirrorDistXFromOrigin[effprim] = MirrorDistXFromOrigin[prim];
+            MirrorDistYFromOrigin[effprim] = MirrorDistYFromOrigin[prim];
+            MirrorDistZFromOrigin[effprim] = MirrorDistZFromOrigin[prim];
+            BndPlaneInXMin[effprim] = BndPlaneInXMin[prim];
+            BndPlaneInXMax[effprim] = BndPlaneInXMax[prim];
+            BndPlaneInYMin[effprim] = BndPlaneInYMin[prim];
+            BndPlaneInYMax[effprim] = BndPlaneInYMax[prim];
+            BndPlaneInZMin[effprim] = BndPlaneInZMin[prim];
+            BndPlaneInZMax[effprim] = BndPlaneInZMax[prim];
+            XBndPlaneInXMin[effprim] = XBndPlaneInXMin[prim];
+            XBndPlaneInXMax[effprim] = XBndPlaneInXMax[prim];
+            YBndPlaneInYMin[effprim] = YBndPlaneInYMin[prim];
+            YBndPlaneInYMax[effprim] = YBndPlaneInYMax[prim];
+            ZBndPlaneInZMin[effprim] = ZBndPlaneInZMin[prim];
+            ZBndPlaneInZMax[effprim] = ZBndPlaneInZMax[prim];
+            VBndPlaneInXMin[effprim] = VBndPlaneInXMin[prim];
+            VBndPlaneInXMax[effprim] = VBndPlaneInXMax[prim];
+            VBndPlaneInYMin[effprim] = VBndPlaneInYMin[prim];
+            VBndPlaneInYMax[effprim] = VBndPlaneInYMax[prim];
+            VBndPlaneInZMin[effprim] = VBndPlaneInZMin[prim];
+            VBndPlaneInZMax[effprim] = VBndPlaneInZMax[prim];
+          }  // else remove == 0
+        }    // loop over primitives to remove the primitives tagged to be
+             // removed
+        fclose(fprrm);
 
-    fclose(fignore);
-  }  // Ignore unnecessary primitives from the final count
+        NbPrimitives -= NbRemoved;
+        printf(
+            "Number of primitives removed: %d, Effective NbPrimitives: %d\n",
+            NbRemoved, NbPrimitives);
+        fflush(stdout);
+      }  // if NbRmPrims true, implying primitives need to be removed
+      fclose(rmprimFile);
+    }  // if the rmprimFile is not NULL, prepare to remove primitives
+  }    // if OptRmPrim: remove primitives as desired by the user
+
+  // Information about primitives which are being ignored
+  char IgnorePrimFile[256];
+  strcpy(IgnorePrimFile, NativePrimDir);
+  strcat(IgnorePrimFile, "/IgnorePrims.info");
+  FILE *fignore = fopen(IgnorePrimFile, "w");
+  if (fignore == NULL) {
+    printf(
+        "error opening IgnorePrims.info file in write mode ... returning\n");
+    return (-1);
+  }
+
+  for (int prim = 1; prim <= OrgnlNbPrimitives; ++prim) {
+    fprintf(fignore, "%d %d %d\n", OrgnlToEffPrim[prim][0],
+            OrgnlToEffPrim[prim][1], OrgnlToEffPrim[prim][2]);
+  }
+  fclose(fignore);
+
+  // Deallocate OrgnlToEffPrim.
+  free_imatrix(OrgnlToEffPrim, 1, NbPrimitives, 0, 2); 
 
   // Reduced-Order Modelling information
   printf("neBEMReadGeometry: Switch to primitive representation after %d repetitions.\n",
