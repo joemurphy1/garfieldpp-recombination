@@ -116,34 +116,35 @@ int WireElements(int prim, int nvertex, double xvert[], double yvert[],
 // Coord2Seg is used for the longer arm (look for OverSmart in
 // DiscretizeTriangle and DiscretizeRectagnle), the aspect ratio problem is
 // expected to be taken care of to a large extent.
-int AnalyzePrimitive(int prim, int *NbSegCoord1, int *NbSegCoord2) {
+int AnalyzePrimitive(int prim, int *NbSegCoord1, int *NbSegCoord2,
+                     FILE *fMeshLog) {
   int fstatus;
 
   switch (NbVertices[prim]) {
     case 2:  // wire
-      fstatus = AnalyzeWire(prim, NbSegCoord1);
+      fstatus = AnalyzeWire(prim, NbSegCoord1, fMeshLog);
       *NbSegCoord2 = 0;
       // assert(fstatus == 0);
       if (fstatus != 0) {
-        neBEMMessage("AnalyzePrimitive - AnalyzeWire");
+        printf("AnalyzePrimitive: AnalyzeWire failed.\n");
         return -1;
       }
       return (2);
       break;
     case 3:  // triangle
-      fstatus = AnalyzeSurface(prim, NbSegCoord1, NbSegCoord2);
+      fstatus = AnalyzeSurface(prim, NbSegCoord1, NbSegCoord2, fMeshLog);
       // assert(fstatus == 0);
       if (fstatus != 0) {
-        neBEMMessage("AnalyzePrimitive - AnalyzeSurface");
+        printf("AnalyzePrimitive: AnalyzeSurface failed.\n");
         return -1;
       }
       return (3);
       break;
     case 4:  // rectangle
-      fstatus = AnalyzeSurface(prim, NbSegCoord1, NbSegCoord2);
+      fstatus = AnalyzeSurface(prim, NbSegCoord1, NbSegCoord2, fMeshLog);
       // assert(fstatus == 0);
       if (fstatus != 0) {
-        neBEMMessage("AnalyzePrimitive - AnalyzeSurface");
+        printf("AnalyzePrimitive: AnalyzeSurface failed.\n");
         return -1;
       }
       return (4);
@@ -153,7 +154,7 @@ int AnalyzePrimitive(int prim, int *NbSegCoord1, int *NbSegCoord2) {
   }
 }  // end of AnalyzePrimitive
 
-int AnalyzeWire(int prim, int *NbSeg) {
+int AnalyzeWire(int prim, int *NbSeg, FILE *fMeshLog) {
   int nb = *NbSeg;
 
   if (nb < 1) {
@@ -240,7 +241,8 @@ int AnalyzeWire(int prim, int *NbSeg) {
     return -1;
 }  // AnalyzeWire ends
 
-int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2) {
+int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2,
+                   FILE *fMeshLog) {
   int nb1 = *NbSegCoord1, nb2 = *NbSegCoord2;
 
   if ((nb1 < 1) || (nb2 < 1)) {
@@ -958,17 +960,14 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       // printf("xlopt: %lg, zlopt: %lg, xhipt: %lg, zhipt: %lg\n",
       // xlopt, zlopt, xhipt, zhipt);
 
-      {  // Separate block for vector rotation
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = xorigin;
-        localDisp.Y = yorigin;
-        localDisp.Z = zorigin;
-        globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
-        SurfElX = SurfX + globalDisp.X;  // GCS
-        SurfElY = SurfY + globalDisp.Y;
-        SurfElZ = SurfZ + globalDisp.Z;
-      }  // vector rotation over
+      Point3D localDisp;
+      localDisp.X = xorigin;
+      localDisp.Y = yorigin;
+      localDisp.Z = zorigin;
+      Point3D globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
+      SurfElX = SurfX + globalDisp.X;  // GCS
+      SurfElY = SurfY + globalDisp.Y;
+      SurfElZ = SurfZ + globalDisp.Z;
 
       // Assign element values and write in the file
       ++EleCntr;

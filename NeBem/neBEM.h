@@ -124,7 +124,6 @@ neBEMGLOBAL double ElementLengthRqstd;
 
 neBEMGLOBAL int EleCntr;     // Element counter
 neBEMGLOBAL int NbElements;  // total number of elements
-neBEMGLOBAL FILE *fMeshLog;
 
 // Related to solution constraints
 // Whether total charge in the system is zero
@@ -259,9 +258,9 @@ typedef struct {
 
 neBEMGLOBAL VolumeKnCh *VolumeKnChArr;
 
-neBEMGLOBAL int AnalyzePrimitive(int, int *, int *);
-neBEMGLOBAL int AnalyzeWire(int, int *);
-neBEMGLOBAL int AnalyzeSurface(int, int *, int *);
+neBEMGLOBAL int AnalyzePrimitive(int, int *, int *, FILE *fMeshLog);
+neBEMGLOBAL int AnalyzeWire(int, int *, FILE *fMeshLog);
+neBEMGLOBAL int AnalyzeSurface(int, int *, int *, FILE *fMeshLog);
 neBEMGLOBAL int DiscretizeWire(int prim, int nvertex, double xvert[],
                                double yvert[], double zvert[], double radius,
                                int volref1, int volref2, int inttype,

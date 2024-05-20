@@ -1487,20 +1487,20 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
   // minimized through a more careful computation of the required allocation for
   // each type of primitive.
   char MeshLogFile[256];
-
   strcpy(MeshLogFile, MeshOutDir);
   strcat(MeshLogFile, "/MeshLog.out");
-  fMeshLog = fopen(MeshLogFile, "w");
+  FILE *fMeshLog = fopen(MeshLogFile, "w");
   fprintf(fMeshLog, "Details of primitive discretization\n");
 
   for (int prim = 1; prim <= NbPrimitives; ++prim) {
     if (NbVertices[prim] == 3  || NbVertices[prim] == 4) {
       NbSurfSegX[prim] = NbElemsOnPrimitives[prim][1];
       NbSurfSegZ[prim] = NbElemsOnPrimitives[prim][2];
-      int fstatus =
-          AnalyzePrimitive(prim, &NbSurfSegX[prim], &NbSurfSegZ[prim]);
+      int fstatus = AnalyzePrimitive(prim, &NbSurfSegX[prim], 
+                                     &NbSurfSegZ[prim], fMeshLog);
       if (fstatus == 0) {
         printf("neBEMDiscretize: AnalyzePrimitive failed.\n");
+        fclose(fMeshLog);
         return -1;
       }
       NbElements += (NbSurfSegX[prim] + 1) * (NbSurfSegZ[prim] + 1);
@@ -1508,9 +1508,10 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
     if (NbVertices[prim] == 2) {
       int itmp;
       NbWireSeg[prim] = NbElemsOnPrimitives[prim][1];
-      int fstatus = AnalyzePrimitive(prim, &NbWireSeg[prim], &itmp);
+      int fstatus = AnalyzePrimitive(prim, &NbWireSeg[prim], &itmp, fMeshLog);
       if (fstatus == 0) {
         printf("neBEMDiscretize: AnalyzePrimitive failed.\n");
+        fclose(fMeshLog);
         return -1;
       }
       NbElements += (NbWireSeg[prim] + 1);
@@ -1636,8 +1637,7 @@ int neBEMDiscretize(int **NbElemsOnPrimitives) {
   // Store element related data in a file for a new mesh created, if opted for
   if (NewMesh && OptStoreElements) {
     if (OptFormattedFile) {
-      int fstatus = WriteElements();
-      if (fstatus) {
+      if (WriteElements()) {
         printf("neBEMDiscretize: WriteElements failed.\n");
         return -1;
       }
@@ -1667,7 +1667,7 @@ int neBEMBoundaryInitialConditions(void) {
   // inverted influence coefficient matrix)
   if ((neBEMState == 4) || (neBEMState == 7)) {
     if (InitialConditions() != 0) {
-      neBEMMessage("neBEMBoundaryInitialConditions - InitialConditions");
+      printf("neBEMBoundaryInitialConditions: InitialConditions failed.\n");
       return -1;
     }
     if (neBEMState == 4) neBEMState = 5;  // create LHMatrix, invert etc
@@ -1712,40 +1712,39 @@ int neBEMSolve(void) {
   clock_t startSolveClock = clock();
 
   if (TimeStep < 1) {
-    neBEMMessage("neBEMSolve - TimeStep cannot be less than one!;\n");
-    neBEMMessage("             Please put TimeStep = 1 for static problems.\n");
+    printf("neBEMSolve: Time step cannot be less than one!\n");
+    printf("            Please put TimeStep = 1 for static problems.\n");
   }
 
   if (neBEMState != 5 && neBEMState != 8) {
-    printf("neBEMSolve: neBEMSolve can be called only in state 5 / 8 ...\n");
-    printf("returning ...\n");
-    return (-1);
+    printf("neBEMSolve: neBEMSolve can be called only in state 5 / 8.\n");
+    return -1;
   }
 
   if (neBEMState == 8) {
     // neBEMState 8 must have inverted flag on
     // so it must be a case looking for solution with a NewBC
     if (NewBC == 0) {
-      neBEMMessage("neBEMSolve - NewBC zero for neBEMState = 8!");
-      neBEMMessage("           - Nothing to be done ... returning.");
+      printf("neBEMSolve: NewBC zero for neBEMState = 8!\n");
+      printf("            Nothing to be done; returning.\n");
       return -1;
     }
   }
 
   if (NewModel || NewMesh || NewBC) {
     if (ComputeSolution() != 0) {
-      neBEMMessage("neBEMSolve - Failure computing new solution.\n");
+      printf("neBEMSolve: Failure computing new solution.\n");
       return -1;
     }
   } else {
     // NewModel == NewMesh == NewBC == 0
     if (NewPP) {
       if (ReadSolution() != 0) {
-        neBEMMessage("neBEMSolve - Failure reading solution");
+        printf("neBEMSolve: Failure reading solution.\n");
         return -1;
       }
     } else {  // NewPP == 0
-      printf("neBEMSolve: Nothing to do ... returning ...\n");
+      printf("neBEMSolve: Nothing to do; returning.\n");
       return -1;
     }
   }
@@ -1766,13 +1765,10 @@ int neBEMSolve(void) {
   // Prepare voxelized data that will be exported to Garfield++
   if (OptVoxel) {
     clock_t startVoxelClock = clock();
-
-    int fstatus = VoxelFPR();
-    if (fstatus != 0) {
-      neBEMMessage("neBEMSolve - Failure computing VoxelFPR");
+    if (VoxelFPR() != 0) {
+      printf("neBEMSolve: Failure computing VoxelFPR.\n");
       return -1;
     }
-
     clock_t stopVoxelClock = clock();
     neBEMTimeElapsed(startVoxelClock, stopVoxelClock);
     printf("to compute VoxelFPR\n");
@@ -1781,13 +1777,10 @@ int neBEMSolve(void) {
   // Prepare 3dMap data that will be exported to Garfield++
   if (OptMap) {
     clock_t startMapClock = clock();
-
-    int fstatus = MapFPR();
-    if (fstatus != 0) {
-      neBEMMessage("neBEMSolve - Failure computing MapFPR");
+    if (MapFPR() != 0) {
+      printf("neBEMSolve: Failure computing MapFPR.\n");
       return -1;
     }
-
     clock_t stopMapClock = clock();
     neBEMTimeElapsed(startMapClock, stopMapClock);
     printf("to compute MapFPR\n");
@@ -1983,27 +1976,21 @@ int neBEMPF(Point3D *point, double *potential, Vector3D *field) {
   // printf("neBEMPF called %8d times", ++neBEMPFCallCntr);
 
   double Pot;
-  int fstatus;
-  if (OptFastVol)  // Note: this is not the Create or Read option
-  {
-    fstatus = FastPFAtPoint(point, &Pot, field);
+  if (OptFastVol) { // Note: this is not the Create or Read option
+    int fstatus = FastPFAtPoint(point, &Pot, field);
     if (fstatus != 0) {
-      neBEMMessage("neBEMPF - FastPFAtPoint");
+      printf("neBEMPF: FastPFAtPoint failed.\n");
       return -1;
     }
   } else {
-    fstatus = PFAtPoint(point, &Pot, field);
+    int fstatus = PFAtPoint(point, &Pot, field);
     if (fstatus != 0) {
-      neBEMMessage("neBEMPF - PFAtPoint");
+      printf("neBEMPF: PFAtPoint failed.\n");
       return -1;
     }
   }
-
   *potential = Pot;
-
-  // printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-
-  return (0);
+  return 0;
 }  // neBEMPF ends
 
 // Actual preparation of the weighting field, including those related to
@@ -2023,7 +2010,6 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
   static int IdWtField = 0;
 
   int dbgFn = 0;
-  int fstatus = 0;
 
   if (neBEMState < 7) {
     printf(
@@ -2055,7 +2041,7 @@ int neBEMPrepareWeightingField(int nprim, int primlist[]) {
   WtFieldChDen[IdWtField] = (double *)malloc((NbElements + 2) * sizeof(double));
   AvWtChDen[IdWtField] = (double *)malloc((NbPrimitives + 2) * sizeof(double));
 
-  fstatus = WeightingFieldSolution(nprim, primlist, WtFieldChDen[IdWtField]);
+  int fstatus = WeightingFieldSolution(nprim, primlist, WtFieldChDen[IdWtField]);
   if (fstatus) {
     printf("neBEMPrepareWeightingField: WeightingFieldSolution failed.\n");
     return -1;
