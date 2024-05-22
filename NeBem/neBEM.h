@@ -62,26 +62,36 @@ neBEMGLOBAL int OptChargingUp;
 // Geometry variables
 neBEMGLOBAL int NbVolumes;
 neBEMGLOBAL int NbPrimitives;
-neBEMGLOBAL int OrgnlNbPrimitives;  // original nmbr may be less than effective
 neBEMGLOBAL int MaxNbVertices;  // maximum allowed number (only 4, at present)
                                 // allocation from 0 to MaxNbVertices - 1
 
 // Related to volumes
+neBEMGLOBAL int VolMax;
 neBEMGLOBAL int *volRef, *volShape, *volMaterial, *volBoundaryType;
 neBEMGLOBAL double *volEpsilon, *volPotential, *volCharge;
 
 // Related to primitives
-neBEMGLOBAL int *PrimType,
-    *InterfaceType;  // removed redundant *PrimCnt in V1.7.2
-neBEMGLOBAL int **OrgnlToEffPrim;
+// Geometric type.
+neBEMGLOBAL int *PrimType;
+// 1: conductor at known potential
+// 2: charged conductor
+// 3: floating conductor
+// 4: DD interface satisfying continuity
+// 5: charged DD interface
+// 6: E parallel symmetry
+// 7: E perpendicular symmetry.
+neBEMGLOBAL int *InterfaceType;
 neBEMGLOBAL int *NbVertices;
-neBEMGLOBAL double **XVertex, **YVertex, **ZVertex, *XNorm, *YNorm, *ZNorm,
-    *PrimLX, *PrimLZ, *Radius;
+neBEMGLOBAL double **XVertex, **YVertex, **ZVertex;
+neBEMGLOBAL double *XNorm, *YNorm, *ZNorm;
+neBEMGLOBAL double *PrimLX, *PrimLZ, *Radius;
 neBEMGLOBAL double *PrimOriginX, *PrimOriginY, *PrimOriginZ;
 neBEMGLOBAL DirnCosn3D *PrimDC;
-neBEMGLOBAL double *Epsilon1, *Epsilon2, *Lambda, *ApplPot, *ApplCh;
+neBEMGLOBAL double *Epsilon1, *Epsilon2;
+// Ratio of dielectric permittivities.
+neBEMGLOBAL double *Lambda;
+neBEMGLOBAL double *ApplPot, *ApplCh;
 neBEMGLOBAL int *VolRef1, *VolRef2;
-neBEMGLOBAL int VolMax;
 neBEMGLOBAL int *PeriodicTypeX, *PeriodicTypeY, *PeriodicTypeZ;
 neBEMGLOBAL int *PeriodicInX, *PeriodicInY, *PeriodicInZ;
 neBEMGLOBAL double *XPeriod, *YPeriod, *ZPeriod;
@@ -97,11 +107,10 @@ neBEMGLOBAL double *VBndPlaneInXMax, *VBndPlaneInYMax, *VBndPlaneInZMax;
 neBEMGLOBAL double *AvChDen, *AvAsgndChDen;
 
 // Related to both primitives and elements
-// Beginning and ending element numbers on a griven primitive
-neBEMGLOBAL int *NbElmntsOnPrim, *ElementBgn, *ElementEnd;
+// Beginning and ending element numbers on each primitive
+neBEMGLOBAL int *ElementBgn, *ElementEnd;
 
 // Related to surfaces and wires
-neBEMGLOBAL int NbSurfs, NbWires;
 neBEMGLOBAL int *NbSurfSegX, *NbSurfSegZ;
 neBEMGLOBAL int *NbWireSeg;
 
@@ -113,12 +122,8 @@ neBEMGLOBAL int MaxNbElementsOnLength;
 // user requested length of along Length
 neBEMGLOBAL double ElementLengthRqstd;
 
-// int MinNbElementsOnSurface;	// minimum number of elements allowed on a
-// surface int MaxNbElementsOnSurface;	// maximum number of elements allowed on
-// a surface double ElementAreaRqstd;	// user requested area of each element
 neBEMGLOBAL int EleCntr;     // Element counter
 neBEMGLOBAL int NbElements;  // total number of elements
-neBEMGLOBAL FILE *fMeshLog;
 
 // Related to solution constraints
 // Whether total charge in the system is zero
@@ -135,40 +140,10 @@ neBEMGLOBAL int NbFloatCon;
 neBEMGLOBAL double VFloatCon;
 
 typedef struct {
-  short int Type;     // 4: rectangular, 3: triangular, 2: linear (wire)
-  Point3D Origin;     // centroid / barycenter / axis-center (local origin)
-  Point3D Vertex[4];  // element vertex begins with index 0 and goes to max 3
+  int PrimitiveNb;  // Index of the primitive to which the element belongs
+  short int GType;  // 4: rectangular, 3: triangular, 2: linear (wire)
+  Point3D Origin;   // centroid / barycenter / axis-center
   double LX, LZ;      // length, breadth / base, height / radius, length
-  double dA;          // area
-  DirnCosn3D DC;      // Direction cosines
-} GeomProp;
-
-// 1: conductor at known potential, 2: charged conductor, 3: floating conductor
-// 4: DD interface satisfying continuity, 5: charged DD interface
-// 6: E parallel symmetry, 7: E perpendicular symmetry.
-typedef struct {
-  short int Type;
-  double Lambda;  // ratio of dielectric permiitivites
-} ElecProp;
-
-typedef struct {
-  short int NbOfBCs;  // nb of boundary conditions on this element
-  Point3D CollPt;     // Collocation (only one, for the time being)
-  double Value;       // potential / charge density
-} BCProp;
-
-// we need a reference to the volumes (volref1 and volref2) that an element
-// belongs to
-typedef struct {
-  short int DeviceNb;  // each setup can be made of several devices
-  int ComponentNb;     // each device made of several components
-  int PrimitiveNb;     // each component can be made of several primitives
-  int InterfaceId;
-  int Id;  // element id number - each made of several elements
-  // Point3D Vertex[4];	// since we consider only upto rectangles: within G
-  GeomProp G;  // geomtype, origin, vertex, lengths, area, direction cosines
-  ElecProp E;  // electype, BC value
-  BCProp BC;   // boundary condn properties (should this BC thing be freed?)
   double Solution;  // accumulated charge, or similar solution
   double Assigned;  // assigned charge, or similar property
 } Element;
@@ -191,8 +166,8 @@ neBEMGLOBAL int ModelCntr, MeshCntr, BCCntr, PPCntr;
 // One for each element that carries an unknown charge density
 // One for each unknown related to each constraint equation
 neBEMGLOBAL int NbConstraints;  // Arising of different physical considerations
-neBEMGLOBAL int NbEqns, NbUnknowns,  // rows and columns in [Inf]
-    DebugLevel;
+neBEMGLOBAL int NbEqns, NbUnknowns;  // rows and columns in [Inf]
+neBEMGLOBAL int DebugLevel;
 neBEMGLOBAL int OptSVD, OptLU, OptGSL;  // option SVD, LU and GSL decompositions
 neBEMGLOBAL double **Inf, **InvMat, *RHS, *Solution;
 neBEMGLOBAL double LengthScale;
@@ -200,9 +175,6 @@ neBEMGLOBAL double LengthScale;
 // Variables to facilitate time stepping
 neBEMGLOBAL int TimeStep, EndOfTime;
 neBEMGLOBAL char TimeStr[256];
-
-// Variables related to geometry viewing
-neBEMGLOBAL char GnuplotTmpDir[256], GnuplotScriptFile[256];  // Dirs and files
 
 // Outputs are written in various subdirectories.
 // DeviceOutDir:
@@ -234,7 +206,6 @@ neBEMGLOBAL int WireElements(int prim, int nvertex, double xvert[],
                              int volref1, int volref2, int inttype,
                              double potential, double charge, double lambda,
                              int NbWireSeg);
-neBEMGLOBAL int BoundaryConditions(void);
 neBEMGLOBAL int InitialConditions(void);
 // Initiate known charge(s) / charge density (ies) within the device.
 neBEMGLOBAL int InitKnownCharges(void);
@@ -287,9 +258,9 @@ typedef struct {
 
 neBEMGLOBAL VolumeKnCh *VolumeKnChArr;
 
-neBEMGLOBAL int AnalyzePrimitive(int, int *, int *);
-neBEMGLOBAL int AnalyzeWire(int, int *);
-neBEMGLOBAL int AnalyzeSurface(int, int *, int *);
+neBEMGLOBAL int AnalyzePrimitive(int, int *, int *, FILE *fMeshLog);
+neBEMGLOBAL int AnalyzeWire(int, int *, FILE *fMeshLog);
+neBEMGLOBAL int AnalyzeSurface(int, int *, int *, FILE *fMeshLog);
 neBEMGLOBAL int DiscretizeWire(int prim, int nvertex, double xvert[],
                                double yvert[], double zvert[], double radius,
                                int volref1, int volref2, int inttype,
@@ -340,6 +311,11 @@ neBEMGLOBAL double EffectKnCh(int fld);
 neBEMGLOBAL double ValueKnCh(int fld);
 neBEMGLOBAL double ContinuityKnCh(int fld);
 
+// Helper functions.
+neBEMGLOBAL double ElementArea(int ele);
+neBEMGLOBAL Point3D CollocationPoint(int ele);
+neBEMGLOBAL void ElementVertices(int ele, Point3D vertices[4]);
+
 // Weighting field charge density solution
 // arguments: boundary condition array, and the solution (charge density, for
 // electrostatic problems) array; returns success (0) or failure (non-zero)
@@ -358,6 +334,7 @@ neBEMGLOBAL Point3D ReflectOnMirror(char Axis, int elesrc, Point3D srcpt,
 // Compute potential and flux components at globalPt due to all elements
 neBEMGLOBAL int PFAtPoint(Point3D *globalPt, double *Pot, Vector3D *Flux);
 neBEMGLOBAL int ElePFAtPoint(Point3D *globalPt, double *Pot, Vector3D *Flux);
+neBEMGLOBAL int ElePFAtPoint1(Point3D *globalPt, double *Pot, Vector3D *Flux);
 neBEMGLOBAL int KnChPFAtPoint(Point3D *globalPt, double *Pot, Vector3D *Flux);
 
 // Choose between element and primitive representations
@@ -551,13 +528,13 @@ neBEMGLOBAL int WtFldPFAtPoint(Point3D *globalPt, double *Pot, Vector3D *Flux,
                                int Id);
 
 // Compute potential at xlocal, ylocal, zlocal due to an element defined by
-// gtsrc (type), lxsrc (dimension), lzsrc (dimension), (length), dA (area)
+// gtsrc (type), lxsrc (dimension), lzsrc (dimension)
 // xlocal, ylocal, zlocal are measured in the element local coordinate system
 // and the charge on the element is assumed to be unity
 neBEMGLOBAL double GetPotential(int src, Point3D *localPt);
 
 // Flux components at xlocal, ylocal, zlocal due to an element defined by
-// gtsrc (type), lxsrc (dimension), lzsrc (dimension), (length), dA (area)
+// gtsrc (type), lxsrc (dimension), lzsrc (dimension)
 // xlocal, ylocal, zlocal and flux components are in the element local
 // coordinate system and the charge on the element is assumed to be unity
 neBEMGLOBAL void GetFluxGCS(int src, Point3D *localPt, Vector3D *Flux);

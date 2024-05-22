@@ -22,6 +22,8 @@
 #include "neBEM.h"
 #include "neBEMInterface.h"
 
+#define MyPI 3.14159265358979323846
+
 #ifdef __cplusplus
 namespace neBEM {
 #endif
@@ -75,15 +77,15 @@ int ComputeSolution(void) {
       OptGSL = 0;
   }
   if ((OptSVD == 0) && (OptLU == 0) && (OptGSL == 0)) {
-    printf("Cannot proceed with OptSVD, OptLU and OptGSL zero.\n");
-    printf("Assuming the safer option OptSVD = 1.\n");
+    printf("ComputeSolution: Cannot proceed with OptSVD, OptLU and OptGSL zero.\n");
+    printf("                 Assuming the safer option OptSVD = 1.\n");
     OptLU = 0;
     OptSVD = 1;
     OptGSL = 0;
   }
   if ((OptSVD == 1) && (OptLU == 1) && (OptGSL == 1)) {
-    printf("Cannot proceed with all OptSVD, OptLU and OptGSL one.\n");
-    printf("Assuming the safer option OptSVD = 1.\n");
+    printf("ComputeSolution: Cannot proceed with all OptSVD, OptLU and OptGSL one.\n");
+    printf("                 Assuming the safer option OptSVD = 1.\n");
     OptLU = 0;
     OptSVD = 1;
     OptGSL = 0;
@@ -108,8 +110,8 @@ int ComputeSolution(void) {
   if (NbFloatingConductors) { 
     // Number of floating conductors now restricted to one.
     if (NbFloatingConductors > 1) {
-      printf("Number of floating conductors > 1! ... not yet implemented.\n");
-      printf("Returning\n");
+      printf("ComputeSolution: Number of floating conductors > 1!\n");
+      printf("                 Not yet implemented. Returning.\n");
       return -1;
     }
     ++NbConstraints;
@@ -135,7 +137,7 @@ int ComputeSolution(void) {
   if (TimeStep == 1) {
     if (InfluenceMatrixFlag) {
       startClock = clock();
-      printf("ComputeSolution: LHMatrix ... ");
+      printf("ComputeSolution: Computing influence matrix...\n");
       fflush(stdout);
 #ifdef _OPENMP
       time_begin = omp_get_wtime();
@@ -146,7 +148,7 @@ int ComputeSolution(void) {
       printf("Elapsed time: %lg\n", time_end - time_begin);
 #endif
       if (fstatus != 0) {
-        neBEMMessage("ComputeSolution - LHMatrix");
+        printf("ComputeSolution: LHMatrix failed.");
         return -1;
       }
       printf("ComputeSolution: LHMatrix done!\n");
@@ -156,11 +158,11 @@ int ComputeSolution(void) {
       printf("to setup influence matrix.\n");
 
       startClock = clock();
-      printf("ComputeSolution: Inverting influence matrix ...\n");
+      printf("ComputeSolution: Inverting influence matrix...\n");
       fflush(stdout);
       fstatus = InvertMatrix();
       if (fstatus != 0) {
-        neBEMMessage("ComputeSolution - InvertMatrix");
+        printf("ComputeSolution: InvertMatrix failed.\n");
         return -1;
       }
       printf("ComputeSolution: Matrix inversion over.\n");
@@ -173,19 +175,19 @@ int ComputeSolution(void) {
       if (OptReadInvMatrix) {
         startClock = clock();
         printf(
-            "ComputeSolution: Reading inverted matrix ... will take time ...");
+            "ComputeSolution: Reading inverted matrix, will take time...\n");
         int fstatus = ReadInvertedMatrix();
         if (fstatus != 0) {
-          neBEMMessage("ComputeSolution - ReadInvertedMatrix");
+          printf("ComputeSolution: ReadInvertedMatrix failed.\n");
           return -1;
         }
-        printf("                 done!\n");
+        printf("                Done!\n");
         stopClock = clock();
         neBEMTimeElapsed(startClock, stopClock);
         printf("to read inverted influence matrix.\n");
       } else {
-        neBEMMessage("ComputeSolution - NewBC but no InvMat ... ");
-        neBEMMessage("don't know how to proceed!\n");
+        printf("ComputeSolution: NewBC but no InvMat.\n");
+        printf("                 Don't know how to proceed!\n");
         return -1;
       }
     }  // if (!InfluenceMatrixFlag) && NewBC
@@ -198,11 +200,11 @@ int ComputeSolution(void) {
   // Update known charges
   if (OptKnCh) {
     startClock = clock();
-    printf("ComputeSolution: UpdateKnownCharges ... ");
+    printf("ComputeSolution: UpdateKnownCharges...\n");
     fflush(stdout);
     fstatus = UpdateKnownCharges();
     if (fstatus != 0) {
-      neBEMMessage("ComputeSolution - UpdateKnownCharges");
+      printf("ComputeSolution: UpdateKnownCharges failed.\n");
       return -1;
     }
     printf("ComputeSolution: UpdateKnownCharges done!\n");
@@ -215,11 +217,11 @@ int ComputeSolution(void) {
   // Update charging up
   if (OptChargingUp) {
     startClock = clock();
-    printf("ComputeSolution: UpdateChargingUp ... ");
+    printf("ComputeSolution: UpdateChargingUp...\n");
     fflush(stdout);
     fstatus = UpdateChargingUp();
     if (fstatus != 0) {
-      neBEMMessage("ComputeSolution - UpdateChargingUp");
+      printf("ComputeSolution: UpdateChargingUp failed.\n");
       return -1;
     }
     printf("ComputeSolution: UpdateChargingUp done!\n");
@@ -231,11 +233,11 @@ int ComputeSolution(void) {
 
   // RHS
   startClock = clock();
-  printf("ComputeSolution: RHVector ... ");
+  printf("ComputeSolution: Setting up right-hand side vector...\n");
   fflush(stdout);
   fstatus = RHVector();
   if (fstatus != 0) {
-    neBEMMessage("ComputeSolution - RHVector");
+    printf("ComputeSolution: RHVector failed.\n");
     return -1;
   }
   printf("ComputeSolution: RHVector done!\n");
@@ -248,8 +250,7 @@ int ComputeSolution(void) {
   // The Solve routine simply involves the matrix
   // multiplication of inverted matrix and the current RHVector.
   startClock = clock();
-  printf("ComputeSolution: Solve ... ");
-  fflush(stdout);
+  printf("ComputeSolution: Solve ...\n");
 #ifdef _OPENMP
   time_begin = omp_get_wtime();
 #endif
@@ -259,7 +260,7 @@ int ComputeSolution(void) {
   printf("Elapsed time: %lg\n", time_end - time_begin);
 #endif
   if (fstatus != 0) {
-    neBEMMessage("ComputeSolution - Solve");
+    printf("ComputeSolution: Solve failed.\n");
     return -1;
   }
   printf("ComputeSolution: Solve done!\n");
@@ -308,7 +309,7 @@ int LHMatrix(void) {
   int dbgFn = 0;
 #endif
   printf(
-      "\nLHMatrix: The size of the Influence coefficient matrix is %d X %d\n",
+      "LHMatrix: The size of the influence coefficient matrix is %d X %d\n",
       NbEqns, NbUnknowns);
   fflush(stdout);
 
@@ -327,7 +328,7 @@ int LHMatrix(void) {
   // The field points are followed using elefld (field counter) and the
   // source elements are followed using elesrc (source counter)
   // printf("field point: ");	// do not remove
-  printf("Computing influence coefficient matrix ... will take time ...\n");
+  printf("LHMatrix: Computing influence coefficient matrix, will take time ...\n");
 
 #ifdef _OPENMP
   int nthreads = 1, tid = 0;
@@ -353,9 +354,10 @@ int LHMatrix(void) {
 
       // Retrieve element properties at the field point
       // boundary condn applied at collocation point
-      const double xfld = (EleArr + elefld - 1)->BC.CollPt.X;
-      const double yfld = (EleArr + elefld - 1)->BC.CollPt.Y;
-      const double zfld = (EleArr + elefld - 1)->BC.CollPt.Z;
+      Point3D collPt = CollocationPoint(elefld);
+      const double xfld = collPt.X;
+      const double yfld = collPt.Y;
+      const double zfld = collPt.Z;
 
 #ifdef _OPENMP
 #pragma omp for
@@ -367,15 +369,13 @@ int LHMatrix(void) {
 
         // Retrieve element properties at the field point
         const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
-        const double xsrc = (EleArr + elesrc - 1)->G.Origin.X;
-        const double ysrc = (EleArr + elesrc - 1)->G.Origin.Y;
-        const double zsrc = (EleArr + elesrc - 1)->G.Origin.Z;
-
-        if ((EleArr + elesrc - 1)->E.Type == 0) {
-          printf(
-              "LHMatrix: Wrong EType for elesrc %d element %d on %dth "
-              "primitive!\n",
-              elesrc, (EleArr + elesrc - 1)->Id, primsrc);
+        const double xsrc = (EleArr + elesrc - 1)->Origin.X;
+        const double ysrc = (EleArr + elesrc - 1)->Origin.Y;
+        const double zsrc = (EleArr + elesrc - 1)->Origin.Z;
+        DirnCosn3D* dcsrc = &PrimDC[primsrc];
+        if (InterfaceType[primsrc] == 0) {
+          printf("LHMatrix: Wrong EType for element %d (primitive %d)!\n",
+                 elesrc, primsrc);
           exit(-1);
         }
 
@@ -393,16 +393,16 @@ int LHMatrix(void) {
             double InitialVector[3] = {xfld - xsrc, yfld - ysrc, zfld - zsrc};
             double TransformationMatrix[3][3] = {
                 {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
-            DirnCosn3D *DirCos = &(EleArr + elesrc - 1)->G.DC;
-            TransformationMatrix[0][0] = DirCos->XUnit.X;
-            TransformationMatrix[0][1] = DirCos->XUnit.Y;
-            TransformationMatrix[0][2] = DirCos->XUnit.Z;
-            TransformationMatrix[1][0] = DirCos->YUnit.X;
-            TransformationMatrix[1][1] = DirCos->YUnit.Y;
-            TransformationMatrix[1][2] = DirCos->YUnit.Z;
-            TransformationMatrix[2][0] = DirCos->ZUnit.X;
-            TransformationMatrix[2][1] = DirCos->ZUnit.Y;
-            TransformationMatrix[2][2] = DirCos->ZUnit.Z;
+
+            TransformationMatrix[0][0] = dcsrc->XUnit.X;
+            TransformationMatrix[0][1] = dcsrc->XUnit.Y;
+            TransformationMatrix[0][2] = dcsrc->XUnit.Z;
+            TransformationMatrix[1][0] = dcsrc->YUnit.X;
+            TransformationMatrix[1][1] = dcsrc->YUnit.Y;
+            TransformationMatrix[1][2] = dcsrc->YUnit.Z;
+            TransformationMatrix[2][0] = dcsrc->ZUnit.X;
+            TransformationMatrix[2][1] = dcsrc->ZUnit.Y;
+            TransformationMatrix[2][2] = dcsrc->ZUnit.Z;
             double FinalVector[3] = {0., 0., 0.};
 
             for (int i = 0; i < 3; ++i) {
@@ -423,7 +423,7 @@ int LHMatrix(void) {
             DebugISLES = 0;
 
           Inf[elefld][elesrc] = ComputeInfluence(elefld, elesrc, &localP,
-                                                 &(EleArr + elesrc - 1)->G.DC);
+                                                 dcsrc);
           if (DebugLevel == 301) {
             printf("elefld: %d, elesrc: %d, Influence: %.16lg\n", elefld,
                    elesrc, Inf[elefld][elesrc]);
@@ -529,7 +529,7 @@ int LHMatrix(void) {
           // (at present assumed to be along one of the coordinate axes, but
           // this constraint can be easily relaxed later - we can have a
           // direction cosine along which the elements may be repeated) and the
-          // distance of repeatition. Thus, for each repeated element, we need
+          // distance of repetition. Thus, for each repeated element, we need
           // to compute its position and the rest remains identical as above.
           // The influence, evaluated as a temporary double, can be added to the
           // base value computed above. PeriodicInX etc are either zero or +ve
@@ -561,16 +561,15 @@ int LHMatrix(void) {
                                                  zfld - ZOfRpt};
                       double TransformationMatrix[3][3] = {
                           {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
-                      DirnCosn3D *DirCos = &(EleArr + elesrc - 1)->G.DC;
-                      TransformationMatrix[0][0] = DirCos->XUnit.X;
-                      TransformationMatrix[0][1] = DirCos->XUnit.Y;
-                      TransformationMatrix[0][2] = DirCos->XUnit.Z;
-                      TransformationMatrix[1][0] = DirCos->YUnit.X;
-                      TransformationMatrix[1][1] = DirCos->YUnit.Y;
-                      TransformationMatrix[1][2] = DirCos->YUnit.Z;
-                      TransformationMatrix[2][0] = DirCos->ZUnit.X;
-                      TransformationMatrix[2][1] = DirCos->ZUnit.Y;
-                      TransformationMatrix[2][2] = DirCos->ZUnit.Z;
+                      TransformationMatrix[0][0] = dcsrc->XUnit.X;
+                      TransformationMatrix[0][1] = dcsrc->XUnit.Y;
+                      TransformationMatrix[0][2] = dcsrc->XUnit.Z;
+                      TransformationMatrix[1][0] = dcsrc->YUnit.X;
+                      TransformationMatrix[1][1] = dcsrc->YUnit.Y;
+                      TransformationMatrix[1][2] = dcsrc->YUnit.Z;
+                      TransformationMatrix[2][0] = dcsrc->ZUnit.X;
+                      TransformationMatrix[2][1] = dcsrc->ZUnit.Y;
+                      TransformationMatrix[2][2] = dcsrc->ZUnit.Z;
                       double FinalVector[3] = {0., 0., 0.};
 
                       for (int i = 0; i < 3; ++i) {
@@ -588,7 +587,7 @@ int LHMatrix(void) {
                     // Direction cosines remain unchanged for a regular
                     // repetition
                     double AddnalInfl = ComputeInfluence(
-                        elefld, elesrc, &localP, &(EleArr + elesrc - 1)->G.DC);
+                        elefld, elesrc, &localP, dcsrc);
                     Inf[elefld][elesrc] += AddnalInfl;
 
                     if (DebugLevel == 301) {
@@ -700,7 +699,6 @@ int LHMatrix(void) {
       // printf("\b\b\b\b\b\b");
     }  // loop for elefld, field element (influenced)
   }    // pragma omp parallel
-
   // Enforce total charge on the system to be zero.
   // All the voltages in the system need to be shifted by an unknown amount
   // V_shift
@@ -710,49 +708,51 @@ int LHMatrix(void) {
   // Please note that charge = Element Charge Density * Element Area
   if (OptSystemChargeZero) {
     // an additional column
-    for (int row = 1; row <= NbEqns; ++row) {
-      if (((EleArr + row - 1)->E.Type == 1) ||
-          ((EleArr + row - 1)->E.Type == 3))  // The
-        Inf[row][NbUnknowns] = 1.0;  // VSystemChargeZero is subtracted only
-      else                           // from potentials
+    for (int row = 1; row < NbEqns; ++row) {
+      const int prim = (EleArr + row - 1)->PrimitiveNb;
+      // The VSystemChargeZero is subtracted only from potentials.
+      if ((InterfaceType[prim] == 1) || (InterfaceType[prim] == 3)) {
+        Inf[row][NbUnknowns] = 1.0;
+      } else {
         Inf[row][NbUnknowns] = 0.0;
+      }
     }
-
     // an additional row
-    for (int col = 1; col <= NbUnknowns; ++col)
-      Inf[NbEqns][col] =
-          (EleArr + col - 1)->G.dA;  // if charge density is computed
-    // Inf[NbEqns][col] = 1.0;	// if charge is computed
-
+    for (int col = 1; col < NbUnknowns; ++col) {
+      // If charge density is computed:
+      Inf[NbEqns][col] = ElementArea(col);
+      // If charge is computed:
+      // Inf[NbEqns][col] = 1.0;
+    }
     // the last element
     Inf[NbEqns][NbUnknowns] = 0.0;
-  }  // if(OptSystemChargeZero)
-  else {
+  } else {
     VSystemChargeZero = 0.0;
   }
 
-  if (NbFloatingConductors)  // assume only one floating conductor
-  {
+  if (NbFloatingConductors) {
+    // assume only one floating conductor
     // an additional column
-    for (int row = 1; row <= NbEqns; ++row) {
-      int etfld = (EleArr + row - 1)->E.Type;
-      if (etfld == 3)  // element of a floating conductor
+    for (int row = 1; row < NbEqns; ++row) {
+      const int prim = (EleArr + row - 1)->PrimitiveNb;
+      if (InterfaceType[prim] == 3) {
+        // element of a floating conductor
         Inf[row][NbUnknowns] = -1.0;
-      else
+      } else {
         Inf[row][NbUnknowns] = 0.0;
+      }
     }  // additional column
 
     // an additional row
-    for (int col = 1; col <= NbUnknowns; ++col) {
-      int etfld = (EleArr + col - 1)->E.Type;
-      if (etfld == 3)  // element of a floating conductor
-      {
-        Inf[NbEqns][col] =
-            (EleArr + col - 1)->G.dA;  // if charge density is computed
+    for (int col = 1; col < NbUnknowns; ++col) {
+      const int prim = (EleArr + col - 1)->PrimitiveNb;
+      if (InterfaceType[prim] == 3) {
+        // element of a floating conductor
+        // If charge density is computed:
+        Inf[NbEqns][col] = ElementArea(col);
         // Inf[NbEqns][col] = 1.0;	// if charge is computed
       } else {
-        Inf[NbEqns][col] = 0.0;  // if charge density is computed
-        // Inf[NbEqns][col] = 0.0;	// if charge is computed
+        Inf[NbEqns][col] = 0.0;
       }
     }  // additional row
 
@@ -761,7 +761,7 @@ int LHMatrix(void) {
   }  // if NbFloatingConductors
 
   if (OptStoreInflMatrix && OptFormattedFile) {
-    printf("storing the influence matrix in a formatted file ...\n");
+    printf("LHMatrix: Storing the influence matrix in a formatted file.\n");
     fflush(stdout);
 
     char InflFile[256];
@@ -769,7 +769,7 @@ int LHMatrix(void) {
     strcat(InflFile, "/Infl.out");
     FILE *fInf = fopen(InflFile, "w+");
     if (fInf == NULL) {
-      neBEMMessage("LHMatrix - InflFile");
+      printf("LHMatrix: Cannot open Infl.out.\n");
       return -1;
     }
     fprintf(fInf, "%d %d\n", NbEqns, NbUnknowns);
@@ -786,8 +786,8 @@ int LHMatrix(void) {
   if (OptStoreInflMatrix &&
       OptUnformattedFile)  // Raw cannot be implemented now.
   {  // It may be because of the memory allocation using the NR routines -
-    neBEMMessage(
-        "LHMatrix - Binary write of Infl matrix not implemented yet.\n");
+    printf(
+        "LHMatrix: Binary write of Infl matrix not implemented yet.\n");
     return -1;
 
     char InflFile[256];
@@ -795,7 +795,7 @@ int LHMatrix(void) {
     strcat(InflFile, "/RawInfl.out");
     FILE *fInf = fopen(InflFile, "wb");
     if (fInf == NULL) {
-      neBEMMessage("LHMatrix - RawInflFile");
+      printf("LHMatrix: Cannot open RawInfl.out.\n");
       return -1;
     }
     printf("\nfInf: %p\n", (void *)fInf);
@@ -880,9 +880,9 @@ Vector1D* InflVec(Point3D fldpt, DirnCosn3D *fldDC, int Pot0Cont1) {
 
     // Retrieve element properties at the field point
     int primsrc = (EleArr+elesrc-1)->PrimitiveNb;
-    double xsrc = (EleArr+elesrc-1)->G.Origin.X;
-    double ysrc = (EleArr+elesrc-1)->G.Origin.Y;
-    double zsrc = (EleArr+elesrc-1)->G.Origin.Z;
+    double xsrc = (EleArr+elesrc-1)->Origin.X;
+    double ysrc = (EleArr+elesrc-1)->Origin.Y;
+    double zsrc = (EleArr+elesrc-1)->Origin.Z;
 
                 // The total influence is due to elements on the basic device
 and due to
@@ -905,15 +905,15 @@ and not
         InitialVector[0] = xfld - xsrc; InitialVector[1] = yfld - ysrc;
         InitialVector[2] = zfld - zsrc; InitialVector[3] = 1.0;
 
-        TransformationMatrix[0][0] = DirCos->XUnit.X;
-        TransformationMatrix[0][1] = DirCos->XUnit.Y;
-        TransformationMatrix[0][2] = DirCos->XUnit.Z;
-        TransformationMatrix[1][0] = DirCos->YUnit.X;
-        TransformationMatrix[1][1] = DirCos->YUnit.Y;
-        TransformationMatrix[1][2] = DirCos->YUnit.Z;
-        TransformationMatrix[2][0] = DirCos->ZUnit.X;
-        TransformationMatrix[2][1] = DirCos->ZUnit.Y;
-        TransformationMatrix[2][2] = DirCos->ZUnit.Z;
+        TransformationMatrix[0][0] = dcsrc->XUnit.X;
+        TransformationMatrix[0][1] = dcsrc->XUnit.Y;
+        TransformationMatrix[0][2] = dcsrc->XUnit.Z;
+        TransformationMatrix[1][0] = dcsrc->YUnit.X;
+        TransformationMatrix[1][1] = dcsrc->YUnit.Y;
+        TransformationMatrix[1][2] = dcsrc->YUnit.Z;
+        TransformationMatrix[2][0] = dcsrc->ZUnit.X;
+        TransformationMatrix[2][1] = dcsrc->ZUnit.Y;
+        TransformationMatrix[2][2] = dcsrc->ZUnit.Z;
 
         for(int i = 0; i < 4; ++i)
         {
@@ -1102,15 +1102,15 @@ InitialVector[4]; double TransformationMatrix[4][4] = {{0.0, 0.0, 0.0, 0.0},
 ZOfRpt; InitialVector[3] = 1.0;
 
                                         TransformationMatrix[0][0] =
-DirCos->XUnit.X; TransformationMatrix[0][1] = DirCos->XUnit.Y;
+dcsrc->XUnit.X; TransformationMatrix[0][1] = dcsrc->XUnit.Y;
                                         TransformationMatrix[0][2] =
-DirCos->XUnit.Z; TransformationMatrix[1][0] = DirCos->YUnit.X;
+dcsrc->XUnit.Z; TransformationMatrix[1][0] = dcsrc->YUnit.X;
                                         TransformationMatrix[1][1] =
-DirCos->YUnit.Y; TransformationMatrix[1][2] = DirCos->YUnit.Z;
+dcsrc->YUnit.Y; TransformationMatrix[1][2] = dcsrc->YUnit.Z;
                                         TransformationMatrix[2][0] =
-DirCos->ZUnit.X; TransformationMatrix[2][1] = DirCos->ZUnit.Y;
+dcsrc->ZUnit.X; TransformationMatrix[2][1] = dcsrc->ZUnit.Y;
                                         TransformationMatrix[2][2] =
-DirCos->ZUnit.Z;
+dcsrc->ZUnit.Z;
 
                                         for(int i = 0; i < 4; ++i)
                                         {
@@ -1311,8 +1311,8 @@ int InvertMatrix(void) {
   InvMat = dmatrix(1, NbUnknowns, 1, NbEqns);
 
   if (OptGSL) {
-    printf("InvertMatrix: matrix decomposition using GSL ... ");
-    printf("no OpenMP implementation ...");
+    printf("InvertMatrix: Matrix decomposition using GSL.\n");
+    printf("              No OpenMP implementation.\n");
     fflush(stdout);
 
     int s;  // signum for LU decomposition
@@ -1337,16 +1337,16 @@ int InvertMatrix(void) {
 
     gsl_matrix_free(m);
     gsl_matrix_free(inverse);
-    printf("InvertMatrix: ... completed using GSL\n");
+    printf("InvertMatrix: ... completed using GSL.\n");
   }  // if OptGSL
 
   if (OptSVD) {
-    printf("InvertMatrix: matrix decomposition using SVD ... ");
-    printf("no OpenMP implementation ...");
+    printf("InvertMatrix: Matrix decomposition using SVD.\n");
+    printf("              No OpenMP implementation.\n");
     fflush(stdout);
 
     clock_t SVDstartClock = clock();
-    printf("ComputeSolution: Decomposing influence matrix ...\n");
+    printf("InvertMatrix: Decomposing influence matrix...\n");
     fflush(stdout);
 
     // These may as well be declared in neBEM.h because a signicant amount
@@ -1368,10 +1368,10 @@ int InvertMatrix(void) {
 
     int fstatus = DecomposeMatrixSVD(SVDInf, SVDw, SVDv);
     if (fstatus != 0) {
-      neBEMMessage("ComputeSolution - DecomposeMatrixSVD");
+      printf("InvertMatrix: DecomposeMatrixSVD failed.\n");
       return -1;
     }
-    printf("ComputeSolution: Matrix decomposition over.\n");
+    printf("InvertMatrix: Matrix decomposition over.\n");
     clock_t SVDstopClock = clock();
     neBEMTimeElapsed(SVDstartClock, SVDstopClock);
     printf("to singular value decompose the influence matrix.\n");
@@ -1381,9 +1381,8 @@ int InvertMatrix(void) {
     tmpmat = dmatrix(1, NbEqns, 1, NbUnknowns);
 
     // calculate w+ (transpose)u
-    for (int j = 1; j <= NbUnknowns;
-         j++) {  // w+ is obtained by replacing every non-zero diagonal entry of
-                 // [W]
+    for (int j = 1; j <= NbUnknowns; j++) {  
+      // w+ is obtained by replacing every non-zero diagonal entry of [W]
       int i;
 #ifdef _OPENMP
 #pragma omp parallel for private(i)
@@ -1420,7 +1419,7 @@ int InvertMatrix(void) {
     free_dmatrix(SVDInf, 1, NbEqns, 1, NbUnknowns);
     free_dvector(SVDw, 1, NbUnknowns);
     free_dmatrix(SVDv, 1, NbUnknowns, 1, NbUnknowns);
-    printf("InvertMatrix: completed using SVD ...\n");
+    printf("InvertMatrix: ... completed using SVD.\n");
     fflush(stdout);
   }  // if OptSVD
 
@@ -1443,12 +1442,12 @@ int InvertMatrix(void) {
         tmpInf[i][j] = Inf[i][j];  // end of omp parallel for
     }
 
-    printf("InvertMatrix: matrix decomposition using LU ... ");
+    printf("InvertMatrix: Matrix decomposition using LU.\n");
     fflush(stdout);
     ludcmp(tmpInf, NbUnknowns, index, &d);  // The tmpInf matrix over-written
 
-    for (int j = 1; j <= NbUnknowns; j++)  // Find inverse by columns.
-    {
+    for (int j = 1; j <= NbUnknowns; j++) { 
+      // Find inverse by columns.
       int i;
 #ifdef _OPENMP
 #pragma omp parallel for private(i)
@@ -1474,7 +1473,7 @@ int InvertMatrix(void) {
     free_dmatrix(y, 1, NbUnknowns, 1, NbUnknowns);
     free_dmatrix(tmpInf, 1, NbEqns, 1, NbUnknowns);
 
-    printf("InvertMatrix: completed using LU ...\n");
+    printf("InvertMatrix: ... completed using LU.\n");
     fflush(stdout);
   }  // if OptLU
 
@@ -1487,18 +1486,14 @@ int InvertMatrix(void) {
 
   // It is necessary to write this file always if we want to avoid
   // matrix inversion for analyzing the same device with a different BC
-  printf("OptStoreInvMatrix: %d, OptFormattedFile: %d\n", OptStoreInvMatrix,
-         OptFormattedFile);
-
   if (OptStoreInvMatrix && OptFormattedFile) {
-    printf("storing the inverted matrix in a formatted file ...\n");
+    printf("InvertMatrix: Storing the inverted matrix in a formatted file.\n");
     fflush(stdout);
 
-    FILE *fInv;  // can be a very large file - change to raw and zipped format
     char InvMFile[256];
     strcpy(InvMFile, MeshOutDir);
     strcat(InvMFile, "/InvMat.out");
-    fInv = fopen(InvMFile, "w");
+    FILE *fInv = fopen(InvMFile, "w");
 
     // following line may be removed after the dimension issue is resolved.
     fprintf(fInv, "%d %d\n", NbEqns, NbUnknowns);
@@ -1511,9 +1506,8 @@ int InvertMatrix(void) {
 
   if (OptStoreInvMatrix && OptUnformattedFile) {
     // not implemented yet
-    // not implemented
-    neBEMMessage("InvertMatrix - Binary write not yet implemented.");
-    return (-1);
+    printf("InvertMatrix: Binary write not yet implemented.\n");
+    return -1;
   }
 
   neBEMState = 7;
@@ -1527,10 +1521,10 @@ int DecomposeMatrixSVD(double **SVDInf, double *SVDw, double **SVDv) {
   // The following needs optimization - wmin, wmax etc.
   double wmin, wmax;
 
-  printf("DecomposeMatrix: matrix decomposition using SVD ... ");
+  printf("DecomposeMatrix: Matrix decomposition using SVD...\n");
   fflush(stdout);
   svdcmp(SVDInf, NbEqns, NbUnknowns, SVDw, SVDv);  // SVDInf matrix over-written
-  printf("DecomposeMatrix: decomposition completed ...\n");
+  printf("DecomposeMatrix: Decomposition completed.\n");
   fflush(stdout);
 
   wmax = SVDw[1];  // Will be the maximum singular value obtained - changed 0.0
@@ -1656,16 +1650,16 @@ double ComputeInfluence(int elefld, int elesrc, Point3D *localP,
 
   if (0) {
     printf("\nContinuity satisfaction using following parameters ...\n");
-    printf("gtsrc: %d, lxsrc: %lg, lzsrc% lg, dA: %lg\n",
-           (EleArr + elesrc - 1)->G.Type, (EleArr + elesrc - 1)->G.LX,
-           (EleArr + elesrc - 1)->G.LZ, (EleArr + elesrc - 1)->G.dA);
+    printf("gtsrc: %d, lxsrc: %lg, lzsrc% lg\n",
+           (EleArr + elesrc - 1)->GType, (EleArr + elesrc - 1)->LX,
+           (EleArr + elesrc - 1)->LZ);
     printf("xlocal: %lg, ylocal: %lg, zlocal: %lg\n", localP->X, localP->Y,
            localP->Z);
   }
-
-  switch ((EleArr + elefld - 1)
-              ->E.Type)  // depending on the etype at the field point
-  {                      // different boundary conditions need to be applied
+  const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
+  switch (InterfaceType[primfld]) {
+    // Depending on the interface type at the field point
+    // different boundary conditions need to be applied
     case 1:              // conductor with known potential
       value = SatisfyValue(elesrc, localP);
       return (value);
@@ -1710,7 +1704,7 @@ double ComputeInfluence(int elefld, int elesrc, Point3D *localP,
 
     default:
       printf("Electric type %d out of range! ... exiting.\n",
-             (EleArr + elefld - 1)->E.Type);
+             InterfaceType[primfld]);
       return (-1);
       break;  // unreachable
   }           // switch on etfld ends
@@ -1730,8 +1724,8 @@ if(0)
         {
         printf("\nContinuity satisfaction using following parameters ...\n");
         printf("gtsrc: %d, lxsrc: %lg, lzsrc% lg, dA: %lg\n",
-                                        (EleArr+srcEle-1)->G.Type,
-(EleArr+srcEle-1)->G.LX, (EleArr+srcEle-1)->G.LZ, (EleArr+srcEle-1)->G.dA);
+                                        (EleArr+srcEle-1)->GType,
+(EleArr+srcEle-1)->LX, (EleArr+srcEle-1)->LZ, (EleArr+srcEle-1)->G.dA);
         printf("xlocal: %lg, ylocal: %lg, zlocal: %lg\n",
                                         localP->X, localP->Y, localP->Z);
         }
@@ -1760,7 +1754,7 @@ double SatisfyValue(int elesrc, Point3D *localP) {
 
   double value;
 
-  switch ((EleArr + elesrc - 1)->G.Type) {
+  switch ((EleArr + elesrc - 1)->GType) {
     case 4:  // rectangular element
       value = RecPot(elesrc, localP);
       return (value);
@@ -1815,17 +1809,18 @@ double SatisfyContinuity(int elefld, int elesrc, Point3D *localP,
   // separate if blocks are merged into one.
   // Check for other "special" cases!
   if ((elefld == elesrc) &&
-      (fabs(localP->X) < (EleArr + elesrc - 1)->G.LX / 2.0) &&
+      (fabs(localP->X) < (EleArr + elesrc - 1)->LX / 2.0) &&
       (fabs(localP->Y) < MINDIST) &&
       (fabs(localP->Z) <
-       (EleArr + elesrc - 1)->G.LZ / 2.0))  // self-inf for DD intrfc
+       (EleArr + elesrc - 1)->LZ / 2.0))  // self-inf for DD intrfc
   {  // consistent with eqn 18 of Bardhan's paper where lmsrc is inverse
-    value = 1.0 / (2.0 * EPS0 * (EleArr + elesrc - 1)->E.Lambda);
+    const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
+    value = 1.0 / (2.0 * EPS0 * Lambda[primsrc]);
   }  // of the multiplying factor of roe(r). EPS0 arises due to electrostatics.
   else {
     value = 0.0;
     // Following fluxes in the influencing ECS
-    switch ((EleArr + elesrc - 1)->G.Type) {
+    switch ((EleArr + elesrc - 1)->GType) {
       case 4:  // rectangular element
         RecFlux(elesrc, localP, &localF);
         break;
@@ -1847,8 +1842,8 @@ double SatisfyContinuity(int elefld, int elesrc, Point3D *localP,
     globalF = RotateVector3D(&localF, DirCos, local2global);
 
     // Fluxes in the influenced ECS co-ordinate system
-    localF =
-        RotateVector3D(&globalF, &(EleArr + elefld - 1)->G.DC, global2local);
+    const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
+    localF = RotateVector3D(&globalF, &PrimDC[primfld], global2local);
 
     value = -localF.Y;
     // normal derivative of Green's function is - normal force
@@ -1867,7 +1862,7 @@ if(DebugLevel == 301) { printf("In EleSatisfyValue ...\n"); }
 
 double value;
 
-switch((EleArr+srcEle-1)->G.Type)
+switch((EleArr+srcEle-1)->GType)
         {
         case 4:		// rectangular element
                 value = RecPot(srcEle, fldPt);
@@ -1922,16 +1917,16 @@ Vector3D localF, globalF;
 // 4 or 5. So, the check on the value of etsrc is superfluous, and two
 // separate if blocks are merged into one.
 // Check for other "special" cases!
-if((fabs(fldPt->X) < (EleArr+srcEle-1)->G.LX/2.0)
+if((fabs(fldPt->X) < (EleArr+srcEle-1)->LX/2.0)
                 && (fabs(fldPt->Y) < MINDIST)
-                && (fabs(fldPt->Z) < (EleArr+srcEle-1)->G.LZ/2.0))// self-inf
+                && (fabs(fldPt->Z) < (EleArr+srcEle-1)->LZ/2.0))// self-inf
 for DD intrfc {	// consistent with eqn 18 of Bardhan's paper where lmsrc is
 inverse value = 1.0 / (2.0*EPS0*(EleArr+srcEle-1)->E.Lambda); }	// of the
 multiplying factor of roe(r). EPS0 arises due to electrostatics. else
         {
         value = 0.0;
         // Following fluxes in the influencing ECS
-        switch((EleArr+srcEle-1)->G.Type)
+        switch((EleArr+srcEle-1)->GType)
                 {
                 case 4:		// rectangular element
                         RecFlux(srcEle, fldPt, &localF);
@@ -1982,18 +1977,16 @@ int RHVector(void) {
   fprintf(fout, "#BCondn Vector\n");
   fprintf(fout, "#elefld\tAssigned\tBC\tKnCh\tChUp\tRHValue\n");
 
-  printf("created BCondns.out file ...\n");
+  printf("RHVector: Created BCondns.out file.\n");
   fflush(stdout);
 
   for (int elefld = 1; elefld <= NbElements; ++elefld) {
     if (0) printf("\nIn RHVector, elefld: %d\n", elefld);
     value = valueKnCh = valueChUp = 0.0;
-    value = (EleArr + elefld - 1)
-                ->BC.Value;  // previouly this line was within case 1
-
-    switch ((EleArr + elefld - 1)->E.Type) {
+    const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
+    value = ApplPot[primfld];
+    switch (InterfaceType[primfld]) {
       case 1:  // Conducting surfaces
-        // value = (EleArr+elefld-1)->BC.Value;
         if (OptKnCh) {
           valueKnCh = ValueKnCh(elefld);  // effect of all known charges
           if (isnan(valueKnCh)) exit(-1);
@@ -2007,7 +2000,7 @@ int RHVector(void) {
         RHS[elefld] = value - valueKnCh - valueChUp;
         break;
       case 2:  // Conducting surfaces with known charge
-        printf("Conducting surface with charge not implemented.\n");
+        printf("RHVector: Conducting surface with charge not implemented.\n");
         fclose(fout);
         return -1;
         break;  // NOTE: no RHVector
@@ -2051,47 +2044,42 @@ int RHVector(void) {
           if (isinf(valueChUp)) exit(-1);
         }
         RHS[elefld] = value - valueKnCh - valueChUp;  // Check Bardhan's eqn 16
-        RHS[elefld] +=
-            (EleArr + elefld - 1)->Assigned;  // effect due to assigned
-        // charge; what happens when assigned elements are charged up in
-        // addition?
+        // Add effect due to assigned charge; 
+        // what happens when assigned elements are charged up in addition?
+        RHS[elefld] += (EleArr + elefld - 1)->Assigned;  
         break;
       case 6:  // E parallel symmetry boundary
-        printf("Symmetry boundary, E parallel not implemented yet.\n");
+        printf("RHVector: Symmetry boundary, E parallel not implemented yet.\n");
         return -1;
         break;
       case 7:  // E perpendicular symmetry boundary
-        printf("Symmetry boundary, E perpendicular not implemented yet.\n");
+        printf("RHVector: Symmetry boundary, E perpendicular not implemented yet.\n");
         return -1;
         break;
       default:
-        printf("elefld in RHVector out of range ... returning\n");
+        printf("RHVector: Interface type out of range.\n");
         return -1;
     }
     fprintf(fout, "%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", elefld,
-            (EleArr + elefld - 1)->G.Origin.X,
-            (EleArr + elefld - 1)->G.Origin.Y,
-            (EleArr + elefld - 1)->G.Origin.Z, (EleArr + elefld - 1)->Assigned,
+            (EleArr + elefld - 1)->Origin.X,
+            (EleArr + elefld - 1)->Origin.Y,
+            (EleArr + elefld - 1)->Origin.Z, (EleArr + elefld - 1)->Assigned,
             value, valueKnCh, valueChUp, RHS[elefld]);
   }  // for elefld ends
 
   // Floating conductor are long neglected. Needs close inspection.
   if (NbConstraints) {
     for (int eqn = NbElements + 1; eqn <= NbEqns; ++eqn) {
-      if (eqn ==
-          NbSystemChargeZero)  // if row corresponds to zero-charge condition
-      {
-        double assigned, dA, SumAssigned = 0.0;
+      if (eqn == NbSystemChargeZero) {
+        // if row corresponds to zero-charge condition
+        double SumAssigned = 0.0;
         // can be parallelized
         for (int ele = 1; ele <= NbElements; ++ele) {
-          assigned = (EleArr + ele - 1)->Assigned;
-          dA = (EleArr + ele - 1)->G.dA;
-          SumAssigned += assigned * dA;  // charge density * element area
+          double assigned = (EleArr + ele - 1)->Assigned;
+          SumAssigned += assigned * ElementArea(ele);  // charge density * element area
         }
-        RHS[eqn] =
-            -SumAssigned;  // applied charge considered - too small change
-        RHS[eqn] =
-            0.0;  // applied charge not considered while meeting constraint
+        RHS[eqn] = -SumAssigned;  // applied charge considered - too small change
+        RHS[eqn] = 0.0;  // applied charge not considered while meeting constraint
       }           // if eqn == NbSystemChargeZero
       else {
         RHS[eqn] = 0.0;
@@ -2099,7 +2087,7 @@ int RHVector(void) {
     }
   }  // if NbConstraints
 
-  printf("computations for RHVector completed ...\n");
+  printf("RHVector: Computations completed.\n");
   fflush(stdout);
 
   fclose(fout);
@@ -2121,9 +2109,10 @@ double ValueKnCh(int elefld) {
 
   double value = 0.0;
   double assigned = 0.0;
-  double xfld = (EleArr + elefld - 1)->BC.CollPt.X;
-  double yfld = (EleArr + elefld - 1)->BC.CollPt.Y;
-  double zfld = (EleArr + elefld - 1)->BC.CollPt.Z;
+  Point3D collPt = CollocationPoint(elefld);
+  double xfld = collPt.X;
+  double yfld = collPt.Y;
+  double zfld = collPt.Z;
 
   // Retrieve element properties at the field point
   // Location needed for Dirichlet (potential)
@@ -2138,14 +2127,16 @@ double ValueKnCh(int elefld) {
     if (fabs(assigned) <= 1.0e-16) continue;
 
     // Retrieve element properties from the structure
-    if ((EleArr + elesrc - 1)->E.Type == 0) {
-      printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-             elesrc, (EleArr + elesrc - 1)->Id,
-             (EleArr + elesrc - 1)->PrimitiveNb);
+    const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
+    DirnCosn3D* dcsrc = &PrimDC[primsrc];
+
+    if (InterfaceType[primsrc] == 0) {
+      printf("Wrong EType for element %d (primitive %d)!\n",
+             elesrc, primsrc);
       exit(-1);
     }
 
-    Point3D *pOrigin = &(EleArr + elesrc - 1)->G.Origin;
+    Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
 
     {  // Rotate point3D from global to local system
       double InitialVector[3] =
@@ -2153,16 +2144,15 @@ double ValueKnCh(int elefld) {
       double TransformationMatrix[3][3] = {{0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0}};
-      DirnCosn3D *DirCos = &(EleArr + elesrc - 1)->G.DC;
-      TransformationMatrix[0][0] = DirCos->XUnit.X;
-      TransformationMatrix[0][1] = DirCos->XUnit.Y;
-      TransformationMatrix[0][2] = DirCos->XUnit.Z;
-      TransformationMatrix[1][0] = DirCos->YUnit.X;
-      TransformationMatrix[1][1] = DirCos->YUnit.Y;
-      TransformationMatrix[1][2] = DirCos->YUnit.Z;
-      TransformationMatrix[2][0] = DirCos->ZUnit.X;
-      TransformationMatrix[2][1] = DirCos->ZUnit.Y;
-      TransformationMatrix[2][2] = DirCos->ZUnit.Z;
+      TransformationMatrix[0][0] = dcsrc->XUnit.X;
+      TransformationMatrix[0][1] = dcsrc->XUnit.Y;
+      TransformationMatrix[0][2] = dcsrc->XUnit.Z;
+      TransformationMatrix[1][0] = dcsrc->YUnit.X;
+      TransformationMatrix[1][1] = dcsrc->YUnit.Y;
+      TransformationMatrix[1][2] = dcsrc->YUnit.Z;
+      TransformationMatrix[2][0] = dcsrc->ZUnit.X;
+      TransformationMatrix[2][1] = dcsrc->ZUnit.Y;
+      TransformationMatrix[2][2] = dcsrc->ZUnit.Z;
       double FinalVector[3];
 
       for (int i = 0; i < 3; ++i) {
@@ -2177,18 +2167,15 @@ double ValueKnCh(int elefld) {
       localP.Z = FinalVector[2];
     }  // Point3D rotated
 
-    switch ((EleArr + elesrc - 1)->G.Type) {
+    switch ((EleArr + elesrc - 1)->GType) {
       case 4:  // rectangular element
         value += assigned * RecPot(elesrc, &localP);
-        // return(value/dA);
         break;
       case 3:  // triangular element
         value += assigned * TriPot(elesrc, &localP);
-        // return(value/dA);
         break;
       case 2:  // linear (wire) element
         value += assigned * WirePot(elesrc, &localP);
-        // return(value/dA);
         break;
       default:
         printf("Geometrical type out of range! ... exiting ...\n");
@@ -2197,6 +2184,7 @@ double ValueKnCh(int elefld) {
     }           // switch over gtsrc ends
   }             // for all source elements - elesrc
 
+  // HS: Shouldn't this be "*= MyFACTOR"?
   value += MyFACTOR;  // in order reduce divisions by MyFACTOR later
   if (dbgFn) {
     printf("value after known charges on elements (* MyFACTOR): %g\n", value);
@@ -2291,9 +2279,12 @@ double ContinuityKnCh(int elefld) {
 
   double value = 0.0;
   double assigned = 0.0;
-  double xfld = (EleArr + elefld - 1)->BC.CollPt.X;
-  double yfld = (EleArr + elefld - 1)->BC.CollPt.Y;
-  double zfld = (EleArr + elefld - 1)->BC.CollPt.Z;
+  Point3D collPt = CollocationPoint(elefld);
+  double xfld = collPt.X;
+  double yfld = collPt.Y;
+  double zfld = collPt.Z;
+  const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
+  DirnCosn3D* dcfld = &PrimDC[primfld];
 
   Vector3D localF, globalF;
 
@@ -2306,13 +2297,15 @@ double ContinuityKnCh(int elefld) {
     assigned = (EleArr + elesrc - 1)->Assigned;
     if (fabs(assigned) <= 1.0e-16) continue;
 
-    Point3D *pOrigin = &(EleArr + elesrc - 1)->G.Origin;
+    Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
+
+    const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
+    DirnCosn3D* dcsrc = &PrimDC[primsrc];
 
     // Retrieve element properties from the structure
-    if ((EleArr + elesrc - 1)->E.Type == 0) {
-      printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-             elesrc, (EleArr + elesrc - 1)->Id,
-             (EleArr + elesrc - 1)->PrimitiveNb);
+    if (InterfaceType[primsrc] == 0) {
+      printf("Wrong EType for element %d (primitive %d)!\n",
+             elesrc, primsrc);
       exit(-1);
     }
 
@@ -2322,16 +2315,15 @@ double ContinuityKnCh(int elefld) {
       double TransformationMatrix[3][3] = {{0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0}};
-      DirnCosn3D *DirCos = &(EleArr + elesrc - 1)->G.DC;
-      TransformationMatrix[0][0] = DirCos->XUnit.X;
-      TransformationMatrix[0][1] = DirCos->XUnit.Y;
-      TransformationMatrix[0][2] = DirCos->XUnit.Z;
-      TransformationMatrix[1][0] = DirCos->YUnit.X;
-      TransformationMatrix[1][1] = DirCos->YUnit.Y;
-      TransformationMatrix[1][2] = DirCos->YUnit.Z;
-      TransformationMatrix[2][0] = DirCos->ZUnit.X;
-      TransformationMatrix[2][1] = DirCos->ZUnit.Y;
-      TransformationMatrix[2][2] = DirCos->ZUnit.Z;
+      TransformationMatrix[0][0] = dcsrc->XUnit.X;
+      TransformationMatrix[0][1] = dcsrc->XUnit.Y;
+      TransformationMatrix[0][2] = dcsrc->XUnit.Z;
+      TransformationMatrix[1][0] = dcsrc->YUnit.X;
+      TransformationMatrix[1][1] = dcsrc->YUnit.Y;
+      TransformationMatrix[1][2] = dcsrc->YUnit.Z;
+      TransformationMatrix[2][0] = dcsrc->ZUnit.X;
+      TransformationMatrix[2][1] = dcsrc->ZUnit.Y;
+      TransformationMatrix[2][2] = dcsrc->ZUnit.Z;
       double FinalVector[3];
 
       for (int i = 0; i < 3; ++i) {
@@ -2351,21 +2343,20 @@ double ContinuityKnCh(int elefld) {
     // || (((EleArr+elesrc-1)->E.Type == 5) && (elefld == elesrc))) // DD intfce
     // For self-influence, lmsrc is equal to lmfld which allows the following.
     if ((elefld == elesrc) &&
-        (fabs(localP.X) < (EleArr + elesrc - 1)->G.LX / 2.0) &&
+        (fabs(localP.X) < (EleArr + elesrc - 1)->LX / 2.0) &&
         (fabs(localP.Y) < MINDIST) &&
-        (fabs(localP.Z) < (EleArr + elesrc - 1)->G.LZ / 2.0)) {
-      value += assigned * 1.0 / (2.0 * EPS0 * (EleArr + elesrc - 1)->E.Lambda);
+        (fabs(localP.Z) < (EleArr + elesrc - 1)->LZ / 2.0)) {
+      value += assigned / (2. * EPS0 * Lambda[primsrc]);
     } else {
       // Retrieve element properties from the structure
-      if ((EleArr + elesrc - 1)->E.Type == 0) {
-        printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-               elesrc, (EleArr + elesrc - 1)->Id,
-               (EleArr + elesrc - 1)->PrimitiveNb);
+      if (InterfaceType[primsrc] == 0) {
+        printf("Wrong EType for element %d (primitive %d)!\n",
+               elesrc, primsrc);
         exit(-1);
       }
 
       // Following fluxes in the influencing ECS
-      switch ((EleArr + elesrc - 1)->G.Type) {
+      switch ((EleArr + elesrc - 1)->GType) {
         case 4:  // rectangular element
           RecFlux(elesrc, &localP, &localF);
           break;
@@ -2382,11 +2373,9 @@ double ContinuityKnCh(int elefld) {
       }           // switch over gtsrc ends
 
       // in GCS - mirror points?!
-      globalF =
-          RotateVector3D(&localF, &(EleArr + elesrc - 1)->G.DC, local2global);
+      globalF = RotateVector3D(&localF, dcsrc, local2global);
       // in ECS (local to the field element)
-      localF =
-          RotateVector3D(&globalF, &(EleArr + elefld - 1)->G.DC, global2local);
+      localF = RotateVector3D(&globalF, dcfld, global2local);
 
       value -= assigned * localF.Y;  // +ve gradient of Green's is -ve normal
                                      // force (changed from -= to += on 02/11/11
@@ -2412,8 +2401,7 @@ double ContinuityKnCh(int elefld) {
     sourcePt.Z = PointKnChArr[point].P.Z;
     // potential not being used to evaluate Neumann continuity
     (void)PointKnChPF(sourcePt, fieldPt, &globalF);
-    localF =
-        RotateVector3D(&globalF, &(EleArr + elefld - 1)->G.DC, global2local);
+    localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= PointKnChArr[point].Assigned * localF.Y;
   }  // loop over points NbPointsKnCh
 
@@ -2435,8 +2423,7 @@ double ContinuityKnCh(int elefld) {
     }
     // potential not being used to evaluate Neumann continuity
     (void)LineKnChPF(startPt, stopPt, fieldPt, &globalF);
-    localF =
-        RotateVector3D(&globalF, &(EleArr + elefld - 1)->G.DC, global2local);
+    localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= LineKnChArr[line].Assigned * localF.Y;
   }  // loop over lines
   // Simplifying conversions, similar to points and lines may be necessary.
@@ -2444,8 +2431,7 @@ double ContinuityKnCh(int elefld) {
     // potential not being used to evaluate Neumann continuity
     (void)AreaKnChPF((AreaKnChArr + area - 1)->NbVertices,
                    ((AreaKnChArr + area - 1)->Vertex), fieldPt, &globalF);
-    localF =
-        RotateVector3D(&globalF, &(EleArr + elefld - 1)->G.DC, global2local);
+    localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= (AreaKnChArr + area - 1)->Assigned * localF.Y;
   }  // loop over areas
 
@@ -2454,14 +2440,141 @@ double ContinuityKnCh(int elefld) {
     // potential not being used to evaluate Neumann continuity
     (void)VolumeKnChPF((VolumeKnChArr + vol - 1)->NbVertices,
                      ((VolumeKnChArr + vol - 1)->Vertex), fieldPt, &globalF);
-    localF =
-        RotateVector3D(&globalF, &(EleArr + elefld - 1)->G.DC, global2local);
+    localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= (VolumeKnChArr + vol - 1)->Assigned * localF.Y;
   }  // loop over volumes
 
   value /= MyFACTOR; // factored in
   return (value);
 }  // end of ContinuityKnCh
+
+double ElementArea(int ele) {
+  Element* eleptr = EleArr + ele - 1;
+  double area = 0.;
+  switch (eleptr->GType) {
+    case 2:
+      // Wire
+      area = 2. * MyPI * eleptr->LX * eleptr->LZ;
+      break;
+    case 3: 
+      // Triangle
+      area = 0.5 * eleptr->LX * eleptr->LZ;
+      break;
+    case 4:
+      // Rectangle
+      area = eleptr->LX * eleptr->LZ;
+      break;
+    default:
+      printf("Geometrical type out of range!\n");
+      break;
+  }
+  return area;
+}
+
+Point3D CollocationPoint(int ele) {
+  Point3D pt;
+  Element* eleptr = EleArr + ele - 1;
+  if (eleptr->GType == 2 || eleptr->GType == 4) {
+    // For wires and rectangles, the collocation point is 
+    // identical to the origin.
+    pt.X = eleptr->Origin.X;
+    pt.Y = eleptr->Origin.Y;
+    pt.Z = eleptr->Origin.Z;
+  } else if (eleptr->GType == 3) {
+    // Triangle
+    // Barycenter location in the ECS
+    Point3D vL;
+    vL.X = eleptr->LX / 3.;
+    vL.Y = 0.;
+    vL.Z = eleptr->LZ / 3.;
+    // Rotate into the global frame.
+    const int prim = eleptr->PrimitiveNb;
+    Point3D vG = RotatePoint3D(&vL, &PrimDC[prim], local2global);
+    pt.X = eleptr->Origin.X + vG.X;
+    pt.Y = eleptr->Origin.Y + vG.Y;
+    pt.Z = eleptr->Origin.Z + vG.Z;
+  } else {
+    printf("Geometrical type out of range!\n");
+    pt.X = eleptr->Origin.X;
+    pt.Y = eleptr->Origin.Y;
+    pt.Z = eleptr->Origin.Z;
+  }
+  return pt;
+}
+
+void ElementVertices(int ele, Point3D vertices[4]) {
+
+  Element* eleptr = EleArr + ele - 1;
+  const int prim = eleptr->PrimitiveNb;
+  const double x0 = eleptr->Origin.X;
+  const double y0 = eleptr->Origin.Y;
+  const double z0 = eleptr->Origin.Z;
+  if (eleptr->GType == 2) {
+    // Wire
+    const double dx = PrimDC[prim].ZUnit.X;
+    const double dy = PrimDC[prim].ZUnit.Y;
+    const double dz = PrimDC[prim].ZUnit.Z;
+    const double h = 0.5 * eleptr->LZ;
+    vertices[0].X = x0 - h * dx;
+    vertices[0].Y = y0 - h * dy;
+    vertices[0].Z = z0 - h * dz;
+    vertices[1].X = x0 + h * dx;
+    vertices[1].Y = y0 + h * dy;
+    vertices[1].Z = z0 + h * dz;
+    vertices[2].X = vertices[2].Y = vertices[2].Z = 0.;
+    vertices[3].X = vertices[3].Y = vertices[3].Z = 0.;
+  } else if (eleptr->GType == 3) {
+    // Triangle
+    vertices[0].X = x0;
+    vertices[0].Y = y0;
+    vertices[0].Z = z0;
+    vertices[1].X = x0 + eleptr->LX * PrimDC[prim].XUnit.X;
+    vertices[1].Y = y0 + eleptr->LX * PrimDC[prim].XUnit.Y;
+    vertices[1].Z = z0 + eleptr->LX * PrimDC[prim].XUnit.Z;
+    vertices[2].X = x0 + eleptr->LZ * PrimDC[prim].ZUnit.X;
+    vertices[2].Y = y0 + eleptr->LZ * PrimDC[prim].ZUnit.Y;
+    vertices[2].Z = z0 + eleptr->LZ * PrimDC[prim].ZUnit.Z;
+    vertices[3].X = 0.;
+    vertices[3].Y = 0.;
+    vertices[3].Z = 0.;
+  } else if (eleptr->GType == 4) {
+    // Rectangle
+    // Half-widths
+    const double hx = 0.5 * eleptr->LX;
+    const double hz = 0.5 * eleptr->LZ;
+    Point3D vL;
+    vL.X = -hx;
+    vL.Y = 0.;
+    vL.Z = -hz;
+    Point3D vG = RotatePoint3D(&vL, &PrimDC[prim], local2global);
+    vertices[0].X = x0 + vG.X;
+    vertices[0].Y = y0 + vG.Y;
+    vertices[0].Z = z0 + vG.Z;
+
+    vL.X = hx;
+    vL.Z = -hz;
+    vG = RotatePoint3D(&vL, &PrimDC[prim], local2global);
+    vertices[1].X = x0 + vG.X;
+    vertices[1].Y = y0 + vG.Y;
+    vertices[1].Z = z0 + vG.Z;
+
+    vL.X = hx;
+    vL.Z = hz;
+    vG = RotatePoint3D(&vL, &PrimDC[prim], local2global);
+    vertices[2].X = x0 + vG.X;
+    vertices[2].Y = y0 + vG.Y;
+    vertices[2].Z = z0 + vG.Z;
+
+    vL.X = -hx;
+    vL.Z = hz;
+    vG = RotatePoint3D(&vL, &PrimDC[prim], local2global);
+    vertices[3].X = x0 + vG.X;
+    vertices[3].Y = y0 + vG.Y;
+    vertices[3].Z = z0 + vG.Z;
+  } else {
+    printf("Geometrical type out of range!\n");
+  }
+}
 
 // Effect of charging up on the Dirichlet boundary conditions
 double ValueChUp(int elefld) {
@@ -2474,9 +2587,10 @@ double ValueChUp(int elefld) {
 
   double value = 0.0;
   double assigned = 0.0;
-  double xfld = (EleArr + elefld - 1)->BC.CollPt.X;
-  double yfld = (EleArr + elefld - 1)->BC.CollPt.Y;
-  double zfld = (EleArr + elefld - 1)->BC.CollPt.Z;
+  Point3D collPt = CollocationPoint(elefld);
+  const double xfld = collPt.X;
+  const double yfld = collPt.Y;
+  const double zfld = collPt.Z;
 
   // Retrieve element properties at the field point
   // Location needed for Dirichlet (potential)
@@ -2491,14 +2605,15 @@ double ValueChUp(int elefld) {
     if (fabs(assigned) <= 1.0e-16) continue;
 
     // Retrieve element properties from the structure
-    if ((EleArr + elesrc - 1)->E.Type == 0) {
-      printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-             elesrc, (EleArr + elesrc - 1)->Id,
-             (EleArr + elesrc - 1)->PrimitiveNb);
+    Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
+    const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
+    DirnCosn3D* dcsrc = &PrimDC[primsrc];
+
+    if (InterfaceType[primsrc] == 0) {
+      printf("Wrong EType for element %d (primitive %d)!\n",
+             elesrc, primsrc);
       exit(-1);
     }
-
-    Point3D *pOrigin = &(EleArr + elesrc - 1)->G.Origin;
 
     {  // Rotate point3D from global to local system
       double InitialVector[3]
@@ -2506,16 +2621,15 @@ double ValueChUp(int elefld) {
       double TransformationMatrix[3][3] = {{0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0}};
-      DirnCosn3D *DirCos = &(EleArr + elesrc - 1)->G.DC;
-      TransformationMatrix[0][0] = DirCos->XUnit.X;
-      TransformationMatrix[0][1] = DirCos->XUnit.Y;
-      TransformationMatrix[0][2] = DirCos->XUnit.Z;
-      TransformationMatrix[1][0] = DirCos->YUnit.X;
-      TransformationMatrix[1][1] = DirCos->YUnit.Y;
-      TransformationMatrix[1][2] = DirCos->YUnit.Z;
-      TransformationMatrix[2][0] = DirCos->ZUnit.X;
-      TransformationMatrix[2][1] = DirCos->ZUnit.Y;
-      TransformationMatrix[2][2] = DirCos->ZUnit.Z;
+      TransformationMatrix[0][0] = dcsrc->XUnit.X;
+      TransformationMatrix[0][1] = dcsrc->XUnit.Y;
+      TransformationMatrix[0][2] = dcsrc->XUnit.Z;
+      TransformationMatrix[1][0] = dcsrc->YUnit.X;
+      TransformationMatrix[1][1] = dcsrc->YUnit.Y;
+      TransformationMatrix[1][2] = dcsrc->YUnit.Z;
+      TransformationMatrix[2][0] = dcsrc->ZUnit.X;
+      TransformationMatrix[2][1] = dcsrc->ZUnit.Y;
+      TransformationMatrix[2][2] = dcsrc->ZUnit.Z;
       double FinalVector[3];
 
       for (int i = 0; i < 3; ++i) {
@@ -2530,7 +2644,7 @@ double ValueChUp(int elefld) {
       localP.Z = FinalVector[2];
     }  // Point3D rotated
 
-    switch ((EleArr + elesrc - 1)->G.Type) {
+    switch ((EleArr + elesrc - 1)->GType) {
       case 4:  // rectangular element
         value += assigned * RecPot(elesrc, &localP);
         // return(value/dA);
@@ -2620,9 +2734,12 @@ double ContinuityChUp(int elefld) {
 
   double value = 0.0;
   double assigned = 0.0;
-  double xfld = (EleArr + elefld - 1)->BC.CollPt.X;
-  double yfld = (EleArr + elefld - 1)->BC.CollPt.Y;
-  double zfld = (EleArr + elefld - 1)->BC.CollPt.Z;
+  Point3D collPt = CollocationPoint(elefld);
+  const double xfld = collPt.X;
+  const double yfld = collPt.Y;
+  const double zfld = collPt.Z;
+  const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
+  DirnCosn3D* dcfld = &PrimDC[primfld];
 
   Vector3D localF, globalF;
 
@@ -2635,13 +2752,13 @@ double ContinuityChUp(int elefld) {
     assigned = (EleArr + elesrc - 1)->Assigned;
     if (fabs(assigned) <= 1.0e-16) continue;
 
-    Point3D *pOrigin = &(EleArr + elesrc - 1)->G.Origin;
+    Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
+    const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
+    DirnCosn3D* dcsrc = &PrimDC[primsrc];
 
     // Retrieve element properties from the structure
-    if ((EleArr + elesrc - 1)->E.Type == 0) {
-      printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-             elesrc, (EleArr + elesrc - 1)->Id,
-             (EleArr + elesrc - 1)->PrimitiveNb);
+    if (InterfaceType[primsrc] == 0) {
+      printf("Wrong EType for element %d (primitive %d)!\n", elesrc, primsrc);
       exit(-1);
     }
 
@@ -2651,16 +2768,15 @@ double ContinuityChUp(int elefld) {
       double TransformationMatrix[3][3] = {{0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0}};
-      DirnCosn3D *DirCos = &(EleArr + elesrc - 1)->G.DC;
-      TransformationMatrix[0][0] = DirCos->XUnit.X;
-      TransformationMatrix[0][1] = DirCos->XUnit.Y;
-      TransformationMatrix[0][2] = DirCos->XUnit.Z;
-      TransformationMatrix[1][0] = DirCos->YUnit.X;
-      TransformationMatrix[1][1] = DirCos->YUnit.Y;
-      TransformationMatrix[1][2] = DirCos->YUnit.Z;
-      TransformationMatrix[2][0] = DirCos->ZUnit.X;
-      TransformationMatrix[2][1] = DirCos->ZUnit.Y;
-      TransformationMatrix[2][2] = DirCos->ZUnit.Z;
+      TransformationMatrix[0][0] = dcsrc->XUnit.X;
+      TransformationMatrix[0][1] = dcsrc->XUnit.Y;
+      TransformationMatrix[0][2] = dcsrc->XUnit.Z;
+      TransformationMatrix[1][0] = dcsrc->YUnit.X;
+      TransformationMatrix[1][1] = dcsrc->YUnit.Y;
+      TransformationMatrix[1][2] = dcsrc->YUnit.Z;
+      TransformationMatrix[2][0] = dcsrc->ZUnit.X;
+      TransformationMatrix[2][1] = dcsrc->ZUnit.Y;
+      TransformationMatrix[2][2] = dcsrc->ZUnit.Z;
       double FinalVector[3];
 
       for (int i = 0; i < 3; ++i) {
@@ -2680,20 +2796,18 @@ double ContinuityChUp(int elefld) {
     // || (((EleArr+elesrc-1)->E.Type == 5) && (elefld == elesrc))) // DD intfce
     // For self-influence, lmsrc is equal to lmfld which allows the following.
     if ((elefld == elesrc) &&
-        (fabs(localP.X) < (EleArr + elesrc - 1)->G.LX / 2.0) &&
+        (fabs(localP.X) < (EleArr + elesrc - 1)->LX / 2.0) &&
         (fabs(localP.Y) < MINDIST) &&
-        (fabs(localP.Z) < (EleArr + elesrc - 1)->G.LZ / 2.0)) {
-      value += assigned * 1.0 / (2.0 * EPS0 * (EleArr + elesrc - 1)->E.Lambda);
+        (fabs(localP.Z) < (EleArr + elesrc - 1)->LZ / 2.0)) {
+      value += assigned / (2.0 * EPS0 * Lambda[primsrc]);
     } else {
-      // Retrieve element properties from the structure
-      if ((EleArr + elesrc - 1)->E.Type == 0) {
-        printf("Wrong EType for elesrc %d element %d on %dth primitive!\n",
-               elesrc, (EleArr + elesrc - 1)->Id,
-               (EleArr + elesrc - 1)->PrimitiveNb);
+      if (InterfaceType[primsrc] == 0) {
+        printf("Wrong EType for element %d (primitive %d)!\n",
+               elesrc, primsrc);
         exit(-1);
       }
-
-      switch ((EleArr + elesrc - 1)->G.Type) {
+      // Retrieve element properties from the structure
+      switch ((EleArr + elesrc - 1)->GType) {
         case 4:  // rectangular element
           RecFlux(elesrc, &localP, &localF);
           break;
@@ -2710,11 +2824,9 @@ double ContinuityChUp(int elefld) {
       }           // switch over gtsrc ends
 
       // in GCS - mirror points?!
-      globalF =
-          RotateVector3D(&localF, &(EleArr + elesrc - 1)->G.DC, local2global);
+      globalF = RotateVector3D(&localF, dcsrc, local2global);
       // in ECS (local to the field element)
-      localF =
-          RotateVector3D(&globalF, &(EleArr + elefld - 1)->G.DC, global2local);
+      localF = RotateVector3D(&globalF, dcfld, global2local);
 
       value -= assigned * localF.Y;  // +ve gradient of Green's is -ve normal
                                      // force (changed from -= to += on 02/11/11
@@ -2736,8 +2848,7 @@ double ContinuityChUp(int elefld) {
   for (int point = 1; point <= NbPointsKnCh; ++point) {
     // potential not being used to evaluate Neumann continuity
     (void)PointKnChPF((PointKnChArr + point - 1)->P, globalP, &globalF);
-    localF =
-        RotateVector3D(&globalF, &(EleArr + elefld - 1)->G.DC, global2local);
+    localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= (PointKnChArr + point - 1)->Assigned * localF.Y;
   }  // loop over points NbPointsKnCh
 
@@ -2745,8 +2856,7 @@ double ContinuityChUp(int elefld) {
     // potential not being used to evaluate Neumann continuity
     (void)LineKnChPF((LineKnChArr + line - 1)->Start,
                    (LineKnChArr + line - 1)->Stop, globalP, &globalF);
-    localF =
-        RotateVector3D(&globalF, &(EleArr + elefld - 1)->G.DC, global2local);
+    localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= (LineKnChArr + line - 1)->Assigned * localF.Y;
   }  // loop over lines
 
@@ -2754,8 +2864,7 @@ double ContinuityChUp(int elefld) {
     // potential not being used to evaluate Neumann continuity
     (void)AreaKnChPF((AreaKnChArr + area - 1)->NbVertices,
                    ((AreaKnChArr + area - 1)->Vertex), globalP, &globalF);
-    localF =
-        RotateVector3D(&globalF, &(EleArr + elefld - 1)->G.DC, global2local);
+    localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= (AreaKnChArr + area - 1)->Assigned * localF.Y;
   }  // loop over areas
 
@@ -2763,8 +2872,7 @@ double ContinuityChUp(int elefld) {
     // potential not being used to evaluate Neumann continuity
     (void)VolumeKnChPF((VolumeKnChArr + vol - 1)->NbVertices,
                      ((VolumeKnChArr + vol - 1)->Vertex), globalP, &globalF);
-    localF =
-        RotateVector3D(&globalF, &(EleArr + elefld - 1)->G.DC, global2local);
+    localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= (VolumeKnChArr + vol - 1)->Assigned * localF.Y;
   }  // loop over volumes
 
@@ -2785,7 +2893,7 @@ int Solve(void) {
   Solution = dvector(1, NbUnknowns);
   // printf("Solution array allocated\n"); fflush(stdout);
 
-  printf("\ncomputing solution for each element: ");
+  printf("Solve: computing solution for each element: ");
 
   for (int i = 1; i <= NbUnknowns; i++) {
     printf("%6d ...", i);
@@ -2805,22 +2913,18 @@ int Solve(void) {
   }
   fflush(stdout);
 
-  printf("\nsolution over for all elements ...\n");
+  printf("\nSolve: Solution over for all elements.\n");
   fflush(stdout);
 
   if (NbConstraints) {
     if (OptSystemChargeZero) {
+      printf("Solve: System charge zero constraint.\n");
       VSystemChargeZero = Solution[NbSystemChargeZero];
-      printf("\nsolution over for system charge zero constraint ...\n");
-      fflush(stdout);
     }
 
     if (NbFloatingConductors) {
+      printf("Solve: Floating conductor charge zero constraint.\n");
       VFloatCon = Solution[NbFloatCon];
-      printf(
-          "\nsolution over for floating conductor charge zero constraint "
-          "...\n");
-      fflush(stdout);
     }
   }  // if NbConstraints
 
@@ -2830,15 +2934,15 @@ int Solve(void) {
   strcat(SolnFile, "/Soln.out");
   FILE *fSoln = fopen(SolnFile, "w");
   if (fSoln == NULL) {
-    neBEMMessage("Solve - SolnFile");
+    neBEMMessage("Solve: Cannot open Soln.out.\n");
     return -1;
   }
   fprintf(fSoln, "#EleNb\tX\tY\tZ\tSolution\tAssigned\tTotal\n");
   for (int ele = 1; ele <= NbElements; ++ele) {
     (EleArr + ele - 1)->Solution = Solution[ele];
     fprintf(fSoln, "%d\t%lg\t%lg\t%lg\t%.16lg\t%.16lg\t%.16lg\n", ele,
-            (EleArr + ele - 1)->G.Origin.X, (EleArr + ele - 1)->G.Origin.Y,
-            (EleArr + ele - 1)->G.Origin.Z, (EleArr + ele - 1)->Solution,
+            (EleArr + ele - 1)->Origin.X, (EleArr + ele - 1)->Origin.Y,
+            (EleArr + ele - 1)->Origin.Z, (EleArr + ele - 1)->Solution,
             (EleArr + ele - 1)->Assigned,
             ((EleArr + ele - 1)->Solution + (EleArr + ele - 1)->Assigned));
   }
@@ -2862,7 +2966,7 @@ int Solve(void) {
   strcat(PrimSolnFile, "/PrimSoln.out");
   FILE *fPrimSoln = fopen(PrimSolnFile, "w");
   if (fPrimSoln == NULL) {
-    neBEMMessage("Solve - PrimSolnFile");
+    printf("Solve: Cannot open PrimSoln.out.\n");
     return -1;
   }
   fprintf(fPrimSoln,
@@ -2874,10 +2978,10 @@ int Solve(void) {
     AvAsgndChDen[prim] = 0.0;
 
     for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim]; ++ele) {
-      area += (EleArr + ele - 1)->G.dA;
-      AvChDen[prim] += (EleArr + ele - 1)->Solution * (EleArr + ele - 1)->G.dA;
-      AvAsgndChDen[prim] +=
-          (EleArr + ele - 1)->Assigned * (EleArr + ele - 1)->G.dA;
+      double dA = ElementArea(ele);
+      area += dA;
+      AvChDen[prim] += (EleArr + ele - 1)->Solution * dA;
+      AvAsgndChDen[prim] += (EleArr + ele - 1)->Assigned * dA;
     }
 
     AvChDen[prim] /= area;
@@ -2899,13 +3003,12 @@ int Solve(void) {
   // reason (such as a repeat calculation), the influence coefficient matrix is
   // not available, it can be retrieved by carrying out the computation once
   // again, reading it from a formatted or an unformatted file.
-  printf("OptValidateSolution: %d\n", OptValidateSolution);
   if (OptValidateSolution) {
-    printf("Computing solution at the collocation points for comparison.\n");
+    printf("Solve: Computing solution at the collocation points for comparison.\n");
     fflush(stdout);
 
     if (InfluenceMatrixFlag) {
-      printf("Influence matrix in memory ...\n");
+      printf("Solve: Influence matrix in memory.\n");
     }
 
     // Only when InfluenceMatrixFlag is false, the influence coefficient
@@ -2914,24 +3017,24 @@ int Solve(void) {
     if (!InfluenceMatrixFlag) {
       if (TimeStep != 1) {
         // influence matrix to be computed only in the first time step
-        printf("Influence matrix in memory ...\n");
+        printf("Solve: Influence matrix in memory.\n");
       } else {
-        printf("Influence matrix NOT in memory ...\n");
+        printf("Solve: Influence matrix NOT in memory.\n");
 
         if (OptRepeatLHMatrix) {
-          printf("repeating influence coefficient matrix computation ...\n");
+          printf("Solve: Repeating influence coefficient matrix computation...\n");
 
           int fstatus = LHMatrix();
           // assert(fstatus == 0);
           if (fstatus != 0) {
-            neBEMMessage("Solve - LHMatrix in OptRepeatLHMatrix");
+            printf("Solve: LHMatrix failed (in OptRepeatLHMatrix).\n");
             return -1;
           }
         }
 
         if (OptStoreInflMatrix && OptFormattedFile) {
           printf(
-              "reading influence coefficient matrix from formatted file...\n");
+              "Solve: Reading influence coefficient matrix from formatted file...\n");
 
           char InflFile[256];
           strcpy(InflFile, MeshOutDir);
@@ -2939,14 +3042,14 @@ int Solve(void) {
           FILE *fInf = fopen(InflFile, "r");
           // assert(fInf != NULL);
           if (fInf == NULL) {
-            neBEMMessage("Solve - InflFile in OptValidate.");
+            printf("Solve: Cannot open Infl.out (in OptValidate).\n");
             return 1;
           }
 
           int chkNbEqns, chkNbUnknowns;
           fscanf(fInf, "%d %d\n", &chkNbEqns, &chkNbUnknowns);
           if ((chkNbEqns != NbEqns) || (chkNbUnknowns != NbUnknowns)) {
-            neBEMMessage("Solve - matrix dimension do not match!");
+            printf("Solve: Matrix dimensions do not match!\n");
             fclose(fInf);
             return (-1);
           }
@@ -2963,8 +3066,7 @@ int Solve(void) {
         }  // stored influence matrix and formatted file
 
         if (OptStoreInflMatrix && OptUnformattedFile) {
-          neBEMMessage(
-              "Solve - Binary read of Infl matrix not implemented yet.\n");
+          printf("Solve: Binary read of Infl matrix not implemented yet.\n");
           return -1;
 
           RawInf = dmatrix(1, NbEqns, 1, NbUnknowns);
@@ -3010,7 +3112,7 @@ int Solve(void) {
       strcat(Chkfile, "/XChk.out");
       FILE *fChk = fopen(Chkfile, "w");  // assert(fChk != NULL);
       if (fChk == NULL) {
-        neBEMMessage("Solve - ChkFile");
+        printf("Solve: Cannot open XChk.out.\n");
         return -1;
       }
       fprintf(fChk, "#Row\tGivenPot\tError\n");
@@ -3042,8 +3144,8 @@ int Solve(void) {
         fprintf(fChk, "%d\t%lg\t%lg\n", elefld, RHS[elefld], Error[elefld]);
       free_dvector(Error, 1, NbEqns);
 
-      printf("Computed values at the collocation points for comparison.\n");
-      printf("Error maximum on element %d and its magnitude is %lg.\n",
+      printf("Solve: Computed values at the collocation points for comparison.\n");
+      printf("Solve: Error maximum on element %d and its magnitude is %lg.\n",
              ElementOfMaxError, MaxError);
       fflush(stdout);
 
@@ -3060,12 +3162,11 @@ int Solve(void) {
     }  // if(Inf || RawInf)
     else {
       if (OptForceValidation) {
-        neBEMMessage(
-            "Solve - Infl matrix not available, re-computation forced.\n");
+        printf("Solve: Infl matrix not available, re-computation forced.\n");
 
         int fstatus = LHMatrix();
         if (fstatus != 0) {
-          neBEMMessage("Solve - LHMatrix in forced OptRepeatLHMatrix");
+          printf("Solve: LHMatrix failed (in forced OptRepeatLHMatrix)");
           return -1;
         }
 
@@ -3098,8 +3199,8 @@ int Solve(void) {
           }
         }
 
-        printf("Computed values at the collocation points for comparison.\n");
-        printf("Error maximum on element %d and its magnitude is %lg.\n",
+        printf("Solve: Computed values at the collocation points for comparison.\n");
+        printf("Solve: Error maximum on element %d and its magnitude is %lg.\n",
                ElementOfMaxError, MaxError);
         fflush(stdout);
 
@@ -3110,7 +3211,7 @@ int Solve(void) {
 
         free_dmatrix(Inf, 1, NbEqns, 1, NbUnknowns);
       } else {  // this is not an error, though
-        neBEMMessage("Solve - Infl matrix not available, no validation.\n");
+        printf("Solve: Infl matrix not available, no validation.\n");
       }
     }  // else (Inf || RawInf)
   }    // if(OptValidateSolution)
@@ -3154,11 +3255,10 @@ int Solve(void) {
   */
 
   OptEstimateError = 0;  // temporary measure
-  printf("OptEstimateError: %d\n", OptEstimateError);
   if (OptEstimateError) {
     printf(
-        "Properties at non-collocation points on element for estimating "
-        "error.\n");
+        "Solve: Properties at non-collocation points on element for "
+        "estimating error.\n");
     fflush(stdout);
 
     double Err;
@@ -3172,7 +3272,7 @@ int Solve(void) {
     strcat(Errfile, "/Errors.out");
     FILE *fErr = fopen(Errfile, "w");
     if (fErr == NULL) {
-      neBEMMessage("Solve - ErrFile");
+      printf("Solve: Cannot open Errors.out.\n");
       return -1;
     }
     fprintf(fErr,
@@ -3192,7 +3292,7 @@ int Solve(void) {
     // interfaces, C-D interfaces (specified voltage), D-D interfaces
     // (continuity of displacement current implied)
     // OMPCheck - may be parallelized
-    for (int prim = 1; prim <= NbPrimitives; ++prim)
+    for (int prim = 1; prim <= NbPrimitives; ++prim) {
       for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim]; ++ele) {
         double normdisp = 1.0e-8;  // displacement in the normal direction
 
@@ -3207,22 +3307,24 @@ int Solve(void) {
 
         // find relevant points for this element; compute PF and cross-check
         // with BC
-        if ((EleArr + ele - 1)->G.Type == 2) continue;
+        if ((EleArr + ele - 1)->GType == 2) continue;
 
-        if ((EleArr + ele - 1)->G.Type == 3)  // triangle
+        if ((EleArr + ele - 1)->GType == 3)  // triangle
         {  // 3 points need to be considered for estimating error (above fig)
           Point3D globalP;
           double Potential;
           Vector3D globalF, localF;
-          double x0 = (EleArr + ele - 1)->G.Vertex[0].X;
-          double y0 = (EleArr + ele - 1)->G.Vertex[0].Y;
-          double z0 = (EleArr + ele - 1)->G.Vertex[0].Z;
-          double x1 = (EleArr + ele - 1)->G.Vertex[1].X;
-          double y1 = (EleArr + ele - 1)->G.Vertex[1].Y;
-          double z1 = (EleArr + ele - 1)->G.Vertex[1].Z;
-          double x2 = (EleArr + ele - 1)->G.Vertex[2].X;
-          double y2 = (EleArr + ele - 1)->G.Vertex[2].Y;
-          double z2 = (EleArr + ele - 1)->G.Vertex[2].Z;
+          Point3D vertices[4];
+          ElementVertices(ele, vertices);
+          double x0 = vertices[0].X;
+          double y0 = vertices[0].Y;
+          double z0 = vertices[0].Z;
+          double x1 = vertices[1].X;
+          double y1 = vertices[1].Y;
+          double z1 = vertices[1].Z;
+          double x2 = vertices[2].X;
+          double y2 = vertices[2].Y;
+          double z2 = vertices[2].Z;
           double xb = (x0 + x1 + x2) / 3.0;  // b for barycentre
           double yb = (y0 + y1 + y2) / 3.0;  // b for barycentre
           double zb = (z0 + z1 + z2) / 3.0;  // b for barycentre
@@ -3245,41 +3347,39 @@ int Solve(void) {
               zerrMax = zb;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
-            double xplus = xb + (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yplus = yb + (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zplus = zb + (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
+            double xplus = xb + PrimDC[prim].XUnit.X * normdisp;
+            xplus += PrimDC[prim].YUnit.X * normdisp;
+            xplus += PrimDC[prim].ZUnit.X * normdisp;
+            double yplus = yb + PrimDC[prim].XUnit.Y * normdisp;
+            yplus += PrimDC[prim].YUnit.Y * normdisp;
+            yplus += PrimDC[prim].ZUnit.Y * normdisp;
+            double zplus = zb + PrimDC[prim].XUnit.Z * normdisp;
+            zplus += PrimDC[prim].YUnit.Z * normdisp;
+            zplus += PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xplus;
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
-            double xminus = xb - (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yminus = yb - (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zminus = zb - (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+            double xminus = xb - PrimDC[prim].XUnit.X * normdisp;
+            xminus -= PrimDC[prim].YUnit.X * normdisp;
+            xminus -= PrimDC[prim].ZUnit.X * normdisp;
+            double yminus = yb - PrimDC[prim].XUnit.Y * normdisp;
+            yminus -= PrimDC[prim].YUnit.Y * normdisp;
+            yminus -= PrimDC[prim].ZUnit.Y * normdisp;
+            double zminus = zb - PrimDC[prim].XUnit.Z * normdisp;
+            zminus -= PrimDC[prim].YUnit.Z * normdisp;
+            zminus -= PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xminus;
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
@@ -3324,40 +3424,40 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
-            double xplus = xerr + (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yplus = yerr + (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zplus = zerr + (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
+            double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
+            xplus += PrimDC[prim].YUnit.X * normdisp;
+            xplus += PrimDC[prim].ZUnit.X * normdisp;
+            double yplus = yerr + PrimDC[prim].XUnit.Y * normdisp;
+            yplus += PrimDC[prim].YUnit.Y * normdisp;
+            yplus += PrimDC[prim].ZUnit.Y * normdisp;
+            double zplus = zerr + PrimDC[prim].XUnit.Z * normdisp;
+            zplus += PrimDC[prim].YUnit.Z * normdisp;
+            zplus += PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xplus;
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
             localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
+                = RotateVector3D(&globalF, &PrimDC[prim],
                                  global2local);
             double value1 = -localF.Y;
-            double xminus = xerr - (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yminus = yerr - (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zminus = zerr - (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+            double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
+            xminus -= PrimDC[prim].YUnit.X * normdisp;
+            xminus -= PrimDC[prim].ZUnit.X * normdisp;
+            double yminus = yerr - PrimDC[prim].XUnit.Y * normdisp;
+            yminus -= PrimDC[prim].YUnit.Y * normdisp;
+            yminus -= PrimDC[prim].ZUnit.Y * normdisp;
+            double zminus = zerr - PrimDC[prim].XUnit.Z * normdisp;
+            zminus -= PrimDC[prim].YUnit.Z * normdisp;
+            zminus -= PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xminus;
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
             localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
+                = RotateVector3D(&globalF, &PrimDC[prim],
                                  global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
@@ -3400,40 +3500,40 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
-            double xplus = xerr + (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yplus = yerr + (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zplus = zerr + (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+          if (InterfaceType[prim] == 4) {
+            // compute displacement currents in the two dielectrics
+            double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
+            xplus += PrimDC[prim].YUnit.X * normdisp;
+            xplus += PrimDC[prim].ZUnit.X * normdisp;
+            double yplus = yerr + PrimDC[prim].XUnit.Y * normdisp;
+            yplus += PrimDC[prim].YUnit.Y * normdisp;
+            yplus += PrimDC[prim].ZUnit.Y * normdisp;
+            double zplus = zerr + PrimDC[prim].XUnit.Z * normdisp;
+            zplus += PrimDC[prim].YUnit.Z * normdisp;
+            zplus += PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xplus;
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
             localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
+                = RotateVector3D(&globalF, &PrimDC[prim],
                                  global2local);
             double value1 = -localF.Y;
-            double xminus = xerr - (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yminus = yerr - (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zminus = zerr - (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+            double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
+            xminus -= PrimDC[prim].YUnit.X * normdisp;
+            xminus -= PrimDC[prim].ZUnit.X * normdisp;
+            double yminus = yerr - PrimDC[prim].XUnit.Y * normdisp;
+            yminus -= PrimDC[prim].YUnit.Y * normdisp;
+            yminus -= PrimDC[prim].ZUnit.Y * normdisp;
+            double zminus = zerr - PrimDC[prim].XUnit.Z * normdisp;
+            zminus -= PrimDC[prim].YUnit.Z * normdisp;
+            zminus -= PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xminus;
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
             localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
+                = RotateVector3D(&globalF, &PrimDC[prim],
                                  global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
@@ -3476,41 +3576,39 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
-            double xplus = xerr + (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yplus = yerr + (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zplus = zerr + (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
+            double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
+            xplus += PrimDC[prim].YUnit.X * normdisp;
+            xplus += PrimDC[prim].ZUnit.X * normdisp;
+            double yplus = yerr + PrimDC[prim].XUnit.Y * normdisp;
+            yplus += PrimDC[prim].YUnit.Y * normdisp;
+            yplus += PrimDC[prim].ZUnit.Y * normdisp;
+            double zplus = zerr + PrimDC[prim].XUnit.Z * normdisp;
+            zplus += PrimDC[prim].YUnit.Z * normdisp;
+            zplus += PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xplus;
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
-            double xminus = xerr - (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yminus = yerr - (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zminus = zerr - (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+            double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
+            xminus -= PrimDC[prim].YUnit.X * normdisp;
+            xminus -= PrimDC[prim].ZUnit.X * normdisp;
+            double yminus = yerr - PrimDC[prim].XUnit.Y * normdisp;
+            yminus -= PrimDC[prim].YUnit.Y * normdisp;
+            yminus -= PrimDC[prim].ZUnit.Y * normdisp;
+            double zminus = zerr - PrimDC[prim].XUnit.Z * normdisp;
+            zminus -= PrimDC[prim].YUnit.Z * normdisp;
+            zminus -= PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xminus;
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
@@ -3528,24 +3626,26 @@ int Solve(void) {
           }
         }  // if triangle
 
-        if ((EleArr + ele - 1)->G.Type == 4)  // rectangle
-        {  // 4 points need to be considered for estimating error (above fig)
+        if ((EleArr + ele - 1)->GType == 4) {
+          // rectangle
+          // 4 points need to be considered for estimating error (above fig)
           Point3D globalP;
           double Potential;
           Vector3D globalF, localF;
-
-          double x0 = (EleArr + ele - 1)->G.Vertex[0].X;
-          double y0 = (EleArr + ele - 1)->G.Vertex[0].Y;
-          double z0 = (EleArr + ele - 1)->G.Vertex[0].Z;
-          double x1 = (EleArr + ele - 1)->G.Vertex[1].X;
-          double y1 = (EleArr + ele - 1)->G.Vertex[1].Y;
-          double z1 = (EleArr + ele - 1)->G.Vertex[1].Z;
-          double x2 = (EleArr + ele - 1)->G.Vertex[2].X;
-          double y2 = (EleArr + ele - 1)->G.Vertex[2].Y;
-          double z2 = (EleArr + ele - 1)->G.Vertex[2].Z;
-          double x3 = (EleArr + ele - 1)->G.Vertex[3].X;
-          double y3 = (EleArr + ele - 1)->G.Vertex[3].Y;
-          double z3 = (EleArr + ele - 1)->G.Vertex[3].Z;
+          Point3D vertices[4];
+          ElementVertices(ele, vertices);
+          double x0 = vertices[0].X;
+          double y0 = vertices[0].Y;
+          double z0 = vertices[0].Z;
+          double x1 = vertices[1].X;
+          double y1 = vertices[1].Y;
+          double z1 = vertices[1].Z;
+          double x2 = vertices[2].X;
+          double y2 = vertices[2].Y;
+          double z2 = vertices[2].Z;
+          double x3 = vertices[3].X;
+          double y3 = vertices[3].Y;
+          double z3 = vertices[3].Z;
           double xo = 0.25 * (x0 + x1 + x2 + x3);  // o for origin
           double yo = 0.25 * (y0 + y1 + y2 + y3);  // o for origin
           double zo = 0.25 * (z0 + z1 + z2 + z3);  // o for origin
@@ -3570,47 +3670,44 @@ int Solve(void) {
           }
           if (InterfaceType[prim] == 4) {
             // compute displacement currents in the two dielectrics
-            double xplus = xo + (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yplus = yo + (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zplus = zo + (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+            double xplus = xo + PrimDC[prim].XUnit.X * normdisp;
+            xplus += PrimDC[prim].YUnit.X * normdisp;
+            xplus += PrimDC[prim].ZUnit.X * normdisp;
+            double yplus = yo + PrimDC[prim].XUnit.Y * normdisp;
+            yplus += PrimDC[prim].YUnit.Y * normdisp;
+            yplus += PrimDC[prim].ZUnit.Y * normdisp;
+            double zplus = zo + PrimDC[prim].XUnit.Z * normdisp;
+            zplus += PrimDC[prim].YUnit.Z * normdisp;
+            zplus += PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xplus;
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double dispfld1 = Epsilon1[prim] * localF.Y;
-            double xminus = xo - (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yminus = yo - (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zminus = zo - (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+            double xminus = xo - PrimDC[prim].XUnit.X * normdisp;
+            xminus -= PrimDC[prim].YUnit.X * normdisp;
+            xminus -= PrimDC[prim].ZUnit.X * normdisp;
+            double yminus = yo - PrimDC[prim].XUnit.Y * normdisp;
+            yminus -= PrimDC[prim].YUnit.Y * normdisp;
+            yminus -= PrimDC[prim].ZUnit.Y * normdisp;
+            double zminus = zo - PrimDC[prim].XUnit.Z * normdisp;
+            zminus -= PrimDC[prim].YUnit.Z * normdisp;
+            zminus -= PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xminus;
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double dispfld2 = Epsilon2[prim] * localF.Y;
             globalP.X = xo;
             globalP.Y = yo;
             globalP.Z = zo;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double dispfldo = Epsilon1[prim] * localF.Y;
             Err = (dispfld2 - dispfld1) /
                   dispfldo;  // - (&(EleArr+ele-1)->Assigned);
@@ -3661,41 +3758,39 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
-            double xplus = xerr + (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yplus = yerr + (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zplus = zerr + (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
+            double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
+            xplus += PrimDC[prim].YUnit.X * normdisp;
+            xplus += PrimDC[prim].ZUnit.X * normdisp;
+            double yplus = yerr + PrimDC[prim].XUnit.Y * normdisp;
+            yplus += PrimDC[prim].YUnit.Y * normdisp;
+            yplus += PrimDC[prim].ZUnit.Y * normdisp;
+            double zplus = zerr + PrimDC[prim].XUnit.Z * normdisp;
+            zplus += PrimDC[prim].YUnit.Z * normdisp;
+            zplus += PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xplus;
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
-            double xminus = xerr - (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yminus = yerr - (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zminus = zerr - (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+            double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
+            xminus -= PrimDC[prim].YUnit.X * normdisp;
+            xminus -= PrimDC[prim].ZUnit.X * normdisp;
+            double yminus = yerr - PrimDC[prim].XUnit.Y * normdisp;
+            yminus -= PrimDC[prim].YUnit.Y * normdisp;
+            yminus -= PrimDC[prim].ZUnit.Y * normdisp;
+            double zminus = zerr - PrimDC[prim].XUnit.Z * normdisp;
+            zminus -= PrimDC[prim].YUnit.Z * normdisp;
+            zminus -= PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xminus;
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
@@ -3737,41 +3832,39 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
-            double xplus = xerr + (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yplus = yerr + (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zplus = zerr + (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
+            double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
+            xplus += PrimDC[prim].YUnit.X * normdisp;
+            xplus += PrimDC[prim].ZUnit.X * normdisp;
+            double yplus = yerr + PrimDC[prim].XUnit.Y * normdisp;
+            yplus += PrimDC[prim].YUnit.Y * normdisp;
+            yplus += PrimDC[prim].ZUnit.Y * normdisp;
+            double zplus = zerr + PrimDC[prim].XUnit.Z * normdisp;
+            zplus += PrimDC[prim].YUnit.Z * normdisp;
+            zplus += PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xplus;
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
-            double xminus = xerr - (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yminus = yerr - (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zminus = zerr - (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+            double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
+            xminus -= PrimDC[prim].YUnit.X * normdisp;
+            xminus -= PrimDC[prim].ZUnit.X * normdisp;
+            double yminus = yerr - PrimDC[prim].XUnit.Y * normdisp;
+            yminus -= PrimDC[prim].YUnit.Y * normdisp;
+            yminus -= PrimDC[prim].ZUnit.Y * normdisp;
+            double zminus = zerr - PrimDC[prim].XUnit.Z * normdisp;
+            zminus -= PrimDC[prim].YUnit.Z * normdisp;
+            zminus -= PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xminus;
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
@@ -3813,41 +3906,39 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
-            double xplus = xerr + (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yplus = yerr + (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zplus = zerr + (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
+            double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
+            xplus += PrimDC[prim].YUnit.X * normdisp;
+            xplus += PrimDC[prim].ZUnit.X * normdisp;
+            double yplus = yerr + PrimDC[prim].XUnit.Y * normdisp;
+            yplus += PrimDC[prim].YUnit.Y * normdisp;
+            yplus += PrimDC[prim].ZUnit.Y * normdisp;
+            double zplus = zerr + PrimDC[prim].XUnit.Z * normdisp;
+            zplus += PrimDC[prim].YUnit.Z * normdisp;
+            zplus += PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xplus;
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
-            double xminus = xerr - (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yminus = yerr - (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zminus = zerr - (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+            double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
+            xminus -= PrimDC[prim].YUnit.X * normdisp;
+            xminus -= PrimDC[prim].ZUnit.X * normdisp;
+            double yminus = yerr - PrimDC[prim].XUnit.Y * normdisp;
+            yminus -= PrimDC[prim].YUnit.Y * normdisp;
+            yminus -= PrimDC[prim].ZUnit.Y * normdisp;
+            double zminus = zerr - PrimDC[prim].XUnit.Z * normdisp;
+            zminus -= PrimDC[prim].YUnit.Z * normdisp;
+            zminus -= PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xminus;
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
@@ -3889,41 +3980,39 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] ==
-              4) {  // compute displacement currents in the two dielectrics
-            double xplus = xerr + (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xplus += (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yplus = yerr + (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yplus += (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zplus = zerr + (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zplus += (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+          if (InterfaceType[prim] == 4) {  
+            // compute displacement currents in the two dielectrics
+            double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
+            xplus += PrimDC[prim].YUnit.X * normdisp;
+            xplus += PrimDC[prim].ZUnit.X * normdisp;
+            double yplus = yerr + PrimDC[prim].XUnit.Y * normdisp;
+            yplus += PrimDC[prim].YUnit.Y * normdisp;
+            yplus += PrimDC[prim].ZUnit.Y * normdisp;
+            double zplus = zerr + PrimDC[prim].XUnit.Z * normdisp;
+            zplus += PrimDC[prim].YUnit.Z * normdisp;
+            zplus += PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xplus;
             globalP.Y = yplus;
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
-            double xminus = xerr - (EleArr + ele - 1)->G.DC.XUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.YUnit.X * normdisp;
-            xminus -= (EleArr + ele - 1)->G.DC.ZUnit.X * normdisp;
-            double yminus = yerr - (EleArr + ele - 1)->G.DC.XUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.YUnit.Y * normdisp;
-            yminus -= (EleArr + ele - 1)->G.DC.ZUnit.Y * normdisp;
-            double zminus = zerr - (EleArr + ele - 1)->G.DC.XUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.YUnit.Z * normdisp;
-            zminus -= (EleArr + ele - 1)->G.DC.ZUnit.Z * normdisp;
+            double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
+            xminus -= PrimDC[prim].YUnit.X * normdisp;
+            xminus -= PrimDC[prim].ZUnit.X * normdisp;
+            double yminus = yerr - PrimDC[prim].XUnit.Y * normdisp;
+            yminus -= PrimDC[prim].YUnit.Y * normdisp;
+            yminus -= PrimDC[prim].ZUnit.Y * normdisp;
+            double zminus = zerr - PrimDC[prim].XUnit.Z * normdisp;
+            zminus -= PrimDC[prim].YUnit.Z * normdisp;
+            zminus -= PrimDC[prim].ZUnit.Z * normdisp;
             globalP.X = xminus;
             globalP.Y = yminus;
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
-            localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &(EleArr + ele - 1)->G.DC,
-                                 global2local);
+            // Flux in the ECS
+            localF = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
@@ -3943,7 +4032,7 @@ int Solve(void) {
 
         if (DebugLevel == 1001) exit(1);
       }  // loop over primitives and elements
-
+    }
     fprintf(fErr,
             "#Error maximum on element %d  on primitive %d with x,y,z %lg, "
             "%lg, %lg and its magnitude is %lg.\n",
@@ -3964,7 +4053,7 @@ int ReadSolution(void) {
   FILE *fSoln = fopen(SolnFile, "r");
   // assert(fSoln != NULL);
   if (fSoln == NULL) {
-    neBEMMessage("ReadSolution - unable to open solution file.");
+    printf("ReadSolution: Unable to open solution file.\n");
     return -1;
   }
 
@@ -4020,7 +4109,7 @@ int ReadSolution(void) {
   strcat(PrimSolnFile, "/PrimSoln.out");
   FILE *fPrimSoln = fopen(PrimSolnFile, "r");
   if (fPrimSoln == NULL) {
-    neBEMMessage("ReadSolution - unable to open primitive solution file.");
+    printf("ReadSolution: Unable to open primitive solution file.\n");
     return -1;
   }
   fgets(instr, 256, fPrimSoln);
@@ -4200,7 +4289,7 @@ Point3D ReflectOnMirror(char Axis, int elesrc, Point3D srcpt, Point3D fldpt,
                         double distance, DirnCosn3D *MirroredDC) {
   Vector3D n;     // define mirror by a bi-vector perpendicular to it
   Point3D Image;  // reflected point by mirror assumed at origin
-
+  const int primsrc = (EleArr + elesrc- 1)->PrimitiveNb;
   switch (Axis) {
     case 'x':
     case 'X':
@@ -4211,15 +4300,15 @@ Point3D ReflectOnMirror(char Axis, int elesrc, Point3D srcpt, Point3D fldpt,
       Image = ReflectPoint3DByMirrorAtOrigin(&srcpt, &n);
       Image.X += 2.0 * distance;
 
-      MirroredDC->XUnit.X = -(EleArr + elesrc - 1)->G.DC.XUnit.X;
-      MirroredDC->XUnit.Y = (EleArr + elesrc - 1)->G.DC.XUnit.Y;
-      MirroredDC->XUnit.Z = (EleArr + elesrc - 1)->G.DC.XUnit.Z;
-      MirroredDC->YUnit.X = -(EleArr + elesrc - 1)->G.DC.YUnit.X;
-      MirroredDC->YUnit.Y = (EleArr + elesrc - 1)->G.DC.YUnit.Y;
-      MirroredDC->YUnit.Z = (EleArr + elesrc - 1)->G.DC.YUnit.Z;
-      MirroredDC->ZUnit.X = -(EleArr + elesrc - 1)->G.DC.ZUnit.X;
-      MirroredDC->ZUnit.Y = (EleArr + elesrc - 1)->G.DC.ZUnit.Y;
-      MirroredDC->ZUnit.Z = (EleArr + elesrc - 1)->G.DC.ZUnit.Z;
+      MirroredDC->XUnit.X = -PrimDC[primsrc].XUnit.X;
+      MirroredDC->XUnit.Y = PrimDC[primsrc].XUnit.Y;
+      MirroredDC->XUnit.Z = PrimDC[primsrc].XUnit.Z;
+      MirroredDC->YUnit.X = -PrimDC[primsrc].YUnit.X;
+      MirroredDC->YUnit.Y = PrimDC[primsrc].YUnit.Y;
+      MirroredDC->YUnit.Z = PrimDC[primsrc].YUnit.Z;
+      MirroredDC->ZUnit.X = -PrimDC[primsrc].ZUnit.X;
+      MirroredDC->ZUnit.Y = PrimDC[primsrc].ZUnit.Y;
+      MirroredDC->ZUnit.Z = PrimDC[primsrc].ZUnit.Z;
       break;
 
     case 'y':
@@ -4231,15 +4320,15 @@ Point3D ReflectOnMirror(char Axis, int elesrc, Point3D srcpt, Point3D fldpt,
       Image = ReflectPoint3DByMirrorAtOrigin(&srcpt, &n);
       Image.Y += 2.0 * distance;
 
-      MirroredDC->XUnit.X = (EleArr + elesrc - 1)->G.DC.XUnit.X;
-      MirroredDC->XUnit.Y = -(EleArr + elesrc - 1)->G.DC.XUnit.Y;
-      MirroredDC->XUnit.Z = (EleArr + elesrc - 1)->G.DC.XUnit.Z;
-      MirroredDC->YUnit.X = (EleArr + elesrc - 1)->G.DC.YUnit.X;
-      MirroredDC->YUnit.Y = -(EleArr + elesrc - 1)->G.DC.YUnit.Y;
-      MirroredDC->YUnit.Z = (EleArr + elesrc - 1)->G.DC.YUnit.Z;
-      MirroredDC->ZUnit.X = (EleArr + elesrc - 1)->G.DC.ZUnit.X;
-      MirroredDC->ZUnit.Y = -(EleArr + elesrc - 1)->G.DC.ZUnit.Y;
-      MirroredDC->ZUnit.Z = (EleArr + elesrc - 1)->G.DC.ZUnit.Z;
+      MirroredDC->XUnit.X = PrimDC[primsrc].XUnit.X;
+      MirroredDC->XUnit.Y = -PrimDC[primsrc].XUnit.Y;
+      MirroredDC->XUnit.Z = PrimDC[primsrc].XUnit.Z;
+      MirroredDC->YUnit.X = PrimDC[primsrc].YUnit.X;
+      MirroredDC->YUnit.Y = -PrimDC[primsrc].YUnit.Y;
+      MirroredDC->YUnit.Z = PrimDC[primsrc].YUnit.Z;
+      MirroredDC->ZUnit.X = PrimDC[primsrc].ZUnit.X;
+      MirroredDC->ZUnit.Y = -PrimDC[primsrc].ZUnit.Y;
+      MirroredDC->ZUnit.Z = PrimDC[primsrc].ZUnit.Z;
       break;
 
     case 'z':
@@ -4251,15 +4340,15 @@ Point3D ReflectOnMirror(char Axis, int elesrc, Point3D srcpt, Point3D fldpt,
       Image = ReflectPoint3DByMirrorAtOrigin(&srcpt, &n);
       Image.Z += 2.0 * distance;
 
-      MirroredDC->XUnit.X = (EleArr + elesrc - 1)->G.DC.XUnit.X;
-      MirroredDC->XUnit.Y = (EleArr + elesrc - 1)->G.DC.XUnit.Y;
-      MirroredDC->XUnit.Z = -(EleArr + elesrc - 1)->G.DC.XUnit.Z;
-      MirroredDC->YUnit.X = (EleArr + elesrc - 1)->G.DC.YUnit.X;
-      MirroredDC->YUnit.Y = (EleArr + elesrc - 1)->G.DC.YUnit.Y;
-      MirroredDC->YUnit.Z = -(EleArr + elesrc - 1)->G.DC.YUnit.Z;
-      MirroredDC->ZUnit.X = (EleArr + elesrc - 1)->G.DC.ZUnit.X;
-      MirroredDC->ZUnit.Y = (EleArr + elesrc - 1)->G.DC.ZUnit.Y;
-      MirroredDC->ZUnit.Z = -(EleArr + elesrc - 1)->G.DC.ZUnit.Z;
+      MirroredDC->XUnit.X = PrimDC[primsrc].XUnit.X;
+      MirroredDC->XUnit.Y = PrimDC[primsrc].XUnit.Y;
+      MirroredDC->XUnit.Z = -PrimDC[primsrc].XUnit.Z;
+      MirroredDC->YUnit.X = PrimDC[primsrc].YUnit.X;
+      MirroredDC->YUnit.Y = PrimDC[primsrc].YUnit.Y;
+      MirroredDC->YUnit.Z = -PrimDC[primsrc].YUnit.Z;
+      MirroredDC->ZUnit.X = PrimDC[primsrc].ZUnit.X;
+      MirroredDC->ZUnit.Y = PrimDC[primsrc].ZUnit.Y;
+      MirroredDC->ZUnit.Z = -PrimDC[primsrc].ZUnit.Z;
       break;
 
     default:

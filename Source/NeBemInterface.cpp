@@ -20,9 +20,6 @@ int neBEMSetDefaults(void) {
   NbPrimitives = 1;
   MaxNbVertices = 4;
 
-  NbSurfs = 1;
-  NbWires = 0;
-
   MinNbElementsOnLength = 1;
   MaxNbElementsOnLength = 100;
   ElementLengthRqstd = 100.0e-6;
