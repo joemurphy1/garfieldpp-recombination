@@ -592,7 +592,7 @@ bool AvalancheMicroscopic::TransportElectrons(
   // loops so will have to be recalculated more than normal. This will affect both CPU and GPU versions.
   int loop_count = 0;
 
-  if ((m_runMode == MPRunMode::GPUExclusive) || (m_runMode == MPRunMode::CPUGPUComparison)) {
+  if (m_runMode == MPRunMode::GPUExclusive) {
 #ifdef USEGPU
     if (!m_gpuInterface) {
       m_gpuInterface = new AvalancheMicroscopicGPU;
@@ -664,68 +664,22 @@ bool AvalancheMicroscopic::TransportElectrons(
         return false;
 
       stack_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
-
 #endif
-    } 
-    else if (m_runMode == MPRunMode::CPUGPUComparison) {
-#ifdef USEGPU
-      // ----------------------------------------------
-      // Run GPU first
-      start = highres_clock_t::now();
-
-      if (m_gpuInterface->processParticleStack(num_curr_particles_gpu, num_new_particles_gpu) == 0) break;
-
-      process_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
-      start = highres_clock_t::now();
-
-      // TODO: TN GPU: Fix arguments (medium, ID, useBandStructure, Flim, Finv all set
-      // to constant values)
-      if (!m_gpuInterface->transportParticleStack(aval, this, 0, false, 0, 0, 0, 0, useBfield, sc,
-            (m_debugShowerLoopNum == loop_count ? m_debugElectronID : -1)))
-        return false;
-
-      stack_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
-
-      // ----------------------------------------------
-      // Now run CPU
-      start = highres_clock_t::now();
-      num_new_particles = newParticles.size();
-
-      // this is all the processing of the particle stack that's needed
-      particles.swap(newParticles);
-
-      if (particles.size() == 0)
-  break;
-
-      num_curr_particles = particles.size();
-
-      // set a high res timer going to record how long each iteration takes
-      process_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
-      start = highres_clock_t::now();
-
-      if (!transportParticleStack(aval, particles, newParticles, signal, useBfield, sc))
-        return false;
-
-      stack_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
-      #endif
-    } 
+    }
 
     loop_count++;    
 
     if (m_showProgress) {
-      if ((m_runMode == MPRunMode::Normal) || (m_runMode == MPRunMode::CPUGPUComparison))
+      if (m_runMode == MPRunMode::Normal)
         std::cout << "    - Current particle stack size (CPU): " << num_curr_particles << std::endl;
-      if ((m_runMode == MPRunMode::GPUExclusive) || (m_runMode == MPRunMode::CPUGPUComparison))
+      if (m_runMode == MPRunMode::GPUExclusive)
         std::cout << "    - Current particle stack size (GPU): " << num_curr_particles_gpu << std::endl;
 
-      if (m_stats.cpu_stack_transport_time.size() > 0)
-      {
+      if (m_stats.cpu_stack_transport_time.size() > 0) {
         std::cout << "CPU Stats: Stk (" << *(m_stats.cpu_stack_process_time.end()-1) << 
                   "),  Tpt (" << *(m_stats.cpu_stack_transport_time.end()-1) << ")" << std::endl;
       }
-
-      if (m_stats.gpu_stack_transport_time.size() > 0)
-      {
+      if (m_stats.gpu_stack_transport_time.size() > 0) {
         std::cout << "GPU Stats: Stk (" << *(m_stats.gpu_stack_process_time.end()-1) << 
                   "),  Tpt (" << *(m_stats.gpu_stack_transport_time.end()-1) << ")" << std::endl;
       }
@@ -753,9 +707,8 @@ bool AvalancheMicroscopic::TransportElectrons(
   }
 
   // Multiprocessor clean up
-  if ((m_runMode == MPRunMode::GPUExclusive) || (m_runMode == MPRunMode::CPUGPUComparison)) {
-#ifdef USEGPU
-
+  if (m_runMode == MPRunMode::GPUExclusive) {
+    #ifdef USEGPU
     // copy over stack if there's any to compare
     if (m_maxNumShowerLoops > -1) {
       m_gpuInterface->TransferStackFromGPUToCPU(m_stackStoreGPU, false);  
@@ -764,12 +717,7 @@ bool AvalancheMicroscopic::TransportElectrons(
 
     // Copy endpoints over
     m_gpuInterface->TransferStackFromGPUToCPU(m_electrons_gpu, true);
-
-#else
-    std::cout << "ERROR: GPU use requested but Garfield has not been built with GPU support" << std::endl;
-    return false;
-#endif
-
+    #endif
   }
 
   // Calculate the induced charge.

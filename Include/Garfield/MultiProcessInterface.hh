@@ -7,8 +7,7 @@ namespace Garfield {
   enum class MPRunMode
   {
     Normal = 0,
-    GPUExclusive,
-    CPUGPUComparison
+    GPUExclusive
   };
 
 }
