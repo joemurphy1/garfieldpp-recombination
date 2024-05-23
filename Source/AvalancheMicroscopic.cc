@@ -136,7 +136,6 @@ void PrintStatus(const std::string& hdr, const std::string& status,
             << "\n";
 }
 
-
 }  // namespace
 
 namespace Garfield {
@@ -618,20 +617,22 @@ bool AvalancheMicroscopic::TransportElectrons(
   unsigned int num_curr_particles_gpu{0};
 
   while ((m_maxNumShowerLoops == -1) || (loop_count < m_maxNumShowerLoops)) {
-    if (m_showProgress){
+    if (m_showProgress) {
       std::cout << "--------------------------------------------------------------" << std::endl;
       std::cout << "Starting Shower iteration:         " << loop_count << std::endl;
     }
 
     // --------------------------------------------
     // Process and transport the particle stack depending on GPU config
-    if (m_runMode == MPRunMode::Normal)
-    {
+    if (m_runMode == MPRunMode::Normal) {
       start = highres_clock_t::now();
       num_new_particles = newParticles.size();
 
       // this is all the processing of the particle stack that's needed
-      if (loop_count) particles.swap(newParticles);
+      if (loop_count) {
+        if (!aval) break;
+        particles.swap(newParticles);
+      }
 
       if (particles.size() == 0)
         break;
@@ -646,13 +647,11 @@ bool AvalancheMicroscopic::TransportElectrons(
 
       stack_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
     } 
-    else if (m_runMode == MPRunMode::GPUExclusive)
-    {
+    else if (m_runMode == MPRunMode::GPUExclusive) {
 #ifdef USEGPU
       start = highres_clock_t::now();
 
-      if (m_gpuInterface->processParticleStack(num_curr_particles_gpu, num_new_particles_gpu) == 0)
-      {
+      if (m_gpuInterface->processParticleStack(num_curr_particles_gpu, num_new_particles_gpu) == 0) {
         break;
       }
 
@@ -668,8 +667,7 @@ bool AvalancheMicroscopic::TransportElectrons(
 
 #endif
     } 
-    else if (m_runMode == MPRunMode::CPUGPUComparison)
-    {
+    else if (m_runMode == MPRunMode::CPUGPUComparison) {
 #ifdef USEGPU
       // ----------------------------------------------
       // Run GPU first
@@ -735,25 +733,20 @@ bool AvalancheMicroscopic::TransportElectrons(
     }
 
     // add to stats
-    if (m_runMode == MPRunMode::GPUExclusive)
-    {
+    if (m_runMode == MPRunMode::GPUExclusive) {
       m_stats.stack_old_size.push_back(num_curr_particles_gpu);
       m_stats.stack_new_size.push_back(num_new_particles_gpu);
-    }
-    else
-    {
+    } else {
       m_stats.stack_old_size.push_back(num_curr_particles);
       m_stats.stack_new_size.push_back(num_new_particles_gpu);
     }
     
-    if (stack_time_cpu > 0)
-    {
+    if (stack_time_cpu > 0) {
       m_stats.cpu_stack_transport_time.push_back(stack_time_cpu);
       m_stats.cpu_stack_process_time.push_back(process_time_cpu);
     }
 
-    if (stack_time_gpu > 0)
-    {      
+    if (stack_time_gpu > 0) {
       m_stats.gpu_stack_transport_time.push_back(stack_time_gpu);
       m_stats.gpu_stack_process_time.push_back(process_time_gpu);
     }
@@ -862,9 +855,6 @@ bool AvalancheMicroscopic::transportParticleStack(
       }
     }
   }
-  // TODO TN GPU: Garfield++ now has a break here (the line below) 
-  // but I'm not sure yet where exactly it should go in our version
-  // if (!aval) break;
   return true;
 }
 
