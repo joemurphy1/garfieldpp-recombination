@@ -200,18 +200,12 @@ class MediumMagboltz : public MediumGas {
   void PlotElectronCollisionRates();
 
   static int GetGasNumberMagboltz(const std::string& input);
-
   double CreateGPUTransferObject(MediumGPU *&med_gpu) override;
-
  private:
-  static constexpr int nEnergyStepsGamma = 5000;
   #endif
   static constexpr int nEnergyStepsLog = 1000;
-
+  static constexpr int nEnergyStepsGamma = 5000;
   static constexpr int nCsTypes = 7;
-
-  /// Max. electron energy in the collision rate tables.
-  double m_eMax;
 
   #ifndef __GPUCOMPILE__
   static constexpr int nCsTypesGamma = 4;
@@ -227,12 +221,10 @@ class MediumMagboltz : public MediumGas {
   bool m_useGasMotion = false;
   /// Automatic calculation of the energy limit by Magboltz or not.
   bool m_autoEnergyLimit = true;
-  bool m_useAutoAdjust = true;
-
-  /// Flag enabling/disabling output of cross-section table to file
-  bool m_useCsOutput = false;
   #endif
 
+/// Max. electron energy in the collision rate tables.
+  double m_eMax;
   /// Energy spacing in the linear part of the collision rate tables.
   double m_eStep;
   /// Inverse energy spacing.
@@ -240,70 +232,27 @@ class MediumMagboltz : public MediumGas {
   double m_eHigh, m_eHighLog;
   double m_lnStep;
 
+/// Flag enabling/disabling output of cross-section table to file
+  bool m_useCsOutput = false;
   /// Number of different cross-section types in the current gas mixture
   unsigned int m_nTerms = 0;
-
-  /// Sample secondary electron energies using Opal-Beaty parameterisation
-  bool m_useOpalBeaty = true;
-
-
-  #ifdef __GPUCOMPILE__
-  double m_wOpalBeaty[Magboltz::nMaxLevels];
-  double m_yFluorescence[Magboltz::nMaxLevels];
-
-  /// Energy imparted to Auger electrons                                                                                                                                                                                                                               
-  double m_eAuger1[Magboltz::nMaxLevels];
-  double m_eAuger2[Magboltz::nMaxLevels];
-  unsigned int m_nAuger1[Magboltz::nMaxLevels];
-  unsigned int m_nAuger2[Magboltz::nMaxLevels];
-
-  unsigned int  m_nFluorescence[Magboltz::nMaxLevels];
-  double m_eFluorescence[Magboltz::nMaxLevels];
-  double m_rgas[m_nMaxGases];
-  double m_s2[m_nMaxGases];
-
-  #else
-  /// Opal-Beaty-Peterson splitting parameter [eV]
-  std::array<double, Magboltz::nMaxLevels> m_wOpalBeaty;
-  /// Fluorescence yield
-  std::array<double, Magboltz::nMaxLevels> m_yFluorescence;
-
-  /// Energy imparted to Auger electrons
-  std::array<double, Magboltz::nMaxLevels> m_eAuger1;
-  std::array<double, Magboltz::nMaxLevels> m_eAuger2;
-
-  /// Number of Auger electrons produced in a collision
-  std::array<unsigned int, Magboltz::nMaxLevels> m_nAuger1;
-  std::array<unsigned int, Magboltz::nMaxLevels> m_nAuger2;
-
-  std::array<unsigned int, Magboltz::nMaxLevels> m_nFluorescence;
-  std::array<double, Magboltz::nMaxLevels> m_eFluorescence;
-
+  #ifndef __GPUCOMPILE__
   /// Recoil energy parameter
   std::array<double, m_nMaxGases> m_rgas;
   std::array<double, m_nMaxGases> m_s2;
-  #endif
-
-
-  #ifndef __GPUCOMPILE__
-
+   /// Opal-Beaty-Peterson splitting parameter [eV]
+  std::array<double, Magboltz::nMaxLevels> m_wOpalBeaty;
   /// Green-Sawada splitting parameters [eV]
   /// (&Gamma;s, &Gamma;b, Ts, Ta, Tb).
   std::array<std::array<double, 5>, m_nMaxGases> m_parGreenSawada;
   std::array<bool, m_nMaxGases> m_hasGreenSawada;
+  #endif
+  /// Sample secondary electron energies using Opal-Beaty parameterisation
+  bool m_useOpalBeaty = true;
   /// Sample secondary electron energies using Green-Sawada parameterisation
   bool m_useGreenSawada = false;
-  /// Level description
-  std::vector<std::string> m_description;
-
-#endif
-
-  /// Null-collision frequency
-  double m_cfNull = 0.;
-  bool m_useAnisotropic = true;
 
 #ifdef __GPUCOMPILE__
-
   int m_csType[Magboltz::nMaxLevels];
   double m_energyLoss[Magboltz::nMaxLevels];
 
@@ -336,12 +285,22 @@ class MediumMagboltz : public MediumGas {
   double** m_cfLog{nullptr};
   int* m_numcfLogIdx{nullptr};
   int m_numcfLog{0};
-  
 #else
   /// Energy loss
   std::array<double, Magboltz::nMaxLevels> m_energyLoss;
   /// Cross-section type
   std::array<int, Magboltz::nMaxLevels> m_csType;
+
+  /// Fluorescence yield
+  std::array<double, Magboltz::nMaxLevels> m_yFluorescence;
+  /// Number of Auger electrons produced in a collision
+  std::array<unsigned int, Magboltz::nMaxLevels> m_nAuger1;
+  std::array<unsigned int, Magboltz::nMaxLevels> m_nAuger2;
+  /// Energy imparted to Auger electrons
+  std::array<double, Magboltz::nMaxLevels> m_eAuger1;
+  std::array<double, Magboltz::nMaxLevels> m_eAuger2;
+  std::array<unsigned int, Magboltz::nMaxLevels> m_nFluorescence;
+  std::array<double, Magboltz::nMaxLevels> m_eFluorescence;
 
   // Parameters for calculation of scattering angles
   std::vector<std::vector<double> > m_scatPar;
@@ -350,12 +309,34 @@ class MediumMagboltz : public MediumGas {
   std::vector<std::vector<double> > m_scatCutLog;
   std::array<int, Magboltz::nMaxLevels> m_scatModel;
 
+  /// Level description
+  std::vector<std::string> m_description;
+
   // Total collision frequency
   std::vector<double> m_cfTot;
   std::vector<double> m_cfTotLog;
   // Collision frequencies
   std::vector<std::vector<double> > m_cf;
   std::vector<std::vector<double> > m_cfLog;
+
+#endif
+ bool m_useAnisotropic = true;
+  /// Null-collision frequency
+  double m_cfNull = 0.;
+#ifdef __GPUCOMPILE__
+  double m_wOpalBeaty[Magboltz::nMaxLevels];
+  double m_yFluorescence[Magboltz::nMaxLevels];
+
+  unsigned int m_nAuger1[Magboltz::nMaxLevels];
+  unsigned int m_nAuger2[Magboltz::nMaxLevels];
+  /// Energy imparted to Auger electrons
+  double m_eAuger1[Magboltz::nMaxLevels];
+  double m_eAuger2[Magboltz::nMaxLevels];
+
+  unsigned int  m_nFluorescence[Magboltz::nMaxLevels];
+  double m_eFluorescence[Magboltz::nMaxLevels];
+  double m_rgas[m_nMaxGases];
+  double m_s2[m_nMaxGases];
 #endif
 
 #ifndef __GPUCOMPILE__
@@ -482,5 +463,4 @@ class MediumMagboltz : public MediumGas {
 };
 }
 #endif
-
 #endif
