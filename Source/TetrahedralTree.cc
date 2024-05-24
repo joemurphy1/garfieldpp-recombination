@@ -162,12 +162,7 @@ __GPULABEL__ const __TETRAHEDRALTREECLASS__* __TETRAHEDRALTREECLASS__::GetBlockF
     const __VEC3CLASS__& point) const
 {
   // If we're at a leaf node, it means, the point is inside this block
-  #ifdef __GPUCOMPILE__
-  if (!children[0])
-        return this;
-  #else
   if (IsLeafNode()) return this;
-  #endif
   // We are at the interior node, so check which child octant contains the
   // point
   int octant = GetOctantContainingPoint(point);
