@@ -7,6 +7,9 @@
 #include "MagboltzInterface.hh"
 #include "MediumGas.hh"
 
+#include <TPad.h>
+#include <TCanvas.h>
+
 namespace Garfield {
 
 /// Interface to %Magboltz (version 11).
@@ -26,6 +29,14 @@ class MediumMagboltz : public MediumGas {
   /// Destructor
   virtual ~MediumMagboltz() {}
 
+  /// Set the canvas to be painted on.
+  void SetCanvas(TPad* pad) { m_pad = pad; }
+  /// Unset an external canvas.
+  void SetCanvas() { m_pad = nullptr; }
+  /// Retrieve the canvas.
+  TPad* GetCanvas();
+
+  
   /// Set the highest electron energy to be included
   /// in the table of scattering rates.
   bool SetMaxElectronEnergy(const double e);
@@ -179,8 +190,10 @@ class MediumMagboltz : public MediumGas {
 
   void PlotElectronCrossSections();
   void PlotElectronCollisionRates();
-
+  
   static int GetGasNumberMagboltz(const std::string& input);
+
+  
  private:
   static constexpr int nEnergyStepsLog = 1000;
   static constexpr int nEnergyStepsGamma = 5000;
@@ -191,6 +204,10 @@ class MediumMagboltz : public MediumGas {
   static const int DxcTypeCollIon;
   static const int DxcTypeCollNonIon;
 
+  // Current pad.
+  TPad* m_pad = nullptr;
+  std::unique_ptr<TCanvas> m_canvas;
+  
   /// Mutex.
   std::mutex m_mutex;
 
