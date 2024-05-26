@@ -190,10 +190,8 @@ class MediumMagboltz : public MediumGas {
 
   void PlotElectronCrossSections();
   void PlotElectronCollisionRates();
-  
-  static int GetGasNumberMagboltz(const std::string& input);
 
-  
+  static int GetGasNumberMagboltz(const std::string& input);
  private:
   static constexpr int nEnergyStepsLog = 1000;
   static constexpr int nEnergyStepsGamma = 5000;
