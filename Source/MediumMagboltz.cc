@@ -1872,6 +1872,16 @@ bool MediumMagboltz::Mixer(const bool verbose) {
   return true;
 }
 
+TPad* MediumMagboltz::GetCanvas() {
+  if (!m_pad) {
+    std::string name = ViewBase::FindUnusedCanvasName("c" + m_className);
+    if (!m_canvas) m_canvas.reset(new TCanvas(name.c_str(), ""));
+    m_pad = m_canvas.get();
+  }
+  return m_pad;
+}
+
+  
 void MediumMagboltz::PlotElectronCrossSections() {
 
   if (!Update()) return;
@@ -1916,8 +1926,11 @@ void MediumMagboltz::PlotElectronCrossSections() {
       double csmax = *std::max_element(cs[j].begin(), cs[j].end());
       if (csmax > ymax) ymax = 100. * std::ceil(csmax /100.);
     }
-    const std::string name = ViewBase::FindUnusedCanvasName("cCs");
-    TCanvas* canvas = new TCanvas(name.c_str(), m_gas[i].c_str(), 800, 600);
+
+ 
+    auto canvas = GetCanvas();
+    // const std::string name = ViewBase::FindUnusedCanvasName("cCs");
+    // TCanvas* canvas = new TCanvas(name.c_str(), m_gas[i].c_str(), 800, 600);
     canvas->cd();
     canvas->SetLogx();
     canvas->SetLogy();
@@ -1980,8 +1993,9 @@ void MediumMagboltz::PlotElectronCollisionRates() {
       }
     }
   }
-  const std::string name = ViewBase::FindUnusedCanvasName("cCollisionRates");
-  TCanvas* canvas = new TCanvas(name.c_str(), m_name.c_str(), 800, 600);
+  auto canvas = GetCanvas();
+  // const std::string name = ViewBase::FindUnusedCanvasName("cCollisionRates");
+  // TCanvas* canvas = new TCanvas(name.c_str(), m_name.c_str(), 800, 600);
   canvas->cd();
   canvas->SetLogx();
   canvas->SetLogy();
