@@ -52,7 +52,6 @@ INTFACEGLOBAL int neBEMInitialize(void);
 INTFACEGLOBAL int OptPrintPrimaryDetails, OptPrintVolumeDetails;
 
 INTFACEGLOBAL int OptGnuplot, OptGnuplotPrimitives, OptGnuplotElements;
-INTFACEGLOBAL FILE *fgnuPrim, *fgnuElem, *fgnuMesh;  // gnu plot files
 
 // Geometry from Garfield or some other Pre-processor
 INTFACEGLOBAL int neBEMReadGeometry(void);
@@ -147,6 +146,9 @@ INTFACEGLOBAL int WritePrimitives(void);
 INTFACEGLOBAL int ReadPrimitives(void);
 INTFACEGLOBAL int WriteElements(void);
 INTFACEGLOBAL int ReadElements(void);
+
+// Save primitive and element information for plotting with Gnuplot
+INTFACEGLOBAL void WriteGnuplotOutput();
 
 #ifdef __cplusplus
 }  // namespace

@@ -12,8 +12,6 @@
 #include "neBEM.h"
 #include "neBEMInterface.h"
 
-#define MyPI 3.14159265358979323846
-
 #ifdef __cplusplus
 namespace neBEM {
 #endif
@@ -118,34 +116,35 @@ int WireElements(int prim, int nvertex, double xvert[], double yvert[],
 // Coord2Seg is used for the longer arm (look for OverSmart in
 // DiscretizeTriangle and DiscretizeRectagnle), the aspect ratio problem is
 // expected to be taken care of to a large extent.
-int AnalyzePrimitive(int prim, int *NbSegCoord1, int *NbSegCoord2) {
+int AnalyzePrimitive(int prim, int *NbSegCoord1, int *NbSegCoord2,
+                     FILE *fMeshLog) {
   int fstatus;
 
   switch (NbVertices[prim]) {
     case 2:  // wire
-      fstatus = AnalyzeWire(prim, NbSegCoord1);
+      fstatus = AnalyzeWire(prim, NbSegCoord1, fMeshLog);
       *NbSegCoord2 = 0;
       // assert(fstatus == 0);
       if (fstatus != 0) {
-        neBEMMessage("AnalyzePrimitive - AnalyzeWire");
+        printf("AnalyzePrimitive: AnalyzeWire failed.\n");
         return -1;
       }
       return (2);
       break;
     case 3:  // triangle
-      fstatus = AnalyzeSurface(prim, NbSegCoord1, NbSegCoord2);
+      fstatus = AnalyzeSurface(prim, NbSegCoord1, NbSegCoord2, fMeshLog);
       // assert(fstatus == 0);
       if (fstatus != 0) {
-        neBEMMessage("AnalyzePrimitive - AnalyzeSurface");
+        printf("AnalyzePrimitive: AnalyzeSurface failed.\n");
         return -1;
       }
       return (3);
       break;
     case 4:  // rectangle
-      fstatus = AnalyzeSurface(prim, NbSegCoord1, NbSegCoord2);
+      fstatus = AnalyzeSurface(prim, NbSegCoord1, NbSegCoord2, fMeshLog);
       // assert(fstatus == 0);
       if (fstatus != 0) {
-        neBEMMessage("AnalyzePrimitive - AnalyzeSurface");
+        printf("AnalyzePrimitive: AnalyzeSurface failed.\n");
         return -1;
       }
       return (4);
@@ -155,17 +154,17 @@ int AnalyzePrimitive(int prim, int *NbSegCoord1, int *NbSegCoord2) {
   }
 }  // end of AnalyzePrimitive
 
-int AnalyzeWire(int prim, int *NbSeg) {
+int AnalyzeWire(int prim, int *NbSeg, FILE *fMeshLog) {
   int nb = *NbSeg;
 
-  if (nb < 1)  // absurd! use the trio: target, min, max
-  {
+  if (nb < 1) {
+    // absurd! use the trio: target, min, max
     double lWire = (XVertex[prim][1] - XVertex[prim][0]) *
-                       (XVertex[prim][1] - XVertex[prim][0]) +
+                   (XVertex[prim][1] - XVertex[prim][0]) +
                    (YVertex[prim][1] - YVertex[prim][0]) *
-                       (YVertex[prim][1] - YVertex[prim][0]) +
+                   (YVertex[prim][1] - YVertex[prim][0]) +
                    (ZVertex[prim][1] - ZVertex[prim][0]) *
-                       (ZVertex[prim][1] - ZVertex[prim][0]);
+                   (ZVertex[prim][1] - ZVertex[prim][0]);
     lWire = sqrt(lWire);
 
     nb = (int)(lWire / ElementLengthRqstd);
@@ -206,30 +205,29 @@ int AnalyzeWire(int prim, int *NbSeg) {
             prim, *NbSeg);
   } else {  // number of dicretization specified by user
     double lWire = (XVertex[prim][1] - XVertex[prim][0]) *
-                       (XVertex[prim][1] - XVertex[prim][0]) +
+                   (XVertex[prim][1] - XVertex[prim][0]) +
                    (YVertex[prim][1] - YVertex[prim][0]) *
-                       (YVertex[prim][1] - YVertex[prim][0]) +
+                   (YVertex[prim][1] - YVertex[prim][0]) +
                    (ZVertex[prim][1] - ZVertex[prim][0]) *
-                       (ZVertex[prim][1] - ZVertex[prim][0]);
+                   (ZVertex[prim][1] - ZVertex[prim][0]);
     lWire = sqrt(lWire);
 
     double ellength = lWire / (double)nb;
 
-    if (lWire < MINDIST)  // at least one element is a necessity
-    {
+    if (lWire < MINDIST) {
+      // at least one element is a necessity
       nb = 1;
       fprintf(fMeshLog, "Fatal: Wire element too small on primitive %d!\n",
               prim);
-    }                             // if lWire < MINDIST
-    else if (ellength < MINDIST)  // element length more than twice MINDIST
-    {
+    } else if (ellength < MINDIST) {
+      // element length must be more than twice MINDIST
       nb = (int)(lWire / (2.0 * MINDIST));
       if (nb < 1) {
         nb = 1;
         fprintf(fMeshLog, "Fatal: Wire element too small on primitive %d!\n",
                 prim);
       }
-    }  // if ellength < MINDIST
+    }
 
     *NbSeg = nb;
 
@@ -243,25 +241,26 @@ int AnalyzeWire(int prim, int *NbSeg) {
     return -1;
 }  // AnalyzeWire ends
 
-int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2) {
+int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2,
+                   FILE *fMeshLog) {
   int nb1 = *NbSegCoord1, nb2 = *NbSegCoord2;
 
-  if ((nb1 < 1) || (nb2 < 1))  // absurd! use the trio: target, min, max
-  {
+  if ((nb1 < 1) || (nb2 < 1)) {
+    // absurd! use the trio: target, min, max
     // Triangle primitives have their right angle on vertex 1
     double l1 = (XVertex[prim][0] - XVertex[prim][1]) *
-                    (XVertex[prim][0] - XVertex[prim][1]) +
+                (XVertex[prim][0] - XVertex[prim][1]) +
                 (YVertex[prim][0] - YVertex[prim][1]) *
-                    (YVertex[prim][0] - YVertex[prim][1]) +
+                (YVertex[prim][0] - YVertex[prim][1]) +
                 (ZVertex[prim][0] - ZVertex[prim][1]) *
-                    (ZVertex[prim][0] - ZVertex[prim][1]);
+                (ZVertex[prim][0] - ZVertex[prim][1]);
     l1 = sqrt(l1);
     double l2 = (XVertex[prim][2] - XVertex[prim][1]) *
-                    (XVertex[prim][2] - XVertex[prim][1]) +
+                (XVertex[prim][2] - XVertex[prim][1]) +
                 (YVertex[prim][2] - YVertex[prim][1]) *
-                    (YVertex[prim][2] - YVertex[prim][1]) +
+                (YVertex[prim][2] - YVertex[prim][1]) +
                 (ZVertex[prim][2] - ZVertex[prim][1]) *
-                    (ZVertex[prim][2] - ZVertex[prim][1]);
+                (ZVertex[prim][2] - ZVertex[prim][1]);
     l2 = sqrt(l2);
 
     // We can use the lengths independently and forget about area
@@ -337,18 +336,18 @@ int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2) {
   } else {  // number of discretization specified by the user
     // Triangle primitives have their right angle on the vertex 1
     double l1 = (XVertex[prim][0] - XVertex[prim][1]) *
-                    (XVertex[prim][0] - XVertex[prim][1]) +
+                (XVertex[prim][0] - XVertex[prim][1]) +
                 (YVertex[prim][0] - YVertex[prim][1]) *
-                    (YVertex[prim][0] - YVertex[prim][1]) +
+                (YVertex[prim][0] - YVertex[prim][1]) +
                 (ZVertex[prim][0] - ZVertex[prim][1]) *
-                    (ZVertex[prim][0] - ZVertex[prim][1]);
+                (ZVertex[prim][0] - ZVertex[prim][1]);
     l1 = sqrt(l1);
     double l2 = (XVertex[prim][2] - XVertex[prim][1]) *
-                    (XVertex[prim][2] - XVertex[prim][1]) +
+                (XVertex[prim][2] - XVertex[prim][1]) +
                 (YVertex[prim][2] - YVertex[prim][1]) *
-                    (YVertex[prim][2] - YVertex[prim][1]) +
+                (YVertex[prim][2] - YVertex[prim][1]) +
                 (ZVertex[prim][2] - ZVertex[prim][1]) *
-                    (ZVertex[prim][2] - ZVertex[prim][1]);
+                (ZVertex[prim][2] - ZVertex[prim][1]);
     l2 = sqrt(l2);
 
     if (l1 > l2) {
@@ -366,8 +365,8 @@ int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2) {
     if (l1 < MINDIST) {
       nb1 = 1;
       fprintf(fMeshLog, "Fatal: Side length l1 too small! prim: %d\n", prim);
-    } else if (ellength1 < MINDIST)  // element length more than twice MINDIST
-    {
+    } else if (ellength1 < MINDIST) {
+      // element length must be more than twice MINDIST
       nb1 = (int)(l1 / (2.0 * MINDIST));
       if (nb1 < 1) {
         nb1 = 1;
@@ -379,8 +378,8 @@ int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2) {
     if (l2 < MINDIST) {
       nb2 = 1;
       fprintf(fMeshLog, "Fatal: Side length l2 too small! prim: %d\n", prim);
-    } else if (ellength2 < MINDIST)  // element length more than twice MINDIST
-    {
+    } else if (ellength2 < MINDIST) {
+      // element length must be more than twice MINDIST
       nb2 = (int)(l2 / (2.0 * MINDIST));
       if (nb2 < 1) {
         nb2 = 1;
@@ -408,11 +407,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
                    double zvert[], double radius, int volref1, int volref2,
                    int inttype, double potential, double charge, double lambda,
                    int NbSegs) {
-  int WireParentObj, WireEType;
-  double WireR, WireL;
-  double WireLambda, WireV;
-  double WireElX, WireElY, WireElZ, WireElL;
-  DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
 
   // Check inputs
   if (PrimType[prim] != 2) {
@@ -445,20 +439,19 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   char primstr[10];
   snprintf(primstr, 10, "%d", prim);
 
-  WireParentObj = 1;  // ParentObj not being used now
-
-  WireL = sqrt((xvert[1] - xvert[0]) * (xvert[1] - xvert[0])  // length of wire
-               + (yvert[1] - yvert[0]) * (yvert[1] - yvert[0]) +
-               (zvert[1] - zvert[0]) * (zvert[1] - zvert[0]));
-  WireR = radius;
-  WireElL = WireL / NbSegs;  // length of each wire element
+  // length of wire
+  double WireL = sqrt((xvert[1] - xvert[0]) * (xvert[1] - xvert[0]) + 
+                      (yvert[1] - yvert[0]) * (yvert[1] - yvert[0]) +
+                      (zvert[1] - zvert[0]) * (zvert[1] - zvert[0]));
+  double WireElL = WireL / NbSegs;  // length of each wire element
 
   // Direction cosines along the wire - note difference from surface primitives!
   // The direction along the wire is considered to be the z axis of the LCS
   // So, let us fix that axial vector first
-  PrimDirnCosn.ZUnit.X = (xvert[1] - xvert[0]) / WireL;  // useful
-  PrimDirnCosn.ZUnit.Y = (yvert[1] - yvert[0]) / WireL;
-  PrimDirnCosn.ZUnit.Z = (zvert[1] - zvert[0]) / WireL;  // useful
+  DirnCosn3D pdc;
+  pdc.ZUnit.X = (xvert[1] - xvert[0]) / WireL;
+  pdc.ZUnit.Y = (yvert[1] - yvert[0]) / WireL;
+  pdc.ZUnit.Z = (zvert[1] - zvert[0]) / WireL;
   // Next, let us find out the coefficients of a plane that passes through the
   // wire centroid and is normal to the axis of the wire. This is basically the
   // mid-plane of the cylindrical wire
@@ -466,7 +459,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   // \vec{OR} . \vec{OA} = 0
   // where O is the wire centroid, A is a point on the axis and R is a point on
   // the cylindrical surface of the wire. \vec{OA} can be easily replaced by the
-  // axial vector that is equivalent to the vector PrimDirnCosn.ZUnit
+  // axial vector that is equivalent to the vector pdc.ZUnit
   // The equation of the plane can be shown to be:
   // XCoef * X + YCoef * Y + ZCoef * Z = Const
   // double XCoef, YCoef, ZCoef, Const; - not needed any more
@@ -476,9 +469,9 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   // O = CreatePoint3D(WireX, WireY, WireZ);
   {
     Vector3D XUnit, YUnit, ZUnit;
-    ZUnit.X = PrimDirnCosn.ZUnit.X;
-    ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-    ZUnit.Z = PrimDirnCosn.ZUnit.Z;
+    ZUnit.X = pdc.ZUnit.X;
+    ZUnit.Y = pdc.ZUnit.Y;
+    ZUnit.Z = pdc.ZUnit.Z;
 
     /* old code	- abs instead of fabs??!!
     XCoef = ZUnit.X;
@@ -488,23 +481,20 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     double WireY = 0.5 * (yvert[1] + yvert[0]);
     double WireZ = 0.5 * (zvert[1] + zvert[0]);
     Const = WireX * ZUnit.X + WireY * ZUnit.Y + WireZ * ZUnit.Z;
-    if(abs(XCoef) < 1.0e-12)	// X can be anything!
-            {
-            XUnit.X = 1.0;
-            XUnit.Y = 0.0;
-            XUnit.Z = 0.0;
-            YUnit = Vector3DCrossProduct(ZUnit, XUnit);
-            }
-    else
-            {
-            // For a point on the above surface where both Y and Z are zero
-            O = CreatePoint3D(WireX, WireY, WireZ);
-            R = CreatePoint3D(Const, 0, 0);
-            // Create the vector joining O and R; find X and Y unit vectors
-            OR = CreateDistanceVector3D(O,R);
-            XUnit = UnitVector3D(OR);
-            YUnit = Vector3DCrossProduct(ZUnit, XUnit);
-            }
+    if(abs(XCoef) < 1.0e-12) { // X can be anything!
+      XUnit.X = 1.0;
+      XUnit.Y = 0.0;
+      XUnit.Z = 0.0;
+      YUnit = Vector3DCrossProduct(ZUnit, XUnit);
+    } else { 
+      // For a point on the above surface where both Y and Z are zero
+      O = CreatePoint3D(WireX, WireY, WireZ);
+      R = CreatePoint3D(Const, 0, 0);
+      // Create the vector joining O and R; find X and Y unit vectors
+      OR = CreateDistanceVector3D(O,R);
+      XUnit = UnitVector3D(OR);
+      YUnit = Vector3DCrossProduct(ZUnit, XUnit);
+    }
     old code */
 
     // replaced following Rob's suggestions (used functions instead of direct
@@ -531,35 +521,31 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     YUnit = UnitVector3D(&YUnit);
     // end of replacement
 
-    PrimDirnCosn.XUnit.X = XUnit.X;
-    PrimDirnCosn.XUnit.Y = XUnit.Y;
-    PrimDirnCosn.XUnit.Z = XUnit.Z;
-    PrimDirnCosn.YUnit.X = YUnit.X;
-    PrimDirnCosn.YUnit.Y = YUnit.Y;
-    PrimDirnCosn.YUnit.Z = YUnit.Z;
+    pdc.XUnit.X = XUnit.X;
+    pdc.XUnit.Y = XUnit.Y;
+    pdc.XUnit.Z = XUnit.Z;
+    pdc.YUnit.X = YUnit.X;
+    pdc.YUnit.Y = YUnit.Y;
+    pdc.YUnit.Z = YUnit.Z;
   }  // X and Y direction cosines computed
 
   // primitive direction cosine assignments
-  PrimDC[prim].XUnit.X = PrimDirnCosn.XUnit.X;
-  PrimDC[prim].XUnit.Y = PrimDirnCosn.XUnit.Y;
-  PrimDC[prim].XUnit.Z = PrimDirnCosn.XUnit.Z;
-  PrimDC[prim].YUnit.X = PrimDirnCosn.YUnit.X;
-  PrimDC[prim].YUnit.Y = PrimDirnCosn.YUnit.Y;
-  PrimDC[prim].YUnit.Z = PrimDirnCosn.YUnit.Z;
-  PrimDC[prim].ZUnit.X = PrimDirnCosn.ZUnit.X;
-  PrimDC[prim].ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-  PrimDC[prim].ZUnit.Z = PrimDirnCosn.ZUnit.Z;
+  PrimDC[prim].XUnit.X = pdc.XUnit.X;
+  PrimDC[prim].XUnit.Y = pdc.XUnit.Y;
+  PrimDC[prim].XUnit.Z = pdc.XUnit.Z;
+  PrimDC[prim].YUnit.X = pdc.YUnit.X;
+  PrimDC[prim].YUnit.Y = pdc.YUnit.Y;
+  PrimDC[prim].YUnit.Z = pdc.YUnit.Z;
+  PrimDC[prim].ZUnit.X = pdc.ZUnit.X;
+  PrimDC[prim].ZUnit.Y = pdc.ZUnit.Y;
+  PrimDC[prim].ZUnit.Z = pdc.ZUnit.Z;
 
   // primitive origin: also the barycenter for a wire element
   PrimOriginX[prim] = 0.5 * (xvert[0] + xvert[1]);
   PrimOriginY[prim] = 0.5 * (yvert[0] + yvert[1]);
   PrimOriginZ[prim] = 0.5 * (zvert[0] + zvert[1]);
-  PrimLX[prim] = WireR;  // radius for wire
+  PrimLX[prim] = radius;  // radius for wire
   PrimLZ[prim] = WireL;  // length of wire
-
-  WireEType = inttype;
-  WireV = potential;
-  WireLambda = lambda;
 
   // file output for a primitive
   FILE *fPrim = NULL;
@@ -581,71 +567,14 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
             PrimOriginY[prim], PrimOriginZ[prim]);
     fprintf(fPrim, "Primitive lengths: %lg\t%lg\n", PrimLX[prim], PrimLZ[prim]);
     fprintf(fPrim, "#DirnCosn: \n");
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.XUnit.X,
-            PrimDirnCosn.XUnit.Y, PrimDirnCosn.XUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.YUnit.X,
-            PrimDirnCosn.YUnit.Y, PrimDirnCosn.YUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.ZUnit.X,
-            PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
     fprintf(fPrim, "#volref1: %d, volref2: %d\n", volref1, volref2);
     fprintf(fPrim, "#NbSegs: %d\n", NbSegs);
-    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", WireParentObj, WireEType);
-    fprintf(fPrim, "#WireR: %lg\tWireL: %lg\n", WireR, WireL);
-    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", WireLambda, WireV);
-  }
-
-  // necessary for gnuplot
-  FILE* fgpPrim = NULL;
-  if (OptGnuplot && OptGnuplotPrimitives) {
-    char gpPrim[256];
-    strcpy(gpPrim, MeshOutDir);
-    strcat(gpPrim, "/GViewDir/gpPrim");
-    strcat(gpPrim, primstr);
-    strcat(gpPrim, ".out");
-    fgpPrim = fopen(gpPrim, "w");
-    if (fgpPrim == NULL) {
-      neBEMMessage("DiscretizeWire - OutgpPrim");
-      fclose(fPrim);
-      return -1;
-    }
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[0], yvert[0], zvert[0]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[1], yvert[1], zvert[1]);
-    fclose(fgpPrim);
-
-    if (prim == 1)
-      fprintf(fgnuPrim, " '%s\' w l", gpPrim);
-    else
-      fprintf(fgnuPrim, ", \\\n \'%s\' w l", gpPrim);
-  }
-
-  // file outputs for elements on primitive
-  FILE* fElem = NULL;
-  if (OptElementFiles) {
-    char OutElem[256];
-    strcpy(OutElem, MeshOutDir);
-    strcat(OutElem, "/Elements/ElemOnPrim");
-    strcat(OutElem, primstr);
-    strcat(OutElem, ".out");
-    fElem = fopen(OutElem, "w");
-    if (fElem == NULL) {
-      neBEMMessage("DiscretizeWire - OutElem");
-      return -1;
-    }
-  }
-  // gnuplot friendly file outputs for elements on primitive
-  FILE* fgpElem = NULL;
-  if (OptGnuplot && OptGnuplotElements) {
-    char gpElem[256];
-    strcpy(gpElem, MeshOutDir);
-    strcat(gpElem, "/GViewDir/gpElemOnPrim");
-    strcat(gpElem, primstr);
-    strcat(gpElem, ".out");
-    fgpElem = fopen(gpElem, "w");
-    if (fgpElem == NULL) {
-      neBEMMessage("DiscretizeWire - OutgpElem");
-      if (fElem) fclose(fElem);
-      return -1;
-    }
+    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, inttype);
+    fprintf(fPrim, "#WireR: %lg\tWireL: %lg\n", radius, WireL);
+    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, potential);
   }
 
   double xincr = (xvert[1] - xvert[0]) / (double)NbSegs;
@@ -653,130 +582,41 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   double zincr = (zvert[1] - zvert[0]) / (double)NbSegs;
 
   ElementBgn[prim] = EleCntr + 1;
-  double xv0, yv0, zv0, xv1, yv1, zv1;
   for (int seg = 1; seg <= NbSegs; ++seg) {
-    xv0 = xvert[0] + ((double)seg - 1.0) * xincr;
-    yv0 = yvert[0] + ((double)seg - 1.0) * yincr;
-    zv0 = zvert[0] + ((double)seg - 1.0) * zincr;
-    xv1 = xvert[0] + ((double)seg) * xincr;
-    yv1 = yvert[0] + ((double)seg) * yincr;
-    zv1 = zvert[0] + ((double)seg) * zincr;
-    WireElX = xvert[0] + ((double)seg - 1.0) * xincr + 0.5 * xincr;
-    WireElY = yvert[0] + ((double)seg - 1.0) * yincr + 0.5 * yincr;
-    WireElZ = zvert[0] + ((double)seg - 1.0) * zincr + 0.5 * zincr;
+    double WireElX = xvert[0] + ((double)seg - 1.0) * xincr + 0.5 * xincr;
+    double WireElY = yvert[0] + ((double)seg - 1.0) * yincr + 0.5 * yincr;
+    double WireElZ = zvert[0] + ((double)seg - 1.0) * zincr + 0.5 * zincr;
 
     // Assign element values and write in the file
     // If element counter exceeds the maximum allowed number of elements, warn!
     ++EleCntr;
     if (EleCntr > NbElements) {
       neBEMMessage("DiscretizeWire - EleCntr more than NbElements!");
-      if (fgpElem) fclose(fgpElem);
-      if (fElem) fclose(fElem);
       return -1;
     }
 
-    (EleArr + EleCntr - 1)->DeviceNb =
-        1;  // At present, there is only one device
-    (EleArr + EleCntr - 1)->ComponentNb = WireParentObj;
     (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-    (EleArr + EleCntr - 1)->Id = EleCntr;
-    (EleArr + EleCntr - 1)->G.Type = 2;  // linear (wire) here
-    (EleArr + EleCntr - 1)->G.Origin.X = WireElX;
-    (EleArr + EleCntr - 1)->G.Origin.Y = WireElY;
-    (EleArr + EleCntr - 1)->G.Origin.Z = WireElZ;
-    (EleArr + EleCntr - 1)->G.Vertex[0].X = xv0;
-    (EleArr + EleCntr - 1)->G.Vertex[0].Y = yv0;
-    (EleArr + EleCntr - 1)->G.Vertex[0].Z = zv0;
-    (EleArr + EleCntr - 1)->G.Vertex[1].X = xv1;
-    (EleArr + EleCntr - 1)->G.Vertex[1].Y = yv1;
-    (EleArr + EleCntr - 1)->G.Vertex[1].Z = zv1;
-    (EleArr + EleCntr - 1)->G.LX = WireR;    // radius of the wire element
-    (EleArr + EleCntr - 1)->G.LZ = WireElL;  // wire element length
-    (EleArr + EleCntr - 1)->G.dA = 2.0 * MyPI * (EleArr + EleCntr - 1)->G.LX *
-                                   (EleArr + EleCntr - 1)->G.LZ;
-    (EleArr + EleCntr - 1)->G.DC.XUnit.X = PrimDirnCosn.XUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.XUnit.Y = PrimDirnCosn.XUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.XUnit.Z = PrimDirnCosn.XUnit.Z;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.X = PrimDirnCosn.YUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.Y = PrimDirnCosn.YUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.Z = PrimDirnCosn.YUnit.Z;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.X = PrimDirnCosn.ZUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.Z = PrimDirnCosn.ZUnit.Z;
-    (EleArr + EleCntr - 1)->E.Type = WireEType;
-    (EleArr + EleCntr - 1)->E.Lambda = WireLambda;
+    (EleArr + EleCntr - 1)->GType = 2;  // linear (wire) here
+    (EleArr + EleCntr - 1)->Origin.X = WireElX;
+    (EleArr + EleCntr - 1)->Origin.Y = WireElY;
+    (EleArr + EleCntr - 1)->Origin.Z = WireElZ;
+    (EleArr + EleCntr - 1)->LX = radius;   // radius of the wire element
+    (EleArr + EleCntr - 1)->LZ = WireElL;  // wire element length
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
-    (EleArr + EleCntr - 1)->BC.NbOfBCs = 1;  // assume one BC per element
-    (EleArr + EleCntr - 1)->BC.CollPt.X =
-        (EleArr + EleCntr - 1)->G.Origin.X;  // modify
-    (EleArr + EleCntr - 1)->BC.CollPt.Y =
-        (EleArr + EleCntr - 1)->G.Origin.Y;  // to be on
-    (EleArr + EleCntr - 1)->BC.CollPt.Z =
-        (EleArr + EleCntr - 1)->G.Origin.Z;  // surface?
 
-    // File operations begin
-    // rfw = fwrite(&Ele, sizeof(Element), 1, fpEle);
-    // printf("Return of fwrite is %d\n", rfw);
-
-    if (OptElementFiles) {
-      fprintf(fElem, "##Element Counter: %d\n", EleCntr);
-      fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-      fprintf(fElem, "%d\t%d\t%d\t%d\n", (EleArr + EleCntr - 1)->DeviceNb,
-              (EleArr + EleCntr - 1)->ComponentNb,
-              (EleArr + EleCntr - 1)->PrimitiveNb, (EleArr + EleCntr - 1)->Id);
-      fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
-      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
-              (EleArr + EleCntr - 1)->G.Type,
-              (EleArr + EleCntr - 1)->G.Origin.X,
-              (EleArr + EleCntr - 1)->G.Origin.Y,
-              (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
-              (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
-      fprintf(fElem, "#DirnCosn: \n");
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.XUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.XUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.XUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.YUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.YUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.YUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.ZUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.ZUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.ZUnit.Z);
-      fprintf(fElem, "#EType\tLambda\n");
-      fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
-              (EleArr + EleCntr - 1)->E.Lambda);
-      fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n",
-              (EleArr + EleCntr - 1)->BC.NbOfBCs,
-              (EleArr + EleCntr - 1)->BC.CollPt.X,
-              (EleArr + EleCntr - 1)->BC.CollPt.Y,
-              (EleArr + EleCntr - 1)->BC.CollPt.Z,
-              (EleArr + EleCntr - 1)->BC.Value);
-    }  // if OptElementFiles
-       //
-    // mark centroid
-    if (OptGnuplot && OptGnuplotElements) {
-      fprintf(fgpElem, "%g\t%g\t%g\n", (EleArr + EleCntr - 1)->BC.CollPt.X,
-              (EleArr + EleCntr - 1)->BC.CollPt.Y,
-              (EleArr + EleCntr - 1)->BC.CollPt.Z);
-    }  // if OptElementFiles
-       // File operations end
   }    // seg loop for wire elements
   ElementEnd[prim] = EleCntr;
-  NbElmntsOnPrim[prim] = ElementEnd[prim] - ElementBgn[prim] + 1;
 
   if (OptPrimitiveFiles) {
     fprintf(fPrim, "Element begin: %d, Element end: %d\n", ElementBgn[prim],
             ElementEnd[prim]);
-    fprintf(fPrim, "Number of elements on primitive: %d\n",
-            NbElmntsOnPrim[prim]);
+    const int nbElements = ElementEnd[prim] - ElementBgn[prim] + 1;
+    fprintf(fPrim, "Number of elements on primitive: %d\n", nbElements);
     fclose(fPrim);
   }
 
-  if (OptElementFiles) fclose(fElem);
-  if (OptGnuplot && OptGnuplotElements) fclose(fgpElem);
-
-  return (0);
+  return 0;
 }  // end of DiscretizeWire
 
 // NbSegX is considered to be the number of rectangular + one triangular
@@ -786,10 +626,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                        double zvert[], double xnorm, double ynorm, double znorm,
                        int volref1, int volref2, int inttype, double potential,
                        double charge, double lambda, int NbSegX, int NbSegZ) {
-  int SurfParentObj, SurfEType;
-  double SurfX, SurfY, SurfZ, SurfLX, SurfLZ;
   double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
-  DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
 
   // Check inputs
   if ((NbSegX <= 0) || (NbSegZ <= 0)) {
@@ -812,16 +649,14 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
 
   // Compute all the properties of this surface
   // Boundary types from 1 to 7 have been defined
-  SurfParentObj = 1;
-  SurfEType = inttype;
-  if ((SurfEType <= 0) || (SurfEType >= 8)) {
-    printf("Wrong SurfEType for prim %d\n", prim);
+  if ((inttype <= 0) || (inttype >= 8)) {
+    printf("Wrong interface type for prim %d\n", prim);
     exit(-1);
   }
   // Origin of the local coordinate center is at the right angle corner
-  SurfX = xvert[1];
-  SurfY = yvert[1];
-  SurfZ = zvert[1];
+  double SurfX = xvert[1];
+  double SurfY = yvert[1];
+  double SurfZ = zvert[1];
 
   // Find the proper direction cosines first - little more tricky that in the
   // rectangular case
@@ -829,33 +664,33 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   // We begin with trial 1: one of the possible orientations
   // Intially, the lengths are necessary
   // lengths of the sides - note that right angle corner is [1]-th element
-  SurfLX = sqrt((xvert[0] - xvert[1]) * (xvert[0] - xvert[1]) +
-                (yvert[0] - yvert[1]) * (yvert[0] - yvert[1]) +
-                (zvert[0] - zvert[1]) * (zvert[0] - zvert[1]));
-  SurfLZ = sqrt((xvert[2] - xvert[1]) * (xvert[2] - xvert[1]) +
-                (yvert[2] - yvert[1]) * (yvert[2] - yvert[1]) +
-                (zvert[2] - zvert[1]) * (zvert[2] - zvert[1]));
+  double SurfLX = sqrt((xvert[0] - xvert[1]) * (xvert[0] - xvert[1]) +
+                       (yvert[0] - yvert[1]) * (yvert[0] - yvert[1]) +
+                       (zvert[0] - zvert[1]) * (zvert[0] - zvert[1]));
+  double SurfLZ = sqrt((xvert[2] - xvert[1]) * (xvert[2] - xvert[1]) +
+                       (yvert[2] - yvert[1]) * (yvert[2] - yvert[1]) +
+                       (zvert[2] - zvert[1]) * (zvert[2] - zvert[1]));
   // Direction cosines - note that right angle corner is [1]-th element
-  PrimDirnCosn.XUnit.X = (xvert[0] - xvert[1]) / SurfLX;
-  PrimDirnCosn.XUnit.Y = (yvert[0] - yvert[1]) / SurfLX;
-  PrimDirnCosn.XUnit.Z = (zvert[0] - zvert[1]) / SurfLX;
-  PrimDirnCosn.ZUnit.X = (xvert[2] - xvert[1]) / SurfLZ;
-  PrimDirnCosn.ZUnit.Y = (yvert[2] - yvert[1]) / SurfLZ;
-  PrimDirnCosn.ZUnit.Z = (zvert[2] - zvert[1]) / SurfLZ;
-  PrimDirnCosn.YUnit =
-      Vector3DCrossProduct(&PrimDirnCosn.ZUnit, &PrimDirnCosn.XUnit);
-  if ((fabs(PrimDirnCosn.YUnit.X - xnorm) <= 1.0e-3) &&
-      (fabs(PrimDirnCosn.YUnit.Y - ynorm) <= 1.0e-3) &&
-      (fabs(PrimDirnCosn.YUnit.Z - znorm) <= 1.0e-3))
+  DirnCosn3D pdc;
+  pdc.XUnit.X = (xvert[0] - xvert[1]) / SurfLX;
+  pdc.XUnit.Y = (yvert[0] - yvert[1]) / SurfLX;
+  pdc.XUnit.Z = (zvert[0] - zvert[1]) / SurfLX;
+  pdc.ZUnit.X = (xvert[2] - xvert[1]) / SurfLZ;
+  pdc.ZUnit.Y = (yvert[2] - yvert[1]) / SurfLZ;
+  pdc.ZUnit.Z = (zvert[2] - zvert[1]) / SurfLZ;
+  pdc.YUnit = Vector3DCrossProduct(&pdc.ZUnit, &pdc.XUnit);
+  if ((fabs(pdc.YUnit.X - xnorm) <= 1.0e-3) &&
+      (fabs(pdc.YUnit.Y - ynorm) <= 1.0e-3) &&
+      (fabs(pdc.YUnit.Z - znorm) <= 1.0e-3))
     flagDC = 1;
   if (DebugLevel == 202) {
     printf("First attempt: \n");
-    PrintDirnCosn3D(PrimDirnCosn);
+    PrintDirnCosn3D(pdc);
     printf("\n");
   }
 
-  if (!flagDC)  // if DC search is unsuccessful, try the other orientation
-  {
+  if (!flagDC) {
+    // if DC search is unsuccessful, try the other orientation
     SurfLX = sqrt((xvert[2] - xvert[1]) * (xvert[2] - xvert[1]) +
                   (yvert[2] - yvert[1]) * (yvert[2] - yvert[1]) +
                   (zvert[2] - zvert[1]) * (zvert[2] - zvert[1]));
@@ -863,42 +698,41 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
                   (yvert[0] - yvert[1]) * (yvert[0] - yvert[1]) +
                   (zvert[0] - zvert[1]) * (zvert[0] - zvert[1]));
     // Direction cosines - note that right angle corner is [1]-th element
-    PrimDirnCosn.XUnit.X = (xvert[2] - xvert[1]) / SurfLX;
-    PrimDirnCosn.XUnit.Y = (yvert[2] - yvert[1]) / SurfLX;
-    PrimDirnCosn.XUnit.Z = (zvert[2] - zvert[1]) / SurfLX;
-    PrimDirnCosn.ZUnit.X = (xvert[0] - xvert[1]) / SurfLZ;
-    PrimDirnCosn.ZUnit.Y = (yvert[0] - yvert[1]) / SurfLZ;
-    PrimDirnCosn.ZUnit.Z = (zvert[0] - zvert[1]) / SurfLZ;
-    PrimDirnCosn.YUnit =
-        Vector3DCrossProduct(&PrimDirnCosn.ZUnit, &PrimDirnCosn.XUnit);
-    if ((fabs(PrimDirnCosn.YUnit.X - xnorm) <= 1.0e-3) &&
-        (fabs(PrimDirnCosn.YUnit.Y - ynorm) <= 1.0e-3) &&
-        (fabs(PrimDirnCosn.YUnit.Z - znorm) <= 1.0e-3))
+    pdc.XUnit.X = (xvert[2] - xvert[1]) / SurfLX;
+    pdc.XUnit.Y = (yvert[2] - yvert[1]) / SurfLX;
+    pdc.XUnit.Z = (zvert[2] - zvert[1]) / SurfLX;
+    pdc.ZUnit.X = (xvert[0] - xvert[1]) / SurfLZ;
+    pdc.ZUnit.Y = (yvert[0] - yvert[1]) / SurfLZ;
+    pdc.ZUnit.Z = (zvert[0] - zvert[1]) / SurfLZ;
+    pdc.YUnit = Vector3DCrossProduct(&pdc.ZUnit, &pdc.XUnit);
+    if ((fabs(pdc.YUnit.X - xnorm) <= 1.0e-3) &&
+        (fabs(pdc.YUnit.Y - ynorm) <= 1.0e-3) &&
+        (fabs(pdc.YUnit.Z - znorm) <= 1.0e-3))
       flagDC = 2;
     if (DebugLevel == 202) {
       printf("Second attempt: \n");
-      PrintDirnCosn3D(PrimDirnCosn);
+      PrintDirnCosn3D(pdc);
       printf("\n");
     }
   }
 
-  if (!flagDC)  // No other possibility, DC search failed!!!
-  {
+  if (!flagDC) {
+    // No other possibility, DC search failed!!!
     printf("Triangle DC problem ... returning ...\n");
     // getchar();
     return -1;
   }
 
   // primitive direction cosine assignments
-  PrimDC[prim].XUnit.X = PrimDirnCosn.XUnit.X;
-  PrimDC[prim].XUnit.Y = PrimDirnCosn.XUnit.Y;
-  PrimDC[prim].XUnit.Z = PrimDirnCosn.XUnit.Z;
-  PrimDC[prim].YUnit.X = PrimDirnCosn.YUnit.X;
-  PrimDC[prim].YUnit.Y = PrimDirnCosn.YUnit.Y;
-  PrimDC[prim].YUnit.Z = PrimDirnCosn.YUnit.Z;
-  PrimDC[prim].ZUnit.X = PrimDirnCosn.ZUnit.X;
-  PrimDC[prim].ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-  PrimDC[prim].ZUnit.Z = PrimDirnCosn.ZUnit.Z;
+  PrimDC[prim].XUnit.X = pdc.XUnit.X;
+  PrimDC[prim].XUnit.Y = pdc.XUnit.Y;
+  PrimDC[prim].XUnit.Z = pdc.XUnit.Z;
+  PrimDC[prim].YUnit.X = pdc.YUnit.X;
+  PrimDC[prim].YUnit.Y = pdc.YUnit.Y;
+  PrimDC[prim].YUnit.Z = pdc.YUnit.Z;
+  PrimDC[prim].ZUnit.X = pdc.ZUnit.X;
+  PrimDC[prim].ZUnit.Y = pdc.ZUnit.Y;
+  PrimDC[prim].ZUnit.Z = pdc.ZUnit.Z;
 
   // primitive origin - for a triangle, origin is at the right corner
   PrimOriginX[prim] = SurfX;
@@ -914,9 +748,6 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     Epsilon1[prim] = Epsilon2[prim];
     Epsilon2[prim] = tmpEpsilon1;
   }
-
-  double SurfLambda = lambda;
-  double SurfV = potential;
 
   // file output for a primitive
   FILE* fPrim = NULL;
@@ -941,88 +772,15 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     fprintf(fPrim, "Norm: %lg\t%lg\t%lg\n", xnorm, ynorm, znorm);
     fprintf(fPrim, "#volref1: %d, volref2: %d\n", volref1, volref2);
     fprintf(fPrim, "#NbSegX: %d, NbSegZ: %d (check note!)\n", NbSegX, NbSegZ);
-    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", SurfParentObj, SurfEType);
+    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, inttype);
     fprintf(fPrim, "#SurfX\tSurfY\tSurfZ\tSurfLX\tSurfLZ (Rt. Corner)\n");
     fprintf(fPrim, "%lg\t%lg\t%lg\t%lg\t%lg\n", SurfX, SurfY, SurfZ, SurfLX,
             SurfLZ);
     fprintf(fPrim, "#DirnCosn: \n");
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.XUnit.X,
-            PrimDirnCosn.XUnit.Y, PrimDirnCosn.XUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.YUnit.X,
-            PrimDirnCosn.YUnit.Y, PrimDirnCosn.YUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.ZUnit.X,
-            PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
-    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", SurfLambda, SurfV);
-  }
-
-  // necessary for gnuplot
-  FILE* fgpPrim = NULL;
-  if (OptGnuplot && OptGnuplotPrimitives) {
-    char gpPrim[256];
-    strcpy(gpPrim, MeshOutDir);
-    strcat(gpPrim, "/GViewDir/gpPrim");
-    strcat(gpPrim, primstr);
-    strcat(gpPrim, ".out");
-    fgpPrim = fopen(gpPrim, "w");
-    if (fgpPrim == NULL) {
-      neBEMMessage("DiscretizeTriangle - OutgpPrim");
-      fclose(fPrim);
-      return -1;
-    }
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[0], yvert[0], zvert[0]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[1], yvert[1], zvert[1]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[2], yvert[2], zvert[2]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n", xvert[0], yvert[0], zvert[0]);
-    fclose(fgpPrim);
-
-    if (prim == 1)
-      fprintf(fgnuPrim, " '%s\' w l", gpPrim);
-    else
-      fprintf(fgnuPrim, ", \\\n \'%s\' w l", gpPrim);
-  }
-
-  // file outputs for elements on primitive
-  FILE* fElem = NULL;
-  if (OptElementFiles) {
-    char OutElem[256];
-    strcpy(OutElem, MeshOutDir);
-    strcat(OutElem, "/Elements/ElemOnPrim");
-    strcat(OutElem, primstr);
-    strcat(OutElem, ".out");
-    fElem = fopen(OutElem, "w");
-    if (fElem == NULL) {
-      neBEMMessage("DiscretizeTriangle - OutElem");
-      return -1;
-    }
-  }
-  // gnuplot friendly file outputs for elements on primitive
-  FILE* fgpElem = NULL;
-  FILE* fgpMesh = NULL;
-  char gpElem[256], gpMesh[256]; 
-  if (OptGnuplot && OptGnuplotElements) {
-    strcpy(gpElem, MeshOutDir);
-    strcat(gpElem, "/GViewDir/gpElemOnPrim");
-    strcat(gpElem, primstr);
-    strcat(gpElem, ".out");
-    fgpElem = fopen(gpElem, "w");
-    // assert(fgpElem != NULL);
-    if (fgpElem == NULL) {
-      neBEMMessage("DiscretizeTriangle - OutgpElem");
-      if (fElem) fclose(fElem);
-      return -1;
-    }
-    // gnuplot friendly file outputs for elements on primitive
-    strcpy(gpMesh, MeshOutDir);
-    strcat(gpMesh, "/GViewDir/gpMeshOnPrim");
-    strcat(gpMesh, primstr);
-    strcat(gpMesh, ".out");
-    fgpMesh = fopen(gpMesh, "w");
-    if (fgpMesh == NULL) {
-      neBEMMessage("DiscretizeTriangle - OutgpMesh");
-      fclose(fgpElem);
-      if (fElem) fclose(fElem);
-      return -1;
-    }
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
+    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, potential);
   }
 
   // Compute element positions (CGs) in primitive local coordinate system (PCS).
@@ -1048,22 +806,21 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     if (SurfLX > SurfLZ) {
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
-    } else  // interchange NbSegX and NbSegZ
-    {
+    } else {
+      // interchange NbSegX and NbSegZ
       int tmp = NbSegZ;
       NbSegZ = NbSegX;
       NbSegX = tmp;
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
     }
-  }     // NbSegX > NbSegZ
-  else  // NbSegX < NbSegZ
-  {
+  } else {
+    // NbSegX < NbSegZ
     if (SurfLX < SurfLZ) {
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
-    } else  // interchange NbSegX and NbSegZ
-    {
+    } else {
+      // interchange NbSegX and NbSegZ
       int tmp = NbSegZ;
       NbSegZ = NbSegX;
       NbSegX = tmp;
@@ -1086,15 +843,15 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
             "NbSegX: %d, SurfElLX: %lg, NbSegZ: %d, SurfElLZ: %lg, AR: %lg\n",
             NbSegX, SurfElLX, NbSegZ, SurfElLZ, AR);
   }
-  if (AR > 10.0)  // NbSegZ needs to be reduced
-  {
-    double tmpElLZ = SurfElLX / 10.0;
+  if (AR > 10.0) {
+    // NbSegZ needs to be reduced
+    double tmpElLZ = 0.1 * SurfElLX;
     NbSegZ = (int)(SurfLZ / tmpElLZ);
     if (NbSegZ <= 0) NbSegZ = 1;
     SurfElLZ = SurfLZ / NbSegZ;
   }
-  if (AR < 0.1)  // NbSegX need to be reduced
-  {
+  if (AR < 0.1) {
+    // NbSegX need to be reduced
     double tmpElLX = SurfElLZ * 0.1;
     NbSegX = (int)(SurfLX / tmpElLX);
     if (NbSegX <= 0) NbSegX = 1;
@@ -1117,10 +874,9 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   // been determined above.
   // First we create the triangular element and then move on to create the
   // rectangular ones.
-  double xv0, yv0, zv0, xv1, yv1, zv1, xv2, yv2, zv2;
   ElementBgn[prim] = EleCntr + 1;
-  for (int k = 1; k <= NbSegZ; ++k)  // consider the k-th row
-  {
+  for (int k = 1; k <= NbSegZ; ++k) {
+    // consider the k-th row
     double grad = (SurfLZ / SurfLX);
     double zlopt = (k - 1) * SurfElLZ;
     double zhipt = (k)*SurfElLZ;
@@ -1128,20 +884,17 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     double xhipt = (SurfLZ - zhipt) / grad;
 
     // the triangular element on the k-th row can now be specified in PCS
-    double xtorigin = xhipt;
-    double ytorigin = 0.0;
-    double ztorigin = zlopt;
     {  // Separate block for position rotation - local2global
       Point3D localDisp, globalDisp;
 
-      localDisp.X = xtorigin;
-      localDisp.Y = ytorigin;
-      localDisp.Z = ztorigin;
-      globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-      SurfElX =
-          SurfX + globalDisp.X;  // these are the coords in GCS of origin of
-      SurfElY =
-          SurfY + globalDisp.Y;  // the triangluar element under consideration
+      localDisp.X = xhipt;
+      localDisp.Y = 0.0;
+      localDisp.Z = zlopt;
+      globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
+      // These are the coords in GCS of origin of
+      // the triangular element under consideration:
+      SurfElX = SurfX + globalDisp.X;  
+      SurfElY = SurfY + globalDisp.Y;  
       SurfElZ = SurfZ + globalDisp.Z;
     }  // vector rotation over
 
@@ -1149,187 +902,41 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     ++EleCntr;
     if (EleCntr > NbElements) {
       neBEMMessage("DiscretizeTriangle - EleCntr more than NbElements 1!");
-      if (fgpElem) fclose(fgpElem);
-      if (fgpMesh) fclose(fgpMesh);
       return -1;
     }
 
-    (EleArr + EleCntr - 1)->DeviceNb =
-        1;  // At present, there is only one device
-    (EleArr + EleCntr - 1)->ComponentNb = SurfParentObj;
     (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-    (EleArr + EleCntr - 1)->Id = EleCntr;
-    (EleArr + EleCntr - 1)->G.Type = 3;  // triangular here
-    (EleArr + EleCntr - 1)->G.Origin.X = SurfElX;
-    (EleArr + EleCntr - 1)->G.Origin.Y = SurfElY;
-    (EleArr + EleCntr - 1)->G.Origin.Z = SurfElZ;
-    // (EleArr+EleCntr-1)->G.LX = SurfElLX;	// previously written as xlopt -
-    // xhipt;
-    (EleArr + EleCntr - 1)->G.LX =
-        xlopt - xhipt;  // back to old ways on 21 Feb 2014
-    (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
-    (EleArr + EleCntr - 1)->G.LZ =
-        zhipt - zlopt;  // to be on the safe side, 21/2/14
-    (EleArr + EleCntr - 1)->G.dA =
-        0.5 * (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
-    // Safe to use the direction cosines obtained for the triangular primitive
-    // since they are bound to remain unchanged for the rectangular sub-elements
-    (EleArr + EleCntr - 1)->G.DC.XUnit.X = PrimDirnCosn.XUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.XUnit.Y = PrimDirnCosn.XUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.XUnit.Z = PrimDirnCosn.XUnit.Z;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.X = PrimDirnCosn.YUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.Y = PrimDirnCosn.YUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.YUnit.Z = PrimDirnCosn.YUnit.Z;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.X = PrimDirnCosn.ZUnit.X;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-    (EleArr + EleCntr - 1)->G.DC.ZUnit.Z = PrimDirnCosn.ZUnit.Z;
-    (EleArr + EleCntr - 1)->E.Type = SurfEType;
-    (EleArr + EleCntr - 1)->E.Lambda = SurfLambda;
+    (EleArr + EleCntr - 1)->GType = 3;  // triangular here
+    (EleArr + EleCntr - 1)->Origin.X = SurfElX;
+    (EleArr + EleCntr - 1)->Origin.Y = SurfElY;
+    (EleArr + EleCntr - 1)->Origin.Z = SurfElZ;
+    // (EleArr+EleCntr-1)->LX = SurfElLX;	// previously written as xlopt - xhipt;
+    (EleArr + EleCntr - 1)->LX = xlopt - xhipt;  // back to old ways on 21 Feb 2014
+    (EleArr + EleCntr - 1)->LZ = SurfElLZ;
+    (EleArr + EleCntr - 1)->LZ = zhipt - zlopt;  // to be on the safe side, 21/2/14
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
     // Boundary condition is applied at the barycenter, not at the origin
     // of the element coordinate system (ECS) which is at the right corner
-    (EleArr + EleCntr - 1)->BC.NbOfBCs = 1;  // assume one BC per element
-
-    xv0 = (EleArr + EleCntr - 1)->G.Origin.X;
-    yv0 = (EleArr + EleCntr - 1)->G.Origin.Y;
-    zv0 = (EleArr + EleCntr - 1)->G.Origin.Z;
-    xv1 = (EleArr + EleCntr - 1)->G.Origin.X +
-          (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.DC.XUnit.X;
-    yv1 = (EleArr + EleCntr - 1)->G.Origin.Y +
-          (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.DC.XUnit.Y;
-    zv1 = (EleArr + EleCntr - 1)->G.Origin.Z +
-          (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.DC.XUnit.Z;
-    xv2 = (EleArr + EleCntr - 1)->G.Origin.X +
-          (EleArr + EleCntr - 1)->G.LZ * (EleArr + EleCntr - 1)->G.DC.ZUnit.X;
-    yv2 = (EleArr + EleCntr - 1)->G.Origin.Y +
-          (EleArr + EleCntr - 1)->G.LZ * (EleArr + EleCntr - 1)->G.DC.ZUnit.Y;
-    zv2 = (EleArr + EleCntr - 1)->G.Origin.Z +
-          (EleArr + EleCntr - 1)->G.LZ * (EleArr + EleCntr - 1)->G.DC.ZUnit.Z;
-    // assign vertices of the element
-    (EleArr + EleCntr - 1)->G.Vertex[0].X = xv0;
-    (EleArr + EleCntr - 1)->G.Vertex[0].Y = yv0;
-    (EleArr + EleCntr - 1)->G.Vertex[0].Z = zv0;
-    (EleArr + EleCntr - 1)->G.Vertex[1].X = xv1;
-    (EleArr + EleCntr - 1)->G.Vertex[1].Y = yv1;
-    (EleArr + EleCntr - 1)->G.Vertex[1].Z = zv1;
-    (EleArr + EleCntr - 1)->G.Vertex[2].X = xv2;
-    (EleArr + EleCntr - 1)->G.Vertex[2].Y = yv2;
-    (EleArr + EleCntr - 1)->G.Vertex[2].Z = zv2;
-    (EleArr + EleCntr - 1)->G.Vertex[3].X = 0.0;
-    (EleArr + EleCntr - 1)->G.Vertex[3].Y = 0.0;
-    (EleArr + EleCntr - 1)->G.Vertex[3].Z = 0.0;
 
     if (DebugLevel == 201) {
       printf("Primitive nb: %d\n", (EleArr + EleCntr - 1)->PrimitiveNb);
-      printf("Element id: %d\n", (EleArr + EleCntr - 1)->Id);
+      printf("Element id: %d\n", EleCntr);
       printf("Element X, Y, Z: %lg %lg %lg\n",
-             (EleArr + EleCntr - 1)->G.Origin.X,
-             (EleArr + EleCntr - 1)->G.Origin.Y,
-             (EleArr + EleCntr - 1)->G.Origin.Z);
-      printf("Element LX, LZ: %lg %lg\n", (EleArr + EleCntr - 1)->G.LX,
-             (EleArr + EleCntr - 1)->G.LZ);
+             (EleArr + EleCntr - 1)->Origin.X,
+             (EleArr + EleCntr - 1)->Origin.Y,
+             (EleArr + EleCntr - 1)->Origin.Z);
+      printf("Element LX, LZ: %lg %lg\n", (EleArr + EleCntr - 1)->LX,
+             (EleArr + EleCntr - 1)->LZ);
       printf("Element (primitive) X axis dirn cosines: %lg, %lg, %lg\n",
-             PrimDirnCosn.XUnit.X, PrimDirnCosn.XUnit.Y, PrimDirnCosn.XUnit.Z);
+             pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
       printf("Element (primitive) Y axis dirn cosines: %lg, %lg, %lg\n",
-             PrimDirnCosn.YUnit.X, PrimDirnCosn.YUnit.Y, PrimDirnCosn.YUnit.Z);
+             pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
       printf("Element (primitive) Z axis dirn cosines: %lg, %lg, %lg\n",
-             PrimDirnCosn.ZUnit.X, PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
+             pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
     }
-    // Following are the location in the ECS
-    double dxl = (EleArr + EleCntr - 1)->G.LX / 3.0;
-    double dyl = 0.0;
-    double dzl = (EleArr + EleCntr - 1)->G.LZ / 3.0;
-    {  // Separate block for position rotation - local2global
-      Point3D localDisp, globalDisp;
 
-      localDisp.X = dxl;
-      localDisp.Y = dyl;
-      localDisp.Z = dzl;
-      if (DebugLevel == 201) {
-        printf("Element dxl, dxy, dxz: %lg %lg %lg\n", localDisp.X, localDisp.Y,
-               localDisp.Z);
-      }
-
-      globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-      (EleArr + EleCntr - 1)->BC.CollPt.X =
-          (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-      (EleArr + EleCntr - 1)->BC.CollPt.Y =
-          (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-      (EleArr + EleCntr - 1)->BC.CollPt.Z =
-          (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      if (DebugLevel == 201) {
-        printf("Element global dxl, dxy, dxz: %lg %lg %lg\n", globalDisp.X,
-               globalDisp.Y, globalDisp.Z);
-        printf("Element BCX, BCY, BCZ: %lg %lg %lg\n",
-               (EleArr + EleCntr - 1)->BC.CollPt.X,
-               (EleArr + EleCntr - 1)->BC.CollPt.Y,
-               (EleArr + EleCntr - 1)->BC.CollPt.Z);
-      }
-    }  // vector rotation over
-    // (EleArr+EleCntr-1)->BC.Value = SurfV; // assigned in BoundaryConditions
-
-    if (OptElementFiles) {
-      fprintf(fElem, "##Element Counter: %d\n", EleCntr);
-      fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-      fprintf(fElem, "%d\t%d\t%d\t%d\n", (EleArr + EleCntr - 1)->DeviceNb,
-              (EleArr + EleCntr - 1)->ComponentNb,
-              (EleArr + EleCntr - 1)->PrimitiveNb, (EleArr + EleCntr - 1)->Id);
-      fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
-      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
-              (EleArr + EleCntr - 1)->G.Type,
-              (EleArr + EleCntr - 1)->G.Origin.X,
-              (EleArr + EleCntr - 1)->G.Origin.Y,
-              (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
-              (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
-      fprintf(fElem, "#DirnCosn: \n");
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.XUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.XUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.XUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.YUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.YUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.YUnit.Z);
-      fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.ZUnit.X,
-              (EleArr + EleCntr - 1)->G.DC.ZUnit.Y,
-              (EleArr + EleCntr - 1)->G.DC.ZUnit.Z);
-      fprintf(fElem, "#EType\tLambda\n");
-      fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
-              (EleArr + EleCntr - 1)->E.Lambda);
-      fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-      fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n",
-              (EleArr + EleCntr - 1)->BC.NbOfBCs,
-              (EleArr + EleCntr - 1)->BC.CollPt.X,
-              (EleArr + EleCntr - 1)->BC.CollPt.Y,
-              (EleArr + EleCntr - 1)->BC.CollPt.Z,
-              (EleArr + EleCntr - 1)->BC.Value);
-    }  // if OptElementFiles
-
-    // mark bary-center and draw mesh
-    if (OptGnuplot && OptGnuplotElements) {
-      fprintf(fgpElem, "%g\t%g\t%g\n", (EleArr + EleCntr - 1)->BC.CollPt.X,
-              (EleArr + EleCntr - 1)->BC.CollPt.Y,
-              (EleArr + EleCntr - 1)->BC.CollPt.Z);
-
-      // draw mesh
-      // assign vertices of the element
-      xv0 = (EleArr + EleCntr - 1)->G.Vertex[0].X;
-      yv0 = (EleArr + EleCntr - 1)->G.Vertex[0].Y;
-      zv0 = (EleArr + EleCntr - 1)->G.Vertex[0].Z;
-      xv1 = (EleArr + EleCntr - 1)->G.Vertex[1].X;
-      yv1 = (EleArr + EleCntr - 1)->G.Vertex[1].Y;
-      zv1 = (EleArr + EleCntr - 1)->G.Vertex[1].Z;
-      xv2 = (EleArr + EleCntr - 1)->G.Vertex[2].X;
-      yv2 = (EleArr + EleCntr - 1)->G.Vertex[2].Y;
-      zv2 = (EleArr + EleCntr - 1)->G.Vertex[2].Z;
-
-      fprintf(fgpMesh, "%g\t%g\t%g\n", xv0, yv0, zv0);
-      fprintf(fgpMesh, "%g\t%g\t%g\n", xv1, yv1, zv1);
-      fprintf(fgpMesh, "%g\t%g\t%g\n", xv2, yv2, zv2);
-      fprintf(fgpMesh, "%g\t%g\t%g\n\n", xv0, yv0, zv0);
-    }  // if OptGnuplotElements
-
-    if (k == NbSegZ)  // no rectangular element on this row
-      continue;
+    if (k == NbSegZ) continue; // no rectangular element on this row
 
     // determine NbSegXOnThisRow and ElLXOnThisRow for the rectagnular elements
     // and then loop.
@@ -1343,31 +950,24 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       NbSegXOnThisRow = (int)(RowLX / SurfElLX);
       ElLXOnThisRow = RowLX / NbSegXOnThisRow;
     }
-    double x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3;
     for (int i = 1; i <= NbSegXOnThisRow; ++i) {
-      double xorigin = (i - 1) * ElLXOnThisRow + 0.5 * ElLXOnThisRow;  // PCS
-      double yorigin = 0.0;  // centroid of the rectagnular element
+      // PCS centroid of the rectangular element
+      double xorigin = (i - 1) * ElLXOnThisRow + 0.5 * ElLXOnThisRow;  
+      double yorigin = 0.0;
       double zorigin = 0.5 * (zlopt + zhipt);
       // printf("k: %d, i: %d, xo: %lg, yo: %lg, zo: %lg\n", k, i,
       // xorigin, yorigin, zorigin);
       // printf("xlopt: %lg, zlopt: %lg, xhipt: %lg, zhipt: %lg\n",
       // xlopt, zlopt, xhipt, zhipt);
 
-      {  // Separate block for vector rotation
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = xorigin;
-        localDisp.Y = yorigin;
-        localDisp.Z = zorigin;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-        SurfElX = SurfX + globalDisp.X;  // GCS
-        SurfElY = SurfY + globalDisp.Y;
-        SurfElZ = SurfZ + globalDisp.Z;
-      }  // vector rotation over
-      // printf("SurfX: %lg, SurfY: %lg, SurfZ: %lg\n",
-      // SurfX, SurfY, SurfZ);
-      // printf("SurfElX: %lg, SurfElY: %lg, SurfElZ: %lg\n",
-      // SurfElX, SurfElY, SurfElZ);
+      Point3D localDisp;
+      localDisp.X = xorigin;
+      localDisp.Y = yorigin;
+      localDisp.Z = zorigin;
+      Point3D globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
+      SurfElX = SurfX + globalDisp.X;  // GCS
+      SurfElY = SurfY + globalDisp.Y;
+      SurfElZ = SurfZ + globalDisp.Z;
 
       // Assign element values and write in the file
       ++EleCntr;
@@ -1376,208 +976,29 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
         return -1;
       }
 
-      (EleArr + EleCntr - 1)->DeviceNb =
-          1;  // At present, there is only one device
-      (EleArr + EleCntr - 1)->ComponentNb = SurfParentObj;
       (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-      (EleArr + EleCntr - 1)->Id = EleCntr;
-      (EleArr + EleCntr - 1)->G.Type = 4;  // rectagnular here
-      (EleArr + EleCntr - 1)->G.Origin.X = SurfElX;
-      (EleArr + EleCntr - 1)->G.Origin.Y = SurfElY;
-      (EleArr + EleCntr - 1)->G.Origin.Z = SurfElZ;
-      (EleArr + EleCntr - 1)->G.LX = ElLXOnThisRow;
-      (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
-      (EleArr + EleCntr - 1)->G.LZ =
-          zhipt - zlopt;  // to be on the safe side! 21/2/14
-      (EleArr + EleCntr - 1)->G.dA =
-          (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
-      // Safe to use the direction cosines obtained for the triangular primitive
-      // since they are bound to remain unchanged for the triangular
-      // sub-elements
-      (EleArr + EleCntr - 1)->G.DC.XUnit.X = PrimDirnCosn.XUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.XUnit.Y = PrimDirnCosn.XUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.XUnit.Z = PrimDirnCosn.XUnit.Z;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.X = PrimDirnCosn.YUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.Y = PrimDirnCosn.YUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.Z = PrimDirnCosn.YUnit.Z;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.X = PrimDirnCosn.ZUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.Z = PrimDirnCosn.ZUnit.Z;
-      (EleArr + EleCntr - 1)->E.Type = SurfEType;
-      (EleArr + EleCntr - 1)->E.Lambda = SurfLambda;
+      (EleArr + EleCntr - 1)->GType = 4;  // rectangular here
+      (EleArr + EleCntr - 1)->Origin.X = SurfElX;
+      (EleArr + EleCntr - 1)->Origin.Y = SurfElY;
+      (EleArr + EleCntr - 1)->Origin.Z = SurfElZ;
+      (EleArr + EleCntr - 1)->LX = ElLXOnThisRow;
+      (EleArr + EleCntr - 1)->LZ = SurfElLZ;
+      (EleArr + EleCntr - 1)->LZ = zhipt - zlopt;  // to be on the safe side! 21/2/14
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
-      // Boundary condition is applied at the origin for this rectangular
-      // element coordinate system (ECS)
-      (EleArr + EleCntr - 1)->BC.NbOfBCs = 1;  // assume one BC per element
-      // Following are the location in the ECS
-      (EleArr + EleCntr - 1)->BC.CollPt.X = (EleArr + EleCntr - 1)->G.Origin.X;
-      (EleArr + EleCntr - 1)->BC.CollPt.Y = (EleArr + EleCntr - 1)->G.Origin.Y;
-      (EleArr + EleCntr - 1)->BC.CollPt.Z = (EleArr + EleCntr - 1)->G.Origin.Z;
-      // find element vertices
-      // 1) displacement vector in the ECS is first identified
-      // 2) this vector is transformed to the GCS
-      // 3) the global displacement vector, when added to the centroid in GCS,
-      // gives the node positions in GCS.
-      x0 = -0.5 *
-           (EleArr + EleCntr - 1)->G.LX;  // xyz displacement of node wrt ECS
-      y0 = 0.0;
-      z0 = -0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x0;
-        localDisp.Y = y0;
-        localDisp.Z = z0;  // displacement in GCS
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-        x0 = (EleArr + EleCntr - 1)->G.Origin.X +
-             globalDisp.X;  // xyz position in GCS
-        y0 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z0 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x1 = 0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y1 = 0.0;
-      z1 = -0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x1;
-        localDisp.Y = y1;
-        localDisp.Z = z1;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-        x1 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y1 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z1 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x2 = 0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y2 = 0.0;
-      z2 = 0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x2;
-        localDisp.Y = y2;
-        localDisp.Z = z2;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-        x2 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y2 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z2 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x3 = -0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y3 = 0.0;
-      z3 = 0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x3;
-        localDisp.Y = y3;
-        localDisp.Z = z3;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-        x3 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y3 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z3 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      // assign vertices of the element
-      (EleArr + EleCntr - 1)->G.Vertex[0].X = x0;
-      (EleArr + EleCntr - 1)->G.Vertex[0].Y = y0;
-      (EleArr + EleCntr - 1)->G.Vertex[0].Z = z0;
-      (EleArr + EleCntr - 1)->G.Vertex[1].X = x1;
-      (EleArr + EleCntr - 1)->G.Vertex[1].Y = y1;
-      (EleArr + EleCntr - 1)->G.Vertex[1].Z = z1;
-      (EleArr + EleCntr - 1)->G.Vertex[2].X = x2;
-      (EleArr + EleCntr - 1)->G.Vertex[2].Y = y2;
-      (EleArr + EleCntr - 1)->G.Vertex[2].Z = z2;
-      (EleArr + EleCntr - 1)->G.Vertex[3].X = x3;
-      (EleArr + EleCntr - 1)->G.Vertex[3].Y = y3;
-      (EleArr + EleCntr - 1)->G.Vertex[3].Z = z3;
-
-      if (OptElementFiles) {
-        fprintf(fElem, "##Element Counter: %d\n", EleCntr);
-        fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-        fprintf(fElem, "%d\t%d\t%d\t%d\n", (EleArr + EleCntr - 1)->DeviceNb,
-                (EleArr + EleCntr - 1)->ComponentNb,
-                (EleArr + EleCntr - 1)->PrimitiveNb,
-                (EleArr + EleCntr - 1)->Id);
-        fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
-        fprintf(
-            fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
-            (EleArr + EleCntr - 1)->G.Type, (EleArr + EleCntr - 1)->G.Origin.X,
-            (EleArr + EleCntr - 1)->G.Origin.Y,
-            (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
-            (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
-        fprintf(fElem, "#DirnCosn: \n");
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.XUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.XUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.XUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.YUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.YUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.YUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.ZUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.ZUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.ZUnit.Z);
-        fprintf(fElem, "#EType\tLambda\n");
-        fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
-                (EleArr + EleCntr - 1)->E.Lambda);
-        fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-        fprintf(fElem, "%d\t%.16lg\t%.16lg\t%.16lg\t%lg\n",
-                (EleArr + EleCntr - 1)->BC.NbOfBCs,
-                (EleArr + EleCntr - 1)->BC.CollPt.X,
-                (EleArr + EleCntr - 1)->BC.CollPt.Y,
-                (EleArr + EleCntr - 1)->BC.CollPt.Z,
-                (EleArr + EleCntr - 1)->BC.Value);
-      }  // if OptElementFiles
-
-      // draw centroid and mesh
-      if (OptGnuplot && OptGnuplotElements) {
-        fprintf(fgpElem, "%g\t%g\t%g\n", (EleArr + EleCntr - 1)->BC.CollPt.X,
-                (EleArr + EleCntr - 1)->BC.CollPt.Y,
-                (EleArr + EleCntr - 1)->BC.CollPt.Z);
-      }  // if OptGnuplot && OptGnuplotElements
-
-      if (OptGnuplot && OptGnuplotElements) {
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x0, y0, z0);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x1, y1, z1);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x2, y2, z2);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x3, y3, z3);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x0, y0, z0);
-      }  // if OptGnuplot && OptGnuplotElements
     }    // for i
   }      // for k
   ElementEnd[prim] = EleCntr;
-  NbElmntsOnPrim[prim] = ElementEnd[prim] - ElementBgn[prim] + 1;
 
   if (OptPrimitiveFiles) {
     fprintf(fPrim, "Element begin: %d, Element end: %d\n", ElementBgn[prim],
             ElementEnd[prim]);
-    fprintf(fPrim, "Number of elements on primitive: %d\n",
-            NbElmntsOnPrim[prim]);
+    const int nbElements = ElementEnd[prim] - ElementBgn[prim] + 1;
+    fprintf(fPrim, "Number of elements on primitive: %d\n", nbElements);
     fclose(fPrim);
   }
 
-  if (OptGnuplot && OptGnuplotElements) {
-    if (prim == 1)
-      fprintf(fgnuElem, " '%s\' w p", gpElem);
-    else
-      fprintf(fgnuElem, ", \\\n \'%s\' w p", gpElem);
-    if (prim == 1) {
-      fprintf(fgnuMesh, " '%s\' w l", gpMesh);
-      fprintf(fgnuMesh, ", \\\n \'%s\' w p ps 1", gpElem);
-    } else {
-      fprintf(fgnuMesh, ", \\\n \'%s\' w l", gpMesh);
-      fprintf(fgnuMesh, ", \\\n \'%s\' w p ps 1", gpElem);
-    }
-
-    fclose(fgpElem);
-    fclose(fgpMesh);
-  }  // if OptGnuplot && OptGnuplotElements
-
-  if (OptElementFiles) fclose(fElem);
-
-  return (0);
+  return 0;
 }  // end of DiscretizeTriangles
 
 // It may be noted here that the direction cosines of a given primitive are
@@ -1588,10 +1009,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
                         double znorm, int volref1, int volref2, int inttype,
                         double potential, double charge, double lambda,
                         int NbSegX, int NbSegZ) {
-  int SurfParentObj, SurfEType;
-  double SurfX, SurfY, SurfZ, SurfLX, SurfLZ;
-  double SurfElX, SurfElY, SurfElZ, SurfElLX, SurfElLZ;
-  DirnCosn3D PrimDirnCosn;  // direction cosine of the current primitive
 
   // Check inputs
   if ((NbSegX <= 0) || (NbSegZ <= 0)) {
@@ -1619,53 +1036,48 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   // &eps, &potential, &charge, &boundarytype);
 
   // compute all the properties of this surface
-  SurfParentObj = 1;
-  SurfEType = inttype;
-  if (SurfEType == 0) {
-    printf("Wrong SurfEType for prim %d\n", prim);
+  if (inttype == 0) {
+    printf("Wrong interface type for prim %d\n", prim);
     exit(-1);
   }
   // centroid of the local coordinate system
-  SurfX = 0.25 * (xvert[0] + xvert[1] + xvert[2] + xvert[3]);
-  SurfY = 0.25 * (yvert[0] + yvert[1] + yvert[2] + yvert[3]);
-  SurfZ = 0.25 * (zvert[0] + zvert[1] + zvert[2] + zvert[3]);
+  double SurfX = 0.25 * (xvert[0] + xvert[1] + xvert[2] + xvert[3]);
+  double SurfY = 0.25 * (yvert[0] + yvert[1] + yvert[2] + yvert[3]);
+  double SurfZ = 0.25 * (zvert[0] + zvert[1] + zvert[2] + zvert[3]);
   // lengths of the sides
-  SurfLX = sqrt((xvert[1] - xvert[0]) * (xvert[1] - xvert[0]) +
-                (yvert[1] - yvert[0]) * (yvert[1] - yvert[0]) +
-                (zvert[1] - zvert[0]) * (zvert[1] - zvert[0]));
-  SurfLZ = sqrt((xvert[2] - xvert[1]) * (xvert[2] - xvert[1]) +
-                (yvert[2] - yvert[1]) * (yvert[2] - yvert[1]) +
-                (zvert[2] - zvert[1]) * (zvert[2] - zvert[1]));
+  double SurfLX = sqrt((xvert[1] - xvert[0]) * (xvert[1] - xvert[0]) +
+                       (yvert[1] - yvert[0]) * (yvert[1] - yvert[0]) +
+                       (zvert[1] - zvert[0]) * (zvert[1] - zvert[0]));
+  double SurfLZ = sqrt((xvert[2] - xvert[1]) * (xvert[2] - xvert[1]) +
+                       (yvert[2] - yvert[1]) * (yvert[2] - yvert[1]) +
+                       (zvert[2] - zvert[1]) * (zvert[2] - zvert[1]));
   // Direction cosines
-  PrimDirnCosn.XUnit.X = (xvert[1] - xvert[0]) / SurfLX;
-  PrimDirnCosn.XUnit.Y = (yvert[1] - yvert[0]) / SurfLX;
-  PrimDirnCosn.XUnit.Z = (zvert[1] - zvert[0]) / SurfLX;
-  PrimDirnCosn.YUnit.X = xnorm;
-  PrimDirnCosn.YUnit.Y = ynorm;
-  PrimDirnCosn.YUnit.Z = znorm;
-  PrimDirnCosn.ZUnit =
-      Vector3DCrossProduct(&PrimDirnCosn.XUnit, &PrimDirnCosn.YUnit);
+  DirnCosn3D pdc;
+  pdc.XUnit.X = (xvert[1] - xvert[0]) / SurfLX;
+  pdc.XUnit.Y = (yvert[1] - yvert[0]) / SurfLX;
+  pdc.XUnit.Z = (zvert[1] - zvert[0]) / SurfLX;
+  pdc.YUnit.X = xnorm;
+  pdc.YUnit.Y = ynorm;
+  pdc.YUnit.Z = znorm;
+  pdc.ZUnit = Vector3DCrossProduct(&pdc.XUnit, &pdc.YUnit);
 
   // primitive direction cosine assignments
-  PrimDC[prim].XUnit.X = PrimDirnCosn.XUnit.X;
-  PrimDC[prim].XUnit.Y = PrimDirnCosn.XUnit.Y;
-  PrimDC[prim].XUnit.Z = PrimDirnCosn.XUnit.Z;
-  PrimDC[prim].YUnit.X = PrimDirnCosn.YUnit.X;
-  PrimDC[prim].YUnit.Y = PrimDirnCosn.YUnit.Y;
-  PrimDC[prim].YUnit.Z = PrimDirnCosn.YUnit.Z;
-  PrimDC[prim].ZUnit.X = PrimDirnCosn.ZUnit.X;
-  PrimDC[prim].ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-  PrimDC[prim].ZUnit.Z = PrimDirnCosn.ZUnit.Z;
+  PrimDC[prim].XUnit.X = pdc.XUnit.X;
+  PrimDC[prim].XUnit.Y = pdc.XUnit.Y;
+  PrimDC[prim].XUnit.Z = pdc.XUnit.Z;
+  PrimDC[prim].YUnit.X = pdc.YUnit.X;
+  PrimDC[prim].YUnit.Y = pdc.YUnit.Y;
+  PrimDC[prim].YUnit.Z = pdc.YUnit.Z;
+  PrimDC[prim].ZUnit.X = pdc.ZUnit.X;
+  PrimDC[prim].ZUnit.Y = pdc.ZUnit.Y;
+  PrimDC[prim].ZUnit.Z = pdc.ZUnit.Z;
 
-  // primitive origin: also the barcenter for a rectangular element
+  // primitive origin: also the barycenter for a rectangular element
   PrimOriginX[prim] = SurfX;
   PrimOriginY[prim] = SurfY;
   PrimOriginZ[prim] = SurfZ;
   PrimLX[prim] = SurfLX;
   PrimLZ[prim] = SurfLZ;
-
-  double SurfLambda = lambda;
-  double SurfV = potential;
 
   // file output for a primitive
   FILE* fPrim = NULL;
@@ -1691,94 +1103,18 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     fprintf(fPrim, "Norm: %lg\t%lg\t%lg\n", xnorm, ynorm, znorm);
     fprintf(fPrim, "#volref1: %d, volref2: %d\n", volref1, volref2);
     fprintf(fPrim, "#NbSegX: %d, NbSegZ: %d\n", NbSegX, NbSegZ);
-    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", SurfParentObj, SurfEType);
+    fprintf(fPrim, "#ParentObj: %d\tEType: %d\n", 1, inttype);
     fprintf(fPrim, "#SurfX\tSurfY\tSurfZ\tSurfLZ\tSurfLZ\n");
     fprintf(fPrim, "%lg\t%lg\t%lg\t%lg\t%lg\n", SurfX, SurfY, SurfZ, SurfLX,
             SurfLZ);
     // fprintf(fPrim, "#SurfRX: %lg\tSurfRY: %lg\tSurfRZ: %lg\n",
     // SurfRX, SurfRY, SurfRZ);
     fprintf(fPrim, "#DirnCosn: \n");
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.XUnit.X,
-            PrimDirnCosn.XUnit.Y, PrimDirnCosn.XUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.YUnit.X,
-            PrimDirnCosn.YUnit.Y, PrimDirnCosn.YUnit.Z);
-    fprintf(fPrim, "%lg, %lg, %lg\n", PrimDirnCosn.ZUnit.X,
-            PrimDirnCosn.ZUnit.Y, PrimDirnCosn.ZUnit.Z);
-    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", SurfLambda, SurfV);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.XUnit.X, pdc.XUnit.Y, pdc.XUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.YUnit.X, pdc.YUnit.Y, pdc.YUnit.Z);
+    fprintf(fPrim, "%lg, %lg, %lg\n", pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
+    fprintf(fPrim, "#SurfLambda: %lg\tSurfV: %lg\n", lambda, potential);
   }  // if OptPrimitiveFiles
-
-  // necessary for gnuplot
-  FILE* fgpPrim = NULL;
-  if (OptGnuplot && OptGnuplotPrimitives) {
-    char gpPrim[256];
-    strcpy(gpPrim, MeshOutDir);
-    strcat(gpPrim, "/GViewDir/gpPrim");
-    strcat(gpPrim, primstr);
-    strcat(gpPrim, ".out");
-    fgpPrim = fopen(gpPrim, "w");
-    if (fgpPrim == NULL) {
-      neBEMMessage("DiscretizeRectangle - OutgpPrim");
-      fclose(fPrim);
-      return -1;
-    }
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[0], yvert[0], zvert[0]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[1], yvert[1], zvert[1]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[2], yvert[2], zvert[2]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n\n", xvert[3], yvert[3], zvert[3]);
-    fprintf(fgpPrim, "%g\t%g\t%g\n", xvert[0], yvert[0], zvert[0]);
-    fclose(fgpPrim);
-
-    if (prim == 1)
-      fprintf(fgnuPrim, " '%s\' w l", gpPrim);
-    else
-      fprintf(fgnuPrim, ", \\\n \'%s\' w l", gpPrim);
-  }  // if OptGnuplot && OptGnuplotPrimitives
-
-  // file outputs for elements on primitive
-  FILE* fElem = NULL;
-  if (OptElementFiles) {
-    char OutElem[256];
-    strcpy(OutElem, MeshOutDir);
-    strcat(OutElem, "/Elements/ElemOnPrim");
-    strcat(OutElem, primstr);
-    strcat(OutElem, ".out");
-    fElem = fopen(OutElem, "w");
-    // assert(fElem != NULL);
-    if (fElem == NULL) {
-      neBEMMessage("DiscretizeRectangle - OutElem");
-      return -1;
-    }
-  }  // if OptElementFiles
-
-  // gnuplot friendly file outputs for elements on primitive
-  FILE* fgpElem = NULL;
-  FILE* fgpMesh = NULL;
-  char gpElem[256], gpMesh[256];
-  if (OptGnuplot && OptGnuplotElements) {
-
-    strcpy(gpElem, MeshOutDir);
-    strcat(gpElem, "/GViewDir/gpElemOnPrim");
-    strcat(gpElem, primstr);
-    strcat(gpElem, ".out");
-    fgpElem = fopen(gpElem, "w");
-    // assert(fgpElem != NULL);
-    if (fgpElem == NULL) {
-      neBEMMessage("DiscretizeRectangle - OutgpElem");
-      if (fElem) fclose(fElem);
-      return -1;
-    }
-    // gnuplot friendly file outputs for elements on primitive
-    strcpy(gpMesh, MeshOutDir);
-    strcat(gpMesh, "/GViewDir/gpMeshOnPrim");
-    strcat(gpMesh, primstr);
-    strcat(gpMesh, ".out");
-    fgpMesh = fopen(gpMesh, "w");
-    if (fgpMesh == NULL) {
-      neBEMMessage("DiscretizeRectangle - OutgpMesh");
-      fclose(fgpElem);
-      return -1;
-    }
-  }  // if OptGnuplot && OptElements
 
   // Compute element positions (CGs) in the primitive local coordinate system.
   // Then map these CGs to the global coordinate system.
@@ -1792,6 +1128,8 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   // number is being used to discretize the longer side - can be OverSmart in
   // certain cases - there may be cases where smaller number of elements suffice
   // for a longer side
+  double SurfElLX = 0.;
+  double SurfElLZ = 0.;
   if (NbSegX == NbSegZ) {
     SurfElLX = SurfLX / NbSegX;  // element sizes
     SurfElLZ = SurfLZ / NbSegZ;
@@ -1799,8 +1137,8 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     if (SurfLX > SurfLZ) {
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
-    } else  // interchange NbSegX and NbSegZ
-    {
+    } else {
+      // interchange NbSegX and NbSegZ
       int tmp = NbSegZ;
       NbSegZ = NbSegX;
       NbSegX = tmp;
@@ -1813,8 +1151,8 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
     if (SurfLX < SurfLZ) {
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
-    } else  // interchange NbSegX and NbSegZ
-    {
+    } else {
+      // interchange NbSegX and NbSegZ
       int tmp = NbSegZ;
       NbSegZ = NbSegX;
       NbSegX = tmp;
@@ -1837,15 +1175,15 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
             "NbSegX: %d, SurfElLX: %lg, NbSegZ: %d, SurfElLZ: %lg, AR: %lg\n",
             NbSegX, SurfElLX, NbSegZ, SurfElLZ, AR);
   }
-  if (AR > 10.0)  // NbSegZ needs to be reduced
-  {
+  if (AR > 10.0) {
+    // NbSegZ needs to be reduced
     double tmpElLZ = SurfElLX / 10.0;
     NbSegZ = (int)(SurfLZ / tmpElLZ);
     if (NbSegZ <= 0) NbSegZ = 1;
     SurfElLZ = SurfLZ / NbSegZ;
   }
-  if (AR < 0.1)  // NbSegX need to be reduced
-  {
+  if (AR < 0.1) {
+    // NbSegX need to be reduced
     double tmpElLX = SurfElLZ * 0.1;
     NbSegX = (int)(SurfLX / tmpElLX);
     if (NbSegX <= 0) NbSegX = 1;
@@ -1859,241 +1197,52 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
             NbSegX, SurfElLX, NbSegZ, SurfElLZ, AR);
   }
 
-  double x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, xav, zav;
   ElementBgn[prim] = EleCntr + 1;
   for (int i = 1; i <= NbSegX; ++i) {
-    x1 = -SurfLX / 2.0 +
-         (double)(i - 1) * SurfElLX;  // assuming centroid at 0,0,0
-    x2 = -SurfLX / 2.0 + (double)(i)*SurfElLX;
-    xav = 0.5 * (x1 + x2);
+    // assuming centroid at 0,0,0
+    double x1 = -0.5 * SurfLX + (double)(i - 1) * SurfElLX;  
+    double x2 = -0.5 * SurfLX + (double)(i)*SurfElLX;
+    double xav = 0.5 * (x1 + x2);
 
     for (int k = 1; k <= NbSegZ; ++k) {
-      z1 = -SurfLZ / 2.0 + (double)(k - 1) * SurfElLZ;
-      z2 = -SurfLZ / 2.0 + (double)(k)*SurfElLZ;
-      zav = 0.5 * (z1 + z2);
-
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = xav;
-        localDisp.Y = 0.0;
-        localDisp.Z = zav;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-        SurfElX = SurfX + globalDisp.X;
-        SurfElY = SurfY + globalDisp.Y;
-        SurfElZ = SurfZ + globalDisp.Z;
-      }  // vector rotation over
+      double z1 = -0.5 * SurfLZ + (double)(k - 1) * SurfElLZ;
+      double z2 = -0.5 * SurfLZ + (double)(k)*SurfElLZ;
+      double zav = 0.5 * (z1 + z2);
+      Point3D localDisp;
+      localDisp.X = xav;
+      localDisp.Y = 0.0;
+      localDisp.Z = zav;
+      Point3D globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
+      double SurfElX = SurfX + globalDisp.X;
+      double SurfElY = SurfY + globalDisp.Y;
+      double SurfElZ = SurfZ + globalDisp.Z;
 
       // Assign element values and write in the file
       ++EleCntr;
       if (EleCntr > NbElements) {
         neBEMMessage("DiscretizeRectangle - EleCntr more than NbElements!");
-        if (fgpMesh) fclose(fgpMesh);
         return -1;
       }
 
-      (EleArr + EleCntr - 1)->DeviceNb =
-          1;  // At present, there is only one device
-      (EleArr + EleCntr - 1)->ComponentNb = SurfParentObj;
       (EleArr + EleCntr - 1)->PrimitiveNb = prim;
-      (EleArr + EleCntr - 1)->Id = EleCntr;
-      (EleArr + EleCntr - 1)->G.Type = 4;  // rectangular here
-      (EleArr + EleCntr - 1)->G.Origin.X = SurfElX;
-      (EleArr + EleCntr - 1)->G.Origin.Y = SurfElY;
-      (EleArr + EleCntr - 1)->G.Origin.Z = SurfElZ;
-      (EleArr + EleCntr - 1)->G.LX = SurfElLX;
-      (EleArr + EleCntr - 1)->G.LZ = SurfElLZ;
-      (EleArr + EleCntr - 1)->G.dA =
-          (EleArr + EleCntr - 1)->G.LX * (EleArr + EleCntr - 1)->G.LZ;
-      (EleArr + EleCntr - 1)->G.DC.XUnit.X = PrimDirnCosn.XUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.XUnit.Y = PrimDirnCosn.XUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.XUnit.Z = PrimDirnCosn.XUnit.Z;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.X = PrimDirnCosn.YUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.Y = PrimDirnCosn.YUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.YUnit.Z = PrimDirnCosn.YUnit.Z;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.X = PrimDirnCosn.ZUnit.X;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.Y = PrimDirnCosn.ZUnit.Y;
-      (EleArr + EleCntr - 1)->G.DC.ZUnit.Z = PrimDirnCosn.ZUnit.Z;
-      (EleArr + EleCntr - 1)->E.Type = SurfEType;
-      (EleArr + EleCntr - 1)->E.Lambda = SurfLambda;
+      (EleArr + EleCntr - 1)->GType = 4;  // rectangular here
+      (EleArr + EleCntr - 1)->Origin.X = SurfElX;
+      (EleArr + EleCntr - 1)->Origin.Y = SurfElY;
+      (EleArr + EleCntr - 1)->Origin.Z = SurfElZ;
+      (EleArr + EleCntr - 1)->LX = SurfElLX;
+      (EleArr + EleCntr - 1)->LZ = SurfElLZ;
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
-      (EleArr + EleCntr - 1)->BC.NbOfBCs = 1;  // assume one BC per element
-      (EleArr + EleCntr - 1)->BC.CollPt.X = (EleArr + EleCntr - 1)->G.Origin.X;
-      (EleArr + EleCntr - 1)->BC.CollPt.Y = (EleArr + EleCntr - 1)->G.Origin.Y;
-      (EleArr + EleCntr - 1)->BC.CollPt.Z = (EleArr + EleCntr - 1)->G.Origin.Z;
 
-      // find element vertices
-      // 1) displacement vector in the ECS is first identified
-      // 2) this vector is transformed to the GCS
-      // 3) the global displacement vector, when added to the centroid in GCS,
-      // gives the node positions in GCS.
-      x0 = -0.5 *
-           (EleArr + EleCntr - 1)->G.LX;  // xyz displacement of node wrt ECS
-      y0 = 0.0;
-      z0 = -0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x0;
-        localDisp.Y = y0;
-        localDisp.Z = z0;  // displacement in GCS
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-        x0 = (EleArr + EleCntr - 1)->G.Origin.X +
-             globalDisp.X;  // xyz position in GCS
-        y0 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z0 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x1 = 0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y1 = 0.0;
-      z1 = -0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x1;
-        localDisp.Y = y1;
-        localDisp.Z = z1;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-        x1 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y1 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z1 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x2 = 0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y2 = 0.0;
-      z2 = 0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x2;
-        localDisp.Y = y2;
-        localDisp.Z = z2;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-        x2 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y2 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z2 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      x3 = -0.5 * (EleArr + EleCntr - 1)->G.LX;
-      y3 = 0.0;
-      z3 = 0.5 * (EleArr + EleCntr - 1)->G.LZ;
-      {  // Separate block for position rotation - local2global
-        Point3D localDisp, globalDisp;
-
-        localDisp.X = x3;
-        localDisp.Y = y3;
-        localDisp.Z = z3;
-        globalDisp = RotatePoint3D(&localDisp, &PrimDirnCosn, local2global);
-        x3 = (EleArr + EleCntr - 1)->G.Origin.X + globalDisp.X;
-        y3 = (EleArr + EleCntr - 1)->G.Origin.Y + globalDisp.Y;
-        z3 = (EleArr + EleCntr - 1)->G.Origin.Z + globalDisp.Z;
-      }  // position rotation over
-
-      // assign vertices of the element
-      (EleArr + EleCntr - 1)->G.Vertex[0].X = x0;
-      (EleArr + EleCntr - 1)->G.Vertex[0].Y = y0;
-      (EleArr + EleCntr - 1)->G.Vertex[0].Z = z0;
-      (EleArr + EleCntr - 1)->G.Vertex[1].X = x1;
-      (EleArr + EleCntr - 1)->G.Vertex[1].Y = y1;
-      (EleArr + EleCntr - 1)->G.Vertex[1].Z = z1;
-      (EleArr + EleCntr - 1)->G.Vertex[2].X = x2;
-      (EleArr + EleCntr - 1)->G.Vertex[2].Y = y2;
-      (EleArr + EleCntr - 1)->G.Vertex[2].Z = z2;
-      (EleArr + EleCntr - 1)->G.Vertex[3].X = x3;
-      (EleArr + EleCntr - 1)->G.Vertex[3].Y = y3;
-      (EleArr + EleCntr - 1)->G.Vertex[3].Z = z3;
-
-      if (OptElementFiles) {
-        fprintf(fElem, "##Element Counter: %d\n", EleCntr);
-        fprintf(fElem, "#DevNb\tCompNb\tPrimNb\tId\n");
-        fprintf(fElem, "%d\t%d\t%d\t%d\n", (EleArr + EleCntr - 1)->DeviceNb,
-                (EleArr + EleCntr - 1)->ComponentNb,
-                (EleArr + EleCntr - 1)->PrimitiveNb,
-                (EleArr + EleCntr - 1)->Id);
-        fprintf(fElem, "#GType\tX\tY\tZ\tLX\tLZ\tdA\n");
-        fprintf(
-            fElem, "%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n",
-            (EleArr + EleCntr - 1)->G.Type, (EleArr + EleCntr - 1)->G.Origin.X,
-            (EleArr + EleCntr - 1)->G.Origin.Y,
-            (EleArr + EleCntr - 1)->G.Origin.Z, (EleArr + EleCntr - 1)->G.LX,
-            (EleArr + EleCntr - 1)->G.LZ, (EleArr + EleCntr - 1)->G.dA);
-        fprintf(fElem, "#DirnCosn: \n");
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.XUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.XUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.XUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.YUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.YUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.YUnit.Z);
-        fprintf(fElem, "%lg, %lg, %lg\n", (EleArr + EleCntr - 1)->G.DC.ZUnit.X,
-                (EleArr + EleCntr - 1)->G.DC.ZUnit.Y,
-                (EleArr + EleCntr - 1)->G.DC.ZUnit.Z);
-        fprintf(fElem, "#EType\tLambda\n");
-        fprintf(fElem, "%d\t%lg\n", (EleArr + EleCntr - 1)->E.Type,
-                (EleArr + EleCntr - 1)->E.Lambda);
-        fprintf(fElem, "#NbBCs\tCPX\tCPY\tCPZ\tValue\n");
-        fprintf(fElem, "%d\t%lg\t%lg\t%lg\t%lg\n",
-                (EleArr + EleCntr - 1)->BC.NbOfBCs,
-                (EleArr + EleCntr - 1)->BC.CollPt.X,
-                (EleArr + EleCntr - 1)->BC.CollPt.Y,
-                (EleArr + EleCntr - 1)->BC.CollPt.Z,
-                (EleArr + EleCntr - 1)->BC.Value);
-      }  // if OptElementFiles
-
-      // mark centroid
-      if (OptGnuplot && OptGnuplotElements) {
-        fprintf(fgpElem, "%g\t%g\t%g\n", (EleArr + EleCntr - 1)->BC.CollPt.X,
-                (EleArr + EleCntr - 1)->BC.CollPt.Y,
-                (EleArr + EleCntr - 1)->BC.CollPt.Z);
-      }  // if OptGnuplot && OptGnuplotElements
-
-      if (OptGnuplot && OptGnuplotElements) {
-        fprintf(fgpMesh, "%g\t%g\t%g\n", x0, y0, z0);
-        fprintf(fgpMesh, "%g\t%g\t%g\n", x1, y1, z1);
-        fprintf(fgpMesh, "%g\t%g\t%g\n", x2, y2, z2);
-        fprintf(fgpMesh, "%g\t%g\t%g\n", x3, y3, z3);
-        fprintf(fgpMesh, "%g\t%g\t%g\n\n", x0, y0, z0);
-        /*
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n", x0, y0, z0, 1);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n\n", x1, y1, z1, 2);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n", x2, y2, z2, 1);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n\n\n", x2, y2, z2, 2);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n", x0, y0, z0, 1);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n\n", x3, y3, z3, 2);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n", x2, y2, z2, 1);
-        fprintf(fgpMesh, "%g\t%g\t%g\t%d\n\n\n", x2, y2, z2, 2);
-        */
-      }  // if(OptGnuplot && OptGnuplotElements)
     }    // for k
   }      // for i
   ElementEnd[prim] = EleCntr;
-  NbElmntsOnPrim[prim] = ElementEnd[prim] - ElementBgn[prim] + 1;
-
   if (OptPrimitiveFiles) {
     fprintf(fPrim, "Element begin: %d, Element end: %d\n", ElementBgn[prim],
             ElementEnd[prim]);
-    fprintf(fPrim, "Number of elements on primitive: %d\n",
-            NbElmntsOnPrim[prim]);
+    const int nbElements = ElementEnd[prim] - ElementBgn[prim] + 1;
+    fprintf(fPrim, "Number of elements on primitive: %d\n", nbElements);
     fclose(fPrim);
-  }
-
-  if (OptElementFiles) fclose(fElem);
-
-  if (OptGnuplot && OptGnuplotElements) {
-    if (prim == 1)
-      fprintf(fgnuElem, " '%s\' w p", gpElem);
-    else
-      fprintf(fgnuElem, ", \\\n \'%s\' w p", gpElem);
-    if (prim == 1) {
-      fprintf(fgnuMesh, " '%s\' w l", gpMesh);
-      fprintf(fgnuMesh, ", \\\n \'%s\' w p ps 1", gpElem);
-    } else {
-      fprintf(fgnuMesh, ", \\\n \'%s\' w l", gpMesh);
-      fprintf(fgnuMesh, ", \\\n \'%s\' w p ps 1", gpElem);
-    }
-
-    fclose(fgpElem);
-    fclose(fgpMesh);
   }
 
   return (0);
@@ -2114,43 +1263,15 @@ int DiscretizePolygon(int /*prim*/, int /*nvertex*/, double /*xvert*/[],
   return (0);
 }  // end of DiscretizePolygon
 
-int BoundaryConditions(void) {
-  // Loop over all the elements of all the primitives.
-  // Some of the primitives do not have a boundary condition to be satisfied
-  // We'll omit these primitives but before doing that we need to know to
-  // which primitive a particular element belongs to.
-  // The RHS will also need to be modified to accommodate the presence of
-  // floating conductors and charged (known) substances.
-  // Looping on primitives (rather than elements) can save precious time!
-  for (int ele = 1; ele <= NbElements; ++ele) {
-    int prim = (EleArr + ele - 1)->PrimitiveNb;
-    // Note this condition is pure geometry, not electric!
-    switch (PrimType[prim]) {
-      case 2:
-      case 3:  // for floating conductor and for dielectric-dielectric intfc
-      case 4:  // the BC is zero (may be modified due to known charges, later)
-        (EleArr + ele - 1)->BC.Value = ApplPot[prim];
-        break;
-
-      default:
-        printf("Primitive out of range in BoundaryConditions ... returning\n");
-        return (-1);
-    }  // switch on PrimType over
-  }    // ele loop over
-
-  return (0);
-}  // end of BoundaryConditions
-
 // Set up initial conditions (C styling to be fixed)
 int InitialConditions(void) {
-  int fstatus = 0;
 
   // Known charges
   if (OptKnCh) {
     startClock = clock();
     printf("InitialConditions: InitKnownCharges ... ");
     fflush(stdout);
-    fstatus = InitKnownCharges();
+    int fstatus = InitKnownCharges();
     if (fstatus != 0) {
       neBEMMessage("InitialConditions - InitKnownCharges");
       return -1;
@@ -2167,7 +1288,7 @@ int InitialConditions(void) {
     startClock = clock();
     printf("InitialConditions: InitChargingUp ... ");
     fflush(stdout);
-    fstatus = InitChargingUp();
+    int fstatus = InitChargingUp();
     if (fstatus != 0) {
       neBEMMessage("InitialConditions - InitChargingUp");
       return -1;
@@ -2198,35 +1319,31 @@ int InitKnownCharges(void) {
 
   /*
   // How to check that the pointer points to a valid function?
-  if(Pt2UserFunction == NULL)
-          {
-          printf("Not a valid function ... returning ...\n");
-          return(-1);
-          }
-  else
-          {
-          // printf("Pt2UserFunction points to %p\n", Pt2UserFunction);
-          }
+  if (Pt2UserFunction == NULL) {
+    printf("Not a valid function ... returning ...\n");
+    return(-1);
+  } else {
+    // printf("Pt2UserFunction points to %p\n", Pt2UserFunction);
+  }
 
   // Status of the known charges conditions is meaningful only after the
   // element discretization has been completed, i.e., beyond the 5th state.
-  if(neBEMState >= 5)
-          {	// the following function is declared in the Interface.h.
-          int fstatus = (*Pt2UserFunction)();	// user to supply function
-          if(fstatus != 0)
-                  {
-                  neBEMMessage("neBEMKnownCharges - Pt2UserFunction");
-                  return -1;
-                  }
-          if(neBEMState > 5)	// assume LHS and inversion to be over?
-                  neBEMState = 8;
-          }
-  else
-          {
-          printf("Known charges are meaningful only beyond state 4 ...\n");
-          printf("returning ...\n");
-          return(-1);
-          }
+  if (neBEMState >= 5) {
+    // the following function is declared in the Interface.h.
+    int fstatus = (*Pt2UserFunction)();	// user to supply function
+    if (fstatus != 0) {
+      neBEMMessage("neBEMKnownCharges - Pt2UserFunction");
+      return -1;
+    }
+    if (neBEMState > 5)	{
+      // assume LHS and inversion to be over?
+      neBEMState = 8;
+    }
+  } else {
+    printf("Known charges are meaningful only beyond state 4 ...\n");
+    printf("returning ...\n");
+    return(-1);
+  }
   */
 
   // Set up parameters related to known charge calculations
@@ -2899,29 +2016,15 @@ int InitChargingUp(void) {
                   for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim];
                        ++ele) {
                     nvert = 0;
-                    if ((EleArr + ele - 1)->G.Type == 3) nvert = 3;
-                    if ((EleArr + ele - 1)->G.Type == 4) nvert = 4;
+                    if ((EleArr + ele - 1)->GType == 3) nvert = 3;
+                    if ((EleArr + ele - 1)->GType == 4) nvert = 4;
                     if (!nvert) {
                       neBEMMessage(
                           "no vertex in element! ... neBEMKnownCharges ...\n");
                       fclose(fPtEChUpMap);
                       return -20;
                     }
-
-                    polynode[0].X = (EleArr + ele - 1)->G.Vertex[0].X;
-                    polynode[0].Y = (EleArr + ele - 1)->G.Vertex[0].Y;
-                    polynode[0].Z = (EleArr + ele - 1)->G.Vertex[0].Z;
-                    polynode[1].X = (EleArr + ele - 1)->G.Vertex[1].X;
-                    polynode[1].Y = (EleArr + ele - 1)->G.Vertex[1].Y;
-                    polynode[1].Z = (EleArr + ele - 1)->G.Vertex[1].Z;
-                    polynode[2].X = (EleArr + ele - 1)->G.Vertex[2].X;
-                    polynode[2].Y = (EleArr + ele - 1)->G.Vertex[2].Y;
-                    polynode[2].Z = (EleArr + ele - 1)->G.Vertex[2].Z;
-                    if (nvert == 4) {
-                      polynode[3].X = (EleArr + ele - 1)->G.Vertex[3].X;
-                      polynode[3].Y = (EleArr + ele - 1)->G.Vertex[3].Y;
-                      polynode[3].Z = (EleArr + ele - 1)->G.Vertex[3].Z;
-                    }
+                    ElementVertices(ele, polynode);
 
                     // printf("neBEMChkInPoly for element %d\n", ele);
                     SumOfAngles = neBEMChkInPoly(nvert, polynode, ptintsct);
@@ -2948,9 +2051,9 @@ int InitChargingUp(void) {
                       fflush(stdout);
                     }
                     if (InEle) {
-                      ptintsct.X = (EleArr + ele - 1)->G.Origin.X;
-                      ptintsct.Y = (EleArr + ele - 1)->G.Origin.Y;
-                      ptintsct.Z = (EleArr + ele - 1)->G.Origin.Z;
+                      ptintsct.X = (EleArr + ele - 1)->Origin.X;
+                      ptintsct.Y = (EleArr + ele - 1)->Origin.Y;
+                      ptintsct.Z = (EleArr + ele - 1)->Origin.Z;
                       // Associate this electron to the identified element
                       EleIntsctd = ele;
                       NbChUpEonEle[ele]++;
@@ -2968,9 +2071,9 @@ int InitChargingUp(void) {
                         printf(
                             "# Associated element and origin: %d, %lg, %lg, "
                             "%lg\n",
-                            ele, (EleArr + ele - 1)->G.Origin.X,
-                            (EleArr + ele - 1)->G.Origin.Y,
-                            (EleArr + ele - 1)->G.Origin.Z);
+                            ele, (EleArr + ele - 1)->Origin.X,
+                            (EleArr + ele - 1)->Origin.Y,
+                            (EleArr + ele - 1)->Origin.Z);
                         printf("#NbChUpEonEle on element: %d\n",
                                NbChUpEonEle[ele]);
                         fprintf(ftmpEF, "#Element: %d\n", ele);
@@ -3036,8 +2139,8 @@ int InitChargingUp(void) {
                 for (int ele = ElementBgn[nearestprim];  // check all elements
                      ele <= ElementEnd[nearestprim]; ++ele) {
                   nvert = 0;
-                  if ((EleArr + ele - 1)->G.Type == 3) nvert = 3;
-                  if ((EleArr + ele - 1)->G.Type == 4) nvert = 4;
+                  if ((EleArr + ele - 1)->GType == 3) nvert = 3;
+                  if ((EleArr + ele - 1)->GType == 4) nvert = 4;
                   if (!nvert) {
                     neBEMMessage(
                         "no vertex element! ... neBEMKnownCharges ...\n");
@@ -3117,9 +2220,9 @@ int InitChargingUp(void) {
                           */
 
                   Vector3D eleOrigin;
-                  eleOrigin.X = (EleArr + ele - 1)->G.Origin.X;
-                  eleOrigin.Y = (EleArr + ele - 1)->G.Origin.Y;
-                  eleOrigin.Z = (EleArr + ele - 1)->G.Origin.Z;
+                  eleOrigin.X = (EleArr + ele - 1)->Origin.X;
+                  eleOrigin.Y = (EleArr + ele - 1)->Origin.Y;
+                  eleOrigin.Z = (EleArr + ele - 1)->Origin.Z;
                   distele = (eleOrigin.X - xend) * (eleOrigin.X - xend) +
                             (eleOrigin.Y - yend) * (eleOrigin.Y - yend) +
                             (eleOrigin.Z - zend) * (eleOrigin.Z - zend);
@@ -3154,9 +2257,9 @@ int InitChargingUp(void) {
                 // {
                 EleIntsctd = nearestele;
                 InEle = 1;
-                ptintsct.X = (EleArr + EleIntsctd - 1)->G.Origin.X;
-                ptintsct.Y = (EleArr + EleIntsctd - 1)->G.Origin.Y;
-                ptintsct.Z = (EleArr + EleIntsctd - 1)->G.Origin.Z;
+                ptintsct.X = (EleArr + EleIntsctd - 1)->Origin.X;
+                ptintsct.Y = (EleArr + EleIntsctd - 1)->Origin.Y;
+                ptintsct.Z = (EleArr + EleIntsctd - 1)->Origin.Z;
                 NbChUpEonEle[EleIntsctd]++;
 
                 fprintf(fPtEChUpMap, "%d %lg %lg %lg %d %d %d %d\n", electron,
@@ -3171,28 +2274,15 @@ int InitChargingUp(void) {
                   printf("%lg, %lg, %lg\n", ptintsct.X, ptintsct.Y, ptintsct.Z);
                   printf("# Associated primitive: %d\n", PrimIntsctd);
                   printf("# Associated element and origin: %d, %lg, %lg, %lg\n",
-                         EleIntsctd, (EleArr + EleIntsctd - 1)->G.Origin.X,
-                         (EleArr + EleIntsctd - 1)->G.Origin.Y,
-                         (EleArr + EleIntsctd - 1)->G.Origin.Z);
+                         EleIntsctd, (EleArr + EleIntsctd - 1)->Origin.X,
+                         (EleArr + EleIntsctd - 1)->Origin.Y,
+                         (EleArr + EleIntsctd - 1)->Origin.Z);
                   printf("#NbChUpEonEle on element: %d\n",
                          NbChUpEonEle[EleIntsctd]);
                   fflush(stdout);
 
                   fprintf(ftmpEF, "#Element: %d\n", EleIntsctd);
-                  polynode[0].X = (EleArr + EleIntsctd - 1)->G.Vertex[0].X;
-                  polynode[0].Y = (EleArr + EleIntsctd - 1)->G.Vertex[0].Y;
-                  polynode[0].Z = (EleArr + EleIntsctd - 1)->G.Vertex[0].Z;
-                  polynode[1].X = (EleArr + EleIntsctd - 1)->G.Vertex[1].X;
-                  polynode[1].Y = (EleArr + EleIntsctd - 1)->G.Vertex[1].Y;
-                  polynode[1].Z = (EleArr + EleIntsctd - 1)->G.Vertex[1].Z;
-                  polynode[2].X = (EleArr + EleIntsctd - 1)->G.Vertex[2].X;
-                  polynode[2].Y = (EleArr + EleIntsctd - 1)->G.Vertex[2].Y;
-                  polynode[2].Z = (EleArr + EleIntsctd - 1)->G.Vertex[2].Z;
-                  if (nvert == 4) {
-                    polynode[3].X = (EleArr + EleIntsctd - 1)->G.Vertex[3].X;
-                    polynode[3].Y = (EleArr + EleIntsctd - 1)->G.Vertex[3].Y;
-                    polynode[3].Z = (EleArr + EleIntsctd - 1)->G.Vertex[3].Z;
-                  }
+                  ElementVertices(EleIntsctd, polynode);
                   fprintf(ftmpEF, "%lg %lg %lg\n", polynode[0].X, polynode[0].Y,
                           polynode[0].Z);
                   fprintf(ftmpEF, "%lg %lg %lg\n", polynode[1].X, polynode[1].Y,
@@ -3264,28 +2354,18 @@ int InitChargingUp(void) {
               }
               fprintf(fepd, "#intersected element number: %d\n", EleIntsctd);
               if (EleIntsctd >= 1) {
-                int gtype = (EleArr + EleIntsctd - 1)->G.Type;
+                int gtype = (EleArr + EleIntsctd - 1)->GType;
                 fprintf(fepd, "#EleType: %d\n", gtype);
                 fprintf(fepd, "#element vertices:\n");
-                double x0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].X;
-                double y0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].Y;
-                double z0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].Z;
-                double x1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].X;
-                double y1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].Y;
-                double z1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].Z;
-                double x2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].X;
-                double y2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].Y;
-                double z2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].Z;
-                fprintf(fepd, "%lg %lg %lg\n", x0, y0, z0);
-                fprintf(fepd, "%lg %lg %lg\n", x1, y1, z1);
-                fprintf(fepd, "%lg %lg %lg\n", x2, y2, z2);
+                Point3D vtx[4];
+                ElementVertices(EleIntsctd, vtx);
+                fprintf(fepd, "%lg %lg %lg\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
+                fprintf(fepd, "%lg %lg %lg\n", vtx[1].X, vtx[1].Y, vtx[1].Z);
+                fprintf(fepd, "%lg %lg %lg\n", vtx[2].X, vtx[2].Y, vtx[2].Z);
                 if (gtype == 4) {
-                  double x3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].X;
-                  double y3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].Y;
-                  double z3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].Z;
-                  fprintf(fepd, "%lg %lg %lg\n", x3, y3, z3);
+                  fprintf(fepd, "%lg %lg %lg\n", vtx[3].X, vtx[3].Y, vtx[3].Z);
                 }
-                fprintf(fepd, "%lg %lg %lg\n", x0, y0, z0);
+                fprintf(fepd, "%lg %lg %lg\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
                 fprintf(fepd, "\n");
 
                 fprintf(fepd, "#ptintsct:\n");
@@ -3309,11 +2389,11 @@ int InitChargingUp(void) {
           }
           for (int ele = 1; ele <= NbElements; ++ele) {
             (EleArr + ele - 1)->Assigned +=
-                ChUpFactor * Q_E * NbChUpEonEle[ele] / (EleArr + ele - 1)->G.dA;
+                ChUpFactor * Q_E * NbChUpEonEle[ele] / ElementArea(ele);
             fprintf(fEleEChUpMap, "%d %lg %lg %lg %d %lg\n", ele,
-                    (EleArr + ele - 1)->G.Origin.X,
-                    (EleArr + ele - 1)->G.Origin.Y,
-                    (EleArr + ele - 1)->G.Origin.Z, NbChUpEonEle[ele],
+                    (EleArr + ele - 1)->Origin.X,
+                    (EleArr + ele - 1)->Origin.Y,
+                    (EleArr + ele - 1)->Origin.Z, NbChUpEonEle[ele],
                     (EleArr + ele - 1)->Assigned);
           }
           fclose(fEleEChUpMap);
@@ -3656,30 +2736,15 @@ int InitChargingUp(void) {
                 for (int ele = ElementBgn[prim]; ele <= ElementEnd[prim];
                      ++ele) {
                   nvert = 0;
-                  if ((EleArr + ele - 1)->G.Type == 3) nvert = 3;
-                  if ((EleArr + ele - 1)->G.Type == 4) nvert = 4;
+                  if ((EleArr + ele - 1)->GType == 3) nvert = 3;
+                  if ((EleArr + ele - 1)->GType == 4) nvert = 4;
                   if (!nvert) {
                     neBEMMessage(
                         "no vertex in element! ... neBEMKnownCharges ...\n");
                     fclose(fPtIChUpMap);
                     return -20;
                   }
-
-                  polynode[0].X = (EleArr + ele - 1)->G.Vertex[0].X;
-                  polynode[0].Y = (EleArr + ele - 1)->G.Vertex[0].Y;
-                  polynode[0].Z = (EleArr + ele - 1)->G.Vertex[0].Z;
-                  polynode[1].X = (EleArr + ele - 1)->G.Vertex[1].X;
-                  polynode[1].Y = (EleArr + ele - 1)->G.Vertex[1].Y;
-                  polynode[1].Z = (EleArr + ele - 1)->G.Vertex[1].Z;
-                  polynode[2].X = (EleArr + ele - 1)->G.Vertex[2].X;
-                  polynode[2].Y = (EleArr + ele - 1)->G.Vertex[2].Y;
-                  polynode[2].Z = (EleArr + ele - 1)->G.Vertex[2].Z;
-                  if (nvert == 4) {
-                    polynode[3].X = (EleArr + ele - 1)->G.Vertex[3].X;
-                    polynode[3].Y = (EleArr + ele - 1)->G.Vertex[3].Y;
-                    polynode[3].Z = (EleArr + ele - 1)->G.Vertex[3].Z;
-                  }
-
+                  ElementVertices(ele, polynode);
                   // printf("neBEMChkInPoly for element %d\n", ele);
                   SumOfAngles = neBEMChkInPoly(nvert, polynode, ptintsct);
                   if (fabs(fabs(SumOfAngles) - neBEMtwopi) <= 1.0e-8) InEle = 1;
@@ -3703,9 +2768,9 @@ int InitChargingUp(void) {
                     fflush(stdout);
                   }
                   if (InEle) {
-                    ptintsct.X = (EleArr + ele - 1)->G.Origin.X;
-                    ptintsct.Y = (EleArr + ele - 1)->G.Origin.Y;
-                    ptintsct.Z = (EleArr + ele - 1)->G.Origin.Z;
+                    ptintsct.X = (EleArr + ele - 1)->Origin.X;
+                    ptintsct.Y = (EleArr + ele - 1)->Origin.Y;
+                    ptintsct.Z = (EleArr + ele - 1)->Origin.Z;
                     EleIntsctd = ele;
                     // Associate this electron to the identified element
                     NbChUpIonEle[ele]++;
@@ -3723,9 +2788,9 @@ int InitChargingUp(void) {
                       printf(
                           "# Associated element and origin: %d, %lg, %lg, "
                           "%lg\n",
-                          ele, (EleArr + ele - 1)->G.Origin.X,
-                          (EleArr + ele - 1)->G.Origin.Y,
-                          (EleArr + ele - 1)->G.Origin.Z);
+                          ele, (EleArr + ele - 1)->Origin.X,
+                          (EleArr + ele - 1)->Origin.Y,
+                          (EleArr + ele - 1)->Origin.Z);
                       printf("#NbChUpIonEle on element: %d\n",
                              NbChUpIonEle[ele]);
                       fprintf(ftmpIF, "#Element: %d\n", ele);
@@ -3790,8 +2855,8 @@ int InitChargingUp(void) {
                 for (int ele = ElementBgn[nearestprim];  // check all elements
                      ele <= ElementEnd[nearestprim]; ++ele) {
                   nvert = 0;
-                  if ((EleArr + ele - 1)->G.Type == 3) nvert = 3;
-                  if ((EleArr + ele - 1)->G.Type == 4) nvert = 4;
+                  if ((EleArr + ele - 1)->GType == 3) nvert = 3;
+                  if ((EleArr + ele - 1)->GType == 4) nvert = 4;
                   if (!nvert) {
                     neBEMMessage(
                         "no vertex element! ... neBEMKnownCharges ...\n");
@@ -3880,9 +2945,9 @@ int InitChargingUp(void) {
                           */
 
                   Vector3D eleOrigin;
-                  eleOrigin.X = (EleArr + ele - 1)->G.Origin.X;
-                  eleOrigin.Y = (EleArr + ele - 1)->G.Origin.Y;
-                  eleOrigin.Z = (EleArr + ele - 1)->G.Origin.Z;
+                  eleOrigin.X = (EleArr + ele - 1)->Origin.X;
+                  eleOrigin.Y = (EleArr + ele - 1)->Origin.Y;
+                  eleOrigin.Z = (EleArr + ele - 1)->Origin.Z;
                   distele = (eleOrigin.X - xend) * (eleOrigin.X - xend) +
                             (eleOrigin.Y - yend) * (eleOrigin.Y - yend) +
                             (eleOrigin.Z - zend) * (eleOrigin.Z - zend);
@@ -3916,9 +2981,9 @@ int InitChargingUp(void) {
                 // {
                 EleIntsctd = nearestele;
                 InEle = 1;
-                ptintsct.X = (EleArr + EleIntsctd - 1)->G.Origin.X;
-                ptintsct.Y = (EleArr + EleIntsctd - 1)->G.Origin.Y;
-                ptintsct.Z = (EleArr + EleIntsctd - 1)->G.Origin.Z;
+                ptintsct.X = (EleArr + EleIntsctd - 1)->Origin.X;
+                ptintsct.Y = (EleArr + EleIntsctd - 1)->Origin.Y;
+                ptintsct.Z = (EleArr + EleIntsctd - 1)->Origin.Z;
                 NbChUpIonEle[EleIntsctd]++;
 
                 fprintf(fPtIChUpMap, "%d %lg %lg %lg %d %d %d %d\n", ion,
@@ -3933,26 +2998,13 @@ int InitChargingUp(void) {
                   printf("%lg, %lg, %lg\n", ptintsct.X, ptintsct.Y, ptintsct.Z);
                   printf("# Associated primitive: %d\n", PrimIntsctd);
                   printf("# Associated element and origin: %d, %lg, %lg, %lg\n",
-                         EleIntsctd, (EleArr + EleIntsctd - 1)->G.Origin.X,
-                         (EleArr + EleIntsctd - 1)->G.Origin.Y,
-                         (EleArr + EleIntsctd - 1)->G.Origin.Z);
+                         EleIntsctd, (EleArr + EleIntsctd - 1)->Origin.X,
+                         (EleArr + EleIntsctd - 1)->Origin.Y,
+                         (EleArr + EleIntsctd - 1)->Origin.Z);
                   printf("#NbChUpIonEle on element: %d\n",
                          NbChUpIonEle[EleIntsctd]);
                   fprintf(ftmpIF, "#Element: %d\n", EleIntsctd);
-                  polynode[0].X = (EleArr + EleIntsctd - 1)->G.Vertex[0].X;
-                  polynode[0].Y = (EleArr + EleIntsctd - 1)->G.Vertex[0].Y;
-                  polynode[0].Z = (EleArr + EleIntsctd - 1)->G.Vertex[0].Z;
-                  polynode[1].X = (EleArr + EleIntsctd - 1)->G.Vertex[1].X;
-                  polynode[1].Y = (EleArr + EleIntsctd - 1)->G.Vertex[1].Y;
-                  polynode[1].Z = (EleArr + EleIntsctd - 1)->G.Vertex[1].Z;
-                  polynode[2].X = (EleArr + EleIntsctd - 1)->G.Vertex[2].X;
-                  polynode[2].Y = (EleArr + EleIntsctd - 1)->G.Vertex[2].Y;
-                  polynode[2].Z = (EleArr + EleIntsctd - 1)->G.Vertex[2].Z;
-                  if (nvert == 4) {
-                    polynode[3].X = (EleArr + EleIntsctd - 1)->G.Vertex[3].X;
-                    polynode[3].Y = (EleArr + EleIntsctd - 1)->G.Vertex[3].Y;
-                    polynode[3].Z = (EleArr + EleIntsctd - 1)->G.Vertex[3].Z;
-                  }
+                  ElementVertices(EleIntsctd, polynode);
                   fprintf(ftmpIF, "%lg %lg %lg\n", polynode[0].X, polynode[0].Y,
                           polynode[0].Z);
                   fprintf(ftmpIF, "%lg %lg %lg\n", polynode[1].X, polynode[1].Y,
@@ -4021,28 +3073,18 @@ int InitChargingUp(void) {
 
               fprintf(fipd, "#intersected element number: %d\n", EleIntsctd);
               if (EleIntsctd >= 1) {
-                int gtype = (EleArr + EleIntsctd - 1)->G.Type;
+                int gtype = (EleArr + EleIntsctd - 1)->GType;
                 fprintf(fipd, "#EleType: %d\n", gtype);
                 fprintf(fipd, "#element vertices:\n");
-                double x0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].X;
-                double y0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].Y;
-                double z0 = (EleArr + EleIntsctd - 1)->G.Vertex[0].Z;
-                double x1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].X;
-                double y1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].Y;
-                double z1 = (EleArr + EleIntsctd - 1)->G.Vertex[1].Z;
-                double x2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].X;
-                double y2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].Y;
-                double z2 = (EleArr + EleIntsctd - 1)->G.Vertex[2].Z;
-                fprintf(fipd, "%lg %lg %lg\n", x0, y0, z0);
-                fprintf(fipd, "%lg %lg %lg\n", x1, y1, z1);
-                fprintf(fipd, "%lg %lg %lg\n", x2, y2, z2);
+                Point3D vtx[4];
+                ElementVertices(EleIntsctd, vtx);
+                fprintf(fipd, "%lg %lg %lg\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
+                fprintf(fipd, "%lg %lg %lg\n", vtx[1].X, vtx[1].Y, vtx[1].Z);
+                fprintf(fipd, "%lg %lg %lg\n", vtx[2].X, vtx[2].Y, vtx[2].Z);
                 if (gtype == 4) {
-                  double x3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].X;
-                  double y3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].Y;
-                  double z3 = (EleArr + EleIntsctd - 1)->G.Vertex[3].Z;
-                  fprintf(fipd, "%lg %lg %lg\n", x3, y3, z3);
+                  fprintf(fipd, "%lg %lg %lg\n", vtx[3].X, vtx[3].Y, vtx[3].Z);
                 }
-                fprintf(fipd, "%lg %lg %lg\n", x0, y0, z0);
+                fprintf(fipd, "%lg %lg %lg\n", vtx[0].X, vtx[0].Y, vtx[0].Z);
                 fprintf(fipd, "\n");
 
                 fprintf(fipd, "#ptintsct:\n");
@@ -4064,11 +3106,11 @@ int InitChargingUp(void) {
           }
           for (int ele = 1; ele <= NbElements; ++ele) {
             (EleArr + ele - 1)->Assigned +=
-                ChUpFactor * Q_I * NbChUpIonEle[ele] / (EleArr + ele - 1)->G.dA;
+                ChUpFactor * Q_I * NbChUpIonEle[ele] / ElementArea(ele);
             fprintf(fEleEIChUpMap, "%d %lg %lg %lg %d %lg\n", ele,
-                    (EleArr + ele - 1)->G.Origin.X,
-                    (EleArr + ele - 1)->G.Origin.Y,
-                    (EleArr + ele - 1)->G.Origin.Z, NbChUpIonEle[ele],
+                    (EleArr + ele - 1)->Origin.X,
+                    (EleArr + ele - 1)->Origin.Y,
+                    (EleArr + ele - 1)->Origin.Z, NbChUpIonEle[ele],
                     (EleArr + ele - 1)->Assigned);
           }
           fclose(fEleEIChUpMap);
