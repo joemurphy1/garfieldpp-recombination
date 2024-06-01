@@ -20,6 +20,7 @@
 #include <TLegend.h>
 #include <TLegendEntry.h>
 #include <TMath.h>
+#include <TPad.h>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
@@ -1989,17 +1990,8 @@ bool MediumMagboltz::Mixer(const bool verbose) {
   return true;
 }
 
-TPad* MediumMagboltz::GetCanvas() {
-  if (!m_pad) {
-    std::string name = ViewBase::FindUnusedCanvasName("c" + m_className);
-    if (!m_canvas) m_canvas.reset(new TCanvas(name.c_str(), ""));
-    m_pad = m_canvas.get();
-  }
-  return m_pad;
-}
-
-  
-void MediumMagboltz::PlotElectronCrossSections() {
+void MediumMagboltz::PlotElectronCrossSections(const unsigned int iplot,
+                                               TPad* pad) {
 
   if (!Update()) return;
 
@@ -2022,6 +2014,7 @@ void MediumMagboltz::PlotElectronCrossSections() {
   }
   std::array<std::array<float, Magboltz::nEnergySteps>, 5> cs;
   for (unsigned int i = 0; i < m_nComponents; ++i) {
+    if (i != iplot) continue;
     for (size_t j = 0; j < 5; ++j) cs[j].fill(0.);
     const double scale = 1. / m_fraction[i];
     for (unsigned int j = 0; j < m_nTerms; ++j) {
@@ -2045,15 +2038,14 @@ void MediumMagboltz::PlotElectronCrossSections() {
     }
 
  
-    auto canvas = GetCanvas();
     // const std::string name = ViewBase::FindUnusedCanvasName("cCs");
     // TCanvas* canvas = new TCanvas(name.c_str(), m_gas[i].c_str(), 800, 600);
-    canvas->cd();
-    canvas->SetLogx();
-    canvas->SetLogy();
-    canvas->SetGridx();
-    canvas->SetGridy();
-    auto frame = canvas->DrawFrame(en[0], ymin, en.back(), ymax, 
+    pad->cd();
+    pad->SetLogx();
+    pad->SetLogy();
+    pad->SetGridx();
+    pad->SetGridy();
+    auto frame = pad->DrawFrame(en[0], ymin, en.back(), ymax, 
                                    ";energy [eV];#sigma [Mbarn]");
     frame->GetXaxis()->SetTitleOffset(1.2);
     auto legend = new TLegend(0.1, 0.1, 0.4, 0.4);
@@ -2075,11 +2067,11 @@ void MediumMagboltz::PlotElectronCrossSections() {
       entry->SetTextColor(cols[j]);
     }
     legend->Draw();
-    canvas->Update();
+    pad->Update();
   }
 
 }
-void MediumMagboltz::PlotElectronCollisionRates() {
+void MediumMagboltz::PlotElectronCollisionRates(TPad* pad) {
 
   if (!Update()) return;
 
@@ -2110,15 +2102,14 @@ void MediumMagboltz::PlotElectronCollisionRates() {
       }
     }
   }
-  auto canvas = GetCanvas();
   // const std::string name = ViewBase::FindUnusedCanvasName("cCollisionRates");
   // TCanvas* canvas = new TCanvas(name.c_str(), m_name.c_str(), 800, 600);
-  canvas->cd();
-  canvas->SetLogx();
-  canvas->SetLogy();
-  canvas->SetGridx();
-  canvas->SetGridy();
-  auto frame = canvas->DrawFrame(en[0], ymin, en.back(), ymax, 
+  pad->cd();
+  pad->SetLogx();
+  pad->SetLogy();
+  pad->SetGridx();
+  pad->SetGridy();
+  auto frame = pad->DrawFrame(en[0], ymin, en.back(), ymax, 
                                  ";energy [eV];collision rate [ns^{-1}]");
   frame->GetXaxis()->SetTitleOffset(1.2);
   auto legend = new TLegend(0.1, 0.1, 0.4, 0.5);
@@ -2160,8 +2151,7 @@ void MediumMagboltz::PlotElectronCollisionRates() {
     }
   }
   legend->Draw();
-  canvas->Update();
-
+  pad->Update();
 }
 
 void MediumMagboltz::SetupGreenSawada() {
