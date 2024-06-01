@@ -1,6 +1,10 @@
 # --- GEM
 add_subdirectory(Gem)
 
+if (USEGPU)
+add_subdirectory(GemGPU)
+endif()
+
 # --- Drift tube
 add_subdirectory(DriftTube)
 

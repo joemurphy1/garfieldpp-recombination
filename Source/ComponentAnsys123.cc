@@ -1,3 +1,4 @@
+#ifndef __GPUCOMPILE__
 #include <math.h>
 #include <stdlib.h>
 #include <fstream>
@@ -563,4 +564,11 @@ bool ComponentAnsys123::SetWeightingField(const std::string& prnsol,
   return true;
 }
 
+#ifndef USEGPU
+double ComponentAnsys123::CreateGPUTransferObject(ComponentGPU *&comp_gpu) {
+  comp_gpu = nullptr;
+  return 0;
 }
+#endif
+}
+#endif

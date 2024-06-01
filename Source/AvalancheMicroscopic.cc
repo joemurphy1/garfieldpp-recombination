@@ -3,10 +3,20 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include <chrono>
+#include <fstream>
+#include <iomanip>
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Random.hh"
+
+#define __GPUCOMPILE__
+#include "AvalancheMicroscopicGPU.h"
+#undef __GPUCOMPILE__
+
+using highres_clock_t = std::chrono::high_resolution_clock;
+using second_t = std::chrono::duration<double, std::ratio<1> >;
 
 namespace {
 
@@ -116,6 +126,14 @@ Garfield::AvalancheMicroscopic::Point MakePoint(
   double dx = 0., dy = 0., dz = 1.;
   Garfield::RndmDirection(dx, dy, dz);
   return MakePoint(x, y, z, t, energy, dx, dy, dz, 0);
+}
+
+void PrintStatus(const std::string& hdr, const std::string& status,
+                 const double x, const double y, const double z,
+                 const bool hole) {
+  const std::string eh = hole ? "Hole " : "Electron ";
+  std::cout << hdr << eh << status << " at " << x << ", " << y << ", " << z
+            << "\n";
 }
 
 }  // namespace
@@ -279,6 +297,36 @@ void AvalancheMicroscopic::GetElectronEndpoint(const size_t i,
   t1 = m_electrons[i].path.back().t;
   e1 = m_electrons[i].path.back().energy;
   status = m_electrons[i].status;
+}
+
+void AvalancheMicroscopic::GetElectronEndpointGPU(const size_t i, double& x0,
+                                               double& y0, double& z0,
+                                               double& t0, double& e0,
+                                               double& x1, double& y1,
+                                               double& z1, double& t1,
+                                               double& e1, int& status) const {
+  if (i >= m_electrons_gpu.size()) {
+    std::cerr << m_className << "::GetElectronEndpoint: Index out of range.\n";
+    status = -3;
+    return;
+  }
+
+  if (m_electrons_gpu[i].path.empty()) {
+    std::cerr << m_className << "::GetElectronEndpoint: Empty drift line.\n";
+    status = -3;
+  }
+
+  x0 = m_electrons_gpu[i].path[0].x;
+  y0 = m_electrons_gpu[i].path[0].y;
+  z0 = m_electrons_gpu[i].path[0].z;
+  t0 = m_electrons_gpu[i].path[0].t;
+  e0 = m_electrons_gpu[i].path[0].energy;
+  x1 = m_electrons_gpu[i].path.back().x;
+  y1 = m_electrons_gpu[i].path.back().y;
+  z1 = m_electrons_gpu[i].path.back().z;
+  t1 = m_electrons_gpu[i].path.back().t;
+  e1 = m_electrons_gpu[i].path.back().energy;
+  status = m_electrons_gpu[i].status;
 }
 
 void AvalancheMicroscopic::GetHoleEndpoint(const size_t i, 
@@ -533,71 +581,143 @@ bool AvalancheMicroscopic::TransportElectrons(
     }
   }
   std::vector<std::pair<Point, Particle> > newParticles;
-  while (!particles.empty()) {
-    newParticles.clear();
-    // Loop over the particles in the avalanche.
-    for (const auto& particle : particles) {
-      if (particle.second == Particle::Ion) {
-        ++m_nIons;
-        continue;
+  m_stats.gpu_stack_process_time.clear();
+  m_stats.cpu_stack_process_time.clear();
+  m_stats.gpu_stack_transport_time.clear();
+  m_stats.cpu_stack_transport_time.clear();
+  m_stats.stack_old_size.clear();
+  m_stats.stack_new_size.clear();
+
+  // GPUREMOVE: Note that the change below means that the transferred variables (medium, id, etc.) are not updated within the transport
+  // loops so will have to be recalculated more than normal. This will affect both CPU and GPU versions.
+  int loop_count = 0;
+
+  if (m_runMode == MPRunMode::GPUExclusive) {
+#ifdef USEGPU
+    if (!m_gpuInterface) {
+      m_gpuInterface = new AvalancheMicroscopicGPU;
+      m_gpuInterface->SetCUDADevice(m_cudaDevice);
+      m_gpuInterface->TransferClassInternalInfo(this);
+    }
+    m_gpuInterface->TransferStackFromCPUToGPU(particles);
+#else
+    std::cout << "ERROR: GPU use requested but Garfield has not been built with GPU support" << std::endl;
+    return false;
+#endif
+  }
+
+  std::chrono::time_point< highres_clock_t > start;
+  double process_time_cpu{0};
+  double stack_time_cpu{0};
+  double process_time_gpu{0};
+  double stack_time_gpu{0};
+  unsigned int num_new_particles{0};
+  unsigned int num_curr_particles{0};
+  unsigned int num_new_particles_gpu{0};
+  unsigned int num_curr_particles_gpu{0};
+
+  while ((m_maxNumShowerLoops == -1) || (loop_count < m_maxNumShowerLoops)) {
+    if (m_showProgress) {
+      std::cout << "--------------------------------------------------------------" << std::endl;
+      std::cout << "Starting Shower iteration:         " << loop_count << std::endl;
+    }
+
+    // --------------------------------------------
+    // Process and transport the particle stack depending on GPU config
+    if (m_runMode == MPRunMode::Normal) {
+      start = highres_clock_t::now();
+      num_new_particles = newParticles.size();
+
+      // this is all the processing of the particle stack that's needed
+      if (loop_count) {
+        if (!aval) break;
+        particles.swap(newParticles);
       }
-      if (aval && m_sizeCut > 0 && m_nElectrons >= (int)m_sizeCut) { 
-        newParticles.clear();
+
+      if (particles.size() == 0)
+        break;
+
+      process_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+      start = highres_clock_t::now();
+
+      num_curr_particles = particles.size();
+
+      if (!transportParticleStack(aval, particles, newParticles, signal, useBfield, sc))
+        return false;
+
+      stack_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+    } 
+    else if (m_runMode == MPRunMode::GPUExclusive) {
+#ifdef USEGPU
+      start = highres_clock_t::now();
+
+      if (m_gpuInterface->processParticleStack(num_curr_particles_gpu, num_new_particles_gpu) == 0) {
         break;
       }
-      const bool isHole = (particle.second == Particle::Hole);
-      std::vector<Point> path;
-      std::vector<double> ts;
-      std::vector<std::array<double, 3> > xs;
-      int status = 0;
-      if (sc) {
-        status = TransportElectronSc(particle.first, isHole, aval, 
-                                     signal, ts, xs, path, 
-                                     newParticles);
-      } else if (useBfield) {
-        status = TransportElectronBfield(particle.first, isHole, aval, 
-                                         signal, ts, xs, path, 
-                                         newParticles);
-      } else {
-        status = TransportElectron(particle.first, isHole, aval, signal, 
-                                   ts, xs, path, newParticles);
-      }
-      double pathLength = 0.;
-      if (m_computePathLength && xs.size() > 1) {
-        const size_t ns = xs.size();
-        for (size_t i = 0; i < ns - 1; ++i) {
-          pathLength += Mag(xs[i + 1][0] - xs[i][0], 
-                            xs[i + 1][1] - xs[i][1],
-                            xs[i + 1][2] - xs[i][2]);
-        }
-      }
-      if (isHole) {
-        Electron hole;
-        hole.status = status;
-        hole.path = std::move(path);
-        hole.pathLength = pathLength;
-        m_holes.push_back(std::move(hole));
-        if (status != StatusAttached) ++m_nHoles;
-      } else {
-        Electron electron;
-        electron.status = status;
-        electron.path = std::move(path);
-        electron.pathLength = pathLength;
-        m_electrons.push_back(std::move(electron));
-        if (status != StatusAttached) ++m_nElectrons;
-      }
-      if (signal) {
-        const double q = isHole ? 1. : -1.;
-        if (m_useWeightingPotential) {
-          m_sensor->AddSignalWeightingPotential(q, ts, xs);
-        } else {
-          m_sensor->AddSignalWeightingField(q, ts, xs, 
-                                            m_integrateWeightingField);
-        }
-      }
+
+      process_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+      start = highres_clock_t::now();
+
+      // TODO: TN GPU: Fix arguments (medium, ID, useBandStructure, Flim, Finv all set
+      // to constant values)
+      if (!m_gpuInterface->transportParticleStack(aval, this, 0, false, 0, 0, 0, 0, useBfield, sc))
+        return false;
+
+      stack_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+#endif
     }
-    if (!aval) break;
-    particles.swap(newParticles);
+
+    loop_count++;    
+
+    if (m_showProgress) {
+      if (m_runMode == MPRunMode::Normal)
+        std::cout << "    - Current particle stack size (CPU): " << num_curr_particles << std::endl;
+      if (m_runMode == MPRunMode::GPUExclusive)
+        std::cout << "    - Current particle stack size (GPU): " << num_curr_particles_gpu << std::endl;
+
+      if (m_stats.cpu_stack_transport_time.size() > 0) {
+        std::cout << "CPU Stats: Stk (" << *(m_stats.cpu_stack_process_time.end()-1) << 
+                  "),  Tpt (" << *(m_stats.cpu_stack_transport_time.end()-1) << ")" << std::endl;
+      }
+      if (m_stats.gpu_stack_transport_time.size() > 0) {
+        std::cout << "GPU Stats: Stk (" << *(m_stats.gpu_stack_process_time.end()-1) << 
+                  "),  Tpt (" << *(m_stats.gpu_stack_transport_time.end()-1) << ")" << std::endl;
+      }
+      std::cout << "--------------------------------------------------------------" << std::endl;
+    }
+
+    // add to stats
+    if (m_runMode == MPRunMode::GPUExclusive) {
+      m_stats.stack_old_size.push_back(num_curr_particles_gpu);
+      m_stats.stack_new_size.push_back(num_new_particles_gpu);
+    } else {
+      m_stats.stack_old_size.push_back(num_curr_particles);
+      m_stats.stack_new_size.push_back(num_new_particles_gpu);
+    }
+    
+    if (stack_time_cpu > 0) {
+      m_stats.cpu_stack_transport_time.push_back(stack_time_cpu);
+      m_stats.cpu_stack_process_time.push_back(process_time_cpu);
+    }
+
+    if (stack_time_gpu > 0) {
+      m_stats.gpu_stack_transport_time.push_back(stack_time_gpu);
+      m_stats.gpu_stack_process_time.push_back(process_time_gpu);
+    }
+  }
+
+  // Multiprocessor clean up
+  if (m_runMode == MPRunMode::GPUExclusive) {
+    #ifdef USEGPU
+    // copy over stack if there's any to compare
+    if (m_maxNumShowerLoops > -1) {
+      m_gpuInterface->TransferStackFromGPUToCPU(m_stackStoreGPU, false);  
+      m_stackStoreCPU = particles;
+    }
+
+    // Copy endpoints over
+    m_gpuInterface->TransferStackFromGPUToCPU(m_electrons_gpu, true);
+    #endif
   }
 
   // Calculate the induced charge.
@@ -609,6 +729,78 @@ bool AvalancheMicroscopic::TransportElectrons(
     for (const auto& p : m_holes) {
       m_sensor->AddInducedCharge(+1, p.path[0].x, p.path[0].y, p.path[0].z, 
                                  p.path.back().x, p.path.back().y, p.path.back().z);
+    }
+  }
+  return true;
+}
+
+bool AvalancheMicroscopic::transportParticleStack(
+  const bool aval,
+  std::vector<std::pair<Point, Particle> > &particles,
+  std::vector<std::pair<Point, Particle> > &newParticles,
+  const bool signal,
+  const bool useBfield,
+  const bool sc) {
+  newParticles.clear();
+  // Loop over the particles in the avalanche.
+  for (const auto& particle : particles) {
+    if (particle.second == Particle::Ion) {
+      ++m_nIons;
+      continue;
+    }
+    if (aval && m_sizeCut > 0 && m_nElectrons >= (int)m_sizeCut) { 
+        newParticles.clear();
+        break;
+    }
+    const bool isHole = (particle.second == Particle::Hole);
+    std::vector<Point> path;
+    std::vector<double> ts;
+    std::vector<std::array<double, 3> > xs;
+    int status = 0;
+    if (sc) {
+      status = TransportElectronSc(particle.first, isHole, aval, 
+                                    signal, ts, xs, path, 
+                                    newParticles);
+    } else if (useBfield) {
+      status = TransportElectronBfield(particle.first, isHole, aval, 
+                                        signal, ts, xs, path, 
+                                        newParticles);
+    } else {
+      status = TransportElectron(particle.first, isHole, aval, signal, 
+                                  ts, xs, path, newParticles);
+    }
+    double pathLength = 0.;
+    if (m_computePathLength && xs.size() > 1) {
+      const size_t ns = xs.size();
+      for (size_t i = 0; i < ns - 1; ++i) {
+        pathLength += Mag(xs[i + 1][0] - xs[i][0], 
+                          xs[i + 1][1] - xs[i][1],
+                          xs[i + 1][2] - xs[i][2]);
+      }
+    }
+    if (isHole) {
+      Electron hole;
+      hole.status = status;
+      hole.path = std::move(path);
+      hole.pathLength = pathLength;
+      m_holes.push_back(std::move(hole));
+      if (status != StatusAttached) ++m_nHoles;
+    } else {
+      Electron electron;
+      electron.status = status;
+      electron.path = std::move(path);
+      electron.pathLength = pathLength;
+      m_electrons.push_back(std::move(electron));
+      if (status != StatusAttached) ++m_nElectrons;
+    }
+    if (signal) {
+      const double q = isHole ? 1. : -1.;
+      if (m_useWeightingPotential) {
+        m_sensor->AddSignalWeightingPotential(q, ts, xs);
+      } else {
+        m_sensor->AddSignalWeightingField(q, ts, xs, 
+                                          m_integrateWeightingField);
+      }
     }
   }
   return true;
@@ -2185,4 +2377,8 @@ void AvalancheMicroscopic::Terminate(double x0, double y0, double z0, double t0,
   }
 }
 
+void AvalancheMicroscopic::SetRunModeOptions(MPRunMode mode, int device) {
+  m_runMode = mode;
+  m_cudaDevice = device;
+}
 }  // namespace Garfield

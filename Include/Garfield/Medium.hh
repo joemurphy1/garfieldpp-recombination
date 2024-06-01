@@ -1,27 +1,66 @@
-#ifndef G_MEDIUM_H
+// Include this header if we're compiling with the GPU or this is the first time without
+#if defined(__GPUCOMPILE__) || !defined(G_MEDIUM_H)
+
+#if !defined(__GPUCOMPILE__) && !defined(G_MEDIUM_H)
 #define G_MEDIUM_H
+#endif
+
+#ifdef __GPUCOMPILE__
+
+#include "Garfield/MagboltzInterface.hh"
+
+#else
 
 #include <string>
 #include <vector>
 
 #include "FundamentalConstants.hh"
+#include "GPUInterface.hh"
+#endif
+
 #include "GarfieldConstants.hh"
 
 class TPad;
 
 namespace Garfield {
 
-/// Abstract base class for media.
+// undefine everything first 
+#ifdef __MEDIUMCLASS__
+#undef __MEDIUMCLASS__
+#undef __GPULABEL__
+#endif
 
-class Medium {
+// setup class names depending on if this is compiling the GPU static version or not
+#ifdef __GPUCOMPILE__
+#define __MEDIUMCLASS__ MediumGPU
+#define __GPULABEL__ __device__
+#else
+#define __MEDIUMCLASS__ Medium
+#define __GPULABEL__
+  class MediumGPU;
+#endif
+
+/// Abstract base class for components.
+
+class __MEDIUMCLASS__ {
  public:
+
+ #ifdef __GPUCOMPILE__
   /// Constructor
-  Medium();
+  __MEDIUMCLASS__() = default;
   /// Destructor
-  virtual ~Medium();
+  ~__MEDIUMCLASS__() {};
+ #else
+  /// Constructor
+  __MEDIUMCLASS__();
+  /// Destructor
+  virtual ~__MEDIUMCLASS__();
+#endif
 
   /// Return the id number of the class instance.
-  int GetId() const { return m_id; }
+  __GPULABEL__ int GetId() const { return m_id; }
+
+#ifndef __GPUCOMPILE__
   /// Get the medium name/identifier.
   const std::string& GetName() const { return m_name; }
   /// Is this medium a gas?
@@ -72,11 +111,14 @@ class Medium {
   virtual void EnablePrimaryIonisation(const bool on = true) { 
     m_ionisable = on; 
   }
+#endif
 
   /// Is charge carrier transport enabled in this medium?
-  bool IsDriftable() const { return m_driftable; }
+  __GPULABEL__ bool IsDriftable() const { return m_driftable; }
   /// Does the medium have electron scattering rates?
-  bool IsMicroscopic() const { return m_microscopic; }
+  __GPULABEL__ bool IsMicroscopic() const { return m_microscopic; }
+
+#ifndef __GPUCOMPILE__
   /// Is charge deposition by charged particles/photon enabled in this medium?
   bool IsIonisable() const { return m_ionisable; }
 
@@ -148,6 +190,18 @@ class Medium {
 
   /// Null-collision rate [ns-1]
   virtual double GetElectronNullCollisionRate(const int band = 0);
+#endif
+
+#ifdef __GPUCOMPILE__
+
+  __device__ GPUFLOAT GetElectronCollisionRate(const GPUFLOAT e, const int band);
+
+  __device__ bool ElectronCollision(
+      const GPUFLOAT e, int& type, int& level, GPUFLOAT& e1,
+      GPUFLOAT& dx, GPUFLOAT& dy, GPUFLOAT& dz,
+      Particle *secondaries_type, GPUFLOAT *secondaries_energy, int &num_secondaries, int& ndxc,
+      int& band);
+#else
   /// Collision rate [ns-1] for given electron energy
   virtual double GetElectronCollisionRate(const double e, const int band = 0);
   /// Sample the collision type. Update energy and direction vector.
@@ -156,6 +210,9 @@ class Medium {
       double& dx, double& dy, double& dz, 
       std::vector<std::pair<Particle, double> >& secondaries, int& ndxc,
       int& band);
+#endif
+
+#ifndef __GPUCOMPILE__
   virtual unsigned int GetNumberOfDeexcitationProducts() const { return 0; }
   virtual bool GetDeexcitationProduct(const unsigned int i, double& t,
                                       double& s, int& type,
@@ -525,13 +582,14 @@ class Medium {
   void EnableDebugging() { m_debug = true; }
   void DisableDebugging() { m_debug = false; }
 
+  /// Create and initialise GPU Transfer class
+  virtual double CreateGPUTransferObject(MediumGPU *&med_gpu);
+
  protected:
   std::string m_className = "Medium";
 
   static int m_idCounter;
 
-  // Id number
-  int m_id;
   // Number of components
   unsigned int m_nComponents = 1;
   // Name
@@ -548,16 +606,22 @@ class Medium {
   double m_a = 0.;
   // Number density [cm-3]
   double m_density = 0.;
+#endif
 
-  // W value
-  double m_w = 0.;
-  // Fano factor
-  double m_fano = 0.;
+  // Id number
+  int m_id;
 
   // Transport flags
   bool m_driftable = false;
   bool m_microscopic = false;
   bool m_ionisable = false;
+
+#ifndef __GPUCOMPILE__
+
+  // W value
+  double m_w = 0.;
+  // Fano factor
+  double m_fano = 0.;
 
   // Update flag
   bool m_isChanged = true;
@@ -708,6 +772,25 @@ class Medium {
       std::vector<std::vector<std::vector<std::vector<double> > > >& tab,
       const double val);
 
+#else
+
+#include "MediumGas.hh"
+#include "MediumMagboltz.hh"
+
+friend class MediumGas;
+friend class MediumMagboltz;
+
+  // enum to mimic polymorphism
+enum class MediumType
+{
+  Medium = 0,
+  MediumGas,
+  MediumMagboltz
+};
+
+MediumType m_MediumType{MediumType::Medium};
+
+#endif
 };
 }
 

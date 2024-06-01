@@ -421,4 +421,7 @@ double Component::IntegrateFluxLine(const double x0, const double y0,
   return s * vmag;
 }
 
+#ifndef USEGPU
+double Component::CreateGPUTransferObject(ComponentGPU *&/*comp_gpu*/) { return 0; }
+#endif
 }  // namespace Garfield

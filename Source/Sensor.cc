@@ -1,3 +1,8 @@
+#ifdef __GPUCOMPILE__
+#include "GPUInterface.hh"
+#include "SensorGPU.h"
+#include "GPUFunctions.h"
+#else
 #include "Garfield/Sensor.hh"
 
 #include <algorithm>
@@ -14,7 +19,9 @@
 #include "Garfield/Random.hh"
 #include "Garfield/ViewBase.hh"
 #include "Garfield/ViewSignal.hh"
+#endif
 
+#ifndef __GPUCOMPILE__
 namespace {
 
 double Interpolate(const std::vector<double> &y, const std::vector<double> &x,
@@ -64,9 +71,11 @@ double Trapezoid2(const std::vector<std::pair<double, double>> &f) {
 }
 
 }  // namespace
+#endif
 
 namespace Garfield {
 
+#ifndef __GPUCOMPILE__
 void Sensor::ElectricField(const double x, const double y, const double z,
                            double &ex, double &ey, double &ez, double &v,
                            Medium *&medium, int &status) {
@@ -92,20 +101,28 @@ void Sensor::ElectricField(const double x, const double y, const double z,
     }
   }
 }
+#endif
 
-void Sensor::ElectricField(const double x, const double y, const double z,
-                           double &ex, double &ey, double &ez, Medium *&medium,
-                           int &status) {
+__GPULABEL__
+void __SENSORCLASS__::ElectricField(const double x, const double y, const double z,
+                           double &ex, double &ey, double &ez, __MEDIUMCLASS__ *&medium,
+                           int &status) __GPUCONST__ {
   ex = ey = ez = 0.;
   status = -10;
   medium = nullptr;
   double fx = 0., fy = 0., fz = 0.;
-  Medium *med = nullptr;
+  __MEDIUMCLASS__ *med = nullptr;
   int stat = 0;
   // Add up electric field contributions from all components.
+  #ifdef __GPUCOMPILE__
+  for (int ic = 0; ic < m_numComponents; ic++) {
+    ComponentGPU* component{m_components[ic]};
+    component->ElectricField(x, y, z, fx, fy, fz, med, stat);
+  #else
   for (const auto &cmp : m_components) {
     if (!std::get<1>(cmp)) continue;
     std::get<0>(cmp)->ElectricField(x, y, z, fx, fy, fz, med, stat);
+  #endif
     if (status != 0) {
       status = stat;
       medium = med;
@@ -118,6 +135,7 @@ void Sensor::ElectricField(const double x, const double y, const double z,
   }
 }
 
+#ifndef __GPUCOMPILE__
 void Sensor::MagneticField(const double x, const double y, const double z,
                            double &bx, double &by, double &bz, int &status) {
   bx = by = bz = 0.;
@@ -256,8 +274,11 @@ bool Sensor::GetArea(double &xmin, double &ymin, double &zmin, double &xmax,
 
   return true;
 }
+#endif
 
-bool Sensor::IsInArea(const double x, const double y, const double z) {
+__GPULABEL__
+bool __SENSORCLASS__::IsInArea(const double x, const double y, const double z) __GPUCONST__ {
+  #ifndef __GPUCOMPILE__
   if (!m_hasUserArea) {
     if (!SetArea()) {
       std::cerr << m_className << "::IsInArea: User area could not be set.\n";
@@ -265,20 +286,24 @@ bool Sensor::IsInArea(const double x, const double y, const double z) {
     }
     m_hasUserArea = true;
   }
+  #endif
 
   if (x >= m_xMinUser && x <= m_xMaxUser && y >= m_yMinUser &&
       y <= m_yMaxUser && z >= m_zMinUser && z <= m_zMaxUser) {
     return true;
   }
 
+  #ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << m_className << "::IsInArea: (" << x << ", " << y << ", " << z
               << ") "
               << " is outside.\n";
   }
+  #endif
   return false;
 }
 
+#ifndef __GPUCOMPILE__
 bool Sensor::IsInside(const double x, const double y, const double z) {
   double ex = 0., ey = 0., ez = 0.;
   Medium *medium = nullptr;
@@ -1867,5 +1892,8 @@ double Sensor::GetTotalInducedCharge(const std::string &label) {
   }
   return 0.;
 }
-
+#ifndef USEGPU
+double Sensor::CreateGPUTransferObject(SensorGPU *&/*sensor_gpu*/) { return 0; }
+#endif
+#endif  // __GPUCOMPILE__
 }  // namespace Garfield

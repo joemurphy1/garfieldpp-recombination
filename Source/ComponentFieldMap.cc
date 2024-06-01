@@ -1,3 +1,4 @@
+#ifndef __GPUCOMPILE__
 #include "Garfield/ComponentFieldMap.hh"
 
 #include <TCanvas.h>
@@ -23,40 +24,70 @@ ComponentFieldMap::~ComponentFieldMap() {}
 
 void ComponentFieldMap::ElectricField(const double x, const double y,
                                       const double z, double& ex, double& ey,
-                                      double& ez, double& volt, Medium*& m,                                      int& status) {
+                                      double& ez, double& volt, Medium*& m, int& status) {
   ElectricField(x, y, z, ex, ey, ez, m, status);
+  #ifdef __GPUCOMPILE__
+  // TODO TN GPU: Volt not supported on GPU
+  volt = 0
+  #else
   volt = Potential(x, y, z, m_pot);
+  #endif
 }
+#endif
 
+#ifdef __GPUCOMPILE__
+__device__ void ComponentGPU::ElectricField(const double xin, const double yin,
+                                            const double zin, double& ex, double& ey,
+                                            double& ez, MediumGPU*& m,
+                                            int& status)
+#else
 void ComponentFieldMap::ElectricField(const double xin, const double yin,
                                       const double zin, double& ex, double& ey,
-                                      double& ez, Medium*& m, int& status) {
+                                      double& ez, Medium*& m, int& status)
+#endif
+{
   // Initial values
   ex = ey = ez = 0.;
   m = nullptr;
   int iel = -1;
+  #ifdef __GPUCOMPILE__
+  status = Field(xin, yin, zin, ex, ey, ez, iel, m_pot, m_numpot);
+  #else
   status = Field(xin, yin, zin, ex, ey, ez, iel, m_pot);
+  #endif
+
   if (status < 0 || iel < 0) {
-    if (status == -10) PrintNotReady("ElectricField");
+    if (status == -10)
+      #ifndef __GPUCOMPILE__
+      PrintNotReady("ElectricField");
+      #endif
     return;
   }
 
   const auto& element = m_elements[iel];
   // Drift medium?
+  #ifndef __GPUCOMPILE__
   if (element.matmap >= m_materials.size()) {
+  #else
+  if (element.matmap >= numMaterials) {
+  #endif
+    #ifndef __GPUCOMPILE__
     if (m_debug) {
       std::cout << m_className << "::ElectricField: "
                 << "Out-of-range material number.\n";
     }
+    #endif
     status = -5;
     return;
   }
 
   const auto& mat = m_materials[element.matmap];
+  #ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << "    Material " << element.matmap << ", drift flag "
               << mat.driftmedium << ".\n";
   }
+  #endif
   m = mat.medium;
   status = -5;
   if (mat.driftmedium) {
@@ -64,11 +95,22 @@ void ComponentFieldMap::ElectricField(const double xin, const double yin,
   }
 }
 
-int ComponentFieldMap::Field(const double xin, const double yin,
-                             const double zin, double& fx, double& fy,
-                             double& fz, int& imap,
-                             const std::vector<double>& pot) const {
-
+int
+#ifdef __GPUCOMPILE__
+__device__ ComponentGPU
+#else
+ComponentFieldMap
+#endif
+::Field(const double xin, const double yin,
+        const double zin, double& fx, double& fy,
+        double& fz, int& imap,
+        #ifdef __GPUCOMPILE__
+        const double* pot,
+        const int numPot
+        #else
+        const std::vector<double>& pot
+        #endif
+        ) const {
   // Do not proceed if not properly initialised.
   if (!m_ready) return -10;
 
@@ -81,11 +123,15 @@ int ComponentFieldMap::Field(const double xin, const double yin,
   double rcoordinate, rotation;
   MapCoordinates(x, y, z, xmirr, ymirr, zmirr, rcoordinate, rotation);
 
+  // TODO TN GPU: We don't support 2D field maps on the GPU yet and it will
+  // silently ignore these
+  #ifndef __GPUCOMPILE__
   if (!m_is3d) {
     if (zin < m_minBoundingBox[2] || zin > m_maxBoundingBox[2]) {
       return -5;
     }
   }
+  #endif
 
   // Find the element that contains this point.
   double t1 = 0., t2 = 0., t3 = 0., t4 = 0.;
@@ -93,21 +139,28 @@ int ComponentFieldMap::Field(const double xin, const double yin,
   double det = 0.;
   imap = -1;
   if (m_elementType == ElementType::Serendipity) {
+    // TODO TN GPU: ElementType::Serendipity not supported on GPU
+    #ifndef __GPUCOMPILE__
     imap = FindElement5(x, y, t1, t2, t3, t4, jac, det);
+    #endif
   } else if (m_elementType == ElementType::CurvedTetrahedron) {
     imap = FindElement13(x, y, z, t1, t2, t3, t4, jac, det);
   }
   // Stop if the point is not in the mesh.
   if (imap < 0) {
+    #ifndef __GPUCOMPILE__
     if (m_debug) {
       std::cerr << m_className << "::Field: (" 
                 << x << ", " << y << ", " << z << ") is not in the mesh.\n";
     }
+    #endif
     return -6;
   }
 
   const Element& element = m_elements[imap];
   if (m_elementType == ElementType::Serendipity) {
+    // TODO TN GPU: ElementType::Serendipity not supported (see above)
+    #ifndef __GPUCOMPILE__
     if (m_degenerate[imap]) {
       std::array<double, 6> v;
       for (size_t i = 0; i < 6; ++i) v[i] = pot[element.emap[i]];
@@ -117,19 +170,32 @@ int ComponentFieldMap::Field(const double xin, const double yin,
       for (size_t i = 0; i < 8; ++i) v[i] = pot[element.emap[i]];
       Field5(v, {t1, t2}, jac, det, fx, fy);
     }
+    #endif
   } else if (m_elementType == ElementType::CurvedTetrahedron) {
+    #ifndef __GPUCOMPILE__
     std::array<double, 10> v;
     for (size_t i = 0; i < 10; ++i) v[i] = pot[element.emap[i]];
     Field13(v, {t1, t2, t3, t4}, jac, 4 * det, fx, fy, fz);
-  }
+    #else
+    double v[10];
+    // TODO TN GPU: Warning can not use size_t here for some reason...
+    for (int i = 0; i < 10; ++i) v[i] = pot[element.emap[i]];
+    // CUDA doesn't like passing initialiser list directly to method
+    double t[4] = {t1, t2, t3, t4};
+    Field13(v, t, jac, 4 * det, fx, fy, fz);
+    #endif
+    }
+  #ifndef __GPUCOMPILE__
   if (m_debug) {
     PrintElement("Field", x, y, z, t1, t2, t3, t4, imap, pot);
   }
+  #endif
   // Transform field to global coordinates.
   UnmapFields(fx, fy, fz, x, y, z, xmirr, ymirr, zmirr, rcoordinate, rotation);
   return 0;
 }
 
+#ifndef __GPUCOMPILE__
 double ComponentFieldMap::Potential(const double xin, const double yin, 
                                     const double zin,
                                     const std::vector<double>& pot) const {
@@ -931,23 +997,44 @@ double ComponentFieldMap::Potential13(const std::array<double, 10>& v,
 void ComponentFieldMap::Field13(const std::array<double, 10>& v,
                                 const std::array<double, 4>& t,
                                 double jac[4][4], const double det, double& ex,
-                                double& ey, double& ez) {
+                                double& ey, double& ez)
+#else
+__device__ void ComponentGPU::Field13(const double v[10],
+                                      const double t[4],
+                                      double jac[4][4], const double det,
+                                      double& ex, double& ey, double& ez)
+#endif
+{
+  #ifndef __GPUCOMPILE__
   std::array<double, 4> g;
+  #else
+  double g[4];
+  #endif
   g[0] = v[0] * (t[0] - 0.25) + v[4] * t[1] + v[5] * t[2] + v[6] * t[3];
   g[1] = v[1] * (t[1] - 0.25) + v[4] * t[0] + v[7] * t[2] + v[8] * t[3];
   g[2] = v[2] * (t[2] - 0.25) + v[5] * t[0] + v[7] * t[1] + v[9] * t[3];
   g[3] = v[3] * (t[3] - 0.25) + v[6] * t[0] + v[8] * t[1] + v[9] * t[2];
+  #ifndef __GPUCOMPILE__
   std::array<double, 3> f = {0., 0., 0.};
   for (size_t j = 0; j < 4; ++j) {
     for (size_t i = 0; i < 3; ++i) {
       f[i] += g[j] * jac[j][i + 1];
     }
   }
+  #else
+  double f[3] = {0., 0., 0.};
+  for (int j = 0; j < 4; ++j) {
+    for (int i = 0; i < 3; ++i) {
+      f[i] += g[j] * jac[j][i + 1];
+    }
+  }
+  #endif
   ex = -f[0] * det;
   ey = -f[1] * det;
   ez = -f[2] * det;
 }
 
+#ifndef __GPUCOMPILE__
 int ComponentFieldMap::FindElement5(const double x, const double y,
                                     double& t1, double& t2,
                                     double& t3, double& t4, double jac[4][4],
@@ -1052,8 +1139,14 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
   }
   return -1;
 }
+#endif
 
-int ComponentFieldMap::FindElement13(
+#ifdef __GPUCOMPILE__
+__device__ int ComponentGPU
+#else
+int ComponentFieldMap
+#endif
+::FindElement13(
     const double x, const double y, const double z, 
     double& t1, double& t2, double& t3, double& t4, 
     double jac[4][4], double& det) const {
@@ -1070,17 +1163,43 @@ int ComponentFieldMap::FindElement13(
   // Verify the count of volumes that contain the point.
   int nfound = 0;
   int imap = -1;
+
+  #ifndef __GPUCOMPILE__
   std::array<double, 10> xn;
   std::array<double, 10> yn;
   std::array<double, 10> zn;
+  #else
+  double xn[10];
+  double yn[10];
+  double zn[10];
+  #endif
+
+  #ifndef __GPUCOMPILE__
   const auto& elements = (m_useTetrahedralTree && m_octree) ? 
       m_octree->GetElementsInBlock(Vec3(x, y, z)) : m_elementIndices;
   for (const auto i : elements) {
+  #else
+  const int *tetList{nullptr};
+  int tetListSize{0};
+  if (m_useTetrahedralTree && m_octree) {
+    m_octree->GetElementsInBlock(Vec3GPU{x, y, z}, tetList, tetListSize);
+  } else {
+    tetList = m_elementIndices;
+    tetListSize = numElements;
+  }
+  for (int teti=0; teti<tetListSize; ++teti) {
+    int i = tetList[teti];
+  #endif
     if (x < m_bbMin[i][0] || y < m_bbMin[i][1] || z < m_bbMin[i][2] ||
         x > m_bbMax[i][0] || y > m_bbMax[i][1] || z > m_bbMax[i][2]) {
       continue;
     }
+    #ifndef __GPUCOMPILE__
     for (size_t j = 0; j < 10; ++j) {
+    #else
+    // TODO: GPU doesn't seem to like size_t, double check this
+    for (int j = 0; j < 10; ++j) {
+    #endif
       const auto& node = m_nodes[m_elements[i].emap[j]];
       xn[j] = node.x;
       yn[j] = node.y;
@@ -1093,10 +1212,12 @@ int ComponentFieldMap::FindElement13(
         t4 > 1) {
       continue;
     }
+    #ifndef __GPUCOMPILE__
     if (m_debug) {
       std::cout << m_className << "::FindElement13:\n"
                 << "    Found matching element " << i << ".\n";
     }
+    #endif
     if (!m_checkMultipleElement) return i;
     ++nfound;
     imap = i;
@@ -1114,17 +1235,23 @@ int ComponentFieldMap::FindElement13(
   // In checking mode, verify the tetrahedron/triangle count.
   if (m_checkMultipleElement) {
     if (nfound < 1) {
+      #ifndef __GPUCOMPILE__
       if (m_debug) {
         std::cout << m_className << "::FindElement13:\n"
                   << "    No element matching point (" 
                   << x << ", " << y << ", " << z << ") found.\n";
       }
+      #endif
       return -1;
     }
     if (nfound > 1) {
+      #ifdef __GPUCOMPILE__
+      printf("ComponentGPU::FindElement13:\n    Found %d elements matching point (%f, %f, %f).\n", nfound, x, y, z);
+      #else
       std::cerr << m_className << "::FindElement13:\n"
                 << "    Found << " << nfound << " elements matching point ("
                 << x << ", " << y << ", " << z << ").\n";
+      #endif
     }
     for (int j = 0; j < 4; ++j) {
       for (int k = 0; k < 4; ++k) jac[j][k] = jacbak[j][k];
@@ -1137,14 +1264,17 @@ int ComponentFieldMap::FindElement13(
     imap = imapbak;
     return imap;
   }
+  #ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << m_className << "::FindElement13:\n"
               << "    No element matching point (" << x << ", " << y << ", "
               << z << ") found.\n";
   }
+  #endif
   return -1;
 }
 
+#ifndef __GPUCOMPILE__
 int ComponentFieldMap::FindElementCube(const double x, const double y,
                                        const double z, double& t1, double& t2,
                                        double& t3, TMatrixD*& jac,
@@ -1261,15 +1391,26 @@ void ComponentFieldMap::Jacobian5(
   // Determinant.
   det = jac[0][0] * jac[1][1] - jac[0][1] * jac[1][0];
 }
+#endif
 
+#ifdef __GPUCOMPILE__
+__device__ void ComponentGPU::Jacobian13(
+  const double xn[10],
+  const double yn[10],
+  const double zn[10],
+  const double fourt0, const double fourt1, 
+  const double fourt2, const double fourt3, 
+  double& det, double jac[4][4])
+#else
 void ComponentFieldMap::Jacobian13(
     const std::array<double, 10>& xn,
     const std::array<double, 10>& yn,
     const std::array<double, 10>& zn,
     const double fourt0, const double fourt1, 
     const double fourt2, const double fourt3, 
-    double& det, double jac[4][4]) {
-
+    double& det, double jac[4][4])
+#endif
+{
   const double fourt0m1 = fourt0 - 1.;
   const double j10 = fourt0m1 * xn[0] + fourt1 * xn[4] + fourt2 * xn[5] + fourt3 * xn[6];
   const double j20 = fourt0m1 * yn[0] + fourt1 * yn[4] + fourt2 * yn[5] + fourt3 * yn[6];
@@ -1334,6 +1475,7 @@ void ComponentFieldMap::Jacobian13(
   det = 1. / (jac[0][3] * j30 + jac[1][3] * j31 + jac[2][3] * j32 + jac[3][3] * j33);
 }
 
+#ifndef __GPUCOMPILE__
 void ComponentFieldMap::JacobianCube(const Element& element, const double t1,
                                      const double t2, const double t3,
                                      TMatrixD*& jac,
@@ -1909,18 +2051,32 @@ std::array<std::array<double, 3>, 4> ComponentFieldMap::Weights12(
   for (size_t i = 0; i < 3; ++i) w[3][i] *= s3;
   return w;
 }
+#endif
 
+#ifdef __GPUCOMPILE__
+__device__ void ComponentGPU::Coordinates12(
+  const double x, const double y, const double z,
+  double& t1, double& t2, double& t3, double& t4,
+  const double xn[10],
+  const double yn[10],
+  const double zn[10],
+  const double w[4][3]) const
+#else
 void ComponentFieldMap::Coordinates12(
     const double x, const double y, const double z, 
     double& t1, double& t2, double& t3, double& t4,
     const std::array<double, 10>& xn,
     const std::array<double, 10>& yn,
     const std::array<double, 10>& zn,
-    const std::array<std::array<double, 3>, 4>& w) const {
+    const std::array<std::array<double, 3>, 4>& w) const
+    #endif
+{
+  #ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << m_className << "::Coordinates12:\n"
               << "   Point (" << x << ", " << y << ", " << z << ").\n";
   }
+  #endif
 
   // Compute tetrahedral coordinates.
   t1 = (x - xn[1]) * w[0][0] + (y - yn[1]) * w[0][1] + (z - zn[1]) * w[0][2];
@@ -1929,6 +2085,7 @@ void ComponentFieldMap::Coordinates12(
   t4 = (x - xn[0]) * w[3][0] + (y - yn[0]) * w[3][1] + (z - zn[0]) * w[3][2];
 
   // Result.
+  #ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << "    Tetrahedral coordinates (t, u, v, w) = (" << t1 << ", "
               << t2 << ", " << t3 << ", " << t4
@@ -1946,8 +2103,19 @@ void ComponentFieldMap::Coordinates12(
               << ", " << z - zr << ")\n";
     std::cout << "    Checksum - 1:           " << sr - 1 << "\n";
   }
+  #endif
 }
 
+#ifdef __GPUCOMPILE__
+__device__ int ComponentGPU::Coordinates13(
+  const double x, const double y, const double z,
+  double& t1, double& t2, double& t3, double& t4,
+  double jac[4][4], double& det,
+  const double xn[10],
+  const double yn[10],
+  const double zn[10],
+  GPUFLOAT** w) const
+#else
 int ComponentFieldMap::Coordinates13(
     const double x, const double y, const double z, 
     double& t1, double& t2, double& t3, double& t4, 
@@ -1955,8 +2123,9 @@ int ComponentFieldMap::Coordinates13(
     const std::array<double, 10>& xn,
     const std::array<double, 10>& yn,
     const std::array<double, 10>& zn,
-    const std::array<std::array<double, 3>, 4>& w) const {
-
+    const std::array<std::array<double, 3>, 4>& w) const
+#endif
+{
   // Make a first order approximation.
   t1 = (x - xn[1]) * w[0][0] + (y - yn[1]) * w[0][1] + (z - zn[1]) * w[0][2];
   // Stop if we are far outside.
@@ -1969,15 +2138,21 @@ int ComponentFieldMap::Coordinates13(
   if (t4 < -0.5 || t4 > 1.5) return 1;
 
   // Start iteration.
+  #ifndef __GPUCOMPILE__
   std::array<double, 4> td = {t1, t2, t3, t4};
+  #else
+  double td[4] = {t1, t2, t3, t4};
+  #endif
 
   // Loop
   bool converged = false;
   for (int iter = 0; iter < 10; ++iter) {
+    #ifndef __GPUCOMPILE__
     if (m_debug) {
       std::printf("    Iteration %4u: t = (%15.8f, %15.8f %15.8f %15.8f)\n",
                   iter, td[0], td[1], td[2], td[3]);
     }
+    #endif
     // Evaluate the shape functions and re-compute the (x,y,z) position 
     // for this set of isoparametric coordinates.
     const double f0 = td[0] * (td[0] - 0.5);
@@ -2006,18 +2181,32 @@ int ComponentFieldMap::Coordinates13(
     // Compute the Jacobian.
     Jacobian13(xn, yn, zn, fourt0, fourt1, fourt2, fourt3, det, jac);
     // Compute the difference vector.
+    #ifndef __GPUCOMPILE__
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
+    #else
+    double sr{0};
+    for (int i=0; i<4; ++i) {
+      sr += td[i];
+    }
+    #endif
     const double diff[4] = {1. - sr, x - xr, y - yr, z - zr};
     // Update the estimate.
     double corr[4] = {0., 0., 0., 0.};
+    // TODO TN GPU: I've seen in the past that the GPU doesn't like size_t
+    #ifdef __GPUCOMPILE__
+    for (int l = 0; l < 4; ++l) {
+      for (int k = 0; k < 4; ++k) {
+    #else
     for (size_t l = 0; l < 4; ++l) {
       for (size_t k = 0; k < 4; ++k) {
+    #endif
         corr[l] += jac[l][k] * diff[k];
       }
       corr[l] *= det;
       td[l] += corr[l];
     }
 
+    #ifndef __GPUCOMPILE__
     // Debugging
     if (m_debug) {
       std::cout << "    Difference vector:  (1, x, y, z)  = (" << diff[0]
@@ -2027,12 +2216,15 @@ int ComponentFieldMap::Coordinates13(
                 << ", " << corr[1] << ", " << corr[2] << ", " << corr[3]
                 << ").\n";
     }
+    #endif
 
     // Check for convergence.
     constexpr double tol = 1.e-5;
     if (fabs(corr[0]) < tol && fabs(corr[1]) < tol && fabs(corr[2]) < tol &&
         fabs(corr[3]) < tol) {
+      #ifndef __GPUCOMPILE__
       if (m_debug) std::cout << "    Convergence reached.\n";
+      #endif
       converged = true;
       break;
     }
@@ -2040,14 +2232,27 @@ int ComponentFieldMap::Coordinates13(
 
   // No convergence reached.
   if (!converged) {
+    #ifndef __GPUCOMPILE__
     const double xmin = std::min({xn[0], xn[1], xn[2], xn[3]});
     const double xmax = std::max({xn[0], xn[1], xn[2], xn[3]});
     const double ymin = std::min({yn[0], yn[1], yn[2], yn[3]});
     const double ymax = std::max({yn[0], yn[1], yn[2], yn[3]});
     const double zmin = std::min({zn[0], zn[1], zn[2], zn[3]});
     const double zmax = std::max({zn[0], zn[1], zn[2], zn[3]});
+    #else
+    const GPUFLOAT xmin = fmin(fmin(fmin(xn[0], xn[1]), xn[2]), xn[3]);
+    const GPUFLOAT xmax = fmax(fmax(fmax(xn[0], xn[1]), xn[2]), xn[3]);
+    const GPUFLOAT ymin = fmin(fmin(fmin(yn[0], yn[1]), yn[2]), yn[3]);
+    const GPUFLOAT ymax = fmax(fmax(fmax(yn[0], yn[1]), yn[2]), yn[3]);
+    const GPUFLOAT zmin = fmin(fmin(fmin(zn[0], zn[1]), zn[2]), zn[3]);
+    const GPUFLOAT zmax = fmax(fmax(fmax(zn[0], zn[1]), zn[2]), zn[3]);
+    #endif
     if (x >= xmin && x <= xmax && y >= ymin && y <= ymax && z >= zmin &&
         z <= zmax) {
+
+      #ifdef __GPUCOMPILE__
+      printf("ComponentGPU::Coordinates13:\n    No convergence achieved when refining internal isoparametric coordinates\n");
+      #else
       if (m_printConvergenceWarnings) {
         std::cout << m_className << "::Coordinates13:\n"
                   << "    No convergence achieved "
@@ -2055,6 +2260,7 @@ int ComponentFieldMap::Coordinates13(
                   << "    at position (" << x << ", " << y << ", " << z
                   << ").\n";
       }
+      #endif
       t1 = t2 = t3 = t4 = -1;
       return 1;
     }
@@ -2065,6 +2271,7 @@ int ComponentFieldMap::Coordinates13(
   t2 = td[1];
   t3 = td[2];
   t4 = td[3];
+  #ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << "    Convergence reached at (t1, t2, t3, t4) = (" << t1 << ", "
               << t2 << ", " << t3 << ", " << t4 << ").\n";
@@ -2101,10 +2308,12 @@ int ComponentFieldMap::Coordinates13(
     std::cout << "    Checksum - 1:           " << sr - 1 << "\n";
   }
 
+#endif
   // Success
   return 0;
 }
 
+#ifndef __GPUCOMPILE__
 int ComponentFieldMap::CoordinatesCube(const double x, const double y,
                                        const double z, double& t1, double& t2,
                                        double& t3, TMatrixD*& jac,
@@ -2522,11 +2731,17 @@ bool ComponentFieldMap::GetElementaryCell(double& xmin, double& ymin,
   zmax = m_mapmax[2];
   return true;
 }
+#endif
 
-void ComponentFieldMap::MapCoordinates(double& xpos, double& ypos, double& zpos,
-                                       bool& xmirrored, bool& ymirrored,
-                                       bool& zmirrored, double& rcoordinate,
-                                       double& rotation) const {
+#ifdef __GPUCOMPILE__
+__device__ void ComponentGPU::
+#else
+void ComponentFieldMap::
+#endif
+MapCoordinates(double& xpos, double& ypos, double& zpos,
+               bool& xmirrored, bool& ymirrored,
+               bool& zmirrored, double& rcoordinate,
+               double& rotation) const {
   // Initial values
   rotation = 0;
 
@@ -2640,10 +2855,18 @@ void ComponentFieldMap::MapCoordinates(double& xpos, double& ypos, double& zpos,
   }
 }
 
+#ifdef __GPUCOMPILE__
+__device__ void ComponentGPU::UnmapFields(double& ex, double& ey, double& ez,
+    const double xpos, const double ypos, const double zpos,
+    const bool xmirrored, const bool ymirrored, const bool zmirrored,
+    const double rcoordinate, const double rotation) const
+#else
 void ComponentFieldMap::UnmapFields(double& ex, double& ey, double& ez,
     const double xpos, const double ypos, const double zpos,
     const bool xmirrored, const bool ymirrored, const bool zmirrored, 
-    const double rcoordinate, const double rotation) const {
+    const double rcoordinate, const double rotation) const
+#endif
+{
   // Apply mirror imaging.
   if (xmirrored) ex = -ex;
   if (ymirrored) ey = -ey;
@@ -2714,6 +2937,7 @@ void ComponentFieldMap::UnmapFields(double& ex, double& ey, double& ez,
   }
 }
 
+#ifndef __GPUCOMPILE__
 double ComponentFieldMap::ScalingFactor(std::string unit) {
   std::transform(unit.begin(), unit.end(), unit.begin(), toupper);
   if (unit == "MUM" || unit == "MICRON" || unit == "MICROMETER") {
@@ -2973,4 +3197,12 @@ void ComponentFieldMap::TimeInterpolation(const double t, double& f0,
   f0 = 1. - f1;
 }
 
+#ifndef USEGPU
+  double ComponentFieldMap::CreateGPUTransferObject(ComponentGPU *&/*comp_gpu*/)
+  {
+    return 0;
+  }
+#endif
+
 }  // namespace Garfield
+#endif

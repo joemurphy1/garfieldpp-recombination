@@ -1,8 +1,15 @@
+#ifdef __GPUCOMPILE__
+#include "GPUInterface.hh"
+#include "TetrahedralTreeGPU.h"
+#include "GPUFunctions.h"
+#else
 #include "Garfield/TetrahedralTree.hh"
 #include <iostream>
+#endif
 
 namespace Garfield {
 
+#ifndef __GPUCOMPILE__
 std::vector<int> TetrahedralTree::emptyBlock = {};
 
 /**
@@ -37,9 +44,11 @@ bool TetrahedralTree::DoesBoxOverlap(const double bb[6]) const {
   if (m_min.x > bb[3] || m_min.y > bb[4] || m_min.z > bb[5]) return false;
   return true;
 }
+#endif
 
 // Determine which octant of the tree would contain 'point'
-int TetrahedralTree::GetOctantContainingPoint(const Vec3& point) const {
+__GPULABEL__ int __TETRAHEDRALTREECLASS__::GetOctantContainingPoint(const __VEC3CLASS__& point) const
+{
   int oct = 0;
   if (point.x >= m_origin.x) oct |= 4;
   if (point.y >= m_origin.y) oct |= 2;
@@ -47,12 +56,13 @@ int TetrahedralTree::GetOctantContainingPoint(const Vec3& point) const {
   return oct;
 }
 
-bool TetrahedralTree::IsLeafNode() const {
+__GPULABEL__ bool __TETRAHEDRALTREECLASS__::IsLeafNode() const {
   // We are a leaf if we have no children. Since we either have none, or
   // all eight, it is sufficient to just check the first.
   return children[0] == nullptr;
 }
 
+#ifndef __GPUCOMPILE__
 void TetrahedralTree::InsertMeshNode(Vec3 point, const int index) {
   // Check if it is a leaf node.
   if (!IsLeafNode()) {
@@ -103,10 +113,25 @@ void TetrahedralTree::InsertMeshElement(const double bb[6], const int index) {
     children[i]->InsertMeshElement(bb, index);
   }
 }
+#endif
 
 // It returns the list of tetrahedrons that intersects in a bounding box (Octree
 // block) that contains the
 // point passed as input.
+#ifdef __GPUCOMPILE__
+__device__ void TetrahedralTreeGPU::GetElementsInBlock(const Vec3GPU& point, const int *&tet_list_elems, int &num_elems) const {
+    const TetrahedralTreeGPU* octreeNode = GetBlockFromPoint(point);
+
+    if (octreeNode) {
+        tet_list_elems = octreeNode->elements;
+        num_elems = octreeNode->numelements;
+        return;
+    }
+
+    tet_list_elems = nullptr;
+    num_elems = 0;
+  }
+#else
 const std::vector<int>& TetrahedralTree::GetElementsInBlock(const Vec3& point) const {
   const TetrahedralTree* octreeNode = GetBlockFromPoint(point);
 
@@ -116,14 +141,15 @@ const std::vector<int>& TetrahedralTree::GetElementsInBlock(const Vec3& point) c
 
   return emptyBlock;
 }
+#endif
 
 // check if the point is inside the domain.
 // This function is only executed at root to ensure that input point is inside
 // the mesh's bounding box
 // If we don't check this, the case when root is leaf node itself will return
 // wrong block
-const TetrahedralTree* TetrahedralTree::GetBlockFromPoint(
-    const Vec3& point) const {
+__GPULABEL__ const __TETRAHEDRALTREECLASS__* __TETRAHEDRALTREECLASS__::GetBlockFromPoint(const __VEC3CLASS__& point) const
+{
   if (!(m_min.x <= point.x && point.x <= m_max.x &&
         m_min.y <= point.y && point.y <= m_max.y &&
         m_min.z <= point.z && point.z <= m_max.z))
@@ -132,8 +158,9 @@ const TetrahedralTree* TetrahedralTree::GetBlockFromPoint(
   return GetBlockFromPointHelper(point);
 }
 
-const TetrahedralTree* TetrahedralTree::GetBlockFromPointHelper(
-    const Vec3& point) const {
+__GPULABEL__ const __TETRAHEDRALTREECLASS__* __TETRAHEDRALTREECLASS__::GetBlockFromPointHelper(
+    const __VEC3CLASS__& point) const
+{
   // If we're at a leaf node, it means, the point is inside this block
   if (IsLeafNode()) return this;
   // We are at the interior node, so check which child octant contains the
@@ -141,4 +168,13 @@ const TetrahedralTree* TetrahedralTree::GetBlockFromPointHelper(
   int octant = GetOctantContainingPoint(point);
   return children[octant]->GetBlockFromPointHelper(point);
 }
+#ifndef __GPUCOMPILE__
+#ifndef USEGPU
+double TetrahedralTree::CreateGPUTransferObject(TetrahedralTreeGPU *&tree_gpu)
+{
+  tree_gpu = nullptr;
+  return 0;
+}
+#endif
+#endif
 }

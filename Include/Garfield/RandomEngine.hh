@@ -18,6 +18,9 @@ class RandomEngine {
   virtual void Seed(const unsigned int s) = 0;
   /// Print some information about the random number generator.
   virtual void Print() = 0;
+  /// Retrieve the seed that was used
+  virtual unsigned int GetSeed() = 0;
+
 };
 }
 

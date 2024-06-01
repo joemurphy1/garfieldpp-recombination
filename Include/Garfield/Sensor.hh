@@ -1,5 +1,16 @@
-#ifndef G_SENSOR_H
+// Include this header if we're compiling with the GPU or this is the first time without
+#if defined(__GPUCOMPILE__) || !defined(G_SENSOR_H)
+
+#if !defined(__GPUCOMPILE__) && !defined(G_SENSOR_H)
 #define G_SENSOR_H
+#endif
+
+#ifdef __GPUCOMPILE__
+
+#include "MediumGPU.h"
+#include "ComponentGPU.h"
+
+#else
 
 #include <fstream>
 #include <functional>
@@ -10,20 +21,45 @@
 
 #include "Component.hh"
 #include "Shaper.hh"
+#include "GPUInterface.hh"
+#endif
 
 class TPad;
 
 namespace Garfield {
 
+// undefine everything first 
+#ifdef __SENSORCLASS__
+#undef __SENSORCLASS__
+#undef __MEDIUMCLASS__
+#undef __GPULABEL__
+#undef __GPUCONST__
+#endif
+
+// setup class names depending on if this is compiling the GPU static version or not
+#ifdef __GPUCOMPILE__
+#define __SENSORCLASS__ SensorGPU
+#define __MEDIUMCLASS__ MediumGPU
+#define __GPULABEL__ __device__
+#define __GPUCONST__ const
+#else
+#define __SENSORCLASS__ Sensor
+#define __MEDIUMCLASS__ Medium
+#define __GPULABEL__ 
+#define __GPUCONST__
+class SensorGPU;
+#endif
+
 /// %Sensor
 
-class Sensor {
+class __SENSORCLASS__ {
  public:
   /// Constructor
-  Sensor() = default;
+  __SENSORCLASS__() = default;
   /// Destructor
-  ~Sensor() {}
+  ~__SENSORCLASS__() {}
 
+#ifndef __GPUCOMPILE__
   /// Add a component.
   void AddComponent(Component* comp);
   /// Get the number of components attached to the sensor.
@@ -48,10 +84,13 @@ class Sensor {
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& medium,
                      int& status);
+#endif
   /// Get the drift field at (x, y, z).
+  __GPULABEL__ 
   void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, Medium*& medium, int& status);
+                     double& ey, double& ez, __MEDIUMCLASS__*& medium, int& status) __GPUCONST__;
 
+#ifndef __GPUCOMPILE__
   /// Get the magnetic field at (x, y, z).
   void MagneticField(const double x, const double y, const double z, double& bx,
                      double& by, double& bz, int& status);
@@ -83,9 +122,12 @@ class Sensor {
   /// Return the current user area.
   bool GetArea(double& xmin, double& ymin, double& zmin, double& xmax,
                double& ymax, double& zmax);
+#endif
   /// Check if a point is inside the user area.
-  bool IsInArea(const double x, const double y, const double z);
+  __GPULABEL__  
+  bool IsInArea(const double x, const double y, const double z) __GPUCONST__;
 
+#ifndef __GPUCOMPILE__
   /// Check if a point is inside an active medium and inside the user area.
   bool IsInside(const double x, const double y, const double z);
 
@@ -292,14 +334,25 @@ class Sensor {
 
   double StepSizeHint();
 
+  /// Create and initialise GPU Transfer class
+  double CreateGPUTransferObject(SensorGPU *&sensor_gpu);
+
  private:
   std::string m_className = "Sensor";
   /// Mutex.
   std::mutex m_mutex;
+#endif
 
   /// Components
+#ifdef __GPUCOMPILE__
+  ComponentGPU** m_components = nullptr;
+  size_t m_numComponents;
+  friend class Sensor;
+#else
   std::vector<std::tuple<Component*, bool, bool> > m_components;
+#endif
 
+#ifndef __GPUCOMPILE__
   struct Electrode {
     Component* comp;
     std::string label;
@@ -339,12 +392,14 @@ class Sensor {
 
   std::vector<std::pair<double, bool> > m_thresholdCrossings;
   double m_thresholdLevel = 0.;
+#endif
 
   // User bounding box
   double m_xMinUser = 0., m_yMinUser = 0., m_zMinUser = 0.;
   double m_xMaxUser = 0., m_yMaxUser = 0., m_zMaxUser = 0.;
   bool m_hasUserArea = false;
 
+#ifndef __GPUCOMPILE__
   // Switch on/off debugging messages
   bool m_debug = false;
 
@@ -380,7 +435,9 @@ class Sensor {
   double InterpolateTransferFunctionTable(const double t) const;
   void MakeTransferFunctionTable(std::vector<double>& tab);
   void FFT(std::vector<double>& data, const bool inverse, const int nn);
+#endif
 };
 }  // namespace Garfield
 
+#undef SENSORCLASS
 #endif
