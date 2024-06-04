@@ -622,10 +622,33 @@ bool ComponentTcadBase<N>::SetWeightingFieldShift(const std::string& label,
 template <size_t N>
 void ComponentTcadBase<N>::EnableVelocityMap(const bool on) {
   m_useVelocityMap = on;
-  if (m_ready && (m_eVelocity.empty() && m_hVelocity.empty())) {
+  if (on && m_ready && (m_eVelocity.empty() && m_hVelocity.empty())) {
     std::cout << m_className << "::EnableVelocityMap:\n"
-              << "    Warning: current map does not include velocity data.\n";
+              << "    Warning: current map does not have velocity data.\n";
   }
+}
+
+template <size_t N>
+void ComponentTcadBase<N>::EnableTrapOccupationMap(const bool on) { 
+
+  m_useTrapOccMap = on; 
+  if (on && m_ready && (m_acceptorOcc.empty() && m_donorOcc.empty())) {
+    std::cout << m_className << "::EnableTrapOccupationMap:\n"
+              << "    Warning: current map does not have "
+              << " trap occupation probability data.\n";
+  }
+  UpdateAttachment();
+}
+
+template <size_t N>
+void ComponentTcadBase<N>::EnableLifetimeMap(const bool on) { 
+
+  m_useLifetimeMap = on; 
+  if (on && m_ready && (m_eLifetime.empty() && m_hLifetime.empty())) {
+    std::cout << m_className << "::EnableLifetimeMap:\n"
+              << "    Warning: current map does not have lifetime data.\n";
+  }
+  UpdateAttachment();
 }
 
 template <size_t N>
@@ -1320,6 +1343,7 @@ bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
               << "    Error reading file " << filename << "\n";
     return false;
   }
+  if (m_useTrapOccMap || m_useLifetimeMap) UpdateAttachment();
   return true;
 }
 
@@ -1750,32 +1774,32 @@ void ComponentTcadBase<N>::SetMedium(const std::string& material,
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::SetDonor(const size_t donorNumber,
+bool ComponentTcadBase<N>::SetDonor(const size_t i,
                                     const double eXsec, const double hXsec,
                                     const double conc) {
-  if (donorNumber >= m_donors.size()) {
+  if (i >= m_donors.size()) {
     std::cerr << m_className << "::SetDonor: Index out of range.\n";
     return false;
   }
-  m_donors[donorNumber].xsece = eXsec;
-  m_donors[donorNumber].xsech = hXsec;
-  m_donors[donorNumber].conc = conc;
+  m_donors[i].xsece = eXsec;
+  m_donors[i].xsech = hXsec;
+  m_donors[i].conc = conc;
 
   UpdateAttachment();
   return true;
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::SetAcceptor(const size_t acceptorNumber,
+bool ComponentTcadBase<N>::SetAcceptor(const size_t i,
                                        const double eXsec, const double hXsec,
                                        const double conc) {
-  if (acceptorNumber >= m_acceptors.size()) {
+  if (i >= m_acceptors.size()) {
     std::cerr << m_className << "::SetAcceptor: Index out of range.\n";
     return false;
   }
-  m_acceptors[acceptorNumber].xsece = eXsec;
-  m_acceptors[acceptorNumber].xsech = hXsec;
-  m_acceptors[acceptorNumber].conc = conc;
+  m_acceptors[i].xsece = eXsec;
+  m_acceptors[i].xsech = hXsec;
+  m_acceptors[i].conc = conc;
 
   UpdateAttachment();
   return true;
@@ -1784,14 +1808,14 @@ bool ComponentTcadBase<N>::SetAcceptor(const size_t acceptorNumber,
 template <size_t N>
 bool ComponentTcadBase<N>::ElectronAttachment(const double x, const double y,
                                               const double z, double& eta) {
-  Interpolate(x, y, z, m_eAttachment, eta);
+  Interpolate(x, y, z, m_eEta, eta);
   return true;
 }
 
 template <size_t N>
 bool ComponentTcadBase<N>::HoleAttachment(const double x, const double y,
                                           const double z, double& eta) {
-  Interpolate(x, y, z, m_hAttachment, eta);
+  Interpolate(x, y, z, m_hEta, eta);
   return true;
 }
 
@@ -1824,15 +1848,19 @@ bool ComponentTcadBase<N>::HoleVelocity(const double x, const double y,
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::GetElectronLifetime(const double x, const double y,
-                                               const double z, double& tau) {
-  return Interpolate(x, y, z, m_eLifetime, tau);
+double ComponentTcadBase<N>::ElectronLifetime(const double x, const double y,
+                                              const double z) {
+  double tau = 0.;
+  Interpolate(x, y, z, m_eLifetime, tau);
+  return tau;
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::GetHoleLifetime(const double x, const double y,
-                                           const double z, double& tau) {
-  return Interpolate(x, y, z, m_hLifetime, tau);
+double ComponentTcadBase<N>::HoleLifetime(const double x, const double y,
+                                          const double z) {
+  double tau = 0.;
+  Interpolate(x, y, z, m_hLifetime, tau);
+  return tau;
 }
 
 template <size_t N>
@@ -1908,8 +1936,8 @@ void ComponentTcadBase<N>::Cleanup() {
   m_acceptors.clear();
   m_donorOcc.clear();
   m_acceptorOcc.clear();
-  m_eAttachment.clear();
-  m_hAttachment.clear();
+  m_eEta.clear();
+  m_hEta.clear();
 }
 
 template <size_t N>
@@ -1947,10 +1975,85 @@ size_t ComponentTcadBase<N>::FindRegion(const std::string& name) const {
 template <size_t N>
 void ComponentTcadBase<N>::UpdateAttachment() {
 
+  if (!m_useLifetimeMap && !m_useTrapOccMap) {
+    m_eEta.clear();
+    m_hEta.clear();
+  }
   if (m_vertices.empty()) return;
   const size_t nVertices = m_vertices.size();
-  m_eAttachment.assign(nVertices, 0.);
-  m_hAttachment.assign(nVertices, 0.);
+  m_eEta.assign(nVertices, 0.);
+  m_hEta.assign(nVertices, 0.);
+  if (m_useLifetimeMap) ComputeEtaFromLifetime();
+  if (m_useTrapOccMap) ComputeEtaFromTraps();
+}
+
+template <size_t N>
+void ComponentTcadBase<N>::ComputeEtaFromLifetime() {
+
+  if (m_vertices.empty()) return;
+  const size_t nVertices = m_vertices.size();
+  // Compute the drift velocities at each node.
+  std::vector<double> ve(nVertices, 0.); 
+  std::vector<double> vh(nVertices, 0.); 
+  for (const auto& element : m_elements) {
+    if (element.region >= m_regions.size()) continue;
+    auto medium = m_regions[element.region].medium;
+    if (!medium) continue;
+    const size_t nv = ElementVertices(element);
+    for (size_t i = 0; i < nv; ++i) {
+      auto k = element.vertex[i];
+      // Get the electric field at this node.
+      const double ex = m_efield[k][0];
+      const double ey = m_efield[k][1];
+      const double ez = N == 3 ? m_efield[k][2] : 0.;
+      // Compute the electron drift velocity.
+      double vx = 0., vy = 0., vz = 0.;
+      medium->ElectronVelocity(ex, ey, ez, 0., 0., 0., vx, vy, vz);
+      ve[k] = sqrt(vx * vx + vy * vy + vz * vz);
+      vx = vy = vz = 0.;
+      medium->HoleVelocity(ex, ey, ez, 0., 0., 0., vx, vy, vz);
+      vh[k] = sqrt(vx * vx + vy * vy + vz * vz);
+    }
+  }
+  // If available, use the velocity information from the TCAD map.
+  if (!m_eVelocity.empty()) {
+    for (size_t i = 0; i < nVertices; ++i) {
+      double v = 0.;
+      for (size_t j = 0; j < N; ++j) {
+        v += m_eVelocity[i][j] * m_eVelocity[i][j];
+      }
+      ve[i] = sqrt(v);
+    }
+  }
+  if (!m_hVelocity.empty()) { 
+    for (size_t i = 0; i < nVertices; ++i) {
+      double v = 0.;
+      for (size_t j = 0; j < N; ++j) {
+        v += m_hVelocity[i][j] * m_hVelocity[i][j];
+      }
+      vh[i] = sqrt(v);
+    }
+  }
+  // Compute the attachment coefficients.
+  if (!m_eLifetime.empty()) {
+    for (size_t i = 0; i < nVertices; ++i) {
+      const double d = m_eLifetime[i] * ve[i];
+      if (d > 0.) m_eEta[i] += 1. / d;
+    }
+  }
+  if (!m_hLifetime.empty()) {
+    for (size_t i = 0; i < nVertices; ++i) {
+      const double d = m_hLifetime[i] * ve[i];
+      if (d > 0.) m_hEta[i] += 1. / d;
+    }
+  }
+}
+
+template <size_t N>
+void ComponentTcadBase<N>::ComputeEtaFromTraps() {
+
+  if (m_vertices.empty()) return;
+  const size_t nVertices = m_vertices.size();
 
   const size_t nAcceptors = m_acceptors.size();
   for (size_t i = 0; i < nAcceptors; ++i) {
@@ -1960,10 +2063,10 @@ void ComponentTcadBase<N>::UpdateAttachment() {
       // Get the occupation probability.
       const double f = m_acceptorOcc[j][i];
       if (defect.xsece > 0.) {
-        m_eAttachment[j] += defect.conc * defect.xsece * (1. - f);
+        m_eEta[j] += defect.conc * defect.xsece * (1. - f);
       }
       if (defect.xsech > 0.) {
-        m_hAttachment[j] += defect.conc * defect.xsech * f;
+        m_hEta[j] += defect.conc * defect.xsech * f;
       }
     }
   }
@@ -1974,10 +2077,10 @@ void ComponentTcadBase<N>::UpdateAttachment() {
     for (size_t j = 0; j < nVertices; ++j) {
       const double f = m_donorOcc[j][i];
       if (defect.xsece > 0.) {
-        m_eAttachment[j] += defect.conc * defect.xsece * f;
+        m_eEta[j] += defect.conc * defect.xsece * f;
       }
       if (defect.xsech > 0.) {
-        m_hAttachment[j] += defect.conc * defect.xsech * (1. - f);
+        m_hEta[j] += defect.conc * defect.xsech * (1. - f);
       }
     }
   }

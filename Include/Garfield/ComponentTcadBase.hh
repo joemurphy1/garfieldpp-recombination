@@ -99,18 +99,23 @@ class ComponentTcadBase : public Component {
   bool SetAcceptor(const size_t acceptorNumber, const double exsec,
                    const double hxsec, const double concentration);
 
-  /// Switch use of the imported impact ionisation map on/off.
+  /// Use the imported impact ionisation map or not.
   void EnableAlphaMap(const bool on) { m_useAlphaMap = on; }
 
-  /// Switch use of the imported trapping map on/off.
-  void EnableAttachmentMap(const bool on) { m_useAttachmentMap = on; }
-
+  /// Use the imported trapping map or not.
+  void EnableTrapOccupationMap(const bool on);
+  /// Use the imported lifetime map or not. 
+  void EnableLifetimeMap(const bool on);
+ 
   /// Get the electron mobility at a given point in the mesh.
   bool GetElectronMobility(const double x, const double y, const double z,
                            double& mob);
   /// Get the hole mobility at a given point in the mesh.
   bool GetHoleMobility(const double x, const double y, const double z,
                        double& mob);
+
+  double ElectronLifetime(const double x, const double y, const double z);
+  double HoleLifetime(const double x, const double y, const double z);
 
   void WeightingField(const double x, const double y, const double z,
                       double& wx, double& wy, double& wz,
@@ -144,17 +149,13 @@ class ComponentTcadBase : public Component {
     return m_useAlphaMap && !(m_eAlpha.empty() && m_hAlpha.empty());
   }
   bool HasAttachmentMap() const override {
-    return (m_useAttachmentMap && !(m_acceptors.empty() && m_donors.empty()));
+    return ((m_useTrapOccMap || m_useLifetimeMap) && 
+            !(m_eEta.empty() && m_hEta.empty()));
   }
   bool ElectronAttachment(const double x, const double y, const double z,
                           double& eta) override;
   bool HoleAttachment(const double x, const double y, const double z,
                       double& eta) override;
-
-  bool GetElectronLifetime(const double x, const double y, const double z,
-                           double& etau) override;
-  bool GetHoleLifetime(const double x, const double y, const double z,
-                       double& htau) override;
 
   bool ElectronTownsend(const double x, const double y, const double z,
                         double& alpha) override;
@@ -242,8 +243,8 @@ class ComponentTcadBase : public Component {
   std::vector<std::vector<float> > m_donorOcc;
   std::vector<std::vector<float> > m_acceptorOcc;
   // Attachment coefficients [1 / cm]
-  std::vector<double> m_eAttachment;
-  std::vector<double> m_hAttachment;
+  std::vector<double> m_eEta;
+  std::vector<double> m_hEta;
 
   struct Defect {
     // Electron cross-section
@@ -258,8 +259,10 @@ class ComponentTcadBase : public Component {
 
   // Use velocity map or not.
   bool m_useVelocityMap = false;
-  // Use trapping map or not.
-  bool m_useAttachmentMap = false;
+  // Use trap occupation probability map or not.
+  bool m_useTrapOccMap = false;
+  // Use lifetime map or not.
+  bool m_useLifetimeMap = false;
   // Use impact ionisation map or not.
   bool m_useAlphaMap = false;
 
@@ -295,6 +298,8 @@ class ComponentTcadBase : public Component {
     return true;
   }
   void UpdateAttachment();
+  void ComputeEtaFromLifetime();
+  void ComputeEtaFromTraps();
 
   bool GetOffset(const std::string& label, double& dx, double& dy,
                  double& dz) const;

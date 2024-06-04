@@ -354,7 +354,7 @@ class __COMPONENTCLASS__ {
 
   /// Does the component have maps of the Townsend coefficient?
   virtual bool HasTownsendMap() const { return false; }
-  /// Does the component have attachment maps?
+  /// Does the component have maps of the attachment coefficient?
   virtual bool HasAttachmentMap() const { return false; }
   /// Does the component have velocity maps?
   virtual bool HasVelocityMap() const { return false; }
@@ -395,16 +395,6 @@ class __COMPONENTCLASS__ {
                             const double /*z*/, double& vx, double& vy,
                             double& vz) {
     vx = vy = vz = 0;
-    return false;
-  }
-  virtual bool GetElectronLifetime(const double /*x*/, const double /*y*/,
-                                   const double /*z*/, double& etau) {
-    etau = -1;
-    return false;
-  }
-  virtual bool GetHoleLifetime(const double /*x*/, const double /*y*/,
-                               const double /*z*/, double& htau) {
-    htau = -1;
     return false;
   }
 
