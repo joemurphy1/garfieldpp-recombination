@@ -1157,15 +1157,16 @@ bool AvalancheMC::ComputeAlphaEta(const Particle particle,
       // Get the drift velocity.
       std::array<double, 3> v;
       if (!GetVelocity(particle, medium, x, e, b, v)) continue;
-      // Get Townsend and attachment coefficients.
+      for (size_t k = 0; k < 3; ++k) vd[k] += wg[j] * v[k];
+      // Get the Townsend coefficient.
       double alpha = GetTownsend(particle, medium, x, e, b);
+      alps[i] += wg[j] * alpha;
+      if (!m_useAttachment) continue;
       double eta = GetAttachment(particle, medium, x, e, b);
       if (eta < 0.) {
         eta = std::abs(eta) * Mag(v) / veff;
         equilibrate = false;
       }
-      for (size_t k = 0; k < 3; ++k) vd[k] += wg[j] * v[k];
-      alps[i] += wg[j] * alpha;
       etas[i] += wg[j] * eta;
     }
 
@@ -1181,7 +1182,7 @@ bool AvalancheMC::ComputeAlphaEta(const Particle particle,
       }
     }
     alps[i] *= 0.5 * dmag * scale;
-    etas[i] *= 0.5 * dmag * scale;
+    if (m_useAttachment) etas[i] *= 0.5 * dmag * scale;
   }
 
   // Skip equilibration if projection has not been requested.
@@ -1194,13 +1195,15 @@ bool AvalancheMC::ComputeAlphaEta(const Particle particle,
     }
     return false;
   }
-  if (!Equilibrate(etas)) {
-    if (m_debug) {
-      std::cerr << m_className << "::ComputeAlphaEta:\n"
-                << "    Unable to even out eta steps.\n"
-                << "    Calculation is probably inaccurate.\n";
+  if (m_useAttachment) {
+    if (!Equilibrate(etas)) {
+      if (m_debug) {
+        std::cerr << m_className << "::ComputeAlphaEta:\n"
+                  << "    Unable to even out eta steps.\n"
+                  << "    Calculation is probably inaccurate.\n";
+      }
+      return false;
     }
-    return false;
   }
   // Seems to have worked.
   return true;
