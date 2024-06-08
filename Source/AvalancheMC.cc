@@ -252,8 +252,8 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
   // Make sure the starting point is inside an active region.
   std::array<double, 3> e0 = {0., 0., 0.};
   std::array<double, 3> b0 = {0., 0., 0.};
-  Medium* medium = nullptr;
-  int status = GetField(x0, e0, b0, medium);
+  Medium* m0 = nullptr;
+  int status = GetField(x0, e0, b0, m0);
   if (status != 0) {
     std::cerr << m_className + "::DriftLine: "
               << PrintVec(x0) + " is not in a valid drift region.\n";
@@ -271,7 +271,7 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
     return StatusOutsideTimeWindow;
   }
   // Determine if the medium is a gas or semiconductor.
-  const bool semiconductor = medium->IsSemiconductor();
+  const bool semiconductor = m0->IsSemiconductor();
 
   while (0 == status) {
     constexpr double tol = 1.e-10;
@@ -285,7 +285,7 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
     }
     // Compute the drift velocity at this point.
     std::array<double, 3> v0;
-    if (!GetVelocity(particle, medium, x0, e0, b0, v0)) {
+    if (!GetVelocity(particle, m0, x0, e0, b0, v0)) {
       status = StatusCalculationAbandoned;
       break;
     }
@@ -305,14 +305,14 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
     double t1 = t0;
     if (vmag < tol || emag < tol) {
       // Diffusion only. Get the mobility.
-      const double mu = GetMobility(particle, medium);
+      const double mu = GetMobility(particle, m0);
       if (mu < 0.) {
         std::cerr << m_className + "::DriftLine: Invalid mobility.\n";
         status = StatusCalculationAbandoned;
         break;
       }
       // Calculate the diffusion coefficient.
-      const double dif = mu * BoltzmannConstant * medium->GetTemperature();
+      const double dif = mu * BoltzmannConstant * m0->GetTemperature();
       double sigma = 0.;
       switch (m_stepModel) {
         case StepModel::FixedTime:
@@ -326,7 +326,7 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
           // Thermal velocity.
           const double vth =
               SpeedOfLight * sqrt(2 * BoltzmannConstant *
-                                  medium->GetTemperature() / ElectronMass);
+                                  m0->GetTemperature() / ElectronMass);
           sigma = m_nMc * dif / vth;
         } break;
         case StepModel::UserDistance:
@@ -375,7 +375,7 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
       double difl = 0., dift = 0.;
       if (m_useDiffusion) {
         // Get the diffusion coefficients.
-        if (!GetDiffusion(particle, medium, e0, b0, difl, dift)) {
+        if (!GetDiffusion(particle, m0, e0, b0, difl, dift)) {
           PrintError("DriftLine", "diffusion", particle, x0);
           status = StatusCalculationAbandoned;
           break;
@@ -391,9 +391,12 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
       // Compute the proposed end point of this step.
       for (size_t k = 0; k < 3; ++k) x1[k] += dt * v0[k];
       std::array<double, 3> v1 = v0;
+      std::array<double, 3> e1 = e0;
+      std::array<double, 3> b1 = b0;
       constexpr unsigned int nMaxIter = 3;
       for (unsigned int i = 0; i < nMaxIter; ++i) {
-        status = GetField(x1, e0, b0, medium);
+        Medium* m1 = nullptr;
+        status = GetField(x1, e1, b1, m1);
         if (status != 0) {
           // Point is outside the active region. Reduce the step size.
           x1 = MidPoint(x0, x1);
@@ -401,7 +404,7 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
           continue;
         }
         // Compute the velocity at the proposed end point.
-        if (!GetVelocity(particle, medium, x1, e0, b0, v1)) {
+        if (!GetVelocity(particle, m1, x1, e1, b1, v1)) {
           status = StatusCalculationAbandoned;
           break;
         }
@@ -416,12 +419,29 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
         vmag = Mag(v1);
       }
       if (m_useDiffusion) AddDiffusion(sqrt(vmag * dt), difl, dift, x1, v1);
+      if (!aval && m_useAttachment) {
+        double eta = GetAttachment(particle, m0, x0, e0, b0);
+        const double ds = Dist(x0, x1);
+        if (eta < 0.) {
+          const double veff = ds / dt;
+          eta = std::abs(eta) * vmag / veff;
+        }
+        const double patt = 1. - std::exp(-std::abs(eta) * ds);
+        if (RndmUniform() < patt) {
+          x1 = MidPoint(x0, x1);
+          dt *= 0.5;
+          path.emplace_back(MakePoint(x1, t1));
+          status = StatusAttached;
+          if (m_debug) std::cout << "    Attached.\n";
+          break;
+        }
+      }
       t1 += dt;
     }
     if (m_debug) std::cout << "    Next point: " << PrintVec(x1) + ".\n";
 
     // Get the electric and magnetic field at the new position.
-    status = GetField(x1, e0, b0, medium);
+    status = GetField(x1, e0, b0, m0);
     if (status == StatusLeftDriftMedium || status == StatusLeftDriftArea) {
       // Point is not inside a "driftable" medium or outside the drift area.
       // Try terminating the drift line close to the boundary.
@@ -478,8 +498,7 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
   unsigned int nIonsOld = m_nIons;
 
   if ((particle == Particle::Electron || particle == Particle::Hole) &&
-      (aval || m_useAttachment) &&
-      (m_sizeCut == 0 || m_nElectrons < m_sizeCut)) {
+      aval && (m_sizeCut == 0 || m_nElectrons < m_sizeCut)) {
     ComputeGainLoss(particle, path, status, secondaries, semiconductor);
     if (status == StatusAttached && m_debug) std::cout << "    Attached.\n";
   }
@@ -1138,15 +1157,16 @@ bool AvalancheMC::ComputeAlphaEta(const Particle particle,
       // Get the drift velocity.
       std::array<double, 3> v;
       if (!GetVelocity(particle, medium, x, e, b, v)) continue;
-      // Get Townsend and attachment coefficients.
+      for (size_t k = 0; k < 3; ++k) vd[k] += wg[j] * v[k];
+      // Get the Townsend coefficient.
       double alpha = GetTownsend(particle, medium, x, e, b);
+      alps[i] += wg[j] * alpha;
+      if (!m_useAttachment) continue;
       double eta = GetAttachment(particle, medium, x, e, b);
       if (eta < 0.) {
         eta = std::abs(eta) * Mag(v) / veff;
         equilibrate = false;
       }
-      for (size_t k = 0; k < 3; ++k) vd[k] += wg[j] * v[k];
-      alps[i] += wg[j] * alpha;
       etas[i] += wg[j] * eta;
     }
 
@@ -1162,7 +1182,7 @@ bool AvalancheMC::ComputeAlphaEta(const Particle particle,
       }
     }
     alps[i] *= 0.5 * dmag * scale;
-    etas[i] *= 0.5 * dmag * scale;
+    if (m_useAttachment) etas[i] *= 0.5 * dmag * scale;
   }
 
   // Skip equilibration if projection has not been requested.
@@ -1175,13 +1195,15 @@ bool AvalancheMC::ComputeAlphaEta(const Particle particle,
     }
     return false;
   }
-  if (!Equilibrate(etas)) {
-    if (m_debug) {
-      std::cerr << m_className << "::ComputeAlphaEta:\n"
-                << "    Unable to even out eta steps.\n"
-                << "    Calculation is probably inaccurate.\n";
+  if (m_useAttachment) {
+    if (!Equilibrate(etas)) {
+      if (m_debug) {
+        std::cerr << m_className << "::ComputeAlphaEta:\n"
+                  << "    Unable to even out eta steps.\n"
+                  << "    Calculation is probably inaccurate.\n";
+      }
+      return false;
     }
-    return false;
   }
   // Seems to have worked.
   return true;
