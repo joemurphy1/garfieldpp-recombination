@@ -612,7 +612,7 @@ void Sensor::AddSignalWeightingPotential(const double q,
       double chargePrev = 0.;
       for (size_t j = 0; j < nt; ++j) {
         const double t = ts[i] + dtimes[j];
-        if (t < ts[i + 1]) continue;
+     //   if (t < ts[i + 1]) continue;
         const double charge = qm[i] * (dwp1[j] - dwp0[j]);
         const double delta = charge - chargePrev;
         const int bin = int((t - m_tStart) * invBinSize);
@@ -1823,14 +1823,13 @@ void Sensor::FFT(std::vector<double> &data, const bool inverse, const int nn) {
   }
 }
 
-void Sensor::PlotSignal(const std::string& label, TPad* pad) {
+void Sensor::PlotSignal(const std::string& label, TPad* pad, 
+                        const std::string optTotal, const std::string optPrompt,
+                        const std::string optDelayed) {
 
   ViewSignal view;
   view.SetSensor(this);
   if (pad) view.SetCanvas(pad);
-  std::string optTotal = "t";
-  std::string optPrompt = "";
-  std::string optDelayed = "";
   view.PlotSignal(label, optTotal, optPrompt, optDelayed); 
 }
  
