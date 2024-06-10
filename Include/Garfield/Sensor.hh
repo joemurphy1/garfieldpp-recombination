@@ -256,7 +256,9 @@ class Sensor {
     const std::vector<double>& ns, const int navg);
 
   /// Plot the induced signal.
-  void PlotSignal(const std::string& label, TPad* pad);
+  void PlotSignal(const std::string& label, TPad* pad,
+                  const std::string optTotal = "t", const std::string optPrompt = "",
+                  const std::string optDelayed = "");
   /// Exporting induced signal to a csv file.
   void ExportSignal(const std::string& label, const std::string& filename,
                     const bool chargeCariers = false) const;
