@@ -174,6 +174,12 @@ class __COMPONENTCLASS__ {
   /// Get the coordinates of the elementary cell.
   virtual bool GetElementaryCell(double& xmin, double& ymin, double& zmin,
                                  double& xmax, double& ymax, double& zmax);
+  // Get the x-length of the elementary cell.
+  double CellSizeX();
+  // Get the y-length of the elementary cell.
+  double CellSizeY();
+  // Get the z-length of the elementary cell.
+  double CellSizeZ();
 
   /** Integrate the normal component of the electric field over a circle.
    * \param xc,yc centre of the circle [cm]
