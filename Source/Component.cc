@@ -137,6 +137,27 @@ bool Component::GetElementaryCell(double& xmin, double& ymin, double& zmin,
   return GetBoundingBox(xmin, ymin, zmin, xmax, ymax, zmax);
 }
 
+double Component::CellSizeX() {
+  double xmin = 0., ymin = 0., zmin = 0.;
+  double xmax = 0., ymax = 0., zmax = 0.;
+  if (!GetElementaryCell(xmin, ymin, zmin, xmax, ymax, zmax)) return 0.;
+  return xmax - xmin;
+}
+
+double Component::CellSizeY() {
+  double xmin = 0., ymin = 0., zmin = 0.;
+  double xmax = 0., ymax = 0., zmax = 0.;
+  if (!GetElementaryCell(xmin, ymin, zmin, xmax, ymax, zmax)) return 0.;
+  return ymax - ymin;
+}
+
+double Component::CellSizeZ() {
+  double xmin = 0., ymin = 0., zmin = 0.;
+  double xmax = 0., ymax = 0., zmax = 0.;
+  if (!GetElementaryCell(xmin, ymin, zmin, xmax, ymax, zmax)) return 0.;
+  return zmax - zmin;
+}
+
 bool Component::CrossedWire(
     const double /*x0*/, const double /*y0*/, const double /*z0*/, 
     const double /*x1*/, const double /*y1*/, const double /*z1*/,
