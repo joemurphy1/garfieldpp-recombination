@@ -1,4 +1,4 @@
-#include "GPUInterface.hh"
+#include "Garfield/GPUInterface.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "AvalancheMicroscopicGPU.h"
 

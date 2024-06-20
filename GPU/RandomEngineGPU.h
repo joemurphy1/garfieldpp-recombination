@@ -1,7 +1,7 @@
 #ifndef G_RANDOM_ENGINE_GPU_H
 #define G_RANDOM_ENGINE_GPU_H
 
-#include "GPUInterface.hh"
+#include "Garfield/GPUInterface.hh"
 #include <curand.h>
 #include <curand_kernel.h>
 
