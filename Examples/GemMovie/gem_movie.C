@@ -59,8 +59,7 @@ int main(int argc, char * argv[]) {
   AvalancheMC drift(&sensor);
   drift.SetTimeSteps(0.05);
 
-  ViewField fieldView;
-  fieldView.SetComponent(&fm);
+  ViewField fieldView(&fm);
   fieldView.SetPlane(0, -1, 0, 0, 0, 0);
   fieldView.SetArea(-2 * pitch, -0.02, 2 * pitch, 0.02);
   fieldView.SetVoltageRange(-160., 160.);
@@ -147,9 +146,9 @@ int main(int argc, char * argv[]) {
     canvas.cd();
     char text[100];
     if (i < 100) {
-      sprintf(text, "#it{t} = %04.1f ns", tmin + dt);
+      snprintf(text, 100, "#it{t} = %04.1f ns", tmin + dt);
     } else {
-      sprintf(text, "#it{t} = %04.2f #mus", 1.e-3 * (tmin + dt));
+      snprintf(text, 100, "#it{t} = %04.2f #mus", 1.e-3 * (tmin + dt));
     }
     label.DrawLatexNDC(0.3, 0.88, text);
     canvas.Update();
@@ -157,7 +156,7 @@ int main(int argc, char * argv[]) {
     constexpr bool gif = false;
     if (!gif) {
       char filename[50];
-      sprintf(filename, "frames/frame_%03d.png", i);
+      snprintf(filename, 50, "frames/frame_%03d.png", i);
       canvas.SaveAs(filename);
     } else {
       if (i == nFrames - 1) { 

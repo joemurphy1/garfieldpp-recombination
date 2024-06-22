@@ -40,7 +40,9 @@ bool NonZero(const std::vector<double>& v) {
 
 namespace Garfield {
 
-ViewMedium::ViewMedium() : ViewBase("ViewMedium") {}
+ViewMedium::ViewMedium(Medium* medium) : 
+    ViewBase("ViewMedium"),
+    m_medium(medium) {}
 
 void ViewMedium::SetMedium(Medium* m) {
   if (!m) {

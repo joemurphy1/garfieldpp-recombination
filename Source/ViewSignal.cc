@@ -13,7 +13,9 @@
 
 namespace Garfield {
 
-ViewSignal::ViewSignal() : ViewBase("ViewSignal") {}
+ViewSignal::ViewSignal(Sensor* sensor) : 
+    ViewBase("ViewSignal"),
+    m_sensor(sensor) {}
 
 void ViewSignal::SetSensor(Sensor* s) {
   if (!s) {

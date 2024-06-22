@@ -116,8 +116,7 @@ int main(int argc, char * argv[]) {
   sensor.SetArea(xmin, 0., -1., xmax, yHV, 1.);
 
   // Plot isopotential contours.
-  ViewField fieldView;
-  fieldView.SetSensor(&sensor);
+  ViewField fieldView(&sensor);
   fieldView.SetArea(xmin, 0., xmax, 5 * gap);
   fieldView.SetVoltageRange(-400., 1000.);
   fieldView.PlotContour();
@@ -159,8 +158,7 @@ int main(int argc, char * argv[]) {
   }
 
   // Plot the drift lines on top of the cell layout.
-  ViewCell cellView;
-  cellView.SetComponent(&cmp);
+  ViewCell cellView(&cmp);
   cellView.SetArea(xmin, 0., xmax, 5 * gap);
   cellView.Plot2d();
   driftView.SetArea(xmin, 0., xmax, 5 * gap);
@@ -168,8 +166,7 @@ int main(int argc, char * argv[]) {
   driftView.Plot(true, false); 
 
   // Plot the induced current.
-  ViewSignal signalView;
-  signalView.SetSensor(&sensor);
+  ViewSignal signalView(&sensor);
   TCanvas c1("c1", "", 800, 600);
   signalView.SetCanvas(&c1);
   signalView.PlotSignal("pad_plane");

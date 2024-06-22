@@ -54,8 +54,7 @@ int main(int argc, char * argv[]) {
   sensor.SetArea(-ext_x,-ext_y,-ext_z,ext_x,ext_y,ext_z);
 
   // Set up the object for field visualization.
-  ViewField vf;
-  vf.SetSensor(&sensor);
+  ViewField vf(&sensor);
   vf.SetCanvas(c1);
   vf.SetArea(-ext_x,-ext_y,ext_x,ext_y);
   vf.SetNumberOfContours(20);

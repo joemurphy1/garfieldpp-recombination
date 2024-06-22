@@ -15,10 +15,9 @@ fm.PrintRange()
 # Dimensions of the GEM [cm]
 pitch = 0.014
 
-fieldView = ROOT.Garfield.ViewField()
+fieldView = ROOT.Garfield.ViewField(fm)
 cF = ROOT.TCanvas('cF', '', 600, 600)
 fieldView.SetCanvas(cF)
-fieldView.SetComponent(fm)
 # Set the normal vector of the viewing plane (xz plane).
 fieldView.SetPlaneXZ()
 # Set the plot limits in the current viewing plane.

@@ -44,8 +44,7 @@ int main(int argc, char * argv[]) {
   const double ymin = -1.5 * h;
   const double ymax =  1.5 * h;
 
-  ViewCell cellView;
-  cellView.SetComponent(&cmp);
+  ViewCell cellView(&cmp);
   cellView.SetArea(xmin, ymin, -10., xmax, ymax, 10.);
 
   ViewIsochrons isoView;

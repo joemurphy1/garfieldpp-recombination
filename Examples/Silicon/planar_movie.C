@@ -84,8 +84,7 @@ int main(int argc, char * argv[]) {
   track.EnablePlotting(&driftView);
   drift.EnablePlotting(&driftView);
 
-  ViewSignal signalView;
-  signalView.SetSensor(&sensor);
+  ViewSignal signalView(&sensor);
 
   TCanvas canvas("c", "", 1400, 600);
   canvas.Divide(2, 1);

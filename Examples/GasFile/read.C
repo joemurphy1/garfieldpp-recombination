@@ -21,8 +21,7 @@ int main(int argc, char * argv[]) {
   gas.LoadIonMobility(path + "/share/Garfield/Data/IonMobility_Ar+_Ar.txt");
   gas.PrintGas();
 
-  ViewMedium view;
-  view.SetMedium(&gas);
+  ViewMedium view(&gas);
   view.SetMagneticField(2.);
   
   TCanvas cV("cV", "", 600, 600);

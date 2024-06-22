@@ -37,8 +37,7 @@ cmp.AddPlaneY(0., 0.)
 cmp.AddPlaneY(249.7, -100000)
 
 # Plot isopotential contours.
-fieldView = ROOT.Garfield.ViewField()
-fieldView.SetComponent(cmp)
+fieldView = ROOT.Garfield.ViewField(cmp)
 xmin = -3 * period
 xmax =  3 * period
 ymin = 0.
@@ -55,9 +54,8 @@ fieldView.EqualFluxIntervals(xmin, ymax, 0, xmax, ymax, 0, xf, yf, zf, 50)
 fieldView.PlotFieldLines(xf, yf, zf, True, False) 
 
 # Plot the cell layout.
-cellView = ROOT.Garfield.ViewCell()
+cellView = ROOT.Garfield.ViewCell(cmp)
 cellView.SetCanvas(fieldView.GetCanvas())
-cellView.SetComponent(cmp)
 cellView.SetArea(xmin, ymin, xmax, ymax)
 cellView.Plot2d()
 

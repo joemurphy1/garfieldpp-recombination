@@ -25,8 +25,7 @@ int main(int argc, char * argv[]) {
   std::vector<double> angles;
   gas.GetFieldGrid(efields, bfields, angles);
 
-  ViewMedium view;
-  view.SetMedium(&gas);
+  ViewMedium view(&gas);
   view.SetMagneticField(0.5);
  
   // Plot the velocity as function of electric field 

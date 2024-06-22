@@ -28,8 +28,7 @@ int main(int argc, char * argv[]) {
   fm.SetWeightingField(path + "weight2.lis", "strip2");
   fm.SetWeightingField(path + "weight3.lis", "strip3");
  
-  ViewField fieldView;
-  fieldView.SetComponent(&fm);
+  ViewField fieldView(&fm);
   fieldView.SetPlaneXZ();
   fieldView.PlotContourWeightingField("strip1", "v");
 

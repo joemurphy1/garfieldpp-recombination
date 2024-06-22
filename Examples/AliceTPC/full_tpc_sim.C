@@ -110,8 +110,7 @@ int main(int argc, char * argv[]) {
   sensor.SetArea(xmin, 0., -1., xmax, yHV, 1.);
 
   // Plot isopotential contours.
-  ViewField fieldView;
-  fieldView.SetComponent(&cmpi);
+  ViewField fieldView(&cmpi);
   fieldView.SetArea(xmin, 0., xmax, 5 * gap);
   fieldView.SetVoltageRange(-400., 1000.);
   fieldView.PlotContour();
@@ -173,8 +172,7 @@ int main(int argc, char * argv[]) {
   }
 
   // Plot the cell layout.
-  ViewCell cellView;
-  cellView.SetComponent(&cmpi);
+  ViewCell cellView(&cmpi);
   cellView.SetArea(xmin, 0., xmax, 5 * gap);
   cellView.Plot2d();
   if (plotDriftLines) {

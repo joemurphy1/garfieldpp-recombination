@@ -82,8 +82,7 @@ int main(int argc, char* argv[]) {
   cGeom->SetLeftMargin(0.14);
   const bool plotContours = false;
   if (plotContours) {
-    ViewField* vf = new ViewField();
-    vf->SetSensor(&sensor);
+    ViewField* vf = new ViewField(&sensor);
     vf->SetCanvas(cGeom);
     vf->SetArea(-axis_x, -axis_y, axis_x, axis_y);
     vf->SetNumberOfContours(40);

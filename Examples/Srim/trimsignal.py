@@ -1,8 +1,5 @@
 import ROOT
 import Garfield
-# import os
-# import math
-# import ctypes
 
 si = ROOT.Garfield.MediumSilicon()
 
@@ -58,7 +55,6 @@ for cluster in tr.GetClusters():
 driftView.SetArea(-2.e-4, 0., 2.e-4, 100.e-4);
 driftView.Plot(True)
 
-signalView = ROOT.Garfield.ViewSignal()
-signalView.SetSensor(sensor)
+signalView = ROOT.Garfield.ViewSignal(sensor)
 signalView.PlotSignal("readout", "tei")
 

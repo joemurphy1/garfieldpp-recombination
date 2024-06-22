@@ -10,8 +10,7 @@ gas.LoadGasFile('ar_80_co2_20_2T.gas')
 gas.LoadIonMobility(path + '/share/Garfield/Data/IonMobility_Ar+_Ar.txt')
 gas.PrintGas()
 
-view = ROOT.Garfield.ViewMedium()
-view.SetMedium(gas)
+view = ROOT.Garfield.ViewMedium(gas)
 view.SetMagneticField(2.)
   
 cV = ROOT.TCanvas('cV', '', 600, 600)

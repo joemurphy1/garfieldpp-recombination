@@ -42,12 +42,10 @@ int main(int argc, char * argv[]) {
   } 
 
   // Plot the potential.
-  ViewField fieldView;
-  fieldView.SetComponent(&cmp);
+  ViewField fieldView(&cmp);
   fieldView.PlotContour();
   // Superimpose the cell layout.
-  ViewCell cellView;
-  cellView.SetComponent(&cmp);
+  ViewCell cellView(&cmp);
   cellView.SetCanvas(fieldView.GetCanvas());
   cellView.Plot2d();
   app.Run(kTRUE);

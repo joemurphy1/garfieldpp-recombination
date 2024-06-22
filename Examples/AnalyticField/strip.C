@@ -41,15 +41,13 @@ int main(int argc, char * argv[]) {
   const double ymin = -0.6;
   const double ymax =  0.6;
   TCanvas canvas("c", "", 600, 600);
-  ViewField fieldView;
+  ViewField fieldView(&sensor);
   fieldView.SetCanvas(&canvas);
-  fieldView.SetSensor(&sensor);
   fieldView.SetArea(xmin, ymin, xmax, ymax);
   fieldView.PlotContourWeightingField("strip", "v");
 
-  ViewCell cellView;
+  ViewCell cellView(&cmp);
   cellView.SetCanvas(&canvas);
-  cellView.SetComponent(&cmp);
   cellView.SetArea(xmin, ymin, xmax, ymax);
   cellView.Plot2d();
   gSystem->ProcessEvents();

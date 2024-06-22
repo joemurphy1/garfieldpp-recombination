@@ -31,10 +31,9 @@ int main(int argc, char * argv[]) {
   // Dimensions of the GEM [cm]
   constexpr double pitch = 0.014;
 
-  ViewField fieldView;
+  ViewField fieldView(&fm);
   constexpr bool plotField = true;
   if (plotField) {
-    fieldView.SetComponent(&fm);
     // Set the normal vector of the viewing plane (xz plane).
     fieldView.SetPlane(0, -1, 0, 0, 0, 0);
     // Set the plot limits in the current viewing plane.

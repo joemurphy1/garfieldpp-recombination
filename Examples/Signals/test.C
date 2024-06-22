@@ -13,7 +13,6 @@
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/MediumSilicon.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/ViewSignal.hh"
 #include "Garfield/Utilities.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Plotting.hh"

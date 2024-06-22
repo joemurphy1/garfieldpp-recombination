@@ -16,8 +16,10 @@ class Medium;
 
 class ViewMedium : public ViewBase {
  public:
+  /// Default constructor.
+  ViewMedium() : ViewMedium(nullptr) {}
   /// Constructor.
-  ViewMedium();
+  ViewMedium(Medium* medium);
   /// Destructor.
   ~ViewMedium() = default;
 

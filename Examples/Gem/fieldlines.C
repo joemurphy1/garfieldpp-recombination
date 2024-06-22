@@ -30,8 +30,7 @@ int main(int argc, char * argv[]) {
   // Dimensions of the GEM [cm]
   constexpr double pitch = 0.014;
 
-  ViewField fieldView;
-  fieldView.SetComponent(&fm);
+  ViewField fieldView(&fm);
   fieldView.SetPlaneXZ();
   // Set the plot limits in the current viewing plane.
   const double xmin = -0.5 * pitch;

@@ -28,17 +28,15 @@ int main(int argc, char * argv[]) {
   cmp.PrintCell();
 
   // Plot the potential.
-  ViewField fieldView;
-  fieldView.SetComponent(&cmp);
+  ViewField fieldView(&cmp);
   const double xmin = -2.1;
   const double xmax =  2.1;
   const double ymin = -2.1;
   const double ymax =  2.1;
   fieldView.SetArea(xmin, ymin, xmax, ymax);
   fieldView.PlotContour();
-  ViewCell cellView;
+  ViewCell cellView(&cmp);
   cellView.SetCanvas(fieldView.GetCanvas());
-  cellView.SetComponent(&cmp);
   cellView.SetArea(xmin, ymin, -1., xmax, ymax, 1.);
   cellView.Plot2d();
 

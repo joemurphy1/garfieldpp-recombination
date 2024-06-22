@@ -65,12 +65,8 @@ int main(int argc, char * argv[]) {
                           0.5 * width - 0.5 * pitch,
                           0.5 * width + 0.5 * pitch, "strip");
 
-  ViewField vField;
-  constexpr bool plotField = true;
-  if (plotField) {
-    vField.SetComponent(&fm);
-    vField.PlotContour("v");
-  }
+  ViewField vField(&fm);
+  vField.PlotContour("v");
 
   // Make a sensor.
   Sensor sensor;
@@ -90,9 +86,8 @@ int main(int argc, char * argv[]) {
   track.SetParticle("pi");
   track.SetMomentum(180.e9);
 
-  ViewSignal vSignal;
+  ViewSignal vSignal(&sensor);
   constexpr bool plotSignal = true;
-  vSignal.SetSensor(&sensor);
 
   ViewDrift vDrift;
   constexpr bool plotDrift = true;

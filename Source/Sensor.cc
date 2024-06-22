@@ -1827,8 +1827,7 @@ void Sensor::PlotSignal(const std::string& label, TPad* pad,
                         const std::string optTotal, const std::string optPrompt,
                         const std::string optDelayed) {
 
-  ViewSignal view;
-  view.SetSensor(this);
+  ViewSignal view(this);
   if (pad) view.SetCanvas(pad);
   view.PlotSignal(label, optTotal, optPrompt, optDelayed); 
 }
