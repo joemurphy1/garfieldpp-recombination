@@ -45,8 +45,7 @@ hw = 0.5 * width
 hp = 0.5 * pitch
 wfield.AddStripOnPlaneY('z', d, hw - hp, hw + hp, 'strip')
 
-vField = ROOT.Garfield.ViewField()
-vField.SetComponent(fm)
+vField = ROOT.Garfield.ViewField(fm)
 vField.PlotContour('v')
 # Probe the electric field.
 efield = fm.ElectricField(0., 0.5 * d, 0.) 
@@ -75,8 +74,7 @@ drift = ROOT.Garfield.AvalancheMC(sensor)
 drift.SetDistanceSteps(1.e-4)
 
 # Plot the signal if requested.
-vSignal = ROOT.Garfield.ViewSignal()
-vSignal.SetSensor(sensor)
+vSignal = ROOT.Garfield.ViewSignal(sensor)
 plotSignal = True
 
 vDrift = ROOT.Garfield.ViewDrift()

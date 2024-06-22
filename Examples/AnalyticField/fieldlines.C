@@ -61,8 +61,7 @@ int main(int argc, char * argv[]) {
   cmp.AddPlaneY(yHV, vHV);
 
   // Plot isopotential contours.
-  ViewField fieldView;
-  fieldView.SetComponent(&cmp);
+  ViewField fieldView(&cmp);
   constexpr double xmin = -3 * period;
   constexpr double xmax =  3 * period;
   fieldView.SetArea(xmin, 0., xmax, 5 * gap);
@@ -78,9 +77,8 @@ int main(int argc, char * argv[]) {
   fieldView.PlotFieldLines(xf, yf, zf, true, false); 
 
   // Plot the cell layout.
-  ViewCell cellView;
+  ViewCell cellView(&cmp);
   cellView.SetCanvas(fieldView.GetCanvas());
-  cellView.SetComponent(&cmp);
   cellView.SetArea(xmin, 0., xmax, 5 * gap);
   cellView.Plot2d();
 

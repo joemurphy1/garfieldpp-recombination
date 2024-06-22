@@ -48,10 +48,9 @@ label = 'strip'
 sensor.AddElectrode(wField, label)
 
 # Plot the weighting potential.
-fieldView = ROOT.Garfield.ViewField()
+fieldView = ROOT.Garfield.ViewField(wField)
 cF = ROOT.TCanvas('cF', '', 600, 600)
 fieldView.SetCanvas(cF)
-fieldView.SetComponent(wField)
 fieldView.SetArea(-0.5 * d, 0, 0.5 * d, d)
 fieldView.PlotContourWeightingField('strip', 'v')
 
@@ -74,8 +73,7 @@ drift = ROOT.Garfield.AvalancheMC(sensor)
 drift.SetDistanceSteps(1.e-4)
 
 # Plot the signal if requested.
-signalView = ROOT.Garfield.ViewSignal()
-signalView.SetSensor(sensor)
+signalView = ROOT.Garfield.ViewSignal(sensor)
 cS = ROOT.TCanvas('cS', '', 600, 600)
 signalView.SetCanvas(cS)
 signalView.SetRangeX(0., 6.)

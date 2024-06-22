@@ -29,8 +29,7 @@ int main(int argc, char *argv[]) {
   Sensor sensor;
   sensor.AddComponent(&efield);
 
-  ViewField view;
-  view.SetSensor(&sensor);
+  ViewField view(&sensor);
   view.SetElectricFieldRange(0.0, 200000.0);
   // Get the mesh parameters.
   unsigned int nx = 0, ny = 0, nz = 0;

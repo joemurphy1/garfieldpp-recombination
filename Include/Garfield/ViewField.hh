@@ -14,8 +14,12 @@ class Component;
 
 class ViewField : public ViewBase {
  public:
-  /// Constructor.
+  /// Default constructor.
   ViewField();
+  /// Constructor from sensor.
+  ViewField(Sensor* sensor);
+  /// Constructor from component.
+  ViewField(Component* component);
   /// Destructor.
   ~ViewField() = default;
 

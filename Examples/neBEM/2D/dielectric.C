@@ -72,9 +72,8 @@ int main(int argc, char * argv[]) {
   outfile.close();
 
   TCanvas canvas("c", "", 600, 600);
-  ViewField fieldView;
+  ViewField fieldView(&cmp);
   fieldView.SetCanvas(&canvas);
-  fieldView.SetComponent(&cmp);
   constexpr bool plotProfile = true;
   if (plotProfile) {
     fieldView.SetElectricFieldRange(0., 1.1 * f1);
@@ -82,9 +81,8 @@ int main(int argc, char * argv[]) {
   } else {
     fieldView.SetArea(1.1 * xMin, 1.1 * yMin, 1.1 * xMax, 1.1 * yMax);
     fieldView.PlotContour("ex");
-    ViewCell cellView;
+    ViewCell cellView(&cmp);
     cellView.SetCanvas(&canvas);
-    cellView.SetComponent(&cmp);
     cellView.SetArea(1.1 * xMin, 1.1 * yMin, -1., 1.1 * xMax, 1.1 * yMax, 1.);
     cellView.Plot2d();
   }

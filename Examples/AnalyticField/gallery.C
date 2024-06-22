@@ -180,10 +180,9 @@ int main(int argc, char * argv[]) {
 
   // Plot the potential.
   TCanvas canvas("c", "", 600, 600);
-  ViewCell cellView;
+  ViewCell cellView(&cmp);
   cellView.SetCanvas(&canvas);
-  cellView.SetComponent(&cmp);
-  ViewField fieldView;
+  ViewField fieldView(&sensor);
   fieldView.SetCanvas(&canvas);
 
   std::vector<setupFunction> cells;
@@ -202,7 +201,6 @@ int main(int argc, char * argv[]) {
     function(&cmp, xmin, xmax, ymin, ymax);
     cmp.PrintCell();
     canvas.Clear();
-    fieldView.SetSensor(&sensor);
     fieldView.SetArea(xmin, ymin, xmax, ymax);
     fieldView.PlotContour();
     cellView.SetArea(xmin, ymin, xmax, ymax);

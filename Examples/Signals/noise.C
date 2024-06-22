@@ -77,8 +77,7 @@ int main(int argc, char * argv[]) {
   TH1F hN("Noise", ";signal [e^{-}];entries", 100, -5 * noise, 5 * noise); 
   // Plot the signal if requested.
   constexpr bool plotSignal = false;
-  ViewSignal signalView;
-  signalView.SetSensor(&sensor);
+  ViewSignal signalView(&sensor);
 
   constexpr bool fft = false;    
   constexpr unsigned int nEvents = 1000;

@@ -65,12 +65,8 @@ int main(int argc, char * argv[]) {
                           0.5 * width - 0.5 * pitch,
                           0.5 * width + 0.5 * pitch, "strip");
 
-  ViewField vField;
-  constexpr bool plotField = true;
-  if (plotField) {
-    vField.SetComponent(&fm);
-    vField.PlotContour("v");
-  }
+  ViewField vField(&fm);
+  vField.PlotContour("v");
 
   // Make a sensor.
   Sensor sensor;
@@ -94,8 +90,7 @@ int main(int argc, char * argv[]) {
   AvalancheMC drift(&sensor);
   drift.SetDistanceSteps(1.e-4);
 
-  ViewSignal vSignal;
-  vSignal.SetSensor(&sensor);
+  ViewSignal vSignal(&sensor);
   constexpr bool plotSignal = true;
 
   ViewDrift vDrift;

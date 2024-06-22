@@ -89,16 +89,14 @@ int main(int argc, char * argv[]) {
   // Plot the drift field if requested.
   constexpr bool plotField = true;
   if (plotField) {
-    ViewField* fieldView = new ViewField(); 
-    fieldView->SetSensor(&sensor); 
+    ViewField* fieldView = new ViewField(&sensor); 
     fieldView->SetArea(-0.5 * d, 0, 0.5 * d, d);
     fieldView->PlotContour("ey");
   }
   // Plot the weighting potential if requested.
   constexpr bool plotWeightingField = true;
   if (plotWeightingField) {
-    ViewField* wfieldView = new ViewField(); 
-    wfieldView->SetComponent(&wField); 
+    ViewField* wfieldView = new ViewField(&wField); 
     wfieldView->SetArea(-0.5 * d, 0, 0.5 * d, d);
     wfieldView->PlotContourWeightingField("strip", "v");
   }

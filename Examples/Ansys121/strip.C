@@ -21,8 +21,7 @@ int main(int argc, char * argv[]) {
   fm.PrintRange();
   fm.PrintMaterials();
 
-  ViewField fieldView;
-  fieldView.SetComponent(&fm);
+  ViewField fieldView(&fm);
   // Set the plot limits in the current viewing plane.
   fieldView.SetArea(-0.01, 0., 0.01, 0.02);
   fieldView.PlotContour();

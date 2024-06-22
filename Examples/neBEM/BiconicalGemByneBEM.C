@@ -208,14 +208,12 @@ int main(int argc, char * argv[]) {
 
   // Plot device geometry in 2D
   /*
-  ViewGeometry geomView2d;
-  geomView2d.SetGeometry(&geo);
+  ViewGeometry geomView2d(&geo);
   geomView2d.SetArea(-lenLX, -lenLY, anodez, lenLX, lenLY, drftz);
   geomView2d.SetPlane(0, 1, 0, 0, 0, 0.0);
   geomView2d.Plot2d();
 
-  ViewGeometry geomView2dClose;
-  geomView2dClose.SetGeometry(&geo);
+  ViewGeometry geomView2dClose(&geo);
   geomView2dClose.SetArea(-lenLX, -lenLY, upcprz, lenLX, lenLY, lwcprz);
   geomView2dClose.SetPlane(0, 1, 0, 0, 0, 0.0);
   geomView2dClose.Plot2d();
@@ -223,8 +221,7 @@ int main(int argc, char * argv[]) {
 
   // Plot device geometry in 3D
   /*
-  ViewGeometry geomView;
-  geomView.SetGeometry(&geo);
+  ViewGeometry geomView(&geo);
   geomView.Plot();
   */
  
@@ -235,16 +232,13 @@ int main(int argc, char * argv[]) {
   nebem.ElectricField(0, 0, 0, ex, ey, ez, v, medium, status);
   std::printf("E = (%15.8f, %15.8f %15.8f), V = %15.8f, status = %d\n", ex, ey, ez, v, status);
 
-  ViewField PfieldProfileView;
-  PfieldProfileView.SetComponent(&nebem);
+  ViewField PfieldProfileView(&nebem);
   PfieldProfileView.PlotProfile(kptx, kpty, anodez, kptx, kpty, drftz);
 
-  ViewField EfieldProfileView;
-  EfieldProfileView.SetComponent(&nebem);
+  ViewField EfieldProfileView(&nebem);
   EfieldProfileView.PlotProfile(kptx, kpty, anodez, kptx, kpty, drftz, "e");
 
-  ViewField PfieldView;
-  PfieldView.SetComponent(&nebem);
+  ViewField PfieldView(&nebem);
   PfieldView.SetArea(-lenLX/2.0, -lenLY/2.0, lwcprz-10.0e-4, lenLX/2.0, lenLY/2.0, upcprz+10.0e-4);
   PfieldView.SetPlane(0, 1, 0, 0, 0, 0);
   PfieldView.PlotContour();
@@ -253,8 +247,7 @@ int main(int argc, char * argv[]) {
 
   */
 
-  ViewField EfieldView;
-  EfieldView.SetComponent(&nebem);
+  ViewField EfieldView(&nebem);
   EfieldView.SetArea(-lenLX/2.0, -lenLY/2.0, lwcprz-10.0e-4, lenLX/2.0, lenLY/2.0, upcprz+10.0e-4);
   EfieldView.SetPlane(0, 1, 0, 0, 0, 0);
   EfieldView.PlotContour("e");

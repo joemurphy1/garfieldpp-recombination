@@ -65,15 +65,13 @@ int main(int argc, char * argv[]) {
   std::printf("E = (%15.8f, %15.8f %15.8f), V = %15.8f, status = %d\n", ex, ey, ez, v, status);
 
   // Plot device geometry in 2D
-  ViewGeometry geomView2d;
-  geomView2d.SetGeometry(&geo);
+  ViewGeometry geomView2d(&geo);
   geomView2d.SetArea(-5, -5, -1, 5, 5, 1);
   geomView2d.SetPlane(0, 1, 0, 0, 0, 0.0);
   geomView2d.Plot2d();
 
   // Plot device geometry in 3D
-  ViewGeometry geomView3d;
-  geomView3d.SetGeometry(&geo);
+  ViewGeometry geomView3d(&geo);
   geomView3d.Plot();
 
   // Plot potential contour
@@ -84,8 +82,7 @@ int main(int argc, char * argv[]) {
   potView.PlotContour();
 
   // Plot potential contour
-  ViewField fieldView;
-  fieldView.SetComponent(&nebem);
+  ViewField fieldView(&nebem);
   fieldView.SetArea(-5, -5, -1, 5, 5, 1);
   fieldView.SetPlane(0, 1, 0, 0, 0, 0.0);
   fieldView.PlotContour("e");

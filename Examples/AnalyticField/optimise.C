@@ -46,9 +46,8 @@ int main(int argc, char * argv[]) {
   const double emag = sqrt(efield[0] * efield[0] + efield[1] * efield[1]);
   std::cout << "Drift field after optimisation: " << emag << "\n";
 
-  ViewField view;
-  view.SetComponent(&cmp);
+  ViewField view(&cmp);
   view.PlotProfile(0.05, 0., 0., 0.05, 2., 0., "e", false);
-  app.Run(true);
+  app.Run();
 }
 

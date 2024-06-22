@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
   TApplication app("app", &argc, argv);
 
   // Define the medium.
-  MediumSilicon* si = new MediumSilicon();
+  MediumSilicon si;
 
   // Setup the mesh.
   const unsigned int nX = 2 * 110 + 1;
@@ -31,24 +31,23 @@ int main(int argc, char *argv[]) {
   const double zMin = -100.e-4;
   const double zMax =  100.e-4;
 
-  ComponentVoxel* efield = new ComponentVoxel();
-  efield->SetMesh(nX, nY, 1, xMin, xMax, yMin, yMax, zMin, zMax);
+  ComponentVoxel efield;
+  efield.SetMesh(nX, nY, 1, xMin, xMax, yMin, yMax, zMin, zMax);
   // Load the field map.
-  efield->LoadElectricField("Efield.txt", "XY", false, false, 1.0e-4);
-  efield->EnablePeriodicityX();
-  efield->SetMedium(0, si);
-  efield->PrintRegions();
-  efield->EnableInterpolation();
+  efield.LoadElectricField("Efield.txt", "XY", false, false, 1.0e-4);
+  efield.EnablePeriodicityX();
+  efield.SetMedium(0, &si);
+  efield.PrintRegions();
+  efield.EnableInterpolation();
 
   // Create a sensor.
-  Sensor* sensor = new Sensor();
-  sensor->AddComponent(efield);
-  sensor->SetArea(0.0, 0.0, -100.0e-4, 110.0e-4, 200.0e-4, 100e-4);
+  Sensor sensor;
+  sensor.AddComponent(&efield);
+  sensor.SetArea(0., 0., -100.e-4, 110.e-4, 200.e-4, 100.e-4);
 
-  ViewField *view = new ViewField();
-  view->SetSensor(sensor);
-  view->SetElectricFieldRange(0.0, 200000.0);
-  view->PlotContour("e");
-  app.Run(true);
+  ViewField view(&sensor);
+  view.SetElectricFieldRange(0.0, 200000.0);
+  view.PlotContour("e");
+  app.Run();
 
 }

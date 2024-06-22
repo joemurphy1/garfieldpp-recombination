@@ -27,17 +27,15 @@ int main(int argc, char * argv[]) {
   cmp.AddCharge(0., 0.5 * gap, 0., 5.e6 * ElementaryCharge);
 
   // Plot isopotential contours.
-  ViewField fieldView;
-  fieldView.SetComponent(&cmp);
+  ViewField fieldView(&cmp);
   constexpr double xmin = -gap;
   constexpr double xmax = +gap;
   fieldView.SetArea(xmin, 0., xmax, gap);
   fieldView.PlotContour();
 
   // Plot the cell layout.
-  ViewCell cellView;
+  ViewCell cellView(&cmp);
   cellView.SetCanvas(fieldView.GetCanvas());
-  cellView.SetComponent(&cmp);
   cellView.SetArea(xmin, 0., xmax, gap);
   cellView.Plot2d();
 

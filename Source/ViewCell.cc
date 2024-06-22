@@ -17,6 +17,14 @@ namespace Garfield {
 
 ViewCell::ViewCell() : ViewBase("ViewCell") {}
 
+ViewCell::ViewCell(ComponentAnalyticField* cmp) : 
+    ViewBase("ViewCell"),
+    m_component(cmp) {}
+
+ViewCell::ViewCell(ComponentNeBem2d* cmp) : 
+    ViewBase("ViewCell"),
+    m_nebem(cmp) {}
+
 void ViewCell::SetComponent(ComponentAnalyticField* cmp) {
   if (!cmp) {
     std::cerr << m_className << "::SetComponent: Null pointer.\n";

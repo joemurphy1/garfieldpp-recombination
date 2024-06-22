@@ -32,8 +32,7 @@ int main(int argc, char * argv[]) {
   fm.GetElementaryCell(xmin, ymin, zmin, xmax, ymax, zmax);
   const double pitch = 2 * (xmax - xmin);
  
-  ViewField fieldView;
-  fieldView.SetComponent(&fm);
+  ViewField fieldView(&fm);
   fieldView.SetPlaneXZ();
   fieldView.SetArea(-pitch, 0, pitch, zmax);
   fieldView.PlotContour();

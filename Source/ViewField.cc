@@ -70,6 +70,14 @@ namespace Garfield {
 
 ViewField::ViewField() : ViewBase("ViewField") { }
 
+ViewField::ViewField(Sensor* sensor) : 
+    ViewBase("ViewField"),
+    m_sensor(sensor) {}
+
+ViewField::ViewField(Component* component) : 
+    ViewBase("ViewField"),
+    m_component(component) {}
+
 void ViewField::SetSensor(Sensor* s) {
   if (!s) {
     std::cerr << m_className << "::SetSensor: Null pointer.\n";

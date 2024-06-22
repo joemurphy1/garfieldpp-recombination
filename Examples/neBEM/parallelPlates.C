@@ -39,8 +39,7 @@ int main(int argc, char * argv[]) {
   std::printf("E = (%15.8f, %15.8f %15.8f), V = %15.8f\n", 
               efield[0], efield[1], efield[2], v);
 
-  ViewField fieldView;
-  fieldView.SetComponent(&nebem);
+  ViewField fieldView(&nebem);
   fieldView.SetArea(-10, -10, -1, 10, 10, 2);
   fieldView.SetPlane(0, 0, 1, 0, 0, 0.2);
   fieldView.PlotContour();

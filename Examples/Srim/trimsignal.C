@@ -77,8 +77,7 @@ int main(int argc, char *argv[]) {
   driftView.SetArea(-2.e-4, 0., 2.e-4, 100.e-4);
   driftView.Plot(true);
 
-  ViewSignal signalView;
-  signalView.SetSensor(&sensor);
+  ViewSignal signalView(&sensor);
   signalView.PlotSignal("readout", "tei");
 
   app.Run();

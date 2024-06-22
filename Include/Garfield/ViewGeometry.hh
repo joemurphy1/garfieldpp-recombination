@@ -17,8 +17,10 @@ class GeometrySimple;
 
 class ViewGeometry : public ViewBase {
  public:
+  /// Default constructor.
+  ViewGeometry() : ViewGeometry(nullptr) {}
   /// Constructor.
-  ViewGeometry();
+  ViewGeometry(GeometrySimple* geo);
   /// Destructor.
   ~ViewGeometry();
 

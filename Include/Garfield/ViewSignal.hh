@@ -18,9 +18,11 @@ class Sensor;
 
 class ViewSignal : public ViewBase {
  public:
-  /// Constructor
-  ViewSignal();
-  /// Destructor
+  /// Default constructor.
+  ViewSignal() : ViewSignal(nullptr) {}
+  /// Constructor.
+  ViewSignal(Sensor* sensor);
+  /// Destructor.
   ~ViewSignal() = default;
 
   /// Set the sensor from which to retrieve the signal.

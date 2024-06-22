@@ -21,8 +21,7 @@ int main(int argc, char *argv[]) {
   cmp.SetCylindricalCoordinates();
   cmp.LoadMagneticField("solenoid.txt", "XZ");
 
-  ViewField view;
-  view.SetComponent(&cmp);
+  ViewField view(&cmp);
   view.SetMagneticFieldRange(5.1, 5.3);
   const double r = 5.;
   const double theta = 0.;

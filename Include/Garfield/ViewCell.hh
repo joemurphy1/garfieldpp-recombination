@@ -17,8 +17,12 @@ class ComponentNeBem2d;
 
 class ViewCell : public ViewBase {
  public:
-  /// Constructor
+  /// Default constructor
   ViewCell();
+  /// Constructor from analytic-field component.
+  ViewCell(ComponentAnalyticField* cmp);
+  /// Constructor from two-dimenstional neBEM component.
+  ViewCell(ComponentNeBem2d* cmp); 
   /// Destructor
   ~ViewCell() = default;
 

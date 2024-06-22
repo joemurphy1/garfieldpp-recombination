@@ -44,8 +44,7 @@ int main(int argc, char * argv[]) {
   sensor.SetArea();
  
   // Plot the electrostatic potential.
-  ViewField fieldView;
-  fieldView.SetSensor(&sensor);
+  ViewField fieldView(&sensor);
   fieldView.SetPlaneXZ();
   fieldView.PlotContour();
 

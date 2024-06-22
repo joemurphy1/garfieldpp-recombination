@@ -127,10 +127,8 @@ int main(int argc, char * argv[]) {
 
   // Plot the signal
   TCanvas* cSignal = new TCanvas("cSignal", "", 600, 600);
-  ViewSignal* signalView = new ViewSignal();
-
+  ViewSignal* signalView = new ViewSignal(&sensor);
   signalView->SetCanvas(cSignal);
-  signalView->SetSensor(&sensor);
   signalView->PlotSignal("N", "te", "", "e");
 
   cSignal->Update();

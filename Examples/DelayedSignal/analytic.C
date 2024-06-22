@@ -10,7 +10,6 @@
 #include "Garfield/Sensor.hh"
 #include "Garfield/AvalancheMC.hh"
 
-#include "Garfield/ViewField.hh"
 #include "Garfield/ViewSignal.hh"
 #include "Garfield/Plotting.hh"
 
@@ -104,8 +103,7 @@ int main(int argc, char *argv[]) {
   drift.DriftHole(0, 150.e-4, 0, 0);
 
   // Plot the signal.
-  ViewSignal signalView;
-  signalView.SetSensor(&sensor);
+  ViewSignal signalView(&sensor);
   signalView.PlotSignal("front", "t", "t", "t");
   app.Run(true);
 

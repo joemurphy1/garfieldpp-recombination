@@ -6,7 +6,6 @@
 
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewDrift.hh"
-#include "Garfield/ViewSignal.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/Sensor.hh"
@@ -150,13 +149,12 @@ int main(int argc, char * argv[]){
   driftView.SetCanvas((TPad*)c1->cd(1));
   driftView.Plot(true);
   // Plot the potential.
-  ViewField fieldView;
-  fieldView.SetSensor(&sensor);
+  ViewField fieldView(&sensor);
   fieldView.SetCanvas((TPad*)c1->cd(2));
   fieldView.Plot("v", "cont1z");
 
   c1->SaveAs("plot.pdf");
-  app.Run(true);
+  app.Run();
   return 0;
 
 }

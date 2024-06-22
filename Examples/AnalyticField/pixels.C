@@ -33,8 +33,7 @@ int main(int argc, char * argv[]) {
   // Plot the weighting potential.
   TCanvas canvas("canvas", "", 1000, 500);
   canvas.Divide(2, 1);
-  ViewField fieldView;
-  fieldView.SetComponent(&cmp);
+  ViewField fieldView(&cmp);
   fieldView.SetPlane(-1., 0., 0., 0.1 * d, 0., 0.);
   fieldView.SetArea(-0.25, -0.25, 0.25, 0.25);
   fieldView.SetCanvas((TPad*)canvas.cd(1));

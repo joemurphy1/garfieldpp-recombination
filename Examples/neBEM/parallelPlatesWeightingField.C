@@ -44,8 +44,7 @@ int main(int argc, char * argv[]) {
   double vw = nebem.WeightingPotential(0, 0, 0, "readout");
   std::printf("Vw = %15.8f\n", vw);
 
-  ViewField fieldView;
-  fieldView.SetComponent(&nebem);
+  ViewField fieldView(&nebem);
   fieldView.SetArea(-10, -10, -1, 10, 10, 2);
   fieldView.SetPlane(0, 0, 1, 0, 0, 0.2);
   fieldView.PlotContourWeightingField("readout", "v");

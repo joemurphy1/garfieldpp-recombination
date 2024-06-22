@@ -32,14 +32,12 @@ int main(int argc, char * argv[]) {
 
   // Plot the potential.
   TCanvas canvas("c", "", 600, 600);
-  ViewCell cellView;
+  ViewCell cellView(&cmp);
   cellView.SetCanvas(&canvas);
-  cellView.SetComponent(&cmp);
   cellView.EnableWireMarkers(false);
   cellView.SetArea(-1.1, -1.1, 1.1, 1.1);
-  ViewField fieldView;
+  ViewField fieldView(&cmp);
   fieldView.SetCanvas(&canvas);
-  fieldView.SetComponent(&cmp);
   fieldView.SetArea(-1.1, -1.1, 1.1, 1.1);
   fieldView.Plot("v", "cont1z");
   cellView.Plot2d();

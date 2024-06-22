@@ -41,14 +41,12 @@ int main(int argc, char * argv[]) {
   outfile.close();
 
   TCanvas canvas("c", "", 600, 600);
-  ViewField fieldView;
+  ViewField fieldView(&cmp);
   fieldView.SetCanvas(&canvas);
-  fieldView.SetComponent(&cmp);
   fieldView.SetArea(-1.1, -0.6, 1.1, 1.6);
   fieldView.PlotContour();
-  ViewCell cellView;
+  ViewCell cellView(&cmp);
   cellView.SetCanvas(&canvas);
-  cellView.SetComponent(&cmp);
   cellView.SetArea(-1.1, -0.6, 1.1, 1.6);
   cellView.Plot2d();
   app.Run(true);
