@@ -166,6 +166,8 @@ class __COMPONENTCLASS__ {
 
   /// Ready for use?
   virtual bool IsReady() { return m_ready; }
+  /// Does the component have a 3D field (map)?
+  virtual bool Is3d() { return true; } 
 
   /// Get the bounding box coordinates.
   virtual bool GetBoundingBox(double& xmin, double& ymin, double& zmin,

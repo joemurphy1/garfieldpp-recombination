@@ -133,6 +133,7 @@ class ComponentFieldMap : public Component {
            z >= m_minBoundingBox[2] && y <= m_maxBoundingBox[2];
   }
 
+  bool Is3d() override { return m_is3d; }
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
                       double& ymax, double& zmax) override;
   bool GetElementaryCell(double& xmin, double& ymin, double& zmin, double& xmax,
@@ -160,7 +161,6 @@ class ComponentFieldMap : public Component {
   /// Create and initialise GPU Transfer class
   double CreateGPUTransferObject(ComponentGPU *&comp_gpu) override;
 
-  friend class ViewFEMesh;
  #endif
 
  protected:
