@@ -2950,11 +2950,11 @@ int Solve(void) {
   if (NbConstraints) {
     if (OptSystemChargeZero) {
       fprintf(fSoln, "#NbSystemChargeZero\tVSystemChargeZero\n");
-      fprintf(fSoln, "# %d\t%lg\n", NbSystemChargeZero, VSystemChargeZero);
+      fprintf(fSoln, "%d\t%lg\n", NbSystemChargeZero, VSystemChargeZero);
     }
     if (NbFloatingConductors) {
       fprintf(fSoln, "#NbFloatCon\tVFloatCon\n");
-      fprintf(fSoln, "# %d\t%lg\n", NbFloatCon, VFloatCon);
+      fprintf(fSoln, "%d\t%lg\n", NbFloatCon, VFloatCon);
     }
   }  // if NbConstraints
 
@@ -4084,7 +4084,6 @@ int ReadSolution(void) {
     if (strstr(instr, "NbSystemChargeZero") != NULL) {
       OptSystemChargeZero = 1;
       ++NbConstraints;
-      fgets(instr, 256, fSoln);
       fscanf(fSoln, "%d %lg\n", &NbSystemChargeZero, &VSystemChargeZero);
       printf(
           "ReadSolution: Read in voltage shift to ensure system charge "
@@ -4092,7 +4091,6 @@ int ReadSolution(void) {
     } else if (strstr(instr, "NbFloatCon") != NULL) {
       NbFloatingConductors = 1;
       ++NbConstraints;
-      fgets(instr, 256, fSoln);
       fscanf(fSoln, "%d %lg\n", &NbFloatCon, &VFloatCon);
       printf("ReadSolution: Read in voltage on floating conductor.\n");
     }
