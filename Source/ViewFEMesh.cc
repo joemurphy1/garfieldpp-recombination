@@ -19,7 +19,9 @@
 
 namespace Garfield {
 
-ViewFEMesh::ViewFEMesh() : ViewBase("ViewFEMesh") {}
+ViewFEMesh::ViewFEMesh(Component* cmp) : 
+    ViewBase("ViewFEMesh"),
+    m_cmp(cmp) {}
 
 ViewFEMesh::~ViewFEMesh() {
   Reset();

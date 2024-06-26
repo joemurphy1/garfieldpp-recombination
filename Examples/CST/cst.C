@@ -96,11 +96,10 @@ int main(int argc, char * argv[]) {
     TCanvas* cd = new TCanvas();
     constexpr bool plotMesh = true;
     if (plotMesh) {
-      ViewFEMesh* meshView = new ViewFEMesh();
+      ViewFEMesh* meshView = new ViewFEMesh(&fm);
       meshView->SetArea(-2 * pitch, -2 * pitch, -0.02, 
                          2 * pitch,  2 * pitch, 0.02);
       meshView->SetCanvas(cd);
-      meshView->SetComponent(&fm);
       // x-z projection.
       meshView->SetPlane(0, -1, 0, 0, 0, 0);
       meshView->SetFillMesh(true);

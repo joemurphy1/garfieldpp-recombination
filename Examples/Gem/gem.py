@@ -79,13 +79,12 @@ for i in range(nEvents):
 
 print('Ratio of back-flowing ions:', float(nBF) / float(nTotal))
 cD = ROOT.TCanvas('cD', '', 600, 600)
-meshView = ROOT.Garfield.ViewFEMesh()
+meshView = ROOT.Garfield.ViewFEMesh(fm)
 plotMesh = True 
 if plotDrift:
   if plotMesh:
     meshView.SetArea(-2 * pitch, -0.02, 2 * pitch, 0.02)
     meshView.SetCanvas(cD)
-    meshView.SetComponent(fm)
     # x-z projection.
     meshView.SetPlane(0, -1, 0, 0, 0, 0)
     meshView.SetFillMesh(True)

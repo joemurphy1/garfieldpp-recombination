@@ -21,8 +21,10 @@ namespace Garfield {
 
 class ViewFEMesh : public ViewBase {
  public:
+  /// Default constructor.
+  ViewFEMesh() : ViewFEMesh(nullptr) {}
   /// Constructor.
-  ViewFEMesh();
+  ViewFEMesh(Component* cmp);
   /// Destructor.
   ~ViewFEMesh();
 
