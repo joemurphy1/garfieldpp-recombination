@@ -652,6 +652,35 @@ void ComponentTcadBase<N>::EnableLifetimeMap(const bool on) {
 }
 
 template <size_t N>
+bool ComponentTcadBase<N>::GetElementNodes(const size_t i, 
+                                           std::vector<size_t>& nodes) const {
+  nodes.clear();
+  if (i >= m_elements.size()) {
+    std::cerr << m_className << "::GetElementNodes: Index out of range.\n";
+    return false;
+  }
+
+  const Element& element = m_elements[i];
+  const size_t nVertices = ElementVertices(element);
+  for (size_t j = 0; j < nVertices; ++j) {
+    nodes.push_back(element.vertex[j]);
+  }
+  return true;
+}
+
+template <size_t N>
+bool ComponentTcadBase<N>::GetElementRegion(const size_t i, 
+                                            size_t& region, bool& drift) const {
+  if (i >= m_elements.size()) {
+    std::cerr << m_className << "::GetElementRegion: Index out of range.\n";
+    return false;
+  }
+  region = m_elements[i].region;
+  drift = m_regions[region].drift;
+  return true;
+}
+
+template <size_t N>
 bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
   // Open the file containing the mesh description.
   std::ifstream gridfile(filename);

@@ -10,7 +10,7 @@
 #include <TPolyLine3D.h>
 
 #include "Garfield/ComponentCST.hh"
-#include "Garfield/ComponentFieldMap.hh"
+#include "Garfield/Component.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
@@ -46,7 +46,7 @@ void ViewFEMesh::Reset() {
   m_geoManager.reset(nullptr);
 }
  
-void ViewFEMesh::SetComponent(ComponentFieldMap* cmp) {
+void ViewFEMesh::SetComponent(Component* cmp) {
   if (!cmp) {
     std::cerr << m_className << "::SetComponent: Null pointer.\n";
     return;
@@ -305,14 +305,12 @@ void ViewFEMesh::DrawElements2d() {
 
   bool cst = false;
   if (dynamic_cast<ComponentCST*>(m_cmp)) cst = true;
-
   // Loop over all elements.
   const auto nElements = m_cmp->GetNumberOfElements();
   for (size_t i = 0; i < nElements; ++i) {
     size_t mat = 0;
     bool driftmedium = false;
-    std::vector<size_t> nodes;
-    if (!m_cmp->GetElement(i, mat, driftmedium, nodes)) continue;
+    if (!m_cmp->GetElementRegion(i, mat, driftmedium)) continue;
     // Do not plot the drift medium.
     if (driftmedium && !m_plotMeshBorders) continue;
     // Do not create polygons for disabled materials.
@@ -332,6 +330,9 @@ void ViewFEMesh::DrawElements2d() {
     if (m_plotMeshBorders || !m_fillMesh) opt += "l";
     if (m_fillMesh) opt += "f";
     opt += "same";
+    // Get the indices of the element vertices.
+    std::vector<size_t> nodes;
+    if (!m_cmp->GetElementNodes(i, nodes)) continue;
     // Get the vertex coordinates in the basic cell.
     std::vector<double> vx0;
     std::vector<double> vy0;
@@ -553,8 +554,7 @@ void ViewFEMesh::DrawElements3d() {
   for (size_t i = 0; i < nElements; ++i) {
     size_t mat = 0;
     bool driftmedium = false;
-    std::vector<size_t> nodes;
-    if (!m_cmp->GetElement(i, mat, driftmedium, nodes)) continue;
+    if (!m_cmp->GetElementRegion(i, mat, driftmedium)) continue;
     // Do not plot the drift medium.
     if (driftmedium && !m_plotMeshBorders) continue;
     // Do not create polygons for disabled materials.
@@ -562,7 +562,9 @@ void ViewFEMesh::DrawElements3d() {
       continue;
     }
     const short col = m_colorMap.count(mat) != 0 ? m_colorMap[mat] : 1;
-
+    // Get the indices of the vertices.
+    std::vector<size_t> nodes;
+    if (!m_cmp->GetElementNodes(i, nodes)) continue;
     // Get the vertex coordinates in the basic cell.
     const size_t nNodes = nodes.size();
     if (nNodes != 4) continue;
@@ -912,8 +914,7 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
   for (const auto& element : elements) {
     size_t mat = 0;
     bool driftmedium = false;
-    std::vector<size_t> nodes;
-    cst->GetElement(element.element, mat, driftmedium, nodes);
+    if (!cst->GetElementRegion(element.element, mat, driftmedium)) continue;
     // Do not plot the drift medium.
     if (driftmedium && !m_plotMeshBorders) continue;
     // Do not create polygons for disabled materials.

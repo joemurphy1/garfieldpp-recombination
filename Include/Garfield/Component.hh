@@ -183,6 +183,24 @@ class __COMPONENTCLASS__ {
   // Get the z-length of the elementary cell.
   double CellSizeZ();
 
+  /// Return the number of mesh elements.
+  virtual size_t GetNumberOfElements() const { return 0; }
+  /// Get the indices of the nodes constituting a given element. 
+  virtual bool GetElementNodes(const size_t /*i*/, 
+                               std::vector<size_t>& /*nodes*/) const {
+    return false;
+  }
+  /// Get the region/material of a mesh element and a flag whether it is 
+  /// associated to an active medium.
+  virtual bool GetElementRegion(const size_t /*i*/, size_t& /*mat*/, 
+                                bool& /*drift*/) const {
+    return false;
+  }
+  /// Return the number of mesh nodes.
+  virtual size_t GetNumberOfNodes() const { return 0; }
+  /// Get the coordinates of a mesh node.
+  virtual bool GetNode(const size_t i, double& x, double& y, double& z) const;
+
   /** Integrate the normal component of the electric field over a circle.
    * \param xc,yc centre of the circle [cm]
    * \param r radius [cm]

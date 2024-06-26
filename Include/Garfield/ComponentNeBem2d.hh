@@ -80,7 +80,7 @@ class ComponentNeBem2d : public Component {
   bool GetWire(const unsigned int i, double& x, double& y, double& d,
                double& v, double& q) const; 
   /// Return the number of boundary elements.
-  unsigned int GetNumberOfElements() const { return m_elements.size(); }
+  size_t GetNumberOfElements() const override { return m_elements.size(); }
   /// Return the coordinates and charge of a given boundary element.
   bool GetElement(const unsigned int i, double& x0, double& y0,
                   double& x1, double& y1, double& q) const;
