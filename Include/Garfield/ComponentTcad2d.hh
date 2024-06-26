@@ -26,15 +26,12 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
     * \param dmin smallest length in the element
     * \param dmax largest length in the element
     * \param type element type
-    * \param nodes indices of the constituent vertices
     * \param reg region
     */
   bool GetElement(const size_t i, double& vol, double& dmin, double& dmax,
-                  int& type, std::vector<size_t>& nodes, int& reg) const;
-  /// Get the coordinates of a mesh node and the potential
-  /// and electric field at this node.
-  bool GetNode(const size_t i, double& x, double& y, double& v, double& ex,
-               double& ey) const;
+                  int& type) const;
+  /// Get the coordinates of a mesh node.
+  bool GetNode(const size_t i, double& x, double& y, double& z) const override;
 
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,

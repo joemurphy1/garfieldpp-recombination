@@ -49,7 +49,7 @@ class ComponentNeBem3d : public Component {
                  double& potential, double& charge, int& bc);
   int GetVolume(const double x, const double y, const double z);
 
-  unsigned int GetNumberOfElements() const { return m_elements.size(); }
+  size_t GetNumberOfElements() const override { return m_elements.size(); }
   bool GetElement(const unsigned int i, std::vector<double>& xv,
                   std::vector<double>& yv, std::vector<double>& zv,
                   int& interface, double& bc, double& lambda) const;

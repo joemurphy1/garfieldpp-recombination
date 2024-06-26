@@ -864,21 +864,30 @@ void ComponentFieldMap::GetAspectRatio(const size_t i, double& dmin,
   }
 }
 
-bool ComponentFieldMap::GetElement(const size_t i, size_t& mat, bool& drift,
-                                   std::vector<size_t>& nodes) const {
+bool ComponentFieldMap::GetElementNodes(const size_t i, 
+                                        std::vector<size_t>& nodes) const {
   if (i >= m_elements.size()) {
-    std::cerr << m_className << "::GetElement: Index out of range.\n";
+    std::cerr << m_className << "::GetElementNodes: Index out of range.\n";
     return false;
   }
   const auto& element = m_elements[i];
-  mat = element.matmap;
-  drift = m_materials[mat].driftmedium;
   size_t nNodes = 4;
   if (m_elementType == ElementType::Serendipity && m_degenerate[i]) {
     nNodes = 3;
   }
   nodes.resize(nNodes);
   for (size_t j = 0; j < nNodes; ++j) nodes[j] = element.emap[j];
+  return true;
+}
+
+bool ComponentFieldMap::GetElementRegion(const size_t i, 
+                                         size_t& mat, bool& drift) const {
+  if (i >= m_elements.size()) {
+    std::cerr << m_className << "::GetElementRegion: Index out of range.\n";
+    return false;
+  }
+  mat = m_elements[i].matmap;
+  drift = m_materials[mat].driftmedium;
   return true;
 }
 

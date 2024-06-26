@@ -10,7 +10,7 @@
 #include <TPolyLine3D.h>
 
 #include "Garfield/ComponentCST.hh"
-#include "Garfield/ComponentFieldMap.hh"
+#include "Garfield/Component.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
@@ -19,7 +19,9 @@
 
 namespace Garfield {
 
-ViewFEMesh::ViewFEMesh() : ViewBase("ViewFEMesh") {}
+ViewFEMesh::ViewFEMesh(Component* cmp) : 
+    ViewBase("ViewFEMesh"),
+    m_cmp(cmp) {}
 
 ViewFEMesh::~ViewFEMesh() {
   Reset();
@@ -46,7 +48,7 @@ void ViewFEMesh::Reset() {
   m_geoManager.reset(nullptr);
 }
  
-void ViewFEMesh::SetComponent(ComponentFieldMap* cmp) {
+void ViewFEMesh::SetComponent(Component* cmp) {
   if (!cmp) {
     std::cerr << m_className << "::SetComponent: Null pointer.\n";
     return;
@@ -73,7 +75,7 @@ bool ViewFEMesh::Plot(const bool twod) {
   pad->cd();
 
   if (!twod) {
-    if (!m_cmp->m_is3d) {
+    if (!m_cmp->Is3d()) {
       std::cerr << m_className << "::Plot:\n"
                 << "    Cannot plot 2D mesh elements in 3D.\n";
       return false;
@@ -265,20 +267,26 @@ void ViewFEMesh::CreateDefaultAxes() {
 // General methodology ported from Garfield
 void ViewFEMesh::DrawElements2d() {
   // Get the map boundaries from the component.
-  double mapxmax = m_cmp->m_mapmax[0];
-  double mapxmin = m_cmp->m_mapmin[0];
-  double mapymax = m_cmp->m_mapmax[1];
-  double mapymin = m_cmp->m_mapmin[1];
-  double mapzmax = m_cmp->m_mapmax[2];
-  double mapzmin = m_cmp->m_mapmin[2];
+  double mapxmin = 0., mapymin = 0., mapzmin = 0.;
+  double mapxmax = 0., mapymax = 0., mapzmax = 0.;
+  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, 
+                                mapxmax, mapymax, mapzmax)) {
+    return;
+  }
 
   // Get the periodicities.
   double sx = mapxmax - mapxmin;
   double sy = mapymax - mapymin;
   double sz = mapzmax - mapzmin;
-  const bool perX = m_cmp->m_periodic[0] || m_cmp->m_mirrorPeriodic[0];
-  const bool perY = m_cmp->m_periodic[1] || m_cmp->m_mirrorPeriodic[1];
-  const bool perZ = m_cmp->m_periodic[2] || m_cmp->m_mirrorPeriodic[2];
+  // Check for simple periodicity.
+  bool perxs = false, perys = false, perzs = false;
+  m_cmp->IsPeriodic(perxs, perys, perzs);
+  // Check for mirror periodicity.
+  bool perxm = false, perym = false, perzm = false;
+  m_cmp->IsMirrorPeriodic(perxm, perym, perzm);
+  const bool perX = perxs || perxm;
+  const bool perY = perys || perym;
+  const bool perZ = perzs || perzm;
 
   // Get the plane information.
   const double fx = m_plane[0];
@@ -299,14 +307,12 @@ void ViewFEMesh::DrawElements2d() {
 
   bool cst = false;
   if (dynamic_cast<ComponentCST*>(m_cmp)) cst = true;
-
   // Loop over all elements.
   const auto nElements = m_cmp->GetNumberOfElements();
   for (size_t i = 0; i < nElements; ++i) {
     size_t mat = 0;
     bool driftmedium = false;
-    std::vector<size_t> nodes;
-    if (!m_cmp->GetElement(i, mat, driftmedium, nodes)) continue;
+    if (!m_cmp->GetElementRegion(i, mat, driftmedium)) continue;
     // Do not plot the drift medium.
     if (driftmedium && !m_plotMeshBorders) continue;
     // Do not create polygons for disabled materials.
@@ -326,6 +332,9 @@ void ViewFEMesh::DrawElements2d() {
     if (m_plotMeshBorders || !m_fillMesh) opt += "l";
     if (m_fillMesh) opt += "f";
     opt += "same";
+    // Get the indices of the element vertices.
+    std::vector<size_t> nodes;
+    if (!m_cmp->GetElementNodes(i, nodes)) continue;
     // Get the vertex coordinates in the basic cell.
     std::vector<double> vx0;
     std::vector<double> vy0;
@@ -351,7 +360,7 @@ void ViewFEMesh::DrawElements2d() {
     for (int nx = nMinX; nx <= nMaxX; nx++) {
       const double dx = sx * nx;
       // Determine the x-coordinates of the vertices.
-      if (m_cmp->m_mirrorPeriodic[0] && nx != 2 * (nx / 2)) {
+      if (perxm && nx != 2 * (nx / 2)) {
         for (size_t j = 0; j < nNodes; ++j) {
           vx[j] = mapxmin + (mapxmax - vx0[j]) + dx;
         }
@@ -365,7 +374,7 @@ void ViewFEMesh::DrawElements2d() {
       for (int ny = nMinY; ny <= nMaxY; ny++) {
         const double dy = sy * ny;
         // Determine the y-coordinates of the vertices.
-        if (m_cmp->m_mirrorPeriodic[1] && ny != 2 * (ny / 2)) {
+        if (perym && ny != 2 * (ny / 2)) {
           for (size_t j = 0; j < nNodes; ++j) {
             vy[j] = mapymin + (mapymax - vy0[j]) + dy;
           }
@@ -379,7 +388,7 @@ void ViewFEMesh::DrawElements2d() {
         for (int nz = nMinZ; nz <= nMaxZ; nz++) {
           const double dz = sz * nz;
           // Determine the z-coordinates of the vertices.
-          if (m_cmp->m_mirrorPeriodic[2] && nz != 2 * (nz / 2)) {
+          if (perzm && nz != 2 * (nz / 2)) {
             for (size_t j = 0; j < nNodes; ++j) {
               vz[j] = mapzmin + (mapzmax - vz0[j]) + dz;
             }
@@ -482,20 +491,26 @@ void ViewFEMesh::DrawElements2d() {
 void ViewFEMesh::DrawElements3d() {
 
   // Get the map boundaries from the component.
-  double mapxmax = m_cmp->m_mapmax[0];
-  double mapxmin = m_cmp->m_mapmin[0];
-  double mapymax = m_cmp->m_mapmax[1];
-  double mapymin = m_cmp->m_mapmin[1];
-  double mapzmax = m_cmp->m_mapmax[2];
-  double mapzmin = m_cmp->m_mapmin[2];
+  double mapxmin = 0., mapymin = 0., mapzmin = 0.;
+  double mapxmax = 0., mapymax = 0., mapzmax = 0.;
+  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, 
+                                mapxmax, mapymax, mapzmax)) {
+    return;
+  }
 
   // Get the periodicities.
   double sx = mapxmax - mapxmin;
   double sy = mapymax - mapymin;
   double sz = mapzmax - mapzmin;
-  const bool perX = m_cmp->m_periodic[0] || m_cmp->m_mirrorPeriodic[0];
-  const bool perY = m_cmp->m_periodic[1] || m_cmp->m_mirrorPeriodic[1];
-  const bool perZ = m_cmp->m_periodic[2] || m_cmp->m_mirrorPeriodic[2];
+  // Check for simple periodicity.
+  bool perxs = false, perys = false, perzs = false;
+  m_cmp->IsPeriodic(perxs, perys, perzs);
+  // Check for mirror periodicity.
+  bool perxm = false, perym = false, perzm = false;
+  m_cmp->IsMirrorPeriodic(perxm, perym, perzm);
+  const bool perX = perxs || perxm;
+  const bool perY = perys || perym;
+  const bool perZ = perzs || perzm;
 
   // Set the plot limits.
   if (m_userBox) {
@@ -541,8 +556,7 @@ void ViewFEMesh::DrawElements3d() {
   for (size_t i = 0; i < nElements; ++i) {
     size_t mat = 0;
     bool driftmedium = false;
-    std::vector<size_t> nodes;
-    if (!m_cmp->GetElement(i, mat, driftmedium, nodes)) continue;
+    if (!m_cmp->GetElementRegion(i, mat, driftmedium)) continue;
     // Do not plot the drift medium.
     if (driftmedium && !m_plotMeshBorders) continue;
     // Do not create polygons for disabled materials.
@@ -550,7 +564,9 @@ void ViewFEMesh::DrawElements3d() {
       continue;
     }
     const short col = m_colorMap.count(mat) != 0 ? m_colorMap[mat] : 1;
-
+    // Get the indices of the vertices.
+    std::vector<size_t> nodes;
+    if (!m_cmp->GetElementNodes(i, nodes)) continue;
     // Get the vertex coordinates in the basic cell.
     const size_t nNodes = nodes.size();
     if (nNodes != 4) continue;
@@ -571,7 +587,7 @@ void ViewFEMesh::DrawElements3d() {
     for (int nx = nMinX; nx <= nMaxX; nx++) {
       const double dx = sx * nx;
       // Determine the x-coordinates of the vertices.
-      if (m_cmp->m_mirrorPeriodic[0] && nx != 2 * (nx / 2)) {
+      if (perxm && nx != 2 * (nx / 2)) {
         for (size_t j = 0; j < nNodes; ++j) {
           v[j][0] = mapxmin + (mapxmax - v0[j][0]) + dx;
         }
@@ -585,7 +601,7 @@ void ViewFEMesh::DrawElements3d() {
       for (int ny = nMinY; ny <= nMaxY; ny++) {
         const double dy = sy * ny;
         // Determine the y-coordinates of the vertices.
-        if (m_cmp->m_mirrorPeriodic[1] && ny != 2 * (ny / 2)) {
+        if (perym && ny != 2 * (ny / 2)) {
           for (size_t j = 0; j < nNodes; ++j) {
             v[j][1] = mapymin + (mapymax - v0[j][1]) + dy;
           }
@@ -599,7 +615,7 @@ void ViewFEMesh::DrawElements3d() {
         for (int nz = nMinZ; nz <= nMaxZ; nz++) {
           const double dz = sz * nz;
           // Determine the z-coordinates of the vertices.
-          if (m_cmp->m_mirrorPeriodic[2] && nz != 2 * (nz / 2)) {
+          if (perzm && nz != 2 * (nz / 2)) {
             for (size_t j = 0; j < nNodes; ++j) {
               v[j][2] = mapzmin + (mapzmax - v0[j][2]) + dz;
             }
@@ -703,20 +719,26 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
   };
 
   // Get the map boundaries from the component
-  double mapxmax = m_cmp->m_mapmax[0];
-  double mapxmin = m_cmp->m_mapmin[0];
-  double mapymax = m_cmp->m_mapmax[1];
-  double mapymin = m_cmp->m_mapmin[1];
-  double mapzmax = m_cmp->m_mapmax[2];
-  double mapzmin = m_cmp->m_mapmin[2];
+  double mapxmin = 0., mapymin = 0., mapzmin = 0.;
+  double mapxmax = 0., mapymax = 0., mapzmax = 0.;
+  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, 
+                                mapxmax, mapymax, mapzmax)) {
+    return;
+  }
 
   // Get the periodicities.
   double sx = mapxmax - mapxmin;
   double sy = mapymax - mapymin;
   double sz = mapzmax - mapzmin;
-  const bool perX = m_cmp->m_periodic[0] || m_cmp->m_mirrorPeriodic[0];
-  const bool perY = m_cmp->m_periodic[1] || m_cmp->m_mirrorPeriodic[1];
-  const bool perZ = m_cmp->m_periodic[2] || m_cmp->m_mirrorPeriodic[2];
+  // Check for simple periodicity.
+  bool perxs = false, perys = false, perzs = false;
+  m_cmp->IsPeriodic(perxs, perys, perzs);
+  // Check for mirror periodicity.
+  bool perxm = false, perym = false, perzm = false;
+  m_cmp->IsMirrorPeriodic(perxm, perym, perzm);
+  const bool perX = perxs || perxm;
+  const bool perY = perys || perym;
+  const bool perZ = perzs || perzm;
 
   // Determine the number of periods present in the cell.
   const int nMinX = perX ? int(m_xMinBox / sx) - 1 : 0;
@@ -894,8 +916,7 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
   for (const auto& element : elements) {
     size_t mat = 0;
     bool driftmedium = false;
-    std::vector<size_t> nodes;
-    cst->GetElement(element.element, mat, driftmedium, nodes);
+    if (!cst->GetElementRegion(element.element, mat, driftmedium)) continue;
     // Do not plot the drift medium.
     if (driftmedium && !m_plotMeshBorders) continue;
     // Do not create polygons for disabled materials.

@@ -945,15 +945,13 @@ void ComponentCST::GetNumberOfMeshLines(unsigned int& n_x, unsigned int& n_y,
   n_z = m_zlines.size();
 }
 
-bool ComponentCST::GetElement(const size_t element, size_t& mat, bool& drift,
-                              std::vector<size_t>& nodes) const {
+bool ComponentCST::GetElementNodes(const size_t element, 
+                                   std::vector<size_t>& nodes) const {
+  nodes.clear(); 
   if (element >= m_nElements || element >= m_elementMaterial.size()) {
     std::cerr << m_className << "::GetElement: Index out of range.\n";
     return false;
   }
-  mat = m_elementMaterial[element];
-  drift = m_materials[mat].driftmedium;
-  nodes.clear(); 
   unsigned int i0 = 0, j0 = 0, k0 = 0;
   Element2Index(element, i0, j0, k0);
   const auto i1 = i0 + 1;
@@ -967,6 +965,17 @@ bool ComponentCST::GetElement(const size_t element, size_t& mat, bool& drift,
   nodes.push_back(Index2Node(i1, j0, k1));
   nodes.push_back(Index2Node(i0, j1, k1));
   nodes.push_back(Index2Node(i1, j1, k1));
+  return true;
+}
+
+bool ComponentCST::GetElementRegion(const size_t element, size_t& mat, 
+                                    bool& drift) const {
+  if (element >= m_nElements || element >= m_elementMaterial.size()) {
+    std::cerr << m_className << "::GetElementRegion: Index out of range.\n";
+    return false;
+  }
+  mat = m_elementMaterial[element];
+  drift = m_materials[mat].driftmedium;
   return true;
 }
 

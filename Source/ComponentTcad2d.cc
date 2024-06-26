@@ -266,9 +266,7 @@ void ComponentTcad2d::SetRangeZ(const double zmin, const double zmax) {
 }
 
 bool ComponentTcad2d::GetElement(const size_t i, double& vol, double& dmin,
-                                 double& dmax, int& type,
-                                 std::vector<size_t>& nodes, int& reg) const {
-  nodes.clear();
+                                 double& dmax, int& type) const {
   if (i >= m_elements.size()) {
     std::cerr << m_className << "::GetElement: Index out of range.\n";
     return false;
@@ -308,16 +306,11 @@ bool ComponentTcad2d::GetElement(const size_t i, double& vol, double& dmin,
               << "    Unexpected element type (" << element.type << ")\n";
     return false;
   }
-  const size_t nVertices = ElementVertices(element);
-  for (size_t j = 0; j < nVertices; ++j) {
-    nodes.push_back(element.vertex[j]);
-  }
-  reg = element.region;
   return true;
 }
 
-bool ComponentTcad2d::GetNode(const size_t i, double& x, double& y, double& v,
-                              double& ex, double& ey) const {
+bool ComponentTcad2d::GetNode(const size_t i, 
+                              double& x, double& y, double& z) const {
   if (i >= m_vertices.size()) {
     std::cerr << m_className << "::GetNode: Index out of range.\n";
     return false;
@@ -325,11 +318,7 @@ bool ComponentTcad2d::GetNode(const size_t i, double& x, double& y, double& v,
 
   x = m_vertices[i][0];
   y = m_vertices[i][1];
-  if (!m_epot.empty()) v = m_epot[i];
-  if (!m_efield.empty()) {
-    ex = m_efield[i][0];
-    ey = m_efield[i][1];
-  }
+  z = 0.;
   return true;
 }
 

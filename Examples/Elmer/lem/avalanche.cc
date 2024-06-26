@@ -143,10 +143,9 @@ int main(int argc, char* argv[]) {
   }
 
   // Set up the object for FE mesh visualization.
-  ViewFEMesh vFE;
+  ViewFEMesh vFE(&elm);
   vFE.SetArea(-axis_x, -axis_z, -axis_y, axis_x, axis_z, axis_y);
   vFE.SetCanvas(cGeom);
-  vFE.SetComponent(&elm);
   vFE.SetPlane(0, -1, 0, 0, 0, 0);
   vFE.SetFillMesh(true);
   vFE.SetColor(1, kGray);

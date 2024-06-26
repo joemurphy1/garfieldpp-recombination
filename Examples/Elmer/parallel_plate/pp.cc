@@ -62,9 +62,8 @@ int main(int argc, char * argv[]) {
   vf.SetPlane(0,-1,0,0,0,0);
 
   // Set up the object for FE mesh visualization.
-  ViewFEMesh vFE;
+  ViewFEMesh vFE(&elm);
   vFE.SetCanvas(c1);
-  vFE.SetComponent(&elm);
   vFE.SetPlane(0,0,-1,0,0,0);
   vFE.SetFillMesh(true);
   vFE.SetColor(1,kBlue);

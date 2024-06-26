@@ -73,16 +73,17 @@ class ComponentFieldMap : public Component {
   /// of unity to a given Medium class.
   void SetGas(Medium* medium);
 
-  /// Return the number of mesh elements.
-  virtual size_t GetNumberOfElements() const { return m_elements.size(); }
+  size_t GetNumberOfElements() const override { return m_elements.size(); }
+  bool GetElementNodes(const size_t i, 
+                       std::vector<size_t>& nodes) const override;
+  bool GetElementRegion(const size_t i, 
+                        size_t& mat, bool& drift) const override;
   /// Return the volume and aspect ratio of a mesh element.
   bool GetElement(const size_t i, double& vol, double& dmin,
                   double& dmax) const;
-  /// Return the material and node indices of a mesh element.
-  virtual bool GetElement(const size_t i, size_t& mat, bool& drift,
-                          std::vector<size_t>& nodes) const;
-  virtual size_t GetNumberOfNodes() const { return m_nodes.size(); }
-  virtual bool GetNode(const size_t i, double& x, double& y, double& z) const;
+  size_t GetNumberOfNodes() const override { return m_nodes.size(); }
+  bool GetNode(const size_t i, double& x, double& y, double& z) const override;
+  /// Return the potential at a given node.
   double GetPotential(const size_t i) const;
 
   // Options
@@ -133,6 +134,7 @@ class ComponentFieldMap : public Component {
            z >= m_minBoundingBox[2] && y <= m_maxBoundingBox[2];
   }
 
+  bool Is3d() override { return m_is3d; }
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
                       double& ymax, double& zmax) override;
   bool GetElementaryCell(double& xmin, double& ymin, double& zmin, double& xmax,
@@ -160,7 +162,6 @@ class ComponentFieldMap : public Component {
   /// Create and initialise GPU Transfer class
   double CreateGPUTransferObject(ComponentGPU *&comp_gpu) override;
 
-  friend class ViewFEMesh;
  #endif
 
  protected:

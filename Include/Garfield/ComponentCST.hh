@@ -25,8 +25,9 @@ class ComponentCST : public ComponentFieldMap {
   void GetNumberOfMeshLines(unsigned int& nx, unsigned int& ny,
                             unsigned int& nz) const;
   size_t GetNumberOfElements() const override { return m_nElements; }
-  bool GetElement(const size_t i, size_t& mat, bool& drift,
-                  std::vector<size_t>& nodes) const override;
+  bool GetElementNodes(const size_t i, 
+                       std::vector<size_t>& nodes) const override;
+  bool GetElementRegion(const size_t i, size_t& mat, bool& drift) const override;
   size_t GetNumberOfNodes() const override { return m_nNodes; }
   bool GetNode(const size_t i, double& x, double& y, double& z) const override; 
 

@@ -50,7 +50,7 @@ int main(int argc, char * argv[]) {
   constexpr double pitch = 0.014;
 
   ViewField fieldView(&fm);
-  ViewFEMesh meshView;
+  ViewFEMesh meshView(&fm);
   constexpr bool plotField = true;
   if (plotField) {
     // Set the normal vector of the viewing plane (xz plane).

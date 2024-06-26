@@ -158,6 +158,11 @@ double Component::CellSizeZ() {
   return zmax - zmin;
 }
 
+bool Component::GetNode(const size_t /*i*/, double& /*x*/, double& /*y*/, 
+                        double& /*z*/) const {
+  return false;
+} 
+
 bool Component::CrossedWire(
     const double /*x0*/, const double /*y0*/, const double /*z0*/, 
     const double /*x1*/, const double /*y1*/, const double /*z1*/,

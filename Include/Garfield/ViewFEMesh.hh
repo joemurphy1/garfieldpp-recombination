@@ -11,7 +11,7 @@
 #include <TMatrixD.h>
 
 #include "ComponentCST.hh"
-#include "ComponentFieldMap.hh"
+#include "Component.hh"
 #include "ViewBase.hh"
 #include "ViewDrift.hh"
 
@@ -21,13 +21,15 @@ namespace Garfield {
 
 class ViewFEMesh : public ViewBase {
  public:
+  /// Default constructor.
+  ViewFEMesh() : ViewFEMesh(nullptr) {}
   /// Constructor.
-  ViewFEMesh();
+  ViewFEMesh(Component* cmp);
   /// Destructor.
   ~ViewFEMesh();
 
   /// Set the component from which to retrieve the mesh and field.
-  void SetComponent(ComponentFieldMap* cmp);
+  void SetComponent(Component* cmp);
 
   void SetPlane(const double fx, const double fy, const double fz, 
                 const double x0, const double y0, const double z0) override;
@@ -86,8 +88,8 @@ class ViewFEMesh : public ViewBase {
   std::vector<double> m_viewRegionX;
   std::vector<double> m_viewRegionY;
 
-  // The field map object
-  ComponentFieldMap* m_cmp = nullptr;
+  // Field map object
+  Component* m_cmp = nullptr;
 
   // Optional associated ViewDrift object
   ViewDrift* m_viewDrift = nullptr;

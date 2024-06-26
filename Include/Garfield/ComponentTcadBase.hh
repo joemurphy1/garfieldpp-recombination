@@ -74,10 +74,12 @@ class ComponentTcadBase : public Component {
   /// Set the medium to be associated to all regions with a given material.
   void SetMedium(const std::string& material, Medium* m);
 
-  /// Get the number of elements in the mesh.
-  size_t GetNumberOfElements() const { return m_elements.size(); }
-  /// Get the number of vertices in the mesh.
-  size_t GetNumberOfNodes() const { return m_vertices.size(); }
+  size_t GetNumberOfElements() const override { return m_elements.size(); }
+  bool GetElementNodes(const size_t i, 
+                       std::vector<size_t>& nodes) const override;
+  bool GetElementRegion(const size_t i, 
+                        size_t& region, bool& active) const override;
+  size_t GetNumberOfNodes() const override { return m_vertices.size(); }
 
   /// Switch use of the imported velocity map on/off.
   void EnableVelocityMap(const bool on);
