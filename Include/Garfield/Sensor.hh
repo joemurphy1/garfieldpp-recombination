@@ -138,7 +138,16 @@ class __SENSORCLASS__ {
   void NewSignal() { ++m_nEvents; }
   /// Reset signals and induced charges of all electrodes.
   void ClearSignal();
+  #else
+  /// Add the signal on the GPU
+  __device__ void AddSignal(const double q, const double t0, const double t1,
+                            const double x0, const double y0, const double z0,
+                            const double x1, const double y1, const double z1,
+                            const bool integrateWeightingField,
+                            const bool useWeightingPotential, const int particle_idx);
+  #endif 
 
+  #ifndef __GPUCOMPILE__
   /** Set the time window and binning for the signal calculation.
    * \param tstart start time [ns]
    * \param tstep bin width [ns]
@@ -338,6 +347,10 @@ class __SENSORCLASS__ {
 
   /// Create and initialise GPU Transfer class
   double CreateGPUTransferObject(SensorGPU *&sensor_gpu);
+  #if USEGPU
+  /// Transfer the electrode signals from the GPU to the CPU
+  void TransferGPUElectrodeSignals(SensorGPU*& sensor_gpu);
+  #endif
 
  private:
   std::string m_className = "Sensor";
@@ -369,12 +382,23 @@ class __SENSORCLASS__ {
   };
   /// Electrodes
   std::vector<Electrode> m_electrodes;
+#else
+  struct ElectrodeGPU {
+    ComponentGPU* comp;
+    int label;
+    double* signal;
+  };
+
+  ElectrodeGPU* m_electrodes = nullptr;
+  size_t m_numElectrodes;
+#endif
 
   // Time window for signals
   double m_tStart = 0.;
   double m_tStep = 10.;
   unsigned int m_nTimeBins = 200;
   unsigned int m_nEvents = 0;
+  #ifndef __GPUCOMPILE__
   bool m_delayedSignal = false;
   std::vector<double> m_delayedSignalTimes;
   unsigned int m_nAvgDelayedSignal = 0;
@@ -425,7 +449,13 @@ class __SENSORCLASS__ {
       if (delayed) electrode.delayedIonSignal[bin] += signal;
     }
   }
+#else
+  __device__ void FillBin(ElectrodeGPU& electrode, const unsigned int bin,
+                          const double signal, const bool electron,
+                          const bool delayed, const int particle_idx);
+#endif
 
+#ifndef __GPUCOMPILE__
   void IntegrateSignal(Electrode& electrode);
   void ConvoluteSignal(Electrode& electrode, const std::vector<double>& tab);
   bool ConvoluteSignalFFT();

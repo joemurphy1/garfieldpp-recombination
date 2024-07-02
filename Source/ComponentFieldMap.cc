@@ -253,23 +253,35 @@ double ComponentFieldMap::Potential(const double xin, const double yin,
   return volt;
 }
 
-void ComponentFieldMap::WeightingField(const double xin, const double yin,
-                                       const double zin, double& wx, double& wy,
-                                       double& wz, const std::string& label) {
+void ComponentFieldMap
+#else
+__device__ void ComponentGPU
+#endif
+    ::WeightingField(const double xin, const double yin, const double zin,
+                     double& wx, double& wy, double& wz,
+#ifndef __GPUCOMPILE__
+                     const std::string& label) {
+#else
+                     size_t label) {
+#endif
   // Initial values.
   wx = wy = wz = 0;
 
   // Do not proceed if not properly initialised.
   if (!m_ready) return;
 
+  #ifndef __GPUCOMPILE__
   // Do not proceed if the requested weighting field does not exist.
   if (m_wpot.count(label) == 0) return;
   if (m_wpot[label].empty()) return; 
-
   int iel = -1;
   Field(xin, yin, zin, wx, wy, wz, iel, m_wpot[label]);
+  #else
+  int iel = -1;
+  Field(xin, yin, zin, wx, wy, wz, iel, m_wpot[label], m_num_entries_wpot[label]);
+  #endif
 }
-
+#ifndef __GPUCOMPILE__
 double ComponentFieldMap::WeightingPotential(double xin, double yin, double zin,
                                              const std::string& label0) {
   // Do not proceed if not properly initialised.

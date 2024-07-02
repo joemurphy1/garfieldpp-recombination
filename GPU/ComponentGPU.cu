@@ -157,6 +157,24 @@ namespace Garfield {
             }
         }
 
+        // Weighting potentials
+        // - Label information is not used here and instead we are relying on the map being ordered
+        comp_gpu->m_num_wpots = m_wpot.size();
+        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_num_entries_wpot), sizeof(int) * comp_gpu->m_num_wpots));
+        alloc += sizeof(int) * comp_gpu->m_num_wpots;
+        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_wpot), sizeof(double*) * comp_gpu->m_num_wpots));
+        alloc += sizeof(double*) * comp_gpu->m_num_wpots;
+        size_t index = 0;
+        for (const auto& data: m_wpot) {
+            comp_gpu->m_num_entries_wpot[index] = data.second.size();
+            checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_wpot[index]), sizeof(double) * data.second.size()));
+            alloc += sizeof(double) * data.second.size();
+            for (size_t j = 0; j < data.second.size(); j++) {
+                comp_gpu->m_wpot[index][j] = data.second.at(j);
+            }
+            ++index;
+        }
+
         if (comp_gpu->m_useTetrahedralTree)
         {
             alloc += m_octree->CreateGPUTransferObject(comp_gpu->m_octree);

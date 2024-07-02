@@ -717,6 +717,7 @@ bool AvalancheMicroscopic::TransportElectrons(
 
     // Copy endpoints over
     m_gpuInterface->TransferStackFromGPUToCPU(m_electrons_gpu, true);
+    m_sensor->TransferGPUElectrodeSignals(m_gpuInterface->m_sensor);
     #endif
   }
 
