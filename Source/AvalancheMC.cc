@@ -548,7 +548,7 @@ bool AvalancheMC::AvalancheElectron(const double x0, const double y0,
   std::vector<std::pair<Point, Particle> > particles;
   particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
                                         Particle::Electron));
-  return TransportParticles(particles, true, holes, true);
+  return TransportParticles(particles, true, holes, m_useMultiplication);
 }
 
 bool AvalancheMC::AvalancheHole(const double x0, const double y0,
@@ -557,7 +557,7 @@ bool AvalancheMC::AvalancheHole(const double x0, const double y0,
   std::vector<std::pair<Point, Particle> > particles;
   particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
                                         Particle::Hole));
-  return TransportParticles(particles, electrons, true, true);
+  return TransportParticles(particles, electrons, true, m_useMultiplication);
 }
 
 bool AvalancheMC::AvalancheElectronHole(const double x0, const double y0,
@@ -567,7 +567,7 @@ bool AvalancheMC::AvalancheElectronHole(const double x0, const double y0,
                                         Particle::Electron));
   particles.emplace_back(std::make_pair(MakePoint(x0, y0, z0, t0), 
                                         Particle::Hole));
-  return TransportParticles(particles, true, true, true);
+  return TransportParticles(particles, true, true, m_useMultiplication);
 }
 
 void AvalancheMC::AddElectron(const double x, const double y, const double z,
@@ -623,7 +623,7 @@ bool AvalancheMC::ResumeAvalanche(const bool electrons, const bool holes) {
       particles.push_back(std::make_pair(p.path.back(), Particle::NegativeIon));
     } 
   }
-  return TransportParticles(particles, electrons, holes, true);
+  return TransportParticles(particles, electrons, holes, m_useMultiplication);
 }
 
 bool AvalancheMC::TransportParticles(

@@ -146,11 +146,12 @@ class AvalancheMC {
   /// Switch off diffusion.
   void DisableDiffusion() { m_useDiffusion = false; }
 
-  /** Switch on attachment (and multiplication) for drift line calculation
-   * (default: enabled). For avalanches the flag is ignored. */
+  /// Switch on attachment (default: enabled).
   void EnableAttachment() { m_useAttachment = true; }
   /// Switch off attachment and multiplication.
   void DisableAttachment() { m_useAttachment = false; }
+  /// Switch multiplication on/off.
+  void EnableMultiplication(const bool on) { m_useMultiplication = on; }
 
   /// Retrieve the Townsend coefficient from the component.
   void EnableTownsendMap(const bool on = true) { m_useTownsendMap = on; }
@@ -260,6 +261,7 @@ class AvalancheMC {
   bool m_doRKF = false;
   bool m_useDiffusion = true;
   bool m_useAttachment = true;
+  bool m_useMultiplication = true;
   /// Scaling factor for electron signals.
   double m_scaleE = 1.;
   /// Scaling factor for hole signals.
