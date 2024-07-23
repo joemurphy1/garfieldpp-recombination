@@ -57,10 +57,11 @@ void ComponentFieldMap::ElectricField(const double xin, const double yin,
   #endif
 
   if (status < 0 || iel < 0) {
-    if (status == -10)
+    if (status == -10) {
       #ifndef __GPUCOMPILE__
       PrintNotReady("ElectricField");
       #endif
+    }
     return;
   }
 
