@@ -39,6 +39,11 @@ class ComponentElmer : public ComponentFieldMap {
     return SetWeightingField(prnsol, label);
   }
   bool SetWeightingField(const std::string& prnsol, const std::string& label);
+
+  #ifdef USEGPU
+  /// Create and initialise GPU Transfer class
+  double CreateGPUTransferObject(ComponentGPU *&comp_gpu) override;
+  #endif
  private:
   bool LoadPotentials(const std::string& prnsol, std::vector<double>& pot);
 };

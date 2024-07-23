@@ -484,10 +484,14 @@ class __COMPONENTCLASS__ {
 #else
 
 // include parts from derived class due to big performance hit from using virtual methods
+// TODO GPU TN: It isn't clear to me that we actually need (at least) the Ansys
+// include - all the code is protected by an ifndef __GPUCOMPILE__, whereas it
+// will be defined when these includes are made
 #include "ComponentFieldMap.hh"
 #include "ComponentAnsys123.hh"
 
 friend class ComponentAnsys123;
+friend class ComponentElmer;
 friend class ComponentFieldMap;
 friend class Component;
 
@@ -496,7 +500,8 @@ enum class ComponentType
 {
   Component = 0,
   ComponentFieldMap,
-  ComponentAnsys123
+  ComponentAnsys123,
+  ComponentElmer
 };
 
 ComponentType m_ComponentType{ComponentType::Component};
