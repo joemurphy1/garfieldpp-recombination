@@ -3,6 +3,7 @@
 #include "ComponentGPU.h"
 #undef __GPUCOMPILE__
 #include "Garfield/ComponentAnsys123.hh"
+#include "Garfield/ComponentComsol.hh"
 #include "Garfield/ComponentElmer.hh"
 
 
@@ -197,6 +198,19 @@ namespace Garfield {
         alloc += Component::CreateGPUTransferObject(comp_gpu);
 
         comp_gpu->m_ComponentType = ComponentGPU::ComponentType::ComponentElmer;
+        return alloc;
+    }
+
+    double ComponentComsol::CreateGPUTransferObject(ComponentGPU *&comp_gpu)
+    {
+        // create main sensor GPU class
+        checkCudaErrors(cudaMallocManaged(&comp_gpu, sizeof(ComponentGPU)));
+        double alloc{sizeof(ComponentGPU)};
+
+        alloc += ComponentFieldMap::CreateGPUTransferObject(comp_gpu);
+        alloc += Component::CreateGPUTransferObject(comp_gpu);
+
+        comp_gpu->m_ComponentType = ComponentGPU::ComponentType::ComponentComsol;
         return alloc;
     }
 }
