@@ -19,7 +19,7 @@ noise = 1000.
  
 # Set transfer function.
 shaper = ROOT.Garfield.Shaper(1, 25., 1., "unipolar")
-# sensor.SetTransferFunction(shaper)
+sensor.SetTransferFunction(shaper)
 
 cpp_code = """
 auto fT = [](const double t) {
@@ -40,7 +40,7 @@ for line in infile:
   times.push_back(float(line[0]))
   values.push_back(float(line[1]))
 infile.close()
-sensor.SetTransferFunction(times, values)
+#sensor.SetTransferFunction(times, values)
 
 # Set the time bins.
 nTimeBins = 1000

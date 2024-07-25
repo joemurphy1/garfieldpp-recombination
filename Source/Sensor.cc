@@ -47,6 +47,13 @@ double Trapezoid2(const std::vector<std::pair<double, double>> &f) {
   const double y0 = f[0].second;
   const double x1 = f[1].first;
   const double y1 = f[1].second;
+  // Scale the function such that the peak amplitude is unity.
+  double ymax = y0;
+  for (size_t i = 0; i < n; ++i) {
+    if (f[i].second > ymax) ymax = f[i].second; 
+  }
+  if (fabs(ymax) < Garfield::Small) return -1.;
+  const double scale = 1. / (ymax * ymax); 
   if (n == 2) {
     sum = (x1 - x0) * (y0 * y0 + y1 * y1);
   } else if (n == 3) {
@@ -67,7 +74,7 @@ double Trapezoid2(const std::vector<std::pair<double, double>> &f) {
       }
     }
   }
-  return 0.5 * sum;
+  return 0.5 * sum * scale;
 }
 
 }  // namespace
@@ -1590,6 +1597,26 @@ double Sensor::TransferFunctionSq() {
     double err = 0.;
     unsigned int stat = 0;
     Numerics::QUADPACK::qagi(fsq, 0., 1, 0., epsrel, integral, err, stat);
+    // Find the peak value.
+    unsigned int imax = 0;
+    double ymax = m_fTransfer(0.);
+    for (unsigned int i = 0; i < m_nTimeBins; ++i) {
+      const double y = m_fTransfer(m_tStep * (i + 0.5));
+      if (y > ymax) {
+        ymax = y;
+        imax = i;
+      }
+    }
+    double tmax = m_tStep * imax; 
+    for (unsigned int i = 0; i < 10; ++i) {
+      const double y = m_fTransfer(tmax);
+      if (y > ymax) ymax = y;
+      tmax += 0.1 * m_tStep;
+    }
+    if (fabs(ymax) > Garfield::Small) {
+      const double scale = 1. / (ymax * ymax);
+      integral *= scale;
+    }
   } else if (m_shaper) {
     integral = m_shaper->TransferFuncSq();
   } else {
