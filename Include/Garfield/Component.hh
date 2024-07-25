@@ -491,6 +491,7 @@ class __COMPONENTCLASS__ {
 #include "ComponentAnsys123.hh"
 
 friend class ComponentAnsys123;
+friend class ComponentComsol;
 friend class ComponentElmer;
 friend class ComponentFieldMap;
 friend class Component;
@@ -501,6 +502,7 @@ enum class ComponentType
   Component = 0,
   ComponentFieldMap,
   ComponentAnsys123,
+  ComponentComsol,
   ComponentElmer
 };
 

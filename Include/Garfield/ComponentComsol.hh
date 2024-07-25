@@ -54,6 +54,10 @@ class ComponentComsol : public ComponentFieldMap {
   /// Get times of time-sliced dynamic weighting field.
   void GetTimeInterval(std::vector<double>& delayedTimes){ delayedTimes = m_wdtimes; }
 
+  #ifdef USEGPU
+  /// Create and initialise GPU Transfer class
+  double CreateGPUTransferObject(ComponentGPU *&comp_gpu) override;
+  #endif
  private:
   double m_unit = 100.;
   bool m_timeset = false;
