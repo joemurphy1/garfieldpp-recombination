@@ -45,43 +45,37 @@ void ViewSignal::SetRangeY(const double ymin, const double ymax) {
   m_userRangeY = true;
 }
 
-void ViewSignal::DrawHistogram(TH1D* h, const std::string& opt,
-                               const std::string& xlabel,
-                               const std::string& ylabel) {
-  if (!h) return;
-  h->GetXaxis()->SetTitle(xlabel.c_str());
-  h->GetYaxis()->SetTitle(ylabel.c_str());
-  h->SetStats(0);
-  auto hCopy = h->DrawCopy(opt.c_str());
+TH1* ViewSignal::DrawHistogram(TH1D& h, const std::string& opt,
+                                const std::string& ylabel) {
+  h.SetDirectory(nullptr);
+  h.SetStats(0);
+  h.GetXaxis()->SetTitle("time [ns]");
+  h.GetYaxis()->SetTitle(ylabel.c_str());
+  h.SetLineWidth(5);
+  auto hCopy = h.DrawCopy(opt.c_str(), "");
   if (m_userRangeX) hCopy->SetAxisRange(m_xmin, m_xmax, "X");
   if (m_userRangeY) {
     hCopy->SetMinimum(m_ymin);
     hCopy->SetMaximum(m_ymax);
   }
+  return hCopy;
 }
 
 void ViewSignal::PlotSignal(const std::string& label,
-                            const std::string& settingTotal,
-                            const std::string& settingPrompt,
-                            const std::string& settingDelayed, 
+                            const std::string& optT,
+                            const std::string& optP,
+                            const std::string& optD, 
                             const bool same) {
-  const bool totalT = true;
-  const bool totalP =
-      settingPrompt.find("t") != std::string::npos ? true : false;
-  const bool totalD =
-      settingDelayed.find("t") != std::string::npos ? true : false;
-  const bool electronT =
-      settingTotal.find("e") != std::string::npos ? true : false;
-  const bool electronP =
-      settingPrompt.find("e") != std::string::npos ? true : false;
-  const bool electronD =
-      settingDelayed.find("e") != std::string::npos ? true : false;
-  const bool ionT = settingTotal.find("i") != std::string::npos ? true : false;
-  const bool ionP = settingPrompt.find("i") != std::string::npos ? true : false;
-  const bool ionD =
-      settingDelayed.find("i") != std::string::npos ? true : false;
+  const bool totT = true;
+  const bool totP = optP.find("t") != std::string::npos ? true : false;
+  const bool totD = optD.find("t") != std::string::npos ? true : false;
+  const bool eleT = optT.find("e") != std::string::npos ? true : false;
+  const bool eleP = optP.find("e") != std::string::npos ? true : false;
+  const bool eleD = optD.find("e") != std::string::npos ? true : false;
+  const bool ionT = optT.find("i") != std::string::npos ? true : false;
+  const bool ionP = optP.find("i") != std::string::npos ? true : false;
+  const bool ionD = optD.find("i") != std::string::npos ? true : false;
 
-  constexpr int lineThickness = 5;
   constexpr double tol = 1e-50;
 
   if (!m_sensor) {
@@ -98,7 +92,6 @@ void ViewSignal::PlotSignal(const std::string& label,
   m_sensor->GetTimeWindow(t0, dt, nBins);
   const double t1 = t0 + nBins * dt;
 
-  std::string xlabel = "time [ns]";
   std::string ylabel = m_labelY;
   if (ylabel.empty()) {
     ylabel = m_sensor->IsIntegrated(label) ? "signal [fC]" : "signal [fC / ns]";
@@ -106,22 +99,21 @@ void ViewSignal::PlotSignal(const std::string& label,
   unsigned int nPlots = same ? 1 : 0;
   if (!RangeSet(gPad)) nPlots = 0;
 
-  if (totalT) {
+  TLegend* legend = nullptr;
+  if (m_legend) {
+    legend = new TLegend(0.7, 0.7, 0.9, 0.9);
+    legend->SetHeader("Induced current components");
+  }
+
+  if (totT) {
     const auto hname = FindUnusedHistogramName("hSignal_");
-    m_hSignal.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
-    m_hSignal->SetDirectory(nullptr);
-    m_hSignal->SetLineColor(m_colTotal);
+    TH1D h(hname.c_str(), "", nBins, t0, t1);
+    h.SetLineColor(m_colTotal);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetSignal(label, i, 0);
-      if (!std::isnan(sig) && std::abs(sig) < tol) {
-        m_hSignal->SetBinContent(i + 1, 0.);
-      } else {
-        m_hSignal->SetBinContent(i + 1, sig);
-      }
+      if (std::isnan(sig) || std::abs(sig) < tol) continue;
+      h.SetBinContent(i + 1, sig);
     }
-
-    m_hSignal->SetLineWidth(lineThickness);
-
     const std::string opt = nPlots > 0 ? "same" : "";
     ++nPlots;
 
@@ -143,186 +135,137 @@ void ViewSignal::PlotSignal(const std::string& label,
       }
       gCrossings.DrawGraph(xp.size(), xp.data(), yp.data(), "psame");
     }
-    DrawHistogram(m_hSignal.get(), opt, xlabel, ylabel);
+    auto hC = DrawHistogram(h, opt, ylabel);
+    if (legend) legend->AddEntry(hC, "Total induced signal", "l");
   }
 
-  if (totalD) {
+  if (totD) {
     const auto hname = FindUnusedHistogramName("hDelayedSignal_");
-    m_hDelayedSignal.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
-    m_hDelayedSignal->SetDirectory(nullptr);
-    m_hDelayedSignal->SetLineColor(m_colDelayed[3]);
-    m_hDelayedSignal->SetLineStyle(7);
-    m_hDelayedSignal->SetStats(0);
+    TH1D h(hname.c_str(), "", nBins, t0, t1);
+    h.SetLineColor(m_colDelayed[3]);
+    h.SetLineStyle(7);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetSignal(label, i, 2);
-      if (!std::isnan(sig) && std::abs(sig) < tol) {
-        m_hDelayedSignal->SetBinContent(i + 1, 0.);
-      } else {
-        m_hDelayedSignal->SetBinContent(i + 1, sig);
-      }
+      if (std::isnan(sig) || std::abs(sig) < tol) continue;
+      h.SetBinContent(i + 1, sig);
     }
-    m_hDelayedSignal->SetLineWidth(lineThickness);
-    m_hDelayedSignal->DrawCopy("same");
+    const std::string opt = nPlots > 0 ? "same" : "";
+    ++nPlots;
+    auto hC = DrawHistogram(h, opt, ylabel);
+    if (legend) legend->AddEntry(hC, "Delayed induced signal", "l");
   }
 
-  if (totalP) {
+  if (totP) {
     const auto hname = FindUnusedHistogramName("hPromptSignal_");
-    m_hPromptSignal.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
-    m_hPromptSignal->SetDirectory(nullptr);
-    m_hPromptSignal->SetLineColor(m_colPrompt[0]);
-    m_hPromptSignal->SetLineStyle(2);
-    m_hPromptSignal->SetStats(0);
+    TH1D h(hname.c_str(), "", nBins, t0, t1);
+    h.SetLineColor(m_colPrompt[0]);
+    h.SetLineStyle(2);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetSignal(label, i, 1);
-      if (!std::isnan(sig) && std::abs(sig) < tol) {
-        m_hPromptSignal->SetBinContent(i + 1, 0.);
-      } else {
-        m_hPromptSignal->SetBinContent(i + 1, sig);
-      }
+      if (std::isnan(sig) || std::abs(sig) < tol) continue;
+      h.SetBinContent(i + 1, sig);
     }
-
-    m_hPromptSignal->SetLineWidth(lineThickness);
-    m_hPromptSignal->DrawCopy("same");
+    const std::string opt = nPlots > 0 ? "same" : "";
+    ++nPlots;
+    auto hC = DrawHistogram(h, opt, ylabel);
+    if (legend) legend->AddEntry(hC, "Prompt induced signal", "l");
   }
 
-  if (electronT) {
+  if (eleT) {
     const auto hname = FindUnusedHistogramName("hSignalElectrons_");
-    m_hSignalElectrons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
-    m_hSignalElectrons->SetDirectory(nullptr);
-    m_hSignalElectrons->SetLineColor(m_colElectrons);
+    TH1D h(hname.c_str(), "", nBins, t0, t1);
+    h.SetLineColor(m_colElectrons);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetElectronSignal(label, i);
-      m_hSignalElectrons->SetBinContent(i + 1, sig);
+      h.SetBinContent(i + 1, sig);
     }
-    m_hSignalElectrons->SetLineWidth(lineThickness);
-    m_hSignalElectrons->DrawCopy("same");
+    const std::string opt = nPlots > 0 ? "same" : "";
+    ++nPlots;
+    auto hC = DrawHistogram(h, opt, ylabel);
+    if (legend) legend->AddEntry(hC, "Electron induced signal", "l");
   }
 
-  if (electronD) {
-    const auto hname = FindUnusedHistogramName("m_hDelayedElectrons_");
-    m_hDelayedElectrons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
-    m_hDelayedElectrons->SetDirectory(nullptr);
-    m_hDelayedElectrons->SetLineColor(m_colDelayed[4]);
-    m_hDelayedElectrons->SetLineStyle(7);
-    m_hDelayedElectrons->SetStats(0);
+  if (eleD) {
+    const auto hname = FindUnusedHistogramName("hDelayedElectrons_");
+    TH1D h(hname.c_str(), "", nBins, t0, t1);
+    h.SetLineColor(m_colDelayed[4]);
+    h.SetLineStyle(7);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetDelayedElectronSignal(label, i);
-      if (!std::isnan(sig) && std::abs(sig) < tol) {
-        m_hDelayedElectrons->SetBinContent(i + 1, 0.);
-      } else {
-        m_hDelayedElectrons->SetBinContent(i + 1, sig);
-      }
+      if (std::isnan(sig) || std::abs(sig) < tol) continue;
+      h.SetBinContent(i + 1, sig);
     }
-    m_hDelayedElectrons->SetLineWidth(lineThickness);
-    m_hDelayedElectrons->DrawCopy("same");
+    const std::string opt = nPlots > 0 ? "same" : "";
+    ++nPlots;
+    auto hC = DrawHistogram(h, opt, ylabel);
+    if (legend) legend->AddEntry(hC, "Electron delayed induced signal", "l");
   }
 
-  if (electronP) {
-    const auto hname = FindUnusedHistogramName("m_hPromptElectrons_");
-    m_hPromptElectrons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
-    m_hPromptElectrons->SetDirectory(nullptr);
-    m_hPromptElectrons->SetLineColor(m_colPrompt[1]);
-    m_hPromptElectrons->SetLineStyle(2);
-    m_hPromptElectrons->SetStats(0);
+  if (eleP) {
+    const auto hname = FindUnusedHistogramName("hPromptElectrons_");
+    TH1D h(hname.c_str(), "", nBins, t0, t1);
+    h.SetLineColor(m_colPrompt[1]);
+    h.SetLineStyle(2);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetElectronSignal(label, i) -
                          m_sensor->GetDelayedElectronSignal(label, i);
-      if (!std::isnan(sig) && std::abs(sig) < tol) {
-        m_hPromptElectrons->SetBinContent(i + 1, 0.);
-      } else {
-        m_hPromptElectrons->SetBinContent(i + 1, sig);
-      }
+      if (std::isnan(sig) || std::abs(sig) < tol) continue;
+      h.SetBinContent(i + 1, sig);
     }
-
-    m_hPromptElectrons->SetLineWidth(lineThickness);
-    m_hPromptElectrons->DrawCopy("same");
+    const std::string opt = nPlots > 0 ? "same" : "";
+    ++nPlots;
+    auto hC = DrawHistogram(h, opt, ylabel);
+    if (legend) legend->AddEntry(hC, "Electron prompt induced signal", "l");
   }
 
   if (ionT) {
-    const auto hname = FindUnusedHistogramName("m_hSignalIons_");
-    m_hSignalIons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
-    m_hSignalIons->SetDirectory(nullptr);
-    m_hSignalIons->SetLineColor(m_colIons);
+    const auto hname = FindUnusedHistogramName("hSignalIons_");
+    TH1D h(hname.c_str(), "", nBins, t0, t1);
+    h.SetLineColor(m_colIons);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetIonSignal(label, i);
-      m_hSignalIons->SetBinContent(i + 1, sig);
+      h.SetBinContent(i + 1, sig);
     }
-    m_hSignalIons->SetLineWidth(lineThickness);
-    m_hSignalIons->DrawCopy("same");
+    const std::string opt = nPlots > 0 ? "same" : "";
+    ++nPlots;
+    auto hC = DrawHistogram(h, opt, ylabel);
+    if (legend) legend->AddEntry(hC, "Ion induced signal", "l");
   }
 
   if (ionD) {
-    const auto hname = FindUnusedHistogramName("m_hDelayedIons_");
-    m_hDelayedIons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
-    m_hDelayedIons->SetDirectory(nullptr);
-    m_hDelayedIons->SetLineColor(m_colDelayed[5]);
-    m_hDelayedIons->SetLineStyle(7);
-    m_hDelayedIons->SetStats(0);
+    const auto hname = FindUnusedHistogramName("hDelayedIons_");
+    TH1D h(hname.c_str(), "", nBins, t0, t1);
+    h.SetLineColor(m_colDelayed[5]);
+    h.SetLineStyle(7);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetDelayedIonSignal(label, i);
-      if (!std::isnan(sig) && std::abs(sig) < tol) {
-        m_hDelayedIons->SetBinContent(i + 1, 0.);
-      } else {
-        m_hDelayedIons->SetBinContent(i + 1, sig);
-      }
+      if (std::isnan(sig) || std::abs(sig) < tol) continue;
+      h.SetBinContent(i + 1, sig);
     }
-    m_hDelayedIons->SetLineWidth(lineThickness);
-    m_hDelayedIons->DrawCopy("same");
+    const std::string opt = nPlots > 0 ? "same" : "";
+    ++nPlots;
+    auto hC = DrawHistogram(h, opt, ylabel);
+    if (legend) legend->AddEntry(hC, "Ion/hole delayed induced signal", "l");
   }
 
   if (ionP) {
-    std::cerr << m_className << "::ionP.\n";
-    const auto hname = FindUnusedHistogramName("m_hPromptIons_");
-    m_hPromptIons.reset(new TH1D(hname.c_str(), "", nBins, t0, t1));
-    m_hPromptIons->SetDirectory(nullptr);
-    m_hPromptIons->SetLineColor(m_colPrompt[2]);
-    m_hPromptIons->SetLineStyle(2);
-    m_hPromptIons->SetStats(0);
+    const auto hname = FindUnusedHistogramName("hPromptIons_");
+    TH1D h(hname.c_str(), "", nBins, t0, t1);
+    h.SetLineColor(m_colPrompt[2]);
+    h.SetLineStyle(2);
     for (unsigned int i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetIonSignal(label, i) -
                          m_sensor->GetDelayedIonSignal(label, i);
-      if (!std::isnan(sig) && std::abs(sig) < tol) {
-        m_hPromptIons->SetBinContent(i + 1, 0.);
-      } else {
-        m_hPromptIons->SetBinContent(i + 1, sig);
-      }
+      if (std::isnan(sig) || std::abs(sig) < tol) continue;
+      h.SetBinContent(i + 1, sig);
     }
-
-    m_hPromptIons->SetLineWidth(lineThickness);
-    m_hPromptIons->DrawCopy("same");
+    const std::string opt = nPlots > 0 ? "same" : "";
+    ++nPlots;
+    auto hC = DrawHistogram(h, opt, ylabel);
+    if (legend) legend->AddEntry(hC, "Ion/hole prompt induced signal", "l");
   }
 
-  if (m_legend) {
-    TLegend* leg = new TLegend(0.7, 0.7, 0.9, 0.9);
-    leg->SetHeader("Induced current components");
-    if (totalT) leg->AddEntry(m_hSignal.get(), "Total induced signal", "l");
-    if (totalP) {
-      leg->AddEntry(m_hPromptSignal.get(), "Prompt induced signal", "l");
-    }
-    if (totalD) {
-      leg->AddEntry(m_hDelayedSignal.get(), "Delayed induced signal", "l");
-    }
-    if (electronT) {
-      leg->AddEntry(m_hSignalElectrons.get(), "Electron induced signal", "l");
-    }
-    if (electronP) {
-      leg->AddEntry(m_hPromptElectrons.get(), "Electron prompt induced signal",
-                    "l");
-    }
-    if (electronD) {
-      leg->AddEntry(m_hDelayedElectrons.get(),
-                    "Electron delayed induced signal", "l");
-    }
-    if (ionT) leg->AddEntry(m_hSignalIons.get(), "Ion induced signal", "l");
-    if (ionP) {
-      leg->AddEntry(m_hPromptIons.get(), "Ion/hole prompt induced signal", "l");
-    }
-    if (ionD) {
-      leg->AddEntry(m_hDelayedIons.get(), "Ion/hole delayed induced signal",
-                    "l");
-    }
-    leg->Draw();
-  }
+  if (legend) legend->Draw();
   gPad->Update();
 }
 

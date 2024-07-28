@@ -51,17 +51,6 @@ class ViewSignal : public ViewBase {
                   const std::string& optDelayed = "",
                   const bool same = false);
 
-  /** Retrieve the histogram for the total, prompt and delayed induced charge or
-    signal.
-    * \param h histogram to be returned
-               ('t': total, 'e': electron-induced, 'i': ion/hole-induced).
-    **/
-
-  TH1D* GetHistogram(const char h = 't') {
-    return h == 'e' ? m_hSignalElectrons.get()
-                    : h == 'i' ? m_hSignalIons.get() : m_hSignal.get();
-  }
-
   /// Set the x-axis limits explicitly.
   void SetRangeX(const double xmin, const double xmax);
   /// Remove the user-defined x-axis limits.
@@ -109,17 +98,6 @@ class ViewSignal : public ViewBase {
   // Axis label.
   std::string m_labelY = "";
 
-  // Histograms.
-  std::unique_ptr<TH1D> m_hSignal;
-  std::unique_ptr<TH1D> m_hSignalElectrons;
-  std::unique_ptr<TH1D> m_hSignalIons;
-  std::unique_ptr<TH1D> m_hPromptSignal;
-  std::unique_ptr<TH1D> m_hPromptElectrons;
-  std::unique_ptr<TH1D> m_hPromptIons;
-  std::unique_ptr<TH1D> m_hDelayedSignal;
-  std::unique_ptr<TH1D> m_hDelayedElectrons;
-  std::unique_ptr<TH1D> m_hDelayedIons;
-
   bool m_legend = false;
 
   // Colours.
@@ -131,7 +109,7 @@ class ViewSignal : public ViewBase {
 
   std::array<short, 3> m_colPrompt{{kAzure + 10, kRed - 4, kMagenta + 2}};
 
-  void DrawHistogram(TH1D* h, const std::string& opt, const std::string& xlabel,
+  TH1* DrawHistogram(TH1D& h, const std::string& opt, 
                      const std::string& ylabel);
 
 };
