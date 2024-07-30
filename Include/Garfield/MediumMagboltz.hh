@@ -200,6 +200,7 @@ class MediumMagboltz : public MediumGas {
 
   void PlotElectronCrossSections(const unsigned int i, TPad* pad);
   void PlotElectronCollisionRates(TPad* pad);
+  void PlotElectronInverseMeanFreePath(TPad* pad);
 
   static int GetGasNumberMagboltz(const std::string& input);
   double CreateGPUTransferObject(MediumGPU *&med_gpu) override;
