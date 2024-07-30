@@ -2071,6 +2071,7 @@ void MediumMagboltz::PlotElectronCrossSections(const unsigned int iplot,
   }
 
 }
+
 void MediumMagboltz::PlotElectronCollisionRates(TPad* pad) {
 
   if (!Update()) return;
@@ -2151,6 +2152,43 @@ void MediumMagboltz::PlotElectronCollisionRates(TPad* pad) {
     }
   }
   legend->Draw();
+  pad->Update();
+}
+
+void MediumMagboltz::PlotElectronInverseMeanFreePath(TPad* pad) {
+
+  if (!Update()) return;
+
+  const double density = GetNumberDensity();
+
+  std::array<float, Magboltz::nEnergySteps> en;
+  std::array<float, Magboltz::nEnergySteps> imfp; 
+  for (unsigned int k = 0; k < Magboltz::nEnergySteps; ++k) {
+    en[k] = (k + 0.5) * m_eStep;
+    double v = SpeedOfLight * sqrt(2. * en[k] / ElectronMass);
+    if (en[k] > 1.e3) {
+      const double re = en[k] / ElectronMass;
+      v *= sqrt(1. + 0.5 * re) / (1. + re);
+    } 
+    imfp[k] = m_cfTot[k] / v;
+  }
+
+  // Plot range.
+  double ymin = *std::min_element(std::begin(imfp), std::end(imfp));
+  double ymax = *std::max_element(std::begin(imfp), std::end(imfp));
+
+  pad->cd();
+  pad->SetLogx();
+  pad->SetLogy();
+  pad->SetGridx();
+  pad->SetGridy();
+  auto frame = pad->DrawFrame(en[0], ymin, en.back(), ymax, 
+                                 ";energy [eV];inv. mean free path [cm^{-1}]");
+  frame->GetXaxis()->SetTitleOffset(1.2);
+  TGraph gr(Magboltz::nEnergySteps);
+  gr.SetLineWidth(3);
+  // gr.SetLineColor(kBlue + 2);
+  gr.DrawGraph(Magboltz::nEnergySteps, en.data(), imfp.data(), "lsame pfc");
   pad->Update();
 }
 
