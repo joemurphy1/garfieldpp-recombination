@@ -869,6 +869,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
               << "::TransportElectron: Got null-collision rate <= 0.\n";
     return StatusCalculationAbandoned;
   }
+  if (m_debug) std::cout << "    Null collision rate: " << fLim << "\n";
   double tLim = 1. / fLim;
 
   std::vector<std::pair<Particle, double> > secondaries;
@@ -915,6 +916,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
         status = StatusCalculationAbandoned;
         break;
       }
+      if (m_debug) std::cout << "    Null collision rate: " << fLim << "\n";
       tLim = 1. / fLim;
     }
 
@@ -960,9 +962,9 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
         tLim = 1. / fLim;
         continue;
       }
-      if (m_useNullCollisionSteps) break;
       // Check for real or null collision.
       if (RndmUniform() <= fReal * tLim) isNullCollision = false;
+      if (m_useNullCollisionSteps) break;
     }
 
     // Increase the collision counters.
@@ -982,7 +984,6 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
     double y1 = y + vy * dt + ey * b3;
     double z1 = z + vz * dt + ez * b3;
     double t1 = t + dt;
-
     // Get the electric field and medium at the proposed new position.
     m_sensor->ElectricField(x1, y1, z1, ex, ey, ez, medium, status);
     if (!hole) {
@@ -1410,9 +1411,9 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
         tLim = 1. / fLim;
         continue;
       }
-      if (m_useNullCollisionSteps) break;
       // Check for real or null collision.
       if (RndmUniform() <= fReal * tLim) isNullCollision = false;
+      if (m_useNullCollisionSteps) break;
     }
 
     // Increase the collision counters.
@@ -1850,9 +1851,9 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
         tLim = 1. / fLim;
         continue;
       }
-      if (m_useNullCollisionSteps) break;
       // Check for real or null collision.
       if (RndmUniform() <= fReal * tLim) isNullCollision = false;
+      if (m_useNullCollisionSteps) break;
     }
 
     // Increase the collision counters.
