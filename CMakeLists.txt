@@ -20,7 +20,7 @@ if (USEGPU)
   project(Garfield
     LANGUAGES CXX Fortran CUDA
     VERSION 0.3.0)
-  set(CMAKE_CUDA_ARCHITECTURES OFF)
+  set(CMAKE_CUDA_ARCHITECTURES native)
 else()
   project(
     Garfield

@@ -452,6 +452,8 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
                                       GPUFLOAT /*fLim*/,
                                       GPUFLOAT /*fInv*/,
                                       unsigned int max_thread_idx,
+                                      bool doSignal,
+                                      bool integrateWeightingField,
                                       int debug_electron = -1
                                       )
     {
@@ -683,13 +685,13 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
             // outside the drift medium/drift area) using iterative bisection.
 
             Terminate(x, y, z, t, x1, y1, z1, t1, m_sensor);
-            /* GPUREMOVE
-            if (m_doSignal) {
-            const int q = hole ? 1 : -1;
-            m_sensor->AddSignal(q, t, t1, x, y, z, x1, y1, z1,
-                                m_integrateWeightingField,
-                                m_useWeightingPotential);
-            }*/
+            if (doSignal) {
+              const int q = (ptype == Particle::Hole) ? 1 : -1;
+              // TODO GPU: This is set to false for now
+              const bool useWeightingPotential = false;
+              m_sensor->AddSignal(q, t, t1, x, y, z, x1, y1, z1, integrateWeightingField, useWeightingPotential,
+                                  thread_idx);
+            }
             Update(raw_ptr_stack, particle_idx, x1, y1, z1, t1, en, kx1, ky1, kz1, band);
 
             if (status != 0) {
@@ -714,7 +716,7 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
             const double dc = Mag(xc - x, yc - y, zc - z);
             const double tc = t + dt * dc / Mag(dx, dy, dz);
             // If switched on, calculated the induced signal over this step.
-            if (m_doSignal) {
+            if (doSignal) {
             const int q = hole ? 1 : -1;
             m_sensor->AddSignal(q, t, tc, x, y, z, xc, yc, zc,
                                 m_integrateWeightingField,
@@ -726,15 +728,16 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
             ok = false;
             if (m_debug) PrintStatus(hdr, "hit a wire", x, y, z, hole);
             break;
-        }
+        }*/
 
         // If switched on, calculate the induced signal.
-        if (m_doSignal) {
-            const int q = hole ? 1 : -1;
-            m_sensor->AddSignal(q, t, t + dt, x, y, z, x1, y1, z1,
-                                m_integrateWeightingField,
-                                m_useWeightingPotential);
-        }*/
+        if (doSignal) {
+          const int q = (ptype == Particle::Hole) ? 1 : -1;
+          // TODO GPU: This is set to false for now
+          const bool useWeightingPotential = false;
+          m_sensor->AddSignal(q, t, t + dt, x, y, z, x1, y1, z1, integrateWeightingField, useWeightingPotential,
+                              thread_idx);
+        }
 
         // Update the coordinates.
         x = x1;
@@ -1011,6 +1014,8 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
             fLim,
             fInv,
             numActiveParticles,
+            aval_ptr->m_doSignal,
+            aval_ptr->m_integrateWeightingField,
             debug_electron);
         cudaDeviceSynchronize();
 

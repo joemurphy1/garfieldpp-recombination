@@ -114,10 +114,14 @@ class ComponentFieldMap : public Component {
                      double& ey, double& ez, double& v, Medium*& m,
                      int& status) override;
   using Component::ElectricField;
+#endif
+  __GPULABEL__
   void WeightingField(const double x, const double y, const double z,
                       double& wx, double& wy, double& wz,
-                      const std::string& label) override;
-
+#ifdef __GPUCOMPILE__
+                      size_t label);
+#else
+                    const std::string& label) override;
   double WeightingPotential(const double x, const double y, const double z,
                             const std::string& label) override;
 
@@ -140,6 +144,10 @@ class ComponentFieldMap : public Component {
   bool GetElementaryCell(double& xmin, double& ymin, double& zmin, double& xmax,
                          double& ymax, double& zmax) override;
 
+  std::map<std::string, std::vector<double> > GetWeightingPotentials() {
+    return m_wpot;
+  }
+
   bool GetVoltageRange(double& vmin, double& vmax) override {
     vmin = m_mapvmin;
     vmax = m_mapvmax;
@@ -161,9 +169,7 @@ class ComponentFieldMap : public Component {
 
   /// Create and initialise GPU Transfer class
   double CreateGPUTransferObject(ComponentGPU *&comp_gpu) override;
-
  #endif
-
  protected:
   bool m_is3d = true;
 
@@ -224,7 +230,7 @@ class ComponentFieldMap : public Component {
   std::vector<Node> m_nodes;
   #endif
 
-  // TODO GPU: m_wpot and m_dwpot not yet implemented
+  // TODO GPU: m_dwpot not yet implemented
   #ifndef __GPUCOMPILE__
   // Potentials.
   std::vector<double> m_pot;
@@ -235,6 +241,12 @@ class ComponentFieldMap : public Component {
   #else
   double* m_pot = nullptr;
   int m_numpot = 0;
+
+  // The number of weighting potentials
+  int m_num_wpots = 0;
+  // The number of entries in each weighting potential
+  int* m_num_entries_wpot = nullptr;
+  double** m_wpot = nullptr;
   #endif
 
   // Materials
@@ -412,7 +424,7 @@ class ComponentFieldMap : public Component {
                    const bool zmirrored, const double rcoordinate,
                    const double rotation) const;
 
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   static int ReadInteger(char* token, int def, bool& error);
   static double ReadDouble(char* token, double def, bool& error);
 
