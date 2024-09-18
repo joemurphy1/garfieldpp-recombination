@@ -1422,7 +1422,7 @@ double Medium::Interpolate1D(
     } else if (extr.first == 2) {
       // Logarithmic extrapolation
       const double extr4 = log(ytab[1] / ytab[0]) / (xtab[1] - xtab[0]);
-      const double extr3 = log(ytab[0] - extr4 * xtab[0]);
+      const double extr3 = log(ytab[0]) - extr4 * xtab[0];
       result = std::exp(std::min(50., extr3 + extr4 * x));
     } else {
       result = ytab[0];
