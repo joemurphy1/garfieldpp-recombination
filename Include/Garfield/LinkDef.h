@@ -75,4 +75,6 @@
 #pragma link C++ function Garfield::SetSerif();
 #pragma link C++ function Garfield::SetSansSerif();
 
+#pragma link C++ enum Garfield::Particle;
+
 #endif
