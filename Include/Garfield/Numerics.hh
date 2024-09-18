@@ -232,6 +232,10 @@ inline double BesselK1L(const double xx) {
 double Divdif(const std::vector<double>& f, const std::vector<double>& a,
               int nn, double x, int mm);
 
+double LinearInterpolation(const std::vector<double>& ytab,
+                           const std::vector<double>& xtab,
+                           const double x);
+
 /// Interpolation of order 1 and 2 in an irregular rectangular
 /// two-dimensional grid.
 bool Boxin2(const std::vector<std::vector<double> >& value,
