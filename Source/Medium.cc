@@ -630,31 +630,12 @@ double Medium::HoleMobility() {
 bool Medium::IonVelocity(const double ex, const double ey, const double ez,
                          const double bx, const double by, const double bz,
                          double& vx, double& vy, double& vz) {
-  vx = vy = vz = 0.;
-  if (m_iMob.empty()) return false;
-  // Compute the magnitude of the electric field.
-  const double e = sqrt(ex * ex + ey * ey + ez * ez);
-  const double e0 = ScaleElectricField(e);
-  if (e < Small || e0 < Small) return true;
-  // Compute the magnitude of the electric field.
-  const double b = sqrt(bx * bx + by * by + bz * bz);
-
-  // Compute the angle between B field and E field.
-  const double ebang = m_tab2d ? GetAngle(ex, ey, ez, bx, by, bz, e, b) : 0.;
-  double mu = 0.;
-  if (!Interpolate(e0, b, ebang, m_iMob, mu, m_intpMob, m_extrMob)) mu = 0.;
-
-  constexpr double q = 1.;
-  mu *= q;
-  if (b < Small) {
-    vx = mu * ex;
-    vy = mu * ey;
-    vz = mu * ez;
-  } else {
-    Langevin(ex, ey, ez, bx, by, bz, mu, vx, vy, vz);
+  std::vector<std::vector<std::vector<double> > > vB;
+  if (m_iVel.empty() && !m_iMob.empty()) {
+    VelocityFromMobility(m_iMob, m_iVel);
   }
-
-  return true;
+  return Velocity(ex, ey, ez, bx, by, bz, m_iVel, vB, vB, +1., 
+                  vx, vy, vz);
 }
 
 bool Medium::IonDiffusion(const double ex, const double ey, const double ez,
@@ -942,12 +923,23 @@ void Medium::SetFieldGrid(const std::vector<double>& efields,
   // Ions
   Clone(m_iMob, efields, bfields, angles, m_intpMob, m_extrMob, 0.,
         "ion mobility");
+  if (!m_iVel.empty()) {
+    Clone(m_iVel, efields, bfields, angles, m_intpVel, m_extrVel, 0.,
+          "ion velocity");
+  }
   Clone(m_iDifL, efields, bfields, angles, m_intpDif, m_extrDif, 0., 
         "ion longitudinal diffusion");
   Clone(m_iDifT, efields, bfields, angles, m_intpDif, m_extrDif, 0., 
         "ion transverse diffusion");
   Clone(m_iDis, efields, bfields, angles, m_intpDis, m_extrDis, -30., 
         "ion dissociation");
+
+  Clone(m_nMob, efields, bfields, angles, m_intpMob, m_extrMob, 0.,
+        "negative ion mobility");
+  if (!m_nVel.empty()) {
+    Clone(m_nVel, efields, bfields, angles, m_intpVel, m_extrVel, 0.,
+          "negative ion velocity");
+  }
 
   if (bfields.size() > 1 || angles.size() > 1) m_tab2d = true;
   m_eFields = efields;
@@ -1127,10 +1119,43 @@ bool Medium::SetIonMobility(const size_t ie, const size_t ib,
   }
 
   m_iMob[ia][ib][ie] = mu;
+  if (!m_iVel.empty()) m_iVel[ia][ib][ie] = mu * m_eFields[ie];
   if (m_debug) {
     std::cout << m_className << "::SetIonMobility:\n    Ion mobility at E = "
               << m_eFields[ie] << " V/cm, B = " 
               << m_bFields[ib] << " T, angle " 
+              << m_bAngles[ia] << " set to " << mu << " cm2/(V ns).\n";
+  }
+  return true;
+}
+
+bool Medium::SetNegativeIonMobility(const size_t ie, const size_t ib,
+                                    const size_t ia, const double mu) {
+  // Check the index.
+  if (ie >= m_eFields.size() || ib >= m_bFields.size() ||
+      ia >= m_bAngles.size()) {
+    PrintOutOfRange(m_className, "SetNegativeIonMobility", ie, ib, ia);
+    return false;
+  }
+
+  if (m_nMob.empty()) {
+    std::cerr << m_className << "::SetNegativeIonMobility:\n"
+              << "    Ion mobility table not initialised.\n";
+    return false;
+  }
+
+  if (mu == 0.) {
+    std::cerr << m_className 
+              << "::SetNegativeIonMobility: Zero value not allowed.\n";
+    return false;
+  }
+
+  m_nMob[ia][ib][ie] = mu;
+  if (!m_nVel.empty()) m_nVel[ia][ib][ie] = mu * m_eFields[ie];
+  if (m_debug) {
+    std::cout << m_className << "::SetNegativeIonMobility:\n"
+              << "    Ion mobility at E = " << m_eFields[ie] 
+              << " V/cm, B = " << m_bFields[ib] << " T, angle " 
               << m_bAngles[ia] << " set to " << mu << " cm2/(V ns).\n";
   }
   return true;
@@ -1145,6 +1170,14 @@ bool Medium::SetIonMobility(const std::vector<double>& efields,
     return false;
   }
 
+  if (m_debug) {
+    std::cout << m_className << "::SetIonMobility:\n"
+              << "  Original mobility table:\n"
+              << "    E [V/cm]   mu [cm2/(V s)]\n";
+    for (size_t i = 0; i < efields.size(); ++i) {
+      std::printf("%15.3f  %15.5f\n", efields[i], 1.e9 * mobs[i]);
+    }
+  } 
   if (negativeIons) {
     ResetNegativeIonMobility();
   } else {
@@ -1158,14 +1191,20 @@ bool Medium::SetIonMobility(const std::vector<double>& efields,
   } else {
     Init(nE, nB, nA, m_iMob, 0.);
   }
+  if (m_debug) {
+    std::cout << "  Interpolated table (interpolation order " 
+              << m_intpMob << "):\n"
+              << "    E [V/cm]   mu [cm2/(V s)]\n";
+  }
   for (size_t i = 0; i < nE; ++i) {
-    const double e = m_eFields[i];
-    const double mu = Interpolate1D(e, mobs, efields, m_intpMob, m_extrMob);
+    const double mu = Interpolate1D(m_eFields[i], mobs, efields, 
+                                    m_intpMob, m_extrMob);
     if (negativeIons) {
       m_nMob[0][0][i] = mu;
     } else {
       m_iMob[0][0][i] = mu;
     }
+    if (m_debug) std::printf("%15.3f  %15.5f\n", m_eFields[i], 1.e9 * mu); 
   }
   if (!m_tab2d) return true;
   for (size_t i = 0; i < nA; ++i) {
@@ -1180,6 +1219,26 @@ bool Medium::SetIonMobility(const std::vector<double>& efields,
     }
   }
   return true;
+}
+
+void Medium::VelocityFromMobility(
+    const std::vector<std::vector<std::vector<double> > >& mob,
+    std::vector<std::vector<std::vector<double> > >& vel) {
+
+  const auto nE = m_eFields.size();
+  const auto nB = m_bFields.size();
+  const auto nA = m_bAngles.size();
+  Init(nE, nB, nA, vel, 0.);
+  for (size_t i = 0; i < nE; ++i) {
+    vel[0][0][i] = mob[0][0][i] * m_eFields[i];
+  }
+  for (size_t i = 0; i < nA; ++i) {
+    for (size_t j = 0; j < nB; ++j) {
+      for (size_t k = 0; k < nE; ++k) {
+        vel[i][j][k] = vel[0][0][k];
+      }
+    }
+  }
 }
 
 void Medium::SetExtrapolationMethodVelocity(const std::string& low,
@@ -1332,74 +1391,69 @@ bool Medium::Interpolate(
 }
 
 double Medium::Interpolate1D(
-    const double e, const std::vector<double>& table,
-    const std::vector<double>& fields, const unsigned int intpMeth,
+    const double x, const std::vector<double>& ytab,
+    const std::vector<double>& xtab, const unsigned int intpMeth,
     const std::pair<unsigned int, unsigned int>& extr) const {
   // This function is a generalized version of the Fortran functions
   // GASVEL, GASVT1, GASVT2, GASLOR, GASMOB, GASDFT, and GASDFL
   // for the case of a 1D table. All variables are generic.
 
-  const auto nSizeTable = fields.size();
+  const auto nt = xtab.size();
 
-  if (e < 0. || nSizeTable < 1) return 0.;
+  if (x < 0. || nt < 1) return 0.;
 
   double result = 0.;
 
-  if (nSizeTable == 1) {
+  if (nt == 1) {
     // Only one point
-    result = table[0];
-  } else if (e < fields[0]) {
+    result = ytab[0];
+  } else if (x < xtab[0]) {
     // Extrapolation towards small fields
-    if (fields[0] >= fields[1]) {
+    if (xtab[0] >= xtab[1]) {
       if (m_debug) {
-        std::cerr << m_className << "::Interpolate1D:\n";
-        std::cerr << "    First two field values coincide.\n";
-        std::cerr << "    No extrapolation to lower fields.\n";
+        std::cerr << m_className << "::Interpolate1D:\n"
+                  << "    First two fields coincide, cannot extrapolate.\n";
       }
-      result = table[0];
+      result = ytab[0];
     } else if (extr.first == 1) {
       // Linear extrapolation
-      const double extr4 = (table[1] - table[0]) / (fields[1] - fields[0]);
-      const double extr3 = table[0] - extr4 * fields[0];
-      result = extr3 + extr4 * e;
+      const double extr4 = (ytab[1] - ytab[0]) / (xtab[1] - xtab[0]);
+      result = ytab[0] + extr4 * (x - xtab[0]);
     } else if (extr.first == 2) {
       // Logarithmic extrapolation
-      const double extr4 = log(table[1] / table[0]) / (fields[1] - fields[0]);
-      const double extr3 = log(table[0] - extr4 * fields[0]);
-      result = std::exp(std::min(50., extr3 + extr4 * e));
+      const double extr4 = log(ytab[1] / ytab[0]) / (xtab[1] - xtab[0]);
+      const double extr3 = log(ytab[0]) - extr4 * xtab[0];
+      result = std::exp(std::min(50., extr3 + extr4 * x));
     } else {
-      result = table[0];
+      result = ytab[0];
     }
-  } else if (e > fields[nSizeTable - 1]) {
+  } else if (x > xtab[nt - 1]) {
     // Extrapolation towards large fields
-    if (fields[nSizeTable - 1] <= fields[nSizeTable - 2]) {
+    if (xtab[nt - 1] <= xtab[nt - 2]) {
       if (m_debug) {
-        std::cerr << m_className << "::Interpolate1D:\n";
-        std::cerr << "    Last two field values coincide.\n";
-        std::cerr << "    No extrapolation to higher fields.\n";
+        std::cerr << m_className << "::Interpolate1D:\n"
+                  << "    Last two fields coincide, cannot extrapolate.\n";
       }
-      result = table[nSizeTable - 1];
+      result = ytab[nt - 1];
     } else if (extr.second == 1) {
       // Linear extrapolation
-      const double extr2 = (table[nSizeTable - 1] - table[nSizeTable - 2]) /
-                           (fields[nSizeTable - 1] - fields[nSizeTable - 2]);
-      const double extr1 =
-          table[nSizeTable - 1] - extr2 * fields[nSizeTable - 1];
-      result = extr1 + extr2 * e;
+      const double extr2 = (ytab[nt - 1] - ytab[nt - 2]) /
+                           (xtab[nt - 1] - xtab[nt - 2]);
+      result = ytab[nt - 1] + extr2 * (x - xtab[nt - 1]);
     } else if (extr.second == 2) {
       // Logarithmic extrapolation
-      const double extr2 = log(table[nSizeTable - 1] / table[nSizeTable - 2]) /
-                           (fields[nSizeTable - 1] - fields[nSizeTable - 2]);
-      const double extr1 =
-          log(table[nSizeTable - 1]) - extr2 * fields[nSizeTable - 1];
-      result = exp(std::min(50., extr1 + extr2 * e));
+      const double extr2 = log(ytab[nt - 1] / ytab[nt - 2]) /
+                           (xtab[nt - 1] - xtab[nt - 2]);
+      const double extr1 = log(ytab[nt - 1]) - extr2 * xtab[nt - 1];
+      result = exp(std::min(50., extr1 + extr2 * x));
     } else {
-      result = table[nSizeTable - 1];
+      result = ytab[nt - 1];
     }
   } else {
     // Intermediate points, spline interpolation (not implemented).
     // Intermediate points, Newtonian interpolation
-    result = Numerics::Divdif(table, fields, nSizeTable, e, intpMeth);
+    result = intpMeth == 1 ? Numerics::LinearInterpolation(ytab, xtab, x) :
+                             Numerics::Divdif(ytab, xtab, nt, x, intpMeth);
   }
 
   return result;

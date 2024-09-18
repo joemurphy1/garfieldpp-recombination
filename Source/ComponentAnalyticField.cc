@@ -724,6 +724,8 @@ bool ComponentAnalyticField::CrossedWire(
   if ((m_perx && fabs(dx) >= m_sx) || (m_pery && fabs(dy) >= m_sy)) {
     std::cerr << m_className << "::CrossedWire:\n"
               << "    Particle crossed more than one period.\n";
+    std::printf("    (%10.4f, %10.4f) - (%10.4f, %10.4f)\n", 
+                xx0, yy0, xx1, yy1); 
     return false;
   }
 

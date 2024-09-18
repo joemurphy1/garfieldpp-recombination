@@ -1252,13 +1252,14 @@ void cfft(std::vector<std::complex<double> >& a, const int msign) {
 
 }
 
-double Divdif(const std::vector<double>& f, const std::vector<double>& a,
-              const int nn, const double x, const int mm) {
+double Divdif(const std::vector<double>& ytab, 
+              const std::vector<double>& xtab,
+              const int n, const double x, const int mm) {
 
   double t[20], d[20];
 
   // Check the arguments.
-  if (nn < 2) {
+  if (n < 2) {
     std::cerr << "Divdif: Array length < 2.\n";
     return 0.;
   }
@@ -1268,22 +1269,22 @@ double Divdif(const std::vector<double>& f, const std::vector<double>& a,
   }
 
   // Deal with the case that X is located at first or last point.
-  const double tol1 = 1.e-6 * fabs(fabs(a[1]) - fabs(a[0]));
-  const double tol2 = 1.e-6 * fabs(fabs(a[nn-1]) - fabs(a[nn-2]));
-  if (fabs(x - a[0]) < tol1) return f[0];
-  if (fabs(x - a[nn - 1]) < tol2) return f[nn - 1];
+  const double tol1 = 1.e-6 * fabs(fabs(xtab[1]) - fabs(xtab[0]));
+  const double tol2 = 1.e-6 * fabs(fabs(xtab[n - 1]) - fabs(xtab[n - 2]));
+  if (fabs(x - xtab[0]) < tol1) return ytab[0];
+  if (fabs(x - xtab[n - 1]) < tol2) return ytab[n - 1];
 
   // Find subscript IX of X in array A.
   constexpr int mmax = 10;
-  const int m = std::min({mm, mmax, nn - 1});
+  const int m = std::min({mm, mmax, n - 1});
   const int mplus = m + 1;
   int ix = 0;
-  int iy = nn + 1;
-  if (a[0] > a[nn - 1]) {
+  int iy = n + 1;
+  if (xtab[0] > xtab[n - 1]) {
     // Search decreasing arguments.
     do {
       const int mid = (ix + iy) / 2;
-      if (x > a[mid - 1]) {
+      if (x > xtab[mid - 1]) {
         iy = mid;
       } else {
         ix = mid;
@@ -1293,7 +1294,7 @@ double Divdif(const std::vector<double>& f, const std::vector<double>& a,
     // Search increasing arguments.
     do {
       const int mid = (ix + iy) / 2;
-      if (x < a[mid - 1]) {
+      if (x < xtab[mid - 1]) {
         iy = mid;
       } else {
         ix = mid;
@@ -1307,14 +1308,14 @@ double Divdif(const std::vector<double>& f, const std::vector<double>& a,
   int l = 0;
   do {
     const int isub = ix + l;
-    if ((1 > isub) || (isub > nn)) {
+    if ((1 > isub) || (isub > n)) {
       // Skip point.
       npts = mplus;
     } else {
       // Insert point.
       ip++;
-      t[ip - 1] = a[isub - 1];
-      d[ip - 1] = f[isub - 1];
+      t[ip - 1] = xtab[isub - 1];
+      d[ip - 1] = ytab[isub - 1];
     }
     if (ip < npts) {
       l = -l;
@@ -1349,6 +1350,19 @@ double Divdif(const std::vector<double>& f, const std::vector<double>& a,
     j--;
   }
   return sum;
+}
+
+double LinearInterpolation(const std::vector<double>& ytab,
+                           const std::vector<double>& xtab,
+                           const double xx) {
+
+  const auto it1 = std::upper_bound(xtab.cbegin(), xtab.cend(), xx);
+  if (it1 == xtab.cend()) return ytab.back();
+  const auto it0 = std::prev(it1);
+  const double dx = (*it1 - *it0);
+  if (dx < 1.e-10) return ytab[it0 - xtab.cbegin()];
+  const double f = (xx - *it0) / dx;
+  return ytab[it0 - xtab.cbegin()] * (1. - f) + f * ytab[it1 - xtab.cbegin()];
 }
 
 bool Boxin2(const std::vector<std::vector<double> >& value,

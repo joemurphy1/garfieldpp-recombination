@@ -482,9 +482,7 @@ class __MEDIUMCLASS__ {
 
   /// Set an entry in the table of negative ion mobilities.
   bool SetNegativeIonMobility(const size_t ie, const size_t ib, 
-                              const size_t ia, const double mu) {
-    return SetEntry(ie, ib, ia, "NegativeIonMobility", m_nMob, mu);
-  }
+                              const size_t ia, const double mu);
   /// Get an entry in the table of negative ion mobilities.
   bool GetNegativeIonMobility(const size_t ie, const size_t ib, 
                               const size_t ia, double& mu) {
@@ -521,13 +519,23 @@ class __MEDIUMCLASS__ {
   void ResetHoleTownsend() { m_hAlp.clear(); }
   void ResetHoleAttachment() { m_hAtt.clear(); }
 
-  void ResetIonMobility() { m_iMob.clear(); }
+  void ResetIonMobility() { 
+    m_iMob.clear(); 
+    m_iVel.clear();
+  }
   void ResetIonDiffusion() {
     m_iDifL.clear();
     m_iDifT.clear();
   }
   void ResetIonDissociation() { m_iDis.clear(); }
-  void ResetNegativeIonMobility() { m_nMob.clear(); }
+  void ResetNegativeIonMobility() { 
+    m_nMob.clear(); 
+    m_nVel.clear();
+  }
+
+  void VelocityFromMobility(
+      const std::vector<std::vector<std::vector<double> > >& mob,
+      std::vector<std::vector<std::vector<double> > >& vel);
 
   /// Select the extrapolation method for fields below/above the table range.
   /// Possible options are "constant", "linear", and "exponential".
@@ -662,11 +670,13 @@ class __MEDIUMCLASS__ {
 
   // Ions
   std::vector<std::vector<std::vector<double> > > m_iMob;
+  std::vector<std::vector<std::vector<double> > > m_iVel;
   std::vector<std::vector<std::vector<double> > > m_iDifL;
   std::vector<std::vector<std::vector<double> > > m_iDifT;
   std::vector<std::vector<std::vector<double> > > m_iDis;
   // Negative ions
   std::vector<std::vector<std::vector<double> > > m_nMob;
+  std::vector<std::vector<std::vector<double> > > m_nVel;
 
   // Thresholds for Townsend, attachment and dissociation coefficients.
   unsigned int m_eThrAlp = 0;

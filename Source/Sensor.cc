@@ -30,13 +30,7 @@ double Interpolate(const std::vector<double> &y, const std::vector<double> &x,
   if (order > 1) {
     return Garfield::Numerics::Divdif(y, x, x.size(), xx, order);
   }
-  const auto it1 = std::upper_bound(x.cbegin(), x.cend(), xx);
-  if (it1 == x.cend()) return y.back();
-  const auto it0 = std::prev(it1);
-  const double dx = (*it1 - *it0);
-  if (dx < Garfield::Small) return y[it0 - x.cbegin()];
-  const double f = (xx - *it0) / dx;
-  return y[it0 - x.cbegin()] * (1. - f) + f * y[it1 - x.cbegin()];
+  return Garfield::Numerics::LinearInterpolation(y, x, xx);
 }
 
 double Trapezoid2(const std::vector<std::pair<double, double>> &f) {
