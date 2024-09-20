@@ -204,20 +204,21 @@ class __MEDIUMCLASS__ {
 #else
   /// Collision rate [ns-1] for given electron energy
   virtual double GetElectronCollisionRate(const double e, const int band = 0);
+  struct Secondary {
+    Particle type = Particle::Electron;
+    double energy = 0.;
+    double time = 0.;
+    double distance = 0.; 
+  };
   /// Sample the collision type. Update energy and direction vector.
   virtual bool ElectronCollision(
       const double e, int& type, int& level, double& e1, 
       double& dx, double& dy, double& dz, 
-      std::vector<std::pair<Particle, double> >& secondaries, int& ndxc,
+      std::vector<Secondary>& secondaries, 
       int& band);
 #endif
 
 #ifndef __GPUCOMPILE__
-  virtual unsigned int GetNumberOfDeexcitationProducts() const { return 0; }
-  virtual bool GetDeexcitationProduct(const unsigned int i, double& t,
-                                      double& s, int& type,
-                                      double& energy) const;
-
   // Transport parameters for holes
   /// Drift velocity [cm / ns]
   virtual bool HoleVelocity(const double ex, const double ey, const double ez,
@@ -582,9 +583,9 @@ class __MEDIUMCLASS__ {
   virtual bool GetPhotoAbsorptionCrossSection(const double e, double& sigma,
                                               const unsigned int i = 0);
   virtual double GetPhotonCollisionRate(const double e);
-  virtual bool GetPhotonCollision(const double e, int& type, int& level,
-                                  double& e1, double& ctheta, int& nsec,
-                                  double& esec);
+  virtual bool PhotonCollision(const double e, int& type, int& level,
+                               double& e1, double& ctheta, 
+                               std::vector<Secondary>& secondaries);
 
   /// Switch on/off debugging  messages
   void EnableDebugging() { m_debug = true; }

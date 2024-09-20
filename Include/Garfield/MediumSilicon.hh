@@ -127,8 +127,8 @@ class MediumSilicon : public Medium {
   // Sample the collision type
   bool ElectronCollision(const double e, int& type, int& level, double& e1,
                          double& dx, double& dy, double& dz,
-                         std::vector<std::pair<Particle, double> >& secondaries,
-                         int& ndxc, int& band) override;
+                         std::vector<Secondary>& secondaries,
+                         int& band) override;
 
   // Density of states
   double GetConductionBandDensityOfStates(const double e, const int band = 0);

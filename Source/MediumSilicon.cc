@@ -716,8 +716,7 @@ double MediumSilicon::GetElectronCollisionRate(const double e, const int band) {
 
 bool MediumSilicon::ElectronCollision(const double e, int& type, 
     int& level, double& e1, double& px, double& py, double& pz, 
-    std::vector<std::pair<Particle, double> >& secondaries, int& ndxc,
-    int& band) {
+    std::vector<Secondary>& secondaries, int& band) {
   if (e > m_eFinalG) {
     std::cerr << m_className << "::ElectronCollision:\n"
               << "    Requested electron energy (" << e << " eV) exceeds the "
@@ -945,17 +944,21 @@ bool MediumSilicon::ElectronCollision(const double e, int& type,
     return false;
   }
 
-  // Secondaries
-  ndxc = 0;
   // Ionising collision
   if (type == ElectronCollisionTypeIonisation) {
     double ee = 0., eh = 0.;
     ComputeSecondaries(e, ee, eh);
     loss = ee + eh + m_bandGap;
     // Add the secondary electron.
-    secondaries.emplace_back(std::make_pair(Particle::Electron, ee));
+    Secondary esec;
+    esec.type = Particle::Electron;
+    esec.energy = ee;
+    secondaries.push_back(std::move(esec));
     // Add the hole.
-    secondaries.emplace_back(std::make_pair(Particle::Hole, eh));
+    Secondary hsec;
+    hsec.type = Particle::Hole;
+    hsec.energy = eh;
+    secondaries.push_back(std::move(hsec));
   }
 
   if (e < loss) loss = e - 0.00001;

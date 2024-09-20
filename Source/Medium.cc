@@ -555,23 +555,13 @@ double Medium::GetElectronCollisionRate(const double /*e*/,
 
 bool Medium::ElectronCollision(const double e, int& type, int& level, 
     double& e1, double& dx, double& dy, double& dz, 
-    std::vector<std::pair<Particle, double> >& /*secondaries*/,
-    int& ndxc, int& band) {
+    std::vector<Secondary>& /*secondaries*/, int& band) {
   type = level = -1;
   e1 = e;
-  ndxc = band = 0;
+  band = 0;
   RndmDirection(dx, dy, dz);
 
-  if (m_debug) PrintNotImplemented(m_className, "GetElectronCollision");
-  return false;
-}
-
-bool Medium::GetDeexcitationProduct(const unsigned int /*i*/, double& t,
-                                    double& s, int& type,
-                                    double& energy) const {
-  if (m_debug) PrintNotImplemented(m_className, "GetDeexcitationProduct");
-  t = s = energy = 0.;
-  type = 0;
+  if (m_debug) PrintNotImplemented(m_className, "ElectronCollision");
   return false;
 }
 
@@ -758,14 +748,12 @@ double Medium::GetPhotonCollisionRate(const double e) {
   return sigma * m_density * SpeedOfLight;
 }
 
-bool Medium::GetPhotonCollision(const double e, int& type, int& level,
-                                double& e1, double& ctheta, int& nsec,
-                                double& esec) {
+bool Medium::PhotonCollision(const double e, int& type, int& level,
+                             double& e1, double& ctheta, 
+                             std::vector<Secondary>& secondaries) {
   type = level = -1;
   e1 = e;
   ctheta = 1.;
-  nsec = 0;
-  esec = 0.;
   return false;
 }
 
