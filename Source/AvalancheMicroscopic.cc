@@ -873,7 +873,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
   if (m_debug) std::cout << "    Null collision rate: " << fLim << "\n";
   double tLim = 1. / fLim;
 
-  std::vector<std::pair<Particle, double> > secondaries;
+  std::vector<Medium::Secondary> secondaries;
   // Keep track of the previous coordinates for distance histogramming.
   double xLast = x;
   double yLast = y;
@@ -1053,11 +1053,9 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
     // Get the collision type and parameters.
     int cstype = 0;
     int level = 0;
-    int ndxc = 0;
     secondaries.clear();
     medium->ElectronCollision(en1, cstype, level, en, kx1, ky1, kz1,
-                              secondaries, ndxc, band);
-
+                              secondaries, band);
     if (m_debug) std::cout << "    Collision type " << cstype << ".\n";
     // If activated, histogram the distance with respect to the
     // last collision.
@@ -1079,18 +1077,18 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
           m_userHandleIonisation(x, y, z, t, cstype, level, medium);
         }
         for (const auto& secondary : secondaries) {
-          if (secondary.first == Particle::Electron) {
-            const double esec = std::max(secondary.second, Small);
+          if (secondary.type == Particle::Electron) {
+            const double esec = std::max(secondary.energy, Small);
             if (m_histSecondary) m_histSecondary->Fill(esec);
             // Add the secondary electron to the stack.
             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, esec), Particle::Electron));
-          } else if (secondary.first == Particle::Hole) {
-            const double esec = std::max(secondary.second, Small);
+          } else if (secondary.type == Particle::Hole) {
+            const double esec = std::max(secondary.energy, Small);
             // Add the secondary hole to the stack.
             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, esec), Particle::Hole));
-          } else if (secondary.first == Particle::Ion) {
+          } else if (secondary.type == Particle::Ion) {
             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, 0.), Particle::Ion));
           }
@@ -1115,27 +1113,18 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
         if (m_userHandleInelastic) {
           m_userHandleInelastic(x, y, z, t, cstype, level, medium);
         }
-        if (ndxc <= 0) break;
-        // Get the electrons/photons produced in the deexcitation cascade.
-        for (int j = ndxc; j--;) {
-          double tdx = 0., sdx = 0., edx = 0.;
-          int typedx = 0;
-          if (!medium->GetDeexcitationProduct(j, tdx, sdx, typedx, edx)) {
-            std::cerr << m_className << "::TransportElectron: "
-                      << "Cannot retrieve deexcitation product " << j
-                      << "/" << ndxc << ".\n";
-            break;
-          }
-          if (typedx == DxcProdTypeElectron) {
+        // Loop over the particles produced in the deexcitation cascade.
+        for (const auto& secondary : secondaries) {
+          if (secondary.type == Particle::Electron) {
             // Penning ionisation
             double xp = x, yp = y, zp = z;
-            if (sdx > Small) {
+            if (secondary.distance > Small) {
               // Randomise the point of creation.
               double dxp = 0., dyp = 0., dzp = 0.;
               RndmDirection(dxp, dyp, dzp);
-              xp += sdx * dxp;
-              yp += sdx * dyp;
-              zp += sdx * dzp;
+              xp += secondary.distance * dxp;
+              yp += secondary.distance * dyp;
+              zp += secondary.distance * dzp;
             }
             // Get the electric field and medium at this location.
             Medium* med = nullptr;
@@ -1152,16 +1141,17 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
               m_userHandleIonisation(xp, yp, zp, t, cstype, level, medium);
             }
             // Add the Penning electron to the list.
-            const double tp = t + tdx;
-            const double ep = std::max(edx, Small);
+            const double tp = t + secondary.time;
+            const double ep = std::max(secondary.energy, Small);
             newParticles.emplace_back(std::make_pair(
               MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
             newParticles.emplace_back(std::make_pair(
               MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
-          } else if (typedx == DxcProdTypePhoton && m_usePhotons &&
-                     edx > m_gammaCut) {
+          } else if (secondary.type == Particle::Photon && m_usePhotons &&
+                     secondary.energy > m_gammaCut) {
             // Radiative de-excitation
-            if (aval) TransportPhoton(x, y, z, t + tdx, edx, newParticles);
+            if (aval) TransportPhoton(x, y, z, t + secondary.time, 
+                                      secondary.energy, newParticles);
           }
         }
         break;
@@ -1306,7 +1296,7 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
   // Ratio of transverse electric field component and magnetic field.
   double ezovb = bmag > Small ? ez / bmag : 0.;
 
-  std::vector<std::pair<Particle, double> > secondaries;
+  std::vector<Medium::Secondary> secondaries;
   // Keep track of the previous coordinates for distance histogramming.
   double xLast = x;
   double yLast = y;
@@ -1528,10 +1518,9 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
     // Get the collision type and parameters.
     int cstype = 0;
     int level = 0;
-    int ndxc = 0;
     secondaries.clear();
     medium->ElectronCollision(en1, cstype, level, en, kx1, ky1, kz1,
-                              secondaries, ndxc, band);
+                              secondaries, band);
 
     if (m_debug) std::cout << "    Collision type " << cstype << ".\n";
     // If activated, histogram the distance with respect to the
@@ -1554,18 +1543,18 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
           m_userHandleIonisation(x, y, z, t, cstype, level, medium);
         }
         for (const auto& secondary : secondaries) {
-          if (secondary.first == Particle::Electron) {
-            const double esec = std::max(secondary.second, Small);
+          if (secondary.type == Particle::Electron) {
+            const double esec = std::max(secondary.energy, Small);
             if (m_histSecondary) m_histSecondary->Fill(esec);
             // Add the secondary electron to the stack.
             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, esec), Particle::Electron));
-          } else if (secondary.first == Particle::Hole) {
-            const double esec = std::max(secondary.second, Small);
+          } else if (secondary.type == Particle::Hole) {
+            const double esec = std::max(secondary.energy, Small);
             // Add the secondary hole to the stack.
             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, esec), Particle::Hole));
-          } else if (secondary.first == Particle::Ion) {
+          } else if (secondary.type == Particle::Ion) {
             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, 0.), Particle::Ion));
           }
@@ -1590,28 +1579,18 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
         if (m_userHandleInelastic) {
           m_userHandleInelastic(x, y, z, t, cstype, level, medium);
         }
-        if (ndxc <= 0) break;
-        // Get the electrons/photons produced in the deexcitation cascade.
-        for (int j = ndxc; j--;) {
-          double tdx = 0., sdx = 0., edx = 0.;
-          int typedx = 0;
-          if (!medium->GetDeexcitationProduct(j, tdx, sdx, typedx, edx)) {
-            std::cerr << m_className << "::TransportElectron: "
-                      << "Cannot retrieve deexcitation product " << j
-                      << "/" << ndxc << ".\n";
-            break;
-          }
-
-          if (typedx == DxcProdTypeElectron) {
+        // Loop over the particles produced in the deexcitation cascade.
+        for (const auto& secondary : secondaries) {
+          if (secondary.type == Particle::Electron) {
             // Penning ionisation
             double xp = x, yp = y, zp = z;
-            if (sdx > Small) {
+            if (secondary.distance > Small) {
               // Randomise the point of creation.
               double dxp = 0., dyp = 0., dzp = 0.;
               RndmDirection(dxp, dyp, dzp);
-              xp += sdx * dxp;
-              yp += sdx * dyp;
-              zp += sdx * dzp;
+              xp += secondary.distance * dxp;
+              yp += secondary.distance * dyp;
+              zp += secondary.distance * dzp;
             }
             // Get the electric field and medium at this location.
             Medium* med = nullptr;
@@ -1628,16 +1607,17 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
               m_userHandleIonisation(xp, yp, zp, t, cstype, level, medium);
             }
             // Add the Penning electron to the list.
-            const double tp = t + tdx;
-            const double ep = std::max(edx, Small);
+            const double tp = t + secondary.time;
+            const double ep = std::max(secondary.energy, Small);
             newParticles.emplace_back(std::make_pair(
               MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
             newParticles.emplace_back(std::make_pair(
               MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
-          } else if (typedx == DxcProdTypePhoton && m_usePhotons &&
-                     edx > m_gammaCut) {
+          } else if (secondary.type == Particle::Photon && m_usePhotons &&
+                     secondary.energy > m_gammaCut) {
             // Radiative de-excitation
-            if (aval) TransportPhoton(x, y, z, t + tdx, edx, newParticles);
+            if (aval) TransportPhoton(x, y, z, t + secondary.time, 
+                                      secondary.energy, newParticles);
           }
         }
         break;
@@ -1758,7 +1738,7 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
   }
   double tLim = 1. / fLim;
 
-  std::vector<std::pair<Particle, double> > secondaries;
+  std::vector<Medium::Secondary> secondaries;
   // Keep track of the previous coordinates for distance histogramming.
   double xLast = x;
   double yLast = y;
@@ -1946,10 +1926,9 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
     // Get the collision type and parameters.
     int cstype = 0;
     int level = 0;
-    int ndxc = 0;
     secondaries.clear();
     medium->ElectronCollision(en1, cstype, level, en, kx1, ky1, kz1,
-                              secondaries, ndxc, band);
+                              secondaries, band);
 
     if (m_debug) std::cout << "    Collision type " << cstype << ".\n";
     // If activated, histogram the distance with respect to the
@@ -1972,8 +1951,8 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
           m_userHandleIonisation(x, y, z, t, cstype, level, medium);
         }
         for (const auto& secondary : secondaries) {
-          if (secondary.first == Particle::Electron) {
-            const double esec = std::max(secondary.second, Small);
+          if (secondary.type == Particle::Electron) {
+            const double esec = std::max(secondary.energy, Small);
             if (m_histSecondary) m_histSecondary->Fill(esec);
             // Add the secondary electron to the stack.
             double kxs = 0., kys = 0., kzs = 0.;
@@ -1981,15 +1960,15 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
             medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs), Particle::Electron));
-          } else if (secondary.first == Particle::Hole) {
-            const double esec = std::max(secondary.second, Small);
+          } else if (secondary.type == Particle::Hole) {
+            const double esec = std::max(secondary.energy, Small);
             // Add the secondary hole to the stack.
             double kxs = 0., kys = 0., kzs = 0.;
             int bs = -1;
             medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs), Particle::Hole));
-          } else if (secondary.first == Particle::Ion) {
+          } else if (secondary.type == Particle::Ion) {
             newParticles.emplace_back(std::make_pair(
               MakePoint(x, y, z, t, 0.), Particle::Ion));
           }
@@ -2019,28 +1998,18 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
         if (m_userHandleInelastic) {
           m_userHandleInelastic(x, y, z, t, cstype, level, medium);
         }
-        if (ndxc <= 0) break;
-        // Get the electrons/photons produced in the deexcitation cascade.
-        for (int j = ndxc; j--;) {
-          double tdx = 0., sdx = 0., edx = 0.;
-          int typedx = 0;
-          if (!medium->GetDeexcitationProduct(j, tdx, sdx, typedx, edx)) {
-            std::cerr << m_className << "::TransportElectron: "
-                      << "Cannot retrieve deexcitation product " << j
-                      << "/" << ndxc << ".\n";
-            break;
-          }
-
-          if (typedx == DxcProdTypeElectron) {
+        // Loop over the particles produced in the deexcitation cascade.
+        for (const auto& secondary : secondaries) {
+          if (secondary.type == Particle::Electron) {
             // Penning ionisation
             double xp = x, yp = y, zp = z;
-            if (sdx > Small) {
+            if (secondary.distance > Small) {
               // Randomise the point of creation.
               double dxp = 0., dyp = 0., dzp = 0.;
               RndmDirection(dxp, dyp, dzp);
-              xp += sdx * dxp;
-              yp += sdx * dyp;
-              zp += sdx * dzp;
+              xp += secondary.distance * dxp;
+              yp += secondary.distance * dyp;
+              zp += secondary.distance * dzp;
             }
             // Get the electric field and medium at this location.
             Medium* med = nullptr;
@@ -2057,16 +2026,17 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
               m_userHandleIonisation(xp, yp, zp, t, cstype, level, medium);
             }
             // Add the Penning electron to the list.
-            const double tp = t + tdx;
-            const double ep = std::max(edx, Small);
+            const double tp = t + secondary.time;
+            const double ep = std::max(secondary.energy, Small);
             newParticles.emplace_back(std::make_pair(
               MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
             newParticles.emplace_back(std::make_pair(
               MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
-          } else if (typedx == DxcProdTypePhoton && m_usePhotons &&
-                     edx > m_gammaCut) {
+          } else if (secondary.type == Particle::Photon && m_usePhotons &&
+                     secondary.energy > m_gammaCut) {
             // Radiative de-excitation
-            if (aval) TransportPhoton(x, y, z, t + tdx, edx, newParticles);
+            if (aval) TransportPhoton(x, y, z, t + secondary.time, 
+                                      secondary.energy, newParticles);
           }
         }
         break;
@@ -2282,41 +2252,43 @@ void AvalancheMicroscopic::TransportPhoton(
   int type, level;
   double e1;
   double ctheta = 0.;
-  int nsec = 0;
-  double esec = 0.;
-  if (!medium->GetPhotonCollision(e, type, level, e1, ctheta, nsec, esec))
+  std::vector<Medium::Secondary> secondaries;
+  if (!medium->PhotonCollision(e, type, level, e1, ctheta, secondaries)) {
     return;
-
+  }
   if (type == PhotonCollisionTypeIonisation) {
-    // Add the secondary electron (random direction).
-    newParticles.emplace_back(std::make_pair(
-      MakePoint(x, y, z, t, std::max(esec, Small)), Particle::Electron));
-    newParticles.emplace_back(std::make_pair(
-      MakePoint(x, y, z, t, 0.), Particle::Ion));
+    for (const auto& secondary : secondaries) {
+      if (secondary.type == Particle::Electron) {
+        // Add the secondary electron (random direction).
+        newParticles.emplace_back(std::make_pair(
+          MakePoint(x, y, z, t, std::max(secondary.energy, Small)), 
+          Particle::Electron));
+      } else if (secondary.type == Particle::Ion) {
+        newParticles.emplace_back(std::make_pair(
+          MakePoint(x, y, z, t, 0.), Particle::Ion));
+      }
+    }
   } else if (type == PhotonCollisionTypeExcitation) {
-    double tdx = 0.;
-    double sdx = 0.;
-    int typedx = 0;
     std::vector<double> tPhotons;
     std::vector<double> ePhotons;
-    for (int j = nsec; j--;) {
-      if (!medium->GetDeexcitationProduct(j, tdx, sdx, typedx, esec)) continue;
-      if (typedx == DxcProdTypeElectron) {
+    for (const auto& secondary : secondaries) {
+      if (secondary.type == Particle::Electron) {
         // Ionisation.
+        const double esec = std::max(secondary.energy, Small);
         newParticles.emplace_back(std::make_pair(
-          MakePoint(x, y, z, t + tdx, std::max(esec, Small)), Particle::Electron));
-        newParticles.emplace_back(std::make_pair(
-          MakePoint(x, y, z, t + tdx, 0.), Particle::Ion));
-      } else if (typedx == DxcProdTypePhoton && m_usePhotons &&
-                 esec > m_gammaCut) {
+          MakePoint(x, y, z, t + secondary.time, esec), 
+          Particle::Electron));
+      } else if (secondary.type == Particle::Photon && m_usePhotons) {
         // Radiative de-excitation
-        tPhotons.push_back(t + tdx);
-        ePhotons.push_back(esec);
+        if (secondary.energy > m_gammaCut) {
+          tPhotons.push_back(t + secondary.time);
+          ePhotons.push_back(secondary.energy);
+        }
       }
     }
     // Transport the photons (if any).
-    const int nSizePhotons = tPhotons.size();
-    for (int k = nSizePhotons; k--;) {
+    const size_t nSizePhotons = tPhotons.size();
+    for (size_t k = 0; k < nSizePhotons; ++k) {
       TransportPhoton(x, y, z, tPhotons[k], ePhotons[k], newParticles);
     }
   }

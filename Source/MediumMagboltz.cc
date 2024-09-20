@@ -228,7 +228,6 @@ void MediumMagboltz::EnableDeexcitation() {
   m_usePenning = false;
   m_useDeexcitation = true;
   m_isChanged = true;
-  m_dxcProducts.clear();
 }
 
 void MediumMagboltz::EnableRadiationTrapping() {
@@ -631,12 +630,10 @@ __device__ bool MediumGPU::ElectronCollision(const GPUFLOAT e, int& type,
 #else
 bool MediumMagboltz::ElectronCollision(const double e, int& type, 
     int& level, double& e1, double& dx, double& dy, double& dz, 
-    std::vector<std::pair<Particle, double> >& secondaries, int& ndxc,
-    int& band)
+    std::vector<Secondary>& secondaries, int& band)
 #endif
 {
   band = 0;
-  ndxc = 0;
   if (e <= 0.) {
     #ifdef __GPUCOMPILE__
     printf("MediumGPU::ElectronCollision: Invalid energy.\n");
@@ -663,6 +660,7 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
 
   // If necessary, update the collision rates table.
   if (!Update()) return false;
+  secondaries.clear();
   #endif
 
   double angCut = 1.;
@@ -780,9 +778,15 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
     secondaries_energy[num_secondaries++] = 0;
     #else
     // Add the secondary electron.
-    secondaries.emplace_back(std::make_pair(Particle::Electron, esec));
+    Secondary secondary;
+    secondary.type = Particle::Electron;
+    secondary.energy = esec;
+    secondaries.emplace_back(std::move(secondary));
     // Add the ion.
-    secondaries.emplace_back(std::make_pair(Particle::Ion, 0.));
+    Secondary ion;
+    ion.type = Particle::Ion;
+    ion.energy = 0.;
+    secondaries.emplace_back(std::move(ion));
     #endif
 
     bool fluorescence = false;
@@ -799,7 +803,10 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
           secondaries_type[num_secondaries] = Particle::Electron;
           secondaries_energy[num_secondaries++] = eav;
           #else
-          secondaries.emplace_back(std::make_pair(Particle::Electron, eav));
+          Secondary esec;
+          esec.type = Particle::Electron;
+          esec.energy = eav;
+          secondaries.push_back(std::move(esec));
           #endif
         }
       }
@@ -810,7 +817,10 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
           secondaries_type[num_secondaries] = Particle::Electron;
           secondaries_energy[num_secondaries++] = eav;
           #else
-          secondaries.emplace_back(std::make_pair(Particle::Electron, eav));
+          Secondary esec;
+          esec.type = Particle::Electron;
+          esec.energy = eav;
+          secondaries.push_back(std::move(esec));
           #endif
         }
       }
@@ -821,7 +831,10 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
         secondaries_type[num_secondaries] = Particle::Electron;
         secondaries_energy[num_secondaries++] = eav;
         #else
-        secondaries.emplace_back(std::make_pair(Particle::Electron, eav));
+        Secondary esec;
+        esec.type = Particle::Electron;
+        esec.energy = eav;
+        secondaries.push_back(std::move(esec));
         #endif
       }
     } 
@@ -831,10 +844,9 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
     // Follow the de-excitation cascade (if switched on).
     if (m_useDeexcitation && m_iDeexcitation[level] >= 0) {
       int fLevel = 0;
-      ComputeDeexcitationInternal(m_iDeexcitation[level], fLevel);
-      ndxc = m_dxcProducts.size();
+      ComputeDeexcitationInternal(m_iDeexcitation[level], fLevel,
+                                  secondaries);
     } else if (m_usePenning) {
-      m_dxcProducts.clear();
       // Simplified treatment of Penning ionisation.
       // If the energy threshold of this level exceeds the
       // ionisation potential of one of the gases,
@@ -853,17 +865,14 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
         double esec = loss * m_rgas[igas] - m_minIonPot;
         if (esec <= 0) esec = Small;
         // Add the secondary electron to the list.
-        dxcProd newDxcProd;
-        newDxcProd.t = 0.;
-        newDxcProd.s = 0.;
+        Secondary secondary;
+        secondary.type = Particle::Electron;
+        secondary.energy = esec;
         if (m_lambdaPenning[level] > Small) {
           // Uniform distribution within a sphere of radius lambda
-          newDxcProd.s = m_lambdaPenning[level] * std::cbrt(RndmUniformPos());
+          secondary.distance = m_lambdaPenning[level] * std::cbrt(RndmUniformPos());
         }
-        newDxcProd.energy = esec;
-        newDxcProd.type = DxcProdTypeElectron;
-        m_dxcProducts.push_back(std::move(newDxcProd));
-        ndxc = 1;
+        secondaries.push_back(std::move(secondary));
         ++m_nPenning;
       }
     }
@@ -954,19 +963,6 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
 }
 
 #ifndef __GPUCOMPILE__
-bool MediumMagboltz::GetDeexcitationProduct(const unsigned int i, double& t,
-                                            double& s, int& type,
-                                            double& energy) const {
-  if (i >= m_dxcProducts.size() || !(m_useDeexcitation || m_usePenning)) {
-    return false;
-  }
-  t = m_dxcProducts[i].t;
-  s = m_dxcProducts[i].s;
-  type = m_dxcProducts[i].type;
-  energy = m_dxcProducts[i].energy;
-  return true;
-}
-
 double MediumMagboltz::GetPhotonCollisionRate(const double e) {
   if (e <= 0.) {
     std::cerr << m_className << "::GetPhotonCollisionRate: Invalid energy.\n";
@@ -998,9 +994,10 @@ double MediumMagboltz::GetPhotonCollisionRate(const double e) {
   return cfSum;
 }
 
-bool MediumMagboltz::GetPhotonCollision(const double e, int& type, int& level,
-                                        double& e1, double& ctheta, int& nsec,
-                                        double& esec) {
+bool MediumMagboltz::PhotonCollision(const double e, int& type, int& level,
+                                     double& e1, double& ctheta, 
+                                     std::vector<Secondary>& secondaries) {
+  secondaries.clear();
   if (e <= 0.) {
     std::cerr << m_className << "::GetPhotonCollision: Invalid energy.\n";
     return false;
@@ -1042,15 +1039,13 @@ bool MediumMagboltz::GetPhotonCollision(const double e, int& type, int& level,
         if (r <= pLine[i]) {
           ++m_nPhotonCollisions[PhotonCollisionTypeExcitation];
           int fLevel = 0;
-          ComputeDeexcitationInternal(iLine[i], fLevel);
+          ComputeDeexcitationInternal(iLine[i], fLevel, secondaries);
           type = PhotonCollisionTypeExcitation;
-          nsec = m_dxcProducts.size();
           return true;
         }
       }
-      std::cerr << m_className << "::GetPhotonCollision:\n";
-      std::cerr << "    Random sampling of deexcitation line failed.\n";
-      std::cerr << "    Program bug!\n";
+      std::cerr << m_className << "::PhotonCollision:\n"
+                << "    Sampling of deexcitation line failed. Program bug.\n";
       return false;
     }
   } else {
@@ -1066,8 +1061,7 @@ bool MediumMagboltz::GetPhotonCollision(const double e, int& type, int& level,
     level = std::lower_bound(begin, begin + m_nPhotonTerms, r) - begin;
   }
 
-  nsec = 0;
-  esec = e1 = 0.;
+  e1 = 0.;
   type = csTypeGamma[level];
   // Collision type
   type = type % nCsTypesGamma;
@@ -1075,8 +1069,14 @@ bool MediumMagboltz::GetPhotonCollision(const double e, int& type, int& level,
   ++m_nPhotonCollisions[type];
   // Ionising collision
   if (type == 1) {
-    esec = std::max(e - m_ionPot[ngas], Small);
-    nsec = 1;
+    Secondary electron;
+    electron.type = Particle::Electron;
+    electron.energy = std::max(e - m_ionPot[ngas], Small);
+    secondaries.push_back(std::move(electron));
+    Secondary ion;
+    ion.type = Particle::Ion;
+    ion.energy = 0.;
+    secondaries.push_back(std::move(ion)); 
   }
 
   // Determine the scattering angle
@@ -2676,7 +2676,9 @@ double MediumMagboltz::RateConstantHardSphere(const double r1, const double r2,
   return sigma * vel;
 }
 
-void MediumMagboltz::ComputeDeexcitation(int iLevel, int& fLevel) {
+void MediumMagboltz::ComputeDeexcitation(int iLevel, int& fLevel,
+    std::vector<Secondary>& secondaries) {
+  secondaries.clear();
   if (!m_useDeexcitation) {
     std::cerr << m_className << "::ComputeDeexcitation: Not enabled.\n";
     return;
@@ -2697,14 +2699,15 @@ void MediumMagboltz::ComputeDeexcitation(int iLevel, int& fLevel) {
     return;
   }
 
-  ComputeDeexcitationInternal(iLevel, fLevel);
+  ComputeDeexcitationInternal(iLevel, fLevel, secondaries);
   if (fLevel >= 0 && fLevel < (int)m_deexcitations.size()) {
     fLevel = m_deexcitations[fLevel].level;
   }
 }
 
-void MediumMagboltz::ComputeDeexcitationInternal(int iLevel, int& fLevel) {
-  m_dxcProducts.clear();
+void MediumMagboltz::ComputeDeexcitationInternal(int iLevel, int& fLevel,
+    std::vector<Secondary>& secondaries) {
+  secondaries.clear();
 
   double t = 0.;
   fLevel = iLevel;
@@ -2731,16 +2734,15 @@ void MediumMagboltz::ComputeDeexcitationInternal(int iLevel, int& fLevel) {
     }
     if (type == DxcTypeRad) {
       // Radiative decay
-      dxcProd photon;
-      photon.s = 0.;
-      photon.t = t;
-      photon.type = DxcProdTypePhoton;
+      Secondary photon;
+      photon.type = Particle::Photon;
       photon.energy = dxc.energy;
+      photon.time = t;
       if (fLevel >= 0) {
         // Decay to a lower lying excited state.
         photon.energy -= m_deexcitations[fLevel].energy;
         if (photon.energy < Small) photon.energy = Small;
-        m_dxcProducts.push_back(std::move(photon));
+        secondaries.push_back(std::move(photon));
         // Proceed with the next level in the cascade.
         iLevel = fLevel;
       } else {
@@ -2750,24 +2752,23 @@ void MediumMagboltz::ComputeDeexcitationInternal(int iLevel, int& fLevel) {
           delta = RndmVoigt(0., dxc.sDoppler, dxc.gPressure);
         }
         photon.energy += delta;
-        m_dxcProducts.push_back(std::move(photon));
+        secondaries.push_back(std::move(photon));
         // Deexcitation cascade is over.
         fLevel = iLevel;
         return;
       }
     } else if (type == DxcTypeCollIon) {
       // Ionisation electron
-      dxcProd electron;
-      electron.s = 0.;
-      electron.t = t;
-      electron.type = DxcProdTypeElectron;
+      Secondary electron;
+      electron.type = Particle::Electron;
       electron.energy = dxc.energy;
+      electron.time = t;
       if (fLevel >= 0) {
         // Associative ionisation
         electron.energy -= m_deexcitations[fLevel].energy;
         if (electron.energy < Small) electron.energy = Small;
         ++m_nPenning;
-        m_dxcProducts.push_back(std::move(electron));
+        secondaries.push_back(std::move(electron));
         // Proceed with the next level in the cascade.
         iLevel = fLevel;
       } else {
@@ -2775,7 +2776,7 @@ void MediumMagboltz::ComputeDeexcitationInternal(int iLevel, int& fLevel) {
         electron.energy -= m_minIonPot;
         if (electron.energy < Small) electron.energy = Small;
         ++m_nPenning;
-        m_dxcProducts.push_back(std::move(electron));
+        secondaries.push_back(std::move(electron));
         // Deexcitation cascade is over.
         fLevel = iLevel;
         return;

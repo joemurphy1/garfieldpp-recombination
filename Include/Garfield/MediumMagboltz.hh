@@ -111,18 +111,15 @@ class MediumMagboltz : public MediumGas {
   /// Sample the collision type.
   bool ElectronCollision(const double e, int& type, int& level, double& e1,
                          double& dx, double& dy, double& dz,
-                         std::vector<std::pair<Particle, double> >& secondaries,
-                         int& ndxc, int& band) override;
-  void ComputeDeexcitation(int iLevel, int& fLevel);
-  unsigned int GetNumberOfDeexcitationProducts() const override {
-    return m_dxcProducts.size();
-  }
-  bool GetDeexcitationProduct(const unsigned int i, double& t, double& s,
-                              int& type, double& energy) const override;
+                         std::vector<Secondary>& secondaries,
+                         int& band) override;
+  void ComputeDeexcitation(int iLevel, int& fLevel, 
+                           std::vector<Secondary>& secondaries);
 
   double GetPhotonCollisionRate(const double e) override;
-  bool GetPhotonCollision(const double e, int& type, int& level, double& e1,
-                          double& ctheta, int& nsec, double& esec) override;
+  bool PhotonCollision(const double e, int& type, int& level, double& e1,
+                       double& ctheta, 
+                       std::vector<Secondary>& secondaries) override;
 
   /// Reset the collision counters.
   void ResetCollisionCounters();
@@ -401,19 +398,6 @@ class MediumMagboltz : public MediumGas {
   // Mapping between deexcitations and cross-section terms.
   std::array<int, Magboltz::nMaxLevels> m_iDeexcitation;
 
-  // List of de-excitation products
-  struct dxcProd {
-    // Radial spread
-    double s;
-    // Time delay
-    double t;
-    // Type of deexcitation product
-    int type;
-    // Energy of the electron or photon
-    double energy;
-  };
-  std::vector<dxcProd> m_dxcProducts;
-
   /// Ionisation potentials of each component
   std::array<double, m_nMaxGases> m_ionPot;
   /// Minimum ionisation potential
@@ -461,7 +445,8 @@ class MediumMagboltz : public MediumGas {
                         const int igas2) const;
   double RateConstantHardSphere(const double r1, const double r2,
                                 const int igas1, const int igas2) const;
-  void ComputeDeexcitationInternal(int iLevel, int& fLevel);
+  void ComputeDeexcitationInternal(int iLevel, int& fLevel,
+      std::vector<Secondary>& secondaries);
   bool ComputePhotonCollisionTable(const bool verbose);
 };
 }
