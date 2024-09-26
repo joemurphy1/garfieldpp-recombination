@@ -102,12 +102,12 @@ class ComponentTcadBase : public Component {
                    const double hxsec, const double concentration);
 
   /// Use the imported impact ionisation map or not.
-  void EnableAlphaMap(const bool on) { m_useAlphaMap = on; }
+  void EnableAlphaMap(const bool on = true) { m_useAlphaMap = on; }
 
   /// Use the imported trapping map or not.
-  void EnableTrapOccupationMap(const bool on);
+  void EnableTrapOccupationMap(const bool on = true);
   /// Use the imported lifetime map or not. 
-  void EnableLifetimeMap(const bool on);
+  void EnableLifetimeMap(const bool on = true);
  
   /// Get the electron mobility at a given point in the mesh.
   bool GetElectronMobility(const double x, const double y, const double z,

@@ -371,7 +371,7 @@ class __COMPONENTCLASS__ {
   }
 
   /// Switch on debugging messages.
-  void EnableDebugging() { m_debug = true; }
+  void EnableDebugging(const bool on = true) { m_debug = on; }
   /// Switch off debugging messages.
   void DisableDebugging() { m_debug = false; }
 

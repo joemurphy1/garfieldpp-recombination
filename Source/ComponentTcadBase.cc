@@ -1206,9 +1206,12 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
       return false;
     }
     std::istringstream data(line);
-    std::string name;
-    data >> name;
-    data.clear();
+    ltrim(line);
+    rtrim(line);
+    const std::string name = line;
+    // std::string name;
+    // data >> name;
+    // data.clear();
     const size_t index = FindRegion(name);
     if (index >= m_regions.size()) {
       // Specified region name is not in the list.
@@ -1226,8 +1229,8 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
     }
     int nElementsRegion;
     data.str(line);
-    data >> nElementsRegion;
     data.clear();
+    data >> nElementsRegion;
     for (int j = 0; j < nElementsRegion; ++j) {
       size_t iElement = 0;
       gridfile >> iElement;
@@ -1260,8 +1263,8 @@ bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
   const size_t nVertices = m_vertices.size();
   std::vector<unsigned int> fillCount(nVertices, 0);
 
-  std::array<double, N> zeroes;
-  zeroes.fill(0.);
+  std::array<double, N> zeros;
+  zeros.fill(0.);
   // Read the file line by line.
   std::string line;
   while (std::getline(datafile, line)) {
@@ -1270,9 +1273,9 @@ bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
     // Skip empty lines.
     if (line.empty()) continue;
     // Find data section.
-    if (line.substr(0, 8) != "function") continue;
+    if (line.substr(0, 9) != "function ") continue;
     // Read type of data set.
-    const auto pEq = line.find('=');
+    auto pEq = line.find('=');
     if (pEq == std::string::npos) {
       // No "=" found.
       std::cerr << m_className << "::LoadData:\n"
@@ -1285,9 +1288,28 @@ bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
     std::istringstream data(line);
     data >> dataset;
     data.clear();
+    std::getline(datafile, line);
+    pEq = line.find('=');
+    if (pEq == std::string::npos) {
+      // No "=" found.
+      std::cerr << m_className << "::LoadData:\n"
+                << "    Error reading file " << filename << ".\n"
+                << "    Line:\n    " << line << "\n";
+      return false;
+    }
+    line = line.substr(pEq + 1);
+    std::string dstype;
+    data.str(line);
+    data.clear();
+    data >> dstype;
     if (m_debug && dataset != "[") {
-      std::cout << m_className << "::LoadData: Found dataset " << dataset
-                << ".\n";
+      std::cout << m_className << "::LoadData: Found " << dstype 
+                << " dataset " << dataset << ".\n";
+    }
+    if (dstype == "scalar" && (dataset == "ElectricField" || 
+        dataset == "eDriftVelocity" || dataset == "hDriftVelocity")) {
+      if (m_debug) std::cout << "    Skipping this dataset.\n"; 
+      continue;
     }
     if (dataset == "ElectrostaticPotential") {
       if (m_epot.empty()) m_epot.assign(nVertices, 0.);
@@ -1296,19 +1318,19 @@ bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
         return false;
       }
     } else if (dataset == "ElectricField") {
-      if (m_efield.empty()) m_efield.assign(nVertices, zeroes);
+      if (m_efield.empty()) m_efield.assign(nVertices, zeros);
       if (!ReadDataset(datafile, dataset)) {
         m_efield.clear();
         return false;
       }
     } else if (dataset == "eDriftVelocity") {
-      if (m_eVelocity.empty()) m_eVelocity.assign(nVertices, zeroes);
+      if (m_eVelocity.empty()) m_eVelocity.assign(nVertices, zeros);
       if (!ReadDataset(datafile, dataset)) {
         m_eVelocity.clear();
         return false;
       }
     } else if (dataset == "hDriftVelocity") {
-      if (m_hVelocity.empty()) m_hVelocity.assign(nVertices, zeroes);
+      if (m_hVelocity.empty()) m_hVelocity.assign(nVertices, zeros);
       if (!ReadDataset(datafile, dataset)) {
         m_hVelocity.clear();
         return false;
@@ -1436,7 +1458,6 @@ bool ComponentTcadBase<N>::ReadDataset(std::ifstream& datafile,
   std::getline(datafile, line);
   std::getline(datafile, line);
   std::getline(datafile, line);
-  std::getline(datafile, line);
   // Get the region name (given in brackets).
   if (!ExtractFromSquareBrackets(line)) {
     std::cerr << m_className << "::ReadDataset:\n"
@@ -1470,6 +1491,7 @@ bool ComponentTcadBase<N>::ReadDataset(std::ifstream& datafile,
   }
   int nValues;
   data.str(line);
+  data.clear();
   data >> nValues;
   if (isVector) nValues /= N;
   if (m_debug) std::cout << "    Expecting " << nValues << " values.\n";
@@ -1506,7 +1528,7 @@ bool ComponentTcadBase<N>::ReadDataset(std::ifstream& datafile,
       if (isInRegion[ivertex]) break;
       ++ivertex;
     }
-    // Check if there is a mismatch between the number of m_vertices
+    // Check if there is a mismatch between the number of vertices
     // and the number of potential values.
     if (ivertex >= nVertices) {
       std::cerr << m_className << "::ReadDataset:\n"
@@ -1584,8 +1606,8 @@ bool ComponentTcadBase<N>::LoadWeightingField(
     return false;
   }
   const size_t nVertices = m_vertices.size();
-  std::array<double, N> zeroes;
-  zeroes.fill(0.);
+  std::array<double, N> zeros;
+  zeros.fill(0.);
   bool ok = true;
   // Read the file line by line.
   std::string line;
@@ -1594,9 +1616,9 @@ bool ComponentTcadBase<N>::LoadWeightingField(
     ltrim(line);
     if (line.empty()) continue;
     // Find data section.
-    if (line.substr(0, 8) != "function") continue;
+    if (line.substr(0, 9) != "function ") continue;
     // Read type of data set.
-    const auto pEq = line.find('=');
+    auto pEq = line.find('=');
     if (pEq == std::string::npos) {
       // No "=" found.
       std::cerr << m_className << "::LoadWeightingField:\n"
@@ -1612,14 +1634,34 @@ bool ComponentTcadBase<N>::LoadWeightingField(
     if (dataset != "ElectrostaticPotential" && dataset != "ElectricField") {
       continue;
     }
+    std::getline(datafile, line);
+    pEq = line.find('=');
+    if (pEq == std::string::npos) {
+      // No "=" found.
+      std::cerr << m_className << "::LoadWeightingField:\n"
+                << "    Error reading file " << filename << ".\n"
+                << "    Line:\n    " << line << "\n";
+      return false;
+    }
+    line = line.substr(pEq + 1);
+    std::string dstype;
+    data.str(line);
+    data.clear();
+    data >> dstype;
+    if (dstype == "scalar" && dataset == "ElectricField") {
+      if (m_debug) {
+        std::cout << m_className << "::LoadWeightingField:\n"
+                  << "    Skipping scalar dataset " << dataset << ".\n";
+      }
+      continue;
+    }
     bool field = false;
     if (dataset == "ElectricField") {
-      if (wf.empty()) wf.assign(nVertices, zeroes);
+      if (wf.empty()) wf.assign(nVertices, zeros);
       field = true;
     } else {
       if (wp.empty()) wp.assign(nVertices, 0.);
     }
-    std::getline(datafile, line);
     std::getline(datafile, line);
     std::getline(datafile, line);
     std::getline(datafile, line);
@@ -1631,10 +1673,9 @@ bool ComponentTcadBase<N>::LoadWeightingField(
       ok = false;
       break;
     }
-    std::string name;
-    data.str(line);
-    data >> name;
-    data.clear();
+    ltrim(line);
+    rtrim(line);
+    const std::string name = line;
     // Check if the region name matches one from the mesh file.
     const auto index = FindRegion(name);
     if (index >= m_regions.size()) {
@@ -1654,8 +1695,8 @@ bool ComponentTcadBase<N>::LoadWeightingField(
     }
     int nValues;
     data.str(line);
-    data >> nValues;
     data.clear();
+    data >> nValues;
     if (field) nValues /= N;
     // Mark the vertices belonging to this region.
     std::vector<bool> isInRegion(nVertices, false);
