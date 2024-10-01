@@ -1,7 +1,7 @@
-#if defined(__GPUCOMPILE__) || !defined(G_MEDIUM_MAGBOLTZ_9)
+#if defined(__GPUCOMPILE__) || !defined(G_MEDIUM_MAGBOLTZ_11)
 
-#if !defined(__GPUCOMPILE__) && !defined(G_MEDIUM_MAGBOLTZ_9)
-#define G_MEDIUM_MAGBOLTZ_9
+#if !defined(__GPUCOMPILE__) && !defined(G_MEDIUM_MAGBOLTZ_11)
+#define G_MEDIUM_MAGBOLTZ_11
 #endif
 
 #ifndef __GPUCOMPILE__
