@@ -1,5 +1,5 @@
 set(libname "magboltz")
-set(lib_fullver 11.16)
+set(lib_fullver 11.19)
 set(lib_apiver 11)
 
 # Creating the target as a shared library

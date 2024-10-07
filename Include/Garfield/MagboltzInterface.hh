@@ -1,4 +1,4 @@
-// Interface to Magboltz (version 9)
+// Interface to Magboltz (version 11.19)
 
 #ifndef G_MAGBOLTZ_INTERFACE
 #define G_MAGBOLTZ_INTERFACE
