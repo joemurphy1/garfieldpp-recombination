@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <unordered_set>
 
 #include <TH1F.h>
 #include <TPolyLine.h>
@@ -59,7 +60,7 @@ void ViewFEMesh::SetComponent(Component* cmp) {
 
 // The plotting functionality here is ported from Garfield
 //  with some inclusion of code from ViewCell.cc
-bool ViewFEMesh::Plot(const bool twod) {
+bool ViewFEMesh::Plot(const bool twod, const bool outline) {
   if (!m_cmp) {
     std::cerr << m_className << "::Plot: Component is not defined.\n";
     return false;
@@ -119,7 +120,11 @@ bool ViewFEMesh::Plot(const bool twod) {
     std::cout << m_className << "::Plot: CST component. Calling DrawCST.\n";
     DrawCST(cst);
   } else {
-    DrawElements2d();
+    if (outline) {
+      DrawBorders2d();
+    } else {
+      DrawElements2d();
+    }
   }
  
   DrawDriftLines2d();
@@ -486,6 +491,242 @@ void ViewFEMesh::DrawElements2d() {
     }      // end x-periodicity loop
   }        // end loop over elements
 
+}
+
+void ViewFEMesh::DrawBorders2d() {
+  // Get the map boundaries from the component.
+  double mapxmin = 0., mapymin = 0., mapzmin = 0.;
+  double mapxmax = 0., mapymax = 0., mapzmax = 0.;
+  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, 
+                                mapxmax, mapymax, mapzmax)) {
+    return;
+  }
+
+  // Get the periodicities.
+  double sx = mapxmax - mapxmin;
+  double sy = mapymax - mapymin;
+  double sz = mapzmax - mapzmin;
+  // Check for simple periodicity.
+  bool perxs = false, perys = false, perzs = false;
+  m_cmp->IsPeriodic(perxs, perys, perzs);
+  // Check for mirror periodicity.
+  bool perxm = false, perym = false, perzm = false;
+  m_cmp->IsMirrorPeriodic(perxm, perym, perzm);
+  const bool perX = perxs || perxm;
+  const bool perY = perys || perym;
+  const bool perZ = perzs || perzm;
+
+  // Get the plane information.
+  const double fx = m_plane[0];
+  const double fy = m_plane[1];
+  const double fz = m_plane[2];
+  const double dist = m_plane[3];
+
+  // Construct single-column matrix for use as coordinate vector.
+  TMatrixD xMat(3, 1);
+
+  // Determine the number of periods present in the cell.
+  const int nMinX = perX ? int(m_xMinBox / sx) - 1 : 0;
+  const int nMaxX = perX ? int(m_xMaxBox / sx) + 1 : 0;
+  const int nMinY = perY ? int(m_yMinBox / sy) - 1 : 0;
+  const int nMaxY = perY ? int(m_yMaxBox / sy) + 1 : 0;
+  const int nMinZ = perZ ? int(m_zMinBox / sz) - 1 : 0;
+  const int nMaxZ = perZ ? int(m_zMaxBox / sz) + 1 : 0;
+
+  bool cst = false;
+  if (dynamic_cast<ComponentCST*>(m_cmp)) cst = true;
+  std::map<std::vector<size_t>, std::vector<size_t> > facetRegions;
+  // Loop over all elements.
+  const auto nElements = m_cmp->GetNumberOfElements();
+  for (size_t i = 0; i < nElements; ++i) {
+    size_t mat = 0;
+    bool driftmedium = false;
+    if (!m_cmp->GetElementRegion(i, mat, driftmedium)) continue;
+    // Get the indices of the element vertices.
+    std::vector<size_t> enodes;
+    if (!m_cmp->GetElementNodes(i, enodes)) continue;
+    // Loope over the faces of the element.
+    std::vector<std::vector<size_t> > faces;
+    if (cst) {
+      faces = {{
+        {0, 1, 3, 2}, {0, 1, 5, 4}, {0, 2, 6, 4}, 
+        {1, 3, 7, 5}, {2, 3, 7, 6}, {4, 5, 7, 6}
+      }};
+      for (auto& f : faces) {
+        for (size_t j = 0; j < 4; ++j) f[j] = enodes[f[j]];
+      }
+    } else {
+      // Tetrahedron.
+      for (size_t j = 0; j < enodes.size(); ++j) {
+        std::vector<size_t> f;
+        for (size_t k = 0; k < enodes.size(); ++k) {
+          if (k == j) continue;
+          f.push_back(enodes[k]);
+        }
+        faces.push_back(std::move(f));
+      }
+    }
+    for (auto& f : faces) {
+      if (f.size() < 3) continue;
+      // Start with the lowest node index.
+      auto minNode = *std::min_element(std::begin(f), std::end(f));
+      while (f[0] != minNode) {
+        std::next_permutation(f.begin(), f.end());
+      }
+      if (f[1] > f.back()) {
+        std::reverse(f.begin(), f.end());
+        while (f[0] != minNode) {
+          std::next_permutation(f.begin(), f.end());
+        }
+      }
+      if (facetRegions.count(f) != 0) {
+        facetRegions[f].push_back(mat);
+      } else {
+        facetRegions[f] = {mat};
+      }
+    }
+  }
+  for (const auto& f : facetRegions) {
+    if (f.second.empty() || f.second.size() > 2) continue;
+    if (f.second.size() == 2) {
+      // Same region/material on both sides of the facet.
+      if (f.second[0] == f.second[1]) continue;
+    }
+    short col = 1;
+    bool disabled = true;
+    for (auto mat : f.second) {
+      if (m_disabledMaterial.count(mat) > 0 && m_disabledMaterial[mat]) {
+        continue;
+      }
+      disabled = false;
+      if (m_colorMap.count(mat) != 0) col = m_colorMap[mat];
+    }
+    if (disabled) continue;
+    TGraph gr;
+    gr.SetLineColor(col);
+
+    // Get the vertex coordinates in the basic cell.
+    std::vector<double> vx0;
+    std::vector<double> vy0;
+    std::vector<double> vz0;
+    for (auto j : f.first) {
+      double xn = 0., yn = 0., zn = 0.;
+      if (!m_cmp->GetNode(j, xn, yn, zn)) continue;
+      vx0.push_back(xn);
+      vy0.push_back(yn);
+      vz0.push_back(zn);
+    }
+    const auto nNodes = f.first.size();
+    if (vx0.size() != nNodes) {
+      std::cerr << m_className << "::DrawBorders2d:\n"
+                << "    Error retrieving node coordinates.\n";
+      continue;
+    }
+    // Coordinates of vertices
+    std::vector<double> vx(nNodes, 0.);
+    std::vector<double> vy(nNodes, 0.);
+    std::vector<double> vz(nNodes, 0.);
+    // Loop over the periodicities in x.
+    for (int nx = nMinX; nx <= nMaxX; nx++) {
+      const double dx = sx * nx;
+      // Determine the x-coordinates of the vertices.
+      if (perxm && nx != 2 * (nx / 2)) {
+        for (size_t j = 0; j < nNodes; ++j) {
+          vx[j] = mapxmin + (mapxmax - vx0[j]) + dx;
+        }
+      } else {
+        for (size_t j = 0; j < nNodes; ++j) {
+          vx[j] = vx0[j] + dx;
+        }
+      }
+
+      // Loop over the periodicities in y.
+      for (int ny = nMinY; ny <= nMaxY; ny++) {
+        const double dy = sy * ny;
+        // Determine the y-coordinates of the vertices.
+        if (perym && ny != 2 * (ny / 2)) {
+          for (size_t j = 0; j < nNodes; ++j) {
+            vy[j] = mapymin + (mapymax - vy0[j]) + dy;
+          }
+        } else {
+          for (size_t j = 0; j < nNodes; ++j) {
+            vy[j] = vy0[j] + dy;
+          }
+        }
+
+        // Loop over the periodicities in z.
+        for (int nz = nMinZ; nz <= nMaxZ; nz++) {
+          const double dz = sz * nz;
+          // Determine the z-coordinates of the vertices.
+          if (perzm && nz != 2 * (nz / 2)) {
+            for (size_t j = 0; j < nNodes; ++j) {
+              vz[j] = mapzmin + (mapzmax - vz0[j]) + dz;
+            }
+          } else {
+            for (size_t j = 0; j < nNodes; ++j) {
+              vz[j] = vz0[j] + dz;
+            }
+          }
+
+          // Store the x and y coordinates of the relevant mesh vertices.
+          std::vector<double> vX;
+          std::vector<double> vY;
+
+          // Value used to determine whether a vertex is in the plane.
+          const double pcf = std::max(
+              {std::abs(vx[0]), std::abs(vy[0]), std::abs(vz[0]), 
+               std::abs(fx), std::abs(fy), std::abs(fz), std::abs(dist)});
+          const double tol = 1.e-4 * pcf;
+          // First isolate the vertices that are in the viewing plane.
+          std::vector<bool> in(nNodes, false);
+          int cnt = 0;
+          for (size_t j = 0; j < nNodes; ++j) {
+            const double d = fx * vx[j] + fy * vy[j] + fz * vz[j] - dist;
+            if (std::abs(d) < tol) {
+              // Point is in the plane.
+              in[j] = true;
+              // Calculate the planar coordinates.
+              double xp = 0., yp = 0.;
+              ToPlane(vx[j], vy[j], vz[j], xp, yp);
+              vX.push_back(xp);
+              vY.push_back(yp);
+            } else {
+              if (d > 0.) {
+                cnt += 1;
+              } else { 
+                cnt -= 1;
+              }
+            }
+          }
+          // Stop if all points are on the same side of the plane.
+          if (std::abs(cnt) == (int)nNodes) continue;
+          for (size_t j = 0; j < nNodes; ++j) {
+            const size_t k = j < nNodes - 1 ? j + 1 : 0;
+            if (in[j] || in[k]) continue;
+            if (PlaneCut(vx[j], vy[j], vz[j], 
+                         vx[k], vy[k], vz[k], xMat)) {
+              vX.push_back(xMat(0, 0));
+              vY.push_back(xMat(1, 0));
+            }
+          }
+          if (vX.size() < 2) continue;
+
+          // Create vectors to store the clipped polygon.
+          std::vector<double> cX;
+          std::vector<double> cY;
+
+          // Clip the polygon to the view area.
+          ClipToView(vX, vY, cX, cY);
+          if (cX.size() < 2) continue;
+
+          // Draw the polygon.
+          std::vector<float> xgr(cX.begin(), cX.end());
+          std::vector<float> ygr(cY.begin(), cY.end());
+          gr.DrawGraph(xgr.size(), xgr.data(), ygr.data(), "lsame");
+        }
+      }
+    }
+  }
 }
 
 void ViewFEMesh::DrawElements3d() {

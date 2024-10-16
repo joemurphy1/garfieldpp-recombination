@@ -46,7 +46,7 @@ class ViewFEMesh : public ViewBase {
   void DisableAxes() { m_drawAxes = false; }
 
   /// Plot method to be called by user
-  bool Plot(const bool twod = true);
+  bool Plot(const bool twod = true, const bool outline = false);
 
   /// Element fill switch; 2D only, set false for wireframe mesh
   void SetFillMesh(const bool f) { m_fillMesh = f; }
@@ -55,13 +55,18 @@ class ViewFEMesh : public ViewBase {
   void SetDrawViewRegion(bool do_draw) { m_drawViewRegion = do_draw; }
   bool GetDrawViewRegion(void) const { return m_drawViewRegion; }
 
-  /// Associate a color with each element material map ID;
-  /// Uses ROOT color numberings
+  /// Associate a color with each element material map ID.
+  /// Uses ROOT color numberings.
   void SetColor(int matID, int colorID) { m_colorMap[matID] = colorID; }
+  void SetColors(const std::map<int, int>& colors) {
+    for (const auto& c : colors) SetColor(c.first, c.second);
+  } 
   void SetFillColor(int matID, int colorID) {
     m_colorMap_fill[matID] = colorID;
   }
-
+  void SetFillColors(const std::map<int, int>& colors) {
+    for (const auto& c : colors) SetFillColor(c.first, c.second);
+  }
   /// Set the optional associated ViewDrift
   void SetViewDrift(ViewDrift* vd) { m_viewDrift = vd; }
 
@@ -117,6 +122,7 @@ class ViewFEMesh : public ViewBase {
   void DrawElements2d();
   void DrawElements3d();
   void DrawCST(ComponentCST* componentCST);
+  void DrawBorders2d();
 
   void DrawDriftLines2d();
   void DrawDriftLines3d();
@@ -143,5 +149,8 @@ class ViewFEMesh : public ViewBase {
 
   void Reset();
 };
+
+using ViewMesh = ViewFEMesh;
+
 }  // namespace Garfield
 #endif
