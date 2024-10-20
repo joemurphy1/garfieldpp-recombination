@@ -123,7 +123,13 @@ class ViewFEMesh : public ViewBase {
   void DrawElements3d();
   void DrawCST(ComponentCST* componentCST);
   void DrawBorders2d();
+  void DrawBorders3d();
 
+  typedef std::vector<size_t> Facet;
+  void AddFacets(const size_t i,
+    const std::vector<std::vector<Facet> >& elementFacets,
+    const std::map<Facet, std::vector<size_t> >& facetElements,
+    std::vector<Facet>& facets, std::vector<bool>& done) const;
   void DrawDriftLines2d();
   void DrawDriftLines3d();
 
