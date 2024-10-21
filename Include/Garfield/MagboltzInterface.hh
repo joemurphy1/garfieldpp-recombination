@@ -184,6 +184,8 @@ extern struct { double dfler, dfter; } diferl_;
 // Townsend and attachment coefficient
 extern struct { double alpha, att; } ctowns_;
 extern struct { double alper, atter; } ctwner_;
+
+// Time of flight swarm parameters
 extern struct {
   double ralpha, ralper;
   double tofene, tofener, tofwv, tofwver;
@@ -191,6 +193,15 @@ extern struct {
   double tofwr, tofwrer;
   double rattof, ratofer;
 } tofout_;
+
+// Steady state townsend swarm parameters
+extern struct {
+    double vdout, vderr;  //< diffusion modified drift
+    double wsout, wserr, dlout, dlerr; //< seems to be WS SST velocities i.e. mean arrival time drift velocity?
+    double dtout, dterr, alphasst, alphaerr;
+    double attsst, atterr;
+} sstout_;
+
 
 void gasmix_(std::int64_t* ngs, double* q, double* qin, std::int64_t* nin, double* e,
              double* ei, char* name, double* virl, double* eb, double* peqel,

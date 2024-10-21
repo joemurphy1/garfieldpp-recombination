@@ -2937,19 +2937,23 @@ bool MediumMagboltz::ComputePhotonCollisionTable(const bool verbose) {
 
 void MediumMagboltz::RunMagboltz(
     const double emag, const double bmag, const double btheta, const int ncoll,
-    bool verbose, double& vx, double& vy, double& vz, double& dl, double& dt,
-    double& alpha, double& eta, double& lor, double& vxerr, double& vyerr,
-    double& vzerr, double& dlerr, double& dterr, double& alphaerr,
-    double& etaerr, double& lorerr, double& alphatof,
-    std::array<double, 6>& difftens) {
+    bool verbose, double& vx, double& vy, double& vz, double& wv, double& wr,
+    double& dl, double& dt, double& alpha, double& eta, double& riontof, double& ratttof,
+    double& lor, double& vxerr, double& vyerr, double& vzerr, double& wverr, double& wrerr,
+    double& dlerr, double& dterr, double& alphaerr, double& etaerr, double& riontoferr, double& ratttoferr,
+    double& lorerr, double& alphatof, std::array<double, 6>& difftens) {
   // Initialize the values.
   vx = vy = vz = 0.;
+  wv = wr = 0.;
   dl = dt = 0.;
   alpha = eta = alphatof = 0.;
+  riontof = ratttof = 0.;
   lor = 0.;
   vxerr = vyerr = vzerr = 0.;
+  wverr = wrerr = 0.;
   dlerr = dterr = 0.;
   alphaerr = etaerr = 0.;
+  riontoferr = ratttoferr = 0.;
   lorerr = 0.;
 
   // Set the input parameters in the Magboltz common blocks.
@@ -2985,6 +2989,9 @@ void MediumMagboltz::RunMagboltz(
     Magboltz::ratio_.frac[i] = 100 * m_fraction[i];
   }
 
+  // Reset TOF struct to not retrieve previous calculated values
+  Magboltz::tofout_.tofdl = 0.;
+
   // Run Magboltz.
   Magboltz::magboltz_();
 
@@ -2995,6 +3002,12 @@ void MediumMagboltz::RunMagboltz(
   vyerr = Magboltz::velerr_.dwy;
   vz = Magboltz::vel_.wz * 1.e-9;
   vzerr = Magboltz::velerr_.dwz;
+
+  // Velocities. Convert to cm / ns.
+  wv = Magboltz::tofout_.tofwv * 1.e-4;
+  wverr = Magboltz::tofout_.tofwver;
+  wr = Magboltz::tofout_.tofwr * 1.e-4;
+  wrerr = Magboltz::tofout_.tofwrer;
 
   // Calculate the Lorentz angle.
   const double vt = sqrt(vx * vx + vy * vy);
@@ -3032,8 +3045,13 @@ void MediumMagboltz::RunMagboltz(
   alphaerr = Magboltz::ctwner_.alper;
   eta = Magboltz::ctowns_.att;
   etaerr = Magboltz::ctwner_.atter;
+  // TOF parameters (convert to 1/ns)
+  riontof = Magboltz::tofout_.ralpha * 1.e3;
+  riontoferr = Magboltz::tofout_.ralper;
+  ratttof = Magboltz::tofout_.rattof * 1.e3;
+  ratttoferr = Magboltz::tofout_.ratofer;
 
-  // Calculate effective Townsend SST coefficient from TOF results. 
+  // Calculate effective Townsend SST coefficient from TOF results.
   if (fabs(Magboltz::tofout_.tofdl) > 0.) {
     const double wrzn = 1.e5 * Magboltz::tofout_.tofwr;
     const double fc1 = 0.5 * wrzn / Magboltz::tofout_.tofdl;
@@ -3041,13 +3059,36 @@ void MediumMagboltz::RunMagboltz(
                         Magboltz::tofout_.rattof) * 1.e12 / 
                        Magboltz::tofout_.tofdl;
     alphatof = fc1 - sqrt(fc1 * fc1 - fc2);
+  } else {
+      // debug message
+      std::cout << m_className << "::RunMagboltz: TOF Rates not available.\n";
+
+      // TOF velocities are unknown in this case: set equal to Magboltz drift velocity (flux)
+      wv = wr = vz;
+      wverr = wrerr = vzerr;
+
+      // Retrieve the total collision frequency and number of collisions.
+      double ftot = 0., fel = 0., fion = 0., fatt = 0., fin = 0.;
+      std::int64_t ntotal = 0;
+      if(m_useGasMotion) {
+          Magboltz::colft_(&ftot, &fel, &fion, &fatt, &fin, &ntotal);
+      } else {
+          Magboltz::colf_(&ftot, &fel, &fion, &fatt, &fin, &ntotal);
+      }
+      riontof = fion * 1.e3;
+      ratttof = fatt * 1.e3;
+      // error of 0 indicating we don't know the uncertainty
+      riontoferr = ratttoferr = 0.0;
   }
+
   // Print the results.
   if (!(m_debug || verbose)) return;
   std::cout << m_className << "::RunMagboltz: Results:\n";
   printf("    Drift velocity along E:   %12.8f cm/ns +/- %5.2f%%\n", vz, vzerr);
   printf("    Drift velocity along Bt:  %12.8f cm/ns +/- %5.2f%%\n", vx, vxerr);
   printf("    Drift velocity along ExB: %12.8f cm/ns +/- %5.2f%%\n", vy, vyerr);
+  printf("    Flux Drift velocity:   %12.8f cm/ns +/- %5.2f%%\n", wv, wverr);
+  printf("    Bulk Drift velocity:   %12.8f cm/ns +/- %5.2f%%\n", wr, wrerr);
   printf("    Lorentz angle:            %12.3f degree\n", lor * RadToDegree);
   printf("    Longitudinal diffusion:   %12.8f cm1/2 +/- %5.2f%%\n", dl, dlerr);
   printf("    Transverse diffusion:     %12.8f cm1/2 +/- %5.2f%%\n", dt, dterr);
@@ -3055,9 +3096,11 @@ void MediumMagboltz::RunMagboltz(
          alphaerr);
   printf("    Attachment coefficient:   %12.4f cm-1  +/- %5.2f%%\n", eta,
          etaerr);
-  if (alphatof > 0.) {
-    printf("    TOF effective Townsend:   %12.4f cm-1 (alpha - eta)\n",
-           alphatof);
+  printf("    Ionization rate:   %12.4f ns-1 +/- %5.2f%%\n", riontof, riontoferr);
+  printf("    Attachment rate:   %12.4f ns-1 +/- %5.2f%%\n", ratttof, ratttoferr);
+  if (fabs(Magboltz::tofout_.tofdl) > 0.) {
+      printf("    TOF effective Townsend:   %12.4f cm-1 (alpha - eta)\n",
+             alphatof);
   }
 }
 
@@ -3073,12 +3116,16 @@ void MediumMagboltz::GenerateGasTable(const int numColl, const bool verbose) {
   Init(nEfields, nBfields, nAngles, m_eVelE, 0.);
   Init(nEfields, nBfields, nAngles, m_eVelB, 0.);
   Init(nEfields, nBfields, nAngles, m_eVelX, 0.);
+  Init(nEfields, nBfields, nAngles, m_eVelWv, 0.);
+  Init(nEfields, nBfields, nAngles, m_eVelWr, 0.);
   Init(nEfields, nBfields, nAngles, m_eDifL, 0.);
   Init(nEfields, nBfields, nAngles, m_eDifT, 0.);
   Init(nEfields, nBfields, nAngles, m_eLor, 0.);
   Init(nEfields, nBfields, nAngles, m_eAlp, -30.);
   Init(nEfields, nBfields, nAngles, m_eAlp0, -30.);
   Init(nEfields, nBfields, nAngles, m_eAtt, -30.);
+  Init(nEfields, nBfields, nAngles, m_eRIon, -30.);
+  Init(nEfields, nBfields, nAngles, m_eRAtt, -30.);
   Init(nEfields, nBfields, nAngles, 6, m_eDifM, 0.);
 
   m_excRates.clear();
@@ -3101,13 +3148,17 @@ void MediumMagboltz::GenerateGasTable(const int numColl, const bool verbose) {
     Init(nEfields, nBfields, nAngles, m_ionLevels.size(), m_ionRates, 0.);
   }
   double vx = 0., vy = 0., vz = 0.;
+  double wv = 0., wr = 0.;
   double difl = 0., dift = 0.;
   double alpha = 0., eta = 0.;
+  double riontof = 0., ratttof = 0.;
   double lor = 0.;
   double vxerr = 0., vyerr = 0., vzerr = 0.;
+  double wverr = 0., wrerr = 0.;
   double diflerr = 0., difterr = 0.;
   double alphaerr = 0., etaerr = 0.;
   double alphatof = 0.;
+  double riontoferr = 0., ratttoferr = 0.;
   double lorerr = 0.;
   std::array<double, 6> difftens;
 
@@ -3120,18 +3171,23 @@ void MediumMagboltz::GenerateGasTable(const int numColl, const bool verbose) {
         const double b = m_bFields[k];
         std::cout << m_className << "::GenerateGasTable: E = " << e
                   << " V/cm, B = " << b << " T, angle: " << a << " rad\n";
-        RunMagboltz(e, b, a, numColl, verbose, vx, vy, vz, difl, dift, alpha,
-                    eta, lor, vxerr, vyerr, vzerr, diflerr, difterr, alphaerr,
-                    etaerr, lorerr, alphatof, difftens);
+        RunMagboltz(e, b, a, numColl, verbose, vx, vy, vz, wv, wr, difl, dift, alpha,
+                    eta, riontof, ratttof, lor, vxerr, vyerr, vzerr, wverr, wrerr,
+                    diflerr, difterr, alphaerr, etaerr, riontoferr, ratttoferr, lorerr,
+                    alphatof, difftens);
         m_eVelE[j][k][i] = vz;
         m_eVelX[j][k][i] = vy;
         m_eVelB[j][k][i] = vx;
+        m_eVelWv[j][k][i] = wv;
+        m_eVelWr[j][k][i] = wr;
         m_eDifL[j][k][i] = difl;
         m_eDifT[j][k][i] = dift;
         m_eLor[j][k][i] = lor;
         m_eAlp[j][k][i] = alpha > 0. ? log(alpha) : -30.;
         m_eAlp0[j][k][i] = m_eAlp[j][k][i];
         m_eAtt[j][k][i] = eta > 0. ? log(eta) : -30.;
+        m_eRIon[j][k][i] = riontof > 0. ? log(riontof) : -30;
+        m_eRAtt[j][k][i] = ratttof > 0. ? log(ratttof) : -30;
         for (unsigned int l = 0; l < 6; ++l) {
           m_eDifM[l][j][k][i] = difftens[l];
         }

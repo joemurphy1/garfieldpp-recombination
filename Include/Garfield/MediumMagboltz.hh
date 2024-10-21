@@ -169,13 +169,18 @@ class MediumMagboltz : public MediumGas {
                  to be simulated
     * \param[in] verbose verbosity flag
     * \param[out] vx,vy,vz drift velocity vector
+    * \param[out] wv, wr flux and bulk drift velocity
     * \param[out] dl,dt diffusion cofficients
     * \param[out] alpha Townsend cofficient
     * \param[out] eta attachment cofficient
+    * \param[out] riontof TOF ionisation rate
+    * \param[out] ratttof TOF attachment rate
     * \param[out] lor Lorentz angle
     * \param[out] vxerr,vyerr,vzerr errors on drift velocity
+    * \param[out] wverr, wrerr errors on TOF drifts
     * \param[out] dlerr,dterr errors on diffusion coefficients
     * \param[out] alphaerr,etaerr errors on Townsend/attachment coefficients
+    * \param[out] riontoferr, ratttoferr errors on TOF rates
     * \param[out] lorerr error on Lorentz angle
     * \param[out] alphatof effective Townsend coefficient \f$(\alpha - \eta)\f$
     *             calculated using time-of-flight method
@@ -183,10 +188,11 @@ class MediumMagboltz : public MediumGas {
     */
   void RunMagboltz(const double e, const double b, const double btheta,
                    const int ncoll, bool verbose, double& vx, double& vy,
-                   double& vz, double& dl, double& dt, double& alpha,
-                   double& eta, double& lor, double& vxerr, double& vyerr,
-                   double& vzerr, double& dlerr, double& dterr,
-                   double& alphaerr, double& etaerr, double& lorerr,
+                   double& vz, double& wv, double& wr, double& dl, double& dt, double& alpha,
+                   double& eta, double& riontof, double& ratttof, double& lor,
+                   double& vxerr, double& vyerr, double& vzerr, double& wverr, double& wrerr,
+                   double& dlerr, double& dterr, double& alphaerr, double& etaerr,
+                   double& riontoferr, double& ratttoferr, double& lorerr,
                    double& alphatof, std::array<double, 6>& difftens);
 
   /// Generate a new gas table (can later be saved to file) by running

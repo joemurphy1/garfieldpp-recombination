@@ -137,7 +137,9 @@ void ViewMedium::Draw() {
   switch (m_par[0]) {
     case Parameter::VelocityE:
     case Parameter::VelocityB:
-    case Parameter::VelocityExB: 
+    case Parameter::VelocityExB:
+    case Parameter::VelocityWv:
+    case Parameter::VelocityWr:
       yaxis->SetTitle("drift velocity [cm/ns]");
       canvas->SetTitle("Drift velocity");
       break;
@@ -159,6 +161,18 @@ void ViewMedium::Draw() {
       } else {
         yaxis->SetTitle("#it{#alpha}, #it{#eta} [1/cm]");
         canvas->SetTitle("Multiplication and attachment");
+      }
+      break;
+    case Parameter::RIonTof:
+    case Parameter::RAttTof:
+      if (std::all_of(m_par.cbegin(), m_par.cend(), [](Parameter p) {
+           return p == Parameter::RIonTof; })) {
+        yaxis->SetTitle("#it{#alpha} [1/ns]");
+        canvas->SetTitle("Ionisation TOF rate");
+      } else if (std::all_of(m_par.cbegin(), m_par.cend(), [](Parameter p) {
+          return p == Parameter::RAttTof; })) {
+        yaxis->SetTitle("#it{#alpha}, #it{#eta} [1/ns]");
+        canvas->SetTitle("Attachment TOF rate");
       }
       break;
     case Parameter::LorentzAngle:
@@ -227,6 +241,12 @@ void ViewMedium::Draw() {
           case Parameter::VelocityExB:
             labels[i] += "#it{v}_{#it{E}#kern[0.05]{#times}#it{B}}";
             break;
+          case Parameter::VelocityWv:
+            labels[i] += "#it{W}_{#it{v}}";
+            break;
+          case Parameter::VelocityWr:
+            labels[i] += "#it{W}_{#it{r}}";
+            break;
           case Parameter::LongitudinalDiffusion:
             labels[i] += "#it{D}_{L}";
             break; 
@@ -238,6 +258,12 @@ void ViewMedium::Draw() {
             break;
           case Parameter::Attachment:
             labels[i] += "#eta";
+            break;
+          case Parameter::RIonTof:
+            labels[i] += "#R_{#it{ion}}";
+            break;
+          case Parameter::RAttTof:
+            labels[i] += "#R_{#it{att}}";
             break;
           case Parameter::LorentzAngle:
             labels[i] += "Lorentz angle";
@@ -346,6 +372,12 @@ void ViewMedium::Export() {
       case Parameter::VelocityExB:
         ylabel[i] += "drift velocity along ExB [cm/ns]";
         break;
+      case Parameter::VelocityWv:
+          ylabel[i] += "drift velocity flux [cm/ns]";
+          break;
+      case Parameter::VelocityWr:
+          ylabel[i] += "drift velocity bulk [cm/ns]";
+          break;
       case Parameter::LongitudinalDiffusion:
         ylabel[i] += "longitudinal diffusion [cm1/2]";
         break; 
@@ -357,6 +389,12 @@ void ViewMedium::Export() {
         break;
       case Parameter::Attachment:
         ylabel[i] += "attachment coefficient [1/cm]";
+        break;
+      case Parameter::RIonTof:
+        ylabel[i] += "TOF ionisation rate [1/ns]";
+        break;
+      case Parameter::RAttTof:
+        ylabel[i] += "TOF attachment rate [1/ns]";
         break;
       case Parameter::LorentzAngle:
         ylabel[i] += "Lorentz angle [rad]";
@@ -786,6 +824,96 @@ void ViewMedium::PlotVelocity(const Axis xaxis, const Charge charge,
   Draw();
 }
 
+void ViewMedium::PlotVelocityFluxBulk(const Axis xaxis, const Charge charge,
+                                      const bool same) {
+    if (!m_medium) {
+        std::cerr << m_className << "::PlotFluxBulkVelocity: Medium is not defined.\n";
+        return;
+    }
+    if (xaxis != m_xaxis) {
+        ResetX(xaxis);
+        ResetY();
+    } else if (!same) {
+        ResetY();
+    } else if (!m_par.empty()) {
+        if (m_par[0] != Parameter::VelocityWv &&
+            m_par[0] != Parameter::VelocityWr) {
+            ResetY();
+        }
+    }
+    const size_t nX = m_xPlot.size();
+    std::array<std::vector<double>, 2> ypl;
+    for (size_t i = 0; i < 2; ++i) ypl[i].assign(nX, 0.);
+
+    double e0 = m_efield;
+    double b0 = m_bfield;
+    double ctheta = cos(m_angle);
+    double stheta = sin(m_angle);
+
+    for (size_t i = 0; i < nX; ++i) {
+        if (xaxis == Axis::E) {
+            e0 = m_xPlot[i];
+        } else if (xaxis == Axis::B) {
+            b0 = m_xPlot[i];
+        } else {
+            ctheta = cos(m_xPlot[i]);
+            stheta = sin(m_xPlot[i]);
+        }
+        double wv = 0., wr = 0.;
+        if (charge == Charge::Electron) {
+            if (m_medium->ElectronVelocityFluxBulk(e0, 0, 0, b0 * ctheta, b0 * stheta, 0,
+                                                   wv, wr)) {
+                ypl[0][i] = fabs(wv);
+                ypl[1][i] = fabs(wr);
+            }
+        }
+    }
+    std::array<std::vector<double>, 2> xgr;
+    std::array<std::vector<double>, 2> ygr;
+
+    std::array<std::vector<double>, 3> grid;
+    int ie = 0, ib = 0, ia = 0;
+    if (GetGrid(grid, ie, ib, ia, xaxis)) {
+        const auto nPoints = xaxis == Axis::E ? grid[0].size() :
+                             xaxis == Axis::B ? grid[1].size() : grid[2].size();
+        for (size_t j = 0; j < nPoints; ++j) {
+            double x = 0., y = 0.;
+            if (xaxis == Axis::E) {
+                ie = j;
+                x = m_medium->UnScaleElectricField(grid[0][j]);
+            } else if (xaxis == Axis::B) {
+                ib = j;
+                x = grid[1][j];
+            } else if (xaxis == Axis::Angle) {
+                ia = j;
+                x = grid[2][j];
+            }
+            if (charge == Charge::Electron) {
+                if (m_medium->GetElectronFluxVelocity(ie, ib, ia, y)) {
+                    xgr[0].push_back(x);
+                    ygr[0].push_back(m_medium->ScaleVelocity(y));
+                }
+                if (m_medium->GetElectronBulkVelocity(ie, ib, ia, y)) {
+                    xgr[1].push_back(x);
+                    ygr[1].push_back(fabs(m_medium->ScaleVelocity(y)));
+                }
+            }
+        }
+    }
+
+    const std::array<Parameter, 2> pars = {Parameter::VelocityWv,
+                                           Parameter::VelocityWr};
+    for (size_t i = 0; i < 2; ++i) {
+        if (!NonZero(ypl[i])) continue;
+        m_yPlot.push_back(std::move(ypl[i]));
+        m_par.push_back(pars[i]);
+        m_q.push_back(charge);
+        m_xGraph.push_back(std::move(xgr[i]));
+        m_yGraph.push_back(std::move(ygr[i]));
+    }
+    Draw();
+}
+
 void ViewMedium::Plot(const Axis xaxis, const Charge charge,
                       const Parameter par, const bool same) {
 
@@ -801,7 +929,9 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
     ResetY();
   } else if (!m_par.empty()) {
     if (m_par[0] != Parameter::Townsend &&
-        m_par[0] != Parameter::Attachment) {
+        m_par[0] != Parameter::Attachment &&
+        m_par[0] != Parameter::RAttTof &&
+        m_par[0] != Parameter::RIonTof) {
       ResetY();
     }
   } 
@@ -827,9 +957,15 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
     if (charge == Charge::Electron) {
       if (par == Parameter::Townsend) {
         if (!m_medium->ElectronTownsend(ex, 0, 0, bx, by, 0, y)) continue;
-      } else {
-        if (!m_medium->ElectronAttachment(ex, 0, 0, bx, by, 0, y)) continue;
-        y = std::abs(y);
+      } else if (par == Parameter::Attachment) {
+          if (!m_medium->ElectronAttachment(ex, 0, 0, bx, by, 0, y)) continue;
+          y = std::abs(y);
+      } else if (par == Parameter::RIonTof) {
+          if (!m_medium->ElectronTOFIonisation(ex, 0, 0, bx, by, 0, y)) continue;
+          y = std::abs(y);
+      } else if (par == Parameter::RAttTof) {
+          if (!m_medium->ElectronTOFAttachment(ex, 0, 0, bx, by, 0, y)) continue;
+          y = std::abs(y);
       }
     } else {
       if (par == Parameter::Townsend) {
@@ -868,11 +1004,21 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
             xgr.push_back(x);
             ygr.push_back(m_medium->ScaleTownsend(exp(y)));
           }
-        } else {
-          if (m_medium->GetElectronAttachment(ie, ib, ia, y)) {
-            xgr.push_back(x);
-            ygr.push_back(m_medium->ScaleAttachment(exp(y)));
-          }
+        } else if (par == Parameter::Attachment) {
+            if (m_medium->GetElectronAttachment(ie, ib, ia, y)) {
+                xgr.push_back(x);
+                ygr.push_back(m_medium->ScaleAttachment(exp(y)));
+            }
+        } else if (par == Parameter::RIonTof) {
+            if (m_medium->GetElectronTOFIonisation(ie, ib, ia, y)) {
+                xgr.push_back(x);
+                ygr.push_back(m_medium->ScaleAttachment(exp(y)));
+            }
+        } else if (par == Parameter::RAttTof) {
+            if (m_medium->GetElectronTOFAttachment(ie, ib, ia, y)) {
+                xgr.push_back(x);
+                ygr.push_back(m_medium->ScaleAttachment(exp(y)));
+            }
         }
       } else if (charge == Charge::Hole) {
         if (par == Parameter::Townsend) {

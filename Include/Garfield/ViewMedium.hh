@@ -82,6 +82,10 @@ class ViewMedium : public ViewBase {
   void PlotElectronVelocity(const char xaxis = 'e', const bool same = false) {
     PlotVelocity(GetAxis(xaxis), Charge::Electron, same);
   }
+  /// Plot Flux and Bulk drift velocity.
+  void PlotElectronVelocityFluxBulk(const char xaxis = 'e', const bool same = false) {
+      PlotVelocityFluxBulk(GetAxis(xaxis), Charge::Electron, same);
+  }
   /// Plot the drift velocity components of holes in the medium.
   void PlotHoleVelocity(const char xaxis = 'e', const bool same = false) {
     PlotVelocity(GetAxis(xaxis), Charge::Hole, same);
@@ -106,6 +110,10 @@ class ViewMedium : public ViewBase {
   void PlotElectronTownsend(const char xaxis = 'e', const bool same = false) {
     Plot(GetAxis(xaxis), Charge::Electron, Parameter::Townsend, same);
   }
+  /// Plot the TOF ionization rate.
+  void PlotElectronTOFIonization(const char xaxis = 'e', const bool same = false) {
+      Plot(GetAxis(xaxis), Charge::Electron, Parameter::RIonTof, same);
+  }
   /// Plot the Townsend coefficient for holes.
   void PlotHoleTownsend(const char xaxis = 'e', const bool same = false) {
     Plot(GetAxis(xaxis), Charge::Hole, Parameter::Townsend, same);
@@ -113,6 +121,10 @@ class ViewMedium : public ViewBase {
   /// Plot the attachment coefficient for electrons.
   void PlotElectronAttachment(const char xaxis = 'e', const bool same = false) {
     Plot(GetAxis(xaxis), Charge::Electron, Parameter::Attachment, same);
+  }
+  /// Plot the TOF attachment rate.
+  void PlotElectronTOFAttachment(const char xaxis = 'e', const bool same = false) {
+      Plot(GetAxis(xaxis), Charge::Electron, Parameter::RAttTof, same);
   }
   /// Plot the attachment coefficient for holes.
   void PlotHoleAttachment(const char xaxis = 'e', const bool same = false) {
@@ -134,11 +146,15 @@ class ViewMedium : public ViewBase {
     VelocityE,
     VelocityB,
     VelocityExB,
+    VelocityWv,
+    VelocityWr,
     TransverseDiffusion,
     LongitudinalDiffusion,
     Townsend,
     Attachment,
-    LorentzAngle
+    LorentzAngle,
+    RIonTof,
+    RAttTof
   };
  
   enum class Charge {
@@ -194,6 +210,8 @@ class ViewMedium : public ViewBase {
 
   void PlotVelocity(const Axis xaxis, const Charge particle,
                     const bool same);
+  void PlotVelocityFluxBulk(const Axis xaxis, const Charge particle,
+                            const bool same);
   void PlotDiffusion(const Axis xaxis, const Charge particle,
                      const bool same);
   void Plot(const Axis xaxis, const Charge particle,
