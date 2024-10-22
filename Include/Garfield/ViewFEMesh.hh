@@ -129,7 +129,9 @@ class ViewFEMesh : public ViewBase {
   void AddFacets(const size_t i,
     const std::vector<std::vector<Facet> >& elementFacets,
     const std::map<Facet, std::vector<size_t> >& facetElements,
-    std::vector<Facet>& facets, std::vector<bool>& done) const;
+    std::vector<Facet>& facets,
+    std::vector<bool>& done) const;
+  bool FacetSign(const Facet& f, const size_t element) const;
   void DrawDriftLines2d();
   void DrawDriftLines3d();
 

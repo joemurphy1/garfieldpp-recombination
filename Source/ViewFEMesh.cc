@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -1000,24 +1001,24 @@ void ViewFEMesh::DrawBorders3d() {
       }
     }
   }
-  std::vector<bool> done(nElements, false);
+  std::vector<bool> edone(nElements, false);
   for (size_t i = 0; i < nElements; ++i) {
-    if (done[i]) continue;
+    if (edone[i]) continue;
     size_t mat = 0;
     bool dm = false;
     if (!m_cmp->GetElementRegion(i, mat, dm)) {
-      done[i] = true;
+      edone[i] = true;
       continue;
     }
     if (dm || (m_disabledMaterial.count(mat) > 0 && m_disabledMaterial[mat])) {
-      done[i] = true;
+      edone[i] = true;
       continue;
     }
     const short col = m_colorMap.count(mat) != 0 ? m_colorMap[mat] : 1;
     // Collect recursively the boundary facets of all elements in 
     // this region. 
     std::vector<Facet> facets;
-    AddFacets(i, elementFacets, facetElements, facets, done);
+    AddFacets(i, elementFacets, facetElements, facets, edone);
     if (facets.empty()) continue;
     // Create a tesselated solid.
     auto solid = new TGeoTessellated("Tessellated", facets.size());
@@ -1108,6 +1109,11 @@ void ViewFEMesh::AddFacets(const size_t i,
         std::cerr << m_className << "::AddFacets: Unexpected element index.\n";
       } else {
         facets.push_back(f);
+        // Make sure that all facets have a consistent orientation.
+        if (!FacetSign(f, i)) {
+          // Flip the facet.
+          std::reverse(facets.back().begin(), facets.back().end());
+        }
       } 
       continue;
     }
@@ -1127,10 +1133,52 @@ void ViewFEMesh::AddFacets(const size_t i,
     } else {
       // Adjacent element belongs to a different region.
       facets.push_back(f);
+      // Make sure that all facets have a consistent orientation.
+      if (!FacetSign(f, i)) {
+        // Flip the facet.
+        std::reverse(facets.back().begin(), facets.back().end());
+      }
     } 
   }
 }
- 
+
+bool ViewFEMesh::FacetSign(const Facet& f, const size_t element) const {
+  std::array<double, 4> x;
+  std::array<double, 4> y;
+  std::array<double, 4> z;
+  for (size_t i = 0; i < 3; ++i) {
+    if (!m_cmp->GetNode(f[i], x[i], y[i], z[i])) return false;
+  }
+  // Find the element vertex that is not part of the facet.
+  std::vector<size_t> nodes;
+  if (!m_cmp->GetElementNodes(element, nodes)) return false;
+  for (const auto i : nodes) {
+    bool found = false;
+    for (const auto j : f) {
+      if (i == j) {
+        found = true;
+        break;
+      }
+    }
+    if (found) continue;
+    if (!m_cmp->GetNode(i, x[3], y[3], z[3])) return false;
+    break;
+  }
+  // Compute the normal vector.
+  double ax = x[1] - x[0];
+  double ay = y[1] - y[0];
+  double az = z[1] - z[0];
+  double bx = x[2] - x[0];
+  double by = y[2] - y[0];
+  double bz = z[2] - z[0];
+  double nx = ay * bz - az * by;
+  double ny = az * bx - ax * bz;
+  double nz = ax * by - ay * bx;
+  // Compute the distance between the fourth point and the facet.
+  double s = nx * (x[0] - x[3]) + ny * (y[0] - y[3]) + nz * (z[0] - z[3]);
+  return std::signbit(s);
+}
+                              
 void ViewFEMesh::DrawDriftLines2d() {
  
   if (!m_viewDrift) return;
