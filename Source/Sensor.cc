@@ -449,6 +449,12 @@ void Sensor::AddElectrode(Component *cmp, const std::string &label) {
   ClearSignal();
 }
 
+void Sensor::ClearElectrodes()
+{
+  std::lock_guard<std::mutex> guard(m_mutex);
+  m_electrodes.clear();
+}
+
 void Sensor::Clear() {
   std::lock_guard<std::mutex> guard(m_mutex);
   m_components.clear();

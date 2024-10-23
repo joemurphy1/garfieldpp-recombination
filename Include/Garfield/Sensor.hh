@@ -77,6 +77,8 @@ class __SENSORCLASS__ {
   void AddElectrode(Component* comp, const std::string& label);
   /// Get the number of electrodes attached to the sensor.
   size_t GetNumberOfElectrodes() const { return m_electrodes.size(); }
+  /// Remove all electrodes.
+  void ClearElectrodes();
   /// Remove all components, electrodes and reset the sensor.
   void Clear();
 
