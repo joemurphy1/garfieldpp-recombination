@@ -1,12 +1,15 @@
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <unordered_set>
 
 #include <TH1F.h>
 #include <TPolyLine.h>
 #include <TGraph.h>
 #include <TGeoSphere.h>
+#include <TGeoTessellated.h>
 #include <TPolyLine3D.h>
 
 #include "Garfield/ComponentCST.hh"
@@ -16,6 +19,50 @@
 #include "Garfield/Random.hh"
 #include "Garfield/TGeoTet.hh"
 #include "Garfield/ViewFEMesh.hh"
+
+namespace {
+
+std::vector<std::vector<size_t> > GetFacets(
+    const std::vector<size_t>& nodes, const bool cst) {
+
+  std::vector<std::vector<size_t> > facets;
+  if (cst) {
+    facets = {{
+      {0, 1, 3, 2}, {0, 1, 5, 4}, {0, 2, 6, 4}, 
+      {1, 3, 7, 5}, {2, 3, 7, 6}, {4, 5, 7, 6}
+    }};
+    for (auto& f : facets) {
+      for (size_t j = 0; j < 4; ++j) f[j] = nodes[f[j]];
+    }
+  } else {
+    // Tetrahedron.
+    for (size_t j = 0; j < nodes.size(); ++j) {
+      std::vector<size_t> f;
+      for (size_t k = 0; k < nodes.size(); ++k) {
+        if (k == j) continue;
+        f.push_back(nodes[k]);
+      }
+      facets.push_back(std::move(f));
+    }
+  }
+  for (auto& f : facets) {
+    if (f.size() < 3) continue;
+    // Start with the lowest node index.
+    auto minNode = *std::min_element(std::begin(f), std::end(f));
+    while (f[0] != minNode) {
+      std::next_permutation(f.begin(), f.end());
+    }
+    if (f[1] > f.back()) {
+      std::reverse(f.begin(), f.end());
+      while (f[0] != minNode) {
+        std::next_permutation(f.begin(), f.end());
+      }
+    }
+  }
+  return facets;
+}
+
+}
 
 namespace Garfield {
 
@@ -59,7 +106,7 @@ void ViewFEMesh::SetComponent(Component* cmp) {
 
 // The plotting functionality here is ported from Garfield
 //  with some inclusion of code from ViewCell.cc
-bool ViewFEMesh::Plot(const bool twod) {
+bool ViewFEMesh::Plot(const bool twod, const bool outline) {
   if (!m_cmp) {
     std::cerr << m_className << "::Plot: Component is not defined.\n";
     return false;
@@ -80,7 +127,11 @@ bool ViewFEMesh::Plot(const bool twod) {
                 << "    Cannot plot 2D mesh elements in 3D.\n";
       return false;
     }
-    DrawElements3d();
+    if (outline) {
+      DrawBorders3d();
+    } else {
+      DrawElements3d();
+    }
     DrawDriftLines3d();
     return true;
   }
@@ -119,7 +170,11 @@ bool ViewFEMesh::Plot(const bool twod) {
     std::cout << m_className << "::Plot: CST component. Calling DrawCST.\n";
     DrawCST(cst);
   } else {
-    DrawElements2d();
+    if (outline) {
+      DrawBorders2d();
+    } else {
+      DrawElements2d();
+    }
   }
  
   DrawDriftLines2d();
@@ -488,6 +543,217 @@ void ViewFEMesh::DrawElements2d() {
 
 }
 
+void ViewFEMesh::DrawBorders2d() {
+  // Get the map boundaries from the component.
+  double mapxmin = 0., mapymin = 0., mapzmin = 0.;
+  double mapxmax = 0., mapymax = 0., mapzmax = 0.;
+  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, 
+                                mapxmax, mapymax, mapzmax)) {
+    return;
+  }
+
+  // Get the periodicities.
+  double sx = mapxmax - mapxmin;
+  double sy = mapymax - mapymin;
+  double sz = mapzmax - mapzmin;
+  // Check for simple periodicity.
+  bool perxs = false, perys = false, perzs = false;
+  m_cmp->IsPeriodic(perxs, perys, perzs);
+  // Check for mirror periodicity.
+  bool perxm = false, perym = false, perzm = false;
+  m_cmp->IsMirrorPeriodic(perxm, perym, perzm);
+  const bool perX = perxs || perxm;
+  const bool perY = perys || perym;
+  const bool perZ = perzs || perzm;
+
+  // Get the plane information.
+  const double fx = m_plane[0];
+  const double fy = m_plane[1];
+  const double fz = m_plane[2];
+  const double dist = m_plane[3];
+
+  // Construct single-column matrix for use as coordinate vector.
+  TMatrixD xMat(3, 1);
+
+  // Determine the number of periods present in the cell.
+  const int nMinX = perX ? int(m_xMinBox / sx) - 1 : 0;
+  const int nMaxX = perX ? int(m_xMaxBox / sx) + 1 : 0;
+  const int nMinY = perY ? int(m_yMinBox / sy) - 1 : 0;
+  const int nMaxY = perY ? int(m_yMaxBox / sy) + 1 : 0;
+  const int nMinZ = perZ ? int(m_zMinBox / sz) - 1 : 0;
+  const int nMaxZ = perZ ? int(m_zMaxBox / sz) + 1 : 0;
+
+  bool cst = false;
+  if (dynamic_cast<ComponentCST*>(m_cmp)) cst = true;
+  std::map<Facet, std::vector<size_t> > facetRegions;
+  // Loop over all elements.
+  const auto nElements = m_cmp->GetNumberOfElements();
+  for (size_t i = 0; i < nElements; ++i) {
+    size_t mat = 0;
+    bool driftmedium = false;
+    if (!m_cmp->GetElementRegion(i, mat, driftmedium)) continue;
+    // Do not plot the drift medium.
+    if (driftmedium) continue;
+    // Do not create polygons for disabled materials.
+    if (m_disabledMaterial.count(mat) > 0 && m_disabledMaterial[mat]) {
+      continue;
+    }
+    // Get the indices of the element vertices.
+    std::vector<size_t> nodes;
+    if (!m_cmp->GetElementNodes(i, nodes)) continue;
+    // Get the faces of the element.
+    std::vector<Facet> facets = GetFacets(nodes, cst);
+    for (auto& f : facets) {
+      if (facetRegions.count(f) != 0) {
+        facetRegions[f].push_back(mat);
+      } else {
+        facetRegions[f] = {mat};
+      }
+    }
+  }
+  for (const auto& f : facetRegions) {
+    if (f.second.empty() || f.second.size() > 2) continue;
+    if (f.second.size() == 2) {
+      // Same region/material on both sides of the facet.
+      if (f.second[0] == f.second[1]) continue;
+    }
+    short col = 1;
+    bool disabled = true;
+    for (auto mat : f.second) {
+      if (m_disabledMaterial.count(mat) > 0 && m_disabledMaterial[mat]) {
+        continue;
+      }
+      disabled = false;
+      if (m_colorMap.count(mat) != 0) col = m_colorMap[mat];
+    }
+    if (disabled) continue;
+    TGraph gr;
+    gr.SetLineColor(col);
+
+    // Get the vertex coordinates in the basic cell.
+    std::vector<double> vx0;
+    std::vector<double> vy0;
+    std::vector<double> vz0;
+    for (auto j : f.first) {
+      double xn = 0., yn = 0., zn = 0.;
+      if (!m_cmp->GetNode(j, xn, yn, zn)) continue;
+      vx0.push_back(xn);
+      vy0.push_back(yn);
+      vz0.push_back(zn);
+    }
+    const auto nNodes = f.first.size();
+    if (vx0.size() != nNodes) {
+      std::cerr << m_className << "::DrawBorders2d:\n"
+                << "    Error retrieving node coordinates.\n";
+      continue;
+    }
+    // Coordinates of vertices
+    std::vector<double> vx(nNodes, 0.);
+    std::vector<double> vy(nNodes, 0.);
+    std::vector<double> vz(nNodes, 0.);
+    // Loop over the periodicities in x.
+    for (int nx = nMinX; nx <= nMaxX; nx++) {
+      const double dx = sx * nx;
+      // Determine the x-coordinates of the vertices.
+      if (perxm && nx != 2 * (nx / 2)) {
+        for (size_t j = 0; j < nNodes; ++j) {
+          vx[j] = mapxmin + (mapxmax - vx0[j]) + dx;
+        }
+      } else {
+        for (size_t j = 0; j < nNodes; ++j) {
+          vx[j] = vx0[j] + dx;
+        }
+      }
+
+      // Loop over the periodicities in y.
+      for (int ny = nMinY; ny <= nMaxY; ny++) {
+        const double dy = sy * ny;
+        // Determine the y-coordinates of the vertices.
+        if (perym && ny != 2 * (ny / 2)) {
+          for (size_t j = 0; j < nNodes; ++j) {
+            vy[j] = mapymin + (mapymax - vy0[j]) + dy;
+          }
+        } else {
+          for (size_t j = 0; j < nNodes; ++j) {
+            vy[j] = vy0[j] + dy;
+          }
+        }
+
+        // Loop over the periodicities in z.
+        for (int nz = nMinZ; nz <= nMaxZ; nz++) {
+          const double dz = sz * nz;
+          // Determine the z-coordinates of the vertices.
+          if (perzm && nz != 2 * (nz / 2)) {
+            for (size_t j = 0; j < nNodes; ++j) {
+              vz[j] = mapzmin + (mapzmax - vz0[j]) + dz;
+            }
+          } else {
+            for (size_t j = 0; j < nNodes; ++j) {
+              vz[j] = vz0[j] + dz;
+            }
+          }
+
+          // Store the x and y coordinates of the relevant mesh vertices.
+          std::vector<double> vX;
+          std::vector<double> vY;
+
+          // Value used to determine whether a vertex is in the plane.
+          const double pcf = std::max(
+              {std::abs(vx[0]), std::abs(vy[0]), std::abs(vz[0]), 
+               std::abs(fx), std::abs(fy), std::abs(fz), std::abs(dist)});
+          const double tol = 1.e-4 * pcf;
+          // First isolate the vertices that are in the viewing plane.
+          std::vector<bool> in(nNodes, false);
+          int cnt = 0;
+          for (size_t j = 0; j < nNodes; ++j) {
+            const double d = fx * vx[j] + fy * vy[j] + fz * vz[j] - dist;
+            if (std::abs(d) < tol) {
+              // Point is in the plane.
+              in[j] = true;
+              // Calculate the planar coordinates.
+              double xp = 0., yp = 0.;
+              ToPlane(vx[j], vy[j], vz[j], xp, yp);
+              vX.push_back(xp);
+              vY.push_back(yp);
+            } else {
+              if (d > 0.) {
+                cnt += 1;
+              } else { 
+                cnt -= 1;
+              }
+            }
+          }
+          // Stop if all points are on the same side of the plane.
+          if (std::abs(cnt) == (int)nNodes) continue;
+          for (size_t j = 0; j < nNodes; ++j) {
+            const size_t k = j < nNodes - 1 ? j + 1 : 0;
+            if (in[j] || in[k]) continue;
+            if (PlaneCut(vx[j], vy[j], vz[j], 
+                         vx[k], vy[k], vz[k], xMat)) {
+              vX.push_back(xMat(0, 0));
+              vY.push_back(xMat(1, 0));
+            }
+          }
+          if (vX.size() < 2) continue;
+
+          // Create vectors to store the clipped polygon.
+          std::vector<double> cX;
+          std::vector<double> cY;
+
+          // Clip the polygon to the view area.
+          ClipToView(vX, vY, cX, cY);
+          if (cX.size() < 2) continue;
+
+          // Draw the polygon.
+          std::vector<float> xgr(cX.begin(), cX.end());
+          std::vector<float> ygr(cY.begin(), cY.end());
+          gr.DrawGraph(xgr.size(), xgr.data(), ygr.data(), "lsame");
+        }
+      }
+    }
+  }
+}
+
 void ViewFEMesh::DrawElements3d() {
 
   // Get the map boundaries from the component.
@@ -628,7 +894,7 @@ void ViewFEMesh::DrawElements3d() {
           std::string vname = "Tet" + std::to_string(m_volumes.size());
           TGeoVolume* vol = new TGeoVolume(vname.c_str(), tet, medDefault); 
           vol->SetLineColor(col);
-          vol->SetTransparency(70.);
+          vol->SetTransparency(50.);
           m_volumes.push_back(vol);
           top->AddNodeOverlap(vol, 1, gGeoIdentity);
         }
@@ -642,6 +908,264 @@ void ViewFEMesh::DrawElements3d() {
   m_geoManager->GetTopNode()->Draw("e");
 }
 
+void ViewFEMesh::DrawBorders3d() {
+
+  // Get the map boundaries from the component.
+  double mapxmin = 0., mapymin = 0., mapzmin = 0.;
+  double mapxmax = 0., mapymax = 0., mapzmax = 0.;
+  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, 
+                                mapxmax, mapymax, mapzmax)) {
+    return;
+  }
+
+  // Get the periodicities.
+  double sx = mapxmax - mapxmin;
+  double sy = mapymax - mapymin;
+  double sz = mapzmax - mapzmin;
+  // Check for simple periodicity.
+  bool perxs = false, perys = false, perzs = false;
+  m_cmp->IsPeriodic(perxs, perys, perzs);
+  // Check for mirror periodicity.
+  bool perxm = false, perym = false, perzm = false;
+  m_cmp->IsMirrorPeriodic(perxm, perym, perzm);
+  const bool perX = perxs || perxm;
+  const bool perY = perys || perym;
+  const bool perZ = perzs || perzm;
+
+  // Set the plot limits.
+  if (m_userBox) {
+    if (std::isinf(m_xMinBox)) m_xMinBox = mapxmin;
+    if (std::isinf(m_yMinBox)) m_yMinBox = mapymin;
+    if (std::isinf(m_zMinBox)) m_zMinBox = mapzmin;
+    if (std::isinf(m_xMaxBox)) m_xMaxBox = mapxmax;
+    if (std::isinf(m_yMaxBox)) m_yMaxBox = mapymax;
+    if (std::isinf(m_zMaxBox)) m_zMaxBox = mapzmax;
+  } else {
+    m_xMinBox = mapxmin;
+    m_yMinBox = mapymin;
+    m_zMinBox = mapzmin;
+    m_xMaxBox = mapxmax;
+    m_yMaxBox = mapymax;
+    m_zMaxBox = mapzmax;
+  } 
+  // Determine the number of periods present in the cell.
+  const int nMinX = perX ? int(m_xMinBox / sx) - 1 : 0;
+  const int nMaxX = perX ? int(m_xMaxBox / sx) + 1 : 0;
+  const int nMinY = perY ? int(m_yMinBox / sy) - 1 : 0;
+  const int nMaxY = perY ? int(m_yMaxBox / sy) + 1 : 0;
+  const int nMinZ = perZ ? int(m_zMinBox / sz) - 1 : 0;
+  const int nMaxZ = perZ ? int(m_zMaxBox / sz) + 1 : 0;
+
+  gGeoManager = nullptr;
+  m_geoManager.reset(new TGeoManager("ViewFEMeshGeoManager", ""));
+  TGeoMaterial* matVacuum = new TGeoMaterial("Vacuum", 0., 0., 0.);
+  TGeoMedium* medVacuum = new TGeoMedium("Vacuum", 1, matVacuum);
+  m_media.push_back(medVacuum);
+  // Use silicon as "default" material.
+  TGeoMaterial* matDefault = new TGeoMaterial("Default", 28.085, 14., 2.329);
+  TGeoMedium* medDefault = new TGeoMedium("Default", 1, matDefault);
+  const double hxw = std::max(std::abs(m_xMaxBox), std::abs(m_xMinBox));
+  const double hyw = std::max(std::abs(m_yMaxBox), std::abs(m_yMinBox));
+  const double hzw = std::max(std::abs(m_zMaxBox), std::abs(m_zMinBox));
+  TGeoVolume* top = m_geoManager->MakeBox("Top", medVacuum, hxw, hyw, hzw);
+  m_geoManager->SetTopVolume(top);
+  m_volumes.push_back(top);
+
+  bool cst = false;
+  if (dynamic_cast<ComponentCST*>(m_cmp)) cst = true;
+  std::map<Facet, std::vector<size_t> > facetElements;
+  const auto nElements = m_cmp->GetNumberOfElements();
+  std::vector<std::vector<Facet> > elementFacets(nElements);
+  // Loop over all elements.
+  for (size_t i = 0; i < nElements; ++i) {
+    size_t mat = 0;
+    bool driftmedium = false;
+    if (!m_cmp->GetElementRegion(i, mat, driftmedium)) continue;
+    // Do not plot the drift medium.
+    if (driftmedium && !m_plotMeshBorders) continue;
+    // Do not plot disabled materials.
+    if (m_disabledMaterial.count(mat) > 0 && m_disabledMaterial[mat]) {
+      continue;
+    }
+    // Get the indices of the element vertices.
+    std::vector<size_t> nodes;
+    if (!m_cmp->GetElementNodes(i, nodes)) continue;
+    // Get the faces of the element.
+    const std::vector<Facet> facets = GetFacets(nodes, cst);
+    for (const auto& f : facets) {
+      elementFacets[i].push_back(f);
+      if (facetElements.count(f) != 0) {
+        facetElements[f].push_back(i);
+      } else {
+        facetElements[f] = {i};
+      }
+    }
+  }
+  std::vector<bool> edone(nElements, false);
+  for (size_t i = 0; i < nElements; ++i) {
+    if (edone[i]) continue;
+    size_t mat = 0;
+    bool dm = false;
+    if (!m_cmp->GetElementRegion(i, mat, dm)) {
+      edone[i] = true;
+      continue;
+    }
+    if (dm || (m_disabledMaterial.count(mat) > 0 && m_disabledMaterial[mat])) {
+      edone[i] = true;
+      continue;
+    }
+    const short col = m_colorMap.count(mat) != 0 ? m_colorMap[mat] : 1;
+    // Collect recursively the boundary facets of all elements in 
+    // this region. 
+    std::vector<Facet> facets;
+    AddFacets(i, elementFacets, facetElements, facets, edone);
+    if (facets.empty()) continue;
+    // Create a tesselated solid.
+    auto solid = new TGeoTessellated("Tessellated", facets.size());
+    for (const auto& facet : facets) {
+      std::vector<Tessellated::Vertex_t> nodes;
+      for (const auto k : facet) {
+        double xn = 0., yn = 0., zn = 0.;
+        m_cmp->GetNode(k, xn, yn, zn);
+        nodes.emplace_back(Tessellated::Vertex_t(xn, yn, zn));
+      }
+      if (nodes.size() == 3) {
+        solid->AddFacet(nodes[0], nodes[1], nodes[2]);
+      } else if (nodes.size() == 4) {
+        solid->AddFacet(nodes[0], nodes[1], nodes[2], nodes[3]);
+      }
+    }
+    const bool flip = false;
+    if (!solid->CheckClosure(flip, m_debug)) {
+      std::cerr << m_className << "::DrawBorders3d: CheckClosure failed.\n";
+    }
+    solid->CloseShape(true, flip, m_debug);
+    if (m_debug) solid->Print();
+    std::string vname = "Tessellated" + std::to_string(m_volumes.size());
+    TGeoVolume* vol = new TGeoVolume(vname.c_str(), solid, medDefault); 
+    vol->SetLineColor(col);
+    vol->SetLineWidth(3);
+    vol->SetTransparency(70.);
+    m_volumes.push_back(vol);
+    int nCopies = 0;
+    // Loop over the periodicities in x.
+    for (int nx = nMinX; nx <= nMaxX; nx++) {
+      double dx = sx * nx;
+      if (perxm && nx != 2 * (nx / 2)) dx += mapxmin + mapxmax;
+      // Loop over the periodicities in y.
+      for (int ny = nMinY; ny <= nMaxY; ny++) {
+        double dy = sy * ny;
+        if (perym && ny != 2 * (ny / 2)) dy += mapymin + mapymax;
+        // Loop over the periodicities in z.
+        for (int nz = nMinZ; nz <= nMaxZ; nz++) {
+          double dz = sz * nz;
+          if (perzm && nz != 2 * (nz / 2)) dz += mapzmin + mapzmax;
+          TGeoRotation rot(*gGeoIdentity);
+          if (perxm && nx != 2 * (nx / 2)) rot.ReflectX(true);
+          if (perym && ny != 2 * (ny / 2)) rot.ReflectY(true);
+          if (perzm && nz != 2 * (nz / 2)) rot.ReflectZ(true);
+          TGeoTranslation tr(dx, dy, dz);
+          ++nCopies;
+          top->AddNodeOverlap(vol, nCopies, new TGeoCombiTrans(tr, rot));
+        }
+      }
+    }
+  }
+  m_geoManager->CloseGeometry();
+  top->SetTransparency(100.);
+  m_geoManager->SetTopVisible();
+  m_geoManager->GetTopNode()->Draw("ogle");
+}
+
+void ViewFEMesh::AddFacets(const size_t i,
+  const std::vector<std::vector<Facet> >& elementFacets,
+  const std::map<Facet, std::vector<size_t> >& facetElements,
+  std::vector<Facet>& facets, std::vector<bool>& done) const {
+
+  if (done[i]) return;
+  done[i] = true;
+  for (const auto& f : elementFacets[i]) {
+    const auto& elements = facetElements.at(f);
+    if (elements.empty() || elements.size() > 2) {
+      // Should not happen.
+      continue;
+    }
+    if (elements.size() == 1) {
+      // Boundary with no adjacent element.
+      if (i != elements[0]) {
+        std::cerr << m_className << "::AddFacets: Unexpected element index.\n";
+      } else {
+        facets.push_back(f);
+        // Make sure that all facets have a consistent orientation.
+        if (!FacetSign(f, i)) {
+          // Flip the facet.
+          std::reverse(facets.back().begin(), facets.back().end());
+        }
+      } 
+      continue;
+    }
+    size_t mat0 = 0, mat1 = 0;
+    bool dm0 = false, dm1 = false;
+    if (!m_cmp->GetElementRegion(elements[0], mat0, dm0)) continue;
+    if (!m_cmp->GetElementRegion(elements[1], mat1, dm1)) continue;
+    if (i != elements[0] && i != elements[1]) {
+      std::cerr << m_className << "::AddFacets:"
+                << " Unexpected element index. Program bug!\n";
+      continue;
+    }
+    if (mat0 == mat1) {
+      // Adjacent element belongs to the same region. Continue the search.
+      const size_t j = (i == elements[0]) ? elements[1] : elements[0];
+      AddFacets(j, elementFacets, facetElements, facets, done);
+    } else {
+      // Adjacent element belongs to a different region.
+      facets.push_back(f);
+      // Make sure that all facets have a consistent orientation.
+      if (!FacetSign(f, i)) {
+        // Flip the facet.
+        std::reverse(facets.back().begin(), facets.back().end());
+      }
+    } 
+  }
+}
+
+bool ViewFEMesh::FacetSign(const Facet& f, const size_t element) const {
+  std::array<double, 4> x;
+  std::array<double, 4> y;
+  std::array<double, 4> z;
+  for (size_t i = 0; i < 3; ++i) {
+    if (!m_cmp->GetNode(f[i], x[i], y[i], z[i])) return false;
+  }
+  // Find the element vertex that is not part of the facet.
+  std::vector<size_t> nodes;
+  if (!m_cmp->GetElementNodes(element, nodes)) return false;
+  for (const auto i : nodes) {
+    bool found = false;
+    for (const auto j : f) {
+      if (i == j) {
+        found = true;
+        break;
+      }
+    }
+    if (found) continue;
+    if (!m_cmp->GetNode(i, x[3], y[3], z[3])) return false;
+    break;
+  }
+  // Compute the normal vector.
+  double ax = x[1] - x[0];
+  double ay = y[1] - y[0];
+  double az = z[1] - z[0];
+  double bx = x[2] - x[0];
+  double by = y[2] - y[0];
+  double bz = z[2] - z[0];
+  double nx = ay * bz - az * by;
+  double ny = az * bx - ax * bz;
+  double nz = ax * by - ay * bx;
+  // Compute the distance between the fourth point and the facet.
+  double s = nx * (x[0] - x[3]) + ny * (y[0] - y[3]) + nz * (z[0] - z[3]);
+  return std::signbit(s);
+}
+                              
 void ViewFEMesh::DrawDriftLines2d() {
  
   if (!m_viewDrift) return;
@@ -694,7 +1218,7 @@ void ViewFEMesh::DrawDriftLines3d() {
     } else {
       pl.SetLineColor(m_viewDrift->m_colIon);
     }
-    pl.SetLineWidth(1);
+    pl.SetLineWidth(2);
     pl.DrawPolyLine(nP, points.data(), "same");
   }
 }
