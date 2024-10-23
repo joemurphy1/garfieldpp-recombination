@@ -894,7 +894,7 @@ void ViewFEMesh::DrawElements3d() {
           std::string vname = "Tet" + std::to_string(m_volumes.size());
           TGeoVolume* vol = new TGeoVolume(vname.c_str(), tet, medDefault); 
           vol->SetLineColor(col);
-          vol->SetTransparency(70.);
+          vol->SetTransparency(50.);
           m_volumes.push_back(vol);
           top->AddNodeOverlap(vol, 1, gGeoIdentity);
         }
@@ -1022,25 +1022,12 @@ void ViewFEMesh::DrawBorders3d() {
     if (facets.empty()) continue;
     // Create a tesselated solid.
     auto solid = new TGeoTessellated("Tessellated", facets.size());
-    std::vector<int> nodeIndex(m_cmp->GetNumberOfNodes(), -1);
-    int j = 0;
     for (const auto& facet : facets) {
+      std::vector<Tessellated::Vertex_t> nodes;
       for (const auto k : facet) {
-        if (nodeIndex[k] >= 0) continue;
         double xn = 0., yn = 0., zn = 0.;
         m_cmp->GetNode(k, xn, yn, zn);
-        if (solid->AddVertex(Tessellated::Vertex_t(xn, yn, zn)) != j) {
-          std::cerr << m_className << "::DrawBorders3d:"
-                    << " Unexpected return value from AddVertex.\n";
-        }
-        nodeIndex[k] = j;
-        ++j;
-      }
-    }
-    for (const auto& facet : facets) {
-      std::vector<int> nodes;
-      for (const auto k : facet) {
-        nodes.push_back(nodeIndex[k]);
+        nodes.emplace_back(Tessellated::Vertex_t(xn, yn, zn));
       }
       if (nodes.size() == 3) {
         solid->AddFacet(nodes[0], nodes[1], nodes[2]);
@@ -1231,7 +1218,7 @@ void ViewFEMesh::DrawDriftLines3d() {
     } else {
       pl.SetLineColor(m_viewDrift->m_colIon);
     }
-    pl.SetLineWidth(1);
+    pl.SetLineWidth(2);
     pl.DrawPolyLine(nP, points.data(), "same");
   }
 }
