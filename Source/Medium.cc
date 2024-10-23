@@ -298,6 +298,45 @@ bool Medium::Velocity(const double ex, const double ey, const double ez,
   return true;
 }
 
+bool Medium::VelocityFluxBulk(const double ex, const double ey, const double ez,
+                 const double bx, const double by, const double bz,
+                 const std::vector<std::vector<std::vector<double> > >& velWv,
+                 const std::vector<std::vector<std::vector<double> > >& velWr,
+                 const double q, double& wv, double& wr) const {
+    wv = wr = 0;
+    // Make sure there is at least a table of velocities along E.
+    if (velWv.empty() || velWr.empty()) return false;
+
+    // Compute the magnitude of the electric field.
+    const double e = sqrt(ex * ex + ey * ey + ez * ez);
+    const double e0 = ScaleElectricField(e);
+    if (e < Small || e0 < Small) return false;
+
+    // Compute the magnitude of the magnetic field.
+    const double b = sqrt(bx * bx + by * by + bz * bz);
+    // Compute the angle between B field and E field.
+    const double ebang = GetAngle(ex, ey, ez, bx, by, bz, e, b);
+
+    // Calculate the velocity along E.
+    double wv_hold = 0., wr_hold = 0.;
+    if (!Interpolate(e0, b, ebang, velWv, wv_hold, m_intpVel, m_extrVel)) {
+        std::cerr << m_className << "::ExtVelocity: Interpolation of flux velocity (Wv) failed.\n";
+        return false;
+    }
+    if (!Interpolate(e0, b, ebang, velWr, wr_hold, m_intpVel, m_extrVel)) {
+        std::cerr << m_className << "::ExtVelocity: Interpolation of bulk velocity (Wr) failed.\n";
+        return false;
+    }
+    // only needed in B = 0 case so far.
+    if (b < Small) {
+        // No magnetic field.
+        wv = wv_hold;
+        wr = wr_hold;
+        return true;
+    }
+    return true;
+}
+
 void Medium::Langevin(const double ex, const double ey, const double ez,
                       double bx, double by, double bz, const double mu,
                       double& vx, double& vy, double& vz) {
@@ -449,6 +488,13 @@ bool Medium::ElectronVelocity(const double ex, const double ey, const double ez,
                   vx, vy, vz);
 }
 
+bool Medium::ElectronVelocityFluxBulk(const double ex, const double ey, const double ez,
+                                 const double bx, const double by,
+                                 const double bz, double &wv, double &wr) {
+    return VelocityFluxBulk(ex, ey, ez, bx, by, bz, m_eVelWv, m_eVelWr, -1.,
+                            wv, wr);
+}
+
 bool Medium::ElectronDiffusion(const double ex, const double ey,
                                const double ez, const double bx,
                                const double by, const double bz, double& dl,
@@ -489,6 +535,28 @@ bool Medium::ElectronAttachment(const double ex, const double ey,
   // Apply scaling.
   eta = ScaleAttachment(eta);
   return true;
+}
+
+bool Medium::ElectronTOFIonisation(const double ex, const double ey, const double ez,
+                                   const double bx, const double by, const double bz,
+                                   double& riontof) {
+    // m_eThrAlp? maybe set to 0
+    if (!Alpha(ex, ey, ez, bx, by, bz, m_eRIon, m_intpAlp, m_eThrAlp, m_extrAlp,
+               riontof)) {
+        return false;
+    }
+    return true;
+}
+
+bool Medium::ElectronTOFAttachment(const double ex, const double ey, const double ez,
+                                   const double bx, const double by, const double bz,
+                                   double& ratttof) {
+    // m_eThrAtt? maybe set to 0
+    if (!Alpha(ex, ey, ez, bx, by, bz, m_eRAtt, m_intpAtt, m_eThrAtt, m_extrAtt,
+               ratttof)) {
+        return false;
+    }
+    return true;
 }
 
 bool Medium::ElectronLorentzAngle(const double ex, const double ey,
@@ -981,13 +1049,14 @@ void Medium::ResetTables() {
   ResetElectronDiffusion();
   ResetElectronTownsend();
   ResetElectronAttachment();
+  ResetElectronTOFRates();
   ResetElectronLorentzAngle();
   
   ResetHoleVelocity();
   ResetHoleDiffusion();
   ResetHoleTownsend();
   ResetHoleAttachment();
- 
+
   ResetIonMobility();
   ResetIonDiffusion();
   ResetIonDissociation();

@@ -248,12 +248,14 @@ class MediumGas : public Medium {
                     double& dl, double& dt, double& alpha, double& alpha0, 
                     double& eta, double& mu, double& lor,
                     double& dis, std::array<double, 6>& dif, 
-                    std::vector<double>& rexc, std::vector<double>& rion);
+                    std::vector<double>& rexc, std::vector<double>& rion,
+                    std::bitset<20> gasok);
   void ReadRecord1D(std::ifstream& gasfile, double& ve, double& vb, double& vx,
-                    double& dl, double& dt, double& alpha, double& alpha0, 
-                    double& eta, double& mu, double& lor,
-                    double& dis, std::array<double, 6>& dif, 
-                    std::vector<double>& rexc, std::vector<double>& rion);
+                    double& wv, double& wr, double& dl, double& dt,
+                    double& alpha, double& alpha0, double& eta, double&riontof,
+                    double& ratttof, double& mu, double& lor, double& dis,
+                    std::array<double, 6>& dif, std::vector<double>& rexc,
+                    std::vector<double>& rion, std::bitset<20> gasok);
   void InsertE(const int ie, const int ne, const int nb, const int na);
   void InsertB(const int ib, const int ne, const int nb, const int na);
   void InsertA(const int ia, const int ne, const int nb, const int na);

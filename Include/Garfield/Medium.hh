@@ -148,6 +148,11 @@ class __MEDIUMCLASS__ {
                                 const double ez, const double bx,
                                 const double by, const double bz, double& vx,
                                 double& vy, double& vz);
+  /// Flux (mean velocity; shorthand: wv) and bulk (center of mass velocity; shorthand: wr) drift velocity [cm / ns]
+  virtual bool ElectronVelocityFluxBulk(const double ex, const double ey,
+                                        const double ez, const double bx,
+                                        const double by, const double bz,
+                                        double& wv, double& wr);
   /// Longitudinal and transverse diffusion coefficients [cm1/2]
   virtual bool ElectronDiffusion(const double ex, const double ey,
                                  const double ez, const double bx,
@@ -170,6 +175,16 @@ class __MEDIUMCLASS__ {
                                   const double ez, const double bx,
                                   const double by, const double bz,
                                   double& eta);
+  /// TOF Ionisation rate [ns-1]
+  virtual bool ElectronTOFIonisation(const double ex, const double ey,
+                                     const double ez, const double bx,
+                                     const double by, const double bz,
+                                     double& riontof);
+  /// TOF Attachment Rate [ns-1]
+  virtual bool ElectronTOFAttachment(const double ex, const double ey,
+                                         const double ez, const double bx,
+                                         const double by, const double bz,
+                                         double& ratttof);
   /// Lorentz angle
   virtual bool ElectronLorentzAngle(const double ex, const double ey,
                                     const double ez, const double bx,
@@ -310,6 +325,26 @@ class __MEDIUMCLASS__ {
                             const size_t ia, double& v) {
     return GetEntry(ie, ib, ia, "ElectronVelocityB", m_eVelB, v);
   }
+  /// Set an entry in the table of flux drift speeds.
+  bool SetElectronFluxVelocity(const size_t ie, const size_t ib,
+                             const size_t ia, const double v) {
+      return SetEntry(ie, ib, ia, "ElectronFluxVelocity", m_eVelWv, v);
+  }
+  /// Get an entry in the table of flux drift speeds.
+  bool GetElectronFluxVelocity(const size_t ie, const size_t ib,
+                             const size_t ia, double& v) {
+      return GetEntry(ie, ib, ia, "ElectronFluxVelocity", m_eVelWv, v);
+  }
+  /// Set an entry in the table of bulk drift speeds.
+  bool SetElectronBulkVelocity(const size_t ie, const size_t ib,
+                             const size_t ia, const double v) {
+      return SetEntry(ie, ib, ia, "ElectronBulkVelocity", m_eVelWr, v);
+  }
+  /// Get an entry in the table of bulk drift speeds.
+  bool GetElectronBulkVelocity(const size_t ie, const size_t ib,
+                             const size_t ia, double& v) {
+      return GetEntry(ie, ib, ia, "ElectronBulkVelocity", m_eVelWr, v);
+  }
   /// Set an entry in the table of longitudinal diffusion coefficients.
   bool SetElectronLongitudinalDiffusion(const size_t ie, const size_t ib,
                                         const size_t ia, const double dl) {
@@ -350,7 +385,27 @@ class __MEDIUMCLASS__ {
                              const size_t ia, double& eta) {
     return GetEntry(ie, ib, ia, "ElectronAttachment", m_eAtt, eta);
   }
- 
+  /// Set an entry in the table of ionization rate of TOF.
+  bool SetElectronTOFIonisation(const size_t ie, const size_t ib,
+                          const size_t ia, const double v) {
+      return SetEntry(ie, ib, ia, "ElectronTOFIonisation", m_eRIon, v);
+  }
+  /// Get an entry in the table of ionization rate of TOF.
+  bool GetElectronTOFIonisation(const size_t ie, const size_t ib,
+                          const size_t ia, double& v) {
+      return GetEntry(ie, ib, ia, "ElectronTOFIonisation", m_eRIon, v);
+  }
+  /// Set an entry in the table of attachment rate of TOF.
+  bool SetElectronTOFAttachment(const size_t ie, const size_t ib,
+                          const size_t ia, const double v) {
+      return SetEntry(ie, ib, ia, "ElectronTOFAttachment", m_eRAtt, v);
+  }
+  /// Get an entry in the table of attachment rate of TOF.
+  bool GetElectronTOFAttachment(const size_t ie, const size_t ib,
+                          const size_t ia, double& v) {
+      return GetEntry(ie, ib, ia, "ElectronTOFAttachment", m_eRAtt, v);
+  }
+
   /// Set an entry in the table of Lorentz angles.
   bool SetElectronLorentzAngle(const size_t ie, const size_t ib,
                                const size_t ia, const double lor) {
@@ -497,6 +552,8 @@ class __MEDIUMCLASS__ {
     m_eVelE.clear();
     m_eVelB.clear();
     m_eVelX.clear();
+    m_eVelWv.clear();
+    m_eVelWr.clear();
   }
   void ResetElectronDiffusion() {
     m_eDifL.clear();
@@ -505,6 +562,10 @@ class __MEDIUMCLASS__ {
   }
   void ResetElectronTownsend() { m_eAlp.clear(); }
   void ResetElectronAttachment() { m_eAtt.clear(); }
+  void ResetElectronTOFRates() {
+      m_eRIon.clear();
+      m_eRAtt.clear();
+  }
   void ResetElectronLorentzAngle() { m_eLor.clear(); }
 
   void ResetHoleVelocity() {
@@ -655,6 +716,10 @@ class __MEDIUMCLASS__ {
   std::vector<std::vector<std::vector<double> > > m_eAlp;
   std::vector<std::vector<std::vector<double> > > m_eAtt;
   std::vector<std::vector<std::vector<double> > > m_eLor;
+  std::vector<std::vector<std::vector<double> > > m_eVelWv;
+  std::vector<std::vector<std::vector<double> > > m_eVelWr;
+  std::vector<std::vector<std::vector<double> > > m_eRIon;
+  std::vector<std::vector<std::vector<double> > > m_eRAtt;
 
   std::vector<std::vector<std::vector<std::vector<double> > > > m_eDifM;
 
@@ -710,6 +775,11 @@ class __MEDIUMCLASS__ {
                 const std::vector<std::vector<std::vector<double> > >& velB,
                 const std::vector<std::vector<std::vector<double> > >& velX,
                 const double q, double& vx, double& vy, double& vz) const;
+  bool VelocityFluxBulk(const double ex, const double ey, const double ez,
+                const double bx, const double by, const double bz,
+                const std::vector<std::vector<std::vector<double> > >& velWv,
+                const std::vector<std::vector<std::vector<double> > >& velWr,
+                const double q, double& wv, double& wr) const;
   static void Langevin(const double ex, const double ey, const double ez,
                        double bx, double by, double bz, const double mu, 
                        double& vx, double& vy, double& vz);

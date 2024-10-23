@@ -343,7 +343,7 @@ bool MediumGas::LoadGasFile(const std::string& filename,
 
   // Start reading the data.
   if (m_debug) std::cout << "    Reading header.\n";
-  int version = 12;
+  int version = 13;
   // GASOK bits
   std::bitset<20> gasok;
   // Gas composition
@@ -418,6 +418,10 @@ bool MediumGas::LoadGasFile(const std::string& filename,
   // (14) allocated for HEED data (not used)
   // (15) excitation rates
   // (16) ionisation rates
+  // (17) Flux drift velocity Wv
+  // (18) Bulk drift velocity Wr
+  // (19) TOF ionisation rate
+  // (20) TOF attachment rate
 
   if (gasok[0]) Init(nE, nB, nA, m_eVelE, 0.);
   if (gasok[1]) Init(nE, nB, nA, m_iMob, 0.);
@@ -435,6 +439,10 @@ bool MediumGas::LoadGasFile(const std::string& filename,
   if (gasok[11]) Init(nE, nB, nA, m_iDis, -30.);
   if (gasok[14]) Init(nE, nB, nA, m_excLevels.size(), m_excRates, 0.);
   if (gasok[15]) Init(nE, nB, nA, m_ionLevels.size(), m_ionRates, 0.);
+  if (gasok[16]) Init(nE, nB, nA, m_eVelWv, 0.);
+  if (gasok[17]) Init(nE, nB, nA, m_eVelWr, 0.);
+  if (gasok[18]) Init(nE, nB, nA, m_eRIon, -30.);
+  if (gasok[19]) Init(nE, nB, nA, m_eRAtt, -30.);
 
   // Force re-initialisation of collision rates etc.
   m_isChanged = true;
@@ -446,12 +454,16 @@ bool MediumGas::LoadGasFile(const std::string& filename,
 
   // Drift velocity along E, Bt and ExB
   double ve = 0., vb = 0., vx = 0.;
+  // Flux and bulk drift velocities
+  double wv = 0., wr = 0.;
   // Lorentz angle
   double lor = 0.;
   // Longitudinal and transverse diffusion coefficients
   double dl = 0., dt = 0.;
   // Townsend and attachment coefficients
   double alpha = 0., alpha0 = 0., eta = 0.;
+  // TOF rate coefficients
+  double riontof = 0., ratttof = 0.;
   // Ion mobility and dissociation coefficient
   double mu = 0., dis = 0.;
   // Diffusion tensor.
@@ -466,14 +478,16 @@ bool MediumGas::LoadGasFile(const std::string& filename,
       for (int k = 0; k < nB; k++) {
         if (m_tab2d) {
           ReadRecord3D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, 
-                       lor, dis, diff, rexc, rion);
+                       lor, dis, diff, rexc, rion, gasok);
         } else {
-          ReadRecord1D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, 
-                       lor, dis, diff, rexc, rion);
+          ReadRecord1D(gasfile, ve, vb, vx, wv, wr, dl, dt, alpha, alpha0, eta, riontof, ratttof,
+                       mu, lor, dis, diff, rexc, rion, gasok);
         }
         if (!m_eVelE.empty()) m_eVelE[j][k][i] = ve;
         if (!m_eVelB.empty()) m_eVelB[j][k][i] = vb;
         if (!m_eVelX.empty()) m_eVelX[j][k][i] = vx;
+        if (!m_eVelWv.empty()) m_eVelWv[j][k][i] = wv;
+        if (!m_eVelWr.empty()) m_eVelWr[j][k][i] = wr;
         if (!m_eDifL.empty()) m_eDifL[j][k][i] = dl;
         if (!m_eDifT.empty()) m_eDifT[j][k][i] = dt;
         if (!m_eAlp.empty()) {
@@ -481,6 +495,8 @@ bool MediumGas::LoadGasFile(const std::string& filename,
           m_eAlp0[j][k][i] = alpha0;
         }
         if (!m_eAtt.empty()) m_eAtt[j][k][i] = eta;
+        if (!m_eRIon.empty()) m_eRIon[j][k][i] = riontof;
+        if (!m_eRAtt.empty()) m_eRAtt[j][k][i] = ratttof;
         if (!m_iMob.empty()) m_iMob[j][k][i] = mu;
         if (!m_eLor.empty()) m_eLor[j][k][i] = lor;
         if (!m_iDis.empty()) m_iDis[j][k][i] = dis;
@@ -621,7 +637,7 @@ bool MediumGas::ReadHeader(std::ifstream& gasfile, int& version,
         }
         version = atoi(token);
         // Check the version number.
-        if (version != 10 && version != 11 && version != 12) {
+        if (version != 10 && version != 11 && version != 12 && version != 13) {
           std::cerr << m_className << "::ReadHeader:\n"
                     << "    The file has version number " << version << ".\n"
                     << "    Files written in this format cannot be read.\n";
@@ -778,8 +794,8 @@ bool MediumGas::ReadHeader(std::ifstream& gasfile, int& version,
 void MediumGas::ReadRecord3D(std::ifstream& gasfile, 
   double& ve, double& vb, double& vx, double& dl, double& dt, 
   double& alpha, double& alpha0, double& eta, double& mu, double& lor,
-  double& dis, std::array<double, 6>& dif, 
-  std::vector<double>& rexc, std::vector<double>& rion) {
+  double& dis, std::array<double, 6>& dif, std::vector<double>& rexc,
+  std::vector<double>& rion, std::bitset<20> gasok) {
 
   // Drift velocity along E, Bt and ExB
   gasfile >> ve >> vb >> vx;
@@ -807,16 +823,31 @@ void MediumGas::ReadRecord3D(std::ifstream& gasfile,
   // Ionization rates
   const unsigned int nion = rion.size();
   for (unsigned int l = 0; l < nion; ++l) gasfile >> rion[l];
+  // check gasok: necessary to read previous gas files (version < 13)
+  double wv = 0., wr = 0., riontof = 0., ratttof = 0.;
+  if(gasok[16]) {
+      gasfile >> wv;
+  }
+  if(gasok[17]) {
+      gasfile >> wr;
+  }
+  if(gasok[18]) {
+      gasfile >> riontof;
+  }
+  if(gasok[19]) {
+      gasfile >> ratttof;
+  }
 }
 
 void MediumGas::ReadRecord1D(std::ifstream& gasfile, 
-  double& ve, double& vb, double& vx, double& dl, double& dt, 
-  double& alpha, double& alpha0, double& eta, double& mu, double& lor,
-  double& dis, std::array<double, 6>& dif, 
-  std::vector<double>& rexc, std::vector<double>& rion) {
+  double& ve, double& vb, double& vx, double& wv, double& wr, double& dl, double& dt,
+  double& alpha, double& alpha0, double& eta, double& riontof, double& ratttof,
+  double& mu, double& lor, double& dis, std::array<double, 6>& dif,
+  std::vector<double>& rexc, std::vector<double>& rion, std::bitset<20> gasok) {
 
   double waste = 0.;
   gasfile >> ve >> waste >> vb >> waste >> vx >> waste;
+  // convert from [cm / us] to Garfield units [cm / ns]
   ve *= 1.e-3;
   vb *= 1.e-3;
   vx *= 1.e-3;
@@ -831,6 +862,19 @@ void MediumGas::ReadRecord1D(std::ifstream& gasfile,
   for (unsigned int j = 0; j < nexc; ++j) gasfile >> rexc[j] >> waste;
   const unsigned int nion = rion.size();
   for (unsigned int j = 0; j < nion; ++j) gasfile >> rion[j] >> waste;
+  // check gasok: necessary to read previous gas files (version < 13)
+  if(gasok[16]) {
+      gasfile >> wv >> waste;
+  }
+  if(gasok[17]) {
+      gasfile >> wr >> waste;
+  }
+  if(gasok[18]) {
+      gasfile >> riontof >> waste;
+  }
+  if(gasok[19]) {
+      gasfile >> ratttof >> waste;
+  }
 }
 
 void MediumGas::ReadFooter(std::ifstream& gasfile,
@@ -1058,6 +1102,8 @@ bool MediumGas::MergeGasFile(const std::string& filename,
   double alpha = 0., alpha0 = 0., eta = 0.;
   // Ion mobility and dissociation coefficient
   double mu = 0., dis = 0.;
+  // place holder
+  double _ = 0.;
   // Diffusion tensor.
   std::array<double, 6> diff;
   // Excitation and ionization rates.
@@ -1072,10 +1118,10 @@ bool MediumGas::MergeGasFile(const std::string& filename,
       for (unsigned int k = 0; k < nNewB; k++) {
         if (new3d) {
           ReadRecord3D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, 
-                       lor, dis, diff, rexc, rion);
+                       lor, dis, diff, rexc, rion, gasok);
         } else {
-          ReadRecord1D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, 
-                       lor, dis, diff, rexc, rion);
+          ReadRecord1D(gasfile, ve, vb, vx, _, _, dl, dt, alpha, alpha0, eta, _, _,
+                       mu, lor, dis, diff, rexc, rion, gasok);
         }
       }
     }
@@ -1518,10 +1564,10 @@ bool MediumGas::MergeGasFile(const std::string& filename,
         // Read the record.
         if (new3d) {
           ReadRecord3D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, 
-                       lor, dis, diff, rexc, rion);
+                       lor, dis, diff, rexc, rion, gasok);
         } else {
-          ReadRecord1D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, 
-                       lor, dis, diff, rexc, rion);
+            ReadRecord1D(gasfile, ve, vb, vx, _, _, dl, dt, alpha, alpha0, eta, _, _,
+                         mu, lor, dis, diff, rexc, rion, gasok);
         }
         const int indb = FindIndex(bfield, m_bFields, eps);
         if (inde < 0 || inda < 0 || indb < 0) {
@@ -1837,7 +1883,7 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
   // Add remark.
   std::string buffer;
   outfile << "\"none" << std::string(25, ' ') << "\"\n";
-  const int version = 12;
+  const int version = 13;
   outfile << " Version   : " << version << "\n";
   outfile << " GASOK bits: " << okstr << "\n";
   std::stringstream ids("");
@@ -1996,6 +2042,22 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
           }
           if (!m_tab2d) val.push_back(0.);
         }
+        // Flux and bulk velocities
+        double wv = m_eVelWv.empty() ? 0. : m_eVelWv[j][k][i];
+        double wr = m_eVelWr.empty() ? 0. : m_eVelWr[j][k][i];
+        if (m_tab2d) {
+            val.insert(val.end(), {wv, wr});
+        } else {
+            val.insert(val.end(), {wv, 0., wr, 0.});
+        }
+        // TOF rates
+        double rion = m_eRIon.empty() ? 0. : m_eRIon[j][k][i];
+        double ratt = m_eRAtt.empty() ? 0. : m_eRAtt[j][k][i];
+        if (m_tab2d) {
+            val.insert(val.end(), {rion, ratt});
+        } else {
+            val.insert(val.end(), {rion, 0., ratt, 0.});
+        }
         PrintArray(val, outfile, cnt, 8);
       }
       if (cnt % 8 != 0) outfile << "\n";
@@ -2086,6 +2148,10 @@ void MediumGas::GetGasBits(std::bitset<20>& gasok) const {
   // SRIM, HEED; skipped
   if (!m_excRates.empty()) gasok.set(14);
   if (!m_ionRates.empty()) gasok.set(15);
+  if (!m_eVelWv.empty()) gasok.set(16);
+  if (!m_eVelWr.empty()) gasok.set(17);
+  if (!m_eRIon.empty()) gasok.set(18);
+  if (!m_eRAtt.empty()) gasok.set(19);
 }
 
 void MediumGas::PrintGas() {
@@ -3409,7 +3475,7 @@ const std::vector<std::string> MediumGas::GetAliases(const std::string& gas) {
 
 void MediumGas::PrintGases() {
 
-  constexpr int version = 12;
+  constexpr int version = 13;
   std::cout << "MediumGas::PrintGases:\n"
             << "Gas            Aliases\n" << std::string(80, '-') << "\n";
   for (int i = 1; i <= 61; ++i) {
