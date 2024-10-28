@@ -103,6 +103,7 @@ add_library(Garfield::Garfield ALIAS Garfield)
 target_sources(
   Garfield
   PRIVATE Source/AvalancheGrid.cc
+          Source/AvalancheGridSpaceCharge.cc
           Source/AvalancheMC.cc
           Source/AvalancheMicroscopic.cc
           Source/Component.cc
