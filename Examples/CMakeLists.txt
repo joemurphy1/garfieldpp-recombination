@@ -28,3 +28,6 @@ add_subdirectory(Geant4GarfieldInterface)
 
 # --- neBEM
 add_subdirectory(neBEM)
+
+# --- RPC Space Charge Evolution
+add_subdirectory(RPCSpaceCharge)
