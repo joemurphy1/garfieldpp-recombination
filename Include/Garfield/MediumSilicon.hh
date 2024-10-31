@@ -98,7 +98,7 @@ class MediumSilicon : public Medium {
 
   // Microscopic transport properties
   bool SetMaxElectronEnergy(const double e);
-  double GetMaxElectronEnergy() const { return m_eFinalG; }
+  double GetMaxElectronEnergy() const { return m_bandG.eFinal; }
 
   bool Initialise();
 
@@ -131,8 +131,8 @@ class MediumSilicon : public Medium {
                          int& band) override;
 
   // Density of states
-  double GetConductionBandDensityOfStates(const double e, const int band = 0);
-  double GetValenceBandDensityOfStates(const double e, const int band = -1);
+  double ConductionBandDOS(const double e, const int band = 0);
+  double ValenceBandDOS(const double e, const int band = -1);
 
   // Reset the collision counters
   void ResetCollisionCounters();
@@ -170,16 +170,6 @@ class MediumSilicon : public Medium {
   char m_dopingType = 'i';
   double m_dopingConcentration = 0.;
 
-  // Effective masses
-  // X valleys
-  double m_mLongX = 0.916;
-  double m_mTransX = 0.191;
-  // L valleys
-  double m_mLongL = 1.59;
-  double m_mTransL = 0.12;
-  // Non-parabolicity parameters [1/eV]
-  double m_alphaX = 0.5;
-  double m_alphaL = 0.5;
   // Lattice mobility
   double m_eLatticeMobility = 1.35e-6;
   double m_hLatticeMobility = 0.45e-6;
@@ -234,56 +224,45 @@ class MediumSilicon : public Medium {
   bool m_fullBandDos = true;
   bool m_anisotropic = true;
 
-  // Energy range of scattering rates
-  double m_eFinalXL = 4.;
-  double m_eStepXL;
-  double m_eFinalG = 10.;
-  double m_eStepG;
-  double m_eFinalV = 8.5;
-  double m_eStepV;
-  static const int nEnergyStepsXL = 2000;
-  static const int nEnergyStepsG = 2000;
-  static const int nEnergyStepsV = 2000;
+  struct Band {
+    int nEnergySteps = 2000;
+    double eStep;
+    // Energy range of scattering rates.
+    double eFinal;
+    // Energy offset [eV].
+    double eMin = 0.;
+    // Multiplicity (number of valleys).
+    int nValleys = 1;
+    // Longitudinal mass.
+    double mL = 1.;
+    // Transverse mass.
+    double mT = 1.;
+    // Conduction effective mass.
+    double mC = 1.;
+    // Non-parabolicity parameter [1/eV].
+    double alpha = 0.;
+    // Null-collision rate.
+    double cfNull;
+    // Total scattering rate.
+    std::vector<double> cfTot;
+    // Scattering rates.
+    std::vector<std::vector<double> > cf;
+    std::vector<double> energyLoss;
+    // Cross-section type.
+    std::vector<int> scatType;
+    // Number of scattering terms.
+    int nLevels = 0; 
+  };
+  
+  Band m_bandX;
+  Band m_bandL;
+  Band m_bandG;
 
-  // Number of scattering terms
-  int m_nLevelsX = 0;
-  int m_nLevelsL = 0;
-  int m_nLevelsG = 0;
-  int m_nLevelsV = 0;
-  // Number of valleys
-  int m_nValleysX = 6;
-  int m_nValleysL = 8;
+  Band m_bandV;
+
   // Energy offset
-  double m_eMinL = 1.05;
-  double m_eMinG = 2.24;
   int m_ieMinL = 0;
   int m_ieMinG = 0;
-
-  // Electron scattering rates
-  double m_cfNullElectronsX = 0.;
-  double m_cfNullElectronsL = 0.;
-  double m_cfNullElectronsG = 0.;
-  std::vector<double> m_cfTotElectronsX;
-  std::vector<double> m_cfTotElectronsL;
-  std::vector<double> m_cfTotElectronsG;
-  std::vector<std::vector<double> > m_cfElectronsX;
-  std::vector<std::vector<double> > m_cfElectronsL;
-  std::vector<std::vector<double> > m_cfElectronsG;
-  std::vector<double> m_energyLossElectronsX;
-  std::vector<double> m_energyLossElectronsL;
-  std::vector<double> m_energyLossElectronsG;
-  // Cross-section type
-  std::vector<int> m_scatTypeElectronsX;
-  std::vector<int> m_scatTypeElectronsL;
-  std::vector<int> m_scatTypeElectronsG;
-
-  // Hole scattering rates
-  double m_cfNullHoles = 0.;
-  std::vector<double> m_cfTotHoles;
-  std::vector<std::vector<double> > m_cfHoles;
-  std::vector<double> m_energyLossHoles;
-  // Cross-section type
-  std::vector<int> m_scatTypeHoles;
 
   // Collision counters
   unsigned int m_nCollElectronAcoustic = 0;
@@ -326,15 +305,19 @@ class MediumSilicon : public Medium {
   bool LoadOpticalData(const std::string& filename);
 
   bool ElectronScatteringRates();
-  bool ElectronAcousticScatteringRates();
-  bool ElectronOpticalScatteringRates();
-  bool ElectronIntervalleyScatteringRatesXX();
-  bool ElectronIntervalleyScatteringRatesXL();
-  bool ElectronIntervalleyScatteringRatesLL();
-  bool ElectronIntervalleyScatteringRatesXGLG();
-  bool ElectronIonisationRatesXL();
-  bool ElectronIonisationRatesG();
-  bool ElectronImpurityScatteringRates();
+  bool AcousticScatteringRates(const double rho, const double kbt, 
+                               const double dp, Band& band, const int k);
+  bool OpticalScatteringRates(const double rho, const double kbt, 
+                              const double dtk, const double eph,
+                              Band& band, const int k);
+  bool IntervalleyScatteringRates(const double rho, const double kbt, 
+                                  const double dtk, const double eph,
+                                  const int kTgt, const double zTgt, 
+                                  const double eMinTgt, const int collType,
+                                  Band& band);
+  bool IonisationRates(const std::vector<double>& p,
+                       const std::vector<double>& eth, Band& band);
+  bool ImpurityScatteringRates(const double kbt, Band& band);
 
   bool HoleScatteringRates();
   bool HoleAcousticScatteringRates();
