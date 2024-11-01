@@ -1,6 +1,7 @@
 #ifndef G_MEDIUM_SILICON_H
 #define G_MEDIUM_SILICON_H
 
+#include <array>
 #include <mutex>
 #include <string>
 #include <vector>
