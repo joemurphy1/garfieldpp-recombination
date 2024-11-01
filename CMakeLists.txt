@@ -76,7 +76,7 @@ elseif(DEFINED ROOT_CMAKE_DIR)
 # )
 endif(DEFINED ENV{ROOTSYS})
 
-find_package(ROOT 6.0 REQUIRED COMPONENTS Geom Gdml)
+find_package(ROOT 6.0 REQUIRED COMPONENTS Geom Gdml MathCore)
 #--- Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY) --
 if(${ROOT_VERSION} VERSION_LESS "6.20.0")
   # It only makes sense for ROOT < 6.20. 
@@ -117,6 +117,7 @@ add_library(GarfieldRandom SHARED
   Source/RandomEngineSTL.cc
 )
 target_include_directories(GarfieldRandom PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
+target_link_libraries(GarfieldRandom PRIVATE ROOT::MathCore)
 
 
 # Creating the main Garfield library
