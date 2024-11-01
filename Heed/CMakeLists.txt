@@ -1,72 +1,63 @@
-# set( libname "heedpp") set( lib_fullver ${PROJECT_VERSION}) set( lib_apiver 1 )
-# add_library(${libname} SHARED "" )
+add_library(Heed SHARED 
+            heed++/code/BGMesh.cpp
+            heed++/code/ElElasticScat.cpp
+            heed++/code/EnTransfCS.cpp
+            heed++/code/EnTransfCS_BGM.cpp
+            heed++/code/EnergyMesh.cpp
+            heed++/code/HeedCluster.cpp
+            heed++/code/HeedCondElectron.cpp
+            heed++/code/HeedDeltaElectron.cpp
+            heed++/code/HeedDeltaElectronCS.cpp
+            heed++/code/HeedMatterDef.cpp
+            heed++/code/HeedParticle.cpp
+            heed++/code/HeedParticle_BGM.cpp
+            heed++/code/HeedPhoton.cpp
+            heed++/code/PairProd.cpp
+            heed++/code/PhotoAbsCS.cpp
+            heed++/code/PhotoAbsCSLib.cpp
+            wcpplib/geometry/box.cpp
+            wcpplib/geometry/circumf.cpp
+            wcpplib/geometry/gparticle.cpp
+            wcpplib/geometry/mparticle.cpp
+            wcpplib/geometry/plane.cpp
+            wcpplib/geometry/polyline.cpp
+            wcpplib/geometry/straight.cpp
+            wcpplib/geometry/surface.cpp
+            wcpplib/geometry/trajestep.cpp
+            wcpplib/geometry/vec.cpp
+            wcpplib/geometry/volume.cpp
+            wcpplib/ioniz/bethe_bloch.cpp
+            wcpplib/ioniz/e_cont_enloss.cpp
+            wcpplib/math/DoubleAc.cpp
+            wcpplib/math/PolLeg.cpp
+            wcpplib/math/cubic.cpp
+            wcpplib/math/kinem.cpp
+            wcpplib/math/linexi2.cpp
+            wcpplib/math/lorgamma.cpp
+            wcpplib/math/parabola.cpp
+            wcpplib/matrix/inverse.cpp
+            wcpplib/matrix/multiply.cpp
+            wcpplib/matter/AtomDef.cpp
+            wcpplib/matter/GasDef.cpp
+            wcpplib/matter/MatterDef.cpp
+            wcpplib/matter/MoleculeDef.cpp
+            wcpplib/particle/eparticle.cpp
+            wcpplib/particle/particle_def.cpp
+            wcpplib/random/PointsRan.cpp
+            wcpplib/random/chisran.cpp
+            wcpplib/safetl/AbsArr.cpp
+            wcpplib/safetl/AbsPtr.cpp
+            wcpplib/stream/definp.cpp
+            wcpplib/stream/findmark.cpp
+            wcpplib/stream/prstream.cpp
+            wcpplib/util/FunNameStack.cpp
+            HeedFieldMap.cpp)
+target_link_libraries(Heed PRIVATE GarfieldConf GarfieldRandom)
+target_include_directories(Heed PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+target_compile_definitions(Heed PRIVATE FUNNAMESTACK)
+add_library(Garfield::Heed ALIAS Heed)
 
-# TODO Heed actually is interdependent from Garfield but just for the Random number
-# production and in that just for the poisson. It can be split but the whole random number
-# generation system should be reviewed. For now I just add the sources to the main
-# garfield library. Needs the absolute path because it will be used from the garfield
-# folder
-# Because the sources are added to the sources of a target defined in another directory
-# we need to provide the absolute path
-target_sources(
-  Garfield
-  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/heed++/code/BGMesh.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/ElElasticScat.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/EnTransfCS.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/EnTransfCS_BGM.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/EnergyMesh.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/HeedCluster.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/HeedCondElectron.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/HeedDeltaElectron.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/HeedDeltaElectronCS.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/HeedMatterDef.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/HeedParticle.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/HeedParticle_BGM.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/HeedPhoton.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/PairProd.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/PhotoAbsCS.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/heed++/code/PhotoAbsCSLib.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/geometry/box.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/geometry/circumf.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/geometry/gparticle.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/geometry/mparticle.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/geometry/plane.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/geometry/polyline.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/geometry/straight.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/geometry/surface.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/geometry/trajestep.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/geometry/vec.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/geometry/volume.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/ioniz/bethe_bloch.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/ioniz/e_cont_enloss.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/math/DoubleAc.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/math/PolLeg.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/math/cubic.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/math/kinem.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/math/linexi2.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/math/lorgamma.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/math/parabola.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/matrix/inverse.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/matrix/multiply.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/matter/AtomDef.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/matter/GasDef.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/matter/MatterDef.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/matter/MoleculeDef.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/particle/eparticle.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/particle/particle_def.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/random/PointsRan.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/random/chisran.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/random/pois.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/random/rnorm.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/safetl/AbsArr.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/safetl/AbsPtr.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/stream/definp.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/stream/findmark.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/stream/prstream.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/wcpplib/util/FunNameStack.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/HeedFieldMap.cpp)
-
-target_compile_definitions(Garfield PRIVATE GARFIELD_HEED_INTERFACE FUNNAMESTACK)
+#target_compile_definitions(Garfield PRIVATE GARFIELD_HEED_INTERFACE FUNNAMESTACK)
 # garfield_set_all_default_properties(${libname}) # Sets the API version of the library
 # set_property( TARGET ${libname} PROPERTY SOVERSION ${lib_apiver} ) set_property( TARGET
 # ${libname} PROPERTY CXX_STANDARD 11) set_property( TARGET ${libname} PROPERTY

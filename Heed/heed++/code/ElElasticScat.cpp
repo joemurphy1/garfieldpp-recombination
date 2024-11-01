@@ -9,7 +9,6 @@
 #include "wcpplib/random/PointsRan.h"
 #include "wcpplib/geometry/vec.h"
 #include "wcpplib/matter/AtomDef.h"  // to find atomic weights for histogramms
-#include "wcpplib/random/ranluxint.h"
 
 #include "heed++/code/PhysicalConstants.h"
 #include "heed++/code/ElElasticScat.h"

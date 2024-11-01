@@ -85,6 +85,20 @@ if(${ROOT_VERSION} VERSION_LESS "6.20.0")
   include("${Root_Use_File_Dir}/modules/RootNewMacros.cmake")
 endif()
 
+add_library(GarfieldConf INTERFACE)
+#--- Set the C++ standard (depending on the ROOT version) ---------------------
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+  if(DEFINED ROOT_CXX_STANDARD)
+    set_property(TARGET GarfieldConf PROPERTY CXX_STANDARD ${ROOT_CXX_STANDARD})
+  elseif(${ROOT_CXX_FLAGS} MATCHES ".*-std=c\\+\\+([0-9][0-9])")
+    set_property(TARGET GarfieldConf PROPERTY CXX_STANDARD ${CMAKE_MATCH_1})
+  elseif(${ROOT_CXX_FLAGS} MATCHES ".*-std=c\\+\\+1z")
+    set_property(TARGET GarfieldConf PROPERTY CXX_STANDARD 17)
+  endif()
+endif()
+set_property(TARGET GarfieldConf PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
+set_property(TARGET GarfieldConf PROPERTY CXX_EXTENSIONS OFF)
+
 find_package(GSL REQUIRED)
 find_package(OpenMP)
 
@@ -97,8 +111,17 @@ if(WITH_DEGRADE)
   add_subdirectory(Degrade)
 endif()
 
+add_library(GarfieldRandom SHARED
+  Source/Random.cc 
+  Source/RandomEngineRoot.cc 
+  Source/RandomEngineSTL.cc
+)
+target_include_directories(GarfieldRandom PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
+
+
 # Creating the main Garfield library
 add_library(Garfield SHARED "")
+target_link_libraries(Garfield PRIVATE GarfieldConf PUBLIC GarfieldRandom Garfield::Heed)
 add_library(Garfield::Garfield ALIAS Garfield)
 target_sources(
   Garfield
@@ -143,8 +166,9 @@ target_sources(
           Source/PlottingEngine.cc
           Source/Polygon.cc
           Source/QuadTree.cc
-          Source/Random.cc
-          Source/RandomEngineRoot.cc
+          #Source/Random.cc
+          #Source/RandomEngineRoot.cc
+          #Source/RandomEngineSTL.cc
           Source/Sensor.cc
           Source/Shaper.cc
           Source/Solid.cc
@@ -238,18 +262,6 @@ if(ROOT_VERSION VERSION_GREATER 6.06)
     COMPONENT dict)
 endif()
 
-#--- Set the C++ standard (depending on the ROOT version) ---------------------
-if(NOT DEFINED CMAKE_CXX_STANDARD)
-  if(${ROOT_CXX_FLAGS} MATCHES ".*-std=c\\+\\+([0-9][0-9])")
-    set_property(TARGET Garfield PROPERTY CXX_STANDARD ${CMAKE_MATCH_1})
-  elseif(${ROOT_CXX_FLAGS} MATCHES ".*-std=c\\+\\+1z")
-    set_property(TARGET Garfield PROPERTY CXX_STANDARD 17)
-  endif()
-endif()
-
-set_property(TARGET Garfield PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
-set_property(TARGET Garfield PROPERTY CXX_EXTENSIONS OFF)
-
 #--- If you cannot create symbolic links turn FALSE the library version -------
 option(BUILD_WITH_VERSION_NUMBER
        "If you cannot create symbolic links turn FALSE the library version" TRUE)
@@ -301,7 +313,6 @@ target_include_directories(
   Garfield
   PUBLIC $<INSTALL_INTERFACE:include>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Heed>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>)
 
@@ -312,7 +323,7 @@ install(
   REGEX LinkDef EXCLUDE)
 
 install(
-  TARGETS Garfield
+  TARGETS Garfield GarfieldRandom Heed
   EXPORT "${PROJECT_NAME}Targets"
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -340,3 +351,9 @@ else()
 endif()
 
 add_subdirectory(CMake)
+
+option(WITH_TESTS "Build Garfield++ tests" ON)
+if(WITH_TESTS)
+  include(CTest)
+  add_subdirectory(Tests)
+endif()

@@ -4,8 +4,11 @@
 #include <TMath.h>
 
 #include "Garfield/Random.hh"
+#include "Garfield/RandomEngineRoot.hh"
 
 namespace {
+
+static const Garfield::RandomEngineRoot randomEngineROOT;
 
 double denlan(const double v) {
   const double p1[5] = {0.4259894875, -0.1249762550, 0.03984243700,
@@ -737,3 +740,5 @@ double RndmHeedWF(const double w, const double f) {
   return (w / wref) * sqf * e + w * (1. - sqf);
 }
 }
+
+std::function<double(void)> Garfield::Random::draw{std::bind(&RandomEngineRoot::Draw, ::randomEngineROOT)};

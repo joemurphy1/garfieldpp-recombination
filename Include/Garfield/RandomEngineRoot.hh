@@ -2,32 +2,23 @@
 #define G_RANDOM_ENGINE_ROOT_H
 
 #include <TRandom3.h>
-
 #include "RandomEngine.hh"
 
 namespace Garfield {
 
-/// ROOT random number generator.
-
-class RandomEngineRoot : public RandomEngine {
- public:
-  /// Constructor
-  RandomEngineRoot();
-  /// Destructor
-  ~RandomEngineRoot();
-  /// Call the random number generator.
-  double Draw() override { return m_rng.Rndm(); }
-  /// Initialise the random number generator.
-  void Seed(const unsigned int s) override;
-  /// Print information about the generator used and the seed. 
-  void Print() override;
-
-  /// Retrieve the seed that was used
-  unsigned int GetSeed() override {return m_rng.GetSeed(); }
-  
- private:
+class RandomEngineRoot : public RandomEngine<RandomEngineRoot,UInt_t>
+{
+public:
+  RandomEngineRoot() {m_rng.SetSeed();};
+  RandomEngineRoot(const UInt_t& seed) : RandomEngine(seed) {}
+  inline double Draw() { return m_rng.Rndm(); }
+  inline void SetSeed(const seed_t& seed) { m_rng.SetSeed(seed); }
+  inline seed_t GetSeed() { return m_seed; }
+  void Print(); 
+private:
   TRandom3 m_rng;
 };
+
 }
 
 #endif

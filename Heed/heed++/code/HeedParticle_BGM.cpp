@@ -1,14 +1,13 @@
 #include <iomanip>
 #include <numeric>
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
-#include "wcpplib/random/ranluxint.h"
-#include "wcpplib/random/pois.h"
 #include "wcpplib/math/kinem.h"
 #include "wcpplib/math/tline.h"
 #include "heed++/code/HeedParticle_BGM.h"
 #include "heed++/code/HeedCluster.h"
 #include "heed++/code/HeedPhoton.h"
 #include "heed++/code/EnTransfCS_BGM.h"
+#include "Garfield/Random.hh"
 
 // 2003-2008, I. Smirnov
 
@@ -100,12 +99,12 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
       const double y2 = etcs->etcs_bgm[n2].quan[na][ns];
       const double mean_pois = f1 * y1 + f2 * y2;
       if (mean_pois <= 0.) continue;
-      const long qt = pois(mean_pois * stp);
+      const long qt = Garfield::RndmPoisson(mean_pois * stp);
       if (m_print_listing) Iprintn(mcout, qt);
       if (qt <= 0) continue;
       for (long nt = 0; nt < qt; nt++) {
         // Sample the energy transfer in this collision.
-        const double rn = SRANLUX();
+        const double rn = Garfield::RndmUniform();
         const double r1 = sampleTransfer(pcm_e, etcs->etcs_bgm[n1].fadda[na][ns], rn);
         const double r2 = sampleTransfer(pcm_e, etcs->etcs_bgm[n2].fadda[na][ns], rn);
         const double r = f1 * r1 + f2 * r2;
@@ -118,7 +117,7 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
         m_edep += et;
         if (m_print_listing) Iprint2n(mcout, nt, et);
         // Sample the position of the collision.
-        const double arange = SRANLUX() * range;
+        const double arange = Garfield::RndmUniform() * range;
         point pt = m_prevpos.pt + dir * arange;
         if (m_loss_only) continue;
         if (m_print_listing) mcout << "generating new cluster\n";

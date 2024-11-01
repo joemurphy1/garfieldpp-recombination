@@ -11,12 +11,14 @@
 #include "Garfield/TrackHeed.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/RandomEngineRoot.hh"
 
 using namespace Garfield;
 
 int main(int argc, char * argv[]) {
 
-  randomEngine.Seed(123456);
+  Garfield::RandomEngineRoot randomEngine(123456);
+  Garfield::Random::SetEngine(randomEngine);
   TApplication app("app", &argc, argv);
   SetDefaultStyle();
 

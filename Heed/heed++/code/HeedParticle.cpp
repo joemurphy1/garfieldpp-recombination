@@ -1,15 +1,13 @@
 #include <iomanip>
 #include <numeric>
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
-#include "wcpplib/random/ranluxint.h"
-#include "wcpplib/random/pois.h"
-#include "wcpplib/random/rnorm.h"
 #include "wcpplib/math/kinem.h"
 #include "wcpplib/math/tline.h"
 #include "heed++/code/HeedParticle.h"
 #include "heed++/code/HeedCluster.h"
 #include "heed++/code/HeedPhoton.h"
 #include "heed++/code/EnTransfCS.h"
+#include "Garfield/Random.hh"
 
 // 2003-2008, I. Smirnov
 
@@ -74,18 +72,18 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
       if (m_print_listing) Iprintn(mcout, ns);
       if (etcs->quan[na][ns] <= 0.0) continue;
       // Sample the number of collisions for this shell.
-      const long qt = pois(etcs->quan[na][ns] * stp);
+      const long qt = Garfield::RndmPoisson(etcs->quan[na][ns] * stp);
       if (m_print_listing) Iprintn(mcout, qt);
       if (qt <= 0) continue;
       for (long nt = 0; nt < qt; ++nt) {
         // Sample the energy transfer in this collision.
-        const double r = sampleTransfer(pcm, etcs->fadda[na][ns], SRANLUX());
+        const double r = sampleTransfer(pcm, etcs->fadda[na][ns], Garfield::RndmUniform());
         // Convert to internal units.
         const double et = r * MeV;
         m_edep += et;
         if (m_print_listing) Iprint2n(mcout, nt, et);
         // Sample the position of the collision.
-        const double arange = SRANLUX() * range;
+        const double arange = Garfield::RndmUniform() * range;
         point pt = m_prevpos.pt + dir * arange;
         if (m_loss_only) continue;
         if (m_print_listing) mcout << "generating new cluster\n";
@@ -125,7 +123,7 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
     if (hmd->radiation_length > 0.) {
       const double x = range / hmd->radiation_length;
       const double sigma = etcs->sigma_ms * sqrt(x);
-      double theta = sigma * rnorm_improved();
+      double theta = sigma * Garfield::RndmGaussian();
       turn(cos(theta), sin(theta));
     }
   }

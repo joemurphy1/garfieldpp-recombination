@@ -44,6 +44,7 @@
 
 // Header for Garfield random engine
 #include "Garfield/Random.hh"
+#include "Garfield/RandomEngineRoot.hh"
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 namespace {
@@ -86,7 +87,8 @@ int main(int argc, char** argv) {
   G4Random::setTheEngine(new CLHEP::RanecuEngine);
   G4Random::setTheSeed(1);
   // Choose seed for Garfield random engine
-  Garfield::randomEngine.Seed(1);
+  Garfield::RandomEngineRoot randomEngine(1);
+  Garfield::Random::SetEngine(randomEngine);
 
   // Construct the default run manager
   G4RunManager* runManager = new G4RunManager;

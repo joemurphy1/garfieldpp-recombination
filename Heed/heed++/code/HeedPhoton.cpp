@@ -1,12 +1,11 @@
 #include <algorithm>
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
-#include "wcpplib/random/ranluxint.h"
 #include "wcpplib/random/chisran.h"
-#include "wcpplib/random/pois.h"
 #include "heed++/code/HeedDeltaElectron.h"
 #include "heed++/code/HeedDeltaElectronCS.h"
 #include "heed++/code/EnTransfCS.h"
 #include "heed++/code/HeedPhoton.h"
+#include "Garfield/Random.hh"
 
 // 2003, I. Smirnov
 
@@ -83,7 +82,7 @@ void HeedPhoton::physics(std::vector<gparticle*>& /*secondaries*/) {
   const double path_length = 1.0 / s;  // cm
   if (m_print_listing) Iprint2n(mcout, m_energy, path_length);
   // Draw a random step length.
-  const double xleng = -path_length * log(1.0 - SRANLUX());
+  const double xleng = -path_length * log(1.0 - Garfield::RndmUniform());
   if (m_print_listing) Iprint2n(mcout, xleng, m_nextpos.prange / cm);
   if (xleng * cm < m_nextpos.prange) {
     m_photon_absorbed = true;
@@ -94,7 +93,7 @@ void HeedPhoton::physics(std::vector<gparticle*>& /*secondaries*/) {
 #endif
     // Sample the shell.
     chispre(cs);
-    const double r = chisran(SRANLUX(), cs);
+    const double r = chisran(Garfield::RndmUniform(), cs);
     const long n = std::min(std::max(long(r), 0L), long(cs.size() - 1));
     if (m_print_listing) Iprintn(mcout, n);
     m_na_absorbing = nat[n];

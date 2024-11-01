@@ -1,9 +1,7 @@
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
-#include "wcpplib/random/ranluxint.h"
-#include "wcpplib/random/pois.h"
-#include "wcpplib/random/rnorm.h"
 #include "heed++/code/HeedDeltaElectron.h"
 #include "heed++/code/HeedDeltaElectronCS.h"
+#include "Garfield/Random.hh"
 
 // 2003, I. Smirnov
 
@@ -32,9 +30,9 @@ double interpolate(Heed::EnergyMesh* emesh, const double x,
 double sample_ctheta(const double sigma) {
   double ctheta = 0.;
   do {
-    double y = Heed::SRANLUX();
+    double y = Garfield::RndmUniform();
     while (y == 1.) {
-      y = Heed::SRANLUX();
+      y = Garfield::RndmUniform();
     }
     const double x = sigma * (-log(1.0 - y));
     ctheta = 1. - x;
@@ -129,7 +127,7 @@ void HeedDeltaElectron::physics_mrange(double& fmrange) {
   if (s_high_mult_scattering) {
     const double mean_path = interpolate(emesh, ek_restr, hdecs->lambda);
     if (m_print_listing) Iprintnf(mcout, mean_path);
-    const double path_length = -mean_path * cm * log(1.0 - SRANLUX());
+    const double path_length = -mean_path * cm * log(1.0 - Garfield::RndmUniform());
     if (m_print_listing) Iprintnf(mcout, path_length);
     if (fmrange > path_length) {
       fmrange = path_length;
@@ -247,7 +245,7 @@ void HeedDeltaElectron::physics_after_new_speed(
   if (m_print_listing) Iprintnf(mcout, m_q_low_path_length);
 #ifdef RANDOM_POIS
   if (m_q_low_path_length > 0.0) {
-    m_q_low_path_length = pois(m_q_low_path_length);
+    m_q_low_path_length = Garfield::RndmPoisson(m_q_low_path_length);
     if (m_print_listing) {
       mcout << "After pois:\n";
       Iprintnf(mcout, m_q_low_path_length);
@@ -266,7 +264,7 @@ void HeedDeltaElectron::physics_after_new_speed(
       for (long nscat = 0; nscat < m_q_low_path_length; ++nscat) {
         if (m_print_listing) Iprintn(mcout, nscat);
         const double theta =
-            hdecs->low_angular_points_ran[n1r].ran(SRANLUX()) * degree;
+            hdecs->low_angular_points_ran[n1r].ran(Garfield::RndmUniform()) * degree;
         if (m_print_listing) Iprintnf(mcout, theta);
         turn(cos(theta), sin(theta));
       }
@@ -276,7 +274,7 @@ void HeedDeltaElectron::physics_after_new_speed(
       // sqrt(mean(square(1-cos(theta)))) depending on USE_MEAN_COEF
       if (m_print_listing) Iprintnf(mcout, sigma);
       // Gauss:
-      // double ctheta = 1.0 - fabs(rnorm_improved() * sigma);
+      // double ctheta = 1.0 - fabs(Garfield::RndmGaussian() * sigma);
       // Exponential distribution fits better:
 #ifdef USE_MEAN_COEF
       const double ctheta = sample_ctheta(sigma);
@@ -296,7 +294,7 @@ void HeedDeltaElectron::physics_after_new_speed(
     }
     EnergyMesh* emesh = hdecs->hmd->energy_mesh;
     const long n1r = findInterval(emesh, ek_restr);
-    const double theta = hdecs->angular_points_ran[n1r].ran(SRANLUX()) * degree;
+    const double theta = hdecs->angular_points_ran[n1r].ran(Garfield::RndmUniform()) * degree;
     if (m_print_listing) Iprintnf(mcout, theta);
     turn(cos(theta), sin(theta));
   }

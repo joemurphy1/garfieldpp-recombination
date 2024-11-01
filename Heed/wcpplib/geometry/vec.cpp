@@ -10,7 +10,7 @@
 #endif
 #include <cmath>
 #include "wcpplib/geometry/vec.h"
-#include "wcpplib/random/ranluxint.h"
+#include "Garfield/Random.hh"
 
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -227,14 +227,14 @@ vec vec::up_new(const abssyscoor* fasc) { return up_new(fasc->Gabas()); }
 void vec::up(const abssyscoor* fasc) { up(fasc->Gabas()); }
 
 void vec::random_round_vec() {
-  const vfloat phi = M_PI * 2.0 * SRANLUX();
+  const vfloat phi = M_PI * 2.0 * Garfield::RndmUniform();
   x = sin(phi);
   y = cos(phi);
   z = 0;
 }
 
 void vec::random_conic_vec(double theta) {
-  vfloat phi = M_PI * 2.0 * SRANLUX();
+  vfloat phi = M_PI * 2.0 * Garfield::RndmUniform();
   double stheta = sin(theta);
   x = sin(phi) * stheta;
   y = cos(phi) * stheta;
@@ -242,7 +242,7 @@ void vec::random_conic_vec(double theta) {
 }
 
 void vec::random_sfer_vec() {
-  vfloat cteta = 2.0 * SRANLUX() - 1.0;
+  vfloat cteta = 2.0 * Garfield::RndmUniform() - 1.0;
   random_round_vec();
   vfloat steta = sqrt(1.0 - cteta * cteta);
   *this = (*this) * steta;
