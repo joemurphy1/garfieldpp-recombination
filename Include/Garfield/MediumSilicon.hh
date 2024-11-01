@@ -98,7 +98,7 @@ class MediumSilicon : public Medium {
 
   // Microscopic transport properties
   bool SetMaxElectronEnergy(const double e);
-  double GetMaxElectronEnergy() const { return m_bandG.eFinal; }
+  double GetMaxElectronEnergy() const { return m_cb[2].eFinal; }
 
   bool Initialise();
 
@@ -231,6 +231,8 @@ class MediumSilicon : public Medium {
     double eFinal;
     // Energy offset [eV].
     double eMin = 0.;
+    // Index corresponding to the energy offset.
+    int iMin = 0;
     // Multiplicity (number of valleys).
     int nValleys = 1;
     // Longitudinal mass.
@@ -253,16 +255,12 @@ class MediumSilicon : public Medium {
     // Number of scattering terms.
     int nLevels = 0; 
   };
-  
-  Band m_bandX;
-  Band m_bandL;
-  Band m_bandG;
 
-  Band m_bandV;
+  // Conduction bands. 
+  std::array<Band, 3> m_cb; 
 
-  // Energy offset
-  int m_ieMinL = 0;
-  int m_ieMinG = 0;
+  std::vector<size_t> m_cbIndex;
+  Band m_vb;
 
   // Collision counters
   unsigned int m_nCollElectronAcoustic = 0;
