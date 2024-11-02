@@ -11,6 +11,16 @@
 #include "Garfield/Random.hh"
 #include "Garfield/Utilities.hh"
 
+namespace {
+bool IsComment(const std::string& line) {
+  if (line.empty()) return false;
+  if (line[0] == '#') return true;
+  if (line.size() > 1 && (line[0] == '/' && line[1] == '/')) return true;
+  return false;
+}
+
+}
+
 namespace Garfield {
 
 MediumSilicon::MediumSilicon()
@@ -1022,7 +1032,7 @@ bool MediumSilicon::GetOpticalDataRange(double& emin, double& emax,
   }
 
   // Make sure the optical data table has been loaded.
-  if (m_opticalDataEnergies.empty()) {
+  if (m_egamma.empty()) {
     if (!LoadOpticalData(m_opticalDataFile)) {
       std::cerr << m_className << "::GetOpticalDataRange:\n"
                 << "    Optical data table could not be loaded.\n";
@@ -1030,8 +1040,8 @@ bool MediumSilicon::GetOpticalDataRange(double& emin, double& emax,
     }
   }
 
-  emin = m_opticalDataEnergies.front();
-  emax = m_opticalDataEnergies.back();
+  emin = m_egamma.front();
+  emax = m_egamma.back();
   if (m_debug) {
     std::cout << m_className << "::GetOpticalDataRange:\n"
               << "    " << emin << " < E [eV] < " << emax << "\n";
@@ -1047,7 +1057,7 @@ bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
   }
 
   // Make sure the optical data table has been loaded.
-  if (m_opticalDataEnergies.empty()) {
+  if (m_egamma.empty()) {
     if (!LoadOpticalData(m_opticalDataFile)) {
       std::cerr << m_className << "::GetDielectricFunction:\n";
       std::cerr << "    Optical data table could not be loaded.\n";
@@ -1056,8 +1066,8 @@ bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
   }
 
   // Make sure the requested energy is within the range of the table.
-  const double emin = m_opticalDataEnergies.front();
-  const double emax = m_opticalDataEnergies.back();
+  const double emin = m_egamma.front();
+  const double emax = m_egamma.back();
   if (e < emin || e > emax) {
     std::cerr << m_className << "::GetDielectricFunction:\n"
               << "    Requested energy (" << e << " eV) "
@@ -1068,23 +1078,23 @@ bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
   }
 
   // Locate the requested energy in the table.
-  const auto begin = m_opticalDataEnergies.cbegin();
-  const auto it1 = std::upper_bound(begin, m_opticalDataEnergies.cend(), e);
+  const auto begin = m_egamma.cbegin();
+  const auto it1 = std::upper_bound(begin, m_egamma.cend(), e);
   if (it1 == begin) {
-    eps1 = m_opticalDataEpsilon.front().first;
-    eps2 = m_opticalDataEpsilon.front().second;
+    eps1 = m_eps1.front();
+    eps2 = m_eps2.front();
     return true;
   }
   const auto it0 = std::prev(it1);
 
-  // Numerics::LinearInterpolation the real part of dielectric function.
+  // Interpolate the real part of dielectric function.
   const double x0 = *it0;
   const double x1 = *it1;
   const double lnx0 = log(*it0);
   const double lnx1 = log(*it1);
   const double lnx = log(e);
-  const double y0 = m_opticalDataEpsilon[it0 - begin].first;
-  const double y1 = m_opticalDataEpsilon[it1 - begin].first;
+  const double y0 = m_eps1[it0 - begin];
+  const double y1 = m_eps1[it1 - begin];
   if (y0 <= 0. || y1 <= 0.) {
     // Use linear interpolation if one of the values is negative.
     eps1 = y0 + (e - x0) * (y1 - y0) / (x1 - x0);
@@ -1096,10 +1106,10 @@ bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
     eps1 = exp(eps1);
   }
 
-  // Numerics::LinearInterpolation the imaginary part of dielectric function,
+  // Interpolate the imaginary part of dielectric function,
   // using log-log interpolation.
-  const double lnz0 = log(m_opticalDataEpsilon[it0 - begin].second);
-  const double lnz1 = log(m_opticalDataEpsilon[it1 - begin].second);
+  const double lnz0 = log(m_eps2[it0 - begin]);
+  const double lnz1 = log(m_eps2[it1 - begin]);
   eps2 = lnz0 + (lnx - lnx0) * (lnz1 - lnz0) / (lnx1 - lnx0);
   eps2 = exp(eps2);
   return true;
@@ -1497,20 +1507,21 @@ double MediumSilicon::HoleAlpha(const double emag) const {
 
 bool MediumSilicon::LoadOpticalData(const std::string& filename) {
   // Clear the optical data table.
-  m_opticalDataEnergies.clear();
-  m_opticalDataEpsilon.clear();
+  m_egamma.clear();
+  m_eps1.clear();
+  m_eps2.clear();
 
-  // Get the path to the data directory.
-  char* pPath = getenv("GARFIELD_HOME");
-  if (pPath == 0) {
+  std::string path = ""; 
+  auto installdir = std::getenv("GARFIELD_INSTALL");
+  if (!installdir) {
     std::cerr << m_className << "::LoadOpticalData:\n"
-              << "    Environment variable GARFIELD_HOME is not set.\n";
+              << "    Environment variable GARFIELD_INSTALL not set.\n";
     return false;
   }
-  const std::string filepath = std::string(pPath) + "/Data/" + filename;
+  path = std::string(installdir) + "/share/Garfield/Data/" + filename;
 
   // Open the file.
-  std::ifstream infile(filepath);
+  std::ifstream infile(path);
   // Make sure the file could actually be opened.
   if (!infile) {
     std::cerr << m_className << "::LoadOpticalData:\n"
@@ -1519,69 +1530,59 @@ bool MediumSilicon::LoadOpticalData(const std::string& filename) {
   }
 
   double lastEnergy = -1.;
-  double energy, eps1, eps2, loss;
   // Read the file line by line.
-  std::string line;
-  std::istringstream dataStream;
-  int i = 0;
-  while (!infile.eof()) {
-    ++i;
-    // Read the next line.
-    std::getline(infile, line);
+  bool ok = true;
+  for (std::string line; std::getline(infile, line);) {
     // Strip white space from the beginning of the line.
     ltrim(line);
-    if (line.empty()) continue;
     // Skip comments.
-    if (line[0] == '#' || line[0] == '*' || (line[0] == '/' && line[1] == '/'))
-      continue;
-    // Extract the values.
-    dataStream.str(line);
-    dataStream >> energy >> eps1 >> eps2 >> loss;
-    if (dataStream.eof()) break;
-    // Check if the data has been read correctly.
-    if (infile.fail()) {
-      std::cerr << m_className << "::LoadOpticalData:\n    Error reading file "
-                << filename << " (line " << i << ").\n";
-      return false;
-    }
-    // Reset the stringstream.
-    dataStream.str("");
-    dataStream.clear();
+    if (line.empty() || IsComment(line)) continue;
+    auto words = tokenize(line);
+    if (words.size() < 4) continue;
+    const double energy = std::stod(words[0]);
+    const double eps1 = std::stod(words[1]);
+    const double eps2 = std::stod(words[2]);
+    const double loss = std::stod(words[3]);
     // Make sure the values make sense.
     // The table has to be in ascending order
     //  with respect to the photon energy.
     if (energy <= lastEnergy) {
-      std::cerr << m_className << "::LoadOpticalData:\n    Table is not in "
-                << "monotonically increasing order (line " << i << ").\n"
-                << "    " << lastEnergy << "  " << energy << "  " << eps1
-                << "  " << eps2 << "\n";
-      return false;
+      std::cerr << m_className << "::LoadOpticalData:\n"
+                << "    Table is not in monotonically increasing order."
+                << "    Line: " << line << "\n";
+      ok = false;
+      break;
     }
     // The imaginary part of the dielectric function has to be positive.
     if (eps2 < 0.) {
-      std::cerr << m_className << "::LoadOpticalData:\n    Negative value "
-                << "of the loss function (line " << i << ").\n";
-      return false;
+      std::cerr << m_className << "::LoadOpticalData:\n"
+                << "    Negative value of the loss function at "
+                << energy << " eV.\n";
+      ok = false;
+      break;
     }
     // Ignore negative photon energies.
     if (energy <= 0.) continue;
     // Add the values to the list.
-    m_opticalDataEnergies.emplace_back(energy);
-    m_opticalDataEpsilon.emplace_back(std::make_pair(eps1, eps2));
+    m_egamma.push_back(energy);
+    m_eps1.push_back(eps1);
+    m_eps2.push_back(eps2);
     lastEnergy = energy;
   }
+  infile.close();
+  if (!ok) return false;
 
-  if (m_opticalDataEnergies.empty()) {
+  if (m_egamma.empty()) {
     std::cerr << m_className << "::LoadOpticalData:\n"
-              << "    Import of data from file " << filepath << "failed.\n"
+              << "    Import of data from file " << path << "failed.\n"
               << "    No valid data found.\n";
     return false;
   }
 
   if (m_debug) {
     std::cout << m_className << "::LoadOpticalData:\n    Read "
-              << m_opticalDataEnergies.size() << " values from file "
-              << filepath << "\n";
+              << m_egamma.size() << " values from file "
+              << path << ".\n";
   }
   return true;
 }
@@ -1688,8 +1689,10 @@ bool MediumSilicon::ElectronScatteringRates() {
   const std::vector<double> pXL = {6.25e1, 3.e3, 6.8e5};
   // Threshold energies [eV]
   const std::vector<double> ethXL = {1.2, 1.8, 3.45};
-  IonisationRates(pXL, ethXL, m_cb[0]);
-  IonisationRates(pXL, ethXL, m_cb[1]);
+  // Exponents
+  const std::vector<double> bXL = {2, 2, 2}; 
+  IonisationRates(pXL, ethXL, bXL, m_cb[0]);
+  IonisationRates(pXL, ethXL, bXL, m_cb[1]);
 
   // - E. Cartier, M. V. Fischetti, E. A. Eklund and F. R. McFeely,
   //   Appl. Phys. Lett 62, 3339-3341
@@ -1699,7 +1702,9 @@ bool MediumSilicon::ElectronScatteringRates() {
   const std::vector<double> pG = {6.25e1, 3.e3, 6.8e5};
   // Threshold energies [eV]
   const std::vector<double> ethG = {1.2, 1.8, 3.45};
-  IonisationRates(pG, ethG, m_cb[2]);
+  // Exponents
+  const std::vector<double> bG = {2, 2, 2}; 
+  IonisationRates(pG, ethG, bG, m_cb[2]);
 
   if (m_debug) {
     std::cout << m_className << "::ElectronScatteringRates:\n"
@@ -1873,6 +1878,7 @@ bool MediumSilicon::IntervalleyScatteringRates(
 
 bool MediumSilicon::IonisationRates(const std::vector<double>& p,
                                     const std::vector<double>& eth,
+                                    const std::vector<double>& b,
                                     Band& band) {
   // References:
   // - E. Cartier, M. V. Fischetti, E. A. Eklund and F. R. McFeely,
@@ -1880,7 +1886,7 @@ bool MediumSilicon::IonisationRates(const std::vector<double>& p,
   // - DAMOCLES web page: www.research.ibm.com/DAMOCLES
 
   const size_t nTerms = p.size();
-  if (nTerms != eth.size()) return false;
+  if (nTerms != eth.size() || nTerms != b.size()) return false;
   for (int i = 0; i < band.nEnergySteps; ++i) {
     const double en = i * band.eStep;
     if (en < band.eMin) {
@@ -1889,7 +1895,7 @@ bool MediumSilicon::IonisationRates(const std::vector<double>& p,
     }
     double fIon = 0.;
     for (size_t j = 0; j < nTerms; ++j) {
-      if (en > eth[j]) fIon += p[j] * (en - eth[j]) * (en - eth[j]);
+      if (en > eth[j]) fIon += p[j] * pow(en - eth[j], b[j]);
     }
     band.cf[i].push_back(fIon);
   }
@@ -1975,7 +1981,15 @@ bool MediumSilicon::HoleScatteringRates() {
   OpticalScatteringRates(rho, kbt, dtk, eph, m_vb);
 
   // HoleImpurityScatteringRates();
-  HoleIonisationRates();
+  // Ionisation.
+  //  - DAMOCLES web page: www.research.ibm.com/DAMOCLES
+  // Coefficients [ns-1]
+  const std::vector<double> p = {2., 1.e3};
+  // Threshold energies [eV]
+  const std::vector<double> eth = {1.1, 1.45};
+  // Exponents
+  const std::vector<double> b = {6., 4.};
+  IonisationRates(p, eth, b, m_vb);
 
   std::ofstream outfile;
   if (m_cfOutput) {
@@ -2014,34 +2028,6 @@ bool MediumSilicon::HoleScatteringRates() {
   if (m_cfOutput) {
     outfile.close();
   }
-
-  return true;
-}
-
-bool MediumSilicon::HoleIonisationRates() {
-  // References:
-  //  - DAMOCLES web page: www.research.ibm.com/DAMOCLES
-
-  // Coefficients [ns-1]
-  constexpr double p[2] = {2., 1.e3};
-  // Threshold energies [eV]
-  constexpr double eth[2] = {1.1, 1.45};
-  // Exponents
-  constexpr double b[2] = {6., 4.};
-
-  double en = 0.;
-  for (int i = 0; i < m_vb.nEnergySteps; ++i) {
-    const double en = i * m_vb.eStep;
-    double fIon = 0.;
-    for (size_t j = 0; j < 2; ++j) {
-      if (en > eth[j]) fIon += p[j] * pow(en - eth[j], b[j]);
-    }
-    m_vb.cf[i].push_back(fIon);
-  }
-
-  m_vb.energyLoss.push_back(eth[0]);
-  m_vb.scatType.push_back(ElectronCollisionTypeIonisation);
-  ++m_vb.nLevels;
 
   return true;
 }
@@ -2197,9 +2183,7 @@ void MediumSilicon::InitialiseDensityOfStates() {
 
   for (auto& d : m_fbDosC) d *= 1.e21;
   for (auto& d : m_fbDosV) d *= 1.e21;
-  auto it = std::max_element(m_fbDosV.begin(), m_fbDosV.end());
-  m_fbDosMaxV = *it;
-  it = std::max_element(m_fbDosC.begin(), m_fbDosC.end());
-  m_fbDosMaxC = *it;
+  m_fbDosMaxC = *std::max_element(m_fbDosC.begin(), m_fbDosC.end());
+  m_fbDosMaxV = *std::max_element(m_fbDosV.begin(), m_fbDosV.end());
 }
 }

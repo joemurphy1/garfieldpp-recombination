@@ -281,8 +281,9 @@ class MediumSilicon : public Medium {
 
   // Optical data
   std::string m_opticalDataFile = "OpticalData_Si.txt";
-  std::vector<double> m_opticalDataEnergies;
-  std::vector<std::pair<double, double> > m_opticalDataEpsilon;
+  std::vector<double> m_egamma;
+  std::vector<double> m_eps1;
+  std::vector<double> m_eps2;
 
   bool UpdateTransportParameters();
   void UpdateLatticeMobility();
@@ -305,6 +306,7 @@ class MediumSilicon : public Medium {
   bool LoadOpticalData(const std::string& filename);
 
   bool ElectronScatteringRates();
+  bool HoleScatteringRates();
   bool AcousticScatteringRates(const double rho, const double kbt,
                                const double dp, Band& band);
   bool OpticalScatteringRates(const double rho, const double kbt, 
@@ -315,13 +317,10 @@ class MediumSilicon : public Medium {
                                   Band& bndI, Band& bndF, const double zF, 
                                   const int collType);
   bool IonisationRates(const std::vector<double>& p,
-                       const std::vector<double>& eth, Band& band);
+                       const std::vector<double>& eth, 
+                       const std::vector<double>& b, Band& band);
   bool ImpurityScatteringRates(const double kbt, Band& band);
 
-  bool HoleScatteringRates();
-  bool HoleIonisationRates();
-
-  // void ComputeSecondaries(const double e0, double& ee, double& eh);
   void InitialiseDensityOfStates();
 };
 }
