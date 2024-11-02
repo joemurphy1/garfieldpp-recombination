@@ -131,10 +131,6 @@ class MediumSilicon : public Medium {
                          std::vector<Secondary>& secondaries,
                          int& band) override;
 
-  // Density of states
-  double ConductionBandDOS(const double e, const int band = 0);
-  double ValenceBandDOS(const double e, const int band = -1);
-
   // Reset the collision counters
   void ResetCollisionCounters();
   // Get the total number of electron collisions
@@ -227,13 +223,16 @@ class MediumSilicon : public Medium {
 
   struct Band {
     int nEnergySteps = 2000;
-    double eStep;
+    double eStep = 0.;
+    double invStep = 0.;
     // Energy range of scattering rates.
     double eFinal;
     // Energy offset [eV].
     double eMin = 0.;
     // Index corresponding to the energy offset.
     int iMin = 0;
+    // Density of states.
+    std::vector<double> dos;
     // Multiplicity (number of valleys).
     int nValleys = 1;
     // Longitudinal mass.
@@ -272,10 +271,12 @@ class MediumSilicon : public Medium {
   std::vector<unsigned int> m_nCollElectronDetailed;
   std::vector<unsigned int> m_nCollElectronBand;
 
+  void ComputeDOS();
   // Density of states tables
-  double m_eStepDos;
-  std::vector<double> m_fbDosValence;
-  std::vector<double> m_fbDosConduction;
+  double m_eStepDos = 0.;
+  double m_invStepDos = 0.;
+  std::vector<double> m_fbDosV;
+  std::vector<double> m_fbDosC;
   double m_fbDosMaxV, m_fbDosMaxC;
 
   // Optical data
@@ -304,23 +305,20 @@ class MediumSilicon : public Medium {
   bool LoadOpticalData(const std::string& filename);
 
   bool ElectronScatteringRates();
-  bool AcousticScatteringRates(const double rho, const double kbt, 
-                               const double dp, Band& band, const int k);
+  bool AcousticScatteringRates(const double rho, const double kbt,
+                               const double dp, Band& band);
   bool OpticalScatteringRates(const double rho, const double kbt, 
                               const double dtk, const double eph,
-                              Band& band, const int k);
+                              Band& band);
   bool IntervalleyScatteringRates(const double rho, const double kbt, 
                                   const double dtk, const double eph,
-                                  const int kTgt, const double zTgt, 
-                                  const double eMinTgt, const int collType,
-                                  Band& band);
+                                  Band& bndI, Band& bndF, const double zF, 
+                                  const int collType);
   bool IonisationRates(const std::vector<double>& p,
                        const std::vector<double>& eth, Band& band);
   bool ImpurityScatteringRates(const double kbt, Band& band);
 
   bool HoleScatteringRates();
-  bool HoleAcousticScatteringRates();
-  bool HoleOpticalScatteringRates();
   bool HoleIonisationRates();
 
   // void ComputeSecondaries(const double e0, double& ee, double& eh);
