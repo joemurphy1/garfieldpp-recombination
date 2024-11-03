@@ -78,8 +78,8 @@ MediumSilicon::MediumSilicon()
   m_vb.eFinal = 8.5;
   m_vb.eStep = m_vb.eFinal / m_vb.nEnergySteps;
   m_vb.invStep = 1. / m_vb.eStep;
-
   // Load the density of states table.
+  InitialiseDOS();
   ComputeDOS();
 }
 
@@ -87,28 +87,28 @@ void MediumSilicon::SetDoping(const char type, const double c) {
   if (toupper(type) == 'N') {
     m_dopingType = 'n';
     if (c > Small) {
-      m_dopingConcentration = c;
+      m_cDop = c;
     } else {
       std::cerr << m_className << "::SetDoping:\n"
                 << "    Doping concentration must be greater than zero.\n"
                 << "    Using default value for n-type silicon "
                 << "(10^12 cm-3) instead.\n";
-      m_dopingConcentration = 1.e12;
+      m_cDop = 1.e12;
     }
   } else if (toupper(type) == 'P') {
     m_dopingType = 'p';
     if (c > Small) {
-      m_dopingConcentration = c;
+      m_cDop = c;
     } else {
       std::cerr << m_className << "::SetDoping:\n"
                 << "    Doping concentration must be greater than zero.\n"
                 << "    Using default value for p-type silicon "
                 << "(10^18 cm-3) instead.\n";
-      m_dopingConcentration = 1.e18;
+      m_cDop = 1.e18;
     }
   } else if (toupper(type) == 'I') {
     m_dopingType = 'i';
-    m_dopingConcentration = 0.;
+    m_cDop = 0.;
   } else {
     std::cerr << m_className << "::SetDoping:\n"
               << "    Unknown dopant type (" << type << ").\n"
@@ -121,7 +121,7 @@ void MediumSilicon::SetDoping(const char type, const double c) {
 
 void MediumSilicon::GetDoping(char& type, double& c) const {
   type = m_dopingType;
-  c = m_dopingConcentration;
+  c = m_cDop;
 }
 
 void MediumSilicon::SetTrapCrossSection(const double ecs, const double hcs) {
@@ -180,14 +180,7 @@ bool MediumSilicon::ElectronVelocity(const double ex, const double ey,
                                      const double by, const double bz,
                                      double& vx, double& vy, double& vz) {
   vx = vy = vz = 0.;
-  if (m_isChanged) {
-    if (!UpdateTransportParameters()) {
-      std::cerr << m_className << "::ElectronVelocity:\n"
-                << "    Error calculating the transport parameters.\n";
-      return false;
-    }
-    m_isChanged = false;
-  }
+  if (!Update()) return false;
 
   if (!m_eVelE.empty()) {
     // Interpolation in user table.
@@ -213,14 +206,7 @@ bool MediumSilicon::ElectronTownsend(const double ex, const double ey,
                                      const double by, const double bz,
                                      double& alpha) {
   alpha = 0.;
-  if (m_isChanged) {
-    if (!UpdateTransportParameters()) {
-      std::cerr << m_className << "::ElectronTownsend:\n"
-                << "    Error calculating the transport parameters.\n";
-      return false;
-    }
-    m_isChanged = false;
-  }
+  if (!Update()) return false;
 
   if (!m_eAlp.empty()) {
     // Interpolation in user table.
@@ -237,14 +223,7 @@ bool MediumSilicon::ElectronAttachment(const double ex, const double ey,
                                        const double by, const double bz,
                                        double& eta) {
   eta = 0.;
-  if (m_isChanged) {
-    if (!UpdateTransportParameters()) {
-      std::cerr << m_className << "::ElectronAttachment:\n"
-                << "    Error calculating the transport parameters.\n";
-      return false;
-    }
-    m_isChanged = false;
-  }
+  if (!Update()) return false;
 
   if (!m_eAtt.empty()) {
     // Interpolation in user table.
@@ -274,14 +253,7 @@ bool MediumSilicon::HoleVelocity(const double ex, const double ey,
                                  const double by, const double bz, double& vx,
                                  double& vy, double& vz) {
   vx = vy = vz = 0.;
-  if (m_isChanged) {
-    if (!UpdateTransportParameters()) {
-      std::cerr << m_className << "::HoleVelocity:\n"
-                << "    Error calculating the transport parameters.\n";
-      return false;
-    }
-    m_isChanged = false;
-  }
+  if (!Update()) return false;
 
   if (!m_hVelE.empty()) {
     // Interpolation in user table.
@@ -307,14 +279,7 @@ bool MediumSilicon::HoleTownsend(const double ex, const double ey,
                                  const double by, const double bz,
                                  double& alpha) {
   alpha = 0.;
-  if (m_isChanged) {
-    if (!UpdateTransportParameters()) {
-      std::cerr << m_className << "::HoleTownsend:\n"
-                << "    Error calculating the transport parameters.\n";
-      return false;
-    }
-    m_isChanged = false;
-  }
+  if (!Update()) return false;
 
   if (!m_hAlp.empty()) {
     // Interpolation in user table.
@@ -331,14 +296,7 @@ bool MediumSilicon::HoleAttachment(const double ex, const double ey,
                                    const double by, const double bz,
                                    double& eta) {
   eta = 0.;
-  if (m_isChanged) {
-    if (!UpdateTransportParameters()) {
-      std::cerr << m_className << "::HoleAttachment:\n"
-                << "    Error calculating the transport parameters.\n";
-      return false;
-    }
-    m_isChanged = false;
-  }
+  if (!Update()) return false;
 
   if (!m_hAtt.empty()) {
     // Interpolation in user table.
@@ -370,8 +328,8 @@ void MediumSilicon::SetLowFieldMobility(const double mue, const double muh) {
     return;
   }
 
-  m_eMobility = mue;
-  m_hMobility = muh;
+  m_eMu = mue;
+  m_hMu = muh;
   m_hasUserMobility = true;
   m_isChanged = true;
 }
@@ -649,14 +607,8 @@ void MediumSilicon::GetElectronMomentum(const double e, double& px, double& py,
 }
 
 double MediumSilicon::GetElectronNullCollisionRate(const int band) {
-  if (m_isChanged) {
-    if (!UpdateTransportParameters()) {
-      std::cerr << m_className << "::GetElectronNullCollisionRate:\n"
-                << "    Error calculating the collision rates table.\n";
-      return 0.;
-    }
-    m_isChanged = false;
-  }
+
+  if (!Update()) return 0.;
   if (band < 0 || band >= m_cbIndex.size()) {
     std::cerr << m_className << "::GetElectronNullCollisionRate:\n"
               << "    Band index (" << band << ") out of range.\n";
@@ -680,14 +632,7 @@ double MediumSilicon::GetElectronCollisionRate(const double e, const int band) {
     SetMaxElectronEnergy(1.05 * e);
   }
 
-  if (m_isChanged) {
-    if (!UpdateTransportParameters()) {
-      std::cerr << m_className << "::GetElectronCollisionRate:\n"
-                << "    Error calculating the collision rates table.\n";
-      return 0.;
-    }
-    m_isChanged = false;
-  }
+  if (!Update()) return 0.;
 
   if (band < 0 || band >= m_cbIndex.size()) {
     std::cerr << m_className << "::GetElectronCollisionRate:\n"
@@ -719,14 +664,7 @@ bool MediumSilicon::ElectronCollision(const double e, int& type,
     return false;
   }
 
-  if (m_isChanged) {
-    if (!UpdateTransportParameters()) {
-      std::cerr << m_className << "::ElectronCollision:\n"
-                << "    Error calculating the collision rates table.\n";
-      return false;
-    }
-    m_isChanged = false;
-  }
+  if (!Update()) return false;
 
   if (band < 0 || band >= m_cbIndex.size()) {
     std::cerr << m_className << "::ElectronCollision:\n"
@@ -1083,25 +1021,21 @@ bool MediumSilicon::Initialise() {
     }
     return true;
   }
-  if (!UpdateTransportParameters()) {
-    std::cerr << m_className << "::Initialise:\n    Error preparing "
-              << "transport parameters/calculating collision rates.\n";
-    return false;
-  }
-  return true;
+  return Update();
 }
 
-bool MediumSilicon::UpdateTransportParameters() {
+bool MediumSilicon::Update() {
+  if (!m_isChanged) return true;
   std::lock_guard<std::mutex> guard(m_mutex);
 
-  // Calculate impact ionisation coefficients.
+  // Calculate the impact ionisation coefficients.
   UpdateImpactIonisation();
 
   if (!m_hasUserMobility) {
-    // Calculate lattice mobility.
+    // Calculate the lattice mobility.
     UpdateLatticeMobility();
 
-    // Calculate doping mobility
+    // Calculate the doping mobility.
     switch (m_dopingMobilityModel) {
       case DopingMobility::Minimos:
         UpdateDopingMobilityMinimos();
@@ -1110,27 +1044,26 @@ bool MediumSilicon::UpdateTransportParameters() {
         UpdateDopingMobilityMasetti();
         break;
       default:
-        std::cerr << m_className << "::UpdateTransportParameters:\n    "
-                  << "Unknown doping mobility model. Program bug!\n";
+        std::cerr << m_className << "::Update: Unknown mobility model!\n";
         break;
     }
   }
 
-  // Calculate saturation velocity
+  // Calculate the saturation velocity.
   if (!m_hasUserSaturationVelocity) {
     UpdateSaturationVelocity();
   }
 
-  // Calculate high field saturation parameters
+  // Calculate the high field saturation parameters.
   if (m_highFieldMobilityModel == HighFieldMobility::Canali) {
     UpdateHighFieldMobilityCanali();
   }
 
   if (m_debug) {
-    std::cout << m_className << "::UpdateTransportParameters:\n"
+    std::cout << m_className << "::Update:\n"
               << "    Low-field mobility [cm2 V-1 ns-1]\n"
-              << "      Electrons: " << m_eMobility << "\n"
-              << "      Holes:     " << m_hMobility << "\n";
+              << "      Electrons: " << m_eMu << "\n"
+              << "      Holes:     " << m_hMu << "\n";
     if (m_highFieldMobilityModel == HighFieldMobility::Constant) {
       std::cout << "    Mobility is not field-dependent.\n";
     } else {
@@ -1139,13 +1072,12 @@ bool MediumSilicon::UpdateTransportParameters() {
                 << "      Holes:     " << m_hSatVel << "\n";
     }
   }
-
+  ComputeDOS();
   if (!ElectronScatteringRates()) return false;
   if (!HoleScatteringRates()) return false;
 
-  // Reset the collision counters.
   ResetCollisionCounters();
-
+  m_isChanged = false;
   return true;
 }
 
@@ -1159,19 +1091,19 @@ void MediumSilicon::UpdateLatticeMobility() {
       // - S. Selberherr, W. Haensch, M. Seavey, J. Slotboom,
       //   Solid State Electronics 33 (1990), 1425
       // - Minimos 6.1 User's Guide (1999)
-      m_eLatticeMobility = 1.43e-6 * pow(t, -2.);
-      m_hLatticeMobility = 0.46e-6 * pow(t, -2.18);
+      m_eMuLat = 1.43e-6 * pow(t, -2.);
+      m_hMuLat = 0.46e-6 * pow(t, -2.18);
       break;
     case LatticeMobility::Sentaurus:
       // - C. Lombardi et al., IEEE Trans. CAD 7 (1988), 1164
       // - Sentaurus Device User Guide (2007)
-      m_eLatticeMobility = 1.417e-6 * pow(t, -2.5);
-      m_hLatticeMobility = 0.4705e-6 * pow(t, -2.2);
+      m_eMuLat = 1.417e-6 * pow(t, -2.5);
+      m_hMuLat = 0.4705e-6 * pow(t, -2.2);
       break;
     case LatticeMobility::Reggiani:
       // M. A. Omar, L. Reggiani, Solid State Electronics 30 (1987), 693
-      m_eLatticeMobility = 1.320e-6 * pow(t, -2.);
-      m_hLatticeMobility = 0.460e-6 * pow(t, -2.2);
+      m_eMuLat = 1.320e-6 * pow(t, -2.);
+      m_hMuLat = 0.460e-6 * pow(t, -2.2);
       break;
     default:
       std::cerr << m_className << "::UpdateLatticeMobility:\n"
@@ -1204,12 +1136,8 @@ void MediumSilicon::UpdateDopingMobilityMinimos() {
   const double hRefC = 2.23e17 * c1;
   const double alpha = 0.72 * pow(m_temperature / 300., 0.065);
   // Assume impurity concentration equal to doping concentration
-  m_eMobility = eMuMin +
-                (m_eLatticeMobility - eMuMin) /
-                    (1. + pow(m_dopingConcentration / eRefC, alpha));
-  m_hMobility = hMuMin +
-                (m_hLatticeMobility - hMuMin) /
-                    (1. + pow(m_dopingConcentration / hRefC, alpha));
+  m_eMu = eMuMin + (m_eMuLat - eMuMin) / (1. + pow(m_cDop / eRefC, alpha));
+  m_hMu = hMuMin + (m_hMuLat - hMuMin) / (1. + pow(m_cDop / hRefC, alpha));
 }
 
 void MediumSilicon::UpdateDopingMobilityMasetti() {
@@ -1219,9 +1147,9 @@ void MediumSilicon::UpdateDopingMobilityMasetti() {
   // - Sentaurus Device User Guide (2007)
   // - Minimos NT User Guide (2004)
 
-  if (m_dopingConcentration < 1.e13) {
-    m_eMobility = m_eLatticeMobility;
-    m_hMobility = m_hLatticeMobility;
+  if (m_cDop < 1.e13) {
+    m_eMu = m_eMuLat;
+    m_hMu = m_hMuLat;
     return;
   }
 
@@ -1242,15 +1170,13 @@ void MediumSilicon::UpdateDopingMobilityMasetti() {
   constexpr double hAlpha = 0.719;
   constexpr double hBeta = 2.;
 
-  m_eMobility = eMuMin1 +
-                (m_eLatticeMobility - eMuMin2) /
-                    (1. + pow(m_dopingConcentration / eCr, eAlpha)) -
-                eMu1 / (1. + pow(eCs / m_dopingConcentration, eBeta));
+  m_eMu = eMuMin1 + 
+          (m_eMuLat - eMuMin2) / (1. + pow(m_cDop / eCr, eAlpha)) -
+          eMu1 / (1. + pow(eCs / m_cDop, eBeta));
 
-  m_hMobility = hMuMin1 * exp(-hPc / m_dopingConcentration) +
-                (m_hLatticeMobility - hMuMin2) /
-                    (1. + pow(m_dopingConcentration / hCr, hAlpha)) -
-                hMu1 / (1. + pow(hCs / m_dopingConcentration, hBeta));
+  m_hMu = hMuMin1 * exp(-hPc / m_cDop) +
+          (m_hMuLat - hMuMin2) / (1. + pow(m_cDop / hCr, hAlpha)) -
+          hMu1 / (1. + pow(hCs / m_cDop, hBeta));
 }
 
 void MediumSilicon::UpdateSaturationVelocity() {
@@ -1368,19 +1294,19 @@ double MediumSilicon::ElectronMobility(const double emag) const {
 
   if (m_highFieldMobilityModel == HighFieldMobility::Minimos) {
     // Minimos User's Guide (1999)
-    const double r = 2 * m_eMobility * emag / m_eSatVel;
-    return 2. * m_eMobility / (1. + sqrt(1. + r * r));
+    const double r = 2 * m_eMu * emag / m_eSatVel;
+    return 2. * m_eMu / (1. + sqrt(1. + r * r));
   } else if (m_highFieldMobilityModel == HighFieldMobility::Canali) {
     // Sentaurus Device User Guide (2007)
-    const double r = m_eMobility * emag / m_eSatVel;
-    return m_eMobility / pow(1. + pow(r, m_eBetaCanali), m_eBetaCanaliInv);
+    const double r = m_eMu * emag / m_eSatVel;
+    return m_eMu / pow(1. + pow(r, m_eBetaCanali), m_eBetaCanaliInv);
   } else if (m_highFieldMobilityModel == HighFieldMobility::Reggiani) {
     // M. A. Omar, L. Reggiani, Solid State Electronics 30 (1987), 693
-    const double r = m_eMobility * emag / m_eSatVel;
+    const double r = m_eMu * emag / m_eSatVel;
     constexpr double k = 1. / 1.5;
-    return m_eMobility / pow(1. + pow(r, 1.5), k);
+    return m_eMu / pow(1. + pow(r, 1.5), k);
   }
-  return m_eMobility;
+  return m_eMu;
 }
 
 double MediumSilicon::ElectronAlpha(const double emag) const {
@@ -1423,17 +1349,17 @@ double MediumSilicon::HoleMobility(const double emag) const {
 
   if (m_highFieldMobilityModel == HighFieldMobility::Minimos) {
     // Minimos User's Guide (1999)
-    return m_hMobility / (1. + m_hMobility * emag / m_eSatVel);
+    return m_hMu / (1. + m_hMu * emag / m_eSatVel);
   } else if (m_highFieldMobilityModel == HighFieldMobility::Canali) {
     // Sentaurus Device User Guide (2007)
-    const double r = m_hMobility * emag / m_hSatVel;
-    return m_hMobility / pow(1. + pow(r, m_hBetaCanali), m_hBetaCanaliInv);
+    const double r = m_hMu * emag / m_hSatVel;
+    return m_hMu / pow(1. + pow(r, m_hBetaCanali), m_hBetaCanaliInv);
   } else if (m_highFieldMobilityModel == HighFieldMobility::Reggiani) {
     // M. A. Omar, L. Reggiani, Solid State Electronics 30 (1987), 693
-    const double r = m_hMobility * emag / m_hSatVel;
-    return m_hMobility / sqrt(1. + r * r);
+    const double r = m_hMu * emag / m_hSatVel;
+    return m_hMu / sqrt(1. + r * r);
   }
-  return m_hMobility;
+  return m_hMu;
 }
 
 double MediumSilicon::HoleAlpha(const double emag) const {
@@ -1673,44 +1599,41 @@ bool MediumSilicon::ElectronScatteringRates() {
               << "    " << m_cb[1].nLevels << " L-valley scattering terms\n"
               << "    " << m_cb[2].nLevels << " higher band scattering terms\n";
   }
+  std::vector<std::string> bands = {"X", "L", "G"};
   for (size_t k = 0; k < nC; ++k) {
     std::ofstream outfile;
     if (m_cfOutput) {
-      if (k == 0) {
-        outfile.open("ratesX.txt", std::ios::out);
-      } else if (k == 1) {
-        outfile.open("ratesL.txt", std::ios::out);
-      } else {
-        outfile.open("ratesG.txt", std::ios::out);
-      }
+      std::string filename = "rates" + bands[k] + ".txt"; 
+      outfile.open(filename, std::ios::out);
     }
     for (int i = 0; i < m_cb[k].nEnergySteps; ++i) {
       // Sum up the scattering rates of all processes.
-      for (int j = 0; j < m_cb[k].nLevels; ++j) {
-        m_cb[k].cfTot[i] += m_cb[k].cf[i][j];
-      }
+      double cftot = 0.;
+      for (int j = 0; j < m_cb[k].nLevels; ++j) cftot += m_cb[k].cf[i][j];
+      m_cb[k].cfTot[i] = cftot;
       if (m_cfOutput) {
-        outfile << i * m_cb[k].eStep << " " << m_cb[k].cfTot[i] << " ";
+        outfile << (i + 0.5) * m_cb[k].eStep << " " << cftot << " ";
         for (int j = 0; j < m_cb[k].nLevels; ++j) {
           outfile << m_cb[k].cf[i][j] << " ";
         }
         outfile << "\n";
       }
-      if (m_cb[k].cfTot[i] > m_cb[k].cfNull) {
-        m_cb[k].cfNull = m_cb[k].cfTot[i];
-      }
+      m_cb[k].cfNull = std::max(cftot, m_cb[k].cfNull);
       // Make sure the total scattering rate is positive.
-      if (m_cb[k].cfTot[i] <= 0.) {
+      if (cftot < 0.) {
         std::cerr << m_className << "::ElectronScatteringRates:\n"
-                  << "    Scattering rate at " << i * m_cb[k].eStep 
-                  << " eV <= 0.\n";
+                  << "    Scattering rate at " 
+                  << (i + 0.5) * m_cb[k].eStep << " eV < 0.\n";
         if (m_cfOutput) outfile.close();
         return false;
       }
-      // Normalise the rates.
-      for (int j = 0; j < m_cb[k].nLevels; ++j) {
-        m_cb[k].cf[i][j] /= m_cb[k].cfTot[i];
-        if (j > 0) m_cb[k].cf[i][j] += m_cb[k].cf[i][j - 1];
+      if (m_cb[k].cfTot[i] > 0.) {
+        // Normalise the rates.
+        const double scale = 1. / cftot;
+        for (int j = 0; j < m_cb[k].nLevels; ++j) {
+          m_cb[k].cf[i][j] *= scale;
+          if (j > 0) m_cb[k].cf[i][j] += m_cb[k].cf[i][j - 1];
+        }
       }
     }
     if (m_cfOutput) outfile.close();
@@ -1732,7 +1655,7 @@ bool MediumSilicon::AcousticScatteringRates(
                    (Hbar * u * u * rho);
 
   for (int i = 0; i < band.nEnergySteps; ++i) {
-    const double en = Small + i * band.eStep;
+    const double en = (i + 0.5) * band.eStep;
     band.cf[i].push_back(c * band.dos[i]);
   }
   
@@ -1763,7 +1686,7 @@ bool MediumSilicon::OpticalScatteringRates(
   double c = c0 * dtk * dtk / eph;
 
   for (int i = 0; i < band.nEnergySteps; ++i) {
-    const double en = i * band.eStep;
+    const double en = (i + 0.5) * band.eStep;
     // Absorption
     if (en > band.eMin) {
       int j = int((en + eph) * band.invStep);
@@ -1809,7 +1732,7 @@ bool MediumSilicon::IntervalleyScatteringRates(
   const double eMinI = bndI.eMin;
   const double eMinF = bndF.eMin;
   for (int i = 0; i < bndI.nEnergySteps; ++i) {
-    const double en = i * bndI.eStep;
+    const double en = (i + 0.5) * bndI.eStep;
     // Absorption
     if (en > eMinI && en + eph > eMinF) {
       int j = int((en + eph) * bndF.invStep);
@@ -1849,7 +1772,7 @@ bool MediumSilicon::IonisationRates(const std::vector<double>& p,
   const size_t nTerms = p.size();
   if (nTerms != eth.size() || nTerms != b.size()) return false;
   for (int i = 0; i < band.nEnergySteps; ++i) {
-    const double en = i * band.eStep;
+    const double en = (i + 0.5) * band.eStep;
     if (en < band.eMin) {
       band.cf[i].push_back(0.);
       continue;
@@ -1875,25 +1798,25 @@ bool MediumSilicon::ImpurityScatteringRates(
   // Dielectric constant
   const double eps = GetDielectricConstant();
   // Impurity concentration
-  const double impurityConcentration = m_dopingConcentration;
-  if (impurityConcentration < Small) return true;
+  const double cImp = m_cDop;
+  if (cImp < Small) return true;
 
   // Screening length
   const double ls = sqrt(eps * kbt / (4 * Pi * FineStructureConstant * HbarC *
-                         impurityConcentration));
+                         cImp));
   const double eb = 0.5 * HbarC * HbarC / (md * ls * ls);
 
   // Prefactor
-  // const double c = pow(2., 2.5) * Pi * impurityConcentration *
+  // const double c = pow(2., 2.5) * Pi * cImp *
   //                  pow(FineStructureConstant * HbarC, 2) *
   //                  SpeedOfLight / (eps * eps * sqrt(md) * eb * eb);
   // Use momentum-transfer cross-section
-  const double c = impurityConcentration * Pi *
+  const double c = cImp * Pi *
                    pow(FineStructureConstant * HbarC, 2) * SpeedOfLight /
                    (sqrt(2 * md) * eps * eps);
 
   for (int i = 0; i < band.nEnergySteps; ++i) {
-    const double en = i * band.eStep;
+    const double en = (i + 0.5) * band.eStep;
     const double gamma = en * (1. + band.alpha * en);
     if (en <= band.eMin || gamma <= 0.) {
       band.cf[i].push_back(0.);
@@ -2003,7 +1926,7 @@ void MediumSilicon::ComputeDOS() {
     // Density-of-states effective mass cubed.
     const double md3 = me3 * m_cb[k].mL * m_cb[k].mT * m_cb[k].mT;
     for (int i = 0; i < m_cb[k].nEnergySteps; ++i) {
-      const double en = i * m_cb[k].eStep;
+      const double en = (i + 0.5) * m_cb[k].eStep;
       if (en < m_cb[k].eMin) continue;
       double r = 0.5 * md3 * en;
       if (m_nonParabolic) r *= (1. + m_cb[k].alpha * en);
@@ -2018,62 +1941,74 @@ void MediumSilicon::ComputeDOS() {
   std::vector<double> eDosC(m_fbDosC.size(), 0.);
   for (size_t i = 0; i < m_fbDosV.size(); ++i) eDosV[i] = i * m_eStepDos;
   for (size_t i = 0; i < m_fbDosC.size(); ++i) eDosC[i] = i * m_eStepDos;
-
+  m_vb.dos.assign(m_vb.nEnergySteps, 0.);
   for (int i = 0; i < m_vb.nEnergySteps; ++i) {
-    const double en = i * m_vb.eStep;
+    const double en = (i + 0.5) * m_vb.eStep;
     m_vb.dos[i] = Numerics::LinearInterpolation(m_fbDosV, eDosV, en);
   }
 
-  if (!m_fullBandDos) return;
+  if (m_fullBandDos) {
+    // Energy up to which XL and higher bands coexist.
+    constexpr double eMaxXL = 2.7;
+    // Assume a linear initial increase of the high-band density-of-states.
+    const double sG = Numerics::LinearInterpolation(m_fbDosC, eDosC, eMaxXL) / 
+                      (eMaxXL - m_cb[2].eMin);
 
-  // Energy up to which XL and higher bands coexist.
-  constexpr double eMaxXL = 2.7;
-  // Assume a linear initial increase of the high-band density-of-states.
-  const double sG = Numerics::LinearInterpolation(m_fbDosC, eDosC, eMaxXL) / 
-                    (eMaxXL - m_cb[2].eMin);
-  for (int i = 0; i < m_cb[2].nEnergySteps; ++i) {
-    const double en = i * m_cb[2].eStep;
-    if (en < m_cb[2].eMin) continue;
-    if (en < eMaxXL) {
-      // Coexistence of XL and higher bands.
-      m_cb[2].dos[i] = sG * (en - m_cb[2].eMin);
-    } else {
-      m_cb[2].dos[i] = Numerics::LinearInterpolation(m_fbDosC, eDosC, en);
+    for (int i = 0; i < m_cb[2].nEnergySteps; ++i) {
+      const double en = (i + 0.5) * m_cb[2].eStep;
+      if (en < m_cb[2].eMin) continue;
+      if (en < eMaxXL) {
+        // Coexistence of XL and higher bands.
+        m_cb[2].dos[i] = sG * (en - m_cb[2].eMin);
+      } else {
+        m_cb[2].dos[i] = Numerics::LinearInterpolation(m_fbDosC, eDosC, en);
+      }
+      m_cb[2];
     }
-    m_cb[2];
+    // L valleys.
+    // Energy up to which we use the analytic approximation.
+    const double eMaxA = m_cb[1].eMin + 0.5;
+    const int iMaxA = int(eMaxA * m_cb[1].invStep);
+    // Fraction attributed to L valleys.
+    double fL = m_cb[1].dos[iMaxA] / 
+                Numerics::LinearInterpolation(m_fbDosC, eDosC, eMaxA);
+    for (int i = 0; i < m_cb[1].nEnergySteps; ++i) {
+      const double en = (i + 0.5) * m_cb[1].eStep;
+      if (en < eMaxA) continue;
+      double dosXL = Numerics::LinearInterpolation(m_fbDosC, eDosC, en);
+      if (en > m_cb[2].eMin) {
+        const int j = int(en * m_cb[2].invStep); 
+        dosXL -= m_cb[2].dos[j];
+      }
+      m_cb[1].dos[i] = std::max(fL * dosXL, 0.);
+    }
+    // X valleys.
+    const double fX = 1. / m_cb[0].nValleys;
+    for (int i = 0; i < m_cb[0].nEnergySteps; ++i) {
+      const double en = (i + 0.5) * m_cb[1].eStep;
+      double dosX = Numerics::LinearInterpolation(m_fbDosC, eDosC, en);
+      // Subract the DOS attributed to L valleys and higher bands.
+      if (en > m_cb[2].eMin) {
+        const int j = int(en * m_cb[2].invStep);
+        dosX -= m_cb[2].dos[j];
+      }
+      if (en > m_cb[1].eMin) {
+        const int j = int(en * m_cb[1].invStep);
+        dosX -= m_cb[1].dos[j] * m_cb[1].nValleys;
+      }
+      m_cb[0].dos[i] = fX * dosX;
+    }
   }
-  // L valleys.
-  // Energy up to which we use the analytic approximation.
-  const double eMaxA = m_cb[1].eMin + 0.5;
-  const int iMaxA = int(eMaxA * m_cb[1].invStep);
-  // Fraction attributed to L valleys.
-  double fL = m_cb[1].dos[iMaxA] / 
-              Numerics::LinearInterpolation(m_fbDosC, eDosC, eMaxA);
-  for (int i = 0; i < m_cb[1].nEnergySteps; ++i) {
-    const double en = i * m_cb[1].eStep;
-    if (en < eMaxA) continue;
-    double dosXL = Numerics::LinearInterpolation(m_fbDosC, eDosC, en);
-    if (en > m_cb[2].eMin) {
-      const int j = int(en * m_cb[2].invStep); 
-      dosXL -= m_cb[2].dos[j];
+  if (!m_cfOutput) return;
+  std::vector<std::string> bands = {"X", "L", "G"};
+  for (size_t k = 0; k < nC; ++k) {
+    std::string filename = "dos" + bands[k] + ".txt";
+    std::ofstream outfile(filename, std::ios::out);
+    for (int i = 0; i < m_cb[k].nEnergySteps; ++i) {
+      const double en = (i + 0.5) * m_cb[k].eStep;
+      outfile << en << "  " << m_cb[k].dos[i] << "\n";
     }
-    m_cb[1].dos[i] = std::max(fL * dosXL, 0.);
-  }
-  // X valleys.
-  const double fX = 1. / m_cb[0].nValleys;
-  for (int i = 0; i < m_cb[0].nEnergySteps; ++i) {
-    const double en = i * m_cb[1].eStep;
-    double dosX = Numerics::LinearInterpolation(m_fbDosC, eDosC, en);
-    // Subract the DOS attributed to L valleys and higher bands.
-    if (en > m_cb[2].eMin) {
-      const int j = int(en * m_cb[2].invStep);
-      dosX -= m_cb[2].dos[j];
-    }
-    if (en > m_cb[1].eMin) {
-      const int j = int(en * m_cb[1].invStep);
-      dosX -= m_cb[1].dos[j] * m_cb[1].nValleys;
-    }
-    m_cb[0].dos[i] = fX * dosX;
+    outfile.close();
   }
 }
 
@@ -2089,14 +2024,14 @@ void MediumSilicon::ComputeSecondaries(const double e0, double& ee,
     // Sample a hole energy according to the valence band DOS.
     eh = RndmUniformPos() * ehMax;
     int ih = std::min(int(eh * m_invStepDos), nV - 1);
-    while (RndmUniform() > m_fbDosV[ih] / m_fbDosMaxV) {
+    while (RndmUniform() * m_fbDosMaxV > m_fbDosV[ih]) {
       eh = RndmUniformPos() * ehMax;
       ih = std::min(int(eh * m_invStepDos), nV - 1);
     }
     // Sample an electron energy according to the conduction band DOS.
     ee = RndmUniformPos() * eeMax;
     int ie = std::min(int(ee * m_invStepDos), nC - 1);
-    while (RndmUniform() > m_fbDosC[ie] / m_fbDosMaxC) {
+    while (RndmUniform() * m_fbDosMaxC > m_fbDosC[ie]) {
       ee = RndmUniformPos() * eeMax;
       ie = std::min(int(ee * m_invStepDos), nC - 1);
     }
@@ -2106,12 +2041,12 @@ void MediumSilicon::ComputeSecondaries(const double e0, double& ee,
     if (ep > 5.) return;
     // Check if the primary electron energy is consistent with the DOS.
     int ip = std::min(int(ep * m_invStepDos), nC - 1);
-    if (RndmUniform() > m_fbDosC[ip] / m_fbDosMaxC) continue;
+    if (RndmUniform() * m_fbDosMaxC > m_fbDosC[ip]) continue;
     ok = true;
   }
 }
 
-void MediumSilicon::InitialiseDensityOfStates() {
+void MediumSilicon::InitialiseDOS() {
   m_eStepDos = 0.1;
   m_invStepDos = 1. / m_eStepDos;
   m_fbDosV = {

@@ -42,7 +42,7 @@ class MediumSilicon : public Medium {
   bool ElectronAttachment(const double ex, const double ey, const double ez,
                           const double bx, const double by, const double bz,
                           double& eta) override;
-  double ElectronMobility() override { return m_eMobility; }
+  double ElectronMobility() override { return m_eMu; }
   // Hole transport parameters
   bool HoleVelocity(const double ex, const double ey, const double ez,
                     const double bx, const double by, const double bz,
@@ -53,7 +53,7 @@ class MediumSilicon : public Medium {
   bool HoleAttachment(const double ex, const double ey, const double ez,
                       const double bx, const double by, const double bz,
                       double& eta) override;
-  double HoleMobility() override { return m_hMobility; }
+  double HoleMobility() override { return m_hMu; }
   /// Specify the low field values of the electron and hole mobilities.
   void SetLowFieldMobility(const double mue, const double muh);
   /// Calculate the lattice mobility using the Minimos model.
@@ -165,14 +165,15 @@ class MediumSilicon : public Medium {
   double m_bandGap = 1.12;
   // Doping
   char m_dopingType = 'i';
-  double m_dopingConcentration = 0.;
+  // Doping concentration
+  double m_cDop = 0.;
 
   // Lattice mobility
-  double m_eLatticeMobility = 1.35e-6;
-  double m_hLatticeMobility = 0.45e-6;
+  double m_eMuLat = 1.35e-6;
+  double m_hMuLat = 0.45e-6;
   // Low-field mobility
-  double m_eMobility = 1.35e-6;
-  double m_hMobility = 0.45e-6;
+  double m_eMu = 1.35e-6;
+  double m_hMu = 0.45e-6;
   // High-field mobility parameters
   double m_eBetaCanali = 1.109;
   double m_hBetaCanali = 1.213;
@@ -218,7 +219,7 @@ class MediumSilicon : public Medium {
   // Options
   bool m_cfOutput = false;
   bool m_nonParabolic = true;
-  bool m_fullBandDos = true;
+  bool m_fullBandDos = false;
   bool m_anisotropic = true;
 
   struct Band {
@@ -258,8 +259,8 @@ class MediumSilicon : public Medium {
 
   // Conduction bands. 
   std::array<Band, 3> m_cb; 
-
   std::vector<size_t> m_cbIndex;
+  // Valence band.
   Band m_vb;
 
   // Collision counters
@@ -271,7 +272,6 @@ class MediumSilicon : public Medium {
   std::vector<unsigned int> m_nCollElectronDetailed;
   std::vector<unsigned int> m_nCollElectronBand;
 
-  void ComputeDOS();
   // Density of states tables
   double m_eStepDos = 0.;
   double m_invStepDos = 0.;
@@ -285,7 +285,7 @@ class MediumSilicon : public Medium {
   std::vector<double> m_eps1;
   std::vector<double> m_eps2;
 
-  bool UpdateTransportParameters();
+  bool Update();
   void UpdateLatticeMobility();
 
   void UpdateDopingMobilityMinimos();
@@ -321,7 +321,8 @@ class MediumSilicon : public Medium {
                        const std::vector<double>& b, Band& band);
   bool ImpurityScatteringRates(const double kbt, Band& band);
 
-  void InitialiseDensityOfStates();
+  void InitialiseDOS();
+  void ComputeDOS();
 };
 }
 
