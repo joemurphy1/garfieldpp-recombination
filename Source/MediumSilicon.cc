@@ -57,12 +57,16 @@ MediumSilicon::MediumSilicon()
   m_cb[0].mT = 0.191;
   m_cb[1].mL = 1.59;
   m_cb[1].mT = 0.12;
+  m_cb[2].mL = 1.;
+  m_cb[2].mT = 1.;
   // Conduction effective masses.
   m_cb[0].mC = 3. / (1. / m_cb[0].mL + 2. / m_cb[0].mT);
   m_cb[1].mC = 3. / (1. / m_cb[1].mL + 2. / m_cb[1].mT);
+  m_cb[2].mC = 1.;
   // Non-parabolicity parameters [1/eV].
   m_cb[0].alpha = 0.5;
   m_cb[1].alpha = 0.5;
+  m_cb[2].alpha = 0.;
   m_cb[0].nValleys = 6;
   m_cb[1].nValleys = 8;
   m_cb[2].nValleys = 1;
@@ -76,7 +80,7 @@ MediumSilicon::MediumSilicon()
   m_vb.invStep = 1. / m_vb.eStep;
 
   // Load the density of states table.
-  InitialiseDensityOfStates();
+  ComputeDOS();
 }
 
 void MediumSilicon::SetDoping(const char type, const double c) {
@@ -495,96 +499,74 @@ bool MediumSilicon::SetMaxElectronEnergy(const double e) {
 double MediumSilicon::GetElectronEnergy(const double px, const double py,
                                         const double pz, double& vx, double& vy,
                                         double& vz, const int band) {
-  // Effective masses
-  double mx = ElectronMass, my = ElectronMass, mz = ElectronMass;
-  // Energy offset
-  double e0 = 0.;
-  if (band >= 0 && band < m_cb[0].nValleys) {
+  const auto k = m_cbIndex[band];
+  if (k == 0 && m_anisotropic) {
     // X valley
-    if (m_anisotropic) {
-      switch (band) {
-        case 0:
-        case 1:
-          // X 100, -100
-          mx *= m_cb[0].mL;
-          my *= m_cb[0].mT;
-          mz *= m_cb[0].mT;
-          break;
-        case 2:
-        case 3:
-          // X 010, 0-10
-          mx *= m_cb[0].mT;
-          my *= m_cb[0].mL;
-          mz *= m_cb[0].mT;
-          break;
-        case 4:
-        case 5:
-          // X 001, 00-1
-          mx *= m_cb[0].mT;
-          my *= m_cb[0].mT;
-          mz *= m_cb[0].mL;
-          break;
-        default:
-          std::cerr << m_className << "::GetElectronEnergy:\n"
-                    << "    Unexpected band index " << band << "!\n";
-          break;
-      }
-    } else {
-      // Use the conduction effective mass.
-      mx *= m_cb[0].mC;
-      my *= m_cb[0].mC;
-      mz *= m_cb[0].mC;
+    double mx = ElectronMass, my = ElectronMass, mz = ElectronMass;
+    switch (band) {
+      case 0:
+      case 1:
+        // X 100, -100
+        mx *= m_cb[0].mL;
+        my *= m_cb[0].mT;
+        mz *= m_cb[0].mT;
+        break;
+      case 2:
+      case 3:
+        // X 010, 0-10
+        mx *= m_cb[0].mT;
+        my *= m_cb[0].mL;
+        mz *= m_cb[0].mT;
+        break;
+      case 4:
+      case 5:
+        // X 001, 00-1
+        mx *= m_cb[0].mT;
+        my *= m_cb[0].mT;
+        mz *= m_cb[0].mL;
+        break;
+      default:
+        std::cerr << m_className << "::GetElectronEnergy:\n"
+                  << "    Unexpected band index " << band << "!\n";
+        break;
     }
-  } else if (band < m_cb[0].nValleys + m_cb[1].nValleys) {
-    // L valley, isotropic approximation
-    e0 = m_cb[1].eMin;
-    mx *= m_cb[1].mC;
-    my *= m_cb[1].mC;
-    mz *= m_cb[1].mC;
-  } else if (band == m_cb[0].nValleys + m_cb[1].nValleys) {
-    // Higher band(s)
+    double ek = 0.5 * (px * px / mx + py * py / my + pz * pz / mz);
+    vx = SpeedOfLight * px / mx;
+    vy = SpeedOfLight * py / my;
+    vz = SpeedOfLight * pz / mz;
+    if (m_nonParabolic && m_cb[0].alpha > 0.) {
+      ek = 0.5 * (sqrt(1. + 4. * m_cb[0].alpha * ek) - 1.) / m_cb[0].alpha;
+      const double a = 1. / (1. + 2. * m_cb[0].alpha * ek);
+      vx *= a;
+      vy *= a;
+      vz *= a;
+    }
+    return ek;
   }
-
-  if (m_nonParabolic) {
-    // Non-parabolicity parameter
-    double alpha = 0.;
-    if (band < m_cb[0].nValleys) {
-      // X valley
-      alpha = m_cb[0].alpha;
-    } else if (band < m_cb[0].nValleys + m_cb[1].nValleys) {
-      // L valley
-      alpha = m_cb[1].alpha;
-    }
-
-    const double p2 = 0.5 * (px * px / mx + py * py / my + pz * pz / mz);
-    if (alpha > 0.) {
-      const double e = 0.5 * (sqrt(1. + 4 * alpha * p2) - 1.) / alpha;
-      const double a = SpeedOfLight / (1. + 2 * alpha * e);
-      vx = a * px / mx;
-      vy = a * py / my;
-      vz = a * pz / mz;
-      return e0 + e;
-    }
+  // Isotropic.
+  const double invm = 1. / (ElectronMass * m_cb[k].mC);
+  double ek = 0.5 * invm * (px * px + py * py + pz * pz);
+  double a = SpeedOfLight * invm;
+  if (m_nonParabolic && m_cb[k].alpha > 0.) {
+    ek = 0.5 * (sqrt(1. + 4. * m_cb[k].alpha * ek) - 1.) / m_cb[k].alpha;
+    a *= 1. / (1. + 2 * m_cb[k].alpha * ek);
   }
-
-  const double e = 0.5 * (px * px / mx + py * py / my + pz * pz / mz);
-  vx = SpeedOfLight * px / mx;
-  vy = SpeedOfLight * py / my;
-  vz = SpeedOfLight * pz / mz;
-  return e0 + e;
+  vx = a * px;
+  vy = a * py;
+  vz = a * pz;
+  return m_cb[k].eMin + ek;
 }
 
 void MediumSilicon::GetElectronMomentum(const double e, double& px, double& py,
                                         double& pz, int& band) {
-  const auto nX = m_cb[0].nValleys;
-  const auto nL = m_cb[1].nValleys;
+  const int nX = m_cb[0].nValleys;
+  const int nL = m_cb[1].nValleys;
   // If the band index is out of range, choose one at random.
-  if (band < 0 || band > nX + nL ||
+  if (band < 0 || band >= m_cbIndex.size() ||
       (e < m_cb[1].eMin && band >= nX) ||
       (e < m_cb[2].eMin && band >= nX + nL)) {
     if (e < m_cb[1].eMin) {
-      band = int(nX * RndmUniform());
-      if (band >= nX) band = nX - 1;
+      band = std::max(int(nX * RndmUniform()), nX - 1);
     } else {
       double dosX = 0.;
       const int j0 = int(e * m_cb[0].invStep);
@@ -601,11 +583,9 @@ void MediumSilicon::GetElectronMomentum(const double e, double& px, double& py,
       } else {
         const double r = RndmUniform() * dosSum;
         if (r < dosX) {
-          band = int(nX * RndmUniform());
-          if (band >= nX) band = nX - 1;
+          band = std::max(int(nX * RndmUniform()), nX - 1);
         } else if (r < dosX + dosL) {
-          band = int(nL * RndmUniform());
-          if (band >= nL) band = nL - 1;
+          band = std::max(int(nL * RndmUniform()), nL - 1);
           band += nX;
         } else {
           band = nX + nL;
@@ -618,70 +598,54 @@ void MediumSilicon::GetElectronMomentum(const double e, double& px, double& py,
     }
   }
   const auto k = m_cbIndex[band];
-  if (k == 0) {
-    // X valleys
-    double pstar = sqrt(2. * ElectronMass * e);
-    if (m_nonParabolic) {
-      pstar *= sqrt(1. + m_cb[0].alpha * e);
-    }
+  if (k == 0 && m_anisotropic) {
+    double p2 = 2. * ElectronMass * e;
+    if (m_nonParabolic) p2 *= (1. + m_cb[0].alpha * e);
+    const double pl = sqrt(p2 * m_cb[0].mL);
+    const double pt = sqrt(p2 * m_cb[0].mT);
 
     const double ctheta = 1. - 2. * RndmUniform();
     const double stheta = sqrt(1. - ctheta * ctheta);
     const double phi = TwoPi * RndmUniform();
 
-    if (m_anisotropic) {
-      const double pl = pstar * sqrt(m_cb[0].mL);
-      const double pt = pstar * sqrt(m_cb[0].mT);
-      switch (band) {
-        case 0:
-        case 1:
-          // 100
-          px = pl * ctheta;
-          py = pt * cos(phi) * stheta;
-          pz = pt * sin(phi) * stheta;
-          break;
-        case 2:
-        case 3:
-          // 010
-          px = pt * sin(phi) * stheta;
-          py = pl * ctheta;
-          pz = pt * cos(phi) * stheta;
-          break;
-        case 4:
-        case 5:
-          // 001
-          px = pt * cos(phi) * stheta;
-          py = pt * sin(phi) * stheta;
-          pz = pl * ctheta;
-          break;
-        default:
-          // Other band; should not occur.
-          std::cerr << m_className << "::GetElectronMomentum:\n"
-                    << "    Unexpected band index (" << band << ").\n";
-          px = pstar * stheta * cos(phi);
-          py = pstar * stheta * sin(phi);
-          pz = pstar * ctheta;
-          break;
-      }
-    } else {
-      pstar *= sqrt(m_cb[0].mC);
-      px = pstar * cos(phi) * stheta;
-      py = pstar * sin(phi) * stheta;
-      pz = pstar * ctheta;
+    switch (band) {
+      case 0:
+      case 1:
+        // 100
+        px = pl * ctheta;
+        py = pt * cos(phi) * stheta;
+        pz = pt * sin(phi) * stheta;
+        break;
+      case 2:
+      case 3:
+        // 010
+        px = pt * sin(phi) * stheta;
+        py = pl * ctheta;
+        pz = pt * cos(phi) * stheta;
+        break;
+      case 4:
+      case 5:
+        // 001
+        px = pt * cos(phi) * stheta;
+        py = pt * sin(phi) * stheta;
+        pz = pl * ctheta;
+        break;
+      default:
+        // Other band; should not occur.
+        std::cerr << m_className << "::GetElectronMomentum:\n"
+                  << "    Unexpected band index (" << band << ").\n";
+        const double pstar = sqrt(p2 * m_cb[0].mC);
+        px = pstar * stheta * cos(phi);
+        py = pstar * stheta * sin(phi);
+        pz = pstar * ctheta;
+        break;
     }
-  } else if (k == 1) {
-    // L valleys
-    double pstar = sqrt(2. * ElectronMass * (e - m_cb[1].eMin));
-    if (m_nonParabolic) {
-      pstar *= sqrt(1. + m_cb[1].alpha * (e - m_cb[1].eMin));
-    }
-    pstar *= sqrt(m_cb[1].mC);
+  } else {
+    double p2 = 2. * ElectronMass * m_cb[k].mC * (e - m_cb[k].eMin);
+    if (m_nonParabolic) p2 *= 1. + m_cb[1].alpha * (e - m_cb[1].eMin);
+    const double pstar = sqrt(p2);
     RndmDirection(px, py, pz, pstar);
-  } else if (k == 2) {
-    // Higher band
-    const double pstar = sqrt(2. * ElectronMass * e);
-    RndmDirection(px, py, pz, pstar);
-  }
+  } 
 }
 
 double MediumSilicon::GetElectronNullCollisionRate(const int band) {
@@ -933,14 +897,13 @@ bool MediumSilicon::ElectronCollision(const double e, int& type,
     // X valleys
     double p2 = 2. * ElectronMass * e1;
     if (m_nonParabolic) p2 *= (1. + m_cb[0].alpha * e1);
-    const double pstar = sqrt(p2);
+    const double pl = sqrt(p2 * m_cb[0].mL);
+    const double pt = sqrt(p2 * m_cb[0].mT);
 
     const double ctheta = 1. - 2. * RndmUniform();
     const double stheta = sqrt(1. - ctheta * ctheta);
     const double phi = TwoPi * RndmUniform();
 
-    const double pl = pstar * sqrt(m_cb[0].mL);
-    const double pt = pstar * sqrt(m_cb[0].mT);
     switch (band) {
       case 0:
       case 1:
@@ -969,9 +932,7 @@ bool MediumSilicon::ElectronCollision(const double e, int& type,
     return true;
   } 
   double p2 = 2. * ElectronMass * m_cb[k].mC * (e1 - m_cb[k].eMin);
-  if (m_nonParabolic) {
-    p2 *= (1. + m_cb[k].alpha * (e1 - m_cb[k].eMin));
-  }
+  if (m_nonParabolic) p2 *= 1. + m_cb[k].alpha * (e1 - m_cb[k].eMin);
   const double pstar = sqrt(p2);
   RndmDirection(px, py, pz, pstar);
   return true;
