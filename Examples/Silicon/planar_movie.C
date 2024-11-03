@@ -120,7 +120,7 @@ int main(int argc, char * argv[]) {
     constexpr bool gif = true;
     if (!gif) {
       char filename[50];
-      sprintf(filename, "frames/frame_%03d.png", i);
+      snprintf(filename, 50, "frames/frame_%03d.png", i);
       canvas.SaveAs(filename);
     } else {
       if (i == nFrames - 1) { 

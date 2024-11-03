@@ -177,7 +177,7 @@ int main(int argc, char * argv[]) {
     // Save the induced current signal to a file.
     if (writeSignal) {
       char filename[50];
-      sprintf(filename, "signal_%05d.txt", i);
+      snprintf(filename, 50, "signal_%05d.txt", i);
       std::ofstream outfile;
       outfile.open(filename, std::ios::out);
       for (unsigned int j = 0; j < nTimeBins; ++j) {
