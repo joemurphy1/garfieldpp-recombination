@@ -517,37 +517,29 @@ double MediumSilicon::GetElectronEnergy(const double px, const double py,
 
 void MediumSilicon::GetElectronMomentum(const double e, double& px, double& py,
                                         double& pz, int& band) {
+  const auto nC = m_cb.size();
   const int nX = m_cb[0].nValleys;
   const int nL = m_cb[1].nValleys;
-  // If the band index is out of range, choose one at random.
+  // If the band index is out of range or inconsistent, choose one at random.
   if (band < 0 || band >= m_cbIndex.size() ||
       (e < m_cb[1].eMin && band >= nX) ||
       (e < m_cb[2].eMin && band >= nX + nL)) {
-    if (e < m_cb[1].eMin) {
-      band = std::max(int(nX * RndmUniform()), nX - 1);
-    } else {
-      double dosX = 0.;
-      const int j0 = int(e * m_cb[0].invStep);
-      if (j0 >= 0 && j0 < m_cb[0].nEnergySteps) dosX = m_cb[0].dos[j0];
-      double dosL = 0.;
-      const int j1 = int(e * m_cb[1].invStep);
-      if (j1 >= 0 && j1 < m_cb[1].nEnergySteps) dosL = m_cb[1].dos[j1];
-      double dosG = 0.;
-      const int j2 = int(e * m_cb[2].invStep);
-      if (j2 >= 0 && j2 < m_cb[2].nEnergySteps) dosL = m_cb[2].dos[j2];
-      const double dosSum = nX * dosX + nL * dosL + dosG;
-      if (dosSum < Small) {
-        band = nX + nL;
-      } else {
-        const double r = RndmUniform() * dosSum;
-        if (r < dosX) {
-          band = std::max(int(nX * RndmUniform()), nX - 1);
-        } else if (r < dosX + dosL) {
-          band = std::max(int(nL * RndmUniform()), nL - 1);
-          band += nX;
-        } else {
-          band = nX + nL;
-        }
+    std::vector<double> cdos;
+    double dosSum = 0.;
+    for (size_t k = 0; k < nC; ++k) {
+      if (e < m_cb[k].eMin) break;
+      const int i = int(e * m_cb[k].invStep);
+      const double dos = i < m_cb[k].nEnergySteps ? m_cb[k].dos[i] : 0.;
+      for (int j = 0; j < m_cb[k].nValleys; ++j) {
+        dosSum += dos; 
+        cdos.push_back(dosSum);
+      }
+    }
+    const double r = RndmUniform() * dosSum;
+    for (size_t i = 0; i < cdos.size(); ++i) {
+      if (r < cdos[i]) {
+        band = i; 
+        break;
       }
     }
     if (m_debug) {
