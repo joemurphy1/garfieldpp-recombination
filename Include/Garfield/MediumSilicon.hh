@@ -180,8 +180,11 @@ class MediumSilicon : public Medium {
   double m_eBetaCanaliInv = 1. / 1.109;
   double m_hBetaCanaliInv = 1. / 1.213;
   // Saturation velocity
-  double m_eSatVel = 1.02e-2;
-  double m_hSatVel = 0.72e-2;
+  double m_eVs = 1.02e-2;
+  double m_hVs = 0.72e-2;
+  // Ratio between low-field mobility and saturation velocity
+  double m_eRs = 1.35e-6 / 1.02e-2;
+  double m_hRs = 0.45e-6 / 0.72e-2;
   // Hall factor
   double m_eHallFactor = 1.15;
   double m_hHallFactor = 0.7;

@@ -371,8 +371,8 @@ void MediumSilicon::SetSaturationVelocity(const double vsate,
               << "    Restoring default values.\n";
     m_hasUserSaturationVelocity = false;
   } else {
-    m_eSatVel = vsate;
-    m_hSatVel = vsath;
+    m_eVs = vsate;
+    m_hVs = vsath;
     m_hasUserSaturationVelocity = true;
   }
 
@@ -1050,6 +1050,8 @@ bool MediumSilicon::Update() {
   if (m_highFieldMobilityModel == HighFieldMobility::Canali) {
     UpdateHighFieldMobilityCanali();
   }
+  m_eRs = m_eMu / m_eVs;
+  m_hRs = m_hMu / m_hVs;
 
   if (m_debug) {
     std::cout << m_className << "::Update:\n"
@@ -1060,8 +1062,8 @@ bool MediumSilicon::Update() {
       std::cout << "    Mobility is not field-dependent.\n";
     } else {
       std::cout << "    Saturation velocity [cm / ns]\n"
-                << "      Electrons: " << m_eSatVel << "\n"
-                << "      Holes:     " << m_hSatVel << "\n";
+                << "      Electrons: " << m_eVs << "\n"
+                << "      Holes:     " << m_hVs << "\n";
     }
   }
   ComputeDOS();
@@ -1178,20 +1180,20 @@ void MediumSilicon::UpdateSaturationVelocity() {
       // - R. Quay, C. Moglestue, V. Palankovski, S. Selberherr,
       //   Materials Science in Semiconductor Processing 3 (2000), 149
       // - Minimos NT User Guide (2004)
-      m_eSatVel = 1.e-2 / (1. + 0.74 * (m_temperature / 300. - 1.));
-      m_hSatVel = 0.704e-2 / (1. + 0.37 * (m_temperature / 300. - 1.));
+      m_eVs = 1.e-2 / (1. + 0.74 * (m_temperature / 300. - 1.));
+      m_hVs = 0.704e-2 / (1. + 0.37 * (m_temperature / 300. - 1.));
       break;
     case SaturationVelocity::Canali:
       // - C. Canali, G. Majni, R. Minder, G. Ottaviani,
       //   IEEE Transactions on Electron Devices 22 (1975), 1045
       // - Sentaurus Device User Guide (2007)
-      m_eSatVel = 1.07e-2 * pow(300. / m_temperature, 0.87);
-      m_hSatVel = 8.37e-3 * pow(300. / m_temperature, 0.52);
+      m_eVs = 1.07e-2 * pow(300. / m_temperature, 0.87);
+      m_hVs = 8.37e-3 * pow(300. / m_temperature, 0.52);
       break;
     case SaturationVelocity::Reggiani:
       // M. A. Omar, L. Reggiani, Solid State Electronics 30 (1987), 693
-      m_eSatVel = 1.470e-2 * sqrt(tanh(150. / m_temperature));
-      m_hSatVel = 0.916e-2 * sqrt(tanh(300. / m_temperature));
+      m_eVs = 1.470e-2 * sqrt(tanh(150. / m_temperature));
+      m_hVs = 0.916e-2 * sqrt(tanh(300. / m_temperature));
       break;
     default:
       std::cerr << m_className << "::UpdateSaturationVelocity:\n" 
@@ -1286,15 +1288,15 @@ double MediumSilicon::ElectronMobility(const double emag) const {
 
   if (m_highFieldMobilityModel == HighFieldMobility::Minimos) {
     // Minimos User's Guide (1999)
-    const double r = 2 * m_eMu * emag / m_eSatVel;
+    const double r = 2 * emag * m_eRs;
     return 2. * m_eMu / (1. + sqrt(1. + r * r));
   } else if (m_highFieldMobilityModel == HighFieldMobility::Canali) {
-    // Sentaurus Device User Guide (2007)
-    const double r = m_eMu * emag / m_eSatVel;
+    // Sentaurus Device User Guide
+    const double r = emag * m_eRs;
     return m_eMu / pow(1. + pow(r, m_eBetaCanali), m_eBetaCanaliInv);
   } else if (m_highFieldMobilityModel == HighFieldMobility::Reggiani) {
     // M. A. Omar, L. Reggiani, Solid State Electronics 30 (1987), 693
-    const double r = m_eMu * emag / m_eSatVel;
+    const double r = emag * m_eRs;
     constexpr double k = 1. / 1.5;
     return m_eMu / pow(1. + pow(r, 1.5), k);
   }
@@ -1341,14 +1343,14 @@ double MediumSilicon::HoleMobility(const double emag) const {
 
   if (m_highFieldMobilityModel == HighFieldMobility::Minimos) {
     // Minimos User's Guide (1999)
-    return m_hMu / (1. + m_hMu * emag / m_eSatVel);
+    return m_hMu / (1. + emag * m_hRs);
   } else if (m_highFieldMobilityModel == HighFieldMobility::Canali) {
-    // Sentaurus Device User Guide (2007)
-    const double r = m_hMu * emag / m_hSatVel;
+    // Sentaurus Device User Guide
+    const double r = emag * m_hRs;
     return m_hMu / pow(1. + pow(r, m_hBetaCanali), m_hBetaCanaliInv);
   } else if (m_highFieldMobilityModel == HighFieldMobility::Reggiani) {
     // M. A. Omar, L. Reggiani, Solid State Electronics 30 (1987), 693
-    const double r = m_hMu * emag / m_hSatVel;
+    const double r = emag * m_hRs;
     return m_hMu / sqrt(1. + r * r);
   }
   return m_hMu;
