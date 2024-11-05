@@ -2,9 +2,9 @@
 #include <fstream>
 #include <iomanip>
 #include "wcpplib/stream/findmark.h"
-#include "wcpplib/random/ranluxint.h"
 #include "wcpplib/math/tline.h"
 #include "heed++/code/PhotoAbsCS.h"
+#include "Garfield/Random.hh"
 
 // 2004, I. Smirnov
 
@@ -513,7 +513,7 @@ int AtomicSecondaryProducts::get_channel(std::vector<double>& felectron_energy,
 #endif
   if (channel_prob_dens.empty()) return 0;
   int ir = 0;
-  double rn = SRANLUX();
+  double rn = Garfield::RndmUniform();
 #ifdef DEBUG_PRINT_get_escape_particles
   Iprintn(mcout, rn);
 #endif

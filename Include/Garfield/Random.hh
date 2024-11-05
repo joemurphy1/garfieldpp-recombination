@@ -3,15 +3,32 @@
 
 #include <cmath>
 #include "FundamentalConstants.hh"
-#include "RandomEngineRoot.hh"
+#include <functional>
 
 namespace Garfield {
 
-/// Random number generator
-extern RandomEngineRoot randomEngine;
+
+class Random
+{
+  public:
+    Random() = default;
+    template<typename T> static inline void SetEngine(T engine)
+    {
+      draw=std::bind(&T::Draw, engine);
+    }
+    inline double static Draw() noexcept
+    {
+      return draw();
+    };
+  private:
+    static std::function<double(void)> draw;
+};
 
 /// Draw a random number uniformly distributed in the range [0, 1).
-inline double RndmUniform() { return randomEngine.Draw(); }
+inline double RndmUniform()
+{ 
+  return Random::Draw();
+}
 
 /// Draw a random number uniformly distributed in the range (0, 1).
 inline double RndmUniformPos() {
