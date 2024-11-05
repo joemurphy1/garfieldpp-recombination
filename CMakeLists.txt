@@ -85,19 +85,16 @@ if(${ROOT_VERSION} VERSION_LESS "6.20.0")
   include("${Root_Use_File_Dir}/modules/RootNewMacros.cmake")
 endif()
 
-add_library(GarfieldConf INTERFACE)
 #--- Set the C++ standard (depending on the ROOT version) ---------------------
 if(NOT DEFINED CMAKE_CXX_STANDARD)
   if(DEFINED ROOT_CXX_STANDARD)
-    set_property(TARGET GarfieldConf PROPERTY CXX_STANDARD ${ROOT_CXX_STANDARD})
+    set(GARFIELD_CXX_STANDARD ${ROOT_CXX_STANDARD})
   elseif(${ROOT_CXX_FLAGS} MATCHES ".*-std=c\\+\\+([0-9][0-9])")
-    set_property(TARGET GarfieldConf PROPERTY CXX_STANDARD ${CMAKE_MATCH_1})
+    set(GARFIELD_CXX_STANDARD ${CMAKE_MATCH_1})
   elseif(${ROOT_CXX_FLAGS} MATCHES ".*-std=c\\+\\+1z")
-    set_property(TARGET GarfieldConf PROPERTY CXX_STANDARD 17)
+    set(GARFIELD_CXX_STANDARD 17)
   endif()
 endif()
-set_property(TARGET GarfieldConf PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
-set_property(TARGET GarfieldConf PROPERTY CXX_EXTENSIONS OFF)
 
 find_package(GSL REQUIRED)
 find_package(OpenMP)
@@ -118,11 +115,17 @@ add_library(GarfieldRandom SHARED
 )
 target_include_directories(GarfieldRandom PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
 target_link_libraries(GarfieldRandom PRIVATE ROOT::MathCore)
+set_property(TARGET GarfieldRandom PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
+set_property(TARGET GarfieldRandom PROPERTY CXX_EXTENSIONS OFF)
+set_property(TARGET GarfieldRandom PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 
 
 # Creating the main Garfield library
 add_library(Garfield SHARED "")
-target_link_libraries(Garfield PRIVATE GarfieldConf PUBLIC GarfieldRandom Garfield::Heed)
+target_link_libraries(Garfield PUBLIC GarfieldRandom Garfield::Heed)
+set_property(TARGET Garfield PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
+set_property(TARGET Garfield PROPERTY CXX_EXTENSIONS OFF)
+set_property(TARGET Garfield PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 add_library(Garfield::Garfield ALIAS Garfield)
 target_sources(
   Garfield
@@ -167,9 +170,6 @@ target_sources(
           Source/PlottingEngine.cc
           Source/Polygon.cc
           Source/QuadTree.cc
-          #Source/Random.cc
-          #Source/RandomEngineRoot.cc
-          #Source/RandomEngineSTL.cc
           Source/Sensor.cc
           Source/Shaper.cc
           Source/Solid.cc
