@@ -94,6 +94,8 @@ if(NOT DEFINED CMAKE_CXX_STANDARD)
   elseif(${ROOT_CXX_FLAGS} MATCHES ".*-std=c\\+\\+1z")
     set(GARFIELD_CXX_STANDARD 17)
   endif()
+else()
+  set(GARFIELD_CXX_STANDARD ${CMAKE_CXX_STANDARD})
 endif()
 
 find_package(GSL REQUIRED)
