@@ -21,11 +21,10 @@ using CLHEP::electron_mass_c2;
 
 HeedParticle_BGM::HeedParticle_BGM(manip_absvol* primvol, const point& pt,
                                    const vec& vel, vfloat ftime,
-                                   particle_def* fpardef,
-                                   HeedFieldMap* fieldmap,
+                                   particle_def* fpardef, fieldmap* fm, 
                                    const bool floss_only,
                                    const bool fprint_listing)
-    : eparticle(primvol, pt, vel, ftime, fpardef, fieldmap),
+    : eparticle(primvol, pt, vel, ftime, fpardef, fm),
       m_print_listing(fprint_listing),
       m_loss_only(floss_only),
       m_particle_number(s_counter++) {}
@@ -132,7 +131,7 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
         const double t = m_prevpos.time + arange * invSpeed;
         if (m_print_listing) mcout << "generating new virtual photon\n";
         HeedPhoton* hp = new HeedPhoton(m_currpos.tid.eid[0], pt, vel, t,
-                                        m_particle_number, et, m_fieldMap);
+                                        m_particle_number, et, m_fm);
         if (!hp->alive()) {
           delete hp;
           continue;

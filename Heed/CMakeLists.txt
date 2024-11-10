@@ -50,8 +50,7 @@ add_library(Heed SHARED
             wcpplib/stream/definp.cpp
             wcpplib/stream/findmark.cpp
             wcpplib/stream/prstream.cpp
-            wcpplib/util/FunNameStack.cpp
-            HeedFieldMap.cpp)
+            wcpplib/util/FunNameStack.cpp)
 target_link_libraries(Heed PRIVATE GarfieldRandom)
 set_property(TARGET Heed PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(TARGET Heed PROPERTY CXX_EXTENSIONS OFF)

@@ -2,9 +2,9 @@
 #define HEEDPHOTON_H
 
 #include <vector>
-#include "HeedFieldMap.h"
 #include "heed++/code/HeedMatterDef.h"
 #include "wcpplib/geometry/gparticle.h"
+#include "wcpplib/particle/fieldmap.h"
 
 //#define SFER_PHOTOEL  // make direction of photoelectron absolutely random
 
@@ -21,7 +21,7 @@ class HeedPhoton : public gparticle {
   /// Constructor.
   HeedPhoton(manip_absvol* primvol, const point& pt, const vec& vel,
              vfloat time, long fparent_particle_number, double fenergy,
-             HeedFieldMap* fieldmap, const bool fs_print_listing = false);
+             fieldmap* fm, const bool fs_print_listing = false);
   /// Destructor
   virtual ~HeedPhoton() {}
 
@@ -57,7 +57,7 @@ class HeedPhoton : public gparticle {
   /// Flag to print internal algorithms of a selected event
   bool m_print_listing = false;
 
-  HeedFieldMap* m_fieldMap = nullptr;
+  fieldmap* m_fm = nullptr;
 };
 }
 

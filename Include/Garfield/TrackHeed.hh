@@ -21,13 +21,13 @@ class ElElasticScat;
 class ElElasticScatLowSigma;
 class PairProd;
 class HeedDeltaElectronCS;
-class HeedFieldMap;
 class HeedPhoton;
 }
 
 namespace Garfield {
 
 class HeedChamber;
+class HeedFieldMap;
 class Medium;
 
 /// Generate tracks using Heed++.
@@ -301,7 +301,7 @@ class TrackHeed : public Track {
 
   // Interface classes
   std::unique_ptr<HeedChamber> m_chamber;
-  std::unique_ptr<Heed::HeedFieldMap> m_fieldMap;
+  std::unique_ptr<HeedFieldMap> m_fieldMap;
 
   // Bounding box
   double m_lX = 0., m_lY = 0., m_lZ = 0.;

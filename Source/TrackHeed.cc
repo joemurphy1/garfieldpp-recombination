@@ -15,7 +15,7 @@
 #include "heed++/code/PhotoAbsCSLib.h"
 
 #include "HeedChamber.hh"
-#include "HeedFieldMap.h"
+#include "HeedFieldMap.hh"
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
@@ -79,7 +79,7 @@ namespace Garfield {
 
 TrackHeed::TrackHeed(Sensor* sensor) : Track("Heed") {
   m_sensor = sensor;
-  m_fieldMap.reset(new Heed::HeedFieldMap());
+  m_fieldMap.reset(new HeedFieldMap());
 }
 
 TrackHeed::~TrackHeed() {}
