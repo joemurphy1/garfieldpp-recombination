@@ -2,7 +2,7 @@
 #define EPARTICLE_H
 #include "wcpplib/geometry/mparticle.h"
 #include "wcpplib/particle/particle_def.h"
-#include "HeedFieldMap.h"
+#include "wcpplib/particle/fieldmap.h"
 
 // 1998 - 2004, I. Smirnov.
 
@@ -18,7 +18,7 @@ class eparticle : public mparticle /*, public particle_type*/ {
   eparticle() = default;
   /// Constructor using velocity vector.
   eparticle(manip_absvol* primvol, const point& pt, const vec& vel, vfloat time,
-            particle_def* fpardef, HeedFieldMap* fieldmap);
+            particle_def* fpardef, fieldmap* fm);
   /// Destructor
   virtual ~eparticle() {}
 
@@ -31,7 +31,7 @@ class eparticle : public mparticle /*, public particle_type*/ {
   // mrange - distance at which the force should not change much
   particle_def* m_pardef = nullptr;
   /// Pointer to field map.
-  HeedFieldMap* m_fieldMap = nullptr;
+  fieldmap* m_fm = nullptr;
 };
 }
 

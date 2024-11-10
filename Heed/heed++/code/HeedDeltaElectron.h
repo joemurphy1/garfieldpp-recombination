@@ -18,7 +18,7 @@ class HeedDeltaElectron : public eparticle {
   /// Constructor.
   HeedDeltaElectron(manip_absvol* primvol, const point& pt, const vec& vel,
                     vfloat ftime, long fparent_particle_number,
-                    HeedFieldMap* fieldmap, bool fs_print_listing = false);
+                    fieldmap* fm, bool fs_print_listing = false);
   /// Destructor
   virtual ~HeedDeltaElectron() {}
 

@@ -21,7 +21,7 @@ using CLHEP::Avogadro;
 
 HeedPhoton::HeedPhoton(manip_absvol* primvol, const point& pt, const vec& vel,
                        vfloat ftime, long fparent_particle_number,
-                       double fenergy, HeedFieldMap* fieldmap,
+                       double fenergy, fieldmap* fm,
                        const bool fs_print_listing)
     : gparticle(primvol, pt, vel, ftime),
       m_particle_number(s_counter++),
@@ -31,7 +31,7 @@ HeedPhoton::HeedPhoton(manip_absvol* primvol, const point& pt, const vec& vel,
       s_sfer_photoel(0),
 #endif
       m_print_listing(fs_print_listing),
-      m_fieldMap(fieldmap) {
+      m_fm(fm) {
   mfunname("HeedPhoton::HeedPhoton(...)");
   double length_vel = vel.length();
   check_econd11(fabs(length_vel - c_light) / (length_vel + c_light), > 1.0e-10,
@@ -166,7 +166,7 @@ void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
     }
     HeedDeltaElectron* hd =
         new HeedDeltaElectron(m_currpos.tid.eid[0], m_currpos.pt, vel,
-                              m_currpos.time, m_particle_number, m_fieldMap);
+                              m_currpos.time, m_particle_number, m_fm);
     secondaries.push_back(hd);
   }
   const long qph = ph_energy.size();
@@ -180,7 +180,7 @@ void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
     }
     HeedPhoton* hp = new HeedPhoton(m_currpos.tid.eid[0], m_currpos.pt,
                                     vel, m_currpos.time, m_particle_number,
-                                    ph_energy[nph], m_fieldMap);
+                                    ph_energy[nph], m_fm);
     secondaries.push_back(hp);
   }
   m_delta_generated = true;

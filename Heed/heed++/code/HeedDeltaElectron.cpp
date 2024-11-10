@@ -59,9 +59,8 @@ bool HeedDeltaElectron::s_direct_low_if_little = true;
 HeedDeltaElectron::HeedDeltaElectron(manip_absvol* primvol, const point& pt,
                                      const vec& vel, vfloat ftime,
                                      long fparent_particle_number,
-                                     HeedFieldMap* fieldmap,
-                                     bool fprint_listing)
-    : eparticle(primvol, pt, vel, ftime, &electron_def, fieldmap),
+                                     fieldmap* fm, bool fprint_listing)
+    : eparticle(primvol, pt, vel, ftime, &electron_def, fm),
       parent_particle_number(fparent_particle_number),
       m_particle_number(s_counter++),
       m_print_listing(fprint_listing) {
@@ -158,7 +157,7 @@ void HeedDeltaElectron::physics_after_new_speed(
     if (m_curr_ekin <= 0.0) {
       // Get local volume.
       absvol* av = m_currpos.volume();
-      if (av && av->s_sensitive && m_fieldMap->inside(m_currpos.ptloc)) {
+      if (av && av->s_sensitive && m_fm->inside(m_currpos.ptloc)) {
         if (m_print_listing) mcout << "Convert to conduction electron.\n";
         conduction_electrons.emplace_back(
             HeedCondElectron(m_currpos.ptloc, m_currpos.time));
@@ -219,7 +218,7 @@ void HeedDeltaElectron::physics_after_new_speed(
   if (!m_alive) {
     // Done tracing the delta electron. Create the last conduction electron.
     vav = m_currpos.volume();
-    if (vav && vav->s_sensitive && m_fieldMap->inside(m_currpos.ptloc)) {
+    if (vav && vav->s_sensitive && m_fm->inside(m_currpos.ptloc)) {
       if (m_print_listing) mcout << "Last conduction electron\n";
       conduction_electrons.emplace_back(
           HeedCondElectron(m_currpos.ptloc, m_currpos.time));
@@ -331,7 +330,7 @@ void HeedDeltaElectron::ionisation(const double eloss, const double dedx,
     point ptloc = curpt;
     m_prevpos.tid.up_absref(&ptloc);
     if (m_print_listing) mcout << "New conduction electron\n";
-    if (m_fieldMap->inside(ptloc)) {
+    if (m_fm->inside(ptloc)) {
       conduction_electrons.emplace_back(HeedCondElectron(ptloc, m_currpos.time));
       conduction_ions.emplace_back(HeedCondElectron(ptloc, m_currpos.time));
     }

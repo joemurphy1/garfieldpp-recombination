@@ -21,11 +21,10 @@ using CLHEP::electron_mass_c2;
 
 HeedParticle::HeedParticle(manip_absvol* primvol, const point& pt,
                            const vec& vel, vfloat ftime, particle_def* fpardef,
-                           HeedFieldMap* fieldmap, 
-                           const bool fcoulomb_scattering,
+                           fieldmap* fm, const bool fcoulomb_scattering,
                            const bool floss_only,
                            const bool fprint_listing)
-    : eparticle(primvol, pt, vel, ftime, fpardef, fieldmap),
+    : eparticle(primvol, pt, vel, ftime, fpardef, fm),
       m_coulomb_scattering(fcoulomb_scattering),
       m_loss_only(floss_only),
       m_print_listing(fprint_listing),
@@ -100,7 +99,7 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
         const double t = m_prevpos.time + arange * invSpeed;
         if (m_print_listing) mcout << "generating new virtual photon\n";
         HeedPhoton* hp = new HeedPhoton(m_currpos.tid.eid[0], pt, vel, t,
-                                        m_particle_number, et, m_fieldMap);
+                                        m_particle_number, et, m_fm);
         if (!hp->alive()) {
           delete hp;
           continue;
