@@ -189,6 +189,25 @@ void AvalancheMC::GetIonEndpoint(const size_t i, double& x0, double& y0,
   status = m_ions[i].status;
 }
 
+void AvalancheMC::GetNegativeIonEndpoint(const size_t i, double& x0, double& y0,
+                                         double& z0, double& t0, double& x1, double& y1,
+                                         double& z1, double& t1, int& status) const {
+  if (i >= m_negativeIons.size()) {
+    std::cerr << m_className << "::GetNegativeIonEndpoint: Index out of range.\n";
+    return;
+  }
+
+  x0 = m_negativeIons[i].path.front().x;
+  y0 = m_negativeIons[i].path.front().y;
+  z0 = m_negativeIons[i].path.front().z;
+  t0 = m_negativeIons[i].path.front().t;
+  x1 = m_negativeIons[i].path.back().x;
+  y1 = m_negativeIons[i].path.back().y;
+  z1 = m_negativeIons[i].path.back().z;
+  t1 = m_negativeIons[i].path.back().t;
+  status = m_negativeIons[i].status;
+}
+
 void AvalancheMC::GetElectronEndpoint(const size_t i, double& x0,
                                       double& y0, double& z0, double& t0,
                                       double& x1, double& y1, double& z1,

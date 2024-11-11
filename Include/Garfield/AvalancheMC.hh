@@ -104,6 +104,9 @@ class AvalancheMC {
   void GetIonEndpoint(const size_t i, double& x0, double& y0, double& z0,
                       double& t0, double& x1, double& y1, double& z1,
                       double& t1, int& status) const;
+  void GetNegativeIonEndpoint(const size_t i, double& x0, double& y0, double& z0,
+                              double& t0, double& x1, double& y1, double& z1,
+                              double& t1, int& status) const;
 
   /// Switch on drift line plotting.
   void EnablePlotting(ViewDrift* view);
