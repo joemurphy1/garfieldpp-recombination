@@ -196,6 +196,8 @@ class MediumSilicon : public Medium {
   double m_hTrapDensity = 0.;
   double m_eTrapTime = 0.;
   double m_hTrapTime = 0.;
+  double m_eTrapRate = 0.;
+  double m_hTrapRate = 0.;
   int m_trappingModel = 0;
 
   // Impact ionisation parameters
