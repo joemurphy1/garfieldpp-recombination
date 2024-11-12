@@ -162,6 +162,7 @@ void MediumSilicon::SetTrappingTime(const double etau, const double htau) {
               << "    Trapping time [ns-1] must be positive.\n";
   } else {
     m_eTrapTime = etau;
+    m_eTrapRate = 1. / etau;
   }
 
   if (htau <= 0.) {
@@ -169,6 +170,7 @@ void MediumSilicon::SetTrappingTime(const double etau, const double htau) {
               << "    Trapping time [ns-1] must be positive.\n";
   } else {
     m_hTrapTime = htau;
+    m_hTrapRate = 1. / htau;
   }
 
   m_trappingModel = 1;
@@ -235,10 +237,7 @@ bool MediumSilicon::ElectronAttachment(const double ex, const double ey,
       eta = m_eTrapCs * m_eTrapDensity;
       break;
     case 1:
-      double vx, vy, vz;
-      ElectronVelocity(ex, ey, ez, bx, by, bz, vx, vy, vz);
-      eta = m_eTrapTime * sqrt(vx * vx + vy * vy + vz * vz);
-      if (eta > 0.) eta = -1. / eta;
+      eta = -m_eTrapRate;
       break;
     default:
       std::cerr << m_className << "::ElectronAttachment: Unknown model. Bug!\n";

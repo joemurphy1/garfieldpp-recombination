@@ -342,6 +342,22 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
         t1 += sigma * sigma / (2 * dif);
       }
       for (size_t i = 0; i < 3; ++i) x1[i] += RndmGaussian(0., sigma);
+      if (!aval && m_useAttachment) {
+        double eta = GetAttachment(particle, m0, x0, e0, b0);
+        const double ds = Dist(x0, x1);
+        if (eta < 0.) {
+          eta = std::abs(eta) * (t1 - t0) / ds;
+        }
+        const double patt = 1. - std::exp(-std::abs(eta) * ds);
+        if (RndmUniform() < patt) {
+          x1 = MidPoint(x0, x1);
+          t1 = 0.5 * (t0 + t1);
+          path.emplace_back(MakePoint(x1, t1));
+          status = StatusAttached;
+          if (m_debug) std::cout << "    Attached.\n";
+          break;
+        }
+      }
     } else {
       // Drift and diffusion. Determine the time step.
       double dt = 0.;
@@ -424,13 +440,13 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
         const double ds = Dist(x0, x1);
         if (eta < 0.) {
           const double veff = ds / dt;
-          eta = std::abs(eta) * vmag / veff;
+          eta = std::abs(eta) / veff;
         }
         const double patt = 1. - std::exp(-std::abs(eta) * ds);
         if (RndmUniform() < patt) {
           x1 = MidPoint(x0, x1);
           dt *= 0.5;
-          path.emplace_back(MakePoint(x1, t1));
+          path.emplace_back(MakePoint(x1, t0 + dt));
           status = StatusAttached;
           if (m_debug) std::cout << "    Attached.\n";
           break;
@@ -1164,7 +1180,7 @@ bool AvalancheMC::ComputeAlphaEta(const Particle particle,
       if (!m_useAttachment) continue;
       double eta = GetAttachment(particle, medium, x, e, b);
       if (eta < 0.) {
-        eta = std::abs(eta) * Mag(v) / veff;
+        eta = std::abs(eta) / veff;
         equilibrate = false;
       }
       etas[i] += wg[j] * eta;

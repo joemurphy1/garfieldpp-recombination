@@ -1029,6 +1029,15 @@ double DriftLineRKF::GetEta(const std::array<double, 3>& x,
   } else if (particle == Particle::Hole) {
     medium->HoleAttachment(ex, ey, ez, bx, by, bz, eta);
   }
+  if (eta < 0.) {
+    int stat = 0;
+    Vec v = GetVelocity(x, particle, stat);
+    if (stat != 0) {
+      std::cerr << m_className << "::GetEta:\n"
+                << "    Cannot retrieve velocity at " << PrintVec(x) << "\n";
+    }
+    eta = std::abs(eta) / Mag(v); 
+  }
   return eta;
 }
 
