@@ -9,35 +9,34 @@
 #include <numeric>
 
 #include "AvalancheMicroscopic.hh"
-#include "AvalancheGrid.hh"
-#include "Garfield/ComponentParallelPlate.hh"
-#include "Garfield/ComponentConstant.hh"
+#include "ComponentParallelPlate.hh"
+#include "ComponentConstant.hh"
 #include "GarfieldConstants.hh"
 #include "Sensor.hh"
-#include "Garfield/Random.hh"
-#include "MediumGas.hh"
+#include "Random.hh"
 
-namespace Garfield {
 
 // Get size of avalanche when going from x to x+dx in Monte Carlo fashion
-  void GetAvalancheSizeFromStep(double dx, const long nElectronIn, const double alpha, const double eta,
-                                long &nElectronOut, double &nPosIonOut, double &nNegIonOut);
+void GetAvalancheSizeFromStep(double dx, const long nElectronIn, const double alpha, const double eta,
+                              long &nElectronOut, double &nPosIonOut, double &nNegIonOut);
 
 // Get mean size of avalanche when going from x to x+dx
-  void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn, const double alpha, const double eta,
-                                    long &nElectronOut, double &nPosIonOut, double &nNegIonOut);
+void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn, const double alpha, const double eta,
+                                  long &nElectronOut, double &nPosIonOut, double &nNegIonOut);
 
-/// Propagates avalanches with the 2d (axi-symmetric) space-charge routine from Lippmann, Riegler (2004)
-/// in uniform background fields. Different options to calculate space-charge-fields can be chosen.
+
+namespace Garfield {
+  /// Propagates avalanches with the 2d (axi-symmetric) space-charge routine from Lippmann, Riegler (2004)
+  /// in uniform background fields. Different options to calculate space-charge-fields can be chosen.
   class AvalancheGridSpaceCharge {
   public:
     /// Constructor
     AvalancheGridSpaceCharge();
 
     /// Destructor
-    ~AvalancheGridSpaceCharge();
+    ~AvalancheGridSpaceCharge() = default;
 
-    /// Reset grid i.e. ImportElectronsFrom... can be called again.
+    /// Reset grid i.e. ImportElectrons can be called again.
     void Reset();
 
     /// Enable/disable debugging ( = log messages) (default off)
@@ -79,9 +78,6 @@ namespace Garfield {
 
     /// Stop the avalanche if K % field is reached
     void SetStopAtK(bool option = true) { m_bStopAtK = option; }
-
-    /// Import elliptic integral values
-    void ImportEllipticIntegralValues(const std::string &filename);
 
     /// Set the sensor (+ determines if base Cmp is CmpParallelPlate (MRPCS)).
     void SetSensor(Sensor *sensor) {
@@ -129,7 +125,9 @@ namespace Garfield {
     }
 
     /// Returns the total electron number evolution
-    std::vector<std::pair<double, long>> GetElectronEvolution() { return m_vNElectronEvolution; }
+    [[nodiscard]] const std::vector<std::pair<double, long>> GetElectronEvolution() const {
+      return m_vNElectronEvolution;
+    }
 
     /// Export the current grid to a txt file (electron, ions numbers and field magnitude)
     ///  Take care: only where electrons are located is the space.charge field evaluated!
@@ -196,65 +194,62 @@ namespace Garfield {
       int gasLayerIndex;
     };
 
-    // prepare grid and place stored electrons from AvalancheMicroscopic import
+    // Prepare grid and place stored electrons from AvalancheMicroscopic import
     void PrepareElectronsFromMicroscopicAvalanche();
 
     // Assign electron to the closest grid point
     bool SnapTo2dGrid(double x, double y, double z, long n = 1, int gasLayer = 0);
 
-    // prepare the mesh with the ComponentParallelPlate
+    // Prepare the mesh with the ComponentParallelPlate
     void Prepare2dMesh();
 
-    // transports the electrons/nodes a timestep
+    // Transports the electrons/nodes a timestep
     bool TransportTimeStep();
 
-    // diffuses the electrons/nodes a timestep
+    // Diffuses the electrons/nodes a timestep
     void DiffuseTimeStep(double dx, long nElectron, double nPosIon, double nNegIon,
                          int iz, int ir, int gasGap);
 
-    // redistributes the charges
+    // Redistributes the charges
     void DistributeCharges(long nElectron, double nPosIon, double nNegIon,
                            int iz, int ir, double stepZ, double stepR, int gasGap);
 
-    // calculate the field from all the contributions to the bin of interest. May need much more functionalities/tables.
+    // Calculate the field from all the contributions to the bin of interest. May need much more functionalities/tables.
     void GetLocalField(int iz, int ir, double &eFieldZ, double &eFieldR, const std::string &fieldOption,
                        int gasGap);
 
-    // calculate the field of charged ring in vacuum using coulomb potentials and indices
+    // Calculate the field of charged ring in vacuum using coulomb potentials and indices
     void GetFreeChargedRing(int iz, int ir, int fz, int fr, double &eFieldZ, double &eFieldR);
 
-    // calculate the field of charged ring in vacuum using coulomb potentials and coordinates
+    // Calculate the field of charged ring in vacuum using coulomb potentials and coordinates
     void GetFreeChargedRing(double zi, double ri, double zf, double rf, double &eFieldZ, double &eFieldR);
 
-    // get field at (zi, ri) from N charges at (zf, rf) either as a ring or a coulomb ball (rf = 0)
+    // Get field at (zi, ri) from N charges at (zf, rf) either as a ring or a coulomb ball (rf = 0)
     // if i and f are too close it is considered as self interaction and not included
     bool AddFieldFromChargeAt(int iz, int ir, int fz, int fr, double N, double &eFieldZ, double &eFieldR);
 
-    // get field at (zi, ri) from N charges at (zf, rf) either as a ring or a coulomb ball (rf = 0)
+    // Get field at (zi, ri) from N charges at (zf, rf) either as a ring or a coulomb ball (rf = 0)
     // if i and f are too close it is considered as self interaction and not included
     bool AddFieldFromChargeAt(int iz, int ir, double zf, double rf, double N, double &eFieldZ, double &eFieldR);
 
-    // get swarm parameters at electric field magnitude
+    // Get swarm parameters at electric field magnitude
     void GetSwarmParameters(double MagEField, double &alpha, double &eta, double &drift,
                             double &dSigmaL, double &dSigmaT, double &wv, double &wr,
                             double &alphaPT, double &etaPT, int gasGap);
 
-    // change from 2dGrid to Global coordinates
+    // Change from 2dGrid to Global coordinates
     void GetGlobalCoordinates(double r, double z, double phi, double &xg, double &yg, double &zg, int gasGap);
 
-    // gets elliptic integrals via list
+    // Import elliptic integral values
+    void ImportEllipticIntegralValues(const std::string &filename);
+
+    // Gets elliptic integrals via list
     void GetEllipticIntegrals(double x, double &K, double &E);
 
-    // get from index the gas gap number
+    // Get from index the gas gap number, else -1
     int GetGasGapNumber(int layerIndex) {
-      int k; //< \in Set(-1, 0, ..., #gas gaps -1)
       auto it = std::find(m_vIndexGasGaps.begin(), m_vIndexGasGaps.end(), layerIndex);
-      if (it != m_vIndexGasGaps.end()) {
-        k = std::distance(m_vIndexGasGaps.begin(), it);
-      } else {
-        k = -1;
-      }
-      return k;
+      return (it != m_vIndexGasGaps.end()) ? std::distance(m_vIndexGasGaps.begin(), it) : -1;
     }
 
   private:
@@ -278,7 +273,6 @@ namespace Garfield {
 
     bool m_bAdaptiveTime = true;
     bool m_bImportElliptic = false;
-    bool m_bImportSwarm = false;
     bool m_bUseTOF = true; //< if TOF parameters should be used else Magboltz drift and SST spatial coefficients
     bool m_bWrAvailable = true; //< if bulk drift velocity is available to the simulation
     bool m_bRatesAvailable = true; //< if temporal rates are available to the simulation
@@ -288,7 +282,6 @@ namespace Garfield {
     double m_dMinGroups = 50; //< same values as lippmann
 
     ComponentParallelPlate *m_ParallelPlate = nullptr;
-    Medium *m_GasImported = nullptr;
     Sensor *m_sensor = nullptr;
     Grid m_AvGrid;
     std::vector<std::vector<GridNode>> m_GridMesh; ///< grid with nodes on it

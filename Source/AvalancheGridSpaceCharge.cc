@@ -1,5 +1,157 @@
 #include "Garfield/AvalancheGridSpaceCharge.hh"
 
+
+void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
+                              const double alpha, const double eta,
+                              long &nElectronOut, double &nPosIonOut, double &nNegIonOut) {
+  // Monte Carlo Avalanche gain per travelled distance dx (cm)
+  long nHolder = 0;
+  double s, condition;
+  nElectronOut = 0;
+  nPosIonOut = 0;
+  nNegIonOut = 0;
+
+  if (std::abs(alpha - eta) < 1.e-8 && alpha > 1.e-8) {
+    // alpha == eta
+    if (nElectronIn < (long) 1e3) {
+      // Running over all electrons in the avalanche.
+      for (int i = 0; i < nElectronIn; i++) {
+        // Draw a random number from the uniform distribution (0,1).
+        s = Garfield::RndmUniformPos();
+        // Condition to which the random number will be compared. If the number is
+        // smaller than the condition, nothing happens. Otherwise, the single
+        // electron will be attached or retrieve additional electrons from the
+        // gas.
+        condition = alpha * dx / (1 + alpha * dx);
+        // we (wrongly) assume if s >= condition only pos ions are created else 1 neg ion.
+        if (s >= condition) {
+          nHolder = (long) (log((1 - s) * (1 + alpha * dx)) / log(condition));
+          /// deviation/improvement wrt Lippmann?
+          nElectronOut += nHolder;
+        } else {
+          nNegIonOut += 1;
+        }
+      }
+      // charge conservation
+      nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut;
+
+    } else {
+      // Central limit theorem.
+      // for electrons
+      const double sigma = sqrt(2 * alpha * dx * (double) nElectronIn);
+      nElectronOut = (long) Garfield::RndmGaussian((double) nElectronIn, sigma);
+
+      // boundary conditions (alpha dx ElectronIn = dPosOut), the procedure guarantees positive values
+      //  and netto Nion = nPos - nNeg = nOut - nIn
+      if (nElectronOut <= 0) nElectronOut = 0; //< unphysical
+      if (nElectronOut >= nElectronIn) {
+        nNegIonOut = (std::exp(eta * dx) - 1) * (double) nElectronIn; //< >= 0
+        nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
+      } else {
+        nPosIonOut = (std::exp(alpha * dx) - 1) * (double) nElectronIn; //< >= 0
+        nNegIonOut = nPosIonOut - (double) (nElectronOut - nElectronIn); //< >= 0
+      }
+    }
+  } else if (alpha < 1.e-8 && eta > 1.e-8) {
+    // alpha == 0, only attachment possible
+    if (nElectronIn < (long) 1e3) {
+      for (int i = 0; i < nElectronIn; i++) {
+        // Draw a random number from the uniform distribution (0,1).
+        s = Garfield::RndmUniformPos();
+        condition = exp(-eta * dx);
+        if (s >= condition) {
+          nNegIonOut += 1;
+        } else {
+          nElectronOut += 1;
+        }
+      }
+    } else {
+      // Central limit theorem.
+      // for electrons
+      const double sigma = std::sqrt((double) nElectronIn * exp(-2 * eta * dx) * (exp(-eta * dx) - 1));
+      nElectronOut = (long) Garfield::RndmGaussian((double) nElectronIn * exp(-eta * dx), sigma);
+
+      // boundary conditions (SEEM GOOD)
+      if (nElectronOut <= 0) nElectronOut = 0; //< unphysical
+      if (nElectronOut > nElectronIn) nElectronOut = nElectronIn; //< unphysical with alpha = 0
+
+      // charge conservation
+      nNegIonOut = -(double) (nElectronOut - nElectronIn);
+    }
+  } else {
+    // alpha != 0 =! eta
+    const double k = eta / alpha;
+    const double ndx = exp((alpha - eta) * dx);
+
+    if (nElectronIn < (long) 1e3) {
+      // Running over all electrons in the avalanche.
+      for (int i = 0; i < nElectronIn; i++) {
+        // Draw a random number from the uniform distribution (0,1).
+        s = Garfield::RndmUniformPos();
+        // Condition to which the random number will be compared. If the number is
+        // smaller than the condition, nothing happens. Otherwise, the single
+        // electron will be attached or retrieve additional electrons from the
+        // gas.
+        condition = k * (ndx - 1) / (ndx - k);
+        if (s >= condition) {
+          nHolder = (long) (1 + log((ndx - k) * (1 - s) / (ndx * (1 - k))) /
+                                log(1 - (1 - k) / (ndx - k)));
+          /// deviation/improvement wrt Lippmann?
+          nElectronOut += nHolder;
+        } else {
+          nNegIonOut += 1;
+        }
+      }
+      // charge conservation
+      nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut;
+
+    } else {
+      // Central limit theorem.
+      // for electrons
+      const double sigma = sqrt((double) nElectronIn * (1 + k) * ndx * (ndx - 1) / (1 - k));
+      nElectronOut = (long) Garfield::RndmGaussian((double) nElectronIn * ndx, sigma);
+
+      // boundary conditions (alpha dx ElectronIn = dPosOut), the procedure guarantees positive values
+      //  and netto Nion = nPos - nNeg = nOut - nIn
+      if (nElectronOut <= 0) nElectronOut = 0; //< unphysical
+
+      // either the above has not been executed or nPosIonOut was not positive
+      if (nElectronOut >= nElectronIn) {
+        nNegIonOut = (std::exp(eta * dx) - 1) * (double) nElectronIn; //< >= 0
+        // nNegIonOut = eta / (alpha - eta) * (nElectronOut - nElectronIn);
+        nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
+      } else {
+        nPosIonOut = (std::exp(alpha * dx) - 1) * (double) nElectronIn; //< >= 0
+        // nPosIonOut = alpha / (alpha - eta) * (nElectronOut - nElectronIn);
+        nNegIonOut = nPosIonOut - (double) (nElectronOut - nElectronIn); //< >= 0
+      }
+    }
+  }
+}
+
+void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn,
+                                  const double alpha, const double eta,
+                                  long &nElectronOut, double &nPosIonOut, double &nNegIonOut) {
+  // Mean size gain
+  nElectronOut = 0;
+  nPosIonOut = 0;
+  nNegIonOut = 0;
+  const double ndx = exp((alpha - eta) * dx);
+  // for electrons
+  nElectronOut = nElectronIn * ndx;
+  if (nElectronOut <= 0) nElectronOut = 0; //< unphysical
+
+  // either the above has not been executed or nPosIonOut was not positive
+  if (nElectronOut >= nElectronIn) {
+    nNegIonOut = (std::exp(eta * dx) - 1) * (double) nElectronIn; //< >= 0
+    nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
+  } else {
+    nPosIonOut = (std::exp(alpha * dx) - 1) * (double) nElectronIn; //< >= 0
+    nNegIonOut = nPosIonOut - (double) (nElectronOut - nElectronIn); //< >= 0
+  }
+}
+
+
 namespace Garfield {
 
   // Public:
@@ -9,10 +161,10 @@ namespace Garfield {
     m_vXElliptic.reserve(20000);
     m_AvGrid.zGrid.reserve(5000);
     m_AvGrid.rGrid.reserve(1000);
-  }
 
-  AvalancheGridSpaceCharge::~AvalancheGridSpaceCharge() {
-    if (m_bImportSwarm && m_GasImported != nullptr) delete m_GasImported;
+    // Import the elliptic integral values
+    const std::string path = std::getenv("GARFIELD_INSTALL");
+    ImportEllipticIntegralValues(path + "/share/Garfield/Data/elliptic_integrals.txt");
   }
 
   void AvalancheGridSpaceCharge::Reset() {
@@ -87,7 +239,7 @@ namespace Garfield {
       m_bImportAvalanche = true;
 
       // resize the electrons according to # gap
-      if (m_ParallelPlate != nullptr) {
+      if (m_ParallelPlate) {
         m_ParallelPlate->IndexOfGasGaps(m_vIndexGasGaps);
       }
       m_vElectrons.resize(m_vIndexGasGaps.size());
@@ -103,10 +255,14 @@ namespace Garfield {
       }
       // Outside gas gap
       int k = 0;
-      if (m_ParallelPlate != nullptr) {
+      if (m_ParallelPlate) {
         int ind;
         double eps;
-        m_ParallelPlate->getLayer(electron.path.back().y, ind, eps);
+        if (!m_ParallelPlate->getLayer(electron.path.back().y, ind, eps)) {
+          std::cerr << m_className
+                    << "::ImportElectronFromAvalancheMicroscopic Electron outside component.\n";
+          continue;
+        }
         k = GetGasGapNumber(ind);
         if (k == -1) {
           std::cerr << m_className
@@ -120,7 +276,7 @@ namespace Garfield {
       pt.y = electron.path.back().y;
       pt.z = electron.path.back().z;
       pt.t = electron.path.back().t;
-      m_vElectrons[k].push_back(pt);
+      m_vElectrons[k].push_back(std::move(pt));
 
       if (m_bDebug)
         std::cerr << m_className
@@ -133,11 +289,10 @@ namespace Garfield {
                                                    const double t, const int n) {
     int gasGap = 0;
     // check if avalanche electron in a gas gap
-    if (m_ParallelPlate != nullptr) {
+    if (m_ParallelPlate) {
       int ind;
       double eps = -1;
-      m_ParallelPlate->getLayer(y, ind, eps);
-      if (eps != 1.) {
+      if (!m_ParallelPlate->getLayer(y, ind, eps) && eps != 1.) {
         std::cerr << m_className
                   << "CreateAvalanche:: Electron is not in a gas gap.";
         return;
@@ -192,11 +347,10 @@ namespace Garfield {
 
     // check if avalanche electron in a gas gap
     int gasGap = 0;
-    if (m_ParallelPlate != nullptr) {
+    if (m_ParallelPlate) {
       int ind;
       double eps = -1;
-      m_ParallelPlate->getLayer(y, ind, eps);
-      if (eps != 1.) {
+      if (!m_ParallelPlate->getLayer(y, ind, eps) && eps != 1.) {
         std::cerr << m_className
                   << "CreateAvalanche:: Electron is not in a gas gap.";
         return;
@@ -401,10 +555,8 @@ namespace Garfield {
       std::cerr << m_className << "::ImportEllipticIntegralValues Couldn't open file.\n";
     }
 
-    std::string line;
     double value;
-
-    while (std::getline(ellipticStream, line)) {
+    for (std::string line; std::getline(ellipticStream, line);) {
       std::istringstream iss(line);
 
       iss >> value;
@@ -432,7 +584,7 @@ namespace Garfield {
     auto CoN = m_vCoNGasLayer[gasLayer];
     int indexZ, indexR;
     // y in micro is z in grid space-charge
-    double r = std::sqrt(std::pow(x - CoN[0], 2) + std::pow(z - CoN[2], 2));
+    double r = std::sqrt((x - CoN[0]) * (x - CoN[0]) + (z - CoN[2]) * (z - CoN[2]));
     indexZ = (int) std::round((y - m_AvGrid.zGrid.front()) / m_AvGrid.zStepSize);
     indexR = (int) std::round(r / m_AvGrid.rStepSize);
 
@@ -512,7 +664,7 @@ namespace Garfield {
 
     double zCoordNode, _;
     int layerIndex = 0, k = 0;
-    if (m_ParallelPlate != nullptr) {
+    if (m_ParallelPlate) {
       m_vYPointInGasGap.resize(n);
       for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
         // determine layer index
@@ -565,7 +717,7 @@ namespace Garfield {
       // determine layer index
       zCoordNode = m_AvGrid.zGrid[iz];
       layerIndex = 0, k = 0;
-      if (m_ParallelPlate != nullptr) {
+      if (m_ParallelPlate) {
         m_ParallelPlate->getLayer(zCoordNode, layerIndex, _);
         // determine gap number from m_iIndexGasGaps and layer index
         k = GetGasGapNumber(layerIndex);
@@ -614,157 +766,6 @@ namespace Garfield {
     if (m_bDebug)
       std::cerr << m_className << "::Prepare2dMesh::Time steps per loop "
                 << m_AvGrid.dt << " ns.\n";
-  }
-
-  void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
-                                const double alpha, const double eta,
-                                long &nElectronOut, double &nPosIonOut, double &nNegIonOut) {
-    // Monte Carlo Avalanche gain per travelled distance dx (cm)
-    long nHolder = 0;
-    double s, condition;
-    nElectronOut = 0;
-    nPosIonOut = 0;
-    nNegIonOut = 0;
-
-    if (std::abs(alpha - eta) < 1.e-8 && alpha > 1.e-8) {
-      // alpha == eta
-      if (nElectronIn < (long) 1e3) {
-        // Running over all electrons in the avalanche.
-        for (int i = 0; i < nElectronIn; i++) {
-          // Draw a random number from the uniform distribution (0,1).
-          s = RndmUniformPos();
-          // Condition to which the random number will be compared. If the number is
-          // smaller than the condition, nothing happens. Otherwise, the single
-          // electron will be attached or retrieve additional electrons from the
-          // gas.
-          condition = alpha * dx / (1 + alpha * dx);
-          // we (wrongly) assume if s >= condition only pos ions are created else 1 neg ion.
-          if (s >= condition) {
-            nHolder = (long) (log((1 - s) * (1 + alpha * dx)) / log(condition));
-            /// deviation/improvement wrt Lippmann?
-            nElectronOut += nHolder;
-          } else {
-            nNegIonOut += 1;
-          }
-        }
-        // charge conservation
-        nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut;
-
-      } else {
-        // Central limit theorem.
-        // for electrons
-        const double sigma = sqrt(2 * alpha * dx);
-        nElectronOut = (long) RndmGaussian((double) nElectronIn, std::sqrt(nElectronIn) * sigma);
-
-        // boundary conditions (alpha dx ElectronIn = dPosOut), the procedure guarantees positive values
-        //  and netto Nion = nPos - nNeg = nOut - nIn
-        if (nElectronOut <= 0) nElectronOut = 0; //< unphysical
-        if (nElectronOut >= nElectronIn) {
-          nNegIonOut = (std::exp(eta * dx) - 1) * (double) nElectronIn; //< >= 0
-          nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
-        } else {
-          nPosIonOut = (std::exp(alpha * dx) - 1) * (double) nElectronIn; //< >= 0
-          nNegIonOut = nPosIonOut - (double) (nElectronOut - nElectronIn); //< >= 0
-        }
-      }
-    } else if (alpha < 1.e-8 && eta > 1.e-8) {
-      // alpha == 0, only attachment possible
-      if (nElectronIn < (long) 1e3) {
-        for (int i = 0; i < nElectronIn; i++) {
-          // Draw a random number from the uniform distribution (0,1).
-          s = RndmUniformPos();
-          condition = exp(-eta * dx);
-          if (s >= condition) {
-            nNegIonOut += 1;
-          } else {
-            nElectronOut += 1;
-          }
-        }
-      } else {
-        // Central limit theorem.
-        // for electrons
-        const double sigma = std::sqrt(exp(-2 * eta * dx) * (exp(-eta * dx) - 1));
-        nElectronOut = (long) RndmGaussian((double) nElectronIn * exp(-eta * dx),
-                                           std::sqrt(nElectronIn) * sigma);
-
-        // boundary conditions (SEEM GOOD)
-        if (nElectronOut <= 0) nElectronOut = 0; //< unphysical
-        if (nElectronOut > nElectronIn) nElectronOut = nElectronIn; //< unphysical with alpha = 0
-
-        // charge conservation
-        nNegIonOut = -(double) (nElectronOut - nElectronIn);
-      }
-    } else {
-      // alpha != 0 =! eta
-      const double k = eta / alpha;
-      const double ndx = exp((alpha - eta) * dx);
-
-      if (nElectronIn < (long) 1e3) {
-        // Running over all electrons in the avalanche.
-        for (int i = 0; i < nElectronIn; i++) {
-          // Draw a random number from the uniform distribution (0,1).
-          s = RndmUniformPos();
-          // Condition to which the random number will be compared. If the number is
-          // smaller than the condition, nothing happens. Otherwise, the single
-          // electron will be attached or retrieve additional electrons from the
-          // gas.
-          condition = k * (ndx - 1) / (ndx - k);
-          if (s >= condition) {
-            nHolder = (long) (1 + log((ndx - k) * (1 - s) / (ndx * (1 - k))) /
-                                  log(1 - (1 - k) / (ndx - k)));
-            /// deviation/improvement wrt Lippmann?
-            nElectronOut += nHolder;
-          } else {
-            nNegIonOut += 1;
-          }
-        }
-        // charge conservation
-        nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut;
-
-      } else {
-        // Central limit theorem.
-        // for electrons
-        const double sigma = sqrt((1 + k) * ndx * (ndx - 1) / (1 - k));
-        nElectronOut = (long) RndmGaussian((double) nElectronIn * ndx, std::sqrt(nElectronIn) * sigma);
-
-        // boundary conditions (alpha dx ElectronIn = dPosOut), the procedure guarantees positive values
-        //  and netto Nion = nPos - nNeg = nOut - nIn
-        if (nElectronOut <= 0) nElectronOut = 0; //< unphysical
-
-        // either the above has not been executed or nPosIonOut was not positive
-        if (nElectronOut >= nElectronIn) {
-          nNegIonOut = (std::exp(eta * dx) - 1) * (double) nElectronIn; //< >= 0
-          // nNegIonOut = eta / (alpha - eta) * (nElectronOut - nElectronIn);
-          nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
-        } else {
-          nPosIonOut = (std::exp(alpha * dx) - 1) * (double) nElectronIn; //< >= 0
-          // nPosIonOut = alpha / (alpha - eta) * (nElectronOut - nElectronIn);
-          nNegIonOut = nPosIonOut - (double) (nElectronOut - nElectronIn); //< >= 0
-        }
-      }
-    }
-  }
-
-  void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn,
-                                    const double alpha, const double eta,
-                                    long &nElectronOut, double &nPosIonOut, double &nNegIonOut) {
-    // Mean size gain
-    nElectronOut = 0;
-    nPosIonOut = 0;
-    nNegIonOut = 0;
-    const double ndx = exp((alpha - eta) * dx);
-    // for electrons
-    nElectronOut = (long) nElectronIn * ndx;
-    if (nElectronOut <= 0) nElectronOut = 0; //< unphysical
-
-    // either the above has not been executed or nPosIonOut was not positive
-    if (nElectronOut >= nElectronIn) {
-      nNegIonOut = (std::exp(eta * dx) - 1) * (double) nElectronIn; //< >= 0
-      nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
-    } else {
-      nPosIonOut = (std::exp(alpha * dx) - 1) * (double) nElectronIn; //< >= 0
-      nNegIonOut = nPosIonOut - (double) (nElectronOut - nElectronIn); //< >= 0
-    }
   }
 
   void AvalancheGridSpaceCharge::PrepareElectronsFromMicroscopicAvalanche() {
@@ -832,13 +833,8 @@ namespace Garfield {
 
     Medium *m = nullptr;
 
-    if (m_bImportSwarm) {
-      // medium from import
-      m = dynamic_cast<Medium *>(m_GasImported);
-    } else {
-      // medium from sensor
-      m = m_sensor->GetMedium(0, m_vYPointInGasGap[gasGap], 0);
-    };
+    // medium from sensor
+    m = m_sensor->GetMedium(0, m_vYPointInGasGap[gasGap], 0);
 
     // alpha
     m->ElectronTownsend(0., MagEField, 0., 0., 0., 0., alpha);
@@ -862,16 +858,13 @@ namespace Garfield {
     if (!m_bUseTOF || !m->ElectronTOFIonisation(0., MagEField, 0., 0., 0., 0., rion)
         || !m->ElectronTOFAttachment(0., MagEField, 0., 0., 0., 0., ratt)) {
 
-      std::cerr << m_className << "::GetSwarmParameters TOF Rates not available.\n";
+      if (m_bDebug) {
+        std::cerr << m_className << "::GetSwarmParameters TOF Rates not available.\n";
+      }
 
       m_bRatesAvailable = false;
-      // that is one possibility
-      // double Reff = drift * alpha - std::pow(alpha, 2) * dSigmaL;
-      // double s = alpha / eta;
-      // ratt = eta < Small ? 0 : Reff / (s - 1.);
-      // rion = eta < Small ? Reff : ratt * s;
 
-      // another approach would be to just use alpha and eta
+      // Diffusionless approximation
       rion = alpha * wr;
       ratt = eta * wr;
     }
@@ -1334,7 +1327,7 @@ namespace Garfield {
         // int IndexOfLeftLayer = m_vIndexGasGaps[k] - 1;
         rpc->getPermittivityFromLayer(IndexOfRightLayer, eps);
         alpha12 = (1. - eps) / (1. + eps);
-        beta12 = -4. * eps / (std::pow(eps + 1., 2) * alpha12);
+        beta12 = -4. * eps / ((eps + 1.) * (eps + 1) * alpha12);
 
         // Obtain bounds of current gas gap
         double zTop, zBottom;
@@ -1394,8 +1387,7 @@ namespace Garfield {
 
     if (fr == 0) {
       // coulomb ball of radius dr / 2
-      dist = std::sqrt(std::pow(zi - zf, 2)
-                       + std::pow(ri, 2));
+      dist = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
 
       intermediateEz = 2. * Pi / (dist * dist);
       intermediateEr = intermediateEz * ri / dist;
@@ -1421,8 +1413,8 @@ namespace Garfield {
 
     if (std::abs(rf) / m_AvGrid.rStepSize < 0.5) {
       // coulomb ball of radius dr / 2
-      dist = std::sqrt(std::pow(zi - zf, 2)
-                       + std::pow(ri, 2));
+      dist = std::sqrt((zi - zf) * (zi - zf)
+                       + ri * ri);
 
       intermediateEz = 2. * Pi / (dist * dist);
       intermediateEr = intermediateEz * ri / dist;

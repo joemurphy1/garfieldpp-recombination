@@ -111,20 +111,23 @@ class ComponentParallelPlate : public Component {
   bool GetBoundingBox(double &xmin, double &ymin, double &zmin, double &xmax,
                       double &ymax, double &zmax) override;
 
-  // Obtain the index and permitivity of of the layer at hight z.
+  // Obtain the index and permitivity of the layer at height z.
   bool getLayer(const double y, int &m, double &epsM) {
 
-    int mholer = -1;
+    int mholder = -1;
+
+    if (y < m_z[0]) return false;
 
     for (int i = 1; i < m_N; i++) {
       if (y <= m_z[i]) {
-        mholer = i;
+        mholder = i;
         break;
       }
     }
-    if (mholer == -1) return false;
 
-    m = mholer;
+    if (mholder == -1) return false;
+
+    m = mholder;
     epsM = m_epsHolder[m - 1];
     return true;
   }

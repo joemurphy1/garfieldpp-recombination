@@ -98,7 +98,6 @@ int main(int argc, char *argv[]) {
   avalsc.SetSensor(&sens);
   avalsc.Set2dGrid(y_mid - (d_bakelite / 2 + d_gas) + 1.e-8, y_mid + (d_bakelite / 2 + d_gas) - 1.e-8, 3 * 400, 0.05,
                    100);
-  avalsc.ImportEllipticIntegralValues("elliptic_integrals.txt");
 
   // Mixed Method: AvalancheMicroscopic
   AvalancheMicroscopic avalmicro;
