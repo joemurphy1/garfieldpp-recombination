@@ -83,8 +83,13 @@ namespace Garfield {
     void SetSensor(Sensor *sensor) {
       // set Sensor
       m_sensor = sensor;
-      // determine if component is CmpParallelPlate (if not it will stay nullptr)
-      m_ParallelPlate = dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(0));
+      // determine if any component is CmpParallelPlate (if not it will stay nullptr)
+      size_t nofCmp = m_sensor->GetNumberOfComponents();
+      for (int i=0; i < nofCmp; i++) {
+        if (!m_ParallelPlate) {
+          m_ParallelPlate = dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(i));
+        }
+      }
     }
 
     /**
