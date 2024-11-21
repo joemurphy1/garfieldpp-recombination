@@ -11,29 +11,29 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
                               const double alpha, const double eta,
                               long &nElectronOut, double &nPosIonOut, double &nNegIonOut) {
   // Monte Carlo Avalanche gain per travelled distance dx (cm)
-  long nHolder = 0;
-  double s, condition;
+  // long nHolder = 0;
+  // double s, condition;
   nElectronOut = 0;
   nPosIonOut = 0;
   nNegIonOut = 0;
 
   if (std::abs(alpha - eta) < 1.e-8 && alpha > 1.e-8) {
     // alpha == eta
-    if (nElectronIn < (long) 1e3) {
+    if (nElectronIn < 1000L) {
+      // Condition to which the random number will be compared. 
+      // If the number is smaller than the condition, nothing happens. 
+      // Otherwise, the single electron will be attached or retrieve 
+      // additional electrons from the gas.
+      const double prob = alpha * dx / (1 + alpha * dx);
       // Running over all electrons in the avalanche.
-      for (int i = 0; i < nElectronIn; i++) {
+      for (long i = 0; i < nElectronIn; i++) {
         // Draw a random number from the uniform distribution (0,1).
-        s = Garfield::RndmUniformPos();
-        // Condition to which the random number will be compared. If the number is
-        // smaller than the condition, nothing happens. Otherwise, the single
-        // electron will be attached or retrieve additional electrons from the
-        // gas.
-        condition = alpha * dx / (1 + alpha * dx);
-        // we (wrongly) assume if s >= condition only pos ions are created else 1 neg ion.
-        if (s >= condition) {
-          nHolder = (long) (log((1 - s) * (1 + alpha * dx)) / log(condition));
+        const double s = Garfield::RndmUniformPos();
+        // We (wrongly) assume if s >= prob only pos ions are created 
+        // else 1 neg ion.
+        if (s >= prob) {
           // deviation/improvement wrt Lippmann?
-          nElectronOut += nHolder;
+          nElectronOut += (long) (log((1 - s) * (1 + alpha * dx)) / log(condition));
         } else {
           nNegIonOut += 1;
         }
@@ -43,29 +43,29 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
 
     } else {
       // Central limit theorem.
-      const double sigma = sqrt(2 * alpha * dx * (double) nElectronIn);
-      nElectronOut = (long) Garfield::RndmGaussian((double) nElectronIn, sigma);
+      const double sigma = sqrt(2 * alpha * dx * nElectronIn);
+      nElectronOut = (long) Garfield::RndmGaussian(nElectronIn, sigma);
 
       // boundary conditions (alpha dx ElectronIn = dPosOut),
       //  the procedure guarantees positive values
       //  and netto Nion = nPos - nNeg = nOut - nIn
       if (nElectronOut <= 0) nElectronOut = 0; //< unphysical
       if (nElectronOut >= nElectronIn) {
-        nNegIonOut = (std::exp(eta * dx) - 1) * (double) nElectronIn; //< >= 0
-        nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
+        nNegIonOut = (std::exp(eta * dx) - 1) * nElectronIn; //< >= 0
+        nPosIonOut = (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
       } else {
-        nPosIonOut = (std::exp(alpha * dx) - 1) * (double) nElectronIn; //< >= 0
-        nNegIonOut = nPosIonOut - (double) (nElectronOut - nElectronIn); //< >= 0
+        nPosIonOut = (std::exp(alpha * dx) - 1) * nElectronIn; //< >= 0
+        nNegIonOut = nPosIonOut - (nElectronOut - nElectronIn); //< >= 0
       }
     }
   } else if (alpha < 1.e-8 && eta > 1.e-8) {
     // alpha == 0, only attachment possible
-    if (nElectronIn < (long) 1e3) {
-      for (int i = 0; i < nElectronIn; i++) {
+    if (nElectronIn < 1000L) {
+      const double prob = exp(-eta * dx);
+      for (long i = 0; i < nElectronIn; i++) {
         // Draw a random number from the uniform distribution (0,1).
-        s = Garfield::RndmUniformPos();
-        condition = exp(-eta * dx);
-        if (s >= condition) {
+        const double s = Garfield::RndmUniformPos();
+        if (s >= prob) {
           nNegIonOut += 1;
         } else {
           nElectronOut += 1;
@@ -73,47 +73,46 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
       }
     } else {
       // Central limit theorem.
-      const double sigma = std::sqrt((double) nElectronIn * exp(-2 * eta * dx) * (exp(-eta * dx) - 1));
-      nElectronOut = (long) Garfield::RndmGaussian((double) nElectronIn * exp(-eta * dx), sigma);
+      const double sigma = std::sqrt(nElectronIn * exp(-2 * eta * dx) * (exp(-eta * dx) - 1));
+      nElectronOut = (long) Garfield::RndmGaussian(nElectronIn * exp(-eta * dx), sigma);
 
       // boundary conditions
       if (nElectronOut <= 0) nElectronOut = 0; //< unphysical
       if (nElectronOut > nElectronIn) nElectronOut = nElectronIn; //< unphysical with alpha = 0
 
       // charge conservation
-      nNegIonOut = -(double) (nElectronOut - nElectronIn);
+      nNegIonOut = -(nElectronOut - nElectronIn);
     }
   } else {
     // alpha != 0 =! eta
     const double k = eta / alpha;
     const double ndx = exp((alpha - eta) * dx);
 
-    if (nElectronIn < (long) 1e3) {
+    if (nElectronIn < 1000L) {
+      // Condition to which the random number will be compared. 
+      // If the number is smaller than the condition, nothing happens. 
+      // Otherwise, the single electron will be attached or retrieve 
+      // additional electrons from the gas.
+      const double prob = k * (ndx - 1) / (ndx - k);
       // Running over all electrons in the avalanche.
-      for (int i = 0; i < nElectronIn; i++) {
+      for (long i = 0; i < nElectronIn; i++) {
         // Draw a random number from the uniform distribution (0,1).
-        s = Garfield::RndmUniformPos();
-        // Condition to which the random number will be compared. If the number is
-        // smaller than the condition, nothing happens. Otherwise, the single
-        // electron will be attached or retrieve additional electrons from the
-        // gas.
-        condition = k * (ndx - 1) / (ndx - k);
-        if (s >= condition) {
-          nHolder = (long) (1 + log((ndx - k) * (1 - s) / (ndx * (1 - k))) /
-                                log(1 - (1 - k) / (ndx - k)));
+        const double s = Garfield::RndmUniformPos();
+        if (s >= prob) {
           // deviation/improvement wrt Lippmann?
-          nElectronOut += nHolder;
+          nElectronOut += (long) (1 + log((ndx - k) * (1 - s) / (ndx * (1 - k))) /
+                                log(1 - (1 - k) / (ndx - k)));
         } else {
           nNegIonOut += 1;
         }
       }
       // charge conservation
-      nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut;
+      nPosIonOut = (nElectronOut - nElectronIn) + nNegIonOut;
 
     } else {
       // Central limit theorem.
-      const double sigma = sqrt((double) nElectronIn * (1 + k) * ndx * (ndx - 1) / (1 - k));
-      nElectronOut = (long) Garfield::RndmGaussian((double) nElectronIn * ndx, sigma);
+      const double sigma = sqrt(nElectronIn * (1 + k) * ndx * (ndx - 1) / (1 - k));
+      nElectronOut = (long) Garfield::RndmGaussian(nElectronIn * ndx, sigma);
 
       // boundary conditions (alpha dx ElectronIn = dPosOut),
       //  the procedure guarantees positive values
@@ -122,13 +121,13 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
 
       // either the above has not been executed or nPosIonOut was not positive
       if (nElectronOut >= nElectronIn) {
-        nNegIonOut = (std::exp(eta * dx) - 1) * (double) nElectronIn; //< >= 0
+        nNegIonOut = (std::exp(eta * dx) - 1) * nElectronIn; //< >= 0
         // nNegIonOut = eta / (alpha - eta) * (nElectronOut - nElectronIn);
-        nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
+        nPosIonOut = (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
       } else {
-        nPosIonOut = (std::exp(alpha * dx) - 1) * (double) nElectronIn; //< >= 0
+        nPosIonOut = (std::exp(alpha * dx) - 1) * nElectronIn; //< >= 0
         // nPosIonOut = alpha / (alpha - eta) * (nElectronOut - nElectronIn);
-        nNegIonOut = nPosIonOut - (double) (nElectronOut - nElectronIn); //< >= 0
+        nNegIonOut = nPosIonOut - (nElectronOut - nElectronIn); //< >= 0
       }
     }
   }
@@ -148,11 +147,11 @@ void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn,
 
   // either the above has not been executed or nPosIonOut was not positive
   if (nElectronOut >= nElectronIn) {
-    nNegIonOut = (std::exp(eta * dx) - 1) * (double) nElectronIn; //< >= 0
-    nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
+    nNegIonOut = (std::exp(eta * dx) - 1) * nElectronIn; //< >= 0
+    nPosIonOut = (nElectronOut - nElectronIn) + nNegIonOut; //< >= 0
   } else {
-    nPosIonOut = (std::exp(alpha * dx) - 1) * (double) nElectronIn; //< >= 0
-    nNegIonOut = nPosIonOut - (double) (nElectronOut - nElectronIn); //< >= 0
+    nPosIonOut = (std::exp(alpha * dx) - 1) * nElectronIn; //< >= 0
+    nNegIonOut = nPosIonOut - (nElectronOut - nElectronIn); //< >= 0
   }
 }
 
