@@ -15,16 +15,6 @@
 #include "Sensor.hh"
 #include "Random.hh"
 
-
-// Get size of avalanche when going from x to x+dx in Monte Carlo fashion
-void GetAvalancheSizeFromStep(double dx, const long nElectronIn, const double alpha, const double eta,
-                              long &nElectronOut, double &nPosIonOut, double &nNegIonOut);
-
-// Get mean size of avalanche when going from x to x+dx
-void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn, const double alpha, const double eta,
-                                  long &nElectronOut, double &nPosIonOut, double &nNegIonOut);
-
-
 namespace Garfield {
   /// Propagates avalanches with the 2d (axi-symmetric) space-charge routine from Lippmann, Riegler (2004)
   /// in uniform background fields. Different options to calculate space-charge-fields can be chosen.

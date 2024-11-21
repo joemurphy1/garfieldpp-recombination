@@ -1,6 +1,8 @@
 #include "Garfield/AvalancheGridSpaceCharge.hh"
 
+namespace {
 
+// Get size of avalanche when going from x to x+dx in Monte Carlo fashion
 void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
                               const double alpha, const double eta,
                               long &nElectronOut, double &nPosIonOut, double &nNegIonOut) {
@@ -128,6 +130,7 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
   }
 }
 
+// Get mean size of avalanche when going from x to x+dx
 void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn,
                                   const double alpha, const double eta,
                                   long &nElectronOut, double &nPosIonOut, double &nNegIonOut) {
@@ -150,6 +153,7 @@ void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn,
   }
 }
 
+}
 
 namespace Garfield {
 
