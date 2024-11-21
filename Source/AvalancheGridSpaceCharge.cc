@@ -2,6 +2,10 @@
 
 namespace {
 
+double Mag(const double x, const double y) {
+  return std::sqrt(x * x + y * y);
+}
+
 // Get size of avalanche when going from x to x+dx in Monte Carlo fashion
 void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
                               const double alpha, const double eta,
@@ -135,7 +139,6 @@ void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn,
                                   const double alpha, const double eta,
                                   long &nElectronOut, double &nPosIonOut, double &nNegIonOut) {
   // Mean size gain
-  nElectronOut = 0;
   nPosIonOut = 0;
   nNegIonOut = 0;
   const double ndx = exp((alpha - eta) * dx);
@@ -195,8 +198,8 @@ namespace Garfield {
     m_bPreparedImportAvalanche = false;
     m_bFieldK = false;
 
-    std::cerr << m_className
-              << "::Reset Instance reseted, ready to use again.\n";
+    std::cout << m_className
+              << "::Reset: Instance reset, ready to use again.\n";
   }
 
 
@@ -227,9 +230,9 @@ namespace Garfield {
     }
 
     if (m_bDebug) {
-      std::cerr << m_className << "::Set2dGrid: Grid created:\n";
-      std::cerr << "       z range = (" << zmin << "," << zmax << ").\n";
-      std::cerr << "       r range = (" << 0 << "," << rmax << ").\n";
+      std::cout << m_className << "::Set2dGrid: Grid created:\n"
+                << "       z range = (" << zmin << "," << zmax << ").\n"
+                << "       r range = (" << 0 << "," << rmax << ").\n";
     }
 
   }
@@ -248,7 +251,7 @@ namespace Garfield {
       m_vElectrons.resize(m_vIndexGasGaps.size());
     }
 
-    for (auto &electron: avmc->GetElectrons()) {
+    for (const auto &electron: avmc->GetElectrons()) {
       // StatusOutsideTimeWindow (if electrons has been transported until reaching status -17 ~ still active)
       if (electron.status != -17) {
         if (m_bDebug)
@@ -519,8 +522,7 @@ namespace Garfield {
       for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
         GridNode *nd = &m_GridMesh[iz][ir];
         int gasGap = nd->gasGapIndex;
-        double EField = std::sqrt(std::pow(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], 2)
-                           + std::pow(nd->eFieldR, 2));
+        double EField = Mag(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], nd->eFieldR);
         exportMagField << std::round(EField) << " ";
       }
       exportMagField << "\n";
@@ -825,9 +827,8 @@ namespace Garfield {
                 << "::GetSwarmParametersFromSensor::Getting parameters at "
                    "|E| = " << MagEField << ".\n";
 
-    Medium *m = nullptr;
     // medium from sensor
-    m = m_sensor->GetMedium(0, m_vYPointInGasGap[gasGap], 0);
+    Medium *m = m_sensor->GetMedium(0, m_vYPointInGasGap[gasGap], 0);
 
     // alpha
     m->ElectronTownsend(0., MagEField, 0., 0., 0., 0., alpha);
@@ -926,8 +927,7 @@ namespace Garfield {
           GetLocalField(iz, ir, nd->eFieldZ, nd->eFieldR, m_sFieldOption, gasGap);
 
           // check if local field reaches background field values.
-          double MagEField = std::sqrt(std::pow(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], 2)
-                                + std::pow(nd->eFieldR, 2));
+          double MagEField = Mag(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], nd->eFieldR);
           if (MagEField - std::abs(m_vEFieldZBackgroundGasLayer[gasGap]) >=
               m_fStreamerK * std::abs(m_vEFieldZBackgroundGasLayer[gasGap])
               && !m_bFieldK) {
@@ -942,8 +942,7 @@ namespace Garfield {
           }
 
           // calculate the swarm parameters
-          MagEField = std::sqrt(
-                  std::pow(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], 2) + std::pow(nd->eFieldR, 2));
+          MagEField = Mag(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], nd->eFieldR);
           GetSwarmParameters(MagEField, nd->townsend, nd->attachment, nd->velocity, nd->dSigmaL, nd->dSigmaT,
                              nd->Wv, nd->Wr, nd->townsendPT, nd->attachmentPT, gasGap);
 
@@ -1003,8 +1002,7 @@ namespace Garfield {
         m_AvGrid.nTotPosIons += std::round(nPosIonOut);
 
         // calculate steps against electric field i.e. correct sign.
-        double MagEField = std::sqrt(
-                std::pow(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], 2) + std::pow(nd->eFieldR, 2));
+        double MagEField = Mag(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], nd->eFieldR);
         double stepZ = step * (-(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap]) / MagEField);
         double stepR = step * (-(nd->eFieldR) / MagEField);
 
@@ -1131,8 +1129,7 @@ namespace Garfield {
     }
 
     // calculate diffusion and add to transport step
-    double MagEField = std::sqrt(
-            std::pow(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], 2) + std::pow(nd->eFieldR, 2));
+    double MagEField = Mag(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], nd->eFieldR);
     if (MagEField > 1.e-8) {
       cosTheta = (-(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap]) / MagEField);
       sinTheta = (-(nd->eFieldR) / MagEField);
@@ -1401,9 +1398,7 @@ namespace Garfield {
 
     if (std::abs(rf) / m_AvGrid.rStepSize < 0.5) {
       // coulomb ball of radius dr / 2
-      const double dist = std::sqrt((zi - zf) * (zi - zf)
-                       + ri * ri);
-
+      const double dist = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
       intermediateEz = 2. * Pi / (dist * dist);
       intermediateEr = intermediateEz * ri / dist;
       intermediateEz *= (zi - zf) / dist;
@@ -1472,10 +1467,11 @@ namespace Garfield {
                                                       int gasGap) {
     // wrt to where the center of electron number has been
     // negative r is allowed and for phi = 0 is just like the x-axis.
-    xg = 0, yg = 0, zg = 0;
     // phi is wrt to local x
-    double xloc = r * std::cos(phi); // per definition local x is in global x direction.
-    double yloc = r * std::sin(phi); // per definition local y is in global -z direction.
+    // per definition local x is in global x direction.
+    double xloc = r * std::cos(phi); 
+    // per definition local y is in global -z direction.
+    double yloc = r * std::sin(phi); 
     yg = z;
     xg = m_vCoNGasLayer[gasGap][0] + xloc;
     zg = m_vCoNGasLayer[gasGap][2] - yloc;
