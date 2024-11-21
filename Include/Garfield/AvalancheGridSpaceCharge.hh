@@ -286,8 +286,9 @@ namespace Garfield {
     std::vector<int> m_vIndexGasGaps = {0}; ///< which layer indices are gas layers
     std::vector<std::vector<double>> m_vCoNGasLayer{}; ///< coordinates of center of electron number. Required: y in [zmin, zmax]
     std::vector<double> m_vYPointInGasGap{}; ///< example point (y-coord) in each gas gap
-    std::vector<double> m_vEFieldZBackgroundGasLayer = {
-            0}; ///< uniform background field in z direction, can be negative.
+    /// uniform background field in z direction, can be negative.
+    std::vector<double> m_ezBkg = {0}; 
+
     std::vector<int> m_vSaturatedGaps{}; ///< which gas gaps are saturated if saturation is on
     std::string m_sFieldOption = "coulomb";
     std::vector<double> m_vXElliptic;

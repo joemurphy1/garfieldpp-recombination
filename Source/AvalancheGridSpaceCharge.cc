@@ -187,10 +187,8 @@ namespace Garfield {
     m_vNElectronEvolution.resize(0);
     m_GridMesh.resize(0);
     m_vYPointInGasGap.resize(0);
-    m_vIndexGasGaps.resize(0);
     m_vIndexGasGaps = {0};
-    m_vEFieldZBackgroundGasLayer.resize(0);
-    m_vEFieldZBackgroundGasLayer = {0};
+    m_ezBkg = {0};
     m_vSaturatedGaps.resize(0);
 
     m_bDriftAvalanche = false;
@@ -493,7 +491,7 @@ namespace Garfield {
       for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
         GridNode *nd = &m_GridMesh[iz][ir];
         int gasGap = nd->gasGapIndex;
-        double EField = nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap];
+        double EField = nd->eFieldZ + m_ezBkg[gasGap];
         exportZField << std::round(EField) << " ";
       }
       exportZField << "\n";
@@ -522,7 +520,7 @@ namespace Garfield {
       for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
         GridNode *nd = &m_GridMesh[iz][ir];
         int gasGap = nd->gasGapIndex;
-        double EField = Mag(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], nd->eFieldR);
+        double EField = Mag(nd->eFieldZ + m_ezBkg[gasGap], nd->eFieldR);
         exportMagField << std::round(EField) << " ";
       }
       exportMagField << "\n";
@@ -608,8 +606,8 @@ namespace Garfield {
     // e-field is along y (micro)
     double step = m_AvGrid.zGrid[indexZ] - y;
     // determine if against (ok) or with e field (not ok):
-    int against = (step > 0 && m_vEFieldZBackgroundGasLayer[gasLayer] < 0) ||
-                  (step < 0 && m_vEFieldZBackgroundGasLayer[gasLayer] > 0);
+    int against = (step > 0 && m_ezBkg[gasLayer] < 0) ||
+                  (step < 0 && m_ezBkg[gasLayer] > 0);
 
     // sanity check
     if (m_GridMesh[indexZ][indexR].gasGapIndex != gasLayer) {
@@ -659,7 +657,7 @@ namespace Garfield {
 
     // get a point (Y global coordinate) in each gas gap
     int n = m_vIndexGasGaps.size();
-    m_vEFieldZBackgroundGasLayer.resize(n);
+    m_ezBkg.resize(n);
 
     if (m_ParallelPlate) {
       m_vYPointInGasGap.resize(n);
@@ -691,13 +689,13 @@ namespace Garfield {
 
       // one expects (ComponentParallelPlate) that the electric field is pointing along y-axis
       //  i.e. Z-axis in our coordinate system.
-      m_vEFieldZBackgroundGasLayer[k] = e[1];
+      m_ezBkg[k] = e[1];
       GetSwarmParameters(std::abs(e[1]), alpha[k], eta[k], drift[k],
                          dSigmaL[k], dSigmaT[k], wv[k], wr[k], alphaPT[k], etaPT[k], k);
 
       // print-out to double-check the swarm parameters
       std::cerr << m_className << "::Prepare2dMesh for gas gap " << k + 1 << "\n" <<
-                "     Ez: " << m_vEFieldZBackgroundGasLayer[k] << " (V/cm)" <<
+                "     Ez: " << m_ezBkg[k] << " (V/cm)" <<
                 " alphaSST: " << alpha[k] << " (1/cm)" <<
                 " etaSST: " << eta[k] << " (1/cm)\n" <<
                 "     alphaPT: " << alphaPT[k] << " (1/cm)" <<
@@ -750,7 +748,7 @@ namespace Garfield {
     for (int k = 0; k < n; k++) {
       int izMin = m_AvGrid.zGasGapBoundaries[k].front();
       int izMax = m_AvGrid.zGasGapBoundaries[k].back();
-      int izAnode = (m_vEFieldZBackgroundGasLayer[k] > 0) ? izMin : izMax;
+      int izAnode = (m_ezBkg[k] > 0) ? izMin : izMax;
       for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
         m_GridMesh[izAnode][ir].anode = true;
       }
@@ -927,9 +925,9 @@ namespace Garfield {
           GetLocalField(iz, ir, nd->eFieldZ, nd->eFieldR, m_sFieldOption, gasGap);
 
           // check if local field reaches background field values.
-          double MagEField = Mag(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], nd->eFieldR);
-          if (MagEField - std::abs(m_vEFieldZBackgroundGasLayer[gasGap]) >=
-              m_fStreamerK * std::abs(m_vEFieldZBackgroundGasLayer[gasGap])
+          double MagEField = Mag(nd->eFieldZ + m_ezBkg[gasGap], nd->eFieldR);
+          if (MagEField - std::abs(m_ezBkg[gasGap]) >=
+              m_fStreamerK * std::abs(m_ezBkg[gasGap])
               && !m_bFieldK) {
             std::cout << m_className << "::Space-charge field reached "
                       << std::to_string(int(m_fStreamerK * 100))
@@ -942,7 +940,7 @@ namespace Garfield {
           }
 
           // calculate the swarm parameters
-          MagEField = Mag(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], nd->eFieldR);
+          MagEField = Mag(nd->eFieldZ + m_ezBkg[gasGap], nd->eFieldR);
           GetSwarmParameters(MagEField, nd->townsend, nd->attachment, nd->velocity, nd->dSigmaL, nd->dSigmaT,
                              nd->Wv, nd->Wr, nd->townsendPT, nd->attachmentPT, gasGap);
 
@@ -1002,8 +1000,8 @@ namespace Garfield {
         m_AvGrid.nTotPosIons += std::round(nPosIonOut);
 
         // calculate steps against electric field i.e. correct sign.
-        double MagEField = Mag(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], nd->eFieldR);
-        double stepZ = step * (-(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap]) / MagEField);
+        double MagEField = Mag(nd->eFieldZ + m_ezBkg[gasGap], nd->eFieldR);
+        double stepZ = step * (-(nd->eFieldZ + m_ezBkg[gasGap]) / MagEField);
         double stepR = step * (-(nd->eFieldR) / MagEField);
 
         if (m_bDiffusion) {
@@ -1129,9 +1127,9 @@ namespace Garfield {
     }
 
     // calculate diffusion and add to transport step
-    double MagEField = Mag(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap], nd->eFieldR);
+    double MagEField = Mag(nd->eFieldZ + m_ezBkg[gasGap], nd->eFieldR);
     if (MagEField > 1.e-8) {
-      cosTheta = (-(nd->eFieldZ + m_vEFieldZBackgroundGasLayer[gasGap]) / MagEField);
+      cosTheta = (-(nd->eFieldZ + m_ezBkg[gasGap]) / MagEField);
       sinTheta = (-(nd->eFieldR) / MagEField);
     } else {
       cosTheta = 1.;
