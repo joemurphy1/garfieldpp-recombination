@@ -111,24 +111,44 @@ class ComponentParallelPlate : public Component {
   bool GetBoundingBox(double &xmin, double &ymin, double &zmin, double &xmax,
                       double &ymax, double &zmax) override;
 
-  // Obtain the index and permitivity of of the layer at hight z.
+  // Obtain the index and permitivity of the layer at height z.
   bool getLayer(const double y, int &m, double &epsM) {
 
-    int mholer = -1;
+    int mholder = -1;
+
+    if (y < m_z[0]) return false;
 
     for (int i = 1; i < m_N; i++) {
       if (y <= m_z[i]) {
-        mholer = i;
+        mholder = i;
         break;
       }
     }
-    if (mholer == -1) return false;
 
-    m = mholer;
+    if (mholder == -1) return false;
+
+    m = mholder;
     epsM = m_epsHolder[m - 1];
     return true;
   }
+  // Obtain the relative permittivity from layer at index m
+  void getPermittivityFromLayer(int m, double& eps) {
+    eps = m_epsHolder.at(m - 1);
+  }
+  // Obtain the z-coordinate bounds of layer m
+  void getZBoundFromLayer(int m, double& zbottom, double& ztop) {
+    ztop = m_z.at(m);
+    zbottom = m_z.at(m - 1);
+  }
+  // Obtain amount of layers
   int NumberOfLayers() { return m_N - 1; }
+  // Get the indices of the gas gaps
+  void IndexOfGasGaps(std::vector<int>& indexGasGap) {
+    indexGasGap = {};
+    for (int i = 1; i < m_N; i++) {
+      if (kroneckerDelta(i) != 0) indexGasGap.push_back(i);
+    }
+  }
 
   void SetIntegrationPrecision(const double eps) { m_precision = eps; }
 

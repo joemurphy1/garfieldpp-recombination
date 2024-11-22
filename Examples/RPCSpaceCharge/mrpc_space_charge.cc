@@ -1,0 +1,148 @@
+//
+// Created by Dario Stocco (stoccod@ethz.ch) on 02.08.2023.
+//
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+
+#include <TApplication.h>
+#include <TCanvas.h>
+#include <TH1F.h>
+#include <TSystem.h>
+#include <numeric>
+
+
+//include Garfield
+#include "Garfield/ComponentConstant.hh"
+#include "Garfield/SolidBox.hh"
+#include "Garfield/GeometrySimple.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/AvalancheGridSpaceCharge.hh"
+#include "Garfield/TrackHeed.hh"
+#include "Garfield/Plotting.hh"
+#include "Garfield/ViewSignal.hh"
+
+
+using namespace Garfield;
+
+#define LOG(x) std::cout << x << std::endl;
+
+int main(int argc, char *argv[]) {
+  LOG("Start MRPC Double Gap RPC Space Charge Example")
+
+  TApplication app("app", &argc, argv);
+  plottingEngine.SetDefaultStyle();
+
+  double voltage = 2 * -9000.;
+
+  MediumMagboltz gas;
+  gas.EnableAutoEnergyLimit(false);
+  gas.SetMaxElectronEnergy(100.);
+  std::string path = "CO2_C2H2F4_isoC4H10_SF6_30_64.5_4.5_1_T_293_P_723.8.gas";
+  gas.LoadGasFile(path);
+  gas.Initialise(true);
+
+  // MRPC dimensions (double gap)
+  double d_bakelite = 0.2; // (cm)
+  double d_pet = 0.02;
+  double d_gas = 0.2;
+  std::vector<double> layers = {d_pet,
+                                d_bakelite,
+                                d_gas,
+                                d_bakelite,
+                                d_gas,
+                                d_bakelite,
+                                d_pet};
+
+  double e_bakelite = 8.;
+  double e_pet = 3.5;
+  double e_gas = 1.;
+  std::vector<double> eps = {e_pet,
+                             e_bakelite,
+                             e_gas,
+                             e_bakelite,
+                             e_gas,
+                             e_bakelite,
+                             e_pet};
+  // ComponentParallelPlate
+  ComponentParallelPlate cmp;
+  cmp.Setup(int(layers.size()), eps, layers, voltage, {});
+  cmp.EnableDebugging();
+  std::string label = "readout";
+  cmp.AddPlane(label);
+
+  // Geometry & Box containing all gas gaps
+  GeometrySimple geo;
+  double y_mid = (2 * d_pet + 3 * d_bakelite + 2 * d_gas) / 2;
+  auto *box = new SolidBox(0., y_mid, 0., 5., (d_bakelite / 2 + d_gas), 5.);
+  geo.AddSolid(box, &gas);
+  cmp.SetGeometry(&geo);
+  cmp.SetMedium(&gas);
+
+  // Sensor
+  Sensor sens;
+  sens.AddComponent(&cmp);
+  sens.AddElectrode(&cmp, label);
+  sens.SetTimeWindow(0, (25. - 0) / 200., 200);
+
+  // AvalancheGridSpaceCharge
+  AvalancheGridSpaceCharge avalsc;
+  avalsc.EnableDebugging();
+  avalsc.EnableDiffusion(true);
+  avalsc.EnableStickyAnode(true);
+  avalsc.EnableAdaptiveTimeStepping(true);
+  avalsc.SetStopAtK(true);
+  avalsc.EnableSpaceChargeEffect(true);
+  avalsc.SetSensor(&sens);
+  avalsc.Set2dGrid(y_mid - (d_bakelite / 2 + d_gas) + 1.e-8, y_mid + (d_bakelite / 2 + d_gas) - 1.e-8, 3 * 400, 0.05,
+                   100);
+
+  // Mixed Method: AvalancheMicroscopic
+  AvalancheMicroscopic avalmicro;
+  avalmicro.SetSensor(&sens);
+  avalmicro.SetTimeWindow(0., 0.5);
+  avalmicro.UseWeightingPotential();
+
+  LOG("Muon(100GeV) Interaction Start")
+
+  // TrackHeed for primary ionization
+  TrackHeed track;
+  track.SetSensor(&sens);
+  track.SetParticle("muon");
+  track.SetMomentum(1.e11); // 100GeV
+  track.NewTrack(0, y_mid + (d_bakelite / 2 + d_gas) - 1.e-6, 0, 0., 0., -1., 0.);
+
+  // Retrieve the clusters along the track.
+  for (const auto &cluster: track.GetClusters()) {
+    // Loop over the electrons in the cluster.
+    for (const auto &electron: cluster.electrons) {
+      // propagate electrons microscopically
+      avalmicro.AvalancheElectron(electron.x, electron.y, electron.z, electron.t, 0.1, 0., 0., 0.);
+      // add electrons to m_AvalGrid instance
+      avalsc.ImportElectronsFromAvalancheMicroscopic(&avalmicro);
+    }
+  }
+
+  LOG("Start Grid Calculation")
+
+  avalsc.StartGridAvalanche();
+  avalsc.ExportGrid("my_mrpc_grid");
+  std::string filename = "my_signal";
+  sens.ExportSignal(label, filename);
+
+  // view recorded signals from plane electrode
+  ViewSignal *signal_view = new ViewSignal();
+  TCanvas *c_signal = new TCanvas(label.c_str(), label.c_str(), 600, 600);
+  signal_view->SetCanvas(c_signal);
+  signal_view->SetSensor(&sens);
+  signal_view->PlotSignal(label);
+  c_signal->SetTitle(label.c_str());
+  c_signal->Draw();
+  gSystem->ProcessEvents();
+
+  app.Run(kTRUE);
+
+  return 0;
+}
