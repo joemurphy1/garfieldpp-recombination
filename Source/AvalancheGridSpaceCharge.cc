@@ -37,6 +37,7 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
         // else 1 neg ion.
         if (s >= prob) {
           // deviation/improvement wrt Lippmann?
+          // HS: compute log(prob) outside of the loop.
           nElectronOut += (long) (log((1 - s) * (1 + alpha * dx)) / log(prob));
         } else {
           nNegIonOut += 1;
@@ -77,6 +78,7 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
       }
     } else {
       // Central limit theorem.
+      // HS: compute exp(-eta * dx) only once?
       const double sigma = std::sqrt(nElectronIn * exp(-2 * eta * dx) * (exp(-eta * dx) - 1));
       nElectronOut = (long) Garfield::RndmGaussian(nElectronIn * exp(-eta * dx), sigma);
 
@@ -104,6 +106,7 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
         const double s = Garfield::RndmUniformPos();
         if (s >= prob) {
           // deviation/improvement wrt Lippmann?
+          // HS: compute the denominator outside of the loop.
           nElectronOut += (long) (1 + log((ndx - k) * (1 - s) / (ndx * (1 - k))) /
                                 log(1 - (1 - k) / (ndx - k)));
         } else {
@@ -327,6 +330,7 @@ namespace Garfield {
     // prepare the CoN
     for (int i = 0; i < (int) m_vIndexGasGaps.size(); i++) {
       if (i != gasGap) {
+        // HS: not sure it's a good idea to initialize with NAN...
         m_vCoNGasLayer.push_back({NAN, NAN, NAN});
       } else if (i == gasGap) {
         m_vCoNGasLayer.push_back({x, y, z});
@@ -338,7 +342,7 @@ namespace Garfield {
                 << "::AvalancheElectron: Could not determine center.\n";
     }
     Prepare2dMesh();
-
+    // HS: check!!
     if (SnapTo2dGrid(x, y, z, n, gasGap) && m_bDebug)
       std::cerr << m_className
                 << "::AvalancheElectron: Electron added at (t, x, y, z) =  (" << t
@@ -369,7 +373,7 @@ namespace Garfield {
     if (std::isnan(m_vCoNGasLayer[gasGap][0])) {
       m_vCoNGasLayer[gasGap] = {0, y, 0};
     }
-
+    // HS: check!!
     if (SnapTo2dGrid(m_vCoNGasLayer[gasGap][0], y, m_vCoNGasLayer[gasGap][2], n, gasGap) && m_bDebug)
       std::cout << m_className << "::AddExtraAvalancheElectron: "
                 << "Electron added at (t, x, y, z) =  (" << m_AvGrid.time 
@@ -579,6 +583,7 @@ namespace Garfield {
       return false;
     }
 
+    // HS: why make a copy?
     auto CoN = m_vCoNGasLayer[gasLayer];
     // y in micro is z in grid space-charge
     double r = std::sqrt((x - CoN[0]) * (x - CoN[0]) + (z - CoN[2]) * (z - CoN[2]));
@@ -709,10 +714,12 @@ namespace Garfield {
     for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
       m_GridMesh[iz].resize(m_AvGrid.rSteps + 1);
       // determine layer index
-      double zCoordNode = m_AvGrid.zGrid[iz], _;
-      int layerIndex = 0, k = 0;
+      double zCoordNode = m_AvGrid.zGrid[iz];
+      int layerIndex = 0;
+      double eps = 0.;
+      int k = 0;
       if (m_ParallelPlate) {
-        m_ParallelPlate->getLayer(zCoordNode, layerIndex, _);
+        m_ParallelPlate->getLayer(zCoordNode, layerIndex, eps);
         // determine gap number from m_iIndexGasGaps and layer index
         k = GetGasGapNumber(layerIndex);
       }
@@ -770,9 +777,8 @@ namespace Garfield {
 
       // continue if no electron in the gas gap
       if (neGasGap <= 0) {
-        m_vCoNGasLayer.push_back({NAN,
-                                  NAN,
-                                  NAN});
+        // HS: not sure it's a good idea to initialize with NAN.
+        m_vCoNGasLayer.push_back({NAN, NAN, NAN});
         continue;
       }
       neTotal += neGasGap;
@@ -821,7 +827,7 @@ namespace Garfield {
                                                     double &alphaPT, double &etaPT, int gasGap) {
     if (m_bDebug && false)
       std::cerr << m_className
-                << "::GetSwarmParametersFromSensor::Getting parameters at "
+                << "::GetSwarmParameters: Getting parameters at "
                    "|E| = " << MagEField << ".\n";
 
     // medium from sensor
@@ -850,7 +856,7 @@ namespace Garfield {
         || !m->ElectronTOFAttachment(0., MagEField, 0., 0., 0., 0., ratt)) {
 
       if (m_bDebug) {
-        std::cerr << m_className << "::GetSwarmParameters TOF Rates not available.\n";
+        std::cerr << m_className << "::GetSwarmParameters: TOF Rates not available.\n";
       }
 
       m_bRatesAvailable = false;
@@ -868,7 +874,7 @@ namespace Garfield {
 
     // print (and information about units!)
     if (m_bDebug && false) {
-      std::cerr << m_className << "::GetParametersFromSensor:\n"
+      std::cerr << m_className << "::GetSwarmParameters:\n"
                 << "  Townsend = " << alpha
                 << " [1/cm], Attachment = " << eta
                 << " [1/cm], Flux Velocity = " << drift
@@ -890,7 +896,7 @@ namespace Garfield {
     double nPosIonOut, nNegIonOut;
 
     if (m_bDebug) {
-      std::cerr << m_className << "::TransportTimeStep Start time: " << m_AvGrid.time << "\n";
+      std::cerr << m_className << "::TransportTimeStep: Start time: " << m_AvGrid.time << "\n";
     }
 
     // choose MC or Mean version depending on m_bMC; total electron > 1e5
@@ -981,12 +987,15 @@ namespace Garfield {
         GridNode *nd = &m_GridMesh[iz][ir];
 
         // continue if at anode or no electrons
+        // HS: why static_cast<double>(nd->nElectron) < 0.5 instead of 
+        //     just nd->nElectron < 1?
         if (nd->anode || static_cast<double>(nd->nElectron) < 0.5) continue;
 
         // update step distance
         double step = std::abs(nd->Wr * m_AvGrid.dt);
 
         // calculate new avalanche size at X + step
+        // HS: use a vector<bool> to keep track of which gaps are saturated?
         if (!m_bSpaceCharge &&
             (std::find(m_vSaturatedGaps.begin(), m_vSaturatedGaps.end(), gasGap) != m_vSaturatedGaps.end()
              ? true : false)) {
@@ -1018,6 +1027,7 @@ namespace Garfield {
           // TODO: discretize phi and add signal for each with nElectron / M on each element.
           // TODO: at anode the signal from diffusion is due to bounded plane not netto 0 because diffusion
           //  tends more backwards, since forward they reach at earlier distance the boundary
+          // HS: why? This means we have to compute cos(0), sin(0) every time.
           double x0, y0, z0;
           GetGlobalCoordinates(m_AvGrid.rGrid[ir], m_AvGrid.zGrid[iz], 0., x0, y0, z0, gasGap);
 
@@ -1053,6 +1063,7 @@ namespace Garfield {
     for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
       for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
         // get node
+        // HS: why a pointer?
         GridNode *nd = &m_GridMesh[iz][ir];
         int gasGap = nd->gasGapIndex;
         if (nd->anode && m_bStick) {
@@ -1259,7 +1270,7 @@ namespace Garfield {
     // calculate space-charge (local field) at iz/ir
     eFieldZ = 0;
     eFieldR = 0;
-
+    // HS: use enum instead of string.
     if (fieldOption == "coulomb") {
       if (!m_bImportElliptic) {
         throw std::runtime_error("::GetLocalField Elliptic values not imported.");
@@ -1280,6 +1291,7 @@ namespace Garfield {
         }
       }
       // add prefactor (final field units V/cm)
+      // HS: make the prefactor constexpr
       eFieldZ *= ElementaryCharge / (2. * Pi * FourPiEpsilon0);
       eFieldR *= ElementaryCharge / (2. * Pi * FourPiEpsilon0);
     } else if (fieldOption == "mirror") {
@@ -1293,6 +1305,7 @@ namespace Garfield {
       }
 
       // get the rpc (ComponentParallelPlate)
+      // HS: why?
       auto *rpc = m_ParallelPlate;
 
       // loop over all cells with particles and add fields
@@ -1303,6 +1316,7 @@ namespace Garfield {
         if (k == -1 || k != gasGap)
           continue;
 
+        // HS: this can be done at initialization time...
         // get epsilon value from neighboring layer (assume both layers have same eps)
         int IndexOfRightLayer = m_vIndexGasGaps[k] + 1;
         // int IndexOfLeftLayer = m_vIndexGasGaps[k] - 1;
@@ -1349,6 +1363,7 @@ namespace Garfield {
         }
       }
       // add prefactor (final field units V/cm)
+      // HS: precompute (constexpr)
       eFieldZ *= ElementaryCharge / (2. * Pi * FourPiEpsilon0);
       eFieldR *= ElementaryCharge / (2. * Pi * FourPiEpsilon0);
     } else if (fieldOption == "relaxation") {
@@ -1376,6 +1391,7 @@ namespace Garfield {
       const double dist = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
 
       intermediateEz = 2. * Pi / (dist * dist);
+      // HS: do the division by dist in the expression above?
       intermediateEr = intermediateEz * ri / dist;
       intermediateEz *= (zi - zf) / dist;
 
@@ -1487,7 +1503,7 @@ namespace Garfield {
     // from x = 0 to 10 it is in steps of 1e-3. From 10 to 1e4 in steps of 1. Then in steps of 1000 until 1e7.
     int arg;
     double stepSize;
-
+    // HS: use 1. / stepSize
     if (-x < 1.e1) {
       stepSize = 1.e-3;
       arg = (int) (-x / stepSize);
@@ -1506,6 +1522,8 @@ namespace Garfield {
     }
 
     // linear interpolation:
+    // HS: rewrite the linear interpolation, 
+    //     f * k[i] + (1. - f) * k[i + 1]
     K = m_vKElliptic.at(arg) + (-x - m_vXElliptic.at(arg))
                                * (m_vKElliptic.at(arg + 1) - m_vKElliptic.at(arg)) / (stepSize);
     E = m_vEElliptic.at(arg) + (-x - m_vXElliptic.at(arg))
@@ -1518,7 +1536,6 @@ namespace Garfield {
     double z = 0., meanDistance = 0.;
     for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
       for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
-        // get node
         const auto ne = m_GridMesh[iz][ir].nElectron;
         if (ne < 0.5) continue;
         nofElectrons += ne;
