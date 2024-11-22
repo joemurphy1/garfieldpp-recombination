@@ -461,56 +461,52 @@ void AvalancheGridSpaceCharge::StartGridAvalanche(double dtime) {
 }
 
 void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
-  // open files
-  std::ofstream exportElectrons(filename + "_electrons.csv");
-  std::ofstream exportPosIon(filename + "_posion.csv");
-  std::ofstream exportNegIon(filename + "_negion.csv");
-  // fields only where there are electrons
-  std::ofstream exportZField(filename + "_eFieldZ.csv");
-  std::ofstream exportRField(filename + "_eFieldR.csv");
-  std::ofstream exportMagField(filename + "_MagField.csv");
 
+
+  std::ofstream exportElectrons(filename + "_electrons.csv");
   if (!exportElectrons.is_open()) {
     std::cerr << "Error opening e- file.\n";
     return;
   }
-
   for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
     for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
       exportElectrons << m_GridMesh[iz][ir].nElectron << " ";
     }
     exportElectrons << "\n";
   }
+  exportElectrons.close();
 
+  std::ofstream exportPosIon(filename + "_posion.csv");
   if (!exportPosIon.is_open()) {
     std::cerr << "Error opening p+ file.\n";
     return;
   }
-
   for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
     for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
       exportPosIon << std::floor(m_GridMesh[iz][ir].nPosIon) << " ";
     }
     exportPosIon << "\n";
   }
+  exportPosIon.close();
 
+  std::ofstream exportNegIon(filename + "_negion.csv");
   if (!exportNegIon.is_open()) {
     std::cerr << "Error opening n- file.\n";
     return;
   }
-
   for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
     for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
       exportNegIon << std::floor(m_GridMesh[iz][ir].nNegIon) << " ";
     }
     exportNegIon << "\n";
   }
+  exportNegIon.close();
 
+  std::ofstream exportZField(filename + "_eFieldZ.csv");
   if (!exportZField.is_open()) {
     std::cerr << "Error opening E_z file.\n";
     return;
   }
-
   for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
     for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
       GridNode *nd = &m_GridMesh[iz][ir];
@@ -520,12 +516,13 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
     }
     exportZField << "\n";
   }
+  exportZField.close();
 
+  std::ofstream exportRField(filename + "_eFieldR.csv");
   if (!exportRField.is_open()) {
     std::cerr << "Error opening E_r file.\n";
     return;
   }
-
   for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
     for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
       double EField = m_GridMesh[iz][ir].eFieldR;
@@ -533,12 +530,13 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
     }
     exportRField << "\n";
   }
+  exportRField.close();
 
+  std::ofstream exportMagField(filename + "_MagField.csv");
   if (!exportMagField.is_open()) {
     std::cerr << "Error opening E_r file.\n";
     return;
   }
-
   for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
     for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
       GridNode *nd = &m_GridMesh[iz][ir];
@@ -548,13 +546,6 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
     }
     exportMagField << "\n";
   }
-
-  // close files
-  exportElectrons.close();
-  exportPosIon.close();
-  exportNegIon.close();
-  exportZField.close();
-  exportRField.close();
   exportMagField.close();
 
   if (m_bDebug) {
