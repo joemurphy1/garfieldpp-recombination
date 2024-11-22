@@ -1,19 +1,15 @@
 #ifndef GARFIELD_AVALANCHEGRIDSPACECHARGE_HH
 #define GARFIELD_AVALANCHEGRIDSPACECHARGE_HH
 
-#include <iostream>
 #include <string>
-#include <sstream>
 #include <utility>
 #include <vector>
 #include <numeric>
 
 #include "AvalancheMicroscopic.hh"
 #include "ComponentParallelPlate.hh"
-#include "ComponentConstant.hh"
 #include "GarfieldConstants.hh"
 #include "Sensor.hh"
-#include "Random.hh"
 
 namespace Garfield {
   /// Propagates avalanches with the 2d (axi-symmetric) space-charge routine from Lippmann, Riegler (2004)

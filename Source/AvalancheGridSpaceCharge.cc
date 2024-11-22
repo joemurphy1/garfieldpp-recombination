@@ -1,4 +1,8 @@
+#include <iostream>
+#include <sstream>
+
 #include "Garfield/AvalancheGridSpaceCharge.hh"
+#include "Garfield/Random.hh"
 
 namespace {
 
@@ -33,13 +37,13 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
         // else 1 neg ion.
         if (s >= prob) {
           // deviation/improvement wrt Lippmann?
-          nElectronOut += (long) (log((1 - s) * (1 + alpha * dx)) / log(condition));
+          nElectronOut += (long) (log((1 - s) * (1 + alpha * dx)) / log(prob));
         } else {
           nNegIonOut += 1;
         }
       }
       // charge conservation
-      nPosIonOut = (double) (nElectronOut - nElectronIn) + nNegIonOut;
+      nPosIonOut = (nElectronOut - nElectronIn) + nNegIonOut;
 
     } else {
       // Central limit theorem.
@@ -253,7 +257,7 @@ namespace Garfield {
       if (electron.status != -17) {
         if (m_bDebug)
           std::cerr << m_className
-                    << "::ImportElectronFromAvalancheMicroscopic Status is not -17, continue.\n";
+                    << "::ImportElectronsFromAvalancheMicroscopic: Status is not -17, continue.\n";
         continue;
       }
       // Outside gas gap
@@ -263,13 +267,13 @@ namespace Garfield {
         double eps;
         if (!m_ParallelPlate->getLayer(electron.path.back().y, ind, eps)) {
           std::cerr << m_className
-                    << "::ImportElectronFromAvalancheMicroscopic Electron outside component.\n";
+                    << "::ImportElectronsFromAvalancheMicroscopic: Electron outside component.\n";
           continue;
         }
         k = GetGasGapNumber(ind);
         if (k == -1) {
           std::cerr << m_className
-                    << "::ImportElectronFromAvalancheMicroscopic Electron is not in a gas gap, continue.\n";
+                    << "::ImportElectronsFromAvalancheMicroscopic: Electron is not in a gas gap, continue.\n";
           continue;
         }
       }
@@ -282,8 +286,8 @@ namespace Garfield {
       m_vElectrons[k].push_back(std::move(pt));
 
       if (m_bDebug)
-        std::cerr << m_className
-                  << "::ImportElectronsFromAvalancheMicroscopic Electron added, y: "
+        std::cout << m_className
+                  << "::ImportElectronsFromAvalancheMicroscopic: Electron added, y: "
                   << electron.path.back().y << " and gas gap: " << k + 1 << "\n";
     }
   }
@@ -297,7 +301,7 @@ namespace Garfield {
       double eps = -1;
       if (!m_ParallelPlate->getLayer(y, ind, eps) && eps != 1.) {
         std::cerr << m_className
-                  << "CreateAvalanche:: Electron is not in a gas gap.";
+                  << "AvalancheElectron: Electron is not in a gas gap.";
         return;
       }
       // determine indices of gas gaps m_iGasLayers
@@ -314,7 +318,7 @@ namespace Garfield {
 
     if (m_AvGrid.time == 0 && m_AvGrid.time != t && m_bDebug)
       std::cerr << m_className
-                << "::CreateAvalanche::Overwriting start time of avalanche for t "
+                << "::AvalancheElectron: Overwriting start time of avalanche for t "
                    "= 0 to " << t << ".\n";
 
     m_AvGrid.time = t;
@@ -329,22 +333,22 @@ namespace Garfield {
       }
     }
 
-    if (m_vCoNGasLayer.size() == 0)
+    if (m_vCoNGasLayer.size() == 0) {
       std::cerr << m_className
-                << "::CreateAvalanche:: Could not determine center.\n";
-
+                << "::AvalancheElectron: Could not determine center.\n";
+    }
     Prepare2dMesh();
 
     if (SnapTo2dGrid(x, y, z, n, gasGap) && m_bDebug)
       std::cerr << m_className
-                << "::CreateAvalanche::Electron added at (t, x, y, z) =  (" << t
+                << "::AvalancheElectron: Electron added at (t, x, y, z) =  (" << t
                 << ", " << x << ", " << y << ", " << z << ").\n";
   }
 
   void AvalancheGridSpaceCharge::AddExtraAvalancheElectron(double y, int n) {
-    if (m_bDriftAvalanche == false) {
+    if (!m_bDriftAvalanche) {
       std::cerr << m_className
-                << "::AddExtraAvalancheElectron First use AvalancheElectron.\n";
+                << "::AddExtraAvalancheElectron: First use AvalancheElectron.\n";
       return;
     }
 
@@ -355,7 +359,7 @@ namespace Garfield {
       double eps = -1;
       if (!m_ParallelPlate->getLayer(y, ind, eps) && eps != 1.) {
         std::cerr << m_className
-                  << "CreateAvalanche:: Electron is not in a gas gap.";
+                  << "AddExtraAvalancheElectron: Electron is not in a gas gap.";
         return;
       }
       gasGap = GetGasGapNumber(ind);
@@ -367,9 +371,10 @@ namespace Garfield {
     }
 
     if (SnapTo2dGrid(m_vCoNGasLayer[gasGap][0], y, m_vCoNGasLayer[gasGap][2], n, gasGap) && m_bDebug)
-      std::cerr << m_className
-                << "::CreateAvalanche::Electron added at (t, x, y, z) =  (" << m_AvGrid.time
-                << ", " << m_vCoNGasLayer[gasGap][0] << ", " << y << ", " << m_vCoNGasLayer[gasGap][2] << ").\n";
+      std::cout << m_className << "::AddExtraAvalancheElectron: "
+                << "Electron added at (t, x, y, z) =  (" << m_AvGrid.time 
+                << ", " << m_vCoNGasLayer[gasGap][0] << ", " << y 
+                << ", " << m_vCoNGasLayer[gasGap][2] << ").\n";
 
   }
 
@@ -449,8 +454,7 @@ namespace Garfield {
 
     for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
       for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
-        GridNode *nd = &m_GridMesh[iz][ir];
-        exportElectrons << nd->nElectron << " ";
+        exportElectrons << m_GridMesh[iz][ir].nElectron << " ";
       }
       exportElectrons << "\n";
     }
@@ -462,8 +466,7 @@ namespace Garfield {
 
     for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
       for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
-        GridNode *nd = &m_GridMesh[iz][ir];
-        exportPosIon << std::floor(nd->nPosIon) << " ";
+        exportPosIon << std::floor(m_GridMesh[iz][ir].nPosIon) << " ";
       }
       exportPosIon << "\n";
     }
@@ -475,8 +478,7 @@ namespace Garfield {
 
     for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
       for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
-        GridNode *nd = &m_GridMesh[iz][ir];
-        exportNegIon << std::floor(nd->nNegIon) << " ";
+        exportNegIon << std::floor(m_GridMesh[iz][ir].nNegIon) << " ";
       }
       exportNegIon << "\n";
     }
@@ -503,8 +505,7 @@ namespace Garfield {
 
     for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
       for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
-        GridNode *nd = &m_GridMesh[iz][ir];
-        double EField = nd->eFieldR;
+        double EField = m_GridMesh[iz][ir].eFieldR;
         exportRField << std::round(EField) << " ";
       }
       exportRField << "\n";
@@ -553,10 +554,9 @@ namespace Garfield {
       std::cerr << m_className << "::ImportEllipticIntegralValues Couldn't open file.\n";
     }
 
-    double value;
     for (std::string line; std::getline(ellipticStream, line);) {
       std::istringstream iss(line);
-
+      double value = 0.;
       iss >> value;
       m_vXElliptic.push_back(value);
       iss >> value;
@@ -663,10 +663,10 @@ namespace Garfield {
       for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
         // determine layer index
         double zCoordNode = m_AvGrid.zGrid[iz], _;
-        int layerIndex = 0, k = 0;
+        int layerIndex = 0;
         m_ParallelPlate->getLayer(zCoordNode, layerIndex, _);
         // determine gap number from m_iIndexGasGaps and layer index
-        k = GetGasGapNumber(layerIndex);
+        int k = GetGasGapNumber(layerIndex);
         if (k != -1 && k < n)
           m_vYPointInGasGap[k] = zCoordNode;
       }
@@ -1018,7 +1018,7 @@ namespace Garfield {
           // TODO: discretize phi and add signal for each with nElectron / M on each element.
           // TODO: at anode the signal from diffusion is due to bounded plane not netto 0 because diffusion
           //  tends more backwards, since forward they reach at earlier distance the boundary
-          double x0, y0, z0, x1, y1, z1;
+          double x0, y0, z0;
           GetGlobalCoordinates(m_AvGrid.rGrid[ir], m_AvGrid.zGrid[iz], 0., x0, y0, z0, gasGap);
 
           // z-step outside gasGap domain, resize to stepZ = Anode - Current
@@ -1032,6 +1032,7 @@ namespace Garfield {
 
           // Induced current from flux drift velocity i.e. introduce weight factor
           double weight = nd->velocity / nd->Wr; //< 1 if (Wv = velocity): Wr = flux
+          double x1, y1, z1;
           GetGlobalCoordinates(m_AvGrid.rGrid[ir] + stepR, m_AvGrid.zGrid[iz] + stepZ, 0., x1, y1, z1,
                                gasGap);
           m_sensor->AddSignalWeightingPotential(-weight,
@@ -1103,9 +1104,9 @@ namespace Garfield {
                                                  int iz, int ir, int gasGap) {
     // add diffusion onto the step dx
     long rest = 0, groups = 0, groupSize = 0;
-    double sqrtdx = std::sqrt(
-            dx), dU, dV, dW, dX, stepZ, stepR, r = m_AvGrid.rGrid[ir]; //< W is along E field, V is along e_phi and U perpendicular V and W
-    double sinTheta, cosTheta;
+    double sqrtdx = std::sqrt(dx);
+    double r = m_AvGrid.rGrid[ir]; 
+
     GridNode *nd = &m_GridMesh[iz][ir];
 
     // Diffuse in Groups of minimum m_dMinGroups groups a size groupSize:
@@ -1126,29 +1127,30 @@ namespace Garfield {
     }
 
     // calculate diffusion and add to transport step
+    double sinTheta = 0.;
+    double cosTheta = 1.;
     double MagEField = Mag(nd->eFieldZ + m_ezBkg[gasGap], nd->eFieldR);
     if (MagEField > 1.e-8) {
       cosTheta = (-(nd->eFieldZ + m_ezBkg[gasGap]) / MagEField);
       sinTheta = (-(nd->eFieldR) / MagEField);
-    } else {
-      cosTheta = 1.;
-      sinTheta = 0.;
     }
 
     for (int group = 0; group < groups; group++) {
       // in the last loop we add the rest to the groupSize.
       if (group == groups - 1) groupSize += rest;
-      // diffuse each group as if it is a particle. (U,V,W) Local coord system along E field.
-      dU = RndmGaussian(0, nd->dSigmaT * sqrtdx);
-      dV = RndmGaussian(0, nd->dSigmaT * sqrtdx);
-      dW = RndmGaussian(dx, nd->dSigmaL * sqrtdx); //< along E-field i.e. mean = dx1
+      // diffuse each group as if it is a particle. 
+      // (U,V,W) Local coord system along E field.
+      //<W is along E field, V is along e_phi and U perpendicular V and W
+      const double dU = RndmGaussian(0, nd->dSigmaT * sqrtdx);
+      const double dV = RndmGaussian(0, nd->dSigmaT * sqrtdx);
+      const double dW = RndmGaussian(dx, nd->dSigmaL * sqrtdx); //< along E-field i.e. mean = dx1
       // transform to avalanche coordinate system
       // (Z,R,Y) where R mimics an X axis and Y is perpendicular to R and Z
-      dX = cosTheta * dU + sinTheta * dW;
+      const double dX = cosTheta * dU + sinTheta * dW;
       // dY = dV
-      stepZ = cosTheta * dW - sinTheta * dU; //< sign seems correct due to sign in cos- and sinTheta
+      const double stepZ = cosTheta * dW - sinTheta * dU; //< sign seems correct due to sign in cos- and sinTheta
       // calculate the change of radius
-      stepR = std::sqrt((r + dX) * (r + dX) + dV * dV) - r; //< sign correct and stepR >= -r
+      const double stepR = std::sqrt((r + dX) * (r + dX) + dV * dV) - r; //< sign correct and stepR >= -r
 
       // distribute nodes and add electrons/ions to Holder
       DistributeCharges(groupSize,
@@ -1263,18 +1265,16 @@ namespace Garfield {
         throw std::runtime_error("::GetLocalField Elliptic values not imported.");
       }
 
-      double N = 0;
       // loop over all cells with particles (except itself) and add fields
       for (int fz = 0; fz <= m_AvGrid.zSteps; fz++) {
         // continue if not in gas gap; only add field from charges in same gas gap
         int k = m_GridMesh[fz][0].gasGapIndex;
-        if (k == -1 || k != gasGap)
-          continue;
+        if (k == -1 || k != gasGap) continue;
         for (int fr = 0; fr <= m_AvGrid.rSteps; fr++) {
           // add electric field from charge at f at position i
-          N = (double) -m_GridMesh[fz][fr].nElectron
-              + m_GridMesh[fz][fr].nPosIon
-              - m_GridMesh[fz][fr].nNegIon;
+          double N = -m_GridMesh[fz][fr].nElectron
+                     + m_GridMesh[fz][fr].nPosIon
+                     - m_GridMesh[fz][fr].nNegIon;
           if (std::abs(N) < 1.) continue; //< N too small to consider
           AddFieldFromChargeAt(iz, ir, fz, fr, N, eFieldZ, eFieldR);
         }
@@ -1294,7 +1294,6 @@ namespace Garfield {
 
       // get the rpc (ComponentParallelPlate)
       auto *rpc = m_ParallelPlate;
-      double eps = 1.; //< neighbored resistive layer thickness from where?
 
       // loop over all cells with particles and add fields
       int k;
@@ -1307,6 +1306,7 @@ namespace Garfield {
         // get epsilon value from neighboring layer (assume both layers have same eps)
         int IndexOfRightLayer = m_vIndexGasGaps[k] + 1;
         // int IndexOfLeftLayer = m_vIndexGasGaps[k] - 1;
+        double eps = 1.; //< neighbored resistive layer thickness from where?
         rpc->getPermittivityFromLayer(IndexOfRightLayer, eps);
         double alpha12 = (1. - eps) / (1. + eps);
         double beta12 = -4. * eps / ((eps + 1.) * (eps + 1) * alpha12);
@@ -1317,13 +1317,15 @@ namespace Garfield {
 
         for (int fr = 0; fr <= m_AvGrid.rSteps; fr++) {
           // charge of interest at f, point of interest at i
-          double N = (double) -m_GridMesh[fz][fr].nElectron
-              + m_GridMesh[fz][fr].nPosIon
-              - m_GridMesh[fz][fr].nNegIon;
+          double N = -m_GridMesh[fz][fr].nElectron
+                    + m_GridMesh[fz][fr].nPosIon
+                    - m_GridMesh[fz][fr].nNegIon;
           if (std::abs(N) < 1.0) continue; //< N too small to consider
 
-          double zf = m_AvGrid.zGrid[fz], rf = m_AvGrid.rGrid[fr],
-                  zi = m_AvGrid.zGrid[iz], ri = m_AvGrid.rGrid[ir];
+          double zf = m_AvGrid.zGrid[fz];
+          double rf = m_AvGrid.rGrid[fr];
+          double zi = m_AvGrid.zGrid[iz];
+          double ri = m_AvGrid.rGrid[ir];
 
           // direct charge interaction, delta_Q = 1 (except itself)
           AddFieldFromChargeAt(iz, ir, fz, fr, N, eFieldZ, eFieldR);
@@ -1364,7 +1366,9 @@ namespace Garfield {
     // charge of interest at f, point of interest at i
     if (fz == iz and fr == ir) return false; //< field on itself is not included
 
-    double zi = m_AvGrid.zGrid[iz], ri = m_AvGrid.rGrid[ir], zf = m_AvGrid.zGrid[fz];
+    double zi = m_AvGrid.zGrid[iz];
+    double ri = m_AvGrid.rGrid[ir];
+    double zf = m_AvGrid.zGrid[fz];
     double intermediateEz = 0., intermediateEr = 0.;
 
     if (fr == 0) {
@@ -1387,10 +1391,12 @@ namespace Garfield {
   bool AvalancheGridSpaceCharge::AddFieldFromChargeAt(int iz, int ir, double zf, double rf, double N, double &eFieldZ,
                                                       double &eFieldR) {
     // charge of interest at f, point of interest at i
-    double zi = m_AvGrid.zGrid[iz], ri = m_AvGrid.rGrid[ir];
-    if (std::abs(zi - zf) / m_AvGrid.zStepSize < 1.e-3 && std::abs(ri - rf) / m_AvGrid.rStepSize < 1.e-3)
+    double zi = m_AvGrid.zGrid[iz];
+    double ri = m_AvGrid.rGrid[ir];
+    if (std::abs(zi - zf) / m_AvGrid.zStepSize < 1.e-3 && 
+        std::abs(ri - rf) / m_AvGrid.rStepSize < 1.e-3) {
       return false; //< field on itself is not included
-
+    }
     double intermediateEz = 0, intermediateEr = 0;
 
     if (std::abs(rf) / m_AvGrid.rStepSize < 0.5) {
@@ -1421,7 +1427,10 @@ namespace Garfield {
     }
 
     // transform to coordinates and get the field
-    double ri = m_AvGrid.rGrid[ir], rf = m_AvGrid.rGrid[fr], zi = m_AvGrid.zGrid[iz], zf = m_AvGrid.zGrid[fz];
+    double ri = m_AvGrid.rGrid[ir];
+    double rf = m_AvGrid.rGrid[fr];
+    double zi = m_AvGrid.zGrid[iz];
+    double zf = m_AvGrid.zGrid[fz];
     GetFreeChargedRing(zi, ri, zf, rf, eFieldZ, eFieldR);
   }
 
@@ -1437,7 +1446,6 @@ namespace Garfield {
     }
 
     double dz = zi - zf;  //< I double-checked that's the right sign
-    double EllE, EllK;
 
     // parameters (see Lippmann Diss.)
     const double a2 = (ri + rf) * (ri + rf) + dz * dz;
@@ -1448,6 +1456,7 @@ namespace Garfield {
     const double x = -4 * ri * rf / b2; //< x < 0, i.e. never near x = 1 (singularity)
 
     // calculation of elliptic integrals and fields (up to prefactor)
+    double EllE, EllK;
     GetEllipticIntegrals(x, EllK, EllE);
     eFieldZ = EllE * 4. * dz / (a2 * b);
     eFieldR = c2 * EllE + a2 * EllK;
@@ -1505,21 +1514,18 @@ namespace Garfield {
 
   double AvalancheGridSpaceCharge::GetMeanDistance() {
     // Returns mean distance of electrons on the whole grid (doesn't work for MRPCs)
-    long nofElectrons = 0, electronHolder = 0;
-    double z = 0, meanDistance = 0;
-    GridNode *nd;
+    long nofElectrons = 0;
+    double z = 0., meanDistance = 0.;
     for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
       for (int ir = 0; ir <= m_AvGrid.rSteps; ir++) {
         // get node
-        nd = &m_GridMesh[iz][ir];
-        electronHolder = nd->nElectron;
-        if ((double) electronHolder < 0.5) continue;
-        nofElectrons += electronHolder;
-        z += m_AvGrid.zGrid[iz] * (double) electronHolder;
+        const auto ne = m_GridMesh[iz][ir].nElectron;
+        if (ne < 0.5) continue;
+        nofElectrons += ne;
+        z += m_AvGrid.zGrid[iz] * ne;
       }
     }
-    meanDistance = z / (double) nofElectrons;
-    return meanDistance;
+    return z / (double) nofElectrons;
   }
 
 }  // namespace Garfield
