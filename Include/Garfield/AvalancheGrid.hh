@@ -112,7 +112,7 @@ class AvalancheGrid {
   bool m_importAvalanche = false;
 
   bool m_layerIndix = false;
-  std::vector<double> m_NLayer;
+  std::vector<double> m_nLayer;
 
   std::string m_className = "AvalancheGrid";
 
@@ -168,13 +168,9 @@ class AvalancheGrid {
       
     Path path;
   };
-    
 
   std::vector<AvalancheNode> m_activeNodes = {};
 
-  // Get size of avalanche when going from z to z-dz.
-  int GetAvalancheSize(double dz, const int nsize, const double alpha,
-                       const double eta);
   // Assign electron to the closest grid point.
   bool SnapToGrid(const double x, const double y, const double z,
                   const double v, const int n = 1);
@@ -182,7 +178,7 @@ class AvalancheGrid {
   void NextAvalancheGridPoint();
   // Obtain the Townsend coef., Attachment coef. and velocity vector from
   // sensor class.
-  bool GetParameters(AvalancheNode &newNode);
+  bool GetParameters(AvalancheNode &node);
 
   void DeactivateNode(AvalancheNode &node);
 };
