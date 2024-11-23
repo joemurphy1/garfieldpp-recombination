@@ -96,11 +96,11 @@ class AvalancheGrid {
   std::vector<int> m_velNormal = {0, 0, 0};
 
   double m_MaxSize = 1.6e7;  // Saturations size
+  // Check if avalanche has reached maximum size
+  bool m_Saturated = false;  
+  // Time when the avalanche has reached maximum size
+  double m_SaturationTime = -1.;  
 
-  bool m_Saturated = false;  // Check if avalanche has reached maximum size
-
-  double m_SaturationTime =
-      -1.;  // Time when the avalanche has reached maximum size
 
   bool m_diffusion = false;  // Check if transverse diffusion is enabled.
 

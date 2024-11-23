@@ -1,7 +1,5 @@
 #include "Garfield/AvalancheGrid.hh"
 
-#include <TF1.h>
-
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -126,7 +124,6 @@ bool AvalancheGrid::SnapToGrid(const double x, const double y,
   newNode.iy = iY;
   newNode.iz = iZ;
   if (!GetParameters(newNode)) {
-    // TODO:Memory leak?
     if (m_debug)
       std::cerr << m_className
                 << "::SnapToGrid: Could not retrieve parameters from sensor.\n";
@@ -179,73 +176,57 @@ bool AvalancheGrid::SnapToGrid(const double x, const double y,
 void AvalancheGrid::NextAvalancheGridPoint() {
   // This main function propagates the electrons and applies the avalanche
   // statistics.
-  int Nholder = 0;  // Holds the avalanche size before propagating it to the
-  // next point in the grid.
   m_run = false;
+  if (m_debug) std::cout << m_className << "::NextAvalancheGridPoint:\n";
   for (AvalancheNode &node : m_activeNodes) {  // For every avalanche node
     if (!node.active) continue;
     m_run = true;
 
-    if (m_debug)
-      std::cerr << m_className << "::NextAvalancheGridPoint:(ix,iy,iz) = ("
-                << node.ix << "," << node.iy << "," << node.iz << ").\n";
-
-    // Get avalanche size.
-    Nholder = node.n;
+    if (m_debug) {
+      std::cout << "  Node (" << node.ix << "," << node.iy << "," 
+                << node.iz << ").\n";
+    }
+    // Get the initial avalanche size.
+    const int ni = node.n;
     if (node.path.xs.empty()) {
       node.path.xs.push_back({m_xgrid[node.ix],
                               m_ygrid[node.iy],
                               m_zgrid[node.iz]});
       node.path.ts.push_back(node.time + node.dt);
-      node.path.qs.push_back((Nholder) / 2);
+      node.path.qs.push_back((ni) / 2);
     }
 
-    if (Nholder == 0) continue;  // If empty go to next point.
+    if (ni == 0) continue;  // If empty go to next point.
     // If the total avalanche size is smaller than the set saturation
     // limit the AvalancheSize function is utilized to obtain the size
     // after its propagation to the next z-coordinate grid point. Else,
     // the size will be kept constant under the propagation.
-
-    if (!m_layerIndix && m_nTotal < m_MaxSize) {
-      int holdnsize = AvalancheSize(node.stepSize, node.n, node.townsend,
-                                       node.attachment);
-
-      if (m_MaxSize - m_nTotal < holdnsize - node.n)
-        holdnsize = m_MaxSize - m_nTotal + node.n;
-
-      node.n = holdnsize;
-
-    } else if (m_layerIndix && m_nLayer[node.layer - 1] < m_MaxSize) {
-      int holdnsize = AvalancheSize(node.stepSize, node.n, node.townsend,
-                                       node.attachment);
-
-      if (m_MaxSize - m_nLayer[node.layer - 1] < holdnsize - node.n)
-        holdnsize = m_MaxSize - m_nLayer[node.layer - 1] + node.n;
-
-      node.n = holdnsize;
-
+    const int nTot = m_layerIndix ? m_nLayer[node.layer - 1] : m_nTotal;
+    if (nTot < m_MaxSize) {
+      int nf = AvalancheSize(node.stepSize, ni, node.townsend,
+                             node.attachment);
+      if (m_MaxSize - nTot < nf - ni) nf = m_MaxSize - nTot + ni;
+      node.n = nf;
     } else {
       m_Saturated = true;
-
       if (m_SaturationTime == -1) m_SaturationTime = node.time + node.dt;
     }
     // Produce induced signal on readout electrodes.
-    
     node.path.xs.push_back({m_xgrid[node.ix + node.velNormal[0]],
                             m_ygrid[node.iy + node.velNormal[1]],
                             m_zgrid[node.iz + node.velNormal[2]]});
     node.path.ts.push_back(node.time + node.dt);
-    node.path.qs.push_back((Nholder + node.n) / 2);
+    node.path.qs.push_back((ni + node.n) / 2);
       
     // Update total number of electrons.
-    if (m_layerIndix) m_nLayer[node.layer - 1] += node.n - Nholder;
-    m_nTotal += node.n - Nholder;
+    if (m_layerIndix) m_nLayer[node.layer - 1] += node.n - ni;
+    m_nTotal += node.n - ni;
 
     if (m_diffusion) {
       // TODO: to implement
     }
 
-    if (m_debug) std::cerr << "n = " << Nholder << " -> " << node.n << ".\n";
+    if (m_debug) std::cerr << "n = " << ni << " -> " << node.n << ".\n";
 
     // Update position index.
     node.ix += node.velNormal[0];
@@ -294,10 +275,10 @@ void AvalancheGrid::DeactivateNode(AvalancheNode &node) {
         
   if (!node.active) {
     // If node has terminated then the signal from the avalanche is calculated
-    m_sensor->AddSignalWeightingPotential(-1,node.path.ts,node.path.xs,
+    m_sensor->AddSignalWeightingPotential(-1, node.path.ts, node.path.xs,
                                           node.path.qs);
     if (m_debug) {
-      std::cerr << m_className << "::DeactivateNode: Node deactivated.\n";
+      std::cout << m_className << "::DeactivateNode: Node deactivated.\n";
     }
   }
 }
@@ -307,7 +288,7 @@ void AvalancheGrid::StartGridAvalanche() {
   if ((!m_importAvalanche && !m_driftAvalanche) || !m_sensor) return;
 
   std::cout << m_className
-            << "::StartGridAvalanche::Starting grid based simulation with "
+            << "::StartGridAvalanche: Starting grid based simulation with "
             << m_nTotal << " initial electrons.\n";
   if (m_nTotal <= 0) {
     std::cerr << m_className << "::StartGridAvalanche: Cancelled.\n";
@@ -353,11 +334,12 @@ void AvalancheGrid::AvalancheElectron(const double x, const double y,
               << "::AvalancheElectron: Overwriting start time of avalanche for t "
                  "= 0 to " << t << ".\n";
   m_time = t;
-
-  if (SnapToGrid(x, y, z, 0, n) && m_debug)
-    std::cerr << m_className
+  const bool ok = SnapToGrid(x, y, z, 0, n);
+  if (ok && m_debug) {
+    std::cout << m_className
               << "::AvalancheElectron: Electron added at (t,x,y,z) =  (" << t
               << "," << x << "," << y << "," << z << ").\n";
+  }
 }
 
 void AvalancheGrid::ImportElectronsFromAvalancheMicroscopic(
@@ -376,9 +358,9 @@ void AvalancheGrid::ImportElectronsFromAvalancheMicroscopic(
     const auto& p2 = electron.path.back();
     const double vel = (p2.z - p1.z) / (p2.t - p1.t);
     m_time = p2.t;
-
-    if (SnapToGrid(p2.x, p2.y, p2.z, vel) && m_debug) {
-      std::cerr << m_className
+    const bool ok = SnapToGrid(p2.x, p2.y, p2.z, vel);
+    if (ok && m_debug) {
+      std::cout << m_className
                 << "::ImportElectronsFromAvalancheMicroscopic: Electron added at "
                    "(x,y,z) =  (" << p2.x << "," << p2.y << "," << p2.z << ").\n";
     }
