@@ -51,10 +51,10 @@ void AvalancheGrid::SetGrid(const double xmin, const double xmax,
   }
 
   if (m_debug) {
-    std::cerr << m_className << "::SetGrid: Grid created:\n";
-    std::cerr << "       x range = (" << xmin << "," << xmax << ").\n";
-    std::cerr << "       y range = (" << ymin << "," << ymax << ").\n";
-    std::cerr << "       z range = (" << zmin << "," << zmax << ").\n";
+    std::cout << m_className << "::SetGrid: Grid created:\n"
+              << "       x range = (" << xmin << "," << xmax << ").\n"
+              << "       y range = (" << ymin << "," << ymax << ").\n"
+              << "       z range = (" << zmin << "," << zmax << ").\n";
   }
 }
 
@@ -63,35 +63,31 @@ int AvalancheGrid::GetAvalancheSize(double dx, const int nsize,
   // Algorithm to get the size of the avalanche after it has propagated over a
   // distance dx.
 
-  int newnsize = 0;  // Holder for final size.
-
+  int newnsize = 0;
   const double k = eta / alpha;
-  const double ndx = exp((alpha - eta) *
-                         dx);  // Scaling Townsend and Attachment coef. to 1/mm.
-  // If the size is higher than 1e3 the central limit theorem will be used to
-  // describe the growth of the Townsend avalanche.
-  if (nsize < 1e3) {
+  const double ndx = exp((alpha - eta) * dx);  
+  // If the size is higher than 1000 the central limit theorem will be used 
+  // to describe the growth of the Townsend avalanche.
+  if (nsize < 1000) {
+    // Condition to which the random number will be compared. 
+    // If the number is smaller than the condition, nothing happens. 
+    // Otherwise, the single electron will be attached or retrieve 
+    // additional electrons from the gas.
+    const double prob = k * (ndx - 1) / (ndx - k);
     // Running over all electrons in the avalanche.
     for (int i = 0; i < nsize; i++) {
       // Draw a random number from the uniform distribution (0,1).
       double s = RndmUniformPos();
-      // Condition to which the random number will be compared. If the number is
-      // smaller than the condition, nothing happens. Otherwise, the single
-      // electron will be attached or retrieve additional electrons from the
-      // gas.
-      double condition = k * (ndx - 1) / (ndx - k);
-
-      if (s >= condition)
+      if (s >= prob) {
         newnsize += (int)(1 + log((ndx - k) * (1 - s) / (ndx * (1 - k))) /
-                                  log(1 - (1 - k) / (ndx - k)));
+                              log(1 - (1 - k) / (ndx - k)));
+      }
     }
-
   } else {
     // Central limit theorem.
-    const double sigma = sqrt((1 + k) * ndx * (ndx - 1) / (1 - k));
-    newnsize = RndmGaussian(nsize * ndx, sqrt(nsize) * sigma);
+    const double sigma = sqrt((1 + k) * nsize * ndx * (ndx - 1) / (1 - k));
+    newnsize = RndmGaussian(nsize * ndx, sigma);
   }
-
   return newnsize;
 }
 
