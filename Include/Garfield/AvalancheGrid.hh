@@ -75,7 +75,7 @@ class AvalancheGrid {
   /// Returns the initial number of electrons in the avalanche.
   int GetAmountOfStartingElectrons() { return m_nestart; }
   /// Returns the final number of electrons in the avalanche.
-  int GetAvalancheSize() { return m_avgrid.N; }
+  int GetAvalancheSize() { return m_nTotal; }
 
   /// Asigning layer index to all Avalanche nodes.
   void AsignLayerIndex(ComponentParallelPlate *RPC);
@@ -120,28 +120,23 @@ class AvalancheGrid {
 
   bool m_printPar = false;
 
-  struct Grid {
-    std::vector<double> zgrid;  ///< Grid points of z-coordinate.
-    int zsteps = 0;             ///< Amount of grid points.
-    double zStepSize =
-        0.;  ///< Distance between the grid points of z-coordinate.
+  std::vector<double> m_zgrid;  ///< Grid points of z-coordinate.
+  int m_zsteps = 0;             ///< Number of grid points.
+  double m_zStepSize = 0.;      ///< Distance between the grid points.
 
-    std::vector<double> ygrid;  ///< Grid points of y-coordinate.
-    double yStepSize = 0.;      ///< Amount of grid points.
-    int ysteps = 0.;  ///< Distance between the grid points of y-coordinate.
+  std::vector<double> m_ygrid;  ///< Grid points of y-coordinate.
+  int m_ysteps = 0;             ///< Number of grid points.
+  double m_yStepSize = 0.;      ///< Distance between the grid points.
 
-    std::vector<double> xgrid;  ///< Grid points of x-coordinate.
-    double xStepSize = 0.;      ///< Amount of grid points.
-    int xsteps = 0.;  ///< Distance between the grid points of x-coordinate.
+  std::vector<double> m_xgrid;  ///< Grid points of x-coordinate.
+  int m_xsteps = 0;             ///< Number of grid points.
+  double m_xStepSize = 0.;      ///< Distance between the grid points.
 
-    bool gridset = false;  ///< Keeps track if the grid has been defined.
-    int N = 0;             ///< Total amount of charge.
-
-    double time = 0;  ///< Clock.
-
-    bool run = true;  ///< Tracking if the charges are still in the drift gap.
-  };
-    
+  bool m_gridset = false; ///< Keeps track if the grid has been defined.
+  int m_nTotal = 0;       ///< Total amount of charge.
+  double m_time = 0;      ///< Clock.
+  bool m_run = true;      ///< Tracking if the charges are still in the drift gap.
+ 
  struct Path {
     std::vector<double> ts ={};
     std::vector< std::array<double, 3> > xs ={};
@@ -177,24 +172,14 @@ class AvalancheGrid {
 
   std::vector<AvalancheNode> m_activeNodes = {};
 
-  Grid m_avgrid;
-  // Setting z-coordinate grid.
-  void SetZGrid(Grid &av, const double top, const double bottom,
-                const int steps);
-  // Setting y-coordinate grid.
-  void SetYGrid(Grid &av, const double top, const double bottom,
-                const int steps);
-  // Setting x-coordinate grid.
-  void SetXGrid(Grid &av, const double top, const double bottom,
-                const int steps);
   // Get size of avalanche when going from z to z-dz.
   int GetAvalancheSize(double dz, const int nsize, const double alpha,
                        const double eta);
   // Assign electron to the closest grid point.
-  bool SnapToGrid(Grid &av, const double x, const double y, const double z,
+  bool SnapToGrid(const double x, const double y, const double z,
                   const double v, const int n = 1);
   // Go to next time step.
-  void NextAvalancheGridPoint(Grid &av);
+  void NextAvalancheGridPoint();
   // Obtain the Townsend coef., Attachment coef. and velocity vector from
   // sensor class.
   bool GetParameters(AvalancheNode &newNode);
