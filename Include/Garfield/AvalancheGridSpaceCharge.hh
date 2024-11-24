@@ -318,7 +318,7 @@ class AvalancheGridSpaceCharge {
 
   std::vector<std::vector<int>> m_zGasGapBoundaries;  ///< [k] -> {izLeft, ..., izRight}
 
-  std::vector<std::vector<GridNode>> m_GridMesh;  ///< grid with nodes on it
+  std::vector<std::vector<GridNode>> m_grid;  ///< grid with nodes on it
   /// Electrons to transfer onto grid
   std::vector<std::vector<Point>> m_vElectrons;  
 
