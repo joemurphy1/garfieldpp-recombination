@@ -117,7 +117,7 @@ class AvalancheGridSpaceCharge {
   void StartGridAvalanche(double dtime = -1);
 
   /// Returns the total positive charge in the gap's
-  long GetAvalancheSize() { return m_AvGrid.nTotPosIons; }
+  long GetAvalancheSize() { return m_nTotPosIons; }
 
   /// Return current mean distance of the electrons on the grid
   double GetMeanDistance();
@@ -180,30 +180,6 @@ class AvalancheGridSpaceCharge {
     /// Gas gap index: -1 if not gas gap; starts with 0, 1, ...
     int gasGapIndex = 0;  
     bool isGasGap = true;
-  };
-
-  struct Grid {
-    std::vector<double> zGrid;  ///< Grid points of z-coordinate.
-    int zSteps = 0;             ///< Number of grid points.
-    /// Distance between the grid points of z-coordinate.
-    double zStepSize = 0.;  
-
-    std::vector<std::vector<int>> zGasGapBoundaries;  ///< [k] -> {izLeft, ..., izRight}
-
-    std::vector<double> rGrid;  ///< Grid points of x-coordinate.
-    int rSteps = 0.;            ///< Number of grid points
-    ///< Distance between the grid points of x-coordinate.
-    double rStepSize = 0.;      
-
-    bool isgridset = false;  ///< Keeps track if the grid has been defined.
-    long nTotElectron = 0;   ///< Total amount of electrons at time step.
-    long nTotPosIons = 0;    ///< total amount of charge created
-
-    double time = 0.;   ///< Grid clock.
-    double time0 = 0.;  ///< initial time
-    double dt = 0.;     ///< time step.
-
-    bool run = true;  ///< Tracking if the charges are still in the drift gap.
   };
 
   struct Point {
@@ -321,7 +297,27 @@ class AvalancheGridSpaceCharge {
 
   ComponentParallelPlate *m_ParallelPlate = nullptr;
   Sensor *m_sensor = nullptr;
-  Grid m_AvGrid;
+
+  std::vector<double> m_zGrid;  ///< Grid points of z-coordinate.
+  int m_zSteps = 0;             ///< Number of grid points.
+  double m_zStepSize = 0.;      /// Distance between the grid points.
+
+  std::vector<double> m_rGrid;  ///< Grid points of r-coordinate.
+  int m_rSteps = 0.;            ///< Number of grid points
+  double m_rStepSize = 0.;      /// Distance between the grid points.
+
+  bool m_isgridset = false;  ///< Keeps track if the grid has been defined.
+  long m_nTotElectron = 0;   ///< Total amount of electrons at time step.
+  long m_nTotPosIons = 0;    ///< total amount of charge created
+
+  double m_time = 0.;   ///< Clock.
+  double m_time0 = 0.;  ///< Initial time.
+  double m_dt = 0.;     ///< Time step.
+  /// Tracking if the charges are still in the drift gap.
+  bool m_run = true;
+
+  std::vector<std::vector<int>> m_zGasGapBoundaries;  ///< [k] -> {izLeft, ..., izRight}
+
   std::vector<std::vector<GridNode>> m_GridMesh;  ///< grid with nodes on it
   /// Electrons to transfer onto grid
   std::vector<std::vector<Point>> m_vElectrons;  
