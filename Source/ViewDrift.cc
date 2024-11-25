@@ -205,10 +205,11 @@ void ViewDrift::Plot2d(const bool axis, const bool snapshot) {
         ions.push_back(driftLine.first.back());
       }
     }
-    DrawMarkers2d(electrons, m_colElectron, m_markerSizeCollision);
+    if(!m_eTop) DrawMarkers2d(electrons, m_colElectron, m_markerSizeCollision);
     DrawMarkers2d(holes, m_colHole, m_markerSizeCollision);
     DrawMarkers2d(negativeIons, m_colNegativeIon, m_markerSizeCollision);
     DrawMarkers2d(ions, m_colIon, m_markerSizeCollision);
+    if(m_eTop) DrawMarkers2d(electrons, m_colElectron, m_markerSizeCollision);
   } else {
     for (const auto& driftLine : m_driftLines) {
       const short lw = 1;
@@ -303,20 +304,23 @@ void ViewDrift::Plot3d(const bool axis, const bool ogl,
     std::vector<std::array<float, 3> > negativeIons;
     std::vector<std::array<float, 3> > ions;
     for (const auto& driftLine : m_driftLines) {
-      if (driftLine.second == Particle::Electron) {
+      if (!m_eTop && driftLine.second == Particle::Electron) {
         electrons.push_back(driftLine.first.back());
       } else if (driftLine.second == Particle::Hole) {
         holes.push_back(driftLine.first.back());
       } else if (driftLine.second == Particle::NegativeIon) {
         negativeIons.push_back(driftLine.first.back());
-      } else {
+      } else if (!m_eTop){
         ions.push_back(driftLine.first.back());
+      } else {
+        electrons.push_back(driftLine.first.back());
       }
     }
-    DrawMarkers3d(electrons, m_colElectron, m_markerSizeCollision);
+    if(!m_eTop) DrawMarkers3d(electrons, m_colElectron, m_markerSizeCollision);
     DrawMarkers3d(holes, m_colHole, m_markerSizeCollision);
     DrawMarkers3d(negativeIons, m_colNegativeIon, m_markerSizeCollision);
     DrawMarkers3d(ions, m_colIon, m_markerSizeCollision);
+    if(m_eTop) DrawMarkers3d(electrons, m_colElectron, m_markerSizeCollision);
   } else {
     for (const auto& driftLine : m_driftLines) {
       std::vector<float> points;
@@ -327,14 +331,16 @@ void ViewDrift::Plot3d(const bool axis, const bool ogl,
       }
       const int nP = driftLine.first.size();
       TPolyLine3D pl(nP, points.data());
-      if (driftLine.second == Particle::Electron) {
+      if (!m_eTop && driftLine.second == Particle::Electron) {
         pl.SetLineColor(m_colElectron);
       } else if (driftLine.second == Particle::Hole) {
         pl.SetLineColor(m_colHole);
       } else if (driftLine.second == Particle::NegativeIon) {
         pl.SetLineColor(m_colNegativeIon);
-      } else {
+      } else if (!m_eTop){
         pl.SetLineColor(m_colIon);
+      } else {
+        pl.SetLineColor(m_colElectron);
       }
       pl.SetLineWidth(1);
       pl.DrawPolyLine(nP, points.data(), "same");
