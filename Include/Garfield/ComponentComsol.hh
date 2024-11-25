@@ -53,15 +53,25 @@ class ComponentComsol : public ComponentFieldMap {
                        const double stept);
   /// Get times of time-sliced dynamic weighting field.
   void GetTimeInterval(std::vector<double>& delayedTimes){ delayedTimes = m_wdtimes; }
+  
+  /// Select material that will exclusivaly be imported based on its relative permitivity
+  void SetImportMaterial(const double epsr = 1.){
+    m_materialSelect = true;
+    m_epsr = epsr;
+  }
 
   #ifdef USEGPU
   /// Create and initialise GPU Transfer class
   double CreateGPUTransferObject(ComponentGPU *&comp_gpu) override;
+  
   #endif
  private:
   double m_unit = 100.;
   bool m_timeset = false;
   static constexpr double MaxNodeDistance = 1.e-8;
+  
+  bool m_materialSelect = false;
+  double m_epsr = 1.;
 
   bool GetTimeInterval(const std::string &file);
 
@@ -98,7 +108,7 @@ class ComponentComsol : public ComponentFieldMap {
         if (!CheckInRange(node.x, node.y, node.z)) return false;
       }
     }
-    if (m_materials[element.matmap].eps != 1) return false;
+    if (m_materialSelect && m_materials[element.matmap].eps != m_epsr) return false;
     return true;
   }
   bool LoadPotentials(const std::string& field, 
