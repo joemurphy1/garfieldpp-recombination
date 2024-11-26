@@ -59,7 +59,9 @@ class ViewDrift : public ViewBase {
   /// Set the colour with which to draw ionisation markers.
   void SetColourIonisations(const short col) { m_colIonisation = col; } 
   /// Set the colour with which to draw attachment markers.
-  void SetColourAttachments(const short col) { m_colAttachment = col; } 
+  void SetColourAttachments(const short col) { m_colAttachment = col; }
+  /// Put electron drift lines on top of the ion/hole drift lines
+  void SetElectronsToFront() { m_eTop = true; }
 
   /// Get the number of drift lines stored. 
   size_t GetNumberOfDriftLines() const { return m_driftLines.size(); }
@@ -118,6 +120,8 @@ class ViewDrift : public ViewBase {
   short m_colAttachment = kCyan + 3;
 
   bool m_drawClusters = false;
+  
+  bool m_eTop = false;
 
   bool SetPlotLimits2d();
   bool SetPlotLimits3d();
