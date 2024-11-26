@@ -69,7 +69,7 @@ inline int operator!=(manip_absvol_treeid& tid1, manip_absvol_treeid& tid2) {
 /// For interface with external system please use manip_absvol.
 class absvol : virtual public absref {
  public:
-  vfloat prec;
+  vfloat prec = 1.;
   bool s_sensitive;
 
   /// Destructor
