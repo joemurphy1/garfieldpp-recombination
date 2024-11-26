@@ -1,4 +1,5 @@
 #include <array>
+#include <cmath>
 #include "wcpplib/geometry/box.h"
 
 /*
@@ -85,7 +86,23 @@ box::box(const box& fb) : absref(fb), absvol(fb) {
 }
 
 void box::init_prec() {
-  prec = (m_dxh + m_dyh + m_dzh) / 3.0;
+  double sum = 0.;
+  int n = 0.;
+  if (std::isfinite(m_dxh)) {
+    sum += m_dxh;
+    n += 1;
+  }
+  if (std::isfinite(m_dyh)) {
+    sum += m_dyh;
+    n += 1;
+  }
+  if (std::isfinite(m_dzh)) {
+    sum += m_dzh;
+    n += 1;
+  }
+  if (n > 0) {
+    prec = sum / n;
+  }
   prec *= vprecision;
 }
 
