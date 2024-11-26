@@ -568,7 +568,7 @@ void AvalancheGridSpaceCharge::ImportEllipticIntegralValues(
 
   if (!ellipticStream) {
     std::cerr << m_className
-              << "::ImportEllipticIntegralValues Couldn't open file.\n";
+              << "::ImportEllipticIntegralValues: Could not open file.\n";
   }
 
   for (std::string line; std::getline(ellipticStream, line);) {
@@ -593,7 +593,7 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
                                             const int gasLayer) {
   // Snap electron from AvalancheMicroscopic to the predefined grid
   if (!m_AvGrid.isgridset) {
-    std::cerr << m_className << "::SnapTo2dGrid:Error: grid is not defined.\n";
+    std::cerr << m_className << "::SnapTo2dGrid: Grid is not defined.\n";
     return false;
   }
 
@@ -678,7 +678,7 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
   // check if sensor is defined
   if (!m_sensor) {
     std::cerr << m_className
-              << "::Prepare2dMesh Sensor is not defined. Abort.\n";
+              << "::Prepare2dMesh: Sensor is not defined. Abort.\n";
   }
 
   // get a point (Y global coordinate) in each gas gap
@@ -711,7 +711,7 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
     if (status != 0) {
       std::cerr
           << m_className
-          << "::Prepare2dMesh Can not estimate background field for gas gap "
+          << "::Prepare2dMesh: Cannot estimate background field for gas gap "
           << k + 1 << ".\n";
     }
 
@@ -723,17 +723,18 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
                        dSigmaT[k], wv[k], wr[k], alphaPT[k], etaPT[k], k);
 
     // print-out to double-check the swarm parameters
-    std::cerr << m_className << "::Prepare2dMesh for gas gap " << k + 1 << "\n"
-              << "     Ez: " << m_ezBkg[k] << " (V/cm)"
-              << " alphaSST: " << alpha[k] << " (1/cm)"
-              << " etaSST: " << eta[k] << " (1/cm)\n"
-              << "     alphaPT: " << alphaPT[k] << " (1/cm)"
-              << " etaPT: " << etaPT[k] << " (1/cm)"
-              << " drift (Wv): " << drift[k] << " (cm/ns)"
-              << " Wr (!= Wv): " << wr[k] << " (cm/ns).\n";
+    std::cout << m_className << "::Prepare2dMesh:\n"
+              << "  Gas gap " << k + 1 << "\n"
+              << "     Ez: " << m_ezBkg[k] << " (V/cm)\n"
+              << "     alphaSST: " << alpha[k] << " (1/cm)\n"
+              << "     alphaPT:  " << alphaPT[k] << " (1/cm)\n"
+              << "     etaSST: " << eta[k] << " (1/cm)\n"
+              << "     etaPT:  " << etaPT[k] << " (1/cm)\n"
+              << "     drift velocity (Wv): " << drift[k] << " (cm/ns)\n"
+              << "     Wr (!= Wv): " << wr[k] << " (cm/ns).\n";
   }
 
-  // set up mesh
+  // Set up mesh
   m_GridMesh.resize(m_AvGrid.zSteps + 1);
   m_AvGrid.zGasGapBoundaries.resize(n);
   for (int iz = 0; iz <= m_AvGrid.zSteps; iz++) {
@@ -790,7 +791,7 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
   m_AvGrid.dt = m_AvGrid.zStepSize / *std::max_element(wr.begin(), wr.end());
 
   if (m_bDebug)
-    std::cerr << m_className << "::Prepare2dMesh::Time steps per loop "
+    std::cerr << m_className << "::Prepare2dMesh: Time step per loop: "
               << m_AvGrid.dt << " ns.\n";
 }
 
@@ -974,7 +975,8 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         if (MagEField - std::abs(m_ezBkg[gasGap]) >=
                 m_fStreamerK * std::abs(m_ezBkg[gasGap]) &&
             !m_bFieldK) {
-          std::cout << m_className << "::Space-charge field reached "
+          std::cout << m_className << ":TransportTimeStep:\n"
+                    << "    Space-charge field reached "
                     << std::to_string(int(m_fStreamerK * 100))
                     << "% of background field in gas gap " << gasGap + 1
                     << "\n";
@@ -1000,7 +1002,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
           m_AvGrid.dt = 1. * m_AvGrid.zStepSize / nd->Wr;
 
           if (m_bDebug) {
-            std::cerr << m_className << "::TransportTimeStep Changed dt from "
+            std::cout << m_className << "::TransportTimeStep: Changed dt from "
                       << dtPrev << " to: " << m_AvGrid.dt << "\n"
                       << "      due to step size: " << step
                       << " bulk velocity: " << nd->Wr << "\n"
@@ -1043,8 +1045,8 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
                      gasGap) != m_vSaturatedGaps.end()
                ? true
                : false)) {
-        nElectronOut =
-            nd->nElectron;  //< saturated case, don't evolve electrons in size
+        // Saturated case, don't evolve electrons in size
+        nElectronOut = nd->nElectron;  
         nPosIonOut = 0,
         nNegIonOut = 0;  //< strictly this is completely wrong because
                          //SC-bremsung creates huge amounts of ions
@@ -1159,8 +1161,8 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       m_vSaturatedGaps.push_back(k);
     }
     if (m_bDebug) {
-      std::cerr << m_className
-                << "::TransportTimeStep Electrons active on grid in gas gap "
+      std::cout << m_className
+                << "::TransportTimeStep: Electrons active on grid in gas gap "
                 << k + 1 << ": " << eOnGrid[k] << "\n";
     }
   }
