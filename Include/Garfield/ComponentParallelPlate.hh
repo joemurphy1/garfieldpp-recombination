@@ -114,20 +114,15 @@ class ComponentParallelPlate : public Component {
   // Obtain the index and permitivity of the layer at height z.
   bool getLayer(const double y, int &m, double &epsM) {
 
-    int mholder = -1;
-
+    m = -1;
     if (y < m_z[0]) return false;
-
     for (int i = 1; i < m_N; i++) {
       if (y <= m_z[i]) {
-        mholder = i;
+        m = i;
         break;
       }
     }
-
-    if (mholder == -1) return false;
-
-    m = mholder;
+    if (m == -1) return false;
     epsM = m_epsHolder[m - 1];
     return true;
   }

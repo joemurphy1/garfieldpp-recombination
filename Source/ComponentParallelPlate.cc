@@ -354,12 +354,11 @@ void ComponentParallelPlate::AddPlane(const std::string &label, bool anode) {
 
 Medium *ComponentParallelPlate::GetMedium(const double x, const double y,
                                           const double z) {
-  if (m_geometry) {
-    return m_geometry->GetMedium(x, y, z);
-  } else if (m_medium) {
-    return m_medium;
-  }
-  return nullptr;
+  Medium* medium = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
+  int i = -1;
+  double eps = 0.;
+  if (!getLayer(y, i, eps)) return nullptr;
+  return kroneckerDelta(i) != 0 ? m_medium : nullptr;  
 }
 
 bool ComponentParallelPlate::Nsigma(
