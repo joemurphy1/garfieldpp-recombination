@@ -609,6 +609,7 @@ void AvalancheMC::AddHole(const double x, const double y, const double z,
   // TODO
   ++m_nHoles;
 }
+
 void AvalancheMC::AddIon(const double x, const double y, const double z,
                          const double t) {
   EndPoint p;
@@ -617,6 +618,15 @@ void AvalancheMC::AddIon(const double x, const double y, const double z,
   m_ions.push_back(std::move(p));
   // TODO
   ++m_nIons;
+}
+
+void AvalancheMC::AddNegativeIon(const double x, const double y, const double z, const double t) {
+  EndPoint p;
+  p.status = StatusAlive;
+  p.path = {MakePoint(x, y, z, t)};
+  m_negativeIons.push_back(std::move(p));
+  // TODO
+  ++m_nNegativeIons;
 }
 
 bool AvalancheMC::ResumeAvalanche(const bool electrons, const bool holes) {
@@ -666,9 +676,11 @@ bool AvalancheMC::TransportParticles(
     return false;
   }
 
+  // Count the number of particles.
   m_nElectrons = 0;
   m_nHoles = 0;
   m_nIons = 0;
+  m_nNegativeIons = 0;
   for (const auto& particle : particles) {
     if (particle.second == Particle::Electron) {
       ++m_nElectrons;
@@ -676,6 +688,8 @@ bool AvalancheMC::TransportParticles(
       ++m_nHoles;
     } else if (particle.second == Particle::Ion) {
       ++m_nIons;
+    } else if (particle.second == Particle::NegativeIon) {
+      ++m_nNegativeIons;
     }
   }
 
