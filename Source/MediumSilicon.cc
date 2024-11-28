@@ -1956,7 +1956,6 @@ void MediumSilicon::ComputeDOS() {
       } else {
         m_cb[2].dos[i] = Numerics::LinearInterpolation(m_fbDosC, eDosC, en);
       }
-      m_cb[2];
     }
     // L valleys.
     // Energy up to which we use the analytic approximation.
