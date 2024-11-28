@@ -13,15 +13,12 @@
 #include "Garfield/Random.hh"
 #include "Garfield/RandomEngineRoot.hh"
 
-
-
 using namespace Garfield;
 
 int main(int argc, char * argv[]) {
 
   Garfield::RandomEngineRoot randomEngine(123456);
   Garfield::Random::SetEngine(randomEngine);
-  // randomEngine.Seed(123456);
   TApplication app("app", &argc, argv);
   SetDefaultStyle();
 
