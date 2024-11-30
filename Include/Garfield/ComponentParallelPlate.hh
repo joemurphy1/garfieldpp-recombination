@@ -172,7 +172,7 @@ class ComponentParallelPlate : public Component {
   std::vector<double> m_epsHolder;
   std::vector<double> m_d;  ///< thickness of each layer
   std::vector<double> m_dHolder;
-  std::vector<double> m_z;  ///< list of indices of conducting layers
+  std::vector<double> m_z;
 
   std::vector<int> m_sigmaIndex;  ///< list of indices of conducting layers
 

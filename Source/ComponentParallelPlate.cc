@@ -19,32 +19,28 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
                                    std::vector<int> sigmaIndex) {
 
   // Here I switch conventions with the z-axis the direction of drift.
-  std::vector<double> placeHolder(N + 1, 0);
 
-  const int Nholder1 = eps.size();
-  const int Nholder2 = d.size();
-  if (N != Nholder1 || N != Nholder2) {
-    std::cout << m_className
-              << "::Inconsistency between the number of layers, permittivities "
-                 "and thicknesses given.\n";
+  if (N != eps.size() || N != d.size()) {
+    std::cout << m_className << "::Setup:\n"
+              << "    Inconsistency between the number of layers, "
+              << "permittivities and thicknesses given.\n";
     return;
   } else if (N < 2) {
-
     std::cout << m_className
-              << "::Setup:: Number of layers must be larger then 1.\n";
+              << "::Setup: Number of layers must be larger then 1.\n";
     return;
   }
 
-  if (m_debug) std::cout << m_className << "::Setup:: Loading parameters.\n";
+  if (m_debug) std::cout << m_className << "::Setup: Loading parameters.\n";
   m_epsHolder = eps;
-  m_eps = placeHolder;
+  m_eps.assign(N + 1, 0.);
 
   m_dHolder = d;
-  m_d = placeHolder;
+  m_d.assign(N + 1, 0.);
   m_N = N + 1;
   m_V = V;
 
-  if (sigmaIndex.size() == 0) {
+  if (sigmaIndex.empty()) {
     for (int i = 0; i < N; i++) {
       if (eps[i] != 1) sigmaIndex.push_back(i + 1);
     }
@@ -52,29 +48,26 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
 
   m_sigmaIndex = sigmaIndex;
 
-  std::vector<double> m_zHolder(N + 1);
-  m_zHolder[0] = 0;
+  m_z.assign(N + 1, 0.);
   for (int i = 1; i <= N; i++) {
-    m_zHolder[i] = m_zHolder[i - 1] + m_dHolder[i - 1];
+    m_z[i] = m_z[i - 1] + m_dHolder[i - 1];
 
     if (m_debug)
-      std::cout << m_className << "Setup:: layer " << i
-                << ":: z = " << m_zHolder[i]
+      std::cout << "    Layer " << i << ": z = " << m_z[i]
                 << ", epsr = " << m_epsHolder[i - 1] << ".\n";
   }
-  m_z = m_zHolder;
 
-  if (m_debug) std::cout << m_className << "Setup:: Constructing matrices.\n";
+  if (m_debug) std::cout << m_className << "Setup: Constructing matrices.\n";
   constructGeometryMatrices(m_N);
 
   if (m_debug)
     std::cout << m_className
-              << "Setup:: Computing weighting potential functions.\n";
+              << "Setup: Computing weighting potential functions.\n";
   setHIntegrand();
   setwpStripIntegrand();
   setwpPixelIntegrand();
 
-  std::cout << m_className << "Setup:: Geometry with N = " << N
+  std::cout << m_className << "Setup: Geometry with N = " << N
             << " layers set.\n";
 }
 
@@ -352,7 +345,7 @@ void ComponentParallelPlate::AddPlane(const std::string &label, bool anode) {
   std::cout << m_className << "::AddPlane: Added plane electrode.\n";
 }
 
-Medium *ComponentParallelPlate::GetMedium(const double x, const double y,
+Medium* ComponentParallelPlate::GetMedium(const double x, const double y,
                                           const double z) {
   Medium* medium = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
   int i = -1;
