@@ -210,12 +210,6 @@ class ComponentParallelPlate : public Component {
     ComponentGrid grid;      ///< grid object.
   };
 
-  enum fieldcomponent {
-    xcomp = 0,
-    ycomp,
-    zcomp
-  };
-
   /// Possible readout groups
   enum structureelectrode {
     NotSet = -1,
