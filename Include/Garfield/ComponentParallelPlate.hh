@@ -167,7 +167,7 @@ class ComponentParallelPlate : public Component {
 
   std::vector<double> m_eps;  ///< relative permittivity of each layer
   std::vector<double> m_epsHolder;
-  std::vector<double> m_dHolder; ///< thickness of each layer
+  std::vector<double> m_d; ///< thickness of each layer
   std::vector<double> m_z;
 
   /// Flag whether a layer is conductive.
@@ -309,10 +309,10 @@ class ComponentParallelPlate : public Component {
     double diff2 = z - m_z[im - 1];
 
     std::vector<double> d(m_N, 0.);
-    for (int i = 0; i < im - 1; i++) d[i] = m_dHolder[i];
+    for (int i = 0; i < im - 1; i++) d[i] = m_d[i];
     d[im - 1] = diff2;
     d[im] = diff1;
-    for (int i = im + 1; i < m_N; i++) d[i] = m_dHolder[i - 1];
+    for (int i = im + 1; i < m_N; i++) d[i] = m_d[i - 1];
     // TODO::Construct c and g matrices only for im != m_currentLayer.
     constructGeometryFunction(m_N, d);
   };

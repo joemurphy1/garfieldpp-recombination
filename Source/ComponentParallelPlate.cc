@@ -35,7 +35,7 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
   m_epsHolder = eps;
   m_eps.assign(N + 1, 0.);
 
-  m_dHolder = d;
+  m_d = d;
   m_N = N + 1;
   m_V = V;
 
@@ -50,7 +50,7 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
 
   m_z.assign(N + 1, 0.);
   for (int i = 1; i <= N; i++) {
-    m_z[i] = m_z[i - 1] + m_dHolder[i - 1];
+    m_z[i] = m_z[i - 1] + m_d[i - 1];
 
     if (m_debug)
       std::cout << "    Layer " << i << ": z = " << m_z[i]
