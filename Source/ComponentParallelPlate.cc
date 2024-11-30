@@ -36,7 +36,6 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
   m_eps.assign(N + 1, 0.);
 
   m_dHolder = d;
-  m_d.assign(N + 1, 0.);
   m_N = N + 1;
   m_V = V;
 
@@ -265,7 +264,6 @@ void ComponentParallelPlate::Reset() {
 
   m_conductive.clear();
   m_eps.clear();
-  m_d.clear();
   m_z.clear();
 
   m_N = 0;
@@ -412,7 +410,8 @@ void ComponentParallelPlate::constructGeometryMatrices(const int N) {
   }
 }
 
-void ComponentParallelPlate::constructGeometryFunction(const int N) {
+void ComponentParallelPlate::constructGeometryFunction(const int N,
+    const std::vector<double>& d) {
 
   int nRow = N;
   int nCol = pow(2, N - 1);
@@ -443,7 +442,7 @@ void ComponentParallelPlate::constructGeometryFunction(const int N) {
         for (int j = 0; j < n - 1; j++) {
           cHold[i] *= (m_eps[j] + m_sigmaMatrix[n - 1][ix1][j] * m_eps[j + 1]) /
                       m_eps[j + 1];
-          vHold[i] += (m_thetaMatrix[n - 1][ix1][j] - 1) * m_d[j];
+          vHold[i] += (m_thetaMatrix[n - 1][ix1][j] - 1) * d[j];
         }
       }
       // summation for g and w
@@ -451,7 +450,7 @@ void ComponentParallelPlate::constructGeometryFunction(const int N) {
         gHold[i] *= (m_eps[N - j - 1] +
                      m_sigmaMatrix[N - n][ix2][j] * m_eps[N - j - 2]) /
                     m_eps[N - j - 2];
-        wHold[i] += (m_thetaMatrix[N - n][ix2][j] - 1) * m_d[N - 1 - j];
+        wHold[i] += (m_thetaMatrix[N - n][ix2][j] - 1) * d[N - 1 - j];
       }
       ix1++;
       ix2++;
@@ -555,7 +554,7 @@ void ComponentParallelPlate::setwpStripIntegrand() {
     double wx = p[2];
     double z = p[3];
     double sol =
-        cos(kk * (x - x0)) * sin(kk * wx / 2) * m_hIntegrand.Eval(kk, z) / kk;
+        cos(kk * (x - x0)) * sin(0.5 * kk * wx) * m_hIntegrand.Eval(kk, z) / kk;
     return 2 * sol / Pi;
   };
   TF1 *wpStripIntegrand =

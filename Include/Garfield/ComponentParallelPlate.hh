@@ -156,22 +156,18 @@ class ComponentParallelPlate : public Component {
  private:
   double m_precision = 1.e-12;
   static constexpr double m_Vw = 1.;
-  double m_eps0 = 8.85418782e-3;
-  // Voltage difference between the parallel plates.
+  /// Voltage difference between the parallel plates.
   double m_V = 0.;
 
   bool m_getPotentialInPlate = true;
 
-  double m_dt = 0.;
-
-  int m_N = 0;  ///< amount of layers
+  int m_N = 0;  ///< Number of layers
 
   double m_upperBoundIntegration = 30;
 
   std::vector<double> m_eps;  ///< relative permittivity of each layer
   std::vector<double> m_epsHolder;
-  std::vector<double> m_d;  ///< thickness of each layer
-  std::vector<double> m_dHolder;
+  std::vector<double> m_dHolder; ///< thickness of each layer
   std::vector<double> m_z;
 
   /// Flag whether a layer is conductive.
@@ -179,8 +175,8 @@ class ComponentParallelPlate : public Component {
 
   TF2 m_hIntegrand;
 
-  TF1 m_wpStripIntegral;  ///< Weighting potential integrant for strips
-  TF2 m_wpPixelIntegral;  ///< Weighting potential integrant for pixels
+  TF1 m_wpStripIntegral;  ///< Weighting potential integrand for strips
+  TF2 m_wpPixelIntegral;  ///< Weighting potential integrand for pixels
 
   std::vector<std::vector<std::vector<int>>> m_sigmaMatrix;  // sigma_{i,j}^n,
                                                              // where n goes
@@ -205,9 +201,9 @@ class ComponentParallelPlate : public Component {
     int ind = structureelectrode::NotSet;  ///< Readout group.
     double xpos, ypos;                     ///< Coordinates in x/y.
     double lx, ly;                         ///< Dimensions in the x-y plane.
-    bool formAnode = true;                 ///< Dimensions in the x-y plane.
+    bool formAnode = true;                 
 
-    bool m_usegrid = false;  ///< Enabeling grid based calculations.
+    bool m_usegrid = false;  ///< Enabling grid based calculations.
     ComponentGrid grid;      ///< grid object.
   };
 
@@ -224,7 +220,6 @@ class ComponentParallelPlate : public Component {
   std::vector<Electrode> m_readout_p;
 
   // Functions that calculate the weighting potential
-
   double IntegratePromptPotential(const Electrode &el, const double x,
                                   const double y, const double z);
 
@@ -233,30 +228,30 @@ class ComponentParallelPlate : public Component {
   double FindWeightingPotentialInGrid(Electrode &el, const double x,
                                       const double y, const double z);
 
-  // function construct the sigma matrix needed to calculate the w, v, c and g
+  // Construct the sigma matrix needed to calculate the w, v, c and g
   // matrices
   bool Nsigma(int N, std::vector<std::vector<int>> &sigmaMatrix);
 
-  // function construct the theta matrix needed to calculate the w, v, c and g
+  // Construct the theta matrix needed to calculate the w, v, c and g
   // matrices
   bool Ntheta(int N, std::vector<std::vector<int>> &thetaMatrix,
               std::vector<std::vector<int>> &sigmaMatrix);
 
-  // function constructing the sigma an theta matrices.
+  // Construct the sigma and theta matrices.
   void constructGeometryMatrices(const int N);
 
-  // function connstructing the w, v, c and g matrices needed for constructing
+  // Construct the w, v, c and g matrices needed for constructing
   // the weighting potentials equations.
-  void constructGeometryFunction(const int N);
+  void constructGeometryFunction(const int N, const std::vector<double>& d);
 
-  // build function h needed for the integrant of the weighting potential of a
-  // stip and pixel
+  // Build function h needed for the integrand of the weighting potential of a
+  // strip and pixel
   void setHIntegrand();
 
-  // build integrant of weighting potential of a strip
+  // build integrand of weighting potential of a strip
   void setwpPixelIntegrand();
 
-  // build integrant of weighting potential of a pixel
+  // build integrand of weighting potential of a pixel
   void setwpStripIntegrand();
 
   // weighting field of a plane in layer with index "indexLayer"
@@ -298,13 +293,9 @@ class ComponentParallelPlate : public Component {
   // Rebuilds c, v, g and w matrix.
   void LayerUpdate(double &z, const int im, const double epsM) {
 
-    if (z == m_currentPosition) {
+    if (z == m_currentPosition) return;
 
-      return;
-
-    } else {
-      m_currentPosition = z;
-    }
+    m_currentPosition = z;
 
     if (im != m_currentLayer) {
       m_currentLayer = im;
@@ -317,12 +308,13 @@ class ComponentParallelPlate : public Component {
     double diff1 = m_z[im] - z;
     double diff2 = z - m_z[im - 1];
 
-    for (int i = 0; i < im - 1; i++) m_d[i] = m_dHolder[i];
-    m_d[im - 1] = diff2;
-    m_d[im] = diff1;
-    for (int i = im + 1; i < m_N; i++) m_d[i] = m_dHolder[i - 1];
+    std::vector<double> d(m_N, 0.);
+    for (int i = 0; i < im - 1; i++) d[i] = m_dHolder[i];
+    d[im - 1] = diff2;
+    d[im] = diff1;
+    for (int i = im + 1; i < m_N; i++) d[i] = m_dHolder[i - 1];
     // TODO::Construct c and g matrices only for im != m_currentLayer.
-    constructGeometryFunction(m_N);
+    constructGeometryFunction(m_N, d);
   };
 
   void UpdatePeriodicity() override;
