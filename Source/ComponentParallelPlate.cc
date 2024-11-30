@@ -40,13 +40,14 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
   m_N = N + 1;
   m_V = V;
 
+  m_conductive.assign(N + 1, false);
   if (sigmaIndex.empty()) {
     for (int i = 0; i < N; i++) {
-      if (eps[i] != 1) sigmaIndex.push_back(i + 1);
+      if (eps[i] != 1) m_conductive[i + 1] = true;
     }
+  } else {
+    for (int i : sigmaIndex) m_conductive[i] = true;
   }
-
-  m_sigmaIndex = sigmaIndex;
 
   m_z.assign(N + 1, 0.);
   for (int i = 1; i <= N; i++) {
@@ -262,7 +263,7 @@ void ComponentParallelPlate::Reset() {
   m_gMatrix.clear();
   m_wMatrix.clear();
 
-  m_sigmaIndex.clear();
+  m_conductive.clear();
   m_eps.clear();
   m_d.clear();
   m_z.clear();
@@ -351,7 +352,7 @@ Medium* ComponentParallelPlate::GetMedium(const double x, const double y,
   int i = -1;
   double eps = 0.;
   if (!getLayer(y, i, eps)) return nullptr;
-  return kroneckerDelta(i) != 0 ? m_medium : nullptr;  
+  return m_conductive[i] ? nullptr : m_medium;
 }
 
 bool ComponentParallelPlate::Nsigma(

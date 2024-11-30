@@ -141,7 +141,7 @@ class ComponentParallelPlate : public Component {
   void IndexOfGasGaps(std::vector<int>& indexGasGap) {
     indexGasGap = {};
     for (int i = 1; i < m_N; i++) {
-      if (kroneckerDelta(i) != 0) indexGasGap.push_back(i);
+      if (!m_conductive[i]) indexGasGap.push_back(i);
     }
   }
 
@@ -174,7 +174,8 @@ class ComponentParallelPlate : public Component {
   std::vector<double> m_dHolder;
   std::vector<double> m_z;
 
-  std::vector<int> m_sigmaIndex;  ///< list of indices of conducting layers
+  /// Flag whether a layer is conductive.
+  std::vector<bool> m_conductive; 
 
   TF2 m_hIntegrand;
 
@@ -232,15 +233,6 @@ class ComponentParallelPlate : public Component {
   double FindWeightingPotentialInGrid(Electrode &el, const double x,
                                       const double y, const double z);
 
-  // function returning 0 if layer with specific index is conductive.
-  double kroneckerDelta(const int index) {
-    if (std::find(m_sigmaIndex.begin(), m_sigmaIndex.end(), index) !=
-        m_sigmaIndex.end())
-      return 0;
-    else
-      return 1;
-  }
-
   // function construct the sigma matrix needed to calculate the w, v, c and g
   // matrices
   bool Nsigma(int N, std::vector<std::vector<int>> &sigmaMatrix);
@@ -291,10 +283,11 @@ class ComponentParallelPlate : public Component {
 
   // electric field in layer with index "indexLayer"
   double constEFieldLayer(const int indexLayer) {
-    if (kroneckerDelta(indexLayer) == 0) return 0.;
+    if (m_conductive[indexLayer]) return 0.;
     double invEz = 0;
     for (int i = 1; i <= m_N - 1; i++) {
-      invEz += -(m_z[i] - m_z[i - 1]) * kroneckerDelta(i) / m_epsHolder[i - 1];
+      if (m_conductive[indexLayer]) continue;
+      invEz += -(m_z[i] - m_z[i - 1]) / m_epsHolder[i - 1];
     }
     return m_V / (m_epsHolder[indexLayer - 1] * invEz);
   }
