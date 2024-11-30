@@ -524,8 +524,9 @@ void ComponentParallelPlate::setwpPixelIntegrand() {
     double wy = p[5];
     double z = p[6];
 
-    double sol = cos(kx * (x - x0)) * sin(kx * wx / 2) * cos(ky * (y - y0)) *
-                 sin(ky * wy / 2) * m_hIntegrand.Eval(K, z) / (kx * ky);
+    double sol = cos(kx * (x - x0)) * sin(0.5 * kx * wx) * 
+                 cos(ky * (y - y0)) * sin(0.5 * ky * wy) * 
+                 m_hIntegrand.Eval(K, z) / (kx * ky);
 
     return 4 * sol / (Pi * Pi);
   };
@@ -559,8 +560,7 @@ void ComponentParallelPlate::setwpStripIntegrand() {
   };
   TF1 *wpStripIntegrand =
       new TF1("wpStripIntegrand", intFunction, 0, m_upperBoundIntegration, 4);
-  wpStripIntegrand->SetNpx(
-      1000);  // increasing number of points the function is evaluated on
+  wpStripIntegrand->SetNpx(1000);  
   wpStripIntegrand->Copy(m_wpStripIntegral);
 
   delete wpStripIntegrand;

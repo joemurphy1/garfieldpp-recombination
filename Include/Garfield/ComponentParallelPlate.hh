@@ -291,7 +291,7 @@ class ComponentParallelPlate : public Component {
   bool decToBinary(int n, std::vector<int> &binaryNum);
 
   // Rebuilds c, v, g and w matrix.
-  void LayerUpdate(double &z, const int im, const double epsM) {
+  void LayerUpdate(const double z, const int im, const double epsM) {
 
     if (z == m_currentPosition) return;
 
