@@ -70,7 +70,7 @@ class AvalancheGridSpaceCharge {
   }
 
   /// Set the streamer-inception criterion constant K in the interval (0,
-  /// \infty) s.t. 1 = 100%
+  /// &infin;) s.t. 1 = 100%
   void SetK(float option = 0.95) { m_fStreamerK = option; }
 
   /// Stop the avalanche if K % field is reached

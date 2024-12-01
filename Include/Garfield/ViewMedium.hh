@@ -51,7 +51,7 @@ class ViewMedium : public ViewBase {
   void DisableExport() { m_outfile = ""; }
 
   /** Plot the drift velocity components.
-    * \param option string indicating the carriers for which to plot 
+    * \param carriers string indicating the carriers for which to plot 
     *        the drift velocity
     *   - "e": electrons,
     *   - "h": holes,
