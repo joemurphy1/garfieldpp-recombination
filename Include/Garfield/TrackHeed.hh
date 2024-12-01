@@ -250,6 +250,9 @@ class TrackHeed : public Track {
     stepAngleCurved = m_stepAngleCurved;
   }
 
+  void CrossInactiveMedia(const bool on = true) {
+    m_crossInactiveMedia = on;
+  }
   void EnableCoulombScattering(const bool on = true) { 
     m_coulombScattering = on;
   } 
@@ -294,6 +297,7 @@ class TrackHeed : public Track {
   bool m_usePacsOutput = false;
 
   bool m_doPhotonReabsorption = true;
+  bool m_crossInactiveMedia = false;
   bool m_coulombScattering = false;
   bool m_useBfieldAuto = true;
   bool m_doDeltaTransport = true;

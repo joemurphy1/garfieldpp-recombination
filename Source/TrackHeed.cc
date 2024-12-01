@@ -211,7 +211,9 @@ bool TrackHeed::NewTrack(const double x0, const double y0, const double z0,
       // Skip this one.
       continue;
     }
-    if (!AddCluster(virtualPhoton, m_clusters)) break;
+    if (!AddCluster(virtualPhoton, m_clusters)) {
+      if (!m_crossInactiveMedia) break;
+    }
   }
   ClearBank(particleBank);
   Heed::gparticle::reset_counter();
