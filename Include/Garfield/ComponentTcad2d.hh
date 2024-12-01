@@ -26,7 +26,6 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
     * \param dmin smallest length in the element
     * \param dmax largest length in the element
     * \param type element type
-    * \param reg region
     */
   bool GetElement(const size_t i, double& vol, double& dmin, double& dmax,
                   int& type) const;

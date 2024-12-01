@@ -55,12 +55,13 @@ class AvalancheGrid {
     m_diffusion = true;
     m_DiffSigma = diffSigma;
   }
-  /** Setting the starting point of an electron that .
+  /** Add an electron to the initial configuration.
    *
-   * \param z z-coordinate of initial electron.
    * \param x x-coordinate of initial electron.
-   * \param v speed of initial electron.
+   * \param y y-coordinate of initial electron.
+   * \param z t-coordinate of initial electron.
    * \param t starting time of avalanche.
+   * \param n number of electrons at this point.
    */
   void AvalancheElectron(const double x, const double y, const double z,
                          const double t = 0, const int n = 1);
