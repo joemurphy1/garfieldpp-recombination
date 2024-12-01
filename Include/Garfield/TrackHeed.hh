@@ -156,6 +156,16 @@ class TrackHeed : public Track {
                               const double t0, const double e0,
                               const double dx0, const double dy0,
                               const double dz0, int& ne);
+  /** Simulate a photon.
+    * \param x0,y0,z0 initial position of the photon
+    * \param t0 initial time
+    * \param e0 initial energy of the photon
+    * \param dx0,dy0,dz0 initial direction of the photon
+    **/
+  Cluster TransportPhoton(const double x0, const double y0, const double z0,
+                          const double t0, const double e0, const double dx0,
+                          const double dy0, const double dz0); 
+
 
   /** Simulate a photon.
     * \param x0,y0,z0 initial position of the photon

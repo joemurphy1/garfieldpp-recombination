@@ -563,51 +563,32 @@ void TrackHeed::TransportDeltaElectron(const double x0, const double y0,
   m_clusters.push_back(std::move(cluster));
 }
 
-void TrackHeed::TransportPhoton(const double x0, const double y0,
-                                const double z0, const double t0,
-                                const double e0, const double dx0,
-                                const double dy0, const double dz0, int& ne) {
-  int ni = 0, np = 0;
-  TransportPhoton(x0, y0, z0, t0, e0, dx0, dy0, dz0, ne, ni, np);
-}
-
-void TrackHeed::TransportPhoton(const double x0, const double y0,
-                                const double z0, const double t0,
-                                const double e0, const double dx0,
-                                const double dy0, const double dz0, int& ne,
-                                int& ni) {
-  int np = 0;
-  TransportPhoton(x0, y0, z0, t0, e0, dx0, dy0, dz0, ne, ni, np);
-} 
-
-void TrackHeed::TransportPhoton(const double x0, const double y0,
-                                const double z0, const double t0,
-                                const double e0, const double dx0,
-                                const double dy0, const double dz0, int& ne,
-                                int& ni, int& np) {
-  ne = ni = np = 0;
+TrackHeed::Cluster TrackHeed::TransportPhoton(
+    const double x0, const double y0, const double z0, const double t0,
+    const double e0, const double dx0, const double dy0, const double dz0) {
+  Cluster cluster;
   // Make sure the energy is positive.
   if (e0 <= 0.) {
     std::cerr << m_className << "::TransportPhoton:\n"
               << "    Photon energy must be positive.\n";
-    return;
+    return cluster;
   }
 
   // Make sure the sensor has been set.
   if (!m_sensor) {
     std::cerr << m_className << "::TransportPhoton: Sensor is not defined.\n";
-    return;
+    return cluster;
   }
 
   bool update = false;
-  if (!UpdateBoundingBox(update)) return;
+  if (!UpdateBoundingBox(update)) return cluster;
 
   // Make sure the initial position is inside an ionisable medium.
   Medium* medium = m_sensor->GetMedium(x0, y0, z0);
   if (!medium || !medium->IsIonisable()) {
     std::cerr << m_className << "::TransportPhoton:\n"
               << "    No ionisable medium at initial position.\n";
-    return;
+    return cluster;
   }
 
   // Check if the medium has changed since the last call.
@@ -619,16 +600,10 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
 
   // If medium or bounding box have changed, update the "chamber".
   if (update) {
-    if (!Initialise(medium)) return;
+    if (!Initialise(medium)) return cluster;
     m_mediumName = medium->GetName();
     m_mediumDensity = medium->GetMassDensity();
   }
-
-  // Clusters from the current track will be lost.
-  m_hasActiveTrack = false;
-  m_clusters.clear();
-  m_cluster = 0;
-  Cluster cluster;
 
   // Set the direction vector.
   Heed::vec velocity = NormaliseDirection(dx0, dy0, dz0);
@@ -691,7 +666,7 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
                   << "    Unknown secondary particle.\n";
         ClearBank(secondaries);
         ClearBank(newSecondaries);
-        return;
+        return cluster;
       }
       if (m_doPhotonReabsorption) {
         fluorescencePhoton->fly(newSecondaries);
@@ -712,6 +687,36 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
     ClearBank(newSecondaries);
   }
   ClearBank(secondaries);
+  return cluster;
+}
+
+void TrackHeed::TransportPhoton(const double x0, const double y0,
+                                const double z0, const double t0,
+                                const double e0, const double dx0,
+                                const double dy0, const double dz0, int& ne) {
+  int ni = 0, np = 0;
+  TransportPhoton(x0, y0, z0, t0, e0, dx0, dy0, dz0, ne, ni, np);
+}
+
+void TrackHeed::TransportPhoton(const double x0, const double y0,
+                                const double z0, const double t0,
+                                const double e0, const double dx0,
+                                const double dy0, const double dz0, int& ne,
+                                int& ni) {
+  int np = 0;
+  TransportPhoton(x0, y0, z0, t0, e0, dx0, dy0, dz0, ne, ni, np);
+} 
+
+void TrackHeed::TransportPhoton(const double x0, const double y0,
+                                const double z0, const double t0,
+                                const double e0, const double dx0,
+                                const double dy0, const double dz0, int& ne,
+                                int& ni, int& np) {
+  // Clusters from the current track will be lost.
+  m_hasActiveTrack = false;
+  m_clusters.clear();
+  m_cluster = 0;
+  Cluster cluster = TransportPhoton(x0, y0, z0, t0, e0, dx0, dy0, dz0);
   ne = cluster.electrons.size();
   ni = cluster.ions.size();
   np = cluster.photons.size();
