@@ -106,14 +106,10 @@ int main(int argc, char * argv[]) {
 
   while (true) {
     const double egamma = 100.e3;
-    int ne = 0;
-    track.TransportPhoton(0., rTube, 0., 0., egamma, 0., -1., 0., ne);
-    if (ne == 0) continue; 
-    for (int k = 0; k < ne; ++k) {
-      double xe = 0., ye = 0., ze = 0., te = 0., ee = 0.;
-      double dx = 0., dy = 0., dz = 0.;
-      track.GetElectron(k, xe, ye, ze, te, ee, dx, dy, dz);
-      drift.DriftElectron(xe, ye, ze, te);
+    auto cluster = track.TransportPhoton(0., rTube, 0., 0., egamma, 0., -1., 0.);
+    if (cluster.electrons.empty()) continue;
+    for (const auto& electron : cluster.electrons) {
+      drift.DriftElectron(electron.x, electron.y, electron.z, electron.t);
     }
     break;
   }
@@ -130,5 +126,5 @@ int main(int argc, char * argv[]) {
     if (plotSignal) sensor.PlotSignal("s", cS);
   }
  
-  app.Run(kTRUE);
+  app.Run();
 }

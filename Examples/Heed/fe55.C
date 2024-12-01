@@ -78,9 +78,8 @@ int main(int argc, char * argv[]) {
     // Sample the photon energy, using the relative intensities according to XDB.
     const double r = 167. * RndmUniform();
     const double egamma = r < 100. ? 5898.8 : r < 150. ? 5887.6 : 6490.4; 
-    int ne = 0;
-    track.TransportPhoton(x0, y0, z0, t0, egamma, 0., 0., 1., ne);
-    hElectrons.Fill(ne);
+    auto cluster = track.TransportPhoton(x0, y0, z0, t0, egamma, 0., 0., 1.);
+    hElectrons.Fill(cluster.electrons.size());
   }
 
   TCanvas c("c", "", 600, 600);
