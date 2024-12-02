@@ -59,6 +59,8 @@ class AvalancheMC {
   void AddHole(const double x, const double y, const double z, const double t);
   /// Add an ion to the list of particles to be transported.
   void AddIon(const double x, const double y, const double z, const double t);
+  /// Add an negative ion to the list of particles to be transported.
+  void AddNegativeIon(const double x, const double y, const double z, const double t);
   /// Resume the simulation from the current set of charge carriers.
   bool ResumeAvalanche(const bool electron = true, const bool hole = true);
 
@@ -104,6 +106,9 @@ class AvalancheMC {
   void GetIonEndpoint(const size_t i, double& x0, double& y0, double& z0,
                       double& t0, double& x1, double& y1, double& z1,
                       double& t1, int& status) const;
+  void GetNegativeIonEndpoint(const size_t i, double& x0, double& y0, double& z0,
+                              double& t0, double& x1, double& y1, double& z1,
+                              double& t1, int& status) const;
 
   /// Switch on drift line plotting.
   void EnablePlotting(ViewDrift* view);
@@ -238,6 +243,8 @@ class AvalancheMC {
   unsigned int m_nHoles = 0;
   /// Number of ions produced
   unsigned int m_nIons = 0;
+  /// Number of negative ions produced
+  unsigned int m_nNegativeIons = 0;
 
   /// Start/end points of all electrons in the avalanche 
   /// (including captured ones).
