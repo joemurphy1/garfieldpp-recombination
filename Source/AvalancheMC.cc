@@ -343,12 +343,14 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
       }
       for (size_t i = 0; i < 3; ++i) x1[i] += RndmGaussian(0., sigma);
       if (!aval && m_useAttachment) {
-        double eta = GetAttachment(particle, m0, x0, e0, b0);
-        const double ds = Dist(x0, x1);
+        const double eta = GetAttachment(particle, m0, x0, e0, b0);
+        double patt = 0.;
         if (eta < 0.) {
-          eta = std::abs(eta) * (t1 - t0) / ds;
+          patt = 1. - std::exp(eta * (t1 - t0));
+        } else {
+          const double ds = Dist(x0, x1);
+          patt = 1. - std::exp(-eta * ds);
         }
-        const double patt = 1. - std::exp(-std::abs(eta) * ds);
         if (RndmUniform() < patt) {
           x1 = MidPoint(x0, x1);
           t1 = 0.5 * (t0 + t1);
@@ -436,13 +438,14 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
       }
       if (m_useDiffusion) AddDiffusion(sqrt(vmag * dt), difl, dift, x1, v1);
       if (!aval && m_useAttachment) {
-        double eta = GetAttachment(particle, m0, x0, e0, b0);
-        const double ds = Dist(x0, x1);
+        const double eta = GetAttachment(particle, m0, x0, e0, b0);
+        double patt = 0.;
         if (eta < 0.) {
-          const double veff = ds / dt;
-          eta = std::abs(eta) / veff;
+          patt = 1. - std::exp(eta * dt);
+        } else {
+          const double ds = Dist(x0, x1);
+          patt = 1. - std::exp(-eta * ds);
         }
-        const double patt = 1. - std::exp(-std::abs(eta) * ds);
         if (RndmUniform() < patt) {
           x1 = MidPoint(x0, x1);
           dt *= 0.5;
