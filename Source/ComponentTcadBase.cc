@@ -2062,59 +2062,18 @@ void ComponentTcadBase<N>::ComputeEtaFromLifetime() {
 
   if (m_vertices.empty()) return;
   const size_t nVertices = m_vertices.size();
-  // Compute the drift velocities at each node.
-  std::vector<double> ve(nVertices, 0.); 
-  std::vector<double> vh(nVertices, 0.); 
-  for (const auto& element : m_elements) {
-    if (element.region >= m_regions.size()) continue;
-    auto medium = m_regions[element.region].medium;
-    if (!medium) continue;
-    const size_t nv = ElementVertices(element);
-    for (size_t i = 0; i < nv; ++i) {
-      auto k = element.vertex[i];
-      // Get the electric field at this node.
-      const double ex = m_efield[k][0];
-      const double ey = m_efield[k][1];
-      const double ez = N == 3 ? m_efield[k][2] : 0.;
-      // Compute the electron drift velocity.
-      double vx = 0., vy = 0., vz = 0.;
-      medium->ElectronVelocity(ex, ey, ez, 0., 0., 0., vx, vy, vz);
-      ve[k] = sqrt(vx * vx + vy * vy + vz * vz);
-      vx = vy = vz = 0.;
-      medium->HoleVelocity(ex, ey, ez, 0., 0., 0., vx, vy, vz);
-      vh[k] = sqrt(vx * vx + vy * vy + vz * vz);
-    }
-  }
-  // If available, use the velocity information from the TCAD map.
-  if (!m_eVelocity.empty()) {
-    for (size_t i = 0; i < nVertices; ++i) {
-      double v = 0.;
-      for (size_t j = 0; j < N; ++j) {
-        v += m_eVelocity[i][j] * m_eVelocity[i][j];
-      }
-      ve[i] = sqrt(v);
-    }
-  }
-  if (!m_hVelocity.empty()) { 
-    for (size_t i = 0; i < nVertices; ++i) {
-      double v = 0.;
-      for (size_t j = 0; j < N; ++j) {
-        v += m_hVelocity[i][j] * m_hVelocity[i][j];
-      }
-      vh[i] = sqrt(v);
-    }
-  }
-  // Compute the attachment coefficients.
   if (!m_eLifetime.empty()) {
     for (size_t i = 0; i < nVertices; ++i) {
-      const double d = m_eLifetime[i] * ve[i];
-      if (d > 0.) m_eEta[i] += 1. / d;
+      if (m_eLifetime[i] > 0.) {
+        m_eEta[i] = -1. / m_eLifetime[i];
+      }
     }
   }
   if (!m_hLifetime.empty()) {
     for (size_t i = 0; i < nVertices; ++i) {
-      const double d = m_hLifetime[i] * ve[i];
-      if (d > 0.) m_hEta[i] += 1. / d;
+      if (m_hLifetime[i] > 0.) {
+        m_hEta[i] = -1. / m_hLifetime[i];
+      }
     }
   }
 }
