@@ -13,6 +13,7 @@
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Random.hh"
 #include "RandomEngineGPU.h"
+#include "Garfield/RandomEngineRoot.hh"
 #include "GPUFunctions.h"
 #include "RandomGPU.h"
 
@@ -254,6 +255,7 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
         std::cout << "Transferring internal data to GPU..." << std::endl;
         memUsageSensor = src->m_sensor->CreateGPUTransferObject(m_sensor);
 
+	Garfield::RandomEngineRoot randomEngine(123456);
         checkCudaErrors( cudaMallocManaged( &m_randomEngine, sizeof(RandomEngineGPU) ) );
         memRNG = sizeof(RandomEngineGPU) + m_randomEngine->initCURandStates(randomEngine.GetSeed());
         m_randomEngine->setRandomEngineOnDevice();
