@@ -32,36 +32,22 @@ class MediumSilicon : public Medium {
   /// Set time constant for trapping of electrons and holes [ns].
   void SetTrappingTime(const double etau, const double htau);
 
-  // Electron transport parameters
-  bool ElectronVelocity(const double ex, const double ey, const double ez,
-                        const double bx, const double by, const double bz,
-                        double& vx, double& vy, double& vz) override;
-  bool ElectronTownsend(const double ex, const double ey, const double ez,
-                        const double bx, const double by, const double bz,
-                        double& alpha) override;
-  bool ElectronAttachment(const double ex, const double ey, const double ez,
-                          const double bx, const double by, const double bz,
-                          double& eta) override;
-  double ElectronMobility() override { return m_eMu; }
-  // Hole transport parameters
-  bool HoleVelocity(const double ex, const double ey, const double ez,
-                    const double bx, const double by, const double bz,
-                    double& vx, double& vy, double& vz) override;
-  bool HoleTownsend(const double ex, const double ey, const double ez,
-                    const double bx, const double by, const double bz,
-                    double& alpha) override;
-  bool HoleAttachment(const double ex, const double ey, const double ez,
-                      const double bx, const double by, const double bz,
-                      double& eta) override;
-  double HoleMobility() override { return m_hMu; }
   /// Specify the low field values of the electron and hole mobilities.
   void SetLowFieldMobility(const double mue, const double muh);
+  /// Set the parameterisation to be used for calculating the 
+  /// lattice mobility model. The currently implemented models are
+  /// - Sentaurus
+  /// - Reggiani
+  /// - Minimos
+  /// The default is Sentaurus. 
+  void SetLatticeMobilityModel(const std::string& model);
   /// Calculate the lattice mobility using the Minimos model.
   void SetLatticeMobilityModelMinimos();
   /// Calculate the lattice mobility using the Sentaurus model (default).
   void SetLatticeMobilityModelSentaurus();
   /// Calculate the lattice mobility using the Reggiani model.
   void SetLatticeMobilityModelReggiani();
+
   /// Use the Minimos model for the doping-dependence of the mobility.
   void SetDopingMobilityModelMinimos();
   /// Use the Masetti model for the doping-dependence of the mobility (default).
@@ -76,6 +62,15 @@ class MediumSilicon : public Medium {
   /// Calculate the saturation velocities using the Reggiani model.
   void SetSaturationVelocityModelReggiani();
 
+  /// Set the parameterisation to be used for the drift velocity as 
+  /// function of the electric field.
+  /// The currently implemented models are 
+  ///  - Canali
+  ///  - Reggiani
+  ///  - Minimos
+  ///  - Constant (velocity increases linearly with the electric field) 
+  /// The default is Canali.
+  void SetHighFieldMobilityModel(const std::string& model);
   /// Parameterize the high-field mobility using the Minimos model.
   void SetHighFieldMobilityModelMinimos();
   /// Parameterize the high-field mobility using the Canali model (default).
@@ -85,6 +80,14 @@ class MediumSilicon : public Medium {
   /// Make the velocity proportional to the electric field (no saturation).
   void SetHighFieldMobilityModelConstant();
 
+  /// Set the parameterisation to be used for calculating the 
+  /// impact ionisation coefficient. The currently implemented models are 
+  ///  - van Overstraeten - de Man
+  ///  - Okuto - Crowell
+  ///  - Massey
+  ///  - Grant
+  /// The default is van Overstraeten - de Man.
+  void SetImpactIonisationModel(const std::string& model);
   /// Calculate &alpha; using the van Overstraeten-de Man model (default).
   void SetImpactIonisationModelVanOverstraetenDeMan();
   /// Calculate &alpha; using the Grant model.
@@ -112,6 +115,29 @@ class MediumSilicon : public Medium {
   }
   void EnableAnisotropy(const bool on = true) { m_anisotropic = on; }
 
+  // Electron transport parameters
+  bool ElectronVelocity(const double ex, const double ey, const double ez,
+                        const double bx, const double by, const double bz,
+                        double& vx, double& vy, double& vz) override;
+  bool ElectronTownsend(const double ex, const double ey, const double ez,
+                        const double bx, const double by, const double bz,
+                        double& alpha) override;
+  bool ElectronAttachment(const double ex, const double ey, const double ez,
+                          const double bx, const double by, const double bz,
+                          double& eta) override;
+  double ElectronMobility() override { return m_eMu; }
+
+  // Hole transport parameters
+  bool HoleVelocity(const double ex, const double ey, const double ez,
+                    const double bx, const double by, const double bz,
+                    double& vx, double& vy, double& vz) override;
+  bool HoleTownsend(const double ex, const double ey, const double ez,
+                    const double bx, const double by, const double bz,
+                    double& alpha) override;
+  bool HoleAttachment(const double ex, const double ey, const double ez,
+                      const double bx, const double by, const double bz,
+                      double& eta) override;
+  double HoleMobility() override { return m_hMu; }
   // Get the electron energy (and its gradient)
   // for a given (crystal) momentum
   double GetElectronEnergy(const double px, const double py, const double pz,

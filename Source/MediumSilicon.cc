@@ -332,6 +332,22 @@ void MediumSilicon::SetLowFieldMobility(const double mue, const double muh) {
   m_hasUserMobility = true;
   m_isChanged = true;
 }
+void MediumSilicon::SetLatticeMobilityModel(const std::string& model) {
+  std::string tmp = model;
+  std::transform(tmp.begin(), tmp.end(), tmp.begin(), toupper);
+  tmp.erase(std::remove_if(tmp.begin(), tmp.end(), isspace), tmp.end());
+  tmp.erase(std::remove(tmp.begin(), tmp.end(), '-'), tmp.end());
+  if (tmp == "MINIMOS") {
+    SetLatticeMobilityModelMinimos();
+  } else if (tmp == "SENTAURUS") {
+    SetLatticeMobilityModelSentaurus();
+  } else if (tmp == "REGGIANI") {
+    SetLatticeMobilityModelReggiani();
+  } else {
+    std::cerr << m_className << "::SetLatticeMobilityModel: Unknown model "
+              << model << ".\n";
+  } 
+}
 
 void MediumSilicon::SetLatticeMobilityModelMinimos() {
   m_latticeMobilityModel = LatticeMobility::Minimos;
@@ -396,6 +412,25 @@ void MediumSilicon::SetSaturationVelocityModelReggiani() {
   m_isChanged = true;
 }
 
+void MediumSilicon::SetHighFieldMobilityModel(const std::string& model) {
+  std::string tmp = model;
+  std::transform(tmp.begin(), tmp.end(), tmp.begin(), toupper);
+  tmp.erase(std::remove_if(tmp.begin(), tmp.end(), isspace), tmp.end());
+  tmp.erase(std::remove(tmp.begin(), tmp.end(), '-'), tmp.end());
+  if (tmp == "MINIMOS") {
+    SetHighFieldMobilityModelMinimos();
+  } else if (tmp == "CANALI") {
+    SetHighFieldMobilityModelCanali();
+  } else if (tmp == "REGGIANI") {
+    SetHighFieldMobilityModelReggiani();
+  } else if (tmp == "CONSTANT" || tmp == "NONE") {
+    SetHighFieldMobilityModelConstant();
+  } else {
+    std::cerr << m_className << "::SetHighFieldMobilityModel: Unknown model "
+              << model << ".\n";
+  }
+}
+
 void MediumSilicon::SetHighFieldMobilityModelMinimos() {
   m_highFieldMobilityModel = HighFieldMobility::Minimos;
   m_isChanged = true;
@@ -413,6 +448,26 @@ void MediumSilicon::SetHighFieldMobilityModelReggiani() {
 
 void MediumSilicon::SetHighFieldMobilityModelConstant() {
   m_highFieldMobilityModel = HighFieldMobility::Constant;
+}
+
+void MediumSilicon::SetImpactIonisationModel(const std::string& model) {
+  std::string tmp = model;
+  std::transform(tmp.begin(), tmp.end(), tmp.begin(), toupper);
+  tmp.erase(std::remove_if(tmp.begin(), tmp.end(), isspace), tmp.end());
+  tmp.erase(std::remove(tmp.begin(), tmp.end(), '-'), tmp.end());
+  if (tmp == "VANOVERSTRAETEN" || tmp == "VANOVERSTRAETENDEMAN" ||
+      tmp == "DEMAN") {
+    SetImpactIonisationModelVanOverstraetenDeMan();
+  } else if (tmp == "GRANT") {
+    SetImpactIonisationModelGrant();
+  } else if (tmp == "MASSEY") {
+    SetImpactIonisationModelMassey();
+  } else if (tmp == "OKUTO" || tmp == "OKUTOCROWELL") {
+    SetImpactIonisationModelOkutoCrowell();
+  } else {
+    std::cerr << m_className << "::SetImpactIonisationModel: Unknown model "
+              << model << ".\n"; 
+  }
 }
 
 void MediumSilicon::SetImpactIonisationModelVanOverstraetenDeMan() {
