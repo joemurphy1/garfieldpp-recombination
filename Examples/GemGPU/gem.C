@@ -11,6 +11,7 @@
 #include "Garfield/ComponentAnsys123.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/RandomEngineRoot.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewFEMesh.hh"
 #include "Garfield/ViewField.hh"
@@ -18,7 +19,7 @@
 using namespace Garfield;
 
 int main(int argc, char* argv[]) {
-  randomEngine.Seed(42);
+  Garfield::RandomEngineRoot randomEngine(42);
 
   TApplication app("app", &argc, argv);
 
