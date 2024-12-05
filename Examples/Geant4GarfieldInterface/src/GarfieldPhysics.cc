@@ -202,8 +202,7 @@ double GarfieldPhysics::GetMaxEnergyMeVParticle(std::string name,
 
 void GarfieldPhysics::InitializePhysics() {
   // Define the gas mixture.
-  fMediumMagboltz = new Garfield::MediumMagboltz();
-  fMediumMagboltz->SetComposition("ar", 70., "co2", 30.);
+  fMediumMagboltz = new Garfield::MediumMagboltz("ar", 70., "co2", 30.);
   fMediumMagboltz->SetTemperature(293.15);
   fMediumMagboltz->SetPressure(760.);
   fMediumMagboltz->Initialise(true);
@@ -230,8 +229,7 @@ void GarfieldPhysics::InitializePhysics() {
   fSensor = new Garfield::Sensor();
   fSensor->AddComponent(fComponentAnalyticField);
 
-  fTrackHeed = new Garfield::TrackHeed();
-  fTrackHeed->SetSensor(fSensor);
+  fTrackHeed = new Garfield::TrackHeed(fSensor);
   fTrackHeed->EnableDeltaElectronTransport();
 }
 
@@ -242,11 +240,9 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
   fEnergyDeposit = 0;
   fSecondaryParticles.clear();
 
-  Garfield::AvalancheMC drift;
-  drift.SetSensor(fSensor);
+  Garfield::AvalancheMC drift(fSensor);
   drift.SetDistanceSteps(1.e-4);
-  Garfield::AvalancheMicroscopic avalanche;
-  avalanche.SetSensor(fSensor);
+  Garfield::AvalancheMicroscopic avalanche(fSensor);
 
   // Wire radius [cm]
   constexpr double rWire = 25.e-4;
@@ -259,58 +255,50 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
 
   fEnergyDeposit = 0;
   if (fIonizationModel != "Heed" || particleName == "gamma") {
-    // Number of electrons produced
-    int nc = 0;
+    Garfield::TrackHeed::Cluster cl;
     if (particleName == "gamma") {
-      fTrackHeed->TransportPhoton(x_cm, y_cm, z_cm, time, eKin_eV, dx, dy, dz,
-                                  nc);
+      cl = fTrackHeed->TransportPhoton(x_cm, y_cm, z_cm, time, eKin_eV, 
+                                       dx, dy, dz);
     } else {
-      fTrackHeed->TransportDeltaElectron(x_cm, y_cm, z_cm, time, eKin_eV, dx,
-                                         dy, dz, nc);
+      cl = fTrackHeed->TransportDeltaElectron(x_cm, y_cm, z_cm, time, eKin_eV, 
+                                              dx, dy, dz);
       fEnergyDeposit = eKin_eV;
     }
-
-    for (int cl = 0; cl < nc; cl++) {
-      double xe, ye, ze, te;
-      double ee, dxe, dye, dze;
-      fTrackHeed->GetElectron(cl, xe, ye, ze, te, ee, dxe, dye, dze);
-      if (fabs(ze) > lTube || sqrt(xe * xe + ye * ye) > rTube) continue;
+    for (const auto& electron : cl.electrons) {
+      if (fabs(electron.z) > lTube ||
+          sqrt(electron.x * electron.x + electron.y * electron.y) > rTube) {
+        continue;
+      }
       nsum++;
       if (particleName == "gamma") {
         fEnergyDeposit += fTrackHeed->GetW();
       }
-      analysisManager->FillH3(1, ze * 10, xe * 10, ye * 10);
+      analysisManager->FillH3(1, electron.z * 10, electron.x * 10, electron.y * 10);
       if (createSecondariesInGeant4) {
-        double newTime = te;
-        if (newTime < time) {
-          newTime += time;
-        }
-        fSecondaryParticles.emplace_back(GarfieldParticle(
-            "e-", ee, newTime, xe, ye, ze, dxe, dye, dze));
+        double newTime = electron.t;
+        if (newTime < time) newTime += time;
+        fSecondaryParticles.emplace_back(GarfieldParticle("e-", electron.e, 
+            newTime, electron.x, electron.y, electron.z, 
+            electron.dx, electron.dy, electron.dz));
       }
 
-      drift.DriftElectron(xe, ye, ze, te);
-
-      double xe1, ye1, ze1, te1;
-      double xe2, ye2, ze2, te2;
-
-      int status;
-      drift.GetElectronEndpoint(0, xe1, ye1, ze1, te1, xe2, ye2, ze2, te2,
-                                status);
-
-      if (0 < xe2 && xe2 < rWire) {
-        xe2 += 2 * rWire;
-      } else if (0 > xe2 && xe2 > -rWire) {
-        xe2 += -2 * rWire;
+      drift.DriftElectron(electron.x, electron.y, electron.z, electron.t);
+      const auto& p1 = drift.GetElectrons().front().path.back();
+      double x1 = p1.x;
+      double y1 = p1.y;
+      if (0 < x1 && x1 < rWire) {
+        x1 += 2 * rWire;
+      } else if (0 > x1 && x1 > -rWire) {
+        x1 += -2 * rWire;
       } 
-      if (0 < ye2 && ye2 < rWire) {
-        ye2 += 2 * rWire;
-      } else if (0 > ye2 && ye2 > -rWire) {
-        ye2 += -2 * rWire;
+      if (0 < y1 && y1 < rWire) {
+        y1 += 2 * rWire;
+      } else if (0 > y1 && y1 > -rWire) {
+        y1 += -2 * rWire;
       }
 
-      double e2 = 0.1;
-      avalanche.AvalancheElectron(xe2, ye2, ze2, te2, e2, 0, 0, 0);
+      const double e1 = 0.1;
+      avalanche.AvalancheElectron(x1, y1, p1.z, p1.t, e1, 0, 0, 0);
 
       int ne = 0, ni = 0;
       avalanche.GetAvalancheSize(ne, ni);
@@ -344,27 +332,21 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
         }
 
         drift.DriftElectron(electron.x, electron.y, electron.z, electron.t);
-
-        double xe1, ye1, ze1, te1;
-        double xe2, ye2, ze2, te2;
-
-        int status;
-        drift.GetElectronEndpoint(0, xe1, ye1, ze1, te1, xe2, ye2, ze2,
-                                  te2, status);
-
-        if (0 < xe2 && xe2 < rWire) {
-          xe2 += 2 * rWire;
-        } else if (0 > xe2 && xe2 > -rWire) {
-          xe2 += -2 * rWire;
+        const auto& p1 = drift.GetElectrons().front().path.back();
+        double x1 = p1.x;
+        double y1 = p1.y;
+        if (0 < x1 && x1 < rWire) {
+          x1 += 2 * rWire;
+        } else if (0 > x1 && x1 > -rWire) {
+          x1 -= 2 * rWire;
         }
-        if (0 < ye2 && ye2 < rWire) {
-          ye2 += 2 * rWire;
-        } else if (0 > ye2 && ye2 > -rWire) {
-          ye2 += -2 * rWire;
+        if (0 < y1 && y1 < rWire) {
+          y1 += 2 * rWire;
+        } else if (0 > y1 && y1 > -rWire) {
+          y1 -= 2 * rWire;
         }
-
-        double e2 = 0.1;
-        avalanche.AvalancheElectron(xe2, ye2, ze2, te2, e2, 0, 0, 0);
+        const double e1 = 0.1;
+        avalanche.AvalancheElectron(x1, y1, p1.z, p1.t, e1, 0, 0, 0);
 
         int ne = 0, ni = 0;
         avalanche.GetAvalancheSize(ne, ni);
