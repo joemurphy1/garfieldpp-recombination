@@ -65,7 +65,6 @@ int main(int argc, char * argv[]) {
 
     meshView.SetArea(-0.5 * pitch, -0.02, 0.5 * pitch, 0.02); 
     meshView.SetCanvas(cf);
-    meshView.SetComponent(&fm);
     meshView.SetPlane(0, -1, 0, 0, 0, 0);
     meshView.SetFillMesh(true);
     meshView.SetColor(2, kGray);

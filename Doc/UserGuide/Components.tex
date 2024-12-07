@@ -143,8 +143,7 @@ hole.SetSectors(4);
 geo.AddSolid(&hole, &gas);
 
 // Create a viewer.
-ViewGeometry geoView;
-geoView.SetGeometry(&geo);
+ViewGeometry geoView(&geo);
 geoView.Plot3d();
 \end{lstlisting}
 The snippet above will produce a three-dimensional impression of the geometry.
@@ -181,9 +180,7 @@ Instead of calling \texttt{PlotCell} one can also use \texttt{ViewCell} directly
 ComponentAnalyticField cmp;
 ... 
 // Create a viewer.
-ViewCell view;
-// Set the pointer to the component.
-view.SetComponent(&cmp);
+ViewCell view(&cmp);
 // Make a two-dimensional plot of the cell layout.
 view.Plot2d();
 \end{lstlisting}
@@ -292,8 +289,9 @@ The class names refer to the type of mesh element used by Ansys:
 
 The field map is imported with the function
 \begin{lstlisting}
-bool Initialise(std::string elist, std::string nlist,
-                std::string mplist, std::string prnsol, std::string unit);
+bool Initialise(const std::string& elist, const std::string& nlist,
+                const std::string& mplist, const std::string& prnsol, 
+                const std::string& unit);
 \end{lstlisting}
 \begin{description}
   \item[elist]
@@ -578,7 +576,7 @@ extracted from CST Studio. More details can be found at
 
 \subsection{COMSOL}
 
-The class \texttt{ComponentComsol} (contributed by E.~Bodnia) can be used for 
+The class \texttt{ComponentComsol} can be used for 
 importing field maps computed using COMSOL Multiphysics.
 The function to import a field map is 
 \begin{lstlisting}
@@ -833,10 +831,13 @@ void ViewFEMesh::SetViewDrift(ViewDrift* driftView);
 a \texttt{ViewDrift} object can be attached to the mesh viewer. 
 The function
 \begin{lstlisting}
-bool ViewFEMesh::Plot();
+bool ViewFEMesh::Plot(const bool twod = true, const bool outline = false);
 \end{lstlisting}
-then allows draws a two-dimensional projection of the drift lines stored in the  
-\texttt{ViewDrift} class together with the mesh. 
+then draws the drift lines stored in the \texttt{ViewDrift} class together with the mesh.
+If the flag \texttt{twod} is set to \texttt{true}, 
+a two-dimensional projection of the drift lines and a cut view of the mesh at the currently set viewing plane are drawn. 
+If \texttt{twod} is \texttt{false}, the drift lines and mesh elements are drawn in 3D. If \texttt{outline} is set to \texttt{true}, only the 
+facets separating two regions are drawn. 
 The plot can be customized using 
 \begin{lstlisting}
 void SetColor(int matid, int colorid);
@@ -851,14 +852,13 @@ void SetFillMesh(bool fill);
               or filled elements
 \end{description}
 As an illustration consider the following example 
-(suppose that \texttt{fm} is a pointer to a field map component 
-and \texttt{driftView} is a pointer to a \texttt{ViewDrift} object) 
+(suppose that \texttt{driftView} is a pointer to a \texttt{ViewDrift} object) 
 \begin{lstlisting}
+  ComponentAnsys123 fm;
+  // ...
   TCanvas* c1 = new TCanvas();
-  ViewFEMesh* meshView = new ViewFEMesh();
+  ViewFEMesh* meshView = new ViewFEMesh(&fm);
   meshView->SetCanvas(c1);
-  // Set the component.
-  meshView->SetComponent(fm);
   // Set the viewing plane.
   meshView->SetPlane(0, -1, 0, 0, 0, 0);
   meshView->SetFillMesh(false);
@@ -867,6 +867,19 @@ and \texttt{driftView} is a pointer to a \texttt{ViewDrift} object)
   meshView->Plot();
 \end{lstlisting}
 
+\begin{lstlisting}
+  ComponentAnsys123 fm;
+  // ...
+  TCanvas* c1 = new TCanvas();
+  ViewFEMesh* meshView = new ViewFEMesh(&fm);
+  meshView->SetCanvas(c1);
+  // Set the viewing plane.
+  meshView->SetPlane(0, -1, 0, 0, 0, 0);
+  meshView->SetFillMesh(false);
+  meshView->SetViewDrift(driftView);
+  meshView->SetArea(-0.01, -0.01, -0.03, 0.01, 0.01, 0.01);
+  meshView->Plot();
+\end{lstlisting}
 \section{Analytic fields}
 
 For two-dimensional geometries consisting of wires, planes and tubes, 

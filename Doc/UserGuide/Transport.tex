@@ -350,21 +350,20 @@ avalanche should be simulated.
 %In case of gas-based detectors, only \texttt{AvalancheElectron} with 
 %\texttt{hole = false} is meaningful. 
 
-The starting and endpoints of electrons in the avalanche can be 
+The trajectories of the electrons in the avalanche can be 
 retrieved using
 \begin{lstlisting}
-size_t GetNumberOfElectronEndpoints() const;
-void GetElectronEndpoint(const size_t i, 
-                         double& x0, double& y0, double& z0, double& t0,
-                         double& x1, double& y1, double& z1, double& t1, int& status) const;
+const std::vector<EndPoint>& GetElectrons();
 \end{lstlisting}
-\begin{description}
-  \item[i] index of the electron
-  \item[x0, y0, z0, t0] initial position and time of the electron
-  \item[x1, y1, z1, t1] final position and time of the electron
-  \item[status] status code indicating why the tracking of the electron was stopped.  
-\end{description}
-Analogous functions are available for holes and ions.
+where \texttt{EndPoint} is a \texttt{struct} containing an integer status code indicating why the tracking of the electron was stopped and a vector of points along the drift line:
+\begin{lstlisting}
+struct EndPoint {
+  int status;
+  std::vector<Point> path;
+};
+\end{lstlisting}  
+Analogous functions are available for holes and (positive and negative) ions.
+%In the following snippet of code we print the status code and the last point on the drift line for each electron in the avalanche.
 
 For debugging purposes, attachment and diffusion can be switched off using
 \begin{lstlisting}

@@ -70,8 +70,7 @@ In order to make sure the calculation of the gas table was successful,
 it is a good idea to plot, for instance, 
 the drift velocity as a function of the electric field.
 \begin{lstlisting}
-ViewMedium mediumView;
-mediumView.SetMedium(&gas);
+ViewMedium mediumView(&gas);
 mediumView.PlotElectronVelocity('e');
 \end{lstlisting}
 \subsubsection{Electric Field}
@@ -133,10 +132,9 @@ We use Heed (Sec.~\ref{Sec:Heed}) to simulate the ionisation
 produced by a charged particle crossing the tube 
 (a 170\,GeV muon in our example).
 \begin{lstlisting}
-TrackHeed track;
+TrackHeed track(&sensor);
 track.SetParticle("muon");
 track.SetEnergy(170.e9);
-track.SetSensor(&sensor);
 \end{lstlisting}
 The drift lines of the electrons created along the track are calculated 
 using Runge-Kutta-Fehlberg (RKF) integration,
@@ -144,8 +142,7 @@ implemented in the class \texttt{DriftLineRKF}.
 This method uses the previously computed tables of transport parameters to 
 calculate drift lines and multiplication. 
 \begin{lstlisting}
-DriftLineRKF drift;
-drift.SetSensor(&sensor);
+DriftLineRKF drift(&sensor);
 \end{lstlisting}
 Let us consider a track that passes at a distance of 3\,mm
 from the wire centre. After simulating the passage of the charged particle,
@@ -185,9 +182,8 @@ We use the class \texttt{ViewCell} to draw the
 outline of the tube and the position of the wire on the same plot as the
 drift lines.
 \begin{lstlisting}
-ViewCell cellView;
+ViewCell cellView(&cmp);
 cellView.SetCanvas(cD);
-cellView.SetComponent(&cmp);
 \end{lstlisting}
 After we've simulated all drift lines from a charged particle 
 track, we create a plot using
@@ -381,8 +377,7 @@ fm.SetGas(&gas);
 Microscopic tracking is handled by the class 
 \texttt{AvalancheMicroscopic} (Sec.~\ref{Sec:MicroscopicTracking}).
 \begin{lstlisting}
-AvalancheMicroscopic aval;
-aval.SetSensor(&sensor);
+AvalancheMicroscopic aval(&sensor);
 \end{lstlisting}
 We are now ready to simulate an electron avalanche in the GEM.
 We place the initial electron 200\,\textmu{m} above the centre of the GEM hole 
@@ -426,8 +421,7 @@ which takes as input the macroscopic drift velocity as
 function of the electric field and simulates drift lines using a 
 Monte Carlo technique (Sec.~\ref{Sec:DriftLineMC}).
 \begin{lstlisting}
-AvalancheMC drift;
-drift.SetSensor(sensor);
+AvalancheMC drift(&sensor);
 drift.SetDistanceSteps(2.e-4);
 \end{lstlisting}
 After simulating an electron avalanche, we loop over all the electron
@@ -628,8 +622,7 @@ sensor.SetTimeWindow(tmin, tstep, nTimeBins);
 We use Heed (Sec.~\ref{Sec:Heed}) to simulate the electron/hole pairs 
 produced by a 180\,GeV\,/\,$c$ charged pion traversing the sensor.
 \begin{lstlisting}
-TrackHeed track;
-track.SetSensor(&sensor);
+TrackHeed track(&sensor);
 // Set the particle type and momentum [eV/c].
 track.SetParticle("pion");
 track.SetMomentum(180.e9);
