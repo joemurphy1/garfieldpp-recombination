@@ -77,6 +77,11 @@ double Trapezoid2(const std::vector<std::pair<double, double>> &f) {
 namespace Garfield {
 
 #ifndef __GPUCOMPILE__
+
+Sensor::Sensor(Component* comp) {
+  AddComponent(comp); 
+}
+
 void Sensor::ElectricField(const double x, const double y, const double z,
                            double &ex, double &ey, double &ez, double &v,
                            Medium *&medium, int &status) {

@@ -54,12 +54,14 @@ class SensorGPU;
 
 class __SENSORCLASS__ {
  public:
-  /// Constructor
+  /// Default constructor.
   __SENSORCLASS__() = default;
-  /// Destructor
+  /// Destructor.
   ~__SENSORCLASS__() {}
 
 #ifndef __GPUCOMPILE__
+  /// Constructor from a single component.
+  Sensor(Component* comp);
   /// Add a component.
   void AddComponent(Component* comp);
   /// Get the number of components attached to the sensor.
