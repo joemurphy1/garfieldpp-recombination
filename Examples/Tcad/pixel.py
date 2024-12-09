@@ -52,8 +52,7 @@ efield = fm.ElectricField(0., 0.5 * d, 0.)
 print(efield)
 
 # Create a sensor. 
-sensor = ROOT.Garfield.Sensor()
-sensor.AddComponent(fm)
+sensor = ROOT.Garfield.Sensor(fm)
 sensor.AddElectrode(wfield, 'strip')
 
 # Set the time bins.

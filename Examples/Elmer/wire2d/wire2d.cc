@@ -51,8 +51,7 @@ int main(int argc, char* argv[]) {
   elm.SetRangeZ(-5.,5.);
 
   // Set up a sensor object.
-  Sensor sensor;
-  sensor.AddComponent(&elm);
+  Sensor sensor(&elm);
   sensor.SetArea(-axis_x, -axis_y, -axis_z, axis_x, axis_y, axis_z);
 
   // Create an avalanche object
@@ -75,7 +74,7 @@ int main(int argc, char* argv[]) {
   aval.AvalancheElectron(xi, yi, zi, 0., 0., 0., 0., 0.);
 
   std::cout << "... avalanche complete with "
-            << aval.GetNumberOfElectronEndpoints() << " electron tracks.\n";
+            << aval.GetElectrons().size() << " electron tracks.\n";
 
   // Plot the geometry, field and drift lines.
   TCanvas* cGeom = new TCanvas("geom", "Geometry/Avalanche/Fields");

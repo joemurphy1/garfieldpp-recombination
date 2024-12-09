@@ -20,8 +20,7 @@ int main(int argc, char * argv[]) {
   cmp.SetElectricField(100., 0., 0.);
   cmp.SetMagneticField(0., 1., 0.);
 
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
 
   TrackHeed track(&sensor);
   track.SetParticle("muon");

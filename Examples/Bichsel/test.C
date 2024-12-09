@@ -11,12 +11,15 @@
 #include "Garfield/TrackBichsel.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/RandomEngineROOT.hh"
 
 using namespace Garfield;
 
 int main(int argc, char * argv[]) {
 
-  randomEngine.Seed(123456);
+  RandomEngineRoot randomEngine(123456);
+  Random::SetEngine(randomEngine);
+
   TApplication app("app", &argc, argv);
   SetDefaultStyle();
 
@@ -28,15 +31,13 @@ int main(int argc, char * argv[]) {
 
   constexpr double width = 10.e-4;
 
-  // Make a component
+  // Make the active area a box with uniform electric field.
   ComponentConstant cmp;
   cmp.SetArea(0., -10., -10., width, 10., 10.);
   cmp.SetMedium(&si);
   cmp.SetElectricField(100., 0., 0.);
 
-  // Make a sensor
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
 
   TrackBichsel track(&sensor);
   track.EnableDebugging();

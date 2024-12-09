@@ -49,8 +49,7 @@ int main(int argc, char * argv[]) {
   constexpr double pitch = 0.014;
 
   // Create the sensor.
-  Sensor sensor;
-  sensor.AddComponent(&fm);
+  Sensor sensor(&fm);
   sensor.SetArea(-5 * pitch, -5 * pitch, -0.02,
                   5 * pitch,  5 * pitch,  0.025);
 

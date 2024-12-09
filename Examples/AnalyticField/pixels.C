@@ -7,8 +7,8 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumSilicon.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/Plotting.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 

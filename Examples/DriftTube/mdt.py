@@ -25,8 +25,7 @@ cmp.AddWire(0, 0, 2 * rWire, vWire, 's')
 cmp.AddTube(rTube, vTube, 0)
 
 # Make a sensor.
-sensor = ROOT.Garfield.Sensor()
-sensor.AddComponent(cmp);
+sensor = ROOT.Garfield.Sensor(cmp);
 sensor.AddElectrode(cmp, 's')
 # Set the signal time window.
 tstep = 0.5;

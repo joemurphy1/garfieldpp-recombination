@@ -5,12 +5,10 @@
 #include <TH2D.h>
 #include <TCanvas.h>
 
-#include "Garfield/Plotting.hh"
-
 #include "Garfield/ComponentAnalyticField.hh"
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Sensor.hh"
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Plotting.hh"
 
 using namespace Garfield;
 

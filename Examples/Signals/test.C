@@ -34,8 +34,7 @@ int main(int argc, char * argv[]) {
   cmp.AddPlaneY(gap, -field * gap); 
     
   // Create a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "pad");
   const unsigned int nBins = 100;
   sensor.SetTimeWindow(0, 0.1, nBins); 

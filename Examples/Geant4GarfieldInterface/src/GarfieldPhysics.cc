@@ -226,9 +226,7 @@ void GarfieldPhysics::InitializePhysics() {
   // Add the tube.
   fComponentAnalyticField->AddTube(rTube, vTube, 0, "t");
 
-  fSensor = new Garfield::Sensor();
-  fSensor->AddComponent(fComponentAnalyticField);
-
+  fSensor = new Garfield::Sensor(fComponentAnalyticField);
   fTrackHeed = new Garfield::TrackHeed(fSensor);
   fTrackHeed->EnableDeltaElectronTransport();
 }

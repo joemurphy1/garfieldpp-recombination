@@ -5,11 +5,11 @@
 #include <TApplication.h>
 #include <TStyle.h>
 
-#include "Garfield/ViewField.hh"
-#include "Garfield/ViewCell.hh"
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
+#include "Garfield/ViewField.hh"
+#include "Garfield/ViewCell.hh"
 
 using namespace Garfield;
 

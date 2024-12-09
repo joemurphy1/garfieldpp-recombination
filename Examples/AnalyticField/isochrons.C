@@ -7,12 +7,11 @@
 #include <TApplication.h>
 #include <TStyle.h>
 
+#include "Garfield/ComponentAnalyticField.hh"
+#include "Garfield/FundamentalConstants.hh"
+#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ViewCell.hh"
 #include "Garfield/ViewIsochrons.hh"
-
-#include "Garfield/ComponentAnalyticField.hh"
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/FundamentalConstants.hh"
 
 using namespace Garfield;
 

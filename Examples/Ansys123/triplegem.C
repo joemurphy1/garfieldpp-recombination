@@ -37,11 +37,9 @@ int main() {
   fm.SetGas(&gas);
   fm.PrintMaterials();
 
-  Sensor sensor;
-  sensor.AddComponent(&fm);
+  Sensor sensor(&fm);
 
-  AvalancheMicroscopic aval;
-  aval.SetSensor(&sensor);
+  AvalancheMicroscopic aval(&sensor);
   aval.EnableAvalancheSizeLimit(1000);
 
   TH1F hNelec("hNelec", "Number of electrons produced", 1000, -0.5, 999.5);

@@ -32,8 +32,7 @@ int main(int argc, char * argv[]) {
   cmp.SetElectricField(0., 0., 20.);
 
   // Make a sensor
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
 
   TH1::StatOverflows(true);
   TH1F hNe("hNe", ";deposited charge [electrons];entries", 150, 0., 15000.);

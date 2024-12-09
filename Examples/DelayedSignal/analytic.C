@@ -5,13 +5,12 @@
 #include <TApplication.h>
 #include <TH1F.h>
 
-#include "Garfield/MediumSilicon.hh"
-#include "Garfield/ComponentUser.hh"
-#include "Garfield/Sensor.hh"
 #include "Garfield/AvalancheMC.hh"
-
-#include "Garfield/ViewSignal.hh"
+#include "Garfield/ComponentUser.hh"
+#include "Garfield/MediumSilicon.hh"
 #include "Garfield/Plotting.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/ViewSignal.hh"
 
 using namespace Garfield;
 
@@ -86,8 +85,7 @@ int main(int argc, char *argv[]) {
   cmp.SetDelayedWeightingPotential("double d = 300.e-4; double d0 = 200.e-4; double tau = 7.9; return y * ((d - d0) / (d * d0)) * (exp(-t / tau) - 1.);", "front");
   cmp.SetDelayedSignalTimes(times);
 
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   // Use 2000 time bins with a width of 25 ps.
   sensor.SetTimeWindow(0., 0.025, 2000);
   sensor.AddElectrode(&cmp, "front");

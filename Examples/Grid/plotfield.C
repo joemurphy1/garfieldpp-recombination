@@ -26,8 +26,7 @@ int main(int argc, char *argv[]) {
   efield.SetMedium(&si);
 
   // Create a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&efield);
+  Sensor sensor(&efield);
 
   ViewField view(&sensor);
   view.SetElectricFieldRange(0.0, 200000.0);

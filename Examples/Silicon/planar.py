@@ -41,9 +41,8 @@ wField.AddPixelOnPlaneY(d, -halfpitch, halfpitch,
                            -halfpitch, halfpitch, 'pixel')
 
 # Create a sensor. 
-sensor = ROOT.Garfield.Sensor()
-# sensor.AddComponent(uniformField)
-sensor.AddComponent(linearField)
+#sensor = ROOT.Garfield.Sensor(uniformField)
+sensor = ROOT.Garfield.Sensor(linearField)
 label = 'strip'
 sensor.AddElectrode(wField, label)
 

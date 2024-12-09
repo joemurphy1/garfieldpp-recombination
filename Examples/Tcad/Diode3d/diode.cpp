@@ -39,8 +39,7 @@ int main(int argc, char * argv[]) {
   }
 
   // Make a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   sensor.SetArea();
  
   // Plot the electrostatic potential.

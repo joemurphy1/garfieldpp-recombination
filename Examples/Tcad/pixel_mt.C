@@ -69,8 +69,7 @@ int main(int argc, char * argv[]) {
   vField.PlotContour("v");
 
   // Make a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&fm);
+  Sensor sensor(&fm);
   sensor.AddElectrode(&wfield, "strip");
 
   const int nSignalBins = 2000;

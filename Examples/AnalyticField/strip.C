@@ -7,11 +7,11 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Plotting.hh"
+#include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
-#include "Garfield/Plotting.hh"
-#include "Garfield/Random.hh"
 
 using namespace Garfield;
 
@@ -31,8 +31,7 @@ int main(int argc, char * argv[]) {
   cmp.AddStripOnPlaneX('z', -0.5, -0.1, 0.1, "strip"); 
   cmp.PrintCell();
 
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "strip");
 
   // Plot the weighting potential.

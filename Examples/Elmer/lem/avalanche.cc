@@ -45,7 +45,6 @@ int main(int argc, char* argv[]) {
   const double axis_y = 0.1;  
   const double axis_z = 0.25 + lem_th / 2 + lem_cpth;
 
-
   // Define the medium (Ar/CO2 70:30).
   MediumMagboltz gas("ar", 70., "co2", 30.);
   // Set the temperature (K)
@@ -64,8 +63,7 @@ int main(int argc, char* argv[]) {
   // elm.SetWeightingField("gemcell/gemcell_WTlel.result", "wtlel");
 
   // Set up a sensor object.
-  Sensor sensor;
-  sensor.AddComponent(&elm);
+  Sensor sensor(&elm);
   sensor.SetArea(-axis_x, -axis_y, -axis_z, axis_x, axis_y, axis_z);
   // sensor.AddElectrode(elm, "wtlel");
   // Set the signal binning.
@@ -91,7 +89,7 @@ int main(int argc, char* argv[]) {
   // Calculate the avalanche.
   aval.AvalancheElectron(xi, yi, zi, 0., 0., 0., 0., 0.);
   std::cout << "... avalanche complete with "
-            << aval.GetNumberOfElectronEndpoints() << " electron tracks.\n";
+            << aval.GetElectrons().size() << " electron tracks.\n";
 
   // Extract the calculated signal.
   double bscale = tEnd / nsBins;  // time per bin

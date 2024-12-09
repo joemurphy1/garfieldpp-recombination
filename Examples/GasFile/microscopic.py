@@ -24,11 +24,9 @@ cmp.SetArea(-2., -2., -gap, 2., 2., gap)
 cmp.SetElectricField(0, 0, efield)
 cmp.SetMedium(gas)
 
-sensor = ROOT.Garfield.Sensor()
-sensor.AddComponent(cmp)
+sensor = ROOT.Garfield.Sensor(cmp)
 
-aval = ROOT.Garfield.AvalancheMicroscopic()
-aval.SetSensor(sensor)
+aval = ROOT.Garfield.AvalancheMicroscopic(sensor)
 
 # Histogram the electron energy distribution.
 hEnergy = ROOT.TH1F('hEnergy', '', 100, 0., 20.)

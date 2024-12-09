@@ -42,7 +42,6 @@ int main(int argc, char * argv[]) {
     return -1;
   }
 
-
   ComponentTcad2d diode;
   diode.Initialise(data_file_prefix + "_steady_dut_des.grd", data_file_prefix + "_steady_dut_des.dat");
   diode.SetRangeZ(-0.5*w, 0.5*w);
@@ -67,18 +66,14 @@ int main(int argc, char * argv[]) {
     );
   }
 
-
   // Define and set the medium.
   MediumSilicon si;
   si.SetTemperature(293.);
   diode.SetMedium("Silicon", &si);
 
-
   // Create a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&diode);
+  Sensor sensor(&diode);
   sensor.AddElectrode(&diode, "N");
-
 
   // This is necessary to enable the delayed signal
   // Defining to few `delay_times` leads to an imprecise calculation of the delayed signal.
@@ -89,14 +84,12 @@ int main(int argc, char * argv[]) {
   sensor.SetDelayedSignalTimes(delay_times);
   sensor.EnableDelayedSignal(true);
 
-
   // Restrict drift to P-side!
   // If not done, the simulation will deadlock, as charges are never removed from the simulation!
   sensor.SetArea(
     xP, -0.5*w, -0.5*w,
     0, 0.5*w, 0.5*w
   );
-
 
   // Set the time bins.
   const unsigned int nTimeBins = 1000;
@@ -105,17 +98,12 @@ int main(int argc, char * argv[]) {
   const double tstep = (tmax - tmin) / nTimeBins;
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
 
-
   // Simulate electron/hole drift lines using MC integration.
-  AvalancheMC drift;
-  drift.SetSensor(&sensor);
+  AvalancheMC drift(&sensor);
   drift.SetDistanceSteps(1.e-4);
-
 
   // Force the use of the weighting field instead of the weighing potential.
   drift.UseWeightingPotential(false);
-
-
 
   // Drift some electrons and holes
   // Alpha-like deposite close to the P-side surface

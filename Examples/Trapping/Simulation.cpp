@@ -8,17 +8,15 @@
 #include <TROOT.h>
 #include <TSystem.h>
 
-#include "Garfield/MediumSilicon.hh"
-#include "Garfield/SolidBox.hh"
-#include "Garfield/GeometrySimple.hh"
+#include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentGrid.hh"
+#include "Garfield/FundamentalConstants.hh"
+#include "Garfield/MediumSilicon.hh"
+#include "Garfield/Plotting.hh"
+#include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
-#include "Garfield/AvalancheMC.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/ViewSignal.hh"
-#include "Garfield/FundamentalConstants.hh"
-#include "Garfield/Random.hh"
 
 using namespace Garfield;
 
@@ -43,8 +41,7 @@ int main(int argc, char* argv[]) {
   wfield.LoadWeightingField("Wfield.txt", "XY", true);
 
   wfield.Print();
-  Sensor sensor;
-  sensor.AddComponent(&efield);
+  Sensor sensor(&efield);
   const std::string label = "pixel";
   sensor.AddElectrode(&wfield, label);
 
@@ -56,15 +53,13 @@ int main(int argc, char* argv[]) {
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
 
   // Set up Heed.
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   // Set the particle type and momentum [eV/c].
   track.SetParticle("pion");
   track.SetMomentum(180.e9);
 
   // Simulate electron/hole drift lines using MC integration.
-  AvalancheMC drift;
-  drift.SetSensor(&sensor);
+  AvalancheMC drift(&sensor);
   // Use steps of 1 micron.
   drift.SetDistanceSteps(1.e-4);
   drift.EnableAttachmentMap();

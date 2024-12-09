@@ -7,9 +7,9 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Plotting.hh"
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
-#include "Garfield/Plotting.hh"
 
 using namespace Garfield;
 
@@ -42,5 +42,5 @@ int main(int argc, char * argv[]) {
   fieldView.Plot("v", "cont1z");
   cellView.Plot2d();
   gSystem->ProcessEvents();
-  app.Run(kTRUE);
+  app.Run();
 }
