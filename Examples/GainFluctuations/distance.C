@@ -6,10 +6,10 @@
 #include <TH1F.h>
 #include <TFile.h>
 
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/ComponentConstant.hh"
-#include "Garfield/Sensor.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/ComponentConstant.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Sensor.hh"
 
 using namespace Garfield;
 
@@ -21,10 +21,9 @@ int main() {
   constexpr double gap = 0.1;
 
   // Make a gas medium.
-  MediumMagboltz gas;
+  MediumMagboltz gas("ar", 90., "co2", 10.);
   gas.SetTemperature(293.15);
   gas.SetPressure(760.);
-  gas.SetComposition("ar", 90., "co2", 10.);
   gas.SetMaxElectronEnergy(150.);
   gas.Initialise();
   
@@ -35,8 +34,7 @@ int main() {
   cmp.SetElectricField(0, 0, field * 1.e3);
 
   // Make a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
 
   // Microscopic tracking.
   AvalancheMicroscopic aval(&sensor);

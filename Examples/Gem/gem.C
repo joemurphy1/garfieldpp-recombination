@@ -6,14 +6,14 @@
 #include <TCanvas.h>
 #include <TH1F.h>
 
-#include "Garfield/ComponentAnsys123.hh"
-#include "Garfield/ViewField.hh"
-#include "Garfield/ViewFEMesh.hh"
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Sensor.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/AvalancheMC.hh"
+#include "Garfield/ComponentAnsys123.hh"
+#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/ViewField.hh"
+#include "Garfield/ViewFEMesh.hh"
 
 using namespace Garfield;
 
@@ -72,8 +72,7 @@ int main(int argc, char * argv[]) {
   }
 
   // Create the sensor.
-  Sensor sensor;
-  sensor.AddComponent(&fm);
+  Sensor sensor(&fm);
   sensor.SetArea(-5 * pitch, -5 * pitch, -0.01,
                   5 * pitch,  5 * pitch,  0.025);
 

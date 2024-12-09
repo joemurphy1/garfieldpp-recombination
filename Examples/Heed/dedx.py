@@ -14,8 +14,7 @@ cmp.SetMedium(si)
 cmp.SetElectricField(100., 0., 0.)
 
 # Make a sensor.
-sensor = ROOT.Garfield.Sensor()
-sensor.AddComponent(cmp)
+sensor = ROOT.Garfield.Sensor(cmp)
 
 # Set up HEED.
 track = ROOT.Garfield.TrackHeed(sensor)

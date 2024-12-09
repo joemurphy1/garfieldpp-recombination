@@ -3,14 +3,14 @@
 #include <TROOT.h>
 #include <TApplication.h>
 
-#include "Garfield/ViewSignal.hh"
+#include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Sensor.hh"
-#include "Garfield/AvalancheMC.hh"
-#include "Garfield/TrackHeed.hh"
-#include "Garfield/Random.hh"
 #include "Garfield/Plotting.hh"
+#include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/TrackHeed.hh"
+#include "Garfield/ViewSignal.hh"
 
 using namespace Garfield;
 
@@ -51,22 +51,19 @@ int main(int argc, char * argv[]) {
   const double rTube = 1.46;
   cmp.AddTube(rTube, 0., 0);
 
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "s");
   const double tmin = 0.;
   const double tstep = 1.;
   const int nTimeBins = 1000; 
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
  
-  AvalancheMC drift;
-  drift.SetSensor(&sensor);
+  AvalancheMC drift(&sensor);
   drift.SetDistanceSteps(2.e-4);
  
-  TrackHeed track;
+  TrackHeed track(&sensor);
   track.SetParticle("muon");
   track.SetEnergy(170.e9);
-  track.SetSensor(&sensor);
 
   // Simulate a muon track.
   double x0 = 1.2;
@@ -95,8 +92,7 @@ int main(int argc, char * argv[]) {
       drift.DriftIon(xIon, 0., 0., time);
     }
   }
-  ViewSignal signalView;
-  signalView.SetSensor(&sensor);
+  ViewSignal signalView(&sensor);
   signalView.PlotSignal("s");
   app.Run();
 }

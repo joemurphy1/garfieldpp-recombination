@@ -14,10 +14,10 @@
 #include <TApplication.h>
 #include <TH1D.h>
 
+#include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/AvalancheMicroscopic.hh"
 
 using namespace Garfield;
 
@@ -46,8 +46,7 @@ int main(int argc, char * argv[]) {
   comp.SetMedium(&gas);
   
   // Make a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&comp);
+  Sensor sensor(&comp);
   sensor.SetArea();
 
   // Make a microscopic tracking class for electron transport.

@@ -36,18 +36,18 @@ int main(int argc, char * argv[]) {
   // Thickness of the gas gap [cm]
   constexpr double width = 1.;
 
-  // Make a component
+  // Make a component.
   ComponentConstant cmp;
   cmp.SetArea(0., -10., -10., width, 10., 10.);
   cmp.SetMedium(&gas);
   cmp.SetElectricField(100., 0., 0.);
 
-  // Make a sensor
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  // Make a sensor.
+  Sensor sensor(&cmp);
 
-  // Track class
+  // Setup HEED.
   TrackHeed track(&sensor);
+  // Set the particle type and momentum [eV/c].
   track.SetParticle("pi");
   track.SetMomentum(120.e9);
   constexpr bool verbose = true;

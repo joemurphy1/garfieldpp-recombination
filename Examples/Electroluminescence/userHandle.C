@@ -6,11 +6,11 @@
 #include <TH1F.h>
 #include <TFile.h>
 
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/ComponentConstant.hh"
-#include "Garfield/Sensor.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/ComponentConstant.hh"
+#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
 
 TH1F* hZ = nullptr;
 
@@ -45,8 +45,7 @@ int main(int argc, char * argv[]) {
   cmp.SetElectricField(0, 0, -8000);
 
   // Make a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
 
   // Microscopic tracking.
   AvalancheMicroscopic aval(&sensor);

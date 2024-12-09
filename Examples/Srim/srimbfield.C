@@ -34,8 +34,7 @@ int main(int argc, char *argv[]) {
   cmp.SetMagneticField(0., 0., 4.);
   
   // Make a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   
   // Create a track class and connect it to a sensor.
   TrackSrim tr(&sensor);

@@ -5,16 +5,16 @@
 #include <TROOT.h>
 #include <TApplication.h>
 
-#include "Garfield/ViewField.hh"
-#include "Garfield/ViewCell.hh"
 #include "Garfield/ComponentAnalyticField.hh"
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Sensor.hh"
-#include "Garfield/ViewDrift.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/DriftLineRKF.hh"
-#include "Garfield/ViewSignal.hh"
+#include "Garfield/FundamentalConstants.hh"
+#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/ViewCell.hh"
+#include "Garfield/ViewDrift.hh"
+#include "Garfield/ViewField.hh"
+#include "Garfield/ViewSignal.hh"
 
 using namespace Garfield;
 
@@ -58,12 +58,10 @@ int main(int argc, char * argv[]) {
   constexpr double vHV = -100000;
  
   // Setup the gas.
-  MediumMagboltz gas;
+  MediumMagboltz gas("ne", 85.72, "co2", 9.52, "n2", 4.76);
   // Set the temperature [K] and pressure [Torr].
   gas.SetTemperature(293.15);
   gas.SetPressure(750.);
-  // Set the composition.
-  gas.SetComposition("ne", 85.72, "co2", 9.52, "n2", 4.76);
   // Read the electron transport coefficients from a .gas file.
   gas.LoadGasFile("Ne_90_CO2_10_N2_5_with_mg.gas");
   // Read the ion mobility table.
@@ -105,8 +103,7 @@ int main(int argc, char * argv[]) {
   cmp.SetMagneticField(0, 0.5, 0);
 
   // Make a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "pad_plane");
   // Change the time window for less/better resolution in time 
   // (effect on convolution can be important).

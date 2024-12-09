@@ -69,8 +69,7 @@ int main(int argc, char * argv[]) {
   cmp.AddTube(rTube, vTube, 0);
 
   // Make a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "s");
   // Set the signal time window.
   const double tstep = 0.5;
@@ -82,10 +81,9 @@ int main(int argc, char * argv[]) {
   sensor.ClearSignal();
 
   // Set up Heed.
-  TrackHeed track;
+  TrackHeed track(&sensor);
   track.SetParticle("muon");
   track.SetEnergy(170.e9);
-  track.SetSensor(&sensor);
  
   TCanvas* cD = nullptr;
   ViewDrift driftView;

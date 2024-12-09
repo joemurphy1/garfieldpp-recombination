@@ -6,9 +6,9 @@
 #include <TStyle.h>
 #include <TApplication.h>
 
+#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ViewMedium.hh"
-#include "Garfield/FundamentalConstants.hh"
 
 using namespace Garfield;
 

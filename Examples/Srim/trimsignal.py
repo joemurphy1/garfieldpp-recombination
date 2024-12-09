@@ -14,8 +14,7 @@ cmp.SetMedium(si)
 cmp.SetWeightingField(0, 1. / d, 0., "readout")
 cmp.SetWeightingPotential(0, 0, 0, 1.)
 
-sensor = ROOT.Garfield.Sensor()
-sensor.AddComponent(cmp)
+sensor = ROOT.Garfield.Sensor(cmp)
 sensor.AddElectrode(cmp, "readout")
 # Set the time bins for the induced current.
 nTimeBins = 1000

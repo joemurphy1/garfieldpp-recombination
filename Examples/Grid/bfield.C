@@ -4,10 +4,7 @@
 #include <TROOT.h>
 #include <TApplication.h>
 
-#include "Garfield/MediumSilicon.hh"
 #include "Garfield/ComponentGrid.hh"
-#include "Garfield/Sensor.hh"
-
 #include "Garfield/ViewField.hh"
 
 using namespace Garfield;

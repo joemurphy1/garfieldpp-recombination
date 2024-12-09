@@ -34,8 +34,7 @@ int main(int argc, char *argv[]) {
   cmp.SetWeightingField(0, 1. / d, 0., "readout");
   cmp.SetWeightingPotential(0, 0, 0, 1.);
 
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "readout");
   // Set the time bins for the induced current.
   const unsigned int nTimeBins = 1000;

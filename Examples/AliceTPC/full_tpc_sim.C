@@ -3,16 +3,16 @@
 #include <TROOT.h>
 #include <TApplication.h>
 
-#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ComponentAnalyticField.hh"
+#include "Garfield/DriftLineRKF.hh"
+#include "Garfield/FundamentalConstants.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
-#include "Garfield/DriftLineRKF.hh"
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
 #include "Garfield/ViewDrift.hh"
-#include "Garfield/FundamentalConstants.hh"
-#include "Garfield/Random.hh"
 
 using namespace Garfield;
 

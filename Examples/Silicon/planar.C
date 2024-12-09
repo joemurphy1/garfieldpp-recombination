@@ -8,20 +8,18 @@
 #include <TApplication.h>
 #include <TH1D.h>
 
-#include "Garfield/MediumSilicon.hh"
+#include "Garfield/AvalancheMC.hh"
+#include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/ComponentUser.hh"
-#include "Garfield/ComponentAnalyticField.hh"
+#include "Garfield/FundamentalConstants.hh"
+#include "Garfield/MediumSilicon.hh"
+#include "Garfield/Plotting.hh"
+#include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
-#include "Garfield/AvalancheMC.hh"
-
 #include "Garfield/ViewDrift.hh"
 #include "Garfield/ViewField.hh"
-#include "Garfield/Plotting.hh"
-
-#include "Garfield/FundamentalConstants.hh"
-#include "Garfield/Random.hh"
 
 using namespace Garfield;
 
@@ -81,8 +79,7 @@ int main(int argc, char * argv[]) {
                              -halfpitch, halfpitch, "pixel");
 
   // Create a sensor. 
-  Sensor sensor;
-  sensor.AddComponent(&linearField); 
+  Sensor sensor(&linearField); 
   const std::string label = "strip";
   sensor.AddElectrode(&wField, label);
 

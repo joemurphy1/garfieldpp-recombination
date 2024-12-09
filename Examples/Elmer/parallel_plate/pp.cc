@@ -49,8 +49,7 @@ int main(int argc, char * argv[]) {
   elm.SetGas(&gas);
 
   // Set up a sensor object.
-  Sensor sensor;
-  sensor.AddComponent(&elm);
+  Sensor sensor(&elm);
   sensor.SetArea(-ext_x,-ext_y,-ext_z,ext_x,ext_y,ext_z);
 
   // Set up the object for field visualization.

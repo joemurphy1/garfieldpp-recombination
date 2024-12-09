@@ -5,7 +5,6 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Sensor.hh"
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
 
@@ -48,5 +47,5 @@ int main(int argc, char * argv[]) {
   ViewCell cellView(&cmp);
   cellView.SetCanvas(fieldView.GetCanvas());
   cellView.Plot2d();
-  app.Run(kTRUE);
+  app.Run();
 }

@@ -35,15 +35,13 @@ int main(int argc, char * argv[]) {
   SolidBox box(0, 0, length, length, length, length);
   geo.AddSolid(&box, &si);
   
-  // Make a component with constant drift field
+  // Make a component with constant drift field.
   ComponentConstant cmp;
   cmp.SetGeometry(&geo);
   constexpr double field = 10.;
   cmp.SetElectricField(0., 0., field);
 
-  // Make a sensor
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   
   // Heed
   TrackHeed track(&sensor);
@@ -80,18 +78,15 @@ int main(int argc, char * argv[]) {
     std::cout << "Primary energy: " << e0 << " eV" << std::endl;
     double nEntries = 0.;
     for (unsigned int i = 0; i < nEvents; ++i) {
-      int np = 0;
-      track.TransportDeltaElectron(0, 0, 0, 0, e0, 0, 0, 1, np);
-      double x1, y1, z1, t1, e1, dx1, dy1, dz1;
-      if (np <= 1) continue;
-      for (int j = np - 1; j--;) {
-        track.GetElectron(j, x1, y1, z1, t1, e1, dx1, dy1, dz1);
-        if (fabs(z1) < 1.e-8) continue;
-        hLong.Fill(z1 * 1.e4);
+      if (i % 1000 == 0) std::printf("  %10d\r", i);
+      auto cluster = track.TransportDeltaElectron(0, 0, 0, 0, e0, 0, 0, 1);
+      if (cluster.electrons.empty()) continue;
+      for (const auto& electron : cluster.electrons) {
+        if (fabs(electron.z) < 1.e-8) continue;
+        hLong.Fill(electron.z * 1.e4);
         nEntries += 1.; 
       }
     }
-
     constexpr double fraction = 0.95;
 
     double sum = 0.;

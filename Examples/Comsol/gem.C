@@ -46,8 +46,7 @@ int main(int argc, char * argv[]) {
   }
 
   // Setup the gas.
-  MediumMagboltz gas;
-  gas.SetComposition("ar", 80., "co2", 20.);
+  MediumMagboltz gas("ar", 80., "co2", 20.);
   gas.SetTemperature(293.15);
   gas.SetPressure(760.);
   gas.Initialise(true);  
@@ -63,8 +62,7 @@ int main(int argc, char * argv[]) {
   fm.PrintMaterials();
  
   // Create the sensor.
-  Sensor sensor;
-  sensor.AddComponent(&fm);
+  Sensor sensor(&fm);
   sensor.SetArea(-5 * pitch, -5 * pitch, -0.01,
                   5 * pitch,  5 * pitch,  0.025);
 
@@ -93,8 +91,8 @@ int main(int argc, char * argv[]) {
     int ne = 0, ni = 0;
     aval.GetAvalancheSize(ne, ni);
     for (const auto& electron : aval.GetElectrons()) {
-      drift.DriftIon(electron.path.front().x, electron.path.front().y,
-                     electron.path.front().z, electron.path.front().t);
+      const auto& p0 = electron.path.front();
+      drift.DriftIon(p0.x, p0.y, p0.z, p0.t);
     }
   }
   if (plotDrift) {
@@ -123,5 +121,5 @@ int main(int argc, char * argv[]) {
     }
   }
 
-  app.Run(kTRUE);
+  app.Run();
 }

@@ -6,10 +6,9 @@
 #include <TGraph.h>
 #include <TAxis.h>
 
-#include "Garfield/Plotting.hh"
-#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ComponentAnalyticField.hh"
-#include "Garfield/Sensor.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Plotting.hh"
 
 using namespace Garfield;
 

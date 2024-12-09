@@ -30,15 +30,13 @@ int main(int argc, char * argv[]) {
   MediumMagboltz gas("ar", 90., "co2", 10.);
 
   constexpr double width = 1.;
-  // Make a component
+  // Make the active area a box with uniform electric field.
   ComponentConstant cmp;
   cmp.SetArea(0., -10., -10., width, 10., 10.);
   cmp.SetMedium(&gas);
   cmp.SetElectricField(100., 0., 0.);
 
-  // Make a sensor
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
 
   TrackDegrade track(&sensor);
   track.SetBetaGamma(3.);

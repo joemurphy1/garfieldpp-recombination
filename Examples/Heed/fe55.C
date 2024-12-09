@@ -56,8 +56,7 @@ int main(int argc, char * argv[]) {
   field.SetElectricField(0., 0., 500.); 
 
   // Make a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&field);
+  Sensor sensor(&field);
   
   // Use Heed for simulating the photon absorption.
   TrackHeed track(&sensor);

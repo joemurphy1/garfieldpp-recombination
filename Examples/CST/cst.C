@@ -5,14 +5,14 @@
 #include <TApplication.h>
 #include <TCanvas.h>
 
+#include "Garfield/AvalancheMC.hh"
+#include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentCST.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewFEMesh.hh"
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Sensor.hh"
-#include "Garfield/AvalancheMicroscopic.hh"
-#include "Garfield/AvalancheMC.hh"
-#include "Garfield/Random.hh"
 
 using namespace Garfield;
 
@@ -30,10 +30,9 @@ int main(int argc, char * argv[]) {
   // Dimensions of the GEM [cm]
   constexpr double pitch = 0.014;
 
-  ViewField fieldView;
+  ViewField fieldView(&fm);
   constexpr bool plotField = true;
   if (plotField) {
-    fieldView.SetComponent(&fm);
     fieldView.SetPlaneXZ();
     // Set the plot limits in the current viewing plane.
     fieldView.SetArea(-0.5 * pitch, -0.02, 0.5 * pitch, 0.02);
@@ -44,8 +43,7 @@ int main(int argc, char * argv[]) {
   }
 
   // Setup the gas.
-  MediumMagboltz gas;
-  gas.SetComposition("ar", 95., "ch4", 5.);
+  MediumMagboltz gas("ar", 95., "ch4", 5.);
   gas.SetTemperature(293.15);
   gas.SetPressure(760.);
   gas.Initialise();
@@ -58,15 +56,12 @@ int main(int argc, char * argv[]) {
   fm.PrintMaterials();
 
   // Create the sensor.
-  Sensor sensor;
-  sensor.AddComponent(&fm);
+  Sensor sensor(&fm);
   sensor.SetArea(-5 * pitch, -5 * pitch, -0.01,
                   5 * pitch,  5 * pitch,  0.025);
-  AvalancheMicroscopic aval;
-  aval.SetSensor(&sensor);
+  AvalancheMicroscopic aval(&sensor);
 
-  AvalancheMC drift;
-  drift.SetSensor(&sensor);
+  AvalancheMC drift(&sensor);
   drift.SetDistanceSteps(2.e-4);
 
   ViewDrift driftView;

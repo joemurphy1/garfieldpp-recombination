@@ -5,18 +5,16 @@
 #include <TSystem.h>
 #include <TApplication.h>
 
-#include "Garfield/MediumSilicon.hh"
+#include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentUser.hh"
 #include "Garfield/ComponentAnalyticField.hh"
+#include "Garfield/MediumSilicon.hh"
+#include "Garfield/Plotting.hh"
+#include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
-#include "Garfield/AvalancheMC.hh"
-
 #include "Garfield/ViewDrift.hh"
 #include "Garfield/ViewSignal.hh"
-#include "Garfield/Plotting.hh"
-
-#include "Garfield/Random.hh"
 
 using namespace Garfield;
 
@@ -55,8 +53,7 @@ int main(int argc, char * argv[]) {
   wField.AddStripOnPlaneY('z', d, -0.5 * pitch, 0. * pitch, "strip");
 
   // Create a sensor. 
-  Sensor sensor;
-  sensor.AddComponent(&linearField); 
+  Sensor sensor(&linearField); 
   // const std::string label = "strip";
   const std::string label = "front";
   sensor.AddElectrode(&wField, label);

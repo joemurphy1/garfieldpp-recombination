@@ -42,8 +42,7 @@ fm.SetGas(gas)
 fm.PrintMaterials()
 
 # Assemble the sensor.
-sensor = ROOT.Garfield.Sensor()
-sensor.AddComponent(fm)
+sensor = ROOT.Garfield.Sensor(fm)
 sensor.SetArea(-5 * pitch, -5 * pitch, -0.01, 5 * pitch,  5 * pitch, 0.025)
 
 aval = ROOT.Garfield.AvalancheMicroscopic(sensor)

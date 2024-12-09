@@ -4,12 +4,11 @@
 #include <TROOT.h>
 #include <TApplication.h>
 
-#include "Garfield/MediumSilicon.hh"
 #include "Garfield/ComponentVoxel.hh"
-#include "Garfield/Sensor.hh"
-
-#include "Garfield/ViewField.hh"
+#include "Garfield/MediumSilicon.hh"
 #include "Garfield/Plotting.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
@@ -41,8 +40,7 @@ int main(int argc, char *argv[]) {
   efield.EnableInterpolation();
 
   // Create a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&efield);
+  Sensor sensor(&efield);
   sensor.SetArea(0., 0., -100.e-4, 110.e-4, 200.e-4, 100.e-4);
 
   ViewField view(&sensor);

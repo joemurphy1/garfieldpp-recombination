@@ -4,8 +4,8 @@
 #include <TCanvas.h>
 
 #include "Garfield/ComponentAnsys123.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/MediumMagboltz.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 

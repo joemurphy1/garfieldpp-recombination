@@ -7,10 +7,10 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
-#include "Garfield/Plotting.hh"
 
 using namespace Garfield;
 
@@ -170,12 +170,8 @@ int main(int argc, char * argv[]) {
   // Setup the gas.
   MediumMagboltz gas("ne", 85.72, "co2", 9.52, "n2", 4.76);
 
-  // Setup the electric field 
   ComponentAnalyticField cmp;
-
-  // Make a sensor
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   sensor.SetArea();
 
   // Plot the potential.

@@ -69,8 +69,7 @@ int main(int argc, char * argv[]) {
   cmp.AddTube(rTube, vTube, 0);
 
   // Make a sensor.
-  Sensor sensor;
-  sensor.AddComponent(&cmp);
+  Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "s");
   // Set the signal time window.
   const double tstep = 0.5;
@@ -82,8 +81,7 @@ int main(int argc, char * argv[]) {
   sensor.ClearSignal();
 
   // Set up Heed.
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
 
   // RKF integration.
   DriftLineRKF drift(&sensor);
