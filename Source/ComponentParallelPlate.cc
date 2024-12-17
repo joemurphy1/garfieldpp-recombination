@@ -19,62 +19,55 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
                                    std::vector<int> sigmaIndex) {
 
   // Here I switch conventions with the z-axis the direction of drift.
-  std::vector<double> placeHolder(N + 1, 0);
 
-  const int Nholder1 = eps.size();
-  const int Nholder2 = d.size();
-  if (N != Nholder1 || N != Nholder2) {
-    std::cout << m_className
-              << "::Inconsistency between the number of layers, permittivities "
-                 "and thicknesses given.\n";
+  if (N != eps.size() || N != d.size()) {
+    std::cout << m_className << "::Setup:\n"
+              << "    Inconsistency between the number of layers, "
+              << "permittivities and thicknesses given.\n";
     return;
   } else if (N < 2) {
-
     std::cout << m_className
-              << "::Setup:: Number of layers must be larger then 1.\n";
+              << "::Setup: Number of layers must be larger then 1.\n";
     return;
   }
 
-  if (m_debug) std::cout << m_className << "::Setup:: Loading parameters.\n";
+  if (m_debug) std::cout << m_className << "::Setup: Loading parameters.\n";
   m_epsHolder = eps;
-  m_eps = placeHolder;
+  m_eps.assign(N + 1, 0.);
 
-  m_dHolder = d;
-  m_d = placeHolder;
+  m_d = d;
   m_N = N + 1;
   m_V = V;
 
-  if (sigmaIndex.size() == 0) {
+  m_conductive.assign(N + 1, false);
+  if (sigmaIndex.empty()) {
     for (int i = 0; i < N; i++) {
-      if (eps[i] != 1) sigmaIndex.push_back(i + 1);
+      if (eps[i] != 1) m_conductive[i + 1] = true;
     }
+  } else {
+    for (int i : sigmaIndex) m_conductive[i] = true;
   }
 
-  m_sigmaIndex = sigmaIndex;
-
-  std::vector<double> m_zHolder(N + 1);
-  m_zHolder[0] = 0;
+  m_z.assign(N + 1, 0.);
   for (int i = 1; i <= N; i++) {
-    m_zHolder[i] = m_zHolder[i - 1] + m_dHolder[i - 1];
+    m_z[i] = m_z[i - 1] + m_d[i - 1];
 
     if (m_debug)
-      std::cout << m_className << "Setup:: layer " << i
-                << ":: z = " << m_zHolder[i]
+      std::cout << "    Layer " << i << ": z = " << m_z[i]
                 << ", epsr = " << m_epsHolder[i - 1] << ".\n";
   }
-  m_z = m_zHolder;
 
-  if (m_debug) std::cout << m_className << "Setup:: Constructing matrices.\n";
+  if (m_debug) std::cout << m_className << "Setup: Constructing matrices.\n";
   constructGeometryMatrices(m_N);
 
   if (m_debug)
     std::cout << m_className
-              << "Setup:: Computing weighting potential functions.\n";
+              << "Setup: Computing weighting potential functions.\n";
   setHIntegrand();
   setwpStripIntegrand();
   setwpPixelIntegrand();
 
-  std::cout << m_className << "Setup:: Geometry with N = " << N
+  std::cout << m_className << "Setup: Geometry with N = " << N
             << " layers set.\n";
 }
 
@@ -269,9 +262,8 @@ void ComponentParallelPlate::Reset() {
   m_gMatrix.clear();
   m_wMatrix.clear();
 
-  m_sigmaIndex.clear();
+  m_conductive.clear();
   m_eps.clear();
-  m_d.clear();
   m_z.clear();
 
   m_N = 0;
@@ -352,14 +344,13 @@ void ComponentParallelPlate::AddPlane(const std::string &label, bool anode) {
   std::cout << m_className << "::AddPlane: Added plane electrode.\n";
 }
 
-Medium *ComponentParallelPlate::GetMedium(const double x, const double y,
+Medium* ComponentParallelPlate::GetMedium(const double x, const double y,
                                           const double z) {
-  if (m_geometry) {
-    return m_geometry->GetMedium(x, y, z);
-  } else if (m_medium) {
-    return m_medium;
-  }
-  return nullptr;
+  Medium* medium = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
+  int i = -1;
+  double eps = 0.;
+  if (!getLayer(y, i, eps)) return nullptr;
+  return m_conductive[i] ? nullptr : m_medium;
 }
 
 bool ComponentParallelPlate::Nsigma(
@@ -419,7 +410,8 @@ void ComponentParallelPlate::constructGeometryMatrices(const int N) {
   }
 }
 
-void ComponentParallelPlate::constructGeometryFunction(const int N) {
+void ComponentParallelPlate::constructGeometryFunction(const int N,
+    const std::vector<double>& d) {
 
   int nRow = N;
   int nCol = pow(2, N - 1);
@@ -450,7 +442,7 @@ void ComponentParallelPlate::constructGeometryFunction(const int N) {
         for (int j = 0; j < n - 1; j++) {
           cHold[i] *= (m_eps[j] + m_sigmaMatrix[n - 1][ix1][j] * m_eps[j + 1]) /
                       m_eps[j + 1];
-          vHold[i] += (m_thetaMatrix[n - 1][ix1][j] - 1) * m_d[j];
+          vHold[i] += (m_thetaMatrix[n - 1][ix1][j] - 1) * d[j];
         }
       }
       // summation for g and w
@@ -458,7 +450,7 @@ void ComponentParallelPlate::constructGeometryFunction(const int N) {
         gHold[i] *= (m_eps[N - j - 1] +
                      m_sigmaMatrix[N - n][ix2][j] * m_eps[N - j - 2]) /
                     m_eps[N - j - 2];
-        wHold[i] += (m_thetaMatrix[N - n][ix2][j] - 1) * m_d[N - 1 - j];
+        wHold[i] += (m_thetaMatrix[N - n][ix2][j] - 1) * d[N - 1 - j];
       }
       ix1++;
       ix2++;
@@ -532,8 +524,9 @@ void ComponentParallelPlate::setwpPixelIntegrand() {
     double wy = p[5];
     double z = p[6];
 
-    double sol = cos(kx * (x - x0)) * sin(kx * wx / 2) * cos(ky * (y - y0)) *
-                 sin(ky * wy / 2) * m_hIntegrand.Eval(K, z) / (kx * ky);
+    double sol = cos(kx * (x - x0)) * sin(0.5 * kx * wx) * 
+                 cos(ky * (y - y0)) * sin(0.5 * ky * wy) * 
+                 m_hIntegrand.Eval(K, z) / (kx * ky);
 
     return 4 * sol / (Pi * Pi);
   };
@@ -562,13 +555,12 @@ void ComponentParallelPlate::setwpStripIntegrand() {
     double wx = p[2];
     double z = p[3];
     double sol =
-        cos(kk * (x - x0)) * sin(kk * wx / 2) * m_hIntegrand.Eval(kk, z) / kk;
+        cos(kk * (x - x0)) * sin(0.5 * kk * wx) * m_hIntegrand.Eval(kk, z) / kk;
     return 2 * sol / Pi;
   };
   TF1 *wpStripIntegrand =
       new TF1("wpStripIntegrand", intFunction, 0, m_upperBoundIntegration, 4);
-  wpStripIntegrand->SetNpx(
-      1000);  // increasing number of points the function is evaluated on
+  wpStripIntegrand->SetNpx(1000);  
   wpStripIntegrand->Copy(m_wpStripIntegral);
 
   delete wpStripIntegrand;
