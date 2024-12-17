@@ -14,11 +14,9 @@
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentParallelPlate.hh"
 #include "Garfield/FundamentalConstants.hh"
-#include "Garfield/GeometrySimple.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/SolidBox.hh"
 #include "Garfield/TrackHeed.hh"
 #include "Garfield/ViewSignal.hh"
 
@@ -76,10 +74,6 @@ int main(int argc, char *argv[]) {
   gas.Initialise(true);
 
   // Setting the drift medium.
-  SolidBox box(0., totalThickness / 2, 0., 5., totalThickness / 2, 5.);
-  GeometrySimple geo;
-  geo.AddSolid(&box, &gas);
-  RPC->SetGeometry(&geo);
   RPC->SetMedium(&gas);
 
   // Create the sensor.
@@ -95,11 +89,7 @@ int main(int argc, char *argv[]) {
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
 
   // Create the AvalancheMicroscopic.
-  AvalancheMicroscopic aval;
-  aval.SetSensor(&sensor);
-  aval.EnableSignalCalculation();
-  aval.UseWeightingPotential();
-
+  AvalancheMicroscopic aval(&sensor);
   // Set time window where the calculations will be done microscopically.
   const double tMaxWindow = 0.1;
   aval.SetTimeWindow(0., tMaxWindow);
@@ -119,24 +109,20 @@ int main(int argc, char *argv[]) {
   TCanvas *cSignal = nullptr;
   if (plotSignal) {
     cSignal = new TCanvas("cSignal", "", 600, 600);
-    signalView = new ViewSignal();
+    signalView = new ViewSignal(&sensor);
     signalView->SetCanvas(cSignal);
-    signalView->SetSensor(&sensor);
   }
 
   ViewSignal *chargeView = nullptr;
   TCanvas *cCharge = nullptr;
-
   if (plotSignal) {
     cCharge = new TCanvas("cCharge", "", 600, 600);
-    chargeView = new ViewSignal();
+    chargeView = new ViewSignal(&sensor);
     chargeView->SetCanvas(cCharge);
-    chargeView->SetSensor(&sensor);
   }
 
   // Set up Heed.
-  TrackHeed track;
-  track.SetSensor(&sensor);
+  TrackHeed track(&sensor);
   // Set the particle type and momentum [eV/c].
   track.SetParticle("pion");
   track.SetMomentum(7.e9);
@@ -159,8 +145,8 @@ int main(int argc, char *argv[]) {
   }
 
   // Start grid based avalanche calculations starting from where the microsocpic
-  // calculations stoped.
-  LOG("Switching to grid based methode.");
+  // calculations stopped.
+  LOG("Switching to grid based method.");
   avalgrid.AsignLayerIndex(RPC);
   avalgrid.StartGridAvalanche();
   // Stop timer.
@@ -187,5 +173,5 @@ int main(int argc, char *argv[]) {
   LOG("Script: Total induced charge = " << sensor.GetTotalInducedCharge(label)
                                         << " [fC].");
 
-  app.Run(kTRUE);
+  app.Run(true);
 }

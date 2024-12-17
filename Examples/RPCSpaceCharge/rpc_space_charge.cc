@@ -4,33 +4,24 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <numeric>
 
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TH1F.h>
 #include <TSystem.h>
-#include <numeric>
 
-
-//include Garfield
-#include "Garfield/ComponentParallelPlate.hh"
-#include "Garfield/SolidBox.hh"
-#include "Garfield/GeometrySimple.hh"
-#include "Garfield/TrackHeed.hh"
-#include "Garfield/Sensor.hh"
-#include "Garfield/AvalancheGrid.hh"
-#include "Garfield/AvalancheMicroscopic.hh"
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/ViewSignal.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/AvalancheGridSpaceCharge.hh"
+#include "Garfield/ComponentParallelPlate.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Plotting.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/ViewSignal.hh"
 
 using namespace Garfield;
 
-#define LOG(x) std::cout << x << std::endl;
-
 int main(int argc, char *argv[]) {
-  LOG("Start RPC Space Charge Example")
+  std::cout << "Start RPC Space Charge Example\n";
 
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
@@ -66,16 +57,8 @@ int main(int argc, char *argv[]) {
   // ComponentParallelPlate
   ComponentParallelPlate cmp;
   cmp.Setup(int(layers.size()), eps, layers, voltage, {});
-  cmp.DisableDebugging();
-
   std::string label = "readout";
   cmp.AddPlane(label);
-
-  // Geometry
-  GeometrySimple geo;
-  auto *box = new SolidBox(0., y_mid, 0., 5., d_gas / 2, 5.);
-  geo.AddSolid(box, &gas);
-  cmp.SetGeometry(&geo);
   cmp.SetMedium(&gas);
 
   // Sensor
@@ -95,7 +78,8 @@ int main(int argc, char *argv[]) {
   avalsc.EnableSpaceChargeEffect(false);
   // set sensor and grid
   avalsc.SetSensor(&sens);
-  avalsc.Set2dGrid(y_mid - d_gas / 2 + 1.e-8, y_mid + d_gas / 2 - 1.e-8, 400, 0.05, 100);
+  avalsc.Set2dGrid(y_mid - 0.5 * d_gas + 1.e-8, 
+                   y_mid + 0.5 * d_gas - 1.e-8, 400, 0.05, 100);
 
   // Avalanche electron
   // place 1000 electrons in the middle of the gas gap
@@ -105,16 +89,13 @@ int main(int argc, char *argv[]) {
   avalsc.ExportGrid("my_rpc_grid");
 
   // view recorded signals from plane electrode
-  ViewSignal *signal_view = new ViewSignal();
+  ViewSignal *signal_view = new ViewSignal(&sens);
   TCanvas *c_signal = new TCanvas(label.c_str(), label.c_str(), 600, 600);
   signal_view->SetCanvas(c_signal);
-  signal_view->SetSensor(&sens);
   signal_view->PlotSignal(label);
   c_signal->SetTitle(label.c_str());
-  c_signal->Draw();
   gSystem->ProcessEvents();
 
-  app.Run(kTRUE);
-
+  app.Run(true);
   return 0;
 }

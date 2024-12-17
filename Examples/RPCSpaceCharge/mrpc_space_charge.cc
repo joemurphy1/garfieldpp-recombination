@@ -4,26 +4,20 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <numeric>
 
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TH1F.h>
 #include <TSystem.h>
-#include <numeric>
 
-
-//include Garfield
-#include "Garfield/ComponentConstant.hh"
-#include "Garfield/SolidBox.hh"
-#include "Garfield/GeometrySimple.hh"
-#include "Garfield/Sensor.hh"
+#include "Garfield/AvalancheGridSpaceCharge.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/AvalancheGridSpaceCharge.hh"
-#include "Garfield/TrackHeed.hh"
 #include "Garfield/Plotting.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/TrackHeed.hh"
 #include "Garfield/ViewSignal.hh"
-
 
 using namespace Garfield;
 
@@ -48,6 +42,8 @@ int main(int argc, char *argv[]) {
   double d_bakelite = 0.2; // (cm)
   double d_pet = 0.02;
   double d_gas = 0.2;
+  double y_mid = 0.5 * (2 * d_pet + 3 * d_bakelite + 2 * d_gas);
+
   std::vector<double> layers = {d_pet,
                                 d_bakelite,
                                 d_gas,
@@ -72,13 +68,6 @@ int main(int argc, char *argv[]) {
   cmp.EnableDebugging();
   std::string label = "readout";
   cmp.AddPlane(label);
-
-  // Geometry & Box containing all gas gaps
-  GeometrySimple geo;
-  double y_mid = (2 * d_pet + 3 * d_bakelite + 2 * d_gas) / 2;
-  auto *box = new SolidBox(0., y_mid, 0., 5., (d_bakelite / 2 + d_gas), 5.);
-  geo.AddSolid(box, &gas);
-  cmp.SetGeometry(&geo);
   cmp.SetMedium(&gas);
 
   // Sensor
@@ -96,20 +85,19 @@ int main(int argc, char *argv[]) {
   avalsc.SetStopAtK(true);
   avalsc.EnableSpaceChargeEffect(true);
   avalsc.SetSensor(&sens);
-  avalsc.Set2dGrid(y_mid - (d_bakelite / 2 + d_gas) + 1.e-8, y_mid + (d_bakelite / 2 + d_gas) - 1.e-8, 3 * 400, 0.05,
+
+  avalsc.Set2dGrid(y_mid - (d_bakelite / 2 + d_gas) + 1.e-8, 
+                   y_mid + (d_bakelite / 2 + d_gas) - 1.e-8, 3 * 400, 0.05,
                    100);
 
   // Mixed Method: AvalancheMicroscopic
-  AvalancheMicroscopic avalmicro;
-  avalmicro.SetSensor(&sens);
+  AvalancheMicroscopic avalmicro(&sens);
   avalmicro.SetTimeWindow(0., 0.5);
-  avalmicro.UseWeightingPotential();
 
   LOG("Muon(100GeV) Interaction Start")
 
   // TrackHeed for primary ionization
-  TrackHeed track;
-  track.SetSensor(&sens);
+  TrackHeed track(&sens);
   track.SetParticle("muon");
   track.SetMomentum(1.e11); // 100GeV
   track.NewTrack(0, y_mid + (d_bakelite / 2 + d_gas) - 1.e-6, 0, 0., 0., -1., 0.);
@@ -118,9 +106,9 @@ int main(int argc, char *argv[]) {
   for (const auto &cluster: track.GetClusters()) {
     // Loop over the electrons in the cluster.
     for (const auto &electron: cluster.electrons) {
-      // propagate electrons microscopically
+      // Propagate electrons microscopically
       avalmicro.AvalancheElectron(electron.x, electron.y, electron.z, electron.t, 0.1, 0., 0., 0.);
-      // add electrons to m_AvalGrid instance
+      // Add electrons to the grid.
       avalsc.ImportElectronsFromAvalancheMicroscopic(&avalmicro);
     }
   }
@@ -139,7 +127,6 @@ int main(int argc, char *argv[]) {
   signal_view->SetSensor(&sens);
   signal_view->PlotSignal(label);
   c_signal->SetTitle(label.c_str());
-  c_signal->Draw();
   gSystem->ProcessEvents();
 
   app.Run(kTRUE);
