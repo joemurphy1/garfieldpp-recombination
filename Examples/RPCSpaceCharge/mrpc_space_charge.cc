@@ -71,8 +71,7 @@ int main(int argc, char *argv[]) {
   cmp.SetMedium(&gas);
 
   // Sensor
-  Sensor sens;
-  sens.AddComponent(&cmp);
+  Sensor sens(&cmp);
   sens.AddElectrode(&cmp, label);
   sens.SetTimeWindow(0, (25. - 0) / 200., 200);
 
@@ -100,6 +99,7 @@ int main(int argc, char *argv[]) {
   TrackHeed track(&sens);
   track.SetParticle("muon");
   track.SetMomentum(1.e11); // 100GeV
+  track.CrossInactiveMedia(true);
   track.NewTrack(0, y_mid + (d_bakelite / 2 + d_gas) - 1.e-6, 0, 0., 0., -1., 0.);
 
   // Retrieve the clusters along the track.
@@ -129,7 +129,6 @@ int main(int argc, char *argv[]) {
   c_signal->SetTitle(label.c_str());
   gSystem->ProcessEvents();
 
-  app.Run(kTRUE);
-
+  app.Run();
   return 0;
 }
