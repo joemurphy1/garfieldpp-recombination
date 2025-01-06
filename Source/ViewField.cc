@@ -733,8 +733,17 @@ void ViewField::PlotFieldLines(const std::vector<double>& x0,
   const double lx = 0.01 * fabs(m_xMaxPlot - m_xMinPlot);
   const double ly = 0.01 * fabs(m_yMaxPlot - m_yMinPlot);
   drift.SetMaximumStepSize(std::min(lx, ly));
+  if (m_debug) {
+    std::cout << m_className << "::PlotFieldLines:\n"
+              << "    Max. step size: " << std::min(lx, ly) << " cm.\n"
+              << "    Plotting " << nLines << " lines.\n";
+  }
   for (size_t i = 0; i < nLines; ++i) {
     std::vector<std::array<float, 3> > xl;
+    if (m_debug) {
+      std::printf("    Line %5zu: (%10.3f, %10.3f, %10.3f)\n",
+                  i, x0[i], y0[i], z0[i]);
+    }
     if (!drift.FieldLine(x0[i], y0[i], z0[i], xl, electron)) continue;
     DrawLine(xl, col, 1);
   }
