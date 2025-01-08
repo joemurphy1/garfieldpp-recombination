@@ -162,6 +162,8 @@ class AvalancheMC {
   void EnableTownsendMap(const bool on = true) { m_useTownsendMap = on; }
   /// Retrieve the attachment coefficient from the component.
   void EnableAttachmentMap(const bool on = true) { m_useAttachmentMap = on; }
+  /// Retrieve the (low-field) mobility from the component.
+  void EnableMobilityMap(const bool on = true) { m_useMobilityMap = on; }
   /// Retrieve the drift velocity from the component.
   void EnableVelocityMap(const bool on = true) { m_useVelocityMap = on; }
 
@@ -280,6 +282,8 @@ class AvalancheMC {
   bool m_useTownsendMap = false;
   /// Take attachment coefficients from the component.
   bool m_useAttachmentMap = false;
+  /// Take mobility coefficients from the component.
+  bool m_useMobilityMap = false;
   /// Take the drift velocities from the component.
   bool m_useVelocityMap = false;
 
@@ -299,7 +303,7 @@ class AvalancheMC {
   int GetField(const std::array<double, 3>& x, std::array<double, 3>& e,
                std::array<double, 3>& b, Medium*& medium) const;
   /// Retrieve the low-field mobility.
-  double GetMobility(const Particle particle, Medium* medium) const;
+  double GetMobility(const Particle particle, Medium* medium, const std::array<double, 3>& x) const;
   /// Compute the drift velocity.
   bool GetVelocity(const Particle particle, Medium* medium,
                    const std::array<double, 3>& x,

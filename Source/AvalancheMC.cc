@@ -273,6 +273,8 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
   std::array<double, 3> b0 = {0., 0., 0.};
   Medium* m0 = nullptr;
   int status = GetField(x0, e0, b0, m0);
+
+
   if (status != 0) {
     std::cerr << m_className + "::DriftLine: "
               << PrintVec(x0) + " is not in a valid drift region.\n";
@@ -324,7 +326,7 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
     double t1 = t0;
     if (vmag < tol || emag < tol) {
       // Diffusion only. Get the mobility.
-      const double mu = GetMobility(particle, m0);
+      const double mu = GetMobility(particle, m0, x0);
       if (mu < 0.) {
         std::cerr << m_className + "::DriftLine: Invalid mobility.\n";
         status = StatusCalculationAbandoned;
@@ -360,6 +362,7 @@ int AvalancheMC::DriftLine(const Point& p0, const Particle particle,
       if (m_stepModel != StepModel::FixedTime) {
         t1 += sigma * sigma / (2 * dif);
       }
+
       for (size_t i = 0; i < 3; ++i) x1[i] += RndmGaussian(0., sigma);
       if (!aval && m_useAttachment) {
         const double eta = GetAttachment(particle, m0, x0, e0, b0);
@@ -771,7 +774,22 @@ int AvalancheMC::GetField(const std::array<double, 3>& x,
   return 0;
 }
 
-double AvalancheMC::GetMobility(const Particle particle, Medium* medium) const {
+double AvalancheMC::GetMobility(const Particle particle, Medium* medium, 
+                                const std::array<double, 3>& x) const {
+  if (m_useMobilityMap) {
+    double mu = -1.;
+    const auto nComponents = m_sensor->GetNumberOfComponents();
+    for (size_t i = 0; i < nComponents; ++i) {
+      auto cmp = m_sensor->GetComponent(i);
+      if (!cmp->HasMobilityMap()) continue;
+      if (particle == Particle::Electron) {
+        if (!cmp->ElectronMobility(x[0], x[1], x[2], mu)) continue;
+      } else {
+        if (!cmp->HoleMobility(x[0], x[1], x[2], mu)) continue;
+      }
+      return mu;
+    }
+  }
   if (particle == Particle::Electron) {
     return medium->ElectronMobility();
   } else if (particle == Particle::Hole) {

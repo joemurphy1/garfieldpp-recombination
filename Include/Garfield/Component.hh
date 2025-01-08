@@ -382,6 +382,8 @@ class __COMPONENTCLASS__ {
   virtual bool HasTownsendMap() const { return false; }
   /// Does the component have maps of the attachment coefficient?
   virtual bool HasAttachmentMap() const { return false; }
+  /// Does the component have maps of the low-field mobility?
+  virtual bool HasMobilityMap() const { return false; }
   /// Does the component have velocity maps?
   virtual bool HasVelocityMap() const { return false; }
 
@@ -397,6 +399,20 @@ class __COMPONENTCLASS__ {
     eta = 0;
     return false;
   }
+
+  // Get the electron mobility coefficient.
+  virtual bool ElectronMobility(const double /*x*/, const double /*y*/,
+                                  const double /*z*/, double& mu) {
+    mu = 0;
+    return false;
+  }
+  /// Get the hole Mobility coefficient.
+  virtual bool HoleMobility(const double /*x*/, const double /*y*/,
+                              const double /*z*/, double& mu) {
+    mu = 0;
+    return false;
+  }
+
   /// Get the electron Townsend coefficient.
   virtual bool ElectronTownsend(const double /*x*/, const double /*y*/,
                                 const double /*z*/, double& alpha) {

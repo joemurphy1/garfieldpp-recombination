@@ -1460,6 +1460,7 @@ void ComponentGrid::Print() {
   if (m_efields.empty() && m_bfields.empty() && 
       m_wfields.empty() && m_wdfields.empty() && 
       m_eAttachment.empty() && m_hAttachment.empty() &&
+      m_eMobility.empty() && m_hMobility.empty() &&
       m_eVelocity.empty() && m_hVelocity.empty()) {
     std::cout << "    Available data: None.\n";
     return;
@@ -1483,6 +1484,12 @@ void ComponentGrid::Print() {
   if (!m_hAttachment.empty()) {
     std::cout << "      Hole attachment coefficient.\n";
   }
+  if (!m_eMobility.empty()) {
+    std::cout << "      Electron Mobility coefficient.\n";
+  }
+  if (!m_hMobility.empty()) {
+    std::cout << "      Hole Mobility coefficient.\n";
+  }
 }
 
 void ComponentGrid::Reset() {
@@ -1491,6 +1498,8 @@ void ComponentGrid::Reset() {
   m_wfields.clear();
   m_eAttachment.clear();
   m_hAttachment.clear();
+  m_eMobility.clear();
+  m_hMobility.clear();
   m_eVelocity.clear();
   m_hVelocity.clear();
 
@@ -1943,6 +1952,26 @@ bool ComponentGrid::HoleAttachment(const double x, const double y,
     return false;
   }
   return GetData(x, y, z, m_hAttachment, att);
+}
+
+bool ComponentGrid::ElectronMobility(const double x, const double y,
+                                       const double z, double& mu) {
+  // Make sure the map has been loaded.
+  if (m_eMobility.empty()) {
+    PrintNotReady(m_className + "::ElectronMobility");
+    return false;
+  }
+  return GetData(x, y, z, m_eMobility, mu);
+}
+
+bool ComponentGrid::HoleMobility(const double x, const double y,
+                                   const double z, double& mu) {
+  // Make sure the map has been loaded.
+  if (m_hMobility.empty()) {
+    PrintNotReady(m_className + "::HoleMobility");
+    return false;
+  }
+  return GetData(x, y, z, m_hMobility, mu);
 }
 
 ComponentGrid::Format ComponentGrid::GetFormat(std::string format) {
