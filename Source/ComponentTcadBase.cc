@@ -1934,15 +1934,15 @@ double ComponentTcadBase<N>::HoleLifetime(const double x, const double y,
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::GetElectronMobility(const double x, const double y,
-                                               const double z, double& mob) {
-  return Interpolate(x, y, z, m_eMobility, mob);
+bool ComponentTcadBase<N>::ElectronMobility(const double x, const double y,
+                                            const double z, double& mu) {
+  return Interpolate(x, y, z, m_eMobility, mu);
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::GetHoleMobility(const double x, const double y,
-                                           const double z, double& mob) {
-  return Interpolate(x, y, z, m_hMobility, mob);
+bool ComponentTcadBase<N>::HoleMobility(const double x, const double y,
+                                        const double z, double& mu) {
+  return Interpolate(x, y, z, m_hMobility, mu);
 }
 
 template <size_t N>

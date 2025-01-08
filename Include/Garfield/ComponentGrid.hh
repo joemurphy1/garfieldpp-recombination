@@ -182,6 +182,13 @@ class ComponentGrid : public Component {
                           double& att) override;
   bool HoleAttachment(const double x, const double y, const double z,
                       double& att) override;
+  bool HasMobilityMap() const override {
+    return !(m_eMobility.empty() && m_hMobility.empty());
+  } 
+  bool ElectronMobility(const double x, const double y, const double z,
+                          double& mu) override;
+  bool HoleMobility(const double x, const double y, const double z,
+                      double& mu) override;
 
   bool HasVelocityMap() const override {
     return !(m_eVelocity.empty() && m_hVelocity.empty());
@@ -224,6 +231,9 @@ class ComponentGrid : public Component {
   /// Attachment maps for electrons and holes.
   std::vector<std::vector<std::vector<double> > > m_eAttachment;
   std::vector<std::vector<std::vector<double> > > m_hAttachment;
+  /// Mobility maps for electrons and holes.
+  std::vector<std::vector<std::vector<double> > > m_eMobility;
+  std::vector<std::vector<std::vector<double> > > m_hMobility;
   /// Velocity maps for electrons and holes.
   std::vector<std::vector<std::vector<Node> > > m_eVelocity;
   std::vector<std::vector<std::vector<Node> > > m_hVelocity;

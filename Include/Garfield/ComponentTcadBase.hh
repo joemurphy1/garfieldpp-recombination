@@ -154,10 +154,17 @@ class ComponentTcadBase : public Component {
     return ((m_useTrapOccMap || m_useLifetimeMap) && 
             !(m_eEta.empty() && m_hEta.empty()));
   }
+  bool HasMobilityMap() const override {
+    return !(m_eMobility.empty() && m_hMobility.empty());
+  }
   bool ElectronAttachment(const double x, const double y, const double z,
                           double& eta) override;
   bool HoleAttachment(const double x, const double y, const double z,
                       double& eta) override;
+  bool ElectronMobility(const double x, const double y, const double z,
+                          double& mu) override;
+  bool HoleMobility(const double x, const double y, const double z,
+                      double& mu) override;
 
   bool ElectronTownsend(const double x, const double y, const double z,
                         double& alpha) override;
