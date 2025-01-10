@@ -3,8 +3,8 @@
 # Version 3.9 is required by the ROOT Use file
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
-# Setting a default build type to be release with debug information. 
-# Otherwise the default mode is debug.
+# Setting the default build type to be Release.
+# Otherwise the default mode is Debug.
 set(default_build_type "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE
@@ -110,6 +110,7 @@ if(WITH_DEGRADE)
   add_subdirectory(Degrade)
 endif()
 
+# Create GarfieldRandom library
 add_library(GarfieldRandom SHARED
   Source/Random.cc 
   Source/RandomEngineRoot.cc 
@@ -208,7 +209,7 @@ if(WITH_DEGRADE)
   )
 endif()
 
-#--- Add GPU Support if requested ------------------------------------------------------
+#--- Add GPU support if requested ---------------------------------------------
 if (USEGPU)
   set(gpu_sources
     GPU/AvalancheMicroscopicGPU.cu
@@ -278,9 +279,6 @@ mark_as_advanced(BUILD_WITH_VERSION_NUMBER)
 # The Nebem interface is somewhat coupled with Garfield itself.
 # We should decouple them to keep them independent, but until then 
 # they have to be compiled in the same library to make it work
-
-# Creating the target as a shared library
-message(STATUS "Creating a new library named ${libname} with API version ${lib_apiver}")
 set(nebem_sources
   NeBem/ComputeProperties.c
   NeBem/Isles.c
