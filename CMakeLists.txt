@@ -121,10 +121,9 @@ set_property(TARGET GarfieldRandom PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(TARGET GarfieldRandom PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET GarfieldRandom PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 
-
 # Creating the main Garfield library
 add_library(Garfield SHARED "")
-target_link_libraries(Garfield PUBLIC GarfieldRandom Garfield::Heed)
+target_link_libraries(Garfield PUBLIC GarfieldRandom)
 set_property(TARGET Garfield PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(TARGET Garfield PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET Garfield PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
@@ -274,8 +273,7 @@ if(BUILD_WITH_VERSION_NUMBER)
 endif()
 mark_as_advanced(BUILD_WITH_VERSION_NUMBER)
 
-
-#--- Add neBEM ----------------------------------------------------------------
+# Add neBEM 
 # TODO Decouple Nebem interface from the Garfield components
 # The Nebem interface is somewhat coupled with Garfield itself.
 # We should decouple them to keep them independent, but until then 
@@ -301,11 +299,11 @@ set(nebem_sources
 set_source_files_properties(${nebem_sources} PROPERTIES LANGUAGE CXX)
 target_sources( Garfield PRIVATE ${nebem_sources})
 
-#--- Add Heed sources ---------------------------------------------------------
+# Add Heed
 add_subdirectory(Heed)
 
 target_link_libraries(Garfield PUBLIC ROOT::Geom ROOT::Gdml ROOT::Graf3d GSL::gsl
-                                      Garfield::magboltz)
+                                      Garfield::magboltz Garfield::Heed)
 if(WITH_DEGRADE)
   target_link_libraries(Garfield PUBLIC Garfield::degrade)
 endif()
@@ -327,7 +325,7 @@ install(
   REGEX LinkDef EXCLUDE)
 
 install(
-  TARGETS Garfield GarfieldRandom Heed
+  TARGETS Garfield GarfieldRandom
   EXPORT "${PROJECT_NAME}Targets"
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
