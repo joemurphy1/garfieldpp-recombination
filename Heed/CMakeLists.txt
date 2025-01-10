@@ -1,3 +1,5 @@
+set(libname "Heed")
+
 add_library(Heed SHARED 
             heed++/code/BGMesh.cpp
             heed++/code/ElElasticScat.cpp
@@ -59,19 +61,12 @@ target_include_directories(Heed PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTE
 target_compile_definitions(Heed PRIVATE FUNNAMESTACK)
 add_library(Garfield::Heed ALIAS Heed)
 
-#target_compile_definitions(Garfield PRIVATE GARFIELD_HEED_INTERFACE FUNNAMESTACK)
-# garfield_set_all_default_properties(${libname}) # Sets the API version of the library
-# set_property( TARGET ${libname} PROPERTY SOVERSION ${lib_apiver} ) set_property( TARGET
-# ${libname} PROPERTY CXX_STANDARD 11) set_property( TARGET ${libname} PROPERTY
-# CMAKE_CXX_STANDARD_REQUIRED ON) set_property( TARGET ${libname} PROPERTY CXX_EXTENSIONS
-# OFF)
+install( 
+  TARGETS ${libname} 
+  EXPORT "${PROJECT_NAME}Targets" 
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} 
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} 
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-# target_include_directories(${libname} PUBLIC
-# $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
-
-# install( TARGETS ${libname} EXPORT "${PROJECT_NAME}Targets" LIBRARY DESTINATION
-# ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} RUNTIME DESTINATION
-# ${CMAKE_INSTALL_BINDIR} )
-
-# --- install the Heed database--------------------------------------------------
+# Install the Heed database
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/heed++/database DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Heed)

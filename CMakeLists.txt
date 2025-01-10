@@ -3,8 +3,8 @@
 # Version 3.9 is required by the ROOT Use file
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
-# Setting a default build type to be release with debug information. 
-# Otherwise the default mode is debug.
+# Setting the default build type to be Release.
+# Otherwise the default mode is Debug.
 set(default_build_type "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE
@@ -110,6 +110,7 @@ if(WITH_DEGRADE)
   add_subdirectory(Degrade)
 endif()
 
+# Create GarfieldRandom library
 add_library(GarfieldRandom SHARED
   Source/Random.cc 
   Source/RandomEngineRoot.cc 
@@ -121,10 +122,9 @@ set_property(TARGET GarfieldRandom PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(TARGET GarfieldRandom PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET GarfieldRandom PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 
-
 # Creating the main Garfield library
 add_library(Garfield SHARED "")
-target_link_libraries(Garfield PUBLIC GarfieldRandom Garfield::Heed)
+target_link_libraries(Garfield PUBLIC GarfieldRandom)
 set_property(TARGET Garfield PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(TARGET Garfield PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET Garfield PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
@@ -209,7 +209,7 @@ if(WITH_DEGRADE)
   )
 endif()
 
-#--- Add GPU Support if requested ------------------------------------------------------
+#--- Add GPU support if requested ---------------------------------------------
 if (USEGPU)
   set(gpu_sources
     GPU/AvalancheMicroscopicGPU.cu
@@ -274,15 +274,11 @@ if(BUILD_WITH_VERSION_NUMBER)
 endif()
 mark_as_advanced(BUILD_WITH_VERSION_NUMBER)
 
-
-#--- Add neBEM ----------------------------------------------------------------
+# Add neBEM 
 # TODO Decouple Nebem interface from the Garfield components
 # The Nebem interface is somewhat coupled with Garfield itself.
 # We should decouple them to keep them independent, but until then 
 # they have to be compiled in the same library to make it work
-
-# Creating the target as a shared library
-message(STATUS "Creating a new library named ${libname} with API version ${lib_apiver}")
 set(nebem_sources
   NeBem/ComputeProperties.c
   NeBem/Isles.c
@@ -301,11 +297,11 @@ set(nebem_sources
 set_source_files_properties(${nebem_sources} PROPERTIES LANGUAGE CXX)
 target_sources( Garfield PRIVATE ${nebem_sources})
 
-#--- Add Heed sources ---------------------------------------------------------
+# Add Heed
 add_subdirectory(Heed)
 
 target_link_libraries(Garfield PUBLIC ROOT::Geom ROOT::Gdml ROOT::Graf3d GSL::gsl
-                                      Garfield::magboltz)
+                                      Garfield::magboltz Garfield::Heed)
 if(WITH_DEGRADE)
   target_link_libraries(Garfield PUBLIC Garfield::degrade)
 endif()
@@ -327,7 +323,7 @@ install(
   REGEX LinkDef EXCLUDE)
 
 install(
-  TARGETS Garfield GarfieldRandom Heed
+  TARGETS Garfield GarfieldRandom
   EXPORT "${PROJECT_NAME}Targets"
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
