@@ -48,8 +48,6 @@ class TrackDegrade : public Track {
   bool NewTrack(const double x0, const double y0, const double z0,
                         const double t0, const double dx0, const double dy0,
                         const double dz0) override;
-  bool GetCluster(double& xc, double& yc, double& zc,
-                  double& tc, int& ne, double& ec, double& extra) override;
   const std::vector<Cluster>& GetClusters() const { return m_clusters; }
   double GetClusterDensity() override;
   double GetStoppingPower() override;
@@ -72,7 +70,6 @@ class TrackDegrade : public Track {
 
  protected:
   std::vector<Cluster> m_clusters;
-  size_t m_cluster = 0;
 
   bool m_penning = true;
   bool m_bremsStrahlung = true;

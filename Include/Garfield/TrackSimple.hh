@@ -28,16 +28,14 @@ class TrackSimple : public Track {
 
   /// Set the cluster density (inverse mean free path).
   void SetClusterDensity(const double d);
-  virtual double GetClusterDensity();
+  double GetClusterDensity() override;
   /// Set the stopping power (dE/dx).
   void SetStoppingPower(const double dedx);
-  virtual double GetStoppingPower();
+  double GetStoppingPower() override;
 
-  virtual bool NewTrack(const double x0, const double y0, const double z0,
-                        const double t0, const double dx0, const double dy0,
-                        const double dz0);
-  virtual bool GetCluster(double& xc, double& yc, double& zc,
-                          double& tc, int& ne, double& ec, double& extra);
+  bool NewTrack(const double x0, const double y0, const double z0,
+                const double t0, const double dx0, const double dy0,
+                const double dz0) override;
   const std::vector<Cluster>& GetClusters() const { return m_clusters; }
 
  protected:
@@ -49,7 +47,6 @@ class TrackSimple : public Track {
   bool m_useEqualSpacing = false;
 
   std::vector<Cluster> m_clusters;
-  size_t m_cluster = 0;
 };
 }
 

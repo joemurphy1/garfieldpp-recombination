@@ -41,7 +41,6 @@ bool TrackSimple::NewTrack(const double x0, const double y0, const double z0,
                            const double dz0) {
 
   m_clusters.clear();
-  m_cluster = 0;
   // Make sure the sensor is defined.
   if (!m_sensor) {
     std::cerr << m_className << "::NewTrack: Sensor is not defined.\n";
@@ -102,23 +101,6 @@ bool TrackSimple::NewTrack(const double x0, const double y0, const double z0,
     cluster.energy = m_eloss * m_mfp;
     m_clusters.push_back(std::move(cluster));
   }
-  m_cluster = 0;
-  return true;
-}
-
-bool TrackSimple::GetCluster(double& xc, double& yc, double& zc, double& tc,
-                             int& ne, double& ec, double& extra) {
-  xc = yc = zc = tc = ec = extra = 0.;
-  ne = 0;
-  if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
-  const auto& cluster = m_clusters[m_cluster];
-  xc = cluster.x;
-  yc = cluster.y;
-  zc = cluster.z;
-  tc = cluster.t;
-  ec = cluster.energy;
-  ne = 1; 
-  ++m_cluster;
   return true;
 }
 

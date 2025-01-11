@@ -28,8 +28,6 @@ class TrackElectron : public Track {
                 const double t0, const double dx0, const double dy0,
                 const double dz0) override;
 
-  bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc,
-                  double& ec, double& extra) override;
   const std::vector<Cluster>& GetClusters() const { return m_clusters; }
 
   double GetClusterDensity() override;
@@ -55,7 +53,6 @@ class TrackElectron : public Track {
   };
 
   std::vector<Cluster> m_clusters;
-  size_t m_cluster = 0;
 
   // Mean free path
   double m_mfp = 0.;

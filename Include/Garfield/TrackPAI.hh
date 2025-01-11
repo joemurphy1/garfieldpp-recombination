@@ -26,8 +26,6 @@ class TrackPAI : public Track {
                 const double t0, const double dx0, const double dy0,
                 const double dz0) override;
 
-  bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc,
-                  double& ec, double& extra) override;
   const std::vector<Cluster>& GetClusters() const { return m_clusters; }
 
   double GetClusterDensity() override;
@@ -56,7 +54,6 @@ class TrackPAI : public Track {
   std::array<double, m_nSteps> m_rutherford;
 
   std::vector<Cluster> m_clusters;
-  size_t m_cluster = 0;
 
   // Medium properties
   std::string m_mediumName = "";
