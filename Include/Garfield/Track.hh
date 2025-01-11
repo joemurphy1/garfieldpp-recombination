@@ -74,15 +74,6 @@ class Track {
   virtual bool NewTrack(const double x0, const double y0, const double z0,
                         const double t0, const double dx0, const double dy0,
                         const double dz0) = 0;
-  /** Get the next "cluster" (ionising collision of the charged particle).
-    * \param xc,yc,zc coordinates of the collision
-    * \param tc time of the collision
-    * \param nc number of electrons produced
-    * \param ec deposited energy
-    * \param extra additional information (not always implemented)
-    */
-  virtual bool GetCluster(double& xc, double& yc, double& zc, double& tc,
-                          int& nc, double& ec, double& extra) = 0;
 
   /// Get the cluster density (number of ionizing collisions per cm or
   /// inverse mean free path for ionization).

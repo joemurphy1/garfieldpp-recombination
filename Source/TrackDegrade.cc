@@ -69,7 +69,6 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
                             const double dz0) {
 
   m_clusters.clear();
-  m_cluster = 0;
   // Make sure the sensor is defined.
   if (!m_sensor) {
     std::cerr << m_className << "::NewTrack: Sensor is not defined.\n";
@@ -396,21 +395,6 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
                                  secondaries.second.end());
     }
   }
-  return true;
-}
-
-bool TrackDegrade::GetCluster(double& xc, double& yc, double& zc, double& tc,
-                              int& ne, double& ec, double& extra) {
-  xc = yc = zc = tc = ec = extra = 0.;
-  ne = 0;
-  if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
-  const auto& cluster = m_clusters[m_cluster];
-  xc = cluster.x;
-  yc = cluster.y;
-  zc = cluster.z;
-  tc = cluster.t;
-  ne = cluster.electrons.size(); 
-  ++m_cluster;
   return true;
 }
 

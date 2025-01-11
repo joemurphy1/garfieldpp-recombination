@@ -361,7 +361,6 @@ bool TrackBichsel::NewTrack(const double x0, const double y0, const double z0,
 
   // Reset the list of clusters.
   m_clusters.clear();
-  m_cluster = 0;
 
   // Make sure a sensor has been defined.
   if (!m_sensor) {
@@ -444,28 +443,6 @@ bool TrackBichsel::NewTrack(const double x0, const double y0, const double z0,
     ekin -= cluster.energy;
     m_clusters.push_back(std::move(cluster));
   }
-  m_cluster = m_clusters.size() + 2; 
-  return true;
-}
-
-bool TrackBichsel::GetCluster(double& xc, double& yc, double& zc,
-                              double& tc, int& ne, double& ec, double& extra) {
-  xc = yc = zc = tc = ec = extra = 0.;
-  ne = 0;
-  if (m_clusters.empty()) return false;
-  // Increment the cluster index.
-  if (m_cluster < m_clusters.size()) {
-    ++m_cluster;
-  } else if (m_cluster > m_clusters.size()) {
-    m_cluster = 0;
-  } 
-  if (m_cluster >= m_clusters.size()) return false;
-
-  xc = m_clusters[m_cluster].x;
-  yc = m_clusters[m_cluster].y;
-  zc = m_clusters[m_cluster].z;
-  tc = m_clusters[m_cluster].t;
-  ec = m_clusters[m_cluster].energy;
   return true;
 }
 

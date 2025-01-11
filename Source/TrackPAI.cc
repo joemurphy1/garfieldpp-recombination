@@ -17,7 +17,6 @@ bool TrackPAI::NewTrack(const double x0, const double y0, const double z0,
                         const double t0, const double dx0, const double dy0,
                         const double dz0) {
   m_clusters.clear();
-  m_cluster = 0;
   // Make sure the sensor has been set.
   if (!m_sensor) {
     std::cerr << m_className << "::NewTrack: Sensor is not defined.\n";
@@ -100,23 +99,6 @@ bool TrackPAI::NewTrack(const double x0, const double y0, const double z0,
     cluster.energy = edep.first;
     m_clusters.push_back(std::move(cluster));
   }
-  return true;
-}
-
-bool TrackPAI::GetCluster(double& xc, double& yc, double& zc,
-                          double& tc, int& nc, double& ec, double& extra) {
-  nc = 0;
-  xc = yc = zc = tc = ec = extra = 0.;
-  if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
-  const auto& cluster = m_clusters[m_cluster];
-  xc = cluster.x;
-  yc = cluster.y;
-  zc = cluster.z;
-  tc = cluster.t;
-  ec = cluster.energy;
-  nc = 1;
-
-  ++m_cluster; 
   return true;
 }
 

@@ -94,9 +94,9 @@ class TrackSrim : public Track {
   bool NewTrack(const double x0, const double y0, const double z0,
                 const double t0, const double dx0, const double dy0,
                 const double dz0) override;
-  bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc, 
-                  double& ec, double& extra) override;
   const std::vector<Cluster>& GetClusters() const { return m_clusters; }
+  bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc, 
+                  double& ec, double& extra);
 
  protected:
   /// Include transverse straggling
