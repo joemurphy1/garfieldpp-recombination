@@ -1,7 +1,6 @@
 # Build Garfield++ library and examples 
 # Authors: Klaus Zenker, Pere Mato, Stefano Caiazza 
-# Version 3.9 is required by the ROOT Use file
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 # Setting the default build type to be Release.
 # Otherwise the default mode is Debug.
