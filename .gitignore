@@ -1,6 +1,10 @@
 # installation location
 install
 
+# build location
+build
+Build
+
 # MacOS metadata
 .DS_Store
 

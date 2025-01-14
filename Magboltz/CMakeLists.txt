@@ -1,19 +1,22 @@
-set(libname "magboltz")
-set(lib_fullver 11.19)
-set(lib_apiver 11)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-# Creating the target as a shared library
-message(STATUS "Creating a new library named ${libname} with API version ${lib_apiver}")
-add_library(${libname} SHARED "")
-add_library(Garfield::${libname} ALIAS ${libname})
-target_sources(${libname} PRIVATE magboltz.f)
-target_compile_options(${libname} PRIVATE -std=legacy)
-# Sets the API version of the library
-set_property(TARGET ${libname} PROPERTY SOVERSION ${lib_apiver})
+project(Magboltz VERSION 11.19)
 
-install(
-  TARGETS ${libname}
-  EXPORT "${PROJECT_NAME}Targets"
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+add_library(Magboltz SHARED magboltz.f)
+target_compile_options(Magboltz PRIVATE -std=legacy)
+set_target_properties(Magboltz PROPERTIES VERSION "${PROJECT_VERSION}" SOVERSION "${PROJECT_VERSION_MAJOR}")
+add_library(Magboltz::Magboltz ALIAS Magboltz)
+
+configure_package_config_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/MagboltzConfig.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/generated/MagboltzConfig.cmake" INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Magboltz")
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/generated/MagboltzConfigVersion.cmake" VERSION "${PROJECT_VERSION}" COMPATIBILITY SameMinorVersion)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/generated/MagboltzConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/generated/MagboltzConfigVersion.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Magboltz")
+install(TARGETS Magboltz EXPORT MagboltzTargets
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(EXPORT MagboltzTargets
+        FILE MagboltzTargets.cmake
+        NAMESPACE Magboltz::
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Magboltz")

@@ -1,7 +1,6 @@
 # Build Garfield++ library and examples 
 # Authors: Klaus Zenker, Pere Mato, Stefano Caiazza 
-# Version 3.9 is required by the ROOT Use file
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 # Setting the default build type to be Release.
 # Otherwise the default mode is Debug.
@@ -99,7 +98,6 @@ else()
 endif()
 
 find_package(GSL REQUIRED)
-find_package(OpenMP)
 
 # Add Magboltz
 add_subdirectory(Magboltz)
@@ -301,11 +299,12 @@ target_sources( Garfield PRIVATE ${nebem_sources})
 add_subdirectory(Heed)
 
 target_link_libraries(Garfield PUBLIC ROOT::Geom ROOT::Gdml ROOT::Graf3d GSL::gsl
-                                      Garfield::magboltz Garfield::Heed)
+Magboltz::Magboltz Garfield::Heed)
 if(WITH_DEGRADE)
-  target_link_libraries(Garfield PUBLIC Garfield::degrade)
+  target_link_libraries(Garfield PUBLIC Degrade::Degrade)
 endif()
 
+find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
   target_link_libraries(Garfield PRIVATE OpenMP::OpenMP_CXX)
 endif()

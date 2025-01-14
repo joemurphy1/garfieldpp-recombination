@@ -75,7 +75,7 @@ make
 If you want to build your own project against Garfield, CMake may be the best option for you. Just add its location to _CMAKE_PREFIX_PATH_ and call _find_package(Garfield)_ within your CMakeLists.txt.
 
 ```
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(test)
 
 if(NOT TARGET Garfield::Garfield)
