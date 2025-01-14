@@ -98,7 +98,6 @@ else()
 endif()
 
 find_package(GSL REQUIRED)
-find_package(OpenMP)
 
 # Add Magboltz
 add_subdirectory(Magboltz)
@@ -300,11 +299,12 @@ target_sources( Garfield PRIVATE ${nebem_sources})
 add_subdirectory(Heed)
 
 target_link_libraries(Garfield PUBLIC ROOT::Geom ROOT::Gdml ROOT::Graf3d GSL::gsl
-                                      Garfield::magboltz Garfield::Heed)
+Magboltz::Magboltz Garfield::Heed)
 if(WITH_DEGRADE)
-  target_link_libraries(Garfield PUBLIC Garfield::degrade)
+  target_link_libraries(Garfield PUBLIC Degrade::Degrade)
 endif()
 
+find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
   target_link_libraries(Garfield PRIVATE OpenMP::OpenMP_CXX)
 endif()
