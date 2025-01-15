@@ -3,7 +3,7 @@
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "TAxis.h"
-#include "TGAxis.h"
+#include "TGaxis.h"
 #include "TLegend.h"
 #include "TH1F.h"
 #include "TStyle.h"
@@ -25,13 +25,13 @@ int main(int argc, char * argv[]) {
   MediumGas gas_0007mbar, gas_1013mbar;
   gas_0007mbar.LoadGasFile("ic4h10_0007mbar_100-25kVcm.gas");
   gas_1013mbar.LoadGasFile("ic4h10_1013mbar_100-100kVcm.gas");
-  double density_0007mbar    = gas_0007mbar.GetNumberDensity();
+  double density_0007mbar = gas_0007mbar.GetNumberDensity();
   double density_1013mbar = gas_1013mbar.GetNumberDensity();
   std::cout<<"Loading GasFile 1 :: Gas Number Density = "<<density_0007mbar<<" cm-3"<<std::endl;
   std::cout<<"Loading GasFile 2 :: Gas Number Density = "<<density_1013mbar<<" cm-3"<<std::endl;
 
   
-  // Get Energygrid
+  // Get field grid
   // assume only electric field, no B-field
   std::vector<double> efields_0007mbar, efields_1013mbar;
   std::vector<double> bfields;
@@ -51,7 +51,7 @@ int main(int argc, char * argv[]) {
   for (i = 0; i < nE_0007mbar; ++i) {
     double ve = 0.;
     gas_0007mbar.GetElectronVelocityE(i, j, k, ve);
-    // Convert from cm/ns to cm/us.                                                                                                                                                                                                       
+    // Convert from cm/ns to cm/us.
     ve *= 1.e3;
     double alpha = 0.;
     gas_0007mbar.GetElectronTownsend(i, j, k, alpha);
@@ -63,7 +63,7 @@ int main(int argc, char * argv[]) {
   for (i = 0; i < nE_1013mbar; ++i) {
     double ve = 0.;
     gas_1013mbar.GetElectronVelocityE(i, j, k, ve);
-    // Convert from cm/ns to cm/us.                                                                                                                                                                                                       
+    // Convert from cm/ns to cm/us.
     ve *= 1.e3;
     double alpha = 0.;
     gas_1013mbar.GetElectronTownsend(i, j, k, alpha);
@@ -71,7 +71,6 @@ int main(int argc, char * argv[]) {
     ve_1013mbar.push_back(ve);
     al_1013mbar.push_back(alpha);
   }
-
 
   
   // - - - - - - - - - - - - - - - - - -
@@ -84,9 +83,6 @@ int main(int argc, char * argv[]) {
   const int nef_1013mbar = 20;
   std::vector<double> ef_1013mbar = {100, 143.845, 206.914, 297.635, 428.133, 615.848, 885.867, 1274.27, 1832.98, 2636.65, 3792.69, 5455.59, 7847.6, 11288.4, 16237.8, 23357.2, 33598.2, 48329.3, 69519.3, 100000}; 
   std::vector<double> ee_1013mbar = {0.0402, 0.0426, 0.0467, 0.0536, 0.0643, 0.0808, 0.1059, 0.1413, 0.1893, 0.2581, 0.3725, 0.5783, 0.9085, 1.3440, 1.8614, 2.4684, 3.1642, 3.8817, 4.5844, 5.3569};
-
-
-  
 
   // - - - - - - - - - - - - - - - - - -
   // Plots vs Electric Field E
@@ -101,18 +97,30 @@ int main(int argc, char * argv[]) {
 
   gr_ve_0007mbar->SetMarkerStyle(24); // open circle
   gr_ve_1013mbar->SetMarkerStyle(20); // full circle
-  gr_ve_0007mbar->SetMarkerColor(kOrange+7); gr_ve_0007mbar->SetLineColor(kOrange+7); gr_ve_0007mbar->SetLineStyle(7);
-  gr_ve_1013mbar->SetMarkerColor(kOrange-3); gr_ve_1013mbar->SetLineColor(kOrange-3); gr_ve_1013mbar->SetLineStyle(9);
+  gr_ve_0007mbar->SetMarkerColor(kOrange+7); 
+  gr_ve_0007mbar->SetLineColor(kOrange+7); 
+  gr_ve_0007mbar->SetLineStyle(7);
+  gr_ve_1013mbar->SetMarkerColor(kOrange-3); 
+  gr_ve_1013mbar->SetLineColor(kOrange-3); 
+  gr_ve_1013mbar->SetLineStyle(9);
 
   gr_al_0007mbar->SetMarkerStyle(24); // open circle
   gr_al_1013mbar->SetMarkerStyle(20); // full circle
-  gr_al_0007mbar->SetMarkerColor(kOrange+7); gr_al_0007mbar->SetLineColor(kOrange+7); gr_al_0007mbar->SetLineStyle(7);
-  gr_al_1013mbar->SetMarkerColor(kOrange-3); gr_al_1013mbar->SetLineColor(kOrange-3); gr_al_1013mbar->SetLineStyle(9);
+  gr_al_0007mbar->SetMarkerColor(kOrange+7); 
+  gr_al_0007mbar->SetLineColor(kOrange+7); 
+  gr_al_0007mbar->SetLineStyle(7);
+  gr_al_1013mbar->SetMarkerColor(kOrange-3); 
+  gr_al_1013mbar->SetLineColor(kOrange-3); 
+  gr_al_1013mbar->SetLineStyle(9);
 
   gr_ee_0007mbar->SetMarkerStyle(24); // open circle
   gr_ee_1013mbar->SetMarkerStyle(20); // full circle
-  gr_ee_0007mbar->SetMarkerColor(kOrange+7); gr_ee_0007mbar->SetLineColor(kOrange+7); gr_ee_0007mbar->SetLineStyle(7);
-  gr_ee_1013mbar->SetMarkerColor(kOrange-3); gr_ee_1013mbar->SetLineColor(kOrange-3); gr_ee_1013mbar->SetLineStyle(9);
+  gr_ee_0007mbar->SetMarkerColor(kOrange+7); 
+  gr_ee_0007mbar->SetLineColor(kOrange+7); 
+  gr_ee_0007mbar->SetLineStyle(7);
+  gr_ee_1013mbar->SetMarkerColor(kOrange-3); 
+  gr_ee_1013mbar->SetLineColor(kOrange-3); 
+  gr_ee_1013mbar->SetLineStyle(9);
 
   TLegend* l2 = new TLegend(0.40, 0.15, 0.80, 0.30);
   l2->AddEntry(gr_ve_0007mbar, "iC_{4}H_{10} (100%)     7 mbar", "PL");
@@ -191,18 +199,30 @@ int main(int argc, char * argv[]) {
 
   gr_ve_0007mbar_Td->SetMarkerStyle(24); // open circle
   gr_ve_1013mbar_Td->SetMarkerStyle(20); // full circle
-  gr_ve_0007mbar_Td->SetMarkerColor(kOrange+7); gr_ve_0007mbar_Td->SetLineColor(kOrange+7); gr_ve_0007mbar_Td->SetLineStyle(7);
-  gr_ve_1013mbar_Td->SetMarkerColor(kOrange-3); gr_ve_1013mbar_Td->SetLineColor(kOrange-3); gr_ve_1013mbar_Td->SetLineStyle(9);
+  gr_ve_0007mbar_Td->SetMarkerColor(kOrange+7); 
+  gr_ve_0007mbar_Td->SetLineColor(kOrange+7); 
+  gr_ve_0007mbar_Td->SetLineStyle(7);
+  gr_ve_1013mbar_Td->SetMarkerColor(kOrange-3); 
+  gr_ve_1013mbar_Td->SetLineColor(kOrange-3); 
+  gr_ve_1013mbar_Td->SetLineStyle(9);
 
   gr_al_0007mbar_Td->SetMarkerStyle(24); // open circle
   gr_al_1013mbar_Td->SetMarkerStyle(20); // full circle
-  gr_al_0007mbar_Td->SetMarkerColor(kOrange+7); gr_al_0007mbar_Td->SetLineColor(kOrange+7); gr_al_0007mbar_Td->SetLineStyle(7);
-  gr_al_1013mbar_Td->SetMarkerColor(kOrange-3); gr_al_1013mbar_Td->SetLineColor(kOrange-3); gr_al_1013mbar_Td->SetLineStyle(9);
+  gr_al_0007mbar_Td->SetMarkerColor(kOrange+7); 
+  gr_al_0007mbar_Td->SetLineColor(kOrange+7); 
+  gr_al_0007mbar_Td->SetLineStyle(7);
+  gr_al_1013mbar_Td->SetMarkerColor(kOrange-3); 
+  gr_al_1013mbar_Td->SetLineColor(kOrange-3); 
+  gr_al_1013mbar_Td->SetLineStyle(9);
 
   gr_ee_0007mbar_Td->SetMarkerStyle(24); // open circle
   gr_ee_1013mbar_Td->SetMarkerStyle(20); // full circle
-  gr_ee_0007mbar_Td->SetMarkerColor(kOrange+7); gr_ee_0007mbar_Td->SetLineColor(kOrange+7); gr_ee_0007mbar_Td->SetLineStyle(7);
-  gr_ee_1013mbar_Td->SetMarkerColor(kOrange-3); gr_ee_1013mbar_Td->SetLineColor(kOrange-3); gr_ee_1013mbar_Td->SetLineStyle(9);
+  gr_ee_0007mbar_Td->SetMarkerColor(kOrange+7); 
+  gr_ee_0007mbar_Td->SetLineColor(kOrange+7); 
+  gr_ee_0007mbar_Td->SetLineStyle(7);
+  gr_ee_1013mbar_Td->SetMarkerColor(kOrange-3); 
+  gr_ee_1013mbar_Td->SetLineColor(kOrange-3); 
+  gr_ee_1013mbar_Td->SetLineStyle(9);
 
   TCanvas* c5 = new TCanvas("c5", "c5", 800, 800);
   c5->SetLeftMargin(0.135);
