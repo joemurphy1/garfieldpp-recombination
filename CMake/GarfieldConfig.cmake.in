@@ -12,7 +12,7 @@ find_dependency(Magboltz)
 
 if(@OpenMP_CXX_FOUND@)
   find_dependency(OpenMP)
-enif()
+endif()
 
 if(@WITH_DEGRADE@)
   find_dependency(Degrade)
