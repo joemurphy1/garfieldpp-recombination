@@ -60,7 +60,8 @@ class ViewMedium : public ViewBase {
     * \param xaxis abscissa.
     *   - 'e': electric field, 
     *   - 'b': magnetic field, 
-    *   - 'a': angle between E and B.
+    *   - 'a': angle between E and B,
+    *   - 'r': reduced electric field. 
     */
   void PlotVelocity(const std::string& carriers, const char xaxis);
   /// Plot the transverse and longitudinal diffusion coefficients.
@@ -76,7 +77,8 @@ class ViewMedium : public ViewBase {
     * \param xaxis abscissa.
     *   - 'e': electric field, 
     *   - 'b': magnetic field, 
-    *   - 'a': angle between E and B.
+    *   - 'a': angle between E and B,
+    *   - 'r': reduced electric field. 
     * \param same flag to keep existing plots (true) or not.
     */
   void PlotElectronVelocity(const char xaxis = 'e', const bool same = false) {
@@ -167,6 +169,7 @@ class ViewMedium : public ViewBase {
     E,
     B,
     Angle,
+    EoverN,
     None
   };
 
@@ -176,9 +179,11 @@ class ViewMedium : public ViewBase {
   double m_eMin = 100., m_eMax = 100000.;
   double m_bMin = 0., m_bMax = 2.;
   double m_aMin = 0., m_aMax = Pi;
+  double m_enMin = 0.25, m_enMax = 400.;
   bool m_logE = true;
   bool m_logB = false;
   bool m_logA = false;
+  bool m_logEN = true;
   bool m_logX = true;
   bool m_autoRangeX = true;
   Axis m_xaxis = Axis::None;
@@ -227,6 +232,10 @@ class ViewMedium : public ViewBase {
   Axis GetAxis(const char xaxis) const;
   bool GetGrid(std::array<std::vector<double>, 3>& grid,
                int& ie, int& ib, int& ia, const Axis xaxis) const;
+
+  double ConvertToTd(const double e0Vcm);
+  double ConvertToVcm(const double e0Td);
+
 };
 }
 #endif
