@@ -30,6 +30,9 @@ int main(int argc, char * argv[]) {
   std::cout<<"Loading GasFile 1 :: Gas Number Density = "<<density_0007mbar<<" cm-3"<<std::endl;
   std::cout<<"Loading GasFile 2 :: Gas Number Density = "<<density_1013mbar<<" cm-3"<<std::endl;
 
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // PART 1 :: Plot information from two gasfiles in a single plot
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   
   // Get field grid
   // assume only electric field, no B-field
@@ -295,6 +298,25 @@ int main(int argc, char * argv[]) {
   axis07->Draw();
   c7->Update();
   c7->SaveAs("Isobutane_ElectronEnergy_Td.pdf");
+
+
+  
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // PART 2 :: Use the built-in option to plot vs Reduced Efield (E/N)
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ViewMedium view(&gas_1013mbar);
+
+  TCanvas cV("cV", "", 600, 600);
+  view.SetCanvas(&cV);
+  view.PlotElectronVelocity('r');
+
+  TCanvas cD("cD", "", 600, 600);
+  view.SetCanvas(&cD);
+  view.PlotElectronDiffusion('r');
+
+  TCanvas cT("cT", "", 600, 600);
+  view.SetCanvas(&cT);
+  view.PlotElectronTownsend('r');
 
   app.Run();
 }

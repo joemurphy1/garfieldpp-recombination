@@ -129,6 +129,8 @@ void ViewMedium::Draw() {
     frame->GetXaxis()->SetTitle("magnetic field [T]");
   } else if (m_xaxis == Axis::Angle) {
     frame->GetXaxis()->SetTitle("angle between #bf{E} and #bf{B} [rad]");
+  } else if (m_xaxis == Axis::EoverN) {
+    frame->GetXaxis()->SetTitle("reduced electric field [Td]");
   } else {
     std::cerr << m_className << "::Draw: Invalid x axis.\n";
     return;
@@ -411,6 +413,8 @@ void ViewMedium::Export() {
     outfile << "B [T]";
   } else if (m_xaxis == Axis::Angle) {
     outfile << "Theta [rad]";
+  } else if (m_xaxis == Axis::EoverN) {
+    outfile << "E/N [Td]";
   }
   outfile << "\n";
   outfile << "# " << nPlots << " plots:\n";
@@ -459,6 +463,10 @@ void ViewMedium::ResetX(const Axis xaxis) {
     xmin = m_aMin;
     xmax = m_aMax;
     logx = m_logA;
+  } else if (xaxis == Axis::EoverN) {
+    xmin = m_enMin;
+    xmax = m_enMax;
+    logx = m_logEN;
   } else {
     m_xaxis = Axis::None;
     return;
@@ -491,6 +499,17 @@ void ViewMedium::ResetX(const Axis xaxis) {
       const double dx = 0.05 * fabs(bangles.back() - bangles.front());
       xmin = std::max(0., bangles.front() - dx);
       xmax = std::min(TwoPi, bangles.back() + dx);
+    } else if (xaxis == Axis::EoverN && !efields.empty()) {
+      if (efields.front() > 0. && efields.back() > 10. * efields.front()) {
+        logx = true;
+        xmin = ConvertToTd(efields.front()) / 1.5;
+        xmax = ConvertToTd(efields.back()) * 1.5;
+      } else {
+        logx = false;
+        const double dx = 0.05 * fabs(ConvertToTd(efields.back()) - ConvertToTd(efields.front()));
+        xmin = std::max(0., ConvertToTd(efields.front()) - dx);
+        xmax = ConvertToTd(efields.back()) + dx;
+      }
     }
   }
 
@@ -545,10 +564,12 @@ void ViewMedium::PlotDiffusion(const Axis xaxis, const Charge charge,
     } else if (xaxis == Axis::B) {
       bx = m_xPlot[i] * ctheta;
       by = m_xPlot[i] * stheta;
-    } else {
+    } else if (xaxis == Axis::Angle) {
       bx = m_bfield * cos(m_xPlot[i]);
       by = m_bfield * sin(m_xPlot[i]);
-    } 
+    } else if ( xaxis == Axis::EoverN) {
+      ex = ConvertToVcm(m_xPlot[i]);
+    }
     double dl = 0., dt = 0.;
     if (charge == Charge::Electron) {
       if (!m_medium->ElectronDiffusion(ex, 0, 0, bx, by, 0, dl, dt)) continue;
@@ -567,7 +588,7 @@ void ViewMedium::PlotDiffusion(const Axis xaxis, const Charge charge,
   std::array<std::vector<double>, 3> grid;
   int ie = 0, ib = 0, ia = 0;
   if (GetGrid(grid, ie, ib, ia, xaxis)) {
-    const auto nPoints = xaxis == Axis::E ? grid[0].size() : 
+    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN) ? grid[0].size() : 
                          xaxis == Axis::B ? grid[1].size() : grid[2].size();
     for (size_t j = 0; j < nPoints; ++j) {
       double x = 0., y = 0.;
@@ -580,6 +601,9 @@ void ViewMedium::PlotDiffusion(const Axis xaxis, const Charge charge,
       } else if (xaxis == Axis::Angle) {
         ia = j;
         x = grid[2][j];
+      } else if (xaxis == Axis::EoverN) {
+	ie = j;
+        x = ConvertToTd(m_medium->UnScaleElectricField(grid[0][j]));
       }
       if (charge == Charge::Electron) {
         if (m_medium->GetElectronTransverseDiffusion(ie, ib, ia, y)) {
@@ -729,9 +753,11 @@ void ViewMedium::PlotVelocity(const Axis xaxis, const Charge charge,
       e0 = m_xPlot[i];
     } else if (xaxis == Axis::B) {
       b0 = m_xPlot[i];
-    } else { 
+    } else if (xaxis == Axis::Angle) { 
       ctheta = cos(m_xPlot[i]);
       stheta = sin(m_xPlot[i]);
+    } else if (xaxis == Axis::EoverN) {
+      e0 = ConvertToVcm(m_xPlot[i]);
     }
     double vx = 0., vy = 0., vz = 0.;
     if (charge == Charge::Electron) {
@@ -761,7 +787,7 @@ void ViewMedium::PlotVelocity(const Axis xaxis, const Charge charge,
   std::array<std::vector<double>, 3> grid;
   int ie = 0, ib = 0, ia = 0;
   if (GetGrid(grid, ie, ib, ia, xaxis)) {
-    const auto nPoints = xaxis == Axis::E ? grid[0].size() : 
+    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN) ? grid[0].size() : 
                          xaxis == Axis::B ? grid[1].size() : grid[2].size();
     for (size_t j = 0; j < nPoints; ++j) {
       double x = 0., y = 0.;
@@ -774,6 +800,9 @@ void ViewMedium::PlotVelocity(const Axis xaxis, const Charge charge,
       } else if (xaxis == Axis::Angle) {
         ia = j;
         x = grid[2][j];
+      } else if (xaxis == Axis::EoverN) {
+        ie = j;
+        x = ConvertToTd(m_medium->UnScaleElectricField(grid[0][j]));
       }
       if (charge == Charge::Electron) {
         if (m_medium->GetElectronVelocityE(ie, ib, ia, y)) {
@@ -855,9 +884,11 @@ void ViewMedium::PlotVelocityFluxBulk(const Axis xaxis, const Charge charge,
             e0 = m_xPlot[i];
         } else if (xaxis == Axis::B) {
             b0 = m_xPlot[i];
-        } else {
+        } else if (xaxis == Axis::Angle) {
             ctheta = cos(m_xPlot[i]);
             stheta = sin(m_xPlot[i]);
+	} else if (xaxis == Axis::EoverN) {
+	    e0 = ConvertToVcm(m_xPlot[i]);
         }
         double wv = 0., wr = 0.;
         if (charge == Charge::Electron) {
@@ -874,7 +905,7 @@ void ViewMedium::PlotVelocityFluxBulk(const Axis xaxis, const Charge charge,
     std::array<std::vector<double>, 3> grid;
     int ie = 0, ib = 0, ia = 0;
     if (GetGrid(grid, ie, ib, ia, xaxis)) {
-        const auto nPoints = xaxis == Axis::E ? grid[0].size() :
+        const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN) ? grid[0].size() :
                              xaxis == Axis::B ? grid[1].size() : grid[2].size();
         for (size_t j = 0; j < nPoints; ++j) {
             double x = 0., y = 0.;
@@ -887,6 +918,9 @@ void ViewMedium::PlotVelocityFluxBulk(const Axis xaxis, const Charge charge,
             } else if (xaxis == Axis::Angle) {
                 ia = j;
                 x = grid[2][j];
+	    } else if (xaxis == Axis::EoverN) {
+	        ie = j;
+	        x = ConvertToTd(m_medium->UnScaleElectricField(grid[0][j]));
             }
             if (charge == Charge::Electron) {
                 if (m_medium->GetElectronFluxVelocity(ie, ib, ia, y)) {
@@ -949,9 +983,11 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
     } else if (xaxis == Axis::B) {
       bx = m_xPlot[i] * ctheta;
       by = m_xPlot[i] * stheta;
-    } else {
+    } else if (xaxis == Axis::Angle) {
       bx = m_bfield * cos(m_xPlot[i]);
       by = m_bfield * sin(m_xPlot[i]);
+    } else if (xaxis == Axis::EoverN) {
+      ex = ConvertToVcm(m_xPlot[i]);
     }
     double y = 0.;
     if (charge == Charge::Electron) {
@@ -984,7 +1020,7 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
   std::array<std::vector<double>, 3> grid;
   int ie = 0, ib = 0, ia = 0;
   if (GetGrid(grid, ie, ib, ia, xaxis)) {
-    const auto nPoints = xaxis == Axis::E ? grid[0].size() : 
+    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN) ? grid[0].size() : 
                          xaxis == Axis::B ? grid[1].size() : grid[2].size();
     for (size_t j = 0; j < nPoints; ++j) {
       double x = 0., y = 0.;
@@ -997,7 +1033,10 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
       } else if (xaxis == Axis::Angle) {
         ia = j;
         x = grid[2][j];
-      }
+      } else if (xaxis == Axis::EoverN) {
+        ie = j;
+        x = ConvertToTd(m_medium->UnScaleElectricField(grid[0][j]));
+      } 
       if (charge == Charge::Electron) {
         if (par == Parameter::Townsend) {
           if (m_medium->GetElectronTownsend(ie, ib, ia, y)) {
@@ -1075,9 +1114,11 @@ void ViewMedium::PlotLorentzAngle(const Axis xaxis, const Charge charge,
     } else if (xaxis == Axis::B) {
       bx = m_xPlot[i] * ctheta;
       by = m_xPlot[i] * stheta;
-    } else {
+    } else if (xaxis == Axis::Angle) {
       bx = m_bfield * cos(m_xPlot[i]);
       by = m_bfield * sin(m_xPlot[i]);
+    } else if (xaxis == Axis::EoverN) {
+      ex = ConvertToVcm(m_xPlot[i]);
     }
     double y = 0.;
     if (!m_medium->ElectronLorentzAngle(ex, 0, 0, bx, by, 0, y)) continue;
@@ -1090,7 +1131,7 @@ void ViewMedium::PlotLorentzAngle(const Axis xaxis, const Charge charge,
   std::array<std::vector<double>, 3> grid;
   int ie = 0, ib = 0, ia = 0;
   if (GetGrid(grid, ie, ib, ia, xaxis)) {
-    const auto nPoints = xaxis == Axis::E ? grid[0].size() : 
+    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN) ? grid[0].size() : 
                          xaxis == Axis::B ? grid[1].size() : grid[2].size();
     for (size_t j = 0; j < nPoints; ++j) {
       double x = 0., y = 0.;
@@ -1103,6 +1144,9 @@ void ViewMedium::PlotLorentzAngle(const Axis xaxis, const Charge charge,
       } else if (xaxis == Axis::Angle) {
         ia = j;
         x = grid[2][j];
+      } else if (xaxis == Axis::EoverN) {
+        ie = j;
+        x = ConvertToTd(m_medium->UnScaleElectricField(grid[0][j]));
       }
       if (m_medium->GetElectronLorentzAngle(ie, ib, ia, y)) {
         xgr.push_back(x);
@@ -1128,6 +1172,8 @@ ViewMedium::Axis ViewMedium::GetAxis(const char xaxis) const {
     return Axis::B;
   } else if (std::toupper(xaxis) == 'A') {
     return Axis::Angle;
+  } else if (std::toupper(xaxis) == 'R') {
+    return Axis::EoverN;
   }
   return Axis::None; 
 }
@@ -1143,7 +1189,7 @@ bool ViewMedium::GetGrid(std::array<std::vector<double>, 3>& grid,
   ie = FindIndex(grid[0], m_efield, eps);
   ib = FindIndex(grid[1], m_bfield, eps);
   ia = FindIndex(grid[2], m_angle, eps);
-  if (xaxis == Axis::E) {
+  if (xaxis == Axis::E || xaxis == Axis::EoverN) {
     if (ib < 0 || ia < 0) return false;
   } else if (xaxis == Axis::B) {
     if (ie < 0 || ia < 0) return false;
@@ -1155,4 +1201,12 @@ bool ViewMedium::GetGrid(std::array<std::vector<double>, 3>& grid,
   return true;
 }
 
+  double ViewMedium::ConvertToTd(const double e0Vcm) {
+    return e0Vcm / m_medium->GetNumberDensity() * 1E17;
+  }
+
+  double ViewMedium::ConvertToVcm(const double e0Td) {
+    return e0Td * m_medium->GetNumberDensity() / 1E17;
+  }
+  
 }
