@@ -5,8 +5,8 @@ if(NOT TARGET Garfield::Garfield)
 endif()
 
 # ---Build executable------------------------------------------------------------
-add_executable(strip strip.C)
-target_link_libraries(strip Garfield::Garfield)
+add_executable(stripAnsys121 strip.C)
+target_link_libraries(stripAnsys121 Garfield::Garfield)
 
 # ---Copy all files locally to the build directory-------------------------------
 foreach(_file ELIST.lis MPLIST.lis NLIST.lis PRNSOL.lis)

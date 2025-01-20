@@ -8,11 +8,11 @@ endif()
 # ########################################################################################
 
 # ---Define executables----------------------------------------------------------
-add_executable(plotfield plotfield.C)
-target_link_libraries(plotfield Garfield::Garfield)
+add_executable(voxel_plotfield plotfield.C)
+target_link_libraries(voxel_plotfield Garfield::Garfield)
 
-add_executable(savefield savefield.C)
-target_link_libraries(savefield Garfield::Garfield)
+add_executable(voxel_savefield savefield.C)
+target_link_libraries(voxel_savefield Garfield::Garfield)
 
 # ---Copy all files locally to the build directory-------------------------------
 foreach(_file Efield.txt)

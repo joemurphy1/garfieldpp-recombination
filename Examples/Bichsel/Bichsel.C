@@ -11,7 +11,7 @@
 #include "Garfield/TrackBichsel.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
-#include "Garfield/RandomEngineROOT.hh"
+#include "Garfield/RandomEngineRoot.hh"
 
 using namespace Garfield;
 

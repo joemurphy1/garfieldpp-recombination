@@ -5,5 +5,5 @@ if(NOT TARGET Garfield::Garfield)
 endif()
 
 # ---Build executable------------------------------------------------------------
-add_executable(test test.C)
-target_link_libraries(test Garfield::Garfield)
+add_executable(Bichsel Bichsel.C)
+target_link_libraries(Bichsel Garfield::Garfield)
