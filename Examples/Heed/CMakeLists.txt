@@ -21,5 +21,6 @@ target_link_libraries(rangeSi Garfield::Garfield)
 add_executable(fe55 fe55.C)
 target_link_libraries(fe55 Garfield::Garfield)
 
-add_executable(plotdedx plotdedx.C)
-target_link_libraries(plotdedx Garfield::Garfield)
+add_executable(heed_plotdedx plotdedx.C)
+target_link_libraries(heed_plotdedx Garfield::Garfield)
+set_target_properties(heed_plotdedx PROPERTIES OUTPUT_NAME "plotdedx")
