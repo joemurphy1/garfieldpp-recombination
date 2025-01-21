@@ -97,6 +97,7 @@ else()
   set(GARFIELD_CXX_STANDARD ${CMAKE_CXX_STANDARD})
 endif()
 
+find_package(GSL REQUIRED)
 find_package(OpenMP)
 
 # Add Magboltz
@@ -272,7 +273,28 @@ if(BUILD_WITH_VERSION_NUMBER)
 endif()
 mark_as_advanced(BUILD_WITH_VERSION_NUMBER)
 
-add_subdirectory(NeBem)
+# Add neBEM 
+# TODO Decouple Nebem interface from the Garfield components
+# The Nebem interface is somewhat coupled with Garfield itself.
+# We should decouple them to keep them independent, but until then 
+# they have to be compiled in the same library to make it work
+set(nebem_sources
+  NeBem/ComputeProperties.c
+  NeBem/Isles.c
+  NeBem/luc.c
+  NeBem/neBEM.c
+  NeBem/neBEMInterface.c
+  NeBem/nrutil.c
+  NeBem/ReTriM.c
+  NeBem/svdcmp.c
+  NeBem/Vector.c)
+
+# Until CMake 3.18 the source file properties are only visible to targets 
+# added in the same directory therefore we cannot add Nebem through the 
+# add_subdirectory mechanism unless we change the cpp file extension so that
+# CMake can recognize them automatically as CXX and not C
+set_source_files_properties(${nebem_sources} PROPERTIES LANGUAGE CXX)
+target_sources(Garfield PRIVATE ${nebem_sources})
 
 # Add Heed
 add_subdirectory(Heed)
@@ -280,9 +302,9 @@ add_subdirectory(Heed)
 target_link_libraries(Garfield PUBLIC ROOT::Geom
                                       ROOT::Gdml
                                       ROOT::Graf3d 
-                                      Magboltz::Magboltz
+                                      GSL::gsl
                                       Garfield::Heed
-                                      neBEM::neBEM
+                                      Magboltz::Magboltz
                                       $<$<BOOL:${WITH_DEGRADE}>:Degrade::Degrade>
                                       $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
                                       )
@@ -291,6 +313,7 @@ target_include_directories(
   Garfield
   PUBLIC $<INSTALL_INTERFACE:include>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>)
 
 #--- Install the header files -------------------------------------------------
