@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     g1->SetLineWidth(2);
     g1->Draw("lsame");
     char buf[100];
-    sprintf(buf, "Townsend, Pure Ar, #gamma = 10^{%d}", ig);
+    snprintf(buf, 100, "Townsend, Pure Ar, #gamma = 10^{%d}", ig);
     leg->AddEntry(g1, buf, "l");
   }
 
@@ -168,15 +168,15 @@ int main(int argc, char *argv[]) {
     g->Draw("lsame");
     if (igas == 0) {
       char buf[100]; 
-      sprintf(buf, "Magboltz, Ar-iC_{4}H_{10} 99-1, #gamma = 10^{%g}",log(gamma)/log(10.0));
+      snprintf(buf, 100, "Magboltz, Ar-iC_{4}H_{10} 99-1, #gamma = 10^{%g}",log(gamma)/log(10.0));
       leg->AddEntry(g, buf, "l");
     } else if (igas == 1) {
       char buf[100]; 
-      sprintf(buf, "Magboltz, Ar-iC_{4}H_{10} 95-5, #gamma = 10^{%g}",log(gamma)/log(10.0));
+      snprintf(buf, 100, "Magboltz, Ar-iC_{4}H_{10} 95-5, #gamma = 10^{%g}",log(gamma)/log(10.0));
       leg->AddEntry(g, buf,"l");
     } else if (igas == 2) {
       char buf[100]; 
-      sprintf(buf, "Magboltz, Ar-iC_{4}H_{10} 90-10, #gamma = 10^{%g}",log(gamma)/log(10.0));
+      snprintf(buf, 100, "Magboltz, Ar-iC_{4}H_{10} 90-10, #gamma = 10^{%g}",log(gamma)/log(10.0));
       leg->AddEntry(g, buf,"l");
     }
   }
