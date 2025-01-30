@@ -61,7 +61,8 @@ class ViewMedium : public ViewBase {
     *   - 'e': electric field, 
     *   - 'b': magnetic field, 
     *   - 'a': angle between E and B,
-    *   - 'r': reduced electric field. 
+    *   - 'r': reduced electric field (E/N),
+    *   - 'p': reduced electric field (E/p)
     */
   void PlotVelocity(const std::string& carriers, const char xaxis);
   /// Plot the transverse and longitudinal diffusion coefficients.
@@ -78,7 +79,8 @@ class ViewMedium : public ViewBase {
     *   - 'e': electric field, 
     *   - 'b': magnetic field, 
     *   - 'a': angle between E and B,
-    *   - 'r': reduced electric field. 
+    *   - 'r': reduced electric field (E/N),
+    *   - 'p': reduced electric field (E/p).
     * \param same flag to keep existing plots (true) or not.
     */
   void PlotElectronVelocity(const char xaxis = 'e', const bool same = false) {
@@ -112,6 +114,14 @@ class ViewMedium : public ViewBase {
   void PlotElectronTownsend(const char xaxis = 'e', const bool same = false) {
     Plot(GetAxis(xaxis), Charge::Electron, Parameter::Townsend, same);
   }
+  /// Plot the Townsend coefficient for electrons.
+  void PlotElectronReducedTownsendN(const char xaxis = 'r', const bool same = false) {
+    Plot(GetAxis(xaxis), Charge::Electron, Parameter::AlphaN, same);
+  }
+  /// Plot the Townsend coefficient for electrons.
+  void PlotElectronReducedTownsendP(const char xaxis = 'p', const bool same = false) {
+    Plot(GetAxis(xaxis), Charge::Electron, Parameter::AlphaP, same);
+  }
   /// Plot the TOF ionization rate.
   void PlotElectronTOFIonization(const char xaxis = 'e', const bool same = false) {
       Plot(GetAxis(xaxis), Charge::Electron, Parameter::RIonTof, same);
@@ -132,6 +142,7 @@ class ViewMedium : public ViewBase {
   void PlotHoleAttachment(const char xaxis = 'e', const bool same = false) {
     Plot(GetAxis(xaxis), Charge::Hole, Parameter::Attachment, same);
   }
+  
   /// Plot the angle between drift velocity and field.
   void PlotElectronLorentzAngle(const char xaxis = 'e', const bool same = false) {
     PlotLorentzAngle(GetAxis(xaxis), Charge::Electron, same);
@@ -156,7 +167,9 @@ class ViewMedium : public ViewBase {
     Attachment,
     LorentzAngle,
     RIonTof,
-    RAttTof
+    RAttTof,
+    AlphaN,
+    AlphaP
   };
  
   enum class Charge {
@@ -170,6 +183,7 @@ class ViewMedium : public ViewBase {
     B,
     Angle,
     EoverN,
+    EoverP,
     None
   };
 
@@ -180,10 +194,12 @@ class ViewMedium : public ViewBase {
   double m_bMin = 0., m_bMax = 2.;
   double m_aMin = 0., m_aMax = Pi;
   double m_enMin = 0.25, m_enMax = 400.;
+  double m_epMin = 0.13, m_epMax = 132.;
   bool m_logE = true;
   bool m_logB = false;
   bool m_logA = false;
   bool m_logEN = true;
+  bool m_logEP = true;
   bool m_logX = true;
   bool m_autoRangeX = true;
   Axis m_xaxis = Axis::None;
@@ -233,8 +249,10 @@ class ViewMedium : public ViewBase {
   bool GetGrid(std::array<std::vector<double>, 3>& grid,
                int& ie, int& ib, int& ia, const Axis xaxis) const;
 
-  double ConvertToTd(const double e0Vcm);
-  double ConvertToVcm(const double e0Td);
+  double ConvertToEN(const double e0Vcm);
+  double UnConvertFromEN(const double e0Td);
+  double ConvertToEP(const double e0Vcm);
+  double UnConvertFromEP(const double e0VcmTorr);
 
 };
 }
