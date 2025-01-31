@@ -332,15 +332,20 @@ int main(int argc, char * argv[]) {
   view.SetCanvas(&cT);
   view.PlotElectronTownsend('r');
 
+  // Plot Alpha vs E/P
+  TCanvas cP("cP", "", 600, 600);
+  view.SetCanvas(&cP);
+  view.PlotElectronTownsend('p');
+
   // Plot Alpha/N vs E/N
-  TCanvas cAN("cT", "", 600, 600);
+  TCanvas cAN("cAN", "", 600, 600);
   view.SetCanvas(&cAN);
   view.PlotElectronReducedTownsendN('r');
 
   // Plot Alpha/p vs E/p
-  TCanvas cAP("cT", "", 600, 600);
+  TCanvas cAP("cAP", "", 600, 600);
   view.SetCanvas(&cAP);
-  view.PlotElectronReducedTownsendN('p');
+  view.PlotElectronReducedTownsendP('p');
 
 
   
