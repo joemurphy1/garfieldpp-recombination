@@ -34,6 +34,10 @@ class ViewMedium : public ViewBase {
   void SetRangeB(const double bmin, const double bmax, const bool logscale);
   /// Set the limits of the angle between electric and magnetic field.
   void SetRangeA(const double amin, const double amax, const bool logscale);
+  /// Set the limits of the reduced electric field (E/N).
+  void SetRangeEN(const double emin, const double emax, const bool logscale);
+  /// Set the limits of the reduced electric field (E/P).
+  void SetRangeEP(const double emin, const double emax, const bool logscale);
   /// Choose the y-axis range based on the function's minima/maxima.
   void EnableAutoRangeY(const bool on = true) { m_autoRangeY = on; }
   /// Set the range of the function (velocity etc.) to be plotted.
