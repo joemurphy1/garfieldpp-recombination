@@ -471,7 +471,7 @@ bool Medium::Alpha(const double ex, const double ey, const double ez,
 
   // Interpolate.
   if (e0 < m_eFields[thr]) intp = 1;
-  if (!Interpolate(e0, b, ebang, tab, alpha, intp, extr)) alpha = -30.;
+  if (!Interpolate(e0, b, ebang, tab, alpha, intp, extr, true)) alpha = -30.;
   if (alpha < -20.) {
     alpha = 0.;
   } else {
@@ -1431,7 +1431,8 @@ bool Medium::Interpolate(
     const double e, const double b, const double a,
     const std::vector<std::vector<std::vector<double> > >& table, double& y,
     const unsigned int intp,
-    const std::pair<unsigned int, unsigned int>& extr) const {
+    const std::pair<unsigned int, unsigned int>& extr,
+    const bool logval) const {
   if (table.empty()) {
     y = 0.;
     return false;  // TODO: true!
@@ -1442,7 +1443,7 @@ bool Medium::Interpolate(
                             m_bAngles.size(), m_bFields.size(), m_eFields.size(),
                             a, b, e, y, intp);
   } else {
-    y = Interpolate1D(e, table[0][0], m_eFields, intp, extr);
+    y = Interpolate1D(e, table[0][0], m_eFields, intp, extr, logval);
   }
   return true;
 }
@@ -1450,7 +1451,8 @@ bool Medium::Interpolate(
 double Medium::Interpolate1D(
     const double x, const std::vector<double>& ytab,
     const std::vector<double>& xtab, const unsigned int intpMeth,
-    const std::pair<unsigned int, unsigned int>& extr) const {
+    const std::pair<unsigned int, unsigned int>& extr,
+    const bool logval) const {
   // This function is a generalized version of the Fortran functions
   // GASVEL, GASVT1, GASVT2, GASLOR, GASMOB, GASDFT, and GASDFL
   // for the case of a 1D table. All variables are generic.
@@ -1474,16 +1476,32 @@ double Medium::Interpolate1D(
       result = ytab[0];
     } else if (extr.first == 1) {
       // Linear extrapolation
-      const double extr4 = (ytab[1] - ytab[0]) / (xtab[1] - xtab[0]);
-      result = ytab[0] + extr4 * (x - xtab[0]);
+      if(!logval) { // linear values in gastable
+	const double extr4 = (ytab[1] - ytab[0]) / (xtab[1] - xtab[0]);
+	result = ytab[0] + extr4 * (x - xtab[0]);
+      }
+      else { // log values in gastable for alpha, eta
+	const double extr4 = (std::exp(ytab[1]) - std::exp(ytab[0])) / (xtab[1] - xtab[0]);
+	result = log(std::exp(ytab[0]) + extr4 * (x - xtab[0]));
+      }
     } else if (extr.first == 2) {
-      // Logarithmic extrapolation
-      const double extr4 = log(ytab[1] / ytab[0]) / (xtab[1] - xtab[0]);
-      const double extr3 = log(ytab[0]) - extr4 * xtab[0];
-      result = std::exp(std::min(50., extr3 + extr4 * x));
+      // Exponential extrapolation
+      if(!logval) { // linear values in gastable
+	const double extr4 = log(ytab[1] / ytab[0]) / (xtab[1] - xtab[0]);
+	const double extr3 = log(ytab[0]) - extr4 * xtab[0];
+	result = std::exp(std::min(50., extr3 + extr4 * x));
+      }
+      else { // log values in gastable for alpha, eta
+	const double extr4 = log(std::exp(ytab[1]) / std::exp(ytab[0])) / (xtab[1] - xtab[0]);
+	const double extr3 = ytab[0] - extr4 * xtab[0];
+	result = std::min(50., extr3 + extr4 * x);
+      }
     } else {
+      // Constant extrapolation
       result = ytab[0];
     }
+    // TO DO: logarithmic extrapolation
+    // TO DO: extrapolation vs alpha/p = A*exp(B*E/p)
   } else if (x > xtab[nt - 1]) {
     // Extrapolation towards large fields
     if (xtab[nt - 1] <= xtab[nt - 2]) {
@@ -1494,18 +1512,36 @@ double Medium::Interpolate1D(
       result = ytab[nt - 1];
     } else if (extr.second == 1) {
       // Linear extrapolation
-      const double extr2 = (ytab[nt - 1] - ytab[nt - 2]) /
-                           (xtab[nt - 1] - xtab[nt - 2]);
-      result = ytab[nt - 1] + extr2 * (x - xtab[nt - 1]);
+      if(!logval) {
+	const double extr2 = (ytab[nt - 1] - ytab[nt - 2]) /
+	                     (xtab[nt - 1] - xtab[nt - 2]);
+	result = ytab[nt - 1] + extr2 * (x - xtab[nt - 1]);
+      }
+      else { // log values in gastable for alpha, eta
+	const double extr2 = (std::exp(ytab[nt - 1]) - std::exp(ytab[nt - 2])) /
+	                     (xtab[nt - 1] - xtab[nt - 2]);
+	result = log(std::exp(ytab[nt - 1]) + extr2 * (x - xtab[nt - 1]));
+      }
     } else if (extr.second == 2) {
-      // Logarithmic extrapolation
-      const double extr2 = log(ytab[nt - 1] / ytab[nt - 2]) /
-                           (xtab[nt - 1] - xtab[nt - 2]);
-      const double extr1 = log(ytab[nt - 1]) - extr2 * xtab[nt - 1];
-      result = exp(std::min(50., extr1 + extr2 * x));
+      // Exponential extrapolation
+      if(!logval) { // linear values in gastable
+	const double extr2 = log(ytab[nt - 1] / ytab[nt - 2]) /
+                             (xtab[nt - 1] - xtab[nt - 2]);
+	const double extr1 = log(ytab[nt - 1]) - extr2 * xtab[nt - 1];
+	result = exp(std::min(50., extr1 + extr2 * x));
+      }
+      else { // log values in gastable for alpha, eta
+	const double extr2 = log(std::exp(ytab[nt - 1]) / std::exp(ytab[nt - 2])) /
+                             (xtab[nt - 1] - xtab[nt - 2]);
+	const double extr1 = ytab[nt - 1] - extr2 * xtab[nt - 1];
+	result = std::min(50., extr1 + extr2 * x);
+      }
     } else {
+      // Constant extrapolation
       result = ytab[nt - 1];
     }
+    // TO DO: logarithmic extrapolation
+    // TO DO: extrapolation vs alpha/p = A*exp(B*E/p)
   } else {
     // Intermediate points, spline interpolation (not implemented).
     // Intermediate points, Newtonian interpolation
