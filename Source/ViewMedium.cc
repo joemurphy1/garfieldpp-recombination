@@ -98,7 +98,32 @@ void ViewMedium::SetRangeY(const double ymin, const double ymax,
   m_yMax = ymax;
   m_logY = logscale;
 }
+  
+void ViewMedium::SetRangeEN(const double emin, const double emax, 
+                           const bool logscale) {
+  if (emin >= emax || emin < 0.) {
+    std::cerr << m_className << "::SetRangeEN: Incorrect range.\n";
+    return;
+  }
 
+  m_enMin = emin;
+  m_enMax = emax;
+  m_logEN = logscale;
+}
+
+void ViewMedium::SetRangeEP(const double emin, const double emax, 
+                           const bool logscale) {
+  if (emin >= emax || emin < 0.) {
+    std::cerr << m_className << "::SetRangeEP: Incorrect range.\n";
+    return;
+  }
+
+  m_epMin = emin;
+  m_epMax = emax;
+  m_logEP = logscale;
+}
+ 
+  
 void ViewMedium::Draw() {
 
   if (m_yPlot.empty()) return;
@@ -131,6 +156,8 @@ void ViewMedium::Draw() {
     frame->GetXaxis()->SetTitle("angle between #bf{E} and #bf{B} [rad]");
   } else if (m_xaxis == Axis::EoverN) {
     frame->GetXaxis()->SetTitle("reduced electric field [Td]");
+  } else if (m_xaxis == Axis::EoverP) {
+    frame->GetXaxis()->SetTitle("reduced electric field [V/cm #upoint Torr]");
   } else {
     std::cerr << m_className << "::Draw: Invalid x axis.\n";
     return;
@@ -165,6 +192,18 @@ void ViewMedium::Draw() {
         canvas->SetTitle("Multiplication and attachment");
       }
       break;
+    case Parameter::AlphaN:
+    case Parameter::AlphaP:
+      if (std::all_of(m_par.cbegin(), m_par.cend(), [](Parameter p) {
+                      return p == Parameter::AlphaN; })) {
+        yaxis->SetTitle("#it{#alpha}/#it{N} [10^{-18} cm^{2}]");
+        canvas->SetTitle("Multiplication");
+      } else if (std::all_of(m_par.cbegin(), m_par.cend(), [](Parameter p) {
+                      return p == Parameter::AlphaP; })) {
+        yaxis->SetTitle("#it{#alpha}/#it{p} [cm^{-1}Torr^{-1}]");
+        canvas->SetTitle("Multiplication");
+      } 
+      break;      
     case Parameter::RIonTof:
     case Parameter::RAttTof:
       if (std::all_of(m_par.cbegin(), m_par.cend(), [](Parameter p) {
@@ -261,6 +300,12 @@ void ViewMedium::Draw() {
           case Parameter::Attachment:
             labels[i] += "#eta";
             break;
+	  case Parameter::AlphaN:
+	    labels[i] += "#it{#alpha}/#it{N}";
+	    break;
+	  case Parameter::AlphaP:
+	    labels[i] += "#it{#alpha}/#it{p}";
+	    break;
           case Parameter::RIonTof:
             labels[i] += "#R_{#it{ion}}";
             break;
@@ -281,11 +326,14 @@ void ViewMedium::Draw() {
     graph.SetMarkerColor(col);
     graph.DrawGraph(m_xPlot.size(), 
                     m_xPlot.data(), m_yPlot[i].data(), "L");
+    // debug
+    graph.Print();
     graph.SetMarkerStyle(20 + i);
     if (!m_xGraph[i].empty()) {
       graph.DrawGraph(m_xGraph[i].size(), 
                       m_xGraph[i].data(), m_yGraph[i].data(), "P");
-
+      // debug
+      graph.Print();
     }
   }
   if (m_logX && xmin > 0.) {
@@ -392,6 +440,12 @@ void ViewMedium::Export() {
       case Parameter::Attachment:
         ylabel[i] += "attachment coefficient [1/cm]";
         break;
+      case Parameter::AlphaN:
+	 ylabel[i] += "reduced Townsend coefficient [10^{-18} cm^{2}]";
+	 break;
+      case Parameter::AlphaP:
+	 ylabel[i] += "reduced Townsend coefficient [cm^{-1}Torr^{-1}]";
+	 break;
       case Parameter::RIonTof:
         ylabel[i] += "TOF ionisation rate [1/ns]";
         break;
@@ -414,7 +468,9 @@ void ViewMedium::Export() {
   } else if (m_xaxis == Axis::Angle) {
     outfile << "Theta [rad]";
   } else if (m_xaxis == Axis::EoverN) {
-    outfile << "E/N [Td]";
+    outfile << "E/#it{N} [Td]";
+  } else if (m_xaxis == Axis::EoverP) {
+    outfile << "E/#it{p} [V/cm #upoint Torr]";
   }
   outfile << "\n";
   outfile << "# " << nPlots << " plots:\n";
@@ -467,6 +523,10 @@ void ViewMedium::ResetX(const Axis xaxis) {
     xmin = m_enMin;
     xmax = m_enMax;
     logx = m_logEN;
+  } else if (xaxis == Axis::EoverP) {
+    xmin = m_epMin;
+    xmax = m_epMax;
+    logx = m_logEP;
   } else {
     m_xaxis = Axis::None;
     return;
@@ -502,13 +562,24 @@ void ViewMedium::ResetX(const Axis xaxis) {
     } else if (xaxis == Axis::EoverN && !efields.empty()) {
       if (efields.front() > 0. && efields.back() > 10. * efields.front()) {
         logx = true;
-        xmin = ConvertToTd(efields.front()) / 1.5;
-        xmax = ConvertToTd(efields.back()) * 1.5;
+        xmin = ConvertToEN(efields.front()) / 1.5;
+        xmax = ConvertToEN(efields.back()) * 1.5;
       } else {
         logx = false;
-        const double dx = 0.05 * fabs(ConvertToTd(efields.back()) - ConvertToTd(efields.front()));
-        xmin = std::max(0., ConvertToTd(efields.front()) - dx);
-        xmax = ConvertToTd(efields.back()) + dx;
+        const double dx = 0.05 * fabs(ConvertToEN(efields.back()) - ConvertToEN(efields.front()));
+        xmin = std::max(0., ConvertToEN(efields.front()) - dx);
+        xmax = ConvertToEN(efields.back()) + dx;
+      }
+    } else if (xaxis == Axis::EoverP && !efields.empty()) {
+      if (efields.front() > 0. && efields.back() > 10. * efields.front()) {
+        logx = true;
+        xmin = ConvertToEP(efields.front()) / 1.5;
+        xmax = ConvertToEP(efields.back()) * 1.5;
+      } else {
+        logx = false;
+        const double dx = 0.05 * fabs(ConvertToEP(efields.back()) - ConvertToEP(efields.front()));
+        xmin = std::max(0., ConvertToEP(efields.front()) - dx);
+        xmax = ConvertToEP(efields.back()) + dx;
       }
     }
   }
@@ -568,7 +639,9 @@ void ViewMedium::PlotDiffusion(const Axis xaxis, const Charge charge,
       bx = m_bfield * cos(m_xPlot[i]);
       by = m_bfield * sin(m_xPlot[i]);
     } else if ( xaxis == Axis::EoverN) {
-      ex = ConvertToVcm(m_xPlot[i]);
+      ex = UnConvertFromEN(m_xPlot[i]);
+    } else if ( xaxis == Axis::EoverP) {
+      ex = UnConvertFromEP(m_xPlot[i]);
     }
     double dl = 0., dt = 0.;
     if (charge == Charge::Electron) {
@@ -588,7 +661,7 @@ void ViewMedium::PlotDiffusion(const Axis xaxis, const Charge charge,
   std::array<std::vector<double>, 3> grid;
   int ie = 0, ib = 0, ia = 0;
   if (GetGrid(grid, ie, ib, ia, xaxis)) {
-    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN) ? grid[0].size() : 
+    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN || xaxis == Axis::EoverP) ? grid[0].size() : 
                          xaxis == Axis::B ? grid[1].size() : grid[2].size();
     for (size_t j = 0; j < nPoints; ++j) {
       double x = 0., y = 0.;
@@ -603,7 +676,10 @@ void ViewMedium::PlotDiffusion(const Axis xaxis, const Charge charge,
         x = grid[2][j];
       } else if (xaxis == Axis::EoverN) {
 	ie = j;
-        x = ConvertToTd(m_medium->UnScaleElectricField(grid[0][j]));
+        x = ConvertToEN(m_medium->UnScaleElectricField(grid[0][j]));
+      } else if (xaxis == Axis::EoverP) {
+	ie = j;
+        x = ConvertToEP(m_medium->UnScaleElectricField(grid[0][j]));
       }
       if (charge == Charge::Electron) {
         if (m_medium->GetElectronTransverseDiffusion(ie, ib, ia, y)) {
@@ -757,7 +833,9 @@ void ViewMedium::PlotVelocity(const Axis xaxis, const Charge charge,
       ctheta = cos(m_xPlot[i]);
       stheta = sin(m_xPlot[i]);
     } else if (xaxis == Axis::EoverN) {
-      e0 = ConvertToVcm(m_xPlot[i]);
+      e0 = UnConvertFromEN(m_xPlot[i]);
+    } else if (xaxis == Axis::EoverP) {
+      e0 = UnConvertFromEP(m_xPlot[i]);  // need to decide on definitions
     }
     double vx = 0., vy = 0., vz = 0.;
     if (charge == Charge::Electron) {
@@ -787,7 +865,7 @@ void ViewMedium::PlotVelocity(const Axis xaxis, const Charge charge,
   std::array<std::vector<double>, 3> grid;
   int ie = 0, ib = 0, ia = 0;
   if (GetGrid(grid, ie, ib, ia, xaxis)) {
-    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN) ? grid[0].size() : 
+    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN || xaxis == Axis::EoverP) ? grid[0].size() : 
                          xaxis == Axis::B ? grid[1].size() : grid[2].size();
     for (size_t j = 0; j < nPoints; ++j) {
       double x = 0., y = 0.;
@@ -802,7 +880,10 @@ void ViewMedium::PlotVelocity(const Axis xaxis, const Charge charge,
         x = grid[2][j];
       } else if (xaxis == Axis::EoverN) {
         ie = j;
-        x = ConvertToTd(m_medium->UnScaleElectricField(grid[0][j]));
+        x = ConvertToEN(m_medium->UnScaleElectricField(grid[0][j]));
+      } else if (xaxis == Axis::EoverP) {
+        ie = j;
+        x = ConvertToEP(m_medium->UnScaleElectricField(grid[0][j]));
       }
       if (charge == Charge::Electron) {
         if (m_medium->GetElectronVelocityE(ie, ib, ia, y)) {
@@ -888,7 +969,7 @@ void ViewMedium::PlotVelocityFluxBulk(const Axis xaxis, const Charge charge,
             ctheta = cos(m_xPlot[i]);
             stheta = sin(m_xPlot[i]);
 	} else if (xaxis == Axis::EoverN) {
-	    e0 = ConvertToVcm(m_xPlot[i]);
+	    e0 = UnConvertFromEN(m_xPlot[i]);
         }
         double wv = 0., wr = 0.;
         if (charge == Charge::Electron) {
@@ -905,7 +986,7 @@ void ViewMedium::PlotVelocityFluxBulk(const Axis xaxis, const Charge charge,
     std::array<std::vector<double>, 3> grid;
     int ie = 0, ib = 0, ia = 0;
     if (GetGrid(grid, ie, ib, ia, xaxis)) {
-        const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN) ? grid[0].size() :
+      const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN || xaxis == Axis::EoverP) ? grid[0].size() :
                              xaxis == Axis::B ? grid[1].size() : grid[2].size();
         for (size_t j = 0; j < nPoints; ++j) {
             double x = 0., y = 0.;
@@ -920,7 +1001,10 @@ void ViewMedium::PlotVelocityFluxBulk(const Axis xaxis, const Charge charge,
                 x = grid[2][j];
 	    } else if (xaxis == Axis::EoverN) {
 	        ie = j;
-	        x = ConvertToTd(m_medium->UnScaleElectricField(grid[0][j]));
+	        x = ConvertToEN(m_medium->UnScaleElectricField(grid[0][j]));
+	    } else if (xaxis == Axis::EoverP) {
+	        ie = j;
+	        x = ConvertToEP(m_medium->UnScaleElectricField(grid[0][j]));
             }
             if (charge == Charge::Electron) {
                 if (m_medium->GetElectronFluxVelocity(ie, ib, ia, y)) {
@@ -987,7 +1071,9 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
       bx = m_bfield * cos(m_xPlot[i]);
       by = m_bfield * sin(m_xPlot[i]);
     } else if (xaxis == Axis::EoverN) {
-      ex = ConvertToVcm(m_xPlot[i]);
+      ex = UnConvertFromEN(m_xPlot[i]);
+    } else if (xaxis == Axis::EoverP) {
+      ex = UnConvertFromEP(m_xPlot[i]);
     }
     double y = 0.;
     if (charge == Charge::Electron) {
@@ -996,6 +1082,12 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
       } else if (par == Parameter::Attachment) {
           if (!m_medium->ElectronAttachment(ex, 0, 0, bx, by, 0, y)) continue;
           y = std::abs(y);
+      } else if (par == Parameter::AlphaN) {
+          if (!m_medium->ElectronTownsend(ex, 0, 0, bx, by, 0, y)) continue;
+          y = std::abs(y) / m_medium->GetNumberDensity() * 1E18;
+      } else if (par == Parameter::AlphaP) {
+          if (!m_medium->ElectronTownsend(ex, 0, 0, bx, by, 0, y)) continue;
+          y = std::abs(y) / m_medium->GetPressure();
       } else if (par == Parameter::RIonTof) {
           if (!m_medium->ElectronTOFIonisation(ex, 0, 0, bx, by, 0, y)) continue;
           y = std::abs(y);
@@ -1020,7 +1112,7 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
   std::array<std::vector<double>, 3> grid;
   int ie = 0, ib = 0, ia = 0;
   if (GetGrid(grid, ie, ib, ia, xaxis)) {
-    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN) ? grid[0].size() : 
+    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN || xaxis == Axis::EoverP) ? grid[0].size() : 
                          xaxis == Axis::B ? grid[1].size() : grid[2].size();
     for (size_t j = 0; j < nPoints; ++j) {
       double x = 0., y = 0.;
@@ -1035,7 +1127,10 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
         x = grid[2][j];
       } else if (xaxis == Axis::EoverN) {
         ie = j;
-        x = ConvertToTd(m_medium->UnScaleElectricField(grid[0][j]));
+        x = ConvertToEN(m_medium->UnScaleElectricField(grid[0][j]));
+      } else if (xaxis == Axis::EoverP) {
+        ie = j;
+        x = ConvertToEP(m_medium->UnScaleElectricField(grid[0][j]));
       } 
       if (charge == Charge::Electron) {
         if (par == Parameter::Townsend) {
@@ -1048,6 +1143,16 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
                 xgr.push_back(x);
                 ygr.push_back(m_medium->ScaleAttachment(exp(y)));
             }
+	} else if (par == Parameter::AlphaN) {
+          if (m_medium->GetElectronTownsend(ie, ib, ia, y)) {
+            xgr.push_back(x);
+            ygr.push_back(m_medium->ScaleTownsend(exp(y))/m_medium->GetNumberDensity()*1E18);
+          }
+	} else if (par == Parameter::AlphaP) {
+          if (m_medium->GetElectronTownsend(ie, ib, ia, y)) {
+            xgr.push_back(x);
+            ygr.push_back(m_medium->ScaleTownsend(exp(y))/m_medium->GetPressure());
+          }
         } else if (par == Parameter::RIonTof) {
             if (m_medium->GetElectronTOFIonisation(ie, ib, ia, y)) {
                 xgr.push_back(x);
@@ -1118,7 +1223,9 @@ void ViewMedium::PlotLorentzAngle(const Axis xaxis, const Charge charge,
       bx = m_bfield * cos(m_xPlot[i]);
       by = m_bfield * sin(m_xPlot[i]);
     } else if (xaxis == Axis::EoverN) {
-      ex = ConvertToVcm(m_xPlot[i]);
+      ex = UnConvertFromEN(m_xPlot[i]);
+    } else if (xaxis == Axis::EoverP) {
+      ex = UnConvertFromEP(m_xPlot[i]);
     }
     double y = 0.;
     if (!m_medium->ElectronLorentzAngle(ex, 0, 0, bx, by, 0, y)) continue;
@@ -1131,7 +1238,7 @@ void ViewMedium::PlotLorentzAngle(const Axis xaxis, const Charge charge,
   std::array<std::vector<double>, 3> grid;
   int ie = 0, ib = 0, ia = 0;
   if (GetGrid(grid, ie, ib, ia, xaxis)) {
-    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN) ? grid[0].size() : 
+    const auto nPoints = (xaxis == Axis::E || xaxis == Axis::EoverN || xaxis == Axis::EoverP) ? grid[0].size() : 
                          xaxis == Axis::B ? grid[1].size() : grid[2].size();
     for (size_t j = 0; j < nPoints; ++j) {
       double x = 0., y = 0.;
@@ -1146,7 +1253,10 @@ void ViewMedium::PlotLorentzAngle(const Axis xaxis, const Charge charge,
         x = grid[2][j];
       } else if (xaxis == Axis::EoverN) {
         ie = j;
-        x = ConvertToTd(m_medium->UnScaleElectricField(grid[0][j]));
+        x = ConvertToEN(m_medium->UnScaleElectricField(grid[0][j]));
+      } else if (xaxis == Axis::EoverP) {
+        ie = j;
+        x = ConvertToEP(m_medium->UnScaleElectricField(grid[0][j]));	
       }
       if (m_medium->GetElectronLorentzAngle(ie, ib, ia, y)) {
         xgr.push_back(x);
@@ -1174,6 +1284,8 @@ ViewMedium::Axis ViewMedium::GetAxis(const char xaxis) const {
     return Axis::Angle;
   } else if (std::toupper(xaxis) == 'R') {
     return Axis::EoverN;
+  } else if (std::toupper(xaxis) == 'P') {
+    return Axis::EoverP;
   }
   return Axis::None; 
 }
@@ -1189,7 +1301,7 @@ bool ViewMedium::GetGrid(std::array<std::vector<double>, 3>& grid,
   ie = FindIndex(grid[0], m_efield, eps);
   ib = FindIndex(grid[1], m_bfield, eps);
   ia = FindIndex(grid[2], m_angle, eps);
-  if (xaxis == Axis::E || xaxis == Axis::EoverN) {
+  if (xaxis == Axis::E || xaxis == Axis::EoverN || xaxis == Axis::EoverP) {
     if (ib < 0 || ia < 0) return false;
   } else if (xaxis == Axis::B) {
     if (ie < 0 || ia < 0) return false;
@@ -1201,12 +1313,20 @@ bool ViewMedium::GetGrid(std::array<std::vector<double>, 3>& grid,
   return true;
 }
 
-  double ViewMedium::ConvertToTd(const double e0Vcm) {
+  double ViewMedium::ConvertToEN(const double e0Vcm) {
     return e0Vcm / m_medium->GetNumberDensity() * 1E17;
   }
 
-  double ViewMedium::ConvertToVcm(const double e0Td) {
+  double ViewMedium::UnConvertFromEN(const double e0Td) {
     return e0Td * m_medium->GetNumberDensity() / 1E17;
+  }
+
+  double ViewMedium::ConvertToEP(const double e0Vcm) {
+    return e0Vcm / m_medium->GetPressure();
+  }
+
+  double ViewMedium::UnConvertFromEP(const double e0VcmTorr) {
+    return e0VcmTorr * m_medium->GetPressure();
   }
   
 }

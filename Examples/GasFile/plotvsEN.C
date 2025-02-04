@@ -27,6 +27,7 @@ int main(int argc, char * argv[]) {
   gas_1013mbar.LoadGasFile("ic4h10_1013mbar_100-100kVcm.gas");
   double density_0007mbar = gas_0007mbar.GetNumberDensity();
   double density_1013mbar = gas_1013mbar.GetNumberDensity();
+  
   std::cout<<"Loading GasFile 1 :: Gas Number Density = "<<density_0007mbar<<" cm-3"<<std::endl;
   std::cout<<"Loading GasFile 2 :: Gas Number Density = "<<density_1013mbar<<" cm-3"<<std::endl;
 
@@ -50,7 +51,8 @@ int main(int argc, char * argv[]) {
   size_t i = 0; // index for electric field
   size_t j = 0; // index for magnetic field
   size_t k = 0; // index for angle E^B
-  
+
+  // Markers for the grid points
   for (i = 0; i < nE_0007mbar; ++i) {
     double ve = 0.;
     gas_0007mbar.GetElectronVelocityE(i, j, k, ve);
@@ -191,13 +193,22 @@ int main(int argc, char * argv[]) {
   for (i = 0; i < nE_1013mbar; ++i) {
     en_1013mbar_Td.push_back( efields_1013mbar[i] / density_1013mbar * 1E17);
   }
+  // plot also Townsend alpha/N
+  std::vector<double> an_0007mbar, an_1013mbar;
+  for (i = 0; i < nE_0007mbar; ++i) {
+    an_0007mbar.push_back( al_0007mbar[i] / density_0007mbar );
+  }
+  for (i = 0; i < nE_1013mbar; ++i) {
+    an_1013mbar.push_back( al_1013mbar[i] / density_1013mbar );
+  }
 
+  
   // make TGraphs vs Reduced Electric Field
-  TGraph * gr_ve_0007mbar_Td = new TGraph(nE_0007mbar,    &en_0007mbar_Td[0],    &ve_0007mbar[0]);
+  TGraph * gr_ve_0007mbar_Td = new TGraph(nE_0007mbar, &en_0007mbar_Td[0], &ve_0007mbar[0]);
   TGraph * gr_ve_1013mbar_Td = new TGraph(nE_1013mbar, &en_1013mbar_Td[0], &ve_1013mbar[0]);
-  TGraph * gr_al_0007mbar_Td = new TGraph(nE_0007mbar,    &en_0007mbar_Td[0],    &al_0007mbar[0]);
-  TGraph * gr_al_1013mbar_Td = new TGraph(nE_1013mbar, &en_1013mbar_Td[0], &al_1013mbar[0]);
-  TGraph * gr_ee_0007mbar_Td = new TGraph(nE_0007mbar,    &en_0007mbar_Td[0],    &ee_0007mbar[0]);
+  TGraph * gr_al_0007mbar_Td = new TGraph(nE_0007mbar, &en_0007mbar_Td[0], &an_0007mbar[0]);
+  TGraph * gr_al_1013mbar_Td = new TGraph(nE_1013mbar, &en_1013mbar_Td[0], &an_1013mbar[0]);
+  TGraph * gr_ee_0007mbar_Td = new TGraph(nE_0007mbar, &en_0007mbar_Td[0], &ee_0007mbar[0]);
   TGraph * gr_ee_1013mbar_Td = new TGraph(nE_1013mbar, &en_1013mbar_Td[0], &ee_1013mbar[0]);
 
   gr_ve_0007mbar_Td->SetMarkerStyle(24); // open circle
@@ -240,7 +251,7 @@ int main(int argc, char * argv[]) {
   c5->Update();
   gr_ve_0007mbar_Td->Draw("PC"); // drop "A" drawoption if one uses DrawFrame
   gr_ve_1013mbar_Td->Draw("PCSame");
-  h5->GetXaxis()->SetTitle("E/N (Td)");
+  h5->GetXaxis()->SetTitle("E/#it{N} (Td)");
   h5->GetYaxis()->SetTitle("Electron Drift Velocity (cm/us)");
   l2->Draw();
   TGaxis *axis05 = new TGaxis(0.1,1000,3e4,1000,0.1*density_1013mbar/1E17,3e4*density_1013mbar/1E17,510,"GL+=");
@@ -260,11 +271,11 @@ int main(int argc, char * argv[]) {
   c6->SetLogy();
   c6->SetLogx();
   c6->cd();
-  auto * h6 = c6->DrawFrame(0.1, 1e-9, 3e4, 2000);
+  auto * h6 = c6->DrawFrame(0.1, 1e-24, 3e4, 5e-15);
   gr_al_0007mbar_Td->Draw("PC"); // drop "A" drawoption if one uses DrawFrame
   gr_al_1013mbar_Td->Draw("PCSame");
-  h6->GetXaxis()->SetTitle("E/N (Td)");
-  h6->GetYaxis()->SetTitle("Townsend Coefficient (cm^{-1})");
+  h6->GetXaxis()->SetTitle("E/#it{N} (Td)");
+  h6->GetYaxis()->SetTitle("#it{#alpha}/#it{N} (cm^{2})");
   l3->Draw();
   TGaxis *axis06 = new TGaxis(0.1,2000,3e4,2000,0.1*density_1013mbar/1E17,3e4*density_1013mbar/1E17,510,"GL+=");
   axis06->SetTextFont(gStyle->GetTextFont());
@@ -286,7 +297,7 @@ int main(int argc, char * argv[]) {
   auto * h7 = c7->DrawFrame(0.1, 0.01, 3e4, 1000);
   gr_ee_0007mbar_Td->Draw("PC"); // drop "A" drawoption if one uses DrawFrame
   gr_ee_1013mbar_Td->Draw("PCSame");
-  h7->GetXaxis()->SetTitle("E/N (Td)");
+  h7->GetXaxis()->SetTitle("E/#it{N} (Td)");
   h7->GetYaxis()->SetTitle("Electron Energy (eV)");
   l2->Draw();
   TGaxis *axis07 = new TGaxis(0.1,1000,3e4,1000,0.1*density_1013mbar/1E17,3e4*density_1013mbar/1E17,510,"GL+=");
@@ -301,22 +312,42 @@ int main(int argc, char * argv[]) {
 
 
   
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  // PART 2 :: Use the built-in option to plot vs Reduced Efield (E/N)
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  ViewMedium view(&gas_1013mbar);
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // PART 2 :: Use the built-in option to plot vs Reduced Efield (E/N and E/P)
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ViewMedium view(&gas_0007mbar);
 
+  // Plot Drift Velocity vs E/N
   TCanvas cV("cV", "", 600, 600);
   view.SetCanvas(&cV);
   view.PlotElectronVelocity('r');
 
+  // Plot Diffusion vs E/N
   TCanvas cD("cD", "", 600, 600);
   view.SetCanvas(&cD);
   view.PlotElectronDiffusion('r');
 
+  // Plot Alpha vs E/N
   TCanvas cT("cT", "", 600, 600);
   view.SetCanvas(&cT);
   view.PlotElectronTownsend('r');
 
+  // Plot Alpha vs E/P
+  TCanvas cP("cP", "", 600, 600);
+  view.SetCanvas(&cP);
+  view.PlotElectronTownsend('p');
+
+  // Plot Alpha/N vs E/N
+  TCanvas cAN("cAN", "", 600, 600);
+  view.SetCanvas(&cAN);
+  view.PlotElectronReducedTownsendN('r');
+
+  // Plot Alpha/p vs E/p
+  TCanvas cAP("cAP", "", 600, 600);
+  view.SetCanvas(&cAP);
+  view.PlotElectronReducedTownsendP('p');
+
+
+  
   app.Run();
 }
