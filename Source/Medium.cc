@@ -1501,7 +1501,7 @@ double Medium::Interpolate1D(
       result = ytab[0];
     }
     // TO DO: logarithmic extrapolation
-    // TO DO: extrapolation vs alpha/p = A*exp(B*E/p)
+    // TO DO: extrapolation vs alpha/p = A*exp(B*p/E)
   } else if (x > xtab[nt - 1]) {
     // Extrapolation towards large fields
     if (xtab[nt - 1] <= xtab[nt - 2]) {
@@ -1541,7 +1541,7 @@ double Medium::Interpolate1D(
       result = ytab[nt - 1];
     }
     // TO DO: logarithmic extrapolation
-    // TO DO: extrapolation vs alpha/p = A*exp(B*E/p)
+    // TO DO: extrapolation vs alpha/p = A*exp(B*p/E)
   } else {
     // Intermediate points, spline interpolation (not implemented).
     // Intermediate points, Newtonian interpolation
