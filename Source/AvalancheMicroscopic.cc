@@ -933,17 +933,126 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
       m_userHandleStep(x, y, z, t, en, kx, ky, kz, hole);
     }
 
+    // Variables for the RKN methode
+    double r0[3], vr[3];
+    std::vector<std::vector<double>> rknIntPoints = {};
+    int nsteps = 2;
+    
     // Energy after the step.
     double en1 = en;
     // Determine the timestep.
     double dt = 0.;
     bool isNullCollision = true;
+    tLim *= m_nullCollScale;
     while (isNullCollision) {
       // Sample the flight time.
       const double r = RndmUniformPos();
       dt += -log(r) * tLim;
       // Calculate the energy after the proposed step.
-      en1 = std::max(en + (a1 + a2 * dt) * dt, Small);
+      if (m_rknSteps) {
+        if (m_debug) {
+          std::cout << "\n=============================\n\n"
+                    << "RKN: (x,y,z) = (" << x << ", " << y << ", " << z << ")\n";
+        }
+      
+        double h = (double) (dt/nsteps);
+        nsteps = 0;
+        double timeholder = 0.;
+        bool loopholder = true;
+        double ex0 = ex, ey0 = ey, ez0 = ez;
+        r0[0] = x;
+        r0[1] = y;
+        r0[2] = z;
+        vr[0] = vx;
+        vr[1] = vy;
+        vr[2] = vz;
+        const double c3 = -2 * c2;
+        std::array<double, 3> k1 = {c3 * ex0, c3 * ey0, c3 * ez0};
+        rknIntPoints.clear();
+        while (loopholder) {
+          // Check if it is the last step of the time interval dt
+          if (0 > dt - timeholder - h) {
+            loopholder = false;
+            h = dt - timeholder;
+            if (m_debug) std::cout  << "\n";
+          }
+          
+          timeholder += h;
+          if (m_debug) std::cout << "RKN:: Time keeper = " << timeholder
+            << " of the " << dt << " ns.\n";
+          const double h2 = h * h;
+          Medium* med0 = nullptr;
+          int statusholder0 = 0;
+          m_sensor->ElectricField(r0[0] + h * vr[0] * 0.5 + 0.125 * h2 * k1[0],
+                                  r0[1] + h * vr[1] * 0.5 + 0.125 * h2 * k1[1],
+                                  r0[2] + h * vr[2] * 0.5 + 0.125 * h2 * k1[2],
+                                  ex0, ey0, ez0, med0, statusholder0);
+          
+          std::array<double, 3> k2 = {c3 * ex0, c3 * ey0, c3 * ez0}; // k3 = k2
+          m_sensor->ElectricField(r0[0] + h * vr[0] + h2 * k2[0] * 0.5,
+                                  r0[1] + h * vr[1] + h2 * k2[1] * 0.5,
+                                  r0[2] + h * vr[2] + h2 * k2[2] * 0.5,
+                                  ex0, ey0, ez0, med0, statusholder0);
+          std::array<double, 3> k4 = {c3 * ex0, c3 * ey0, c3 * ez0};
+          
+          // Check error tolerance
+          const double steperror = h2 *
+          (sqrt(k1[0] * k1[0] + k1[1] * k1[1] + k1[2] * k1[2]) -
+           sqrt(k2[0] * k2[0] + k2[1] * k2[1] + k2[2] * k2[2]) -
+           sqrt(k2[0] * k2[0] + k2[1] * k2[1] + k2[2] * k2[2]) +
+           sqrt(k4[0] * k4[0] + k4[1] * k4[1] + k4[2] * k4[2]));
+          
+          if (m_debug) std::cout << "RKN:: steperror = "<< steperror << ".\n";
+          
+          if (std::abs(steperror) < 4 * m_rknsteperrortol) {
+            for (int j = 0; j <= 2; j++) {
+              r0[j] = r0[j] + h * vr[j] +
+              (1.0 / 6.0) * (k1[j] + k2[j] + k2[j]) * h2;
+              vr[j] = vr[j] + (1.0 / 6.0) *
+              (k1[j] + 2 * k2[j] + 2 * k2[j] + k4[j]) *
+              h;
+            }
+            
+            const double hholder = h;
+            h *= pow((m_rknsteperrortol / std::abs(steperror)), 0.25);
+            
+            if ((0.25 * hholder <= h && 4 * hholder >= h) ||
+                steperror < m_rknsteperrortol * 1.e-10 || h < m_rknMinh) {
+              h = hholder;
+            }
+            
+            // Final point of current stage is first point of the next
+            k1.swap(k4);
+            
+            if (statusholder0 != 0) {
+              if (m_debug) std::cout << "RKN:: Outside drift medium! Breaking loop.\n";
+              dt = timeholder + h;
+              break;
+            }
+            
+            // Plot intermediate points
+            if (m_viewer) rknIntPoints.push_back({r0[0],r0[1],r0[2]});
+            nsteps++;
+            
+          } else {
+            timeholder -= h;
+            
+            // Adjust step size
+            h *= pow((m_rknsteperrortol / std::abs(steperror)), 0.25);
+          }
+          if (m_debug) std::cout << "RKN:: h = " << h << "\n";
+        }
+        
+        en1 = std::max(
+                       (vr[0] * vr[0] + vr[1] * vr[1] + vr[2] * vr[2]) / (c1 * c1),
+                       Small);
+      } else {
+        en1 = std::max(en + (a1 + a2 * dt) * dt, Small);
+      }
+      
+      if (m_debug) std::cout << "RKN:: en1 = " << en1 << ","
+        << std::max(en + (a1 + a2 * dt) * dt, Small) << " eV.\n";
+
       // Get the real collision rate at the updated energy.
       const double fReal = medium->GetElectronCollisionRate(en1, band);
       if (fReal <= 0.) {
@@ -972,21 +1081,43 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
     ++nColl;
     ++nCollPlot;
 
-    // Calculate the direction at the instant before the collision.
-    const double b1 = sqrt(en / en1);
-    const double b2 = 0.5 * c1 * dt / sqrt(en1);
-    double kx1 = kx * b1 + ex * b2;
-    double ky1 = ky * b1 + ey * b2;
-    double kz1 = kz * b1 + ez * b2;
-
-    // Calculate the step in coordinate space.
-    const double b3 = dt * dt * c2;
-    double x1 = x + vx * dt + ex * b3;
-    double y1 = y + vy * dt + ey * b3;
-    double z1 = z + vz * dt + ez * b3;
+    double x1, y1, z1;
+    double kx1, ky1, kz1;
+    if (m_rknSteps) {
+      // Update the direction.
+      const double a1 = 1/ (c1 * sqrt(en1));
+      
+      kx1 = vr[0] * a1;
+      ky1 = vr[1] * a1;
+      kz1 = vr[2] * a1;
+      
+      vx = vr[0];
+      vy = vr[1];
+      vz = vr[2];
+      
+      // Update the step in coordinate space.
+      x1 = r0[0];
+      y1 = r0[1];
+      z1 = r0[2];
+    } else {
+      // Calculate the direction at the instant before the collision.
+      const double b1 = sqrt(en / en1);
+      const double b2 = 0.5 * c1 * dt / sqrt(en1);
+      kx1 = kx * b1 + ex * b2;
+      ky1 = ky * b1 + ey * b2;
+      kz1 = kz * b1 + ez * b2;
+      
+      // Calculate the step in coordinate space.
+      const double b3 = dt * dt * c2;
+      x1 = x + vx * dt + ex * b3;
+      y1 = y + vy * dt + ey * b3;
+      z1 = z + vz * dt + ez * b3;
+    }
     double t1 = t + dt;
+    
     // Get the electric field and medium at the proposed new position.
     m_sensor->ElectricField(x1, y1, z1, ex, ey, ez, medium, status);
+    
     if (!hole) {
       ex = -ex;
       ey = -ey;
@@ -1177,7 +1308,16 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
                   << "::TransportElectron: Unknown collision type.\n";
         break;
     }
-    if (m_viewer) PlotCollision(cstype, did, x, y, z, nCollPlot);
+    if (m_viewer) {
+      if(m_rknSteps) {
+        for(int ip = 0; ip < rknIntPoints.size(); ip++)
+          PlotCollision(cstype, did, rknIntPoints[ip][0],
+                        rknIntPoints[ip][1], rknIntPoints[ip][2],
+                        nCollPlot);
+      } else {
+        PlotCollision(cstype, did, x, y, z, nCollPlot);
+      }
+    }
 
     // Update the direction vector.
     kx = kx1;
