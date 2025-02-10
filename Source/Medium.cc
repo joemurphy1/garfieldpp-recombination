@@ -1492,7 +1492,7 @@ double Medium::Interpolate1D(
 	result = std::exp(std::min(50., extr3 + extr4 * x));
       }
       else { // log values in gastable for alpha, eta
-	const double extr4 = log(std::exp(ytab[1] - ytab[0])) / (xtab[1] - xtab[0]);
+	const double extr4 = (ytab[1] - ytab[0]) / (xtab[1] - xtab[0]);
 	const double extr3 = ytab[0] - extr4 * xtab[0];
 	result = std::min(50., extr3 + extr4 * x);
       }
@@ -1531,7 +1531,7 @@ double Medium::Interpolate1D(
 	result = exp(std::min(50., extr1 + extr2 * x));
       }
       else { // log values in gastable for alpha, eta
-	const double extr2 = log(std::exp(ytab[nt - 1] - ytab[nt - 2])) /
+	const double extr2 = (ytab[nt - 1] - ytab[nt - 2]) /
 	                     (xtab[nt - 1] - xtab[nt - 2]);
 	const double extr1 = ytab[nt - 1] - extr2 * xtab[nt - 1];
 	result = std::min(50., extr1 + extr2 * x);
