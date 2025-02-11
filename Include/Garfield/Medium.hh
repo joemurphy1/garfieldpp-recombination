@@ -809,13 +809,13 @@ class __MEDIUMCLASS__ {
                    const std::vector<std::vector<std::vector<double> > >& table,
                    double& y, const unsigned int intp,
                    const std::pair<unsigned int, unsigned int>& extr,
-		   const bool logval=false) const;
+		               const bool logval = false) const;
 
   double Interpolate1D(const double e, const std::vector<double>& table,
                        const std::vector<double>& fields,
                        const unsigned int intpMeth,
                        const std::pair<unsigned int, unsigned int>& extr,
-		       const bool logval=false) const;
+		                   const bool logval = false) const;
 
   bool SetEntry(const size_t i, const size_t j, const size_t k, 
                 const std::string& fcn, 
