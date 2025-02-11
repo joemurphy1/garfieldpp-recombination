@@ -933,7 +933,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
       m_userHandleStep(x, y, z, t, en, kx, ky, kz, hole);
     }
 
-    // Variables for the RKN methode
+    // Variables for the RKN method.
     double r0[3], vr[3];
     std::vector<std::vector<double>> rknIntPoints = {};
     int nsteps = 2;
@@ -955,7 +955,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
                     << "RKN: (x,y,z) = (" << x << ", " << y << ", " << z << ")\n";
         }
       
-        double h = (double) (dt/nsteps);
+        double h = dt / nsteps;
         nsteps = 0;
         double timeholder = 0.;
         bool loopholder = true;
@@ -978,8 +978,10 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
           }
           
           timeholder += h;
-          if (m_debug) std::cout << "RKN:: Time keeper = " << timeholder
-            << " of the " << dt << " ns.\n";
+          if (m_debug) {
+            std::cout << "RKN: Time keeper = " << timeholder
+                      << " of the " << dt << " ns.\n";
+          }
           const double h2 = h * h;
           Medium* med0 = nullptr;
           int statusholder0 = 0;
@@ -1025,7 +1027,9 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
             k1.swap(k4);
             
             if (statusholder0 != 0) {
-              if (m_debug) std::cout << "RKN:: Outside drift medium! Breaking loop.\n";
+              if (m_debug) {
+                std::cout << "RKN: Outside drift medium! Breaking loop.\n";
+              }
               dt = timeholder + h;
               break;
             }
@@ -1036,11 +1040,10 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
             
           } else {
             timeholder -= h;
-            
             // Adjust step size
             h *= pow((m_rknsteperrortol / std::abs(steperror)), 0.25);
           }
-          if (m_debug) std::cout << "RKN:: h = " << h << "\n";
+          if (m_debug) std::cout << "RKN: h = " << h << "\n";
         }
         
         en1 = std::max(
@@ -1050,9 +1053,10 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
         en1 = std::max(en + (a1 + a2 * dt) * dt, Small);
       }
       
-      if (m_debug) std::cout << "RKN:: en1 = " << en1 << ","
-        << std::max(en + (a1 + a2 * dt) * dt, Small) << " eV.\n";
-
+      if (m_debug) {
+        std::cout << "RKN: en1 = " << en1 << ","
+                  << std::max(en + (a1 + a2 * dt) * dt, Small) << " eV.\n";
+      }
       // Get the real collision rate at the updated energy.
       const double fReal = medium->GetElectronCollisionRate(en1, band);
       if (fReal <= 0.) {
