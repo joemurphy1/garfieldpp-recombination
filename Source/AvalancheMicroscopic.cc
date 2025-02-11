@@ -998,21 +998,18 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
           std::array<double, 3> k4 = {c3 * ex0, c3 * ey0, c3 * ez0};
           
           // Check error tolerance
-          const double steperror = h2 *
-          (sqrt(k1[0] * k1[0] + k1[1] * k1[1] + k1[2] * k1[2]) -
-           sqrt(k2[0] * k2[0] + k2[1] * k2[1] + k2[2] * k2[2]) -
-           sqrt(k2[0] * k2[0] + k2[1] * k2[1] + k2[2] * k2[2]) +
-           sqrt(k4[0] * k4[0] + k4[1] * k4[1] + k4[2] * k4[2]));
+          const double steperror = h2 * (
+            sqrt(k1[0] * k1[0] + k1[1] * k1[1] + k1[2] * k1[2]) -
+            2 * sqrt(k2[0] * k2[0] + k2[1] * k2[1] + k2[2] * k2[2]) + 
+            sqrt(k4[0] * k4[0] + k4[1] * k4[1] + k4[2] * k4[2]));
           
-          if (m_debug) std::cout << "RKN:: steperror = "<< steperror << ".\n";
+          if (m_debug) std::cout << "RKN: steperror = " << steperror << ".\n";
           
           if (std::abs(steperror) < 4 * m_rknsteperrortol) {
             for (int j = 0; j <= 2; j++) {
               r0[j] = r0[j] + h * vr[j] +
-              (1.0 / 6.0) * (k1[j] + k2[j] + k2[j]) * h2;
-              vr[j] = vr[j] + (1.0 / 6.0) *
-              (k1[j] + 2 * k2[j] + 2 * k2[j] + k4[j]) *
-              h;
+                      (k1[j] + k2[j] + k2[j]) * h2 / 6.;
+              vr[j] = vr[j] + (k1[j] + 4 * k2[j] + k4[j]) * h / 6.;
             }
             
             const double hholder = h;
