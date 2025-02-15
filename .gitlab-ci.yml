@@ -51,7 +51,7 @@ build-ubuntu23:
 
 build-ubuntu22:
   stage: build
-  image: rootproject/root:6.28.10-ubuntu22.04
+  image: rootproject/root:6.30.04-ubuntu22.04
   script:
     - rm -rf build
     - mkdir build
