@@ -1476,32 +1476,31 @@ double Medium::Interpolate1D(
       result = ytab[0];
     } else if (extr.first == 1) {
       // Linear extrapolation
-      if(!logval) { // linear values in gastable
-	const double extr4 = (ytab[1] - ytab[0]) / (xtab[1] - xtab[0]);
-	result = ytab[0] + extr4 * (x - xtab[0]);
-      }
-      else { // log values in gastable for alpha, eta
-	const double extr4 = (std::exp(ytab[1]) - std::exp(ytab[0])) / (xtab[1] - xtab[0]);
-	result = log(std::exp(ytab[0]) + extr4 * (x - xtab[0]));
+      if (!logval) { 
+        const double extr4 = (ytab[1] - ytab[0]) / (xtab[1] - xtab[0]);
+        result = ytab[0] + extr4 * (x - xtab[0]);
+      } else { 
+        // Log values in gas table for alpha, eta.
+        const double extr4 = (std::exp(ytab[1]) - std::exp(ytab[0])) / 
+                             (xtab[1] - xtab[0]);
+        result = log(std::exp(ytab[0]) + extr4 * (x - xtab[0]));
       }
     } else if (extr.first == 2) {
       // Exponential extrapolation
-      if(!logval) { // linear values in gastable
-	const double extr4 = log(ytab[1] / ytab[0]) / (xtab[1] - xtab[0]);
-	const double extr3 = log(ytab[0]) - extr4 * xtab[0];
-	result = std::exp(std::min(50., extr3 + extr4 * x));
-      }
-      else { // log values in gastable for alpha, eta
-	const double extr4 = (ytab[1] - ytab[0]) / (xtab[1] - xtab[0]);
-	const double extr3 = ytab[0] - extr4 * xtab[0];
-	result = std::min(50., extr3 + extr4 * x);
+      if (!logval) {
+        const double extr4 = log(ytab[1] / ytab[0]) / (xtab[1] - xtab[0]);
+        const double extr3 = log(ytab[0]) - extr4 * xtab[0];
+        result = std::exp(std::min(50., extr3 + extr4 * x));
+      } else { 
+        // Log values in gastable for alpha, eta.
+        const double extr4 = (ytab[1] - ytab[0]) / (xtab[1] - xtab[0]);
+        const double extr3 = ytab[0] - extr4 * xtab[0];
+        result = std::min(50., extr3 + extr4 * x);
       }
     } else {
       // Constant extrapolation
       result = ytab[0];
     }
-    // TO DO: logarithmic extrapolation
-    // TO DO: extrapolation vs alpha/p = A*exp(B*p/E)
   } else if (x > xtab[nt - 1]) {
     // Extrapolation towards large fields
     if (xtab[nt - 1] <= xtab[nt - 2]) {
@@ -1512,29 +1511,28 @@ double Medium::Interpolate1D(
       result = ytab[nt - 1];
     } else if (extr.second == 1) {
       // Linear extrapolation
-      if(!logval) {
-	const double extr2 = (ytab[nt - 1] - ytab[nt - 2]) /
-	                     (xtab[nt - 1] - xtab[nt - 2]);
-	result = ytab[nt - 1] + extr2 * (x - xtab[nt - 1]);
-      }
-      else { // log values in gastable for alpha, eta
-	const double extr2 = (std::exp(ytab[nt - 1]) - std::exp(ytab[nt - 2])) /
-	                     (xtab[nt - 1] - xtab[nt - 2]);
-	result = log(std::exp(ytab[nt - 1]) + extr2 * (x - xtab[nt - 1]));
+      if (!logval) {
+        const double extr2 = (ytab[nt - 1] - ytab[nt - 2]) /
+                             (xtab[nt - 1] - xtab[nt - 2]);
+        result = ytab[nt - 1] + extr2 * (x - xtab[nt - 1]);
+      } else { 
+        // Log values in gas table for alpha, eta.
+        const double extr2 = (std::exp(ytab[nt - 1]) - std::exp(ytab[nt - 2])) /
+                             (xtab[nt - 1] - xtab[nt - 2]);
+        result = log(std::exp(ytab[nt - 1]) + extr2 * (x - xtab[nt - 1]));
       }
     } else if (extr.second == 2) {
-      // Exponential extrapolation
-      if(!logval) { // linear values in gastable
-	const double extr2 = log(ytab[nt - 1] / ytab[nt - 2]) /
+      if (!logval) { 
+        const double extr2 = log(ytab[nt - 1] / ytab[nt - 2]) /
                              (xtab[nt - 1] - xtab[nt - 2]);
-	const double extr1 = log(ytab[nt - 1]) - extr2 * xtab[nt - 1];
-	result = exp(std::min(50., extr1 + extr2 * x));
-      }
-      else { // log values in gastable for alpha, eta
-	const double extr2 = (ytab[nt - 1] - ytab[nt - 2]) /
-	                     (xtab[nt - 1] - xtab[nt - 2]);
-	const double extr1 = ytab[nt - 1] - extr2 * xtab[nt - 1];
-	result = std::min(50., extr1 + extr2 * x);
+        const double extr1 = log(ytab[nt - 1]) - extr2 * xtab[nt - 1];
+        result = exp(std::min(50., extr1 + extr2 * x));
+      } else { 
+        // Log values in gas table for alpha, eta.
+        const double extr2 = (ytab[nt - 1] - ytab[nt - 2]) /
+                             (xtab[nt - 1] - xtab[nt - 2]);
+        const double extr1 = ytab[nt - 1] - extr2 * xtab[nt - 1];
+        result = std::min(50., extr1 + extr2 * x);
       }
     } else {
       // Constant extrapolation

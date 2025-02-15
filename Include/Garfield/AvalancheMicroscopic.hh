@@ -104,17 +104,19 @@ class AvalancheMicroscopic {
   /// Switch on update of coordinates for null-collision steps (default: off).
   void EnableNullCollisionSteps(const bool on = true, const int nSteps = 1) {
     m_useNullCollisionSteps = on;
-    m_nullCollScale = nSteps <= 1 ? 1. : 1. / nSteps ;
+    m_nullCollScale = nSteps <= 1 ? 1. : 1. / nSteps;
   }
 
   /// Switch on Runge-Kutta-Nystrom stepping (default: off).
   void EnableRKNSteps(const bool on = true) {
     m_rknSteps = on;
   }
-  /// Set error tolerance and min stage size on Runge-Kutta-Nystrom method (default: 1.e-10 and 1.e-5).
+  /// Set error tolerance and minimum step size on Runge-Kutta-Nystrom method 
+  /// (default: 1.e-10 and 1.e-5).
   void SetRKNTolerance(const double sTol = 1.e-10,
                        const double sMinStep = 1.e-5) {
-    m_rknsteperrortol = sTol; m_rknMinh = sMinStep;
+    m_rknsteperrortol = sTol; 
+    m_rknMinh = sMinStep;
   }
 
   /** Set a (lower) energy threshold for electron transport.

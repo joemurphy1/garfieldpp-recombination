@@ -933,9 +933,9 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
       m_userHandleStep(x, y, z, t, en, kx, ky, kz, hole);
     }
 
-    // Variables for the RKN methode
+    // Variables for the RKN method.
     double r0[3], vr[3];
-    std::vector<std::vector<double>> rknIntPoints = {};
+    std::vector<std::array<double, 3> > rknIntPoints = {};
     int nsteps = 2;
     
     // Energy after the step.
@@ -955,7 +955,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
                     << "RKN: (x,y,z) = (" << x << ", " << y << ", " << z << ")\n";
         }
       
-        double h = (double) (dt/nsteps);
+        double h = dt / nsteps;
         nsteps = 0;
         double timeholder = 0.;
         bool loopholder = true;
@@ -978,39 +978,36 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
           }
           
           timeholder += h;
-          if (m_debug) std::cout << "RKN:: Time keeper = " << timeholder
-            << " of the " << dt << " ns.\n";
+          if (m_debug) {
+            std::cout << "RKN: Time keeper = " << timeholder
+                      << " of the " << dt << " ns.\n";
+          }
           const double h2 = h * h;
           Medium* med0 = nullptr;
-          int statusholder0 = 0;
+          int stat0 = 0;
           m_sensor->ElectricField(r0[0] + h * vr[0] * 0.5 + 0.125 * h2 * k1[0],
                                   r0[1] + h * vr[1] * 0.5 + 0.125 * h2 * k1[1],
                                   r0[2] + h * vr[2] * 0.5 + 0.125 * h2 * k1[2],
-                                  ex0, ey0, ez0, med0, statusholder0);
+                                  ex0, ey0, ez0, med0, stat0);
           
           std::array<double, 3> k2 = {c3 * ex0, c3 * ey0, c3 * ez0}; // k3 = k2
           m_sensor->ElectricField(r0[0] + h * vr[0] + h2 * k2[0] * 0.5,
                                   r0[1] + h * vr[1] + h2 * k2[1] * 0.5,
                                   r0[2] + h * vr[2] + h2 * k2[2] * 0.5,
-                                  ex0, ey0, ez0, med0, statusholder0);
+                                  ex0, ey0, ez0, med0, stat0);
           std::array<double, 3> k4 = {c3 * ex0, c3 * ey0, c3 * ez0};
           
           // Check error tolerance
-          const double steperror = h2 *
-          (sqrt(k1[0] * k1[0] + k1[1] * k1[1] + k1[2] * k1[2]) -
-           sqrt(k2[0] * k2[0] + k2[1] * k2[1] + k2[2] * k2[2]) -
-           sqrt(k2[0] * k2[0] + k2[1] * k2[1] + k2[2] * k2[2]) +
-           sqrt(k4[0] * k4[0] + k4[1] * k4[1] + k4[2] * k4[2]));
+          const double steperror = h2 * (
+            Mag(k1[0], k1[1], k1[2]) - 2 * Mag(k2[0], k2[1], k2[2]) + 
+            Mag(k4[0], k4[1], k4[2]));
           
-          if (m_debug) std::cout << "RKN:: steperror = "<< steperror << ".\n";
+          if (m_debug) std::cout << "RKN: steperror = " << steperror << ".\n";
           
           if (std::abs(steperror) < 4 * m_rknsteperrortol) {
             for (int j = 0; j <= 2; j++) {
-              r0[j] = r0[j] + h * vr[j] +
-              (1.0 / 6.0) * (k1[j] + k2[j] + k2[j]) * h2;
-              vr[j] = vr[j] + (1.0 / 6.0) *
-              (k1[j] + 2 * k2[j] + 2 * k2[j] + k4[j]) *
-              h;
+              r0[j] += h * vr[j] + (k1[j] + k2[j] + k2[j]) * h2 / 6.;
+              vr[j] += (k1[j] + 4 * k2[j] + k4[j]) * h / 6.;
             }
             
             const double hholder = h;
@@ -1024,23 +1021,24 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
             // Final point of current stage is first point of the next
             k1.swap(k4);
             
-            if (statusholder0 != 0) {
-              if (m_debug) std::cout << "RKN:: Outside drift medium! Breaking loop.\n";
+            if (stat0 != 0) {
+              if (m_debug) {
+                std::cout << "RKN: Outside drift medium! Breaking loop.\n";
+              }
               dt = timeholder + h;
               break;
             }
             
             // Plot intermediate points
-            if (m_viewer) rknIntPoints.push_back({r0[0],r0[1],r0[2]});
+            if (m_viewer) rknIntPoints.push_back({r0[0], r0[1], r0[2]});
             nsteps++;
             
           } else {
             timeholder -= h;
-            
             // Adjust step size
             h *= pow((m_rknsteperrortol / std::abs(steperror)), 0.25);
           }
-          if (m_debug) std::cout << "RKN:: h = " << h << "\n";
+          if (m_debug) std::cout << "RKN: h = " << h << "\n";
         }
         
         en1 = std::max(
@@ -1050,9 +1048,10 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
         en1 = std::max(en + (a1 + a2 * dt) * dt, Small);
       }
       
-      if (m_debug) std::cout << "RKN:: en1 = " << en1 << ","
-        << std::max(en + (a1 + a2 * dt) * dt, Small) << " eV.\n";
-
+      if (m_debug) {
+        std::cout << "RKN: en1 = " << en1 << ","
+                  << std::max(en + (a1 + a2 * dt) * dt, Small) << " eV.\n";
+      }
       // Get the real collision rate at the updated energy.
       const double fReal = medium->GetElectronCollisionRate(en1, band);
       if (fReal <= 0.) {
@@ -1309,11 +1308,10 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
         break;
     }
     if (m_viewer) {
-      if(m_rknSteps) {
-        for(int ip = 0; ip < rknIntPoints.size(); ip++)
-          PlotCollision(cstype, did, rknIntPoints[ip][0],
-                        rknIntPoints[ip][1], rknIntPoints[ip][2],
-                        nCollPlot);
+      if (m_rknSteps) {
+        for (const auto& pt : rknIntPoints) {
+          PlotCollision(cstype, did, pt[0], pt[1], pt[2], nCollPlot);
+        }
       } else {
         PlotCollision(cstype, did, x, y, z, nCollPlot);
       }
