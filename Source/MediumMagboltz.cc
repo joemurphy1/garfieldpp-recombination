@@ -2748,9 +2748,9 @@ void MediumMagboltz::ComputeDeexcitationInternal(int iLevel, int& fLevel,
       } else {
         // Decay to ground state.
         double delta = RndmVoigt(0., dxc.sDoppler, dxc.gPressure);
-        while (photon.energy + delta < Small || fabs(delta) >= dxc.width) {
-          delta = RndmVoigt(0., dxc.sDoppler, dxc.gPressure);
-        }
+        // while (photon.energy + delta < Small || fabs(delta) >= dxc.width) {
+        //   delta = RndmVoigt(0., dxc.sDoppler, dxc.gPressure);
+        // }
         photon.energy += delta;
         secondaries.push_back(std::move(photon));
         // Deexcitation cascade is over.
@@ -2903,7 +2903,7 @@ bool MediumMagboltz::ComputePhotonCollisionTable(const bool verbose) {
     const double fwhmVoigt =
         0.5 * (1.0692 * fwhmLorentz + sqrt(0.86639 * fwhmLorentz * fwhmLorentz +
                                            4 * fwhmGauss * fwhmGauss));
-    dxc.width = nWidths * fwhmVoigt;
+    dxc.width = fwhmVoigt;
     ++nResonanceLines;
   }
 
