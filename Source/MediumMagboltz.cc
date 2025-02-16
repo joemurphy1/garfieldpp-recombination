@@ -984,9 +984,8 @@ double MediumMagboltz::GetPhotonCollisionRate(const double e) {
   if (m_useDeexcitation && m_useRadTrap && !m_deexcitations.empty()) {
     // Loop over the excitations.
     for (const auto& dxc : m_deexcitations) {
-      if (dxc.cf > 0. && fabs(e - dxc.energy) <= dxc.width) {
-        cfSum += dxc.cf *
-                 TMath::Voigt(e - dxc.energy, dxc.sDoppler, 2 * dxc.gPressure);
+      if (dxc.cf > 0. && fabs(e - dxc.energy) <= dxc.width * m_nAbsWidths) {
+        cfSum += CalcDiscreteLineCf(dxc, e, cfSum); 
       }
     }
   }
@@ -1024,9 +1023,8 @@ bool MediumMagboltz::PhotonCollision(const double e, int& type, int& level,
     const unsigned int nDeexcitations = m_deexcitations.size();
     for (unsigned int i = 0; i < nDeexcitations; ++i) {
       const auto& dxc = m_deexcitations[i];
-      if (dxc.cf > 0. && fabs(e - dxc.energy) <= dxc.width) {
-        r += dxc.cf *
-             TMath::Voigt(e - dxc.energy, dxc.sDoppler, 2 * dxc.gPressure);
+      if (dxc.cf > 0. && fabs(e - dxc.energy) <= dxc.width * m_nAbsWidths) {
+        r += CalcDiscreteLineCf(dxc, e, r);
         pLine.push_back(r);
         iLine.push_back(i);
         ++nLines;
@@ -1572,6 +1570,8 @@ bool MediumMagboltz::Mixer(const bool verbose) {
         qAtt[0], &nAtt, qNull[0], &nNull, scln, nc0, ec0, wklm, efl,
         ng1, eg1, ng2, eg2, scrpt, scrptn,  
         Magboltz::nCharName, Magboltz::nCharDescr, Magboltz::nCharDescr);
+    const double m = (2. / e[1]) * ElectronMass / AtomicMassUnitElectronVolt;
+    m_mgas[iGas] = m;
     if (m_debug || verbose) {
       const double m = (2. / e[1]) * ElectronMass / AtomicMassUnitElectronVolt;
       std::cout << "    " << name << "\n"
@@ -2892,9 +2892,6 @@ bool MediumMagboltz::ComputePhotonCollisionTable(const bool verbose) {
     dxc.gPressure = kResBroad * FineStructureConstant * pow(HbarC, 3) *
                     dxc.osc * dens * m_fraction[dxc.gas] /
                     (ElectronMass * dxc.energy);
-    // Make an estimate for the width within which a photon can be
-    // absorbed by the line
-    constexpr double nWidths = 1000.;
     // Calculate the FWHM of the Voigt distribution according to the
     // approximation formula given in
     // Olivero and Longbothum, J. Quant. Spectr. Rad. Trans. 17, 233-236
@@ -3290,6 +3287,62 @@ void MediumMagboltz::GenerateGasTable(const int numColl, const bool verbose) {
   // Set the threshold indices.
   SetThreshold(m_eAlp);
   SetThreshold(m_eAtt);
+}
+
+// Discrete line absorption calculation based on 
+// absorption coefficient K(v) from
+//      T.Holstein - Imprisonment of Resonance Radiation in Gases
+//      Phys. Rev.72, 1212 - Published 15 December, 1947 
+//    dxc: deexcitation object
+//    e:   incident photon energy
+//    cfOth: additional contribution to cf from absorption cs 
+//           other than discrete lines
+//     
+//    cf = cs(v)*c*nAr  , cs(v) = K(v) / nAr  => cf  = K(v)*c
+//    cf is limited in such a way that cf + cfOth < Bohr area
+//
+double MediumMagboltz::CalcDiscreteLineCf(const Deexcitation& dxc, 
+                                          double e, double cfOth) const {
+  const int    iGas = dxc.gas;
+  const double c  = 299792458;                                  // [m/s]
+  const double Kb = 1.38064852e-23;                             // [J/K]
+  const double T  = m_temperature;                              // [K]
+  const double M  = m_mgas[dxc.gas] * AtomicMassUnit * 1.e-3;   // gas mass [kg]
+  const double N  = GetNumberDensity() * m_fraction[iGas] * 1.e6; // [Atoms/m3]
+  const double tau = 1.e-9 / dxc.rate;                          // [s]
+  const double g  = 1. / tau;                                   // [Hz]
+  const double gp = dxc.gPressure / (TwoPi * Hbar * 1.e-9);     // [Hz]
+  const double V0 = sqrt(2 * Kb * T / M);                       // [m/s]
+  const double g2 = 3;
+  const double g1 = 1;
+  const double f0 = dxc.energy / (TwoPi * Hbar * 1.e-9);        // [Hz]
+  const double f  = e / (TwoPi * Hbar * 1.e-9);                 // [Hz]
+  const double l0 = c / f0;                                   	// [m]
+  double K0 = (pow(l0, 3) * N / (8 * Pi)) * (g2 / g1) / (sqrt(Pi) * V0 * tau);
+  double a = (g + gp) * l0 / (4 * Pi * V0);
+  double x = ((f - f0) / f0) * (c / V0);
+  double K = K0 * (exp(-x * x) + a / (sqrt(Pi) * x * x));
+  double cf = K * c * 1.e-9; 
+  double R = 0; // Radius
+  if (dxc.label.find("Ar") != std::string::npos) {
+    R = 71e-12;
+  } else if (dxc.label.find("CO2") != std::string::npos) {
+    R = 331e-12;
+  } else {
+    std::cout << m_className << "::CalcDiscreteLineCf: "
+              << "Unknown excited state " << dxc.label << "\n";
+  }
+  double csOpt = Pi * R * R;
+  double cfOpt = csOpt * N * c * 1.e-9;
+  if (cfOth > cfOpt) {
+    std::cout << std::setprecision(8) 
+              << m_className << "::CalcDiscreteLineCf: cfOth > cfOpt!\n"
+              << "cfOpt = " << cfOpt << ", cfOth = " << cfOth 
+              << ", cf discrete = " << cf << "\n";
+  } else if (cf > cfOpt - cfOth) {
+    cf = cfOpt - cfOth;
+  } 
+  return cf;
 }
 
 void MediumMagboltz::GetExcitationIonisationLevels() {
