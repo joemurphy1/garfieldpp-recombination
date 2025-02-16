@@ -2895,7 +2895,7 @@ bool MediumMagboltz::ComputePhotonCollisionTable(const bool verbose) {
     // Calculate the FWHM of the Voigt distribution according to the
     // approximation formula given in
     // Olivero and Longbothum, J. Quant. Spectr. Rad. Trans. 17, 233-236
-    const double fwhmGauss = dxc.sDoppler * sqrt(2. * log(2.));
+    const double fwhmGauss = dxc.sDoppler * 2 * sqrt(2. * log(2.));
     const double fwhmLorentz = dxc.gPressure;
     const double fwhmVoigt =
         0.5 * (1.0692 * fwhmLorentz + sqrt(0.86639 * fwhmLorentz * fwhmLorentz +
