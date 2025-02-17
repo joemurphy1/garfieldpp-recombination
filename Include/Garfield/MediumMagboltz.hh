@@ -68,6 +68,9 @@ class MediumMagboltz : public MediumGas {
   void EnableRadiationTrapping();
   /// Switch off discrete photoabsorption levels.
   void DisableRadiationTrapping() { m_useRadTrap = false; }
+  /// Set the number of emission line widths within which to apply 
+  /// absorption by discrete lines.
+  void SetLineWidth(const double n) { m_nAbsWidths = n; }
 
   bool EnablePenningTransfer() override;
   bool EnablePenningTransfer(const double r, const double lambda) override;
@@ -243,6 +246,8 @@ class MediumMagboltz : public MediumGas {
   /// Number of different cross-section types in the current gas mixture
   unsigned int m_nTerms = 0;
   #ifndef __GPUCOMPILE__
+  /// Mass
+  std::array<double, m_nMaxGases> m_mgas;
   /// Recoil energy parameter
   std::array<double, m_nMaxGases> m_rgas;
   std::array<double, m_nMaxGases> m_s2;
@@ -403,6 +408,10 @@ class MediumMagboltz : public MediumGas {
   std::vector<Deexcitation> m_deexcitations;
   // Mapping between deexcitations and cross-section terms.
   std::array<int, Magboltz::nMaxLevels> m_iDeexcitation;
+  // Number of emission widths within which to conosider discrete line
+  // absorption.
+  // TODO: default value?
+  double m_nAbsWidths = 1000.;
 
   /// Ionisation potentials of each component
   std::array<double, m_nMaxGases> m_ionPot;
@@ -451,6 +460,8 @@ class MediumMagboltz : public MediumGas {
                         const int igas2) const;
   double RateConstantHardSphere(const double r1, const double r2,
                                 const int igas1, const int igas2) const;
+  double CalcDiscreteLineCf(const Deexcitation& dxc,
+                            double e, double cfOth) const;
   void ComputeDeexcitationInternal(int iLevel, int& fLevel,
       std::vector<Secondary>& secondaries);
   bool ComputePhotonCollisionTable(const bool verbose);
