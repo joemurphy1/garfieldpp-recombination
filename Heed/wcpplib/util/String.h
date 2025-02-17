@@ -66,8 +66,6 @@ It is provided "as is" without express or implied warranty.
 
 namespace Heed {
 
-typedef std::string String;
-
 // puts one \n at the end of string stream:
 
 inline void put_one_n(std::ostringstream& ost) {
