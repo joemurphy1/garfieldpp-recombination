@@ -26,14 +26,14 @@ int operator!=(const vec &r1, const vec &r2) {
 
 /// Return true if two vectors are approximately the same.
 // Thus r2 may be is cube with side 2*prec with center marked by r1.
-bool apeq(const vec &r1, const vec &r2, vfloat prec) {
+bool apeq(const vec &r1, const vec &r2, double prec) {
   return (apeq(r1.x, r2.x, prec) && apeq(r1.y, r2.y, prec) &&
           apeq(r1.z, r2.z, prec));
 }
 
 vec unit_vec(const vec &v) {
   // pvecerror("inline vec unit_vec(const vec &v)");
-  const vfloat len = v.length();
+  const double len = v.length();
   if (len == 0) {
     mcerr << "error in unit_vec: length(vec)=0\n";
     spexit(mcerr);
@@ -41,9 +41,9 @@ vec unit_vec(const vec &v) {
   return vec(v.x / len, v.y / len, v.z / len);
 }
 
-int check_par(const vec &r1, const vec &r2, vfloat prec) {
+int check_par(const vec &r1, const vec &r2, double prec) {
   // 1 par, -1 antipar, 0 not parallel
-  vfloat a = ang2vec(r1, r2);
+  double a = ang2vec(r1, r2);
   // mcout<<"check_par: a="<<a<<" a-(M_PI - prec)="<<a-(M_PI - prec)<<'\n';
   if (vecerror != 0) {
     vecerror = 0;
@@ -65,9 +65,9 @@ int check_par(const vec &r1, const vec &r2, vfloat prec) {
   return 0;
 }
 
-int check_perp(const vec &r1, const vec &r2, vfloat prec) {  
+int check_perp(const vec &r1, const vec &r2, double prec) {  
   // returns 1 if perpendicular
-  vfloat a = ang2vec(r1, r2);
+  double a = ang2vec(r1, r2);
   if (vecerror != 0) {
     vecerror = 0;
     return 0;

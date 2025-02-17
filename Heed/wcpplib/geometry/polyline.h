@@ -56,7 +56,7 @@ class polyline : public absref {
   /// 0 point is not in
   /// 1 point coincides with an edge
   /// 2 point is inside an interval
-  int check_point_in(const point& fpt, vfloat prec) const;
+  int check_point_in(const point& fpt, double prec) const;
 
   /// If straight line goes exactly by segment of polyline,
   /// the fuction gives two end points of adjacent segments and the
@@ -64,12 +64,12 @@ class polyline : public absref {
   /// If one of the points is common, it is given several times.
   /// For example, if line crosses break point the point is given two times.
   int cross(const straight& fsl, point* pc, int& qpc, polyline* pl, int& qpl,
-            vfloat prec) const;
+    double prec) const;
   /// Distance between two intervals.
-  vfloat dist_two_inter(polyline& pl, vfloat prec) const;
-  vfloat distance(const point& fpt) const;
+  double dist_two_inter(polyline& pl, double prec) const;
+  double distance(const point& fpt) const;
   /// Distance between two points.
-  vfloat distance(const point& fpt, point& cpt) const;
+  double distance(const point& fpt, point& cpt) const;
 
  protected:
   void polyline_init(const point* fpt, int fqpt);
@@ -104,13 +104,13 @@ class polyline : public absref {
 
   ~polyline() { polyline_del(); }
   friend int plane::cross(const polyline& pll, point* crpt, int& qcrpt,
-                          polyline* crpll, int& qcrpll, vfloat prec) const;
+                          polyline* crpll, int& qcrpll, double prec) const;
   friend std::ostream& operator<<(std::ostream& file, const polyline& p);
 };
 
 /// Draws straight line via 4 intervals.
 /// Returns 1 if line is drawn and 0 otherwise.
-int cross4pllines(const polyline pl[4], vfloat precision, straight& sl,
+int cross4pllines(const polyline pl[4], double precision, straight& sl,
                   point ptc[4][2]);
 
 std::ostream& operator<<(std::ostream& file, const polyline& p);
@@ -147,16 +147,16 @@ std::ostream& operator<<(std::ostream& file, const polyline_pl& p);
 class polygon : public polyline_pl {
  public:
   int s_convex;
-  int check_point_in(const point& fpt, vfloat prec) const;
+  int check_point_in(const point& fpt, double prec) const;
   //            0 point is not in
   //            1 point coincides with an edge
   //            2 point is inside an interval of border
   //            3 point is inside body
-  point cross(const straight& fsl, vfloat prec) const;
+  point cross(const straight& fsl, double prec) const;
   // if no cross, returns vecerror=1.
 
-  int range(const point& fpt, const vec& dir, vfloat& rng, point& fptenr,
-            vfloat prec) const;
+  int range(const point& fpt, const vec& dir, double& rng, point& fptenr,
+    double prec) const;
   polygon& operator=(const polygon& fpl);
   polygon() : polyline_pl(), s_convex(0) {}
   polygon(const polygon& plg) : polyline_pl((polyline_pl)plg) {
@@ -170,7 +170,7 @@ class polygon : public polyline_pl {
       spexit(mcerr);
     }
   }
-  polygon(const straight* fsl, int fqsl, vfloat prec);
+  polygon(const straight* fsl, int fqsl, double prec);
   // Prec is used to find crossing points of straight lines
 };
 std::ostream& operator<<(std::ostream& file, const polygon& p);
@@ -186,9 +186,9 @@ class rectangle : public polygon {
   /// Directions of sides, unit length
   vec dir2;       
   // Dimensions
-  vfloat dim[2] = {0., 0.};
+  double dim[2] = {0., 0.};
   rectangle() : polygon() {}
-  rectangle(const point& fpiv, vec fdir[2], vfloat fdim[2], vfloat prec);
+  rectangle(const point& fpiv, vec fdir[2], double fdim[2], double prec);
   // Prec is used to check that sides are perpendicular and
   // at initing of the polygon via straight lines.
  protected:
@@ -205,13 +205,13 @@ class spquadr : public polygon {
   point piv;
   vec dir1, dir2;
   /// Width of total plane in units of radians
-  vfloat awidth;  
+  double awidth;  
 
  public:
   point Gpiv() const { return piv; }
   vec Gdir1() const { return dir1; }
   vec Gdir2() const { return dir2; }
-  vfloat Gawidth() const { return awidth; }
+  double Gawidth() const { return awidth; }
 
  protected:
   static absref absref::* aref_sp[4];
@@ -219,27 +219,27 @@ class spquadr : public polygon {
 
  public:
   /// Position in units of radians.
-  vfloat apos(const point& fpt) const { 
+  double apos(const point& fpt) const { 
     // it is assumed that the point is inside
     return acos(cos2vec(dir1, vec(fpt - piv)));
   }
-  vfloat apos(const straight& fsl, vfloat prec) const {
+  double apos(const straight& fsl, double prec) const {
     point pth = cross(fsl, prec);
     if (vecerror != 0) return 0.0;
     return apos(pth);
   }
   /// Perpendicular position. Distance from basis sl[0].
-  vfloat perpos(const point& fpt) const { 
+  double perpos(const point& fpt) const { 
     // it is assumed that the point is inside
-    vfloat r = sl[0].distance(fpt);
+    double r = sl[0].distance(fpt);
     return r;
   }
-  vfloat perpos(const straight& fsl, vfloat prec) const {
+  double perpos(const straight& fsl, double prec) const {
     point pth = cross(fsl, prec);
     if (vecerror != 0) return 0.0;
     return perpos(pth);
   }
-  point pt_angle_rad(vfloat rad, vfloat angle);
+  point pt_angle_rad(double rad, double angle);
 
   spquadr() : polygon(), piv(), dir1(), dir2(), awidth(0) {}
 
@@ -254,7 +254,7 @@ class spquadr : public polygon {
     return *this;
   }
   spquadr(const point& fpiv, const straight& sl1, const straight& sl2,
-          const vec& fdir1, const vec& fdir2, vfloat prec);
+          const vec& fdir1, const vec& fdir2, double prec);
 
   friend std::ostream& operator<<(std::ostream& file, const spquadr& p);
 

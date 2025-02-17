@@ -20,7 +20,7 @@ using CLHEP::MeV;
 using CLHEP::electron_mass_c2;
 
 HeedParticle_BGM::HeedParticle_BGM(manip_absvol* primvol, const point& pt,
-                                   const vec& vel, vfloat ftime,
+                                   const vec& vel, double ftime,
                                    particle_def* fpardef, fieldmap* fm, 
                                    const bool floss_only,
                                    const bool fprint_listing)

@@ -32,8 +32,8 @@ box::box()
   init_planes();
 }
 
-box::box(vfloat fdx, vfloat fdy, vfloat fdz, const std::string& fname) {
-  pvecerror("box(vfloat fdx, vfloat fdy, vfloat fdz, const string &fname)");
+box::box(double fdx, double fdy, double fdz, const std::string& fname) {
+  pvecerror("box(double fdx, double fdy, double fdz, const string &fname)");
   m_dx = fabs(fdx);
   m_dy = fabs(fdy);
   m_dz = fabs(fdz);
@@ -45,9 +45,9 @@ box::box(vfloat fdx, vfloat fdy, vfloat fdz, const std::string& fname) {
   init_planes();
 }
 
-box::box(vfloat fdx, vfloat fdy, vfloat fdz, vfloat fprec,
+box::box(double fdx, double fdy, double fdz, double fprec,
          const std::string& fname) {
-  pvecerror("box(vfloat fdx, vfloat fdy, vfloat fdz, vfloat fprec, const string &fname)");
+  pvecerror("box(double fdx, double fdy, double fdz, double fprec, const string &fname)");
   m_dx = fabs(fdx);
   m_dy = fabs(fdy);
   m_dz = fabs(fdz);

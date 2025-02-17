@@ -24,8 +24,8 @@ namespace Heed {
 
 class box : public absvol {
  public:
-  vfloat m_dx, m_dy, m_dz;     ///< Lengths of sides
-  vfloat m_dxh, m_dyh, m_dzh;  ///< Half-lengths of sides
+  double m_dx, m_dy, m_dz;     ///< Lengths of sides
+  double m_dxh, m_dyh, m_dzh;  ///< Half-lengths of sides
   ulsvolume m_ulsv;
   std::string m_name;
 
@@ -33,9 +33,9 @@ class box : public absvol {
   /// Default constructor.
   box();
   // Constructor, compute precision from mean of dimensions.
-  box(vfloat fdx, vfloat fdy, vfloat fdz, const std::string& fname);
+  box(double fdx, double fdy, double fdz, const std::string& fname);
   /// Constructor with user-provided precision.
-  box(vfloat fdx, vfloat fdy, vfloat fdz, vfloat fprec,
+  box(double fdx, double fdy, double fdz, double fprec,
       const std::string& fname);
   box(box& fb);
   box(const box& fb);

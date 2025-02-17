@@ -22,11 +22,11 @@ absref_transmit trajestep::get_components() {
   return absref_transmit(4, aref);
 }
 
-trajestep::trajestep(const vfloat fmax_range, const vfloat frad_for_straight,
-                     const vfloat fmax_straight_arange, 
-                     const vfloat fmax_circ_arange, const point& fcurrpos,
+trajestep::trajestep(const double fmax_range, const double frad_for_straight,
+                     const double fmax_straight_arange, 
+                     const double fmax_circ_arange, const point& fcurrpos,
                      const vec& fdir, const bool fcurved, const vec& frelcen,
-                     vfloat fmrange, vfloat prec)
+                     double fmrange, double prec)
     : max_range(fmax_range),
       rad_for_straight(frad_for_straight),
       max_straight_arange(fmax_straight_arange),
@@ -52,7 +52,7 @@ trajestep::trajestep(const vfloat fmax_range, const vfloat frad_for_straight,
     if (mrange < 0 || mrange > max_range) mrange = max_range;
     s_range_cf = curved;
     if (s_range_cf == 1) {
-      const vfloat r = relcen.length();
+      const double r = relcen.length();
       if (r >= rad_for_straight) {
         s_range_cf = 0;
         mrange = std::min(mrange, r * max_straight_arange);
@@ -63,22 +63,22 @@ trajestep::trajestep(const vfloat fmax_range, const vfloat frad_for_straight,
   }
 }
 
-trajestep::trajestep(const trajestep& fts, vfloat fmrange) {
-  mfunname("trajestep::trajestep(const trajestep& fts, vfloat fmrange)");
+trajestep::trajestep(const trajestep& fts, double fmrange) {
+  mfunname("trajestep::trajestep(const trajestep& fts, double fmrange)");
   // Continue propagation from the end point of the old step.
   point fpos;
   vec fdir;
   vec frelcen;
   fts.Gnextpoint1(fts.mrange, fpos, fdir, frelcen);
-  vfloat prec = 0.1;  // not important here
+  double prec = 0.1;  // not important here
   *this =
       trajestep(fts.max_range, fts.rad_for_straight,
                 fts.max_straight_arange, fts.max_circ_arange,
                 fpos, fdir, fts.curved, frelcen, fmrange, prec);
 }
 
-void trajestep::Gnextpoint(vfloat frange, point& fpos, vec& fdir) const {
-  pvecerror("int trajestep::Gnextpoint(vfloat frange, point& fpos, vec& fdir)");
+void trajestep::Gnextpoint(double frange, point& fpos, vec& fdir) const {
+  pvecerror("int trajestep::Gnextpoint(double frange, point& fpos, vec& fdir)");
   check_econd12(frange, >, mrange, mcerr);
   if (s_range_cf == 0) {
     // interpolation by straight line
@@ -87,12 +87,12 @@ void trajestep::Gnextpoint(vfloat frange, point& fpos, vec& fdir) const {
       // no curvature
       fdir = dir;
     } else {
-      vfloat ang = frange / relcen.length();
+      double ang = frange / relcen.length();
       fdir = dir;
       fdir.turn(dir || relcen, ang);
     }
   } else {
-    vfloat ang = frange / relcen.length();  // angle to turn
+    double ang = frange / relcen.length();  // angle to turn
     fdir = dir;
     fdir.turn(dir || relcen, ang);  // direction at the end
     vec frelcen = relcen;
@@ -101,10 +101,10 @@ void trajestep::Gnextpoint(vfloat frange, point& fpos, vec& fdir) const {
   }
 }
 
-void trajestep::Gnextpoint1(vfloat frange, point& fpos, vec& fdir,
+void trajestep::Gnextpoint1(double frange, point& fpos, vec& fdir,
                             vec& frelcen) const {
   pvecerror(
-      "int trajestep::Gnextpoint(vfloat frange, point& fpos, vec& fdir, "
+      "int trajestep::Gnextpoint(double frange, point& fpos, vec& fdir, "
       "vec& frelcen)");
   check_econd12(frange, >, mrange, mcerr);
   if (s_range_cf == 0) {
@@ -115,14 +115,14 @@ void trajestep::Gnextpoint1(vfloat frange, point& fpos, vec& fdir,
       fdir = dir;
       frelcen = relcen;  // whatever it is
     } else {
-      vfloat ang = frange / relcen.length();
+      double ang = frange / relcen.length();
       fdir = dir;
       fdir.turn(dir || relcen, ang);
       frelcen = relcen;
       frelcen.turn(dir || relcen, ang);
     }
   } else {
-    vfloat ang = frange / relcen.length();  // angle to turn
+    double ang = frange / relcen.length();  // angle to turn
     fdir = dir;
     fdir.turn(dir || relcen, ang);  // direction at the end
     frelcen = relcen;

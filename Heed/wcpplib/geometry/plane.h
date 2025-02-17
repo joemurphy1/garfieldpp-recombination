@@ -40,7 +40,7 @@ class plane : public absref {
   plane() : piv(), dir() {}
   plane(const point& fpiv, const vec& fdir) : piv(fpiv), dir(unit_vec(fdir)) {}
   plane(const straight& sl, const point& pt);
-  plane(const straight& sl1, const straight& sl2, vfloat prec);
+  plane(const straight& sl1, const straight& sl2, double prec);
   // Good if lines are crossed or if they are different not crossed parallel.
   // Otherwise vecerror != 0
   // Prec is used for crossing of lines.
@@ -58,10 +58,10 @@ class plane : public absref {
   friend int operator!=(const plane& pl1, const plane& pl2) {
     return pl1 == pl2 ? 0 : 1;
   }
-  friend bool apeq(const plane& pl1, const plane& pl2, vfloat prec);
+  friend bool apeq(const plane& pl1, const plane& pl2, double prec);
 
   /// Return 1 if a point is in the plane (within precision prec).
-  int check_point_in(const point& fp, vfloat prec) const;
+  int check_point_in(const point& fp, double prec) const;
 
   /// Figure out whether a straight line crosses the plane 
   /// and return the intersection point if it does.
@@ -74,9 +74,9 @@ class plane : public absref {
   straight cross(const plane& sl) const;
 
   int cross(const polyline& pll, point* crpt, int& qcrpt, polyline* crpll,
-            int& qcrpll, vfloat prec) const;
+            int& qcrpll, double prec) const;
 
-  vfloat distance(const point& fpt) const;
+  double distance(const point& fpt) const;
   friend std::ostream& operator<<(std::ostream& file, const plane& s);
 };
 

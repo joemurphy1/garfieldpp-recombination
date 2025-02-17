@@ -20,7 +20,7 @@ using CLHEP::electron_mass_c2;
 using CLHEP::Avogadro;
 
 HeedPhoton::HeedPhoton(manip_absvol* primvol, const point& pt, const vec& vel,
-                       vfloat ftime, long fparent_particle_number,
+                       double ftime, long fparent_particle_number,
                        double fenergy, fieldmap* fm,
                        const bool fs_print_listing)
     : gparticle(primvol, pt, vel, ftime),

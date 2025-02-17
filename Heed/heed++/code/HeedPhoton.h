@@ -20,7 +20,7 @@ class HeedPhoton : public gparticle {
   HeedPhoton() = default;
   /// Constructor.
   HeedPhoton(manip_absvol* primvol, const point& pt, const vec& vel,
-             vfloat time, long fparent_particle_number, double fenergy,
+             double time, long fparent_particle_number, double fenergy,
              fieldmap* fm, const bool fs_print_listing = false);
   /// Destructor
   virtual ~HeedPhoton() {}

@@ -20,7 +20,7 @@ class HeedParticle : public eparticle {
   /// is simulated: no deposition of clusters,
   /// no generation of virtual photons.
   HeedParticle(manip_absvol* primvol, const point& pt, const vec& vel,
-               vfloat time, particle_def* fpardef, fieldmap* fm,
+               double time, particle_def* fpardef, fieldmap* fm,
                const bool fcoulomb_scattering = false,
                const bool floss_only = false,
                const bool fprint_listing = false);

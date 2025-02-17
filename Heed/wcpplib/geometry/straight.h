@@ -53,7 +53,7 @@ class straight : public absref {
   // This axis is given by anum. 0 - x, 1 - y, 2 - z.
   // Unless I've mistaken, the line should necessary be directed
   // toward increasing of this axis.
-  straight(const straight sl[4], point pt[2], vfloat prec);
+  straight(const straight sl[4], point pt[2], double prec);
   // Draws line via four lines by interpolation.
   // pt[2] are starting points for two intermidiate layers
   straight(straight* sl,  // array of lines via which it need to draw
@@ -61,13 +61,13 @@ class straight : public absref {
            int qsl,                   // number of lines in array
            const straight& sl_start,  // first approximation
            int anum,                  // prolong axis : 0 - x, 1 - y, 2 - z.
-           vfloat precision,          // wanted precision
-           vfloat* dist,              // array of distances,
+           double precision,          // wanted precision
+           double* dist,              // array of distances,
            // they may be negative as in vecdistance
            // For vecdistance this is this line
            point (*pt)[2],  // points,  pt[][0] is point on this line
            // pt[][1] is point on line sl.
-           vfloat& mean2dist);  // mean square distance
+           double& mean2dist);  // mean square distance
   // The constructor draws straight line via qsl lines by xi-2 method
   // residuals are calculated in planes normal to axis which is measured.
   // This axis is given by anum. 0 - x, 1 - y, 2 - z.
@@ -93,11 +93,11 @@ class straight : public absref {
   friend int operator!=(const straight& sl1, const straight& sl2) {
     return sl1 == sl2 ? 0 : 1;
   }
-  friend bool apeq(const straight& sl1, const straight& sl2, vfloat prec);
+  friend bool apeq(const straight& sl1, const straight& sl2, double prec);
 
   /// Calculate distance of a point from the line and compare it with prec.
   /// Return 1 if the point is on the line. 
-  int check_point_in(const point& fp, vfloat prec) const;
+  int check_point_in(const point& fp, double prec) const;
 
   /** Figure out whether the line crosses another straight line
     * (within a precision prec).
@@ -106,10 +106,10 @@ class straight : public absref {
     * - Lines are parallel                             vecerror = 2
     * - Lines are identical                            vecerror = 3
     */
-  point cross(const straight& sl, vfloat prec) const;
+  point cross(const straight& sl, double prec) const;
 
   /// Shortest distance between two lines, may be negative.
-  vfloat vecdistance(const straight& sl, int& type_of_cross, point pt[2]) const;
+  double vecdistance(const straight& sl, int& type_of_cross, point pt[2]) const;
   // type_of_cross has same meaning as vecerror from previous function,
   // But the precision is assumed to be 0.
   // pt inited only for type_of_cross == 1 and 0.
@@ -123,7 +123,7 @@ class straight : public absref {
   // vecdistance is just y-coordinate of point of crossing of sl converting
   // to new syscoor with plane (ey, ez).
 
-  vfloat distance(const straight& sl, int& type_of_cross, point pt[2]) const;
+  double distance(const straight& sl, int& type_of_cross, point pt[2]) const;
   // shortest distance between lines, always positive.
   // type_of_cross has same meaning as vecerror from previous function
   // But the precision is assumed to be 0.
@@ -132,8 +132,8 @@ class straight : public absref {
   // pt[0] is point on this line. pt[1] is point on line sl.
   // It is absolute value of vecdistance
 
-  vfloat distance(const point& fpt) const;
-  vfloat distance(const point& fpt, point& fcpt) const;
+  double distance(const point& fpt) const;
+  double distance(const point& fpt, point& fcpt) const;
   // calculates closest point on the line
 
   point vecdistance(const vec normal, const straight& slt);

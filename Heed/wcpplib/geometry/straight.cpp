@@ -1,6 +1,7 @@
 #include "wcpplib/geometry/straight.h"
 #include "wcpplib/geometry/plane.h"
 #include "wcpplib/math/linexi2.h"
+#include <limits>
 /*
 Copyright (c) 2000 Igor B. Smirnov
 
@@ -37,24 +38,24 @@ int operator==(const straight& sl1, const straight& sl2) {
   return 0;
 }
 
-bool apeq(const straight& sl1, const straight& sl2, vfloat prec) {
-  pvecerror("bool apeq(const straight &sl1, const straight &sl2, vfloat prec)");
+bool apeq(const straight& sl1, const straight& sl2, double prec) {
+  pvecerror("bool apeq(const straight &sl1, const straight &sl2, double prec)");
   if (check_par(sl1.dir, sl2.dir, prec) == 0) return false;
   if (apeq(sl1.piv, sl2.piv, prec)) return true;
   return (sl1.check_point_in(sl2.piv, prec) == 1);
 }
 
-int straight::check_point_in(const point& fp, vfloat prec) const {
-  pvecerror("int straight::check_point_in(point fp, vfloat prec)");
-  vfloat f = distance(fp);
+int straight::check_point_in(const point& fp, double prec) const {
+  pvecerror("int straight::check_point_in(point fp, double prec)");
+  double f = distance(fp);
   if (f <= prec) return 1;
   return 0;
 }
-point straight::cross(const straight& sl, vfloat prec) const {
-  pvecerror("point straight::cross(straight& sl, vfloat prec)");
+point straight::cross(const straight& sl, double prec) const {
+  pvecerror("point straight::cross(straight& sl, double prec)");
   point pt[2];
   int type_of_cross;
-  vfloat f = vecdistance(sl, type_of_cross, &pt[0]);
+  double f = vecdistance(sl, type_of_cross, &pt[0]);
   point ptt(dv0);
   if (type_of_cross == 2 || type_of_cross == 3) {
     vecerror = type_of_cross;
@@ -69,10 +70,10 @@ point straight::cross(const straight& sl, vfloat prec) const {
   }
 }
 
-vfloat straight::vecdistance(const straight& sl, int& type_of_cross,
+double straight::vecdistance(const straight& sl, int& type_of_cross,
                              point pt[2]) const {
   pvecerror(
-      "vfloat straight::vecdistance(const straight& sl, int& type_of_cross, "
+      "double straight::vecdistance(const straight& sl, int& type_of_cross, "
       "point pt[2])");
   pt[0] = point();
   pt[1] = point();
@@ -124,7 +125,7 @@ vfloat straight::vecdistance(const straight& sl, int& type_of_cross,
     return 0.0;
   } else {
     type_of_cross = 1;
-    vfloat d = pt[1].v.y;
+    double d = pt[1].v.y;
     pt[0] = pt[1];
     pt[0].v.y = 0;
     pt[0].down(&scl);
@@ -133,20 +134,20 @@ vfloat straight::vecdistance(const straight& sl, int& type_of_cross,
   }
 }
 
-vfloat straight::distance(const straight& sl, int& type_of_cross,
+double straight::distance(const straight& sl, int& type_of_cross,
                           point pt[2]) const {
   return fabs(vecdistance(sl, type_of_cross, pt));
 }
 
 straight::straight(straight* sl, int qsl, const straight& sl_start, int anum,
-                   vfloat precision, vfloat* dist,  // may be negative
-                   point (*pt)[2], vfloat& mean2dist) {
+  double precision, double* dist,  // may be negative
+                   point (*pt)[2], double& mean2dist) {
   pvecerror("void straight::straight(straight* sl, int qsl,...");
   check_econd11(qsl, < 4, mcerr);
   straight sl_finish = sl_start;
   int n;
-  mean2dist = max_vfloat;
-  vfloat mean2dist_prev = max_vfloat;
+  mean2dist = std::numeric_limits<double>::max();
+  double mean2dist_prev = std::numeric_limits<double>::max();
   int type_of_cross;
   point* ptf = new point[qsl];
   // mcout<<"straight::straight: starting, qsl="<<qsl
@@ -176,28 +177,28 @@ straight::straight(straight* sl, int qsl, const straight& sl_start, int anum,
   delete[] ptf;
 }
 
-vfloat straight::distance(const point& fpt) const {
-  pvecerror("vfloat straight::distance(point& fpt)");
+double straight::distance(const point& fpt) const {
+  pvecerror("double straight::distance(point& fpt)");
   if (fpt == piv) return 0.0;
   vec v = fpt - piv;
   return v.length() * sin2vec(dir, v);  // should be positive
 }
 
-vfloat straight::distance(const point& fpt, point& fcpt) const {
-  pvecerror("vfloat straight::distance(point& fpt, point& fcpt)");
+double straight::distance(const point& fpt, point& fcpt) const {
+  pvecerror("double straight::distance(point& fpt, point& fcpt)");
   if (fpt == piv) {
     fcpt = piv;
     return 0.0;
   }
   vec v = fpt - piv;
-  vfloat len = v.length();
+  double len = v.length();
   fcpt = piv + len * cos2vec(dir, v) * dir;
   return v.length() * sin2vec(dir, v);
 }
 
 point straight::vecdistance(const vec normal, const straight& slt) {
   pvecerror(
-      "vfloat straight::vecdistance(const vec normal, const straight& slt)");
+      "double straight::vecdistance(const vec normal, const straight& slt)");
   if (check_perp(normal, slt.Gdir(), 0.0) == 1) {
     // if it is perp.
     mcout << "straight::vecdistance: normal=" << normal
@@ -259,11 +260,11 @@ straight::straight(const point* pt, int qpt, int anum) {
   delete[] z;
 }
 
-straight::straight(const straight sl[4], point pt[2], vfloat precision) {
+straight::straight(const straight sl[4], point pt[2], double precision) {
   pvecerror(
-      "straight::straight(const straight sl[4], point pt[2],  vfloat prec");
+      "straight::straight(const straight sl[4], point pt[2],  double prec");
   int i;
-  vfloat meandist;
+  double meandist;
   point ptprev[2];
   point ptcurr[2];
   ptprev[0] = pt[0];
