@@ -9,7 +9,6 @@ appear in all copies and in supporting documentation.
 It is provided "as is" without express or implied warranty.
 */
 #include "wcpplib/util/FunNameStack.h"
-#include "wcpplib/math/parabola.h"
 #include "wcpplib/math/DoubleAc.h"
 #include "wcpplib/safetl/AbsArr.h"
 #include "wcpplib/matrix/multiply.h"
