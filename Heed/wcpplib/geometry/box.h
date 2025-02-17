@@ -52,7 +52,6 @@ class box : public absvol {
   void income(gparticle* gp) override;
   void chname(char* nm) const override;
   void print(std::ostream& file, int l) const override;
-  box* copy() const override;
 
  protected:
   absref_transmit get_components() override;
@@ -71,7 +70,6 @@ class manip_box : public manip_absvol, public box {
   absvol* Gavol() const override;
   void chname(char* nm) const override;
   void print(std::ostream& file, int l) const override;
-  manip_box* copy() const override;
 };
 
 // *****   sh_manip_box  ********
@@ -89,7 +87,6 @@ class sh_manip_box : public sh_manip_absvol, public box {
   absvol* Gavol() const override;
   void chname(char* nm) const override;
   void print(std::ostream& file, int l) const override;
-  sh_manip_box* copy() const override;
 
  protected:
   absref_transmit get_components() override;

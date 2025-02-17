@@ -29,9 +29,6 @@ class HeedChamber : public Heed::sh_manip_absvol,
     s_sensitive = true;
   }
 
-  Garfield::HeedChamber* copy() const override {
-    return new Garfield::HeedChamber(*this);
-  }
   absvol* Gavol() const override { return (Heed::box*)this; }
 
  protected:

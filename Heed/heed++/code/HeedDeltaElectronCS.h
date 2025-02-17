@@ -32,7 +32,6 @@ class HeedDeltaElectronCS {
   // copy of similar thing from ElElasticScatLowSigma
 
   void print(std::ostream& file, int l) const;
-  HeedDeltaElectronCS* copy() const { return new HeedDeltaElectronCS(*this); }
 
   static constexpr long q_angular_mesh = 50;
   static constexpr double low_cut_angle_deg = 20.;

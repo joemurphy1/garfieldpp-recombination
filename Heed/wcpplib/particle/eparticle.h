@@ -21,8 +21,6 @@ class eparticle : public mparticle /*, public particle_type*/ {
             particle_def* fpardef, fieldmap* fm);
   /// Destructor
   virtual ~eparticle() {}
-
-  eparticle* copy() const override { return new eparticle(*this); }
   void print(std::ostream& file, int l) const override;
 
  protected:

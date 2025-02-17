@@ -27,7 +27,6 @@ class HeedParticle : public eparticle {
   /// Destructor
   virtual ~HeedParticle() {}
 
-  HeedParticle* copy() const override { return new HeedParticle(*this); }
   void print(std::ostream& file, int l) const override;
 
  protected:

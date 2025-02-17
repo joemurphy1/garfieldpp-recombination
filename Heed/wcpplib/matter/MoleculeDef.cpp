@@ -43,8 +43,6 @@ double VanDerWaals::volume_of_mole(double T, double p, int& s_not_single) {
   return res;
 }
 
-VanDerWaals* VanDerWaals::copy() const { return new VanDerWaals(*this); }
-
 std::ostream& operator<<(std::ostream& file, const VanDerWaals& f) {
   mfunname(
       "std::ostream& operator << (std::ostream& file, const VanDerWaals& f)");

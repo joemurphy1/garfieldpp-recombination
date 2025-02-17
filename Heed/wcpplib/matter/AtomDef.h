@@ -38,7 +38,6 @@ class AtomDef {
   double A() const { return Ah; }
 
   void print(std::ostream& file, int l = 0) const;
-  AtomDef* copy() const { return new AtomDef(*this); } 
 };
 std::ostream& operator<<(std::ostream& file, const AtomDef& f);
 

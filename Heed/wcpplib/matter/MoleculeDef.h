@@ -32,8 +32,6 @@ class VanDerWaals {
   */
   // Return number of moles in the unit volume
   double volume_of_mole(double T, double p, int& s_not_single);
-
-  VanDerWaals* copy() const;
 };
 std::ostream& operator<<(std::ostream& file, const VanDerWaals& f);
 
@@ -87,8 +85,6 @@ class MoleculeDef : public AtomMixDef {
   ~MoleculeDef() = default;
 
   void print(std::ostream& file, int l) const;
-
-  MoleculeDef* copy() const { return new MoleculeDef(*this); }
 };
 std::ostream& operator<<(std::ostream& file, const MoleculeDef& f);
 

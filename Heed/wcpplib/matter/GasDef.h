@@ -116,7 +116,6 @@ class GasDef : public MatterDef {
          double fdensity = -1.0);
 
   void print(std::ostream& file, int l = 0) const;
-  GasDef* copy() const { return new GasDef(*this); }
 };
 std::ostream& operator<<(std::ostream& file, const GasDef& f);
 

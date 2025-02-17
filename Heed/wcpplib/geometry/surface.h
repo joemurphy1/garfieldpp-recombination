@@ -25,7 +25,6 @@ namespace Heed {
 
 class surface : public absref {
  public:
-  virtual surface* copy() const = 0;
   virtual ~surface() {}
   virtual int check_point_inside(const point& fpt, const vec& dir,
                                  vfloat fprec) const = 0;
@@ -115,7 +114,6 @@ class splane : public surface {
     return i;
   }
   void print(std::ostream& file, int l) const override;
-  splane* copy() const override { return new splane(*this); }
 };
 
 /// Unlimited surfaces volume.
@@ -176,7 +174,6 @@ class ulsvolume : public absvol {
     strcat(nm, name.c_str());
   }
   void print(std::ostream& file, int l) const override;
-  ulsvolume* copy() const override { return new ulsvolume(*this); }
 };
 
 class manip_ulsvolume : public manip_absvol, public ulsvolume {
@@ -193,7 +190,6 @@ class manip_ulsvolume : public manip_absvol, public ulsvolume {
     strcat(nm, name.c_str());
   }
   virtual void print(std::ostream& file, int l) const;
-  virtual manip_ulsvolume* copy() const { return new manip_ulsvolume(*this); }
 };
 }
 

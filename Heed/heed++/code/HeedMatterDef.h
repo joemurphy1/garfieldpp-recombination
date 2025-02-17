@@ -76,7 +76,6 @@ class HeedMatterDef {
   // calculated by another program and written to a file (only for debug)
   void replace_epsi12(const std::string& file_name);
   void print(std::ostream& file, int l) const;
-  HeedMatterDef* copy() const { return new HeedMatterDef(*this); }
 
   /// Flag affecting mixtures of atoms with different ionization potentials.
   /// If 1, all energy transfers what is absorbed even with the energy less than

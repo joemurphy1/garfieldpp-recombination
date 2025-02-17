@@ -34,7 +34,6 @@ class mparticle : public gparticle {
   double kinetic_energy() const { return m_curr_ekin; }
 
   void print(std::ostream& file, int l) const override;
-  mparticle* copy() const override { return new mparticle(*this); }
 
 
  protected:

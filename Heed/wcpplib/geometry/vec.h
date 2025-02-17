@@ -123,7 +123,6 @@ class absref_transmit {
   virtual ~absref_transmit() {}
 
   virtual void print(std::ostream& file, int l) const;
-  virtual absref_transmit* copy() const { return new absref_transmit(*this); }
 
   /// Number of vector objects which are the members of the class
   int qaref = 0;
@@ -357,7 +356,6 @@ class basis : public absref {
   basis(const vec& pex, const vec& pey, const vec& pez, const std::string& pname);
 
   friend std::ostream& operator<<(std::ostream& file, const basis& b);
-  virtual basis* copy() const { return new basis(*this); }
   virtual void print(std::ostream& file, int l) const;
   virtual ~basis() {}
 };
@@ -406,7 +404,6 @@ class point : public absref {
     return apeq(p1.v, p2.v, prec);
   }
   friend std::ostream& operator<<(std::ostream& file, const point& p);
-  virtual point* copy() const { return new point(*this); }
   virtual void print(std::ostream& file, int l) const;
   virtual ~point() {}
 };
@@ -455,7 +452,6 @@ class fixsyscoor : public absref, public abssyscoor {
         piv((f.Gapiv() != NULL) ? (*(f.Gapiv())) : point()),
         bas((f.Gabas() != NULL) ? (*(f.Gabas())) : basis()) {}
   void print(std::ostream& file, int l) const override;
-  fixsyscoor* copy() const { return new fixsyscoor(*this); }
   virtual ~fixsyscoor() {}
 
  protected:

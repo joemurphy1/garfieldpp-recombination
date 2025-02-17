@@ -199,8 +199,6 @@ class gparticle {
 
   /// Print-out.
   virtual void print(std::ostream& file, int l) const;
-  /// Clone the particle.
-  virtual gparticle* copy() const { return new gparticle(*this); }
 
  protected:
   /// Assign prevpos = currpos and currpos = nextpos,

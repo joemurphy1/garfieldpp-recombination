@@ -26,7 +26,6 @@ class HeedPhoton : public gparticle {
   virtual ~HeedPhoton() {}
 
   void print(std::ostream& file, int l) const override;
-  HeedPhoton* copy() const override { return new HeedPhoton(*this); }
 
   long m_particle_number;
   long m_parent_particle_number;

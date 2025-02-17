@@ -24,7 +24,6 @@ class EnTransfCS {
              const bool debug = false);
 
   void print(std::ostream& file, int l) const;
-  EnTransfCS* copy() const { return new EnTransfCS(*this); }
 
   /// Flag indicating whether the calculation was successful.
   bool m_ok = true;

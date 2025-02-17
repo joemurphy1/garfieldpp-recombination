@@ -145,12 +145,6 @@ void absvol::print(std::ostream& file, int l) const {
   file.flush();
 }
 
-absvol* absvol::copy() const {
-  mcerr << "absvol::copy() not defined\n";
-  spexit(mcerr);
-  return NULL;
-}                   
-
 // *********  manip_absvol  *********
 int manip_absvol::m_check_point_inside(const point& fpt,
                                        const vec& fdir) const {
@@ -247,12 +241,6 @@ void manip_absvol::m_print(std::ostream& file, int l) const {
   file.flush();
 }
 
-manip_absvol* manip_absvol::copy() const {
-  mcerr << "manip_absvol_copy() not defined\n";
-  spexit(mcerr);
-  return NULL;
-}                   
-
 // *********  sh_manip_absvol  *********
 absref_transmit sh_manip_absvol::get_components() {
   aref_ptr[0] = &csys;
@@ -276,12 +264,6 @@ void sh_manip_absvol::m_chname(char* nm) const {
   strcpy(nm, "mvol->");
   Gavol()->chname(&nm[6]);
 }
-
-sh_manip_absvol* sh_manip_absvol::copy() const {
-  mcerr << "sh_manip_absvol_copy() not defined\n";
-  spexit(mcerr);
-  return NULL;
-}                   
 
 void sh_manip_absvol::m_print(std::ostream& file, int l) const {
   if (l <= 0) return;

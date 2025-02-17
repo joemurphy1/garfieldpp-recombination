@@ -232,8 +232,6 @@ int box::range_ext(trajestep& fts, int s_ext) const {
   return m_ulsv.range_ext(fts, s_ext);
 }
 
-box* box::copy() const { return new box(*this); }
-
 void box::income(gparticle* /*gp*/) {}
 void box::chname(char* nm) const {
   strcpy(nm, "box: ");
@@ -243,7 +241,7 @@ void box::chname(char* nm) const {
 // *****   manip_box  ********
 
 absvol* manip_box::Gavol() const { return (box*)this; }
-manip_box* manip_box::copy() const { return new manip_box(*this); }
+
 void manip_box::chname(char* nm) const {
   strcpy(nm, "manip_box: ");
   strcat(nm, m_name.c_str());
@@ -274,7 +272,6 @@ absref_transmit sh_manip_box::get_components() {
   return sh_manip_absvol::get_components();
 }
 
-sh_manip_box* sh_manip_box::copy() const { return new sh_manip_box(*this); }
 void sh_manip_box::chname(char* nm) const {
   strcpy(nm, "sh_manip_box: ");
   strcat(nm, m_name.c_str());

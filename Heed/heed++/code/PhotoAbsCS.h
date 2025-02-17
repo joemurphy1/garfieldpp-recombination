@@ -70,7 +70,6 @@ class PhotoAbsCS {
   virtual void scale(double fact) = 0;
 
   virtual void print(std::ostream& file, int l) const;
-  virtual PhotoAbsCS* copy() const = 0;
 
  protected:
   std::string name;
@@ -112,9 +111,7 @@ class AveragePhotoAbsCS : public PhotoAbsCS {
   void scale(double fact) override;
 
   void print(std::ostream& file, int l) const override;
-  AveragePhotoAbsCS* copy() const override {
-    return new AveragePhotoAbsCS(*this);
-  }
+
 };
 
 /// Hydrogen: empirical fit of Kosarev & Podoliak.
@@ -131,9 +128,6 @@ class HydrogenPhotoAbsCS : public PhotoAbsCS {
   void scale(double fact) override;
 
   void print(std::ostream& file, int l) const override;
-  HydrogenPhotoAbsCS* copy() const override {
-    return new HydrogenPhotoAbsCS(*this);
-  }
 
  private:
   double prefactor = 1.;
@@ -194,9 +188,6 @@ class SimpleTablePhotoAbsCS : public PhotoAbsCS {
   const std::vector<double>& get_arr_CS() const { return cs; }
   void scale(double fact) override;
   void print(std::ostream& file, int l) const override;
-  SimpleTablePhotoAbsCS* copy() const override {
-    return new SimpleTablePhotoAbsCS(*this);
-  }
 
  private:
   /// Filename (saved for printing).
@@ -227,7 +218,6 @@ class PhenoPhotoAbsCS : public PhotoAbsCS {
   double get_integral_CS(double energy1, double energy2) const override;
   void scale(double fact) override;
   void print(std::ostream& file, int l) const override;
-  PhenoPhotoAbsCS* copy() const override { return new PhenoPhotoAbsCS(*this); }
 
  private:
   double power = 0.;
@@ -360,7 +350,6 @@ class AtomPhotoAbsCS {
   /// Activate a sub-shell. Set s_ignore_shell flag to false. 
   virtual void restore_shell(int nshell);
   virtual void print(std::ostream& file, int l) const;
-  virtual AtomPhotoAbsCS* copy() const = 0;
 
   AtomicSecondaryProducts* get_asp(int nshell);
 
@@ -414,9 +403,6 @@ class SimpleAtomPhotoAbsCS : public AtomPhotoAbsCS {
     return m_acs[nshell]->get_number();
   }
   virtual void print(std::ostream& file, int l) const;
-  virtual SimpleAtomPhotoAbsCS* copy() const {
-    return new SimpleAtomPhotoAbsCS(*this);
-  }
 
  protected:
   /// Filename (saved for printing).
@@ -449,7 +435,6 @@ class ExAtomPhotoAbsCS : public AtomPhotoAbsCS {
   // Width [MeV]
   void replace_shells_by_average(double fwidth, double fstep, long fmax_q_step);
   virtual void print(std::ostream& file, int l) const;
-  virtual ExAtomPhotoAbsCS* copy() const { return new ExAtomPhotoAbsCS(*this); }
 
   /// Default constructor.
   ExAtomPhotoAbsCS() : AtomPhotoAbsCS() {}
