@@ -255,14 +255,39 @@ class vec : public absref {
                r1.x * r2.y - r1.y * r2.x);
   }
   /// Return 1 if precisely the same vectors and 0 otherwise.
-  friend inline int operator==(const vec& r1, const vec& r2);
+  friend inline int operator==(const vec& r1, const vec& r2)
+  {
+    if (r1.x == r2.x && r1.y == r2.y && r1.z == r2.z)
+    return 1;
+  else
+    return 0;
+  }
   /// Return 0 if precisely the same vectors and 1 otherwise.
-  friend inline int operator!=(const vec& r1, const vec& r2);
+  friend inline int operator!=(const vec& r1, const vec& r2)
+  {
+    if (r1 == r2)
+    return 0;
+  else
+    return 1;
+  }
 
   /// Return true if two vectors are approximately the same.
-  friend inline bool apeq(const vec& r1, const vec& r2, double prec);
+  friend inline bool apeq(const vec& r1, const vec& r2, double prec)
+  {
+    return (apeq(r1.x, r2.x, prec) && apeq(r1.y, r2.y, prec) &&
+    apeq(r1.z, r2.z, prec));
+  }
 
-  friend inline vec unit_vec(const vec& v);
+  friend inline vec unit_vec(const vec& v)
+  {
+      // pvecerror("inline vec unit_vec(const vec &v)");
+  const double len = v.length();
+  if (len == 0) {
+    mcerr << "error in unit_vec: length(vec)=0\n";
+    spexit(mcerr);
+  }
+  return vec(v.x / len, v.y / len, v.z / len);
+  }
   // cosinus of angle between vectors
   // If one of vectors has zero length, it makes vecerror=1 and returns 0.
   friend double cos2vec(const vec& r1, const vec& r2);
@@ -282,7 +307,30 @@ class vec : public absref {
   /// Returns: 1 - parallel, -1  - antiparallel, 0 not parallel.
   /// Also returns 0 if one or both vectors have zero length.
   /// Thus, if angle between vectors < prec, they are parallel.
-  friend inline int check_par(const vec& r1, const vec& r2, double prec);
+  friend inline int check_par(const vec& r1, const vec& r2, double prec)
+  {
+      // 1 par, -1 antipar, 0 not parallel
+  double a = ang2vec(r1, r2);
+  // mcout<<"check_par: a="<<a<<" a-(M_PI - prec)="<<a-(M_PI - prec)<<'\n';
+  if (vecerror != 0) {
+    vecerror = 0;
+    return 0;
+  }
+  if (a <= prec) return 1;
+  if (a >= M_PI - std::max(prec, vprecision)) {
+    // If without max(prec, vprecision) but with just -prec
+    // Even for exactly parallel vectors this function
+    // would never confirm this.
+    if (prec < vprecision) {
+      vec anti_r2 = -r2;         // reverse the vector
+      a = ang2vec(r1, anti_r2);  // M_PI - old_a
+      if (a <= prec) return -1;
+    } else {
+      return -1;
+    }
+  }
+  return 0;
+  }
 
   /// Check whether two vectors are perpendicular.
   /// Returns: 1 perpendicular, 0 not perpendicular.
@@ -290,8 +338,22 @@ class vec : public absref {
   /// Thus, if angle between vectors
   /// a > 0.5 * M_PI - max(prec, vprecision) and
   /// a < 0.5 * M_PI + max(prec, vprecision), they are perpendicular.
-  friend inline int check_perp(const vec& r1, const vec& r2, double prec);
-  friend inline vec switch_xyz(const vec&);  // don't change the vector itself
+  friend inline int check_perp(const vec& r1, const vec& r2, double prec)
+  {
+      // returns 1 if perpendicular
+  double a = ang2vec(r1, r2);
+  if (vecerror != 0) {
+    vecerror = 0;
+    return 0;
+  }
+  if (apeq(a, 0.5 * M_PI, std::max(prec, vprecision))) return 1;
+  // If without max(prec, vprecision) but with just prec
+  // Event for exactly perpendicular vectors this function
+  // would never confirm this.
+  // if(a >= 0.5*M_PI - prec && a =< 0.5*M_PI + prec ) return 1;
+  return 0;
+  }
+  friend inline vec switch_xyz(const vec& v) { return vec(v.z, v.x, v.y); } // don't change the vector itself
 
 };
 std::ostream& operator<<(std::ostream& file, const vec& v);
@@ -300,8 +362,6 @@ extern vec dex;  // unit vector by x
 extern vec dey;  // unit vector by y
 extern vec dez;  // unit vector by z
 extern vec dv0;  // zero vector
-
-#include "wcpplib/geometry/vec.ic"
 
 /// Basis.
 class basis : public absref {
