@@ -57,7 +57,7 @@ bool HeedDeltaElectron::s_high_mult_scattering = true;
 bool HeedDeltaElectron::s_direct_low_if_little = true;
 
 HeedDeltaElectron::HeedDeltaElectron(manip_absvol* primvol, const point& pt,
-                                     const vec& vel, vfloat ftime,
+                                     const vec& vel, double ftime,
                                      long fparent_particle_number,
                                      fieldmap* fm, bool fprint_listing)
     : eparticle(primvol, pt, vel, ftime, &electron_def, fm),

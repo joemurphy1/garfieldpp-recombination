@@ -44,11 +44,6 @@ The file is provided "as is" without express or implied warranty.
 // To work correctly stackline(string); should not be in any additional {}
 
 #include "wcpplib/geometry/vfloat.h"
-/* Introduces type vfloat which is used throughout the geometrical calculations
-instead of double. 'double' is meant to be replacable by 'float' for
-speeding up, but no consistent research was made to check that it really
-works in this way. So now vfloat is synonym of double.
-*/
 
 namespace Heed {
 
@@ -89,7 +84,7 @@ class absref {
   /// Convert numbering representation of objects to new system
   virtual void up(const abssyscoor* fasc);
   /// Turn around axis doing via center of coordinate system along dir.
-  virtual void turn(const vec& dir, vfloat angle);
+  virtual void turn(const vec& dir, double angle);
   virtual void shift(const vec& dir);
 
  private:
@@ -123,7 +118,6 @@ class absref_transmit {
   virtual ~absref_transmit() {}
 
   virtual void print(std::ostream& file, int l) const;
-  virtual absref_transmit* copy() const { return new absref_transmit(*this); }
 
   /// Number of vector objects which are the members of the class
   int qaref = 0;
@@ -179,7 +173,7 @@ class absref_transmit {
 class vec : public absref {
  public:
   /// Constructor.
-  vec(vfloat xx, vfloat yy, vfloat zz) {
+  vec(double xx, double yy, double zz) {
     x = xx;
     y = yy;
     z = zz;
@@ -189,12 +183,12 @@ class vec : public absref {
   /// Destructor
   virtual ~vec() {}
  
-  vfloat x = 0.;
-  vfloat y = 0.;
-  vfloat z = 0.;
+  double x = 0.;
+  double y = 0.;
+  double z = 0.;
 
-  vfloat length() const { return sqrt(x * x + y * y + z * z); }
-  vfloat length2() const { return x * x + y * y + z * z; }
+  double length() const { return sqrt(x * x + y * y + z * z); }
+  double length2() const { return x * x + y * y + z * z; }
 
   vec down_new(const basis* fabas);
   vec up_new(const basis* fabas_new);
@@ -209,9 +203,9 @@ class vec : public absref {
   void up(const abssyscoor* fasc) override;
 
   /// Make new turned vector and leave this one unchanged.
-  vec turn_new(const vec& dir, vfloat angle);
+  vec turn_new(const vec& dir, double angle);
   /// Turn this vector
-  void turn(const vec& dir, vfloat angle) override;
+  void turn(const vec& dir, double angle) override;
   void shift(const vec& dir) override;
 
   /// Generate random unit vector in plane perpendicular to z-axis.
@@ -222,18 +216,18 @@ class vec : public absref {
   // Generate random unit vector in any direction in 3D space.
   void random_sfer_vec();
 
-  friend vec operator*(const vec& v, vfloat p) {
+  friend vec operator*(const vec& v, double p) {
     return vec(v.x * p, v.y * p, v.z * p);
   }
-  friend vec operator*=(vec& v, vfloat p) {
+  friend vec operator*=(vec& v, double p) {
     v = v * p;
     return v;
   }
-  friend vec operator*(vfloat p, const vec& v) {
+  friend vec operator*(double p, const vec& v) {
     return vec(v.x * p, v.y * p, v.z * p);
   }
-  vec operator/(vfloat p) const { return vec(x / p, y / p, z / p); }
-  friend vec operator/=(vec& v, vfloat p) {
+  vec operator/(double p) const { return vec(x / p, y / p, z / p); }
+  friend vec operator/=(vec& v, double p) {
     v = v / p;
     return v;
   }
@@ -252,7 +246,7 @@ class vec : public absref {
     return r1;
   }
   friend vec operator-(const vec& r) { return vec(-r.x, -r.y, -r.z); }
-  friend vfloat operator*(const vec& r1, const vec& r2) {
+  friend double operator*(const vec& r1, const vec& r2) {
     return r1.x * r2.x + r1.y * r2.y + r1.z * r2.z;
   }
   /// Vector product.
@@ -261,34 +255,82 @@ class vec : public absref {
                r1.x * r2.y - r1.y * r2.x);
   }
   /// Return 1 if precisely the same vectors and 0 otherwise.
-  friend inline int operator==(const vec& r1, const vec& r2);
+  friend inline int operator==(const vec& r1, const vec& r2)
+  {
+    if (r1.x == r2.x && r1.y == r2.y && r1.z == r2.z)
+    return 1;
+  else
+    return 0;
+  }
   /// Return 0 if precisely the same vectors and 1 otherwise.
-  friend inline int operator!=(const vec& r1, const vec& r2);
+  friend inline int operator!=(const vec& r1, const vec& r2)
+  {
+    if (r1 == r2)
+    return 0;
+  else
+    return 1;
+  }
 
   /// Return true if two vectors are approximately the same.
-  friend inline bool apeq(const vec& r1, const vec& r2, vfloat prec);
+  friend inline bool apeq(const vec& r1, const vec& r2, double prec)
+  {
+    return (apeq(r1.x, r2.x, prec) && apeq(r1.y, r2.y, prec) &&
+    apeq(r1.z, r2.z, prec));
+  }
 
-  friend inline vec unit_vec(const vec& v);
+  friend inline vec unit_vec(const vec& v)
+  {
+      // pvecerror("inline vec unit_vec(const vec &v)");
+  const double len = v.length();
+  if (len == 0) {
+    mcerr << "error in unit_vec: length(vec)=0\n";
+    spexit(mcerr);
+  }
+  return vec(v.x / len, v.y / len, v.z / len);
+  }
   // cosinus of angle between vectors
   // If one of vectors has zero length, it makes vecerror=1 and returns 0.
-  friend vfloat cos2vec(const vec& r1, const vec& r2);
+  friend double cos2vec(const vec& r1, const vec& r2);
   //  angle between vectors, in interval [0, M_PI]
   // If one of vectors has zero length, it makes vecerror=1.
-  friend vfloat ang2vec(const vec& r1, const vec& r2);
+  friend double ang2vec(const vec& r1, const vec& r2);
   friend vec project_to_plane(const vec& r, const vec& normal);
   // angle between projections of 2 vectors on plane normal to vector normal
   // in interval [0, 2*M_PI]
   // If one of vectors has zero length, it makes vecerror=1.
-  friend vfloat ang2projvec(const vec& r1, const vec& r2, const vec& normal);
+  friend double ang2projvec(const vec& r1, const vec& r2, const vec& normal);
   // sinus of angle between vectors, 0 or positive.
   // If one of vectors has zero length, it makes vecerror=1.
-  friend vfloat sin2vec(const vec& r1, const vec& r2);
+  friend double sin2vec(const vec& r1, const vec& r2);
 
   /// Check whether two vectors are parallel, or anti-parallel.
   /// Returns: 1 - parallel, -1  - antiparallel, 0 not parallel.
   /// Also returns 0 if one or both vectors have zero length.
   /// Thus, if angle between vectors < prec, they are parallel.
-  friend inline int check_par(const vec& r1, const vec& r2, vfloat prec);
+  friend inline int check_par(const vec& r1, const vec& r2, double prec)
+  {
+      // 1 par, -1 antipar, 0 not parallel
+  double a = ang2vec(r1, r2);
+  // mcout<<"check_par: a="<<a<<" a-(M_PI - prec)="<<a-(M_PI - prec)<<'\n';
+  if (vecerror != 0) {
+    vecerror = 0;
+    return 0;
+  }
+  if (a <= prec) return 1;
+  if (a >= M_PI - std::max(prec, vprecision)) {
+    // If without max(prec, vprecision) but with just -prec
+    // Even for exactly parallel vectors this function
+    // would never confirm this.
+    if (prec < vprecision) {
+      vec anti_r2 = -r2;         // reverse the vector
+      a = ang2vec(r1, anti_r2);  // M_PI - old_a
+      if (a <= prec) return -1;
+    } else {
+      return -1;
+    }
+  }
+  return 0;
+  }
 
   /// Check whether two vectors are perpendicular.
   /// Returns: 1 perpendicular, 0 not perpendicular.
@@ -296,8 +338,22 @@ class vec : public absref {
   /// Thus, if angle between vectors
   /// a > 0.5 * M_PI - max(prec, vprecision) and
   /// a < 0.5 * M_PI + max(prec, vprecision), they are perpendicular.
-  friend inline int check_perp(const vec& r1, const vec& r2, vfloat prec);
-  friend inline vec switch_xyz(const vec&);  // don't change the vector itself
+  friend inline int check_perp(const vec& r1, const vec& r2, double prec)
+  {
+      // returns 1 if perpendicular
+  double a = ang2vec(r1, r2);
+  if (vecerror != 0) {
+    vecerror = 0;
+    return 0;
+  }
+  if (apeq(a, 0.5 * M_PI, std::max(prec, vprecision))) return 1;
+  // If without max(prec, vprecision) but with just prec
+  // Event for exactly perpendicular vectors this function
+  // would never confirm this.
+  // if(a >= 0.5*M_PI - prec && a =< 0.5*M_PI + prec ) return 1;
+  return 0;
+  }
+  friend inline vec switch_xyz(const vec& v) { return vec(v.z, v.x, v.y); } // don't change the vector itself
 
 };
 std::ostream& operator<<(std::ostream& file, const vec& v);
@@ -306,8 +362,6 @@ extern vec dex;  // unit vector by x
 extern vec dey;  // unit vector by y
 extern vec dez;  // unit vector by z
 extern vec dv0;  // zero vector
-
-#include "wcpplib/geometry/vec.ic"
 
 /// Basis.
 class basis : public absref {
@@ -357,7 +411,6 @@ class basis : public absref {
   basis(const vec& pex, const vec& pey, const vec& pez, const std::string& pname);
 
   friend std::ostream& operator<<(std::ostream& file, const basis& b);
-  virtual basis* copy() const { return new basis(*this); }
   virtual void print(std::ostream& file, int l) const;
   virtual ~basis() {}
 };
@@ -384,7 +437,7 @@ class point : public absref {
   /// Constructor from vector.  
   point(const vec& fv) : v(fv) {}
   /// Constructor from coordinates.
-  point(const vfloat fex, const vfloat fey, const vfloat fez)
+  point(const double fex, const double fey, const double fez)
       : v(fex, fey, fez) {}
   /// Copy constructor.
   point(const point& p) : v(p.v) {}
@@ -402,11 +455,10 @@ class point : public absref {
   friend int operator!=(const point& p1, const point& p2) {
     return p1.v != p2.v ? 1 : 0;
   }
-  friend bool apeq(const point& p1, const point& p2, vfloat prec) {
+  friend bool apeq(const point& p1, const point& p2, double prec) {
     return apeq(p1.v, p2.v, prec);
   }
   friend std::ostream& operator<<(std::ostream& file, const point& p);
-  virtual point* copy() const { return new point(*this); }
   virtual void print(std::ostream& file, int l) const;
   virtual ~point() {}
 };
@@ -455,7 +507,6 @@ class fixsyscoor : public absref, public abssyscoor {
         piv((f.Gapiv() != NULL) ? (*(f.Gapiv())) : point()),
         bas((f.Gabas() != NULL) ? (*(f.Gabas())) : basis()) {}
   void print(std::ostream& file, int l) const override;
-  fixsyscoor* copy() const { return new fixsyscoor(*this); }
   virtual ~fixsyscoor() {}
 
  protected:

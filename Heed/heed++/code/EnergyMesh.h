@@ -57,7 +57,6 @@ class EnergyMesh {
   long get_interval_number_between_centers(const double ener) const;  // left
   friend std::ostream& operator<<(std::ostream& file, EnergyMesh& f);
 
-  EnergyMesh* copy() const { return new EnergyMesh(*this); }
   void print(std::ostream& file, int l) const;
 
  private:

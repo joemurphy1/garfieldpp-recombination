@@ -50,7 +50,7 @@ void absref::up(const abssyscoor* fasc) {
   ApplyAnyFunctionToVecElements(up(fasc));
 }
 
-void absref::turn(const vec& dir, vfloat angle) {
+void absref::turn(const vec& dir, double angle) {
   ApplyAnyFunctionToVecElements(turn(dir, angle));
 }
 
@@ -63,12 +63,12 @@ absref_transmit absref::get_components() {
 }
 
 // **** vector ****
-vfloat cos2vec(const vec& r1, const vec& r2) {
+double cos2vec(const vec& r1, const vec& r2) {
   // cosinus of angle between vectors
   // If one of vectors has zero length, it returns 2.
-  pvecerror("vfloat cos2vec(const vec& r1, const vec& r2)");
-  vfloat lr1 = r1.length2();
-  vfloat lr2 = r2.length2();
+  pvecerror("double cos2vec(const vec& r1, const vec& r2)");
+  double lr1 = r1.length2();
+  double lr2 = r2.length2();
   // mcout<<"cos2vec:\n";
   // Iprintn(mcout, lr1);
   // Iprintn(mcout, lr2);
@@ -76,7 +76,7 @@ vfloat cos2vec(const vec& r1, const vec& r2) {
     vecerror = 1;
     return 0;
   }
-  vfloat cs = r1 * r2;
+  double cs = r1 * r2;
   int sign = 1;
   if (cs < 0) sign = -1;
   cs = cs * cs;
@@ -86,15 +86,15 @@ vfloat cos2vec(const vec& r1, const vec& r2) {
   // return r1*r2/(lr1*lr2);
 }
 
-vfloat ang2vec(const vec& r1, const vec& r2) {
+double ang2vec(const vec& r1, const vec& r2) {
   // angle between vectors
   // instead of return acos(cos2vec(r1,r2)); which produces NaN on linux at
   // parallel vectors
-  vfloat cs = cos2vec(r1, r2);
+  double cs = cos2vec(r1, r2);
   if (vecerror != 0) return 0;
   if (cs > 0.707106781187 || cs < -0.707106781187) {  // 1.0/sqrt(2)
     // pass to sin, it will be more exactly
-    vfloat sn = sin2vec(r1, r2);
+    double sn = sin2vec(r1, r2);
     if (vecerror != 0) return 0;
     if (cs > 0.0)
       return asin(sn);
@@ -104,16 +104,16 @@ vfloat ang2vec(const vec& r1, const vec& r2) {
   return acos(cs);
 }
 
-vfloat sin2vec(const vec& r1, const vec& r2) {
+double sin2vec(const vec& r1, const vec& r2) {
   // sinus of angle between vectors
-  pvecerror("vfloat sin2vec(const vec& r1, const vec& r2)");
-  vfloat lr1 = r1.length2();
-  vfloat lr2 = r2.length2();
+  pvecerror("double sin2vec(const vec& r1, const vec& r2)");
+  double lr1 = r1.length2();
+  double lr2 = r2.length2();
   if (lr1 == 0 || lr2 == 0) {
     vecerror = 1;
     return 0;
   }
-  vfloat sn = (r1 || r2).length();
+  double sn = (r1 || r2).length();
   sn = sn * sn;
   sn = sqrt(sn / (lr1 * lr2));
   // mcout<<"r1="<<r1<<"r2="<<r2<<"sin="<<sn<<'\n';
@@ -129,20 +129,20 @@ vec project_to_plane(const vec& r, const vec& normal) {
     return dv0;
   }
   vec ax = unit_vec(per || normal);
-  vfloat v = ax * r;
+  double v = ax * r;
   return v * ax;
 }
 
-vfloat ang2projvec(const vec& r1, const vec& r2, const vec& normal) {
+double ang2projvec(const vec& r1, const vec& r2, const vec& normal) {
   pvecerror(
-      "vfloat ang2projvec(const vec& r1, const vec& r2, const vec& normal)");
+      "double ang2projvec(const vec& r1, const vec& r2, const vec& normal)");
   vec rt1 = project_to_plane(r1, normal);
   vec rt2 = project_to_plane(r2, normal);
   if (rt1 == dv0 || rt2 == dv0) {
     vecerror = 1;
     return 0;
   }
-  vfloat tang = ang2vec(rt1, rt2);
+  double tang = ang2vec(rt1, rt2);
   if (tang == 0) return tang;  // projections are parallel
   vec at = rt1 || rt2;
   int i = check_par(at, normal, 0.0001);
@@ -189,21 +189,21 @@ vec vec::up_new(const basis* fabas_new) {
 
 void vec::up(const basis* fabas_new) { *this = this->up_new(fabas_new); }
 
-vec vec::turn_new(const vec& dir, vfloat angle) {
-  pvecerror("vec turn(vec& dir, vfloat& angle)");
+vec vec::turn_new(const vec& dir, double angle) {
+  pvecerror("vec turn(vec& dir, double& angle)");
   if ((*this).length() == 0) return vec(0, 0, 0);
   if (check_par(*this, dir, 0.0) != 0) {
     // parallel vectors are not changed
     return *this;
   }
-  vfloat dirlen = dir.length();
+  double dirlen = dir.length();
   check_econd11a(dirlen, == 0, "cannot turn around zero vector", mcerr);
   vec u = dir / dirlen;  // unit vector
   vec constcomp = u * (*this) * u;
   vec ort1 = unit_vec(u || (*this));
   vec ort2 = ort1 || u;
   vec perpcomp = ort2 * (*this) * ort2;
-  vfloat len = perpcomp.length();
+  double len = perpcomp.length();
   // mcout<<" constcomp="<<constcomp<<" ort1="<<ort1<<" ort2="<<ort2;
   ort1 = sin(angle) * len * ort1;
   ort2 = cos(angle) * len * ort2;
@@ -213,7 +213,7 @@ vec vec::turn_new(const vec& dir, vfloat angle) {
   return constcomp + ort1 + ort2;
 }
 
-void vec::turn(const vec& dir, vfloat angle) {
+void vec::turn(const vec& dir, double angle) {
   *this = this->turn_new(dir, angle);
 }
 
@@ -227,14 +227,14 @@ vec vec::up_new(const abssyscoor* fasc) { return up_new(fasc->Gabas()); }
 void vec::up(const abssyscoor* fasc) { up(fasc->Gabas()); }
 
 void vec::random_round_vec() {
-  const vfloat phi = M_PI * 2.0 * Garfield::RndmUniform();
+  const double phi = M_PI * 2.0 * Garfield::RndmUniform();
   x = sin(phi);
   y = cos(phi);
   z = 0;
 }
 
 void vec::random_conic_vec(double theta) {
-  vfloat phi = M_PI * 2.0 * Garfield::RndmUniform();
+  double phi = M_PI * 2.0 * Garfield::RndmUniform();
   double stheta = sin(theta);
   x = sin(phi) * stheta;
   y = cos(phi) * stheta;
@@ -242,9 +242,9 @@ void vec::random_conic_vec(double theta) {
 }
 
 void vec::random_sfer_vec() {
-  vfloat cteta = 2.0 * Garfield::RndmUniform() - 1.0;
+  double cteta = 2.0 * Garfield::RndmUniform() - 1.0;
   random_round_vec();
-  vfloat steta = sqrt(1.0 - cteta * cteta);
+  double steta = sqrt(1.0 - cteta * cteta);
   *this = (*this) * steta;
   z = cteta;
 }
@@ -298,7 +298,7 @@ basis::basis(const vec& p, const std::string& pname) {
     ey = dey;
     ez = dez;
   }
-  vfloat ca = cos2vec(p, dez);
+  double ca = cos2vec(p, dez);
   if (ca == 1) {
     ex = dex;
     ey = dey;
@@ -324,7 +324,7 @@ basis::basis(const vec& p, const vec& c, const std::string& pname) {
     ey = dey;
     ez = dez;
   }
-  vfloat ca = cos2vec(p, c);
+  double ca = cos2vec(p, c);
   if (ca == 1) {
     vecerror = 1;
     ex = dex;
@@ -360,9 +360,9 @@ basis::basis(const vec& pex, const vec& pey, const vec& pez,
     mcerr << "name=" << pname << '\n';
     spexit(mcerr);
   }
-  if (!apeq(pex.length(), vfloat(1.0)) ||
-      !apeq(pey.length(), vfloat(1.0)) ||
-      !apeq(pez.length(), vfloat(1.0))) {
+  if (!apeq(pex.length(), double(1.0)) ||
+      !apeq(pey.length(), double(1.0)) ||
+      !apeq(pez.length(), double(1.0))) {
     mcerr << "ERROR in basis::basis(vec &pex, vec &pey, vec &pez) : \n"
           << "the vectors are not of unit length\n";
     mcerr << " pex,pey,pez:\n";

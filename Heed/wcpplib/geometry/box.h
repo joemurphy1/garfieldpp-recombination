@@ -24,8 +24,8 @@ namespace Heed {
 
 class box : public absvol {
  public:
-  vfloat m_dx, m_dy, m_dz;     ///< Lengths of sides
-  vfloat m_dxh, m_dyh, m_dzh;  ///< Half-lengths of sides
+  double m_dx, m_dy, m_dz;     ///< Lengths of sides
+  double m_dxh, m_dyh, m_dzh;  ///< Half-lengths of sides
   ulsvolume m_ulsv;
   std::string m_name;
 
@@ -33,9 +33,9 @@ class box : public absvol {
   /// Default constructor.
   box();
   // Constructor, compute precision from mean of dimensions.
-  box(vfloat fdx, vfloat fdy, vfloat fdz, const std::string& fname);
+  box(double fdx, double fdy, double fdz, const std::string& fname);
   /// Constructor with user-provided precision.
-  box(vfloat fdx, vfloat fdy, vfloat fdz, vfloat fprec,
+  box(double fdx, double fdy, double fdz, double fprec,
       const std::string& fname);
   box(box& fb);
   box(const box& fb);
@@ -52,7 +52,6 @@ class box : public absvol {
   void income(gparticle* gp) override;
   void chname(char* nm) const override;
   void print(std::ostream& file, int l) const override;
-  box* copy() const override;
 
  protected:
   absref_transmit get_components() override;
@@ -71,7 +70,6 @@ class manip_box : public manip_absvol, public box {
   absvol* Gavol() const override;
   void chname(char* nm) const override;
   void print(std::ostream& file, int l) const override;
-  manip_box* copy() const override;
 };
 
 // *****   sh_manip_box  ********
@@ -89,7 +87,6 @@ class sh_manip_box : public sh_manip_absvol, public box {
   absvol* Gavol() const override;
   void chname(char* nm) const override;
   void print(std::ostream& file, int l) const override;
-  sh_manip_box* copy() const override;
 
  protected:
   absref_transmit get_components() override;

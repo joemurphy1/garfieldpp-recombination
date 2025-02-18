@@ -4,22 +4,6 @@
 
 namespace Heed {
 
-int definp_int(const std::string& str) {
-  mfunnamep("int definp_int(const std::string& str)");
-  int i = 0;
-  mcout << "definp_int: starting, read int " << str << "\n";
-  if (str != std::string()) {
-    // search for mark
-    int i_ret = findmark(std::cin, str.c_str());
-    check_econd11(i_ret, != 1, mcerr);
-  }
-  std::cin >> i;
-  Iprintn(mcout, i);
-  check_econd11(std::cin.good(), != 1, mcerr);
-  mcout << "int is read\n";
-  return i;
-}
-
 long set_position(const std::string& word, std::istream& istrm, int s_rewind,
                   int s_req_sep) {
   mfunnamep(

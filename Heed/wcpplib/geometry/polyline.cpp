@@ -1,4 +1,5 @@
 #include "wcpplib/geometry/polyline.h"
+#include <limits>
 
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -73,8 +74,8 @@ void polyline::polyline_init(const point* fpt, int fqpt) {
   for (int n = 0; n < qsl; ++n) aref[n + qpt] = &sl[n];
 }
 
-int polyline::check_point_in(const point& fpt, vfloat prec) const {
-  pvecerror("int polyline::check_point_in(point& fpt, vfloat prec)");
+int polyline::check_point_in(const point& fpt, double prec) const {
+  pvecerror("int polyline::check_point_in(point& fpt, double prec)");
   for (int n = 0; n < qpt; ++n) {
     if (apeq(pt[n], fpt, prec)) return 1;
   }
@@ -92,7 +93,7 @@ int polyline::check_point_in(const point& fpt, vfloat prec) const {
 }
 
 int polyline::cross(const straight& fsl, point* pc, int& qpc, polyline* pl,
-                    int& qpl, vfloat prec) const {
+                    int& qpl, double prec) const {
   pvecerror("void polyline::cross(const straight& fsl, ...)");
   qpc = 0;
   qpl = 0;
@@ -123,20 +124,20 @@ int polyline::cross(const straight& fsl, point* pc, int& qpc, polyline* pl,
   return 0;
 }
 
-vfloat polyline::dist_two_inter(polyline& pl2, vfloat prec) const {
-  pvecerror("vfloat polyline::dist_two_inter(polyline& pl)");
+double polyline::dist_two_inter(polyline& pl2, double prec) const {
+  pvecerror("double polyline::dist_two_inter(polyline& pl)");
   const polyline& pl1 = *this;
   check_econd11(pl1.Gqpt(), != 2, mcerr);
   check_econd11(pl2.Gqpt(), != 2, mcerr);
   point cpt[2];
   int type_of_cross;
-  vfloat sldist = pl1.Gsl(0).distance(pl2.Gsl(0), type_of_cross, cpt);
+  double sldist = pl1.Gsl(0).distance(pl2.Gsl(0), type_of_cross, cpt);
   if (type_of_cross == 2 || type_of_cross == 3) return sldist;
   if (pl1.check_point_in(cpt[0], prec) > 0 &&
       pl2.check_point_in(cpt[1], prec) > 0)
     return sldist;
-  vfloat mx = max_vfloat;
-  vfloat r;
+    double mx = std::numeric_limits<double>::max();
+    double r;
   if ((r = pl1.distance(pl2.Gpt(0))) < mx) mx = r;
   if ((r = pl1.distance(pl2.Gpt(1))) < mx) mx = r;
   if ((r = pl2.distance(pl1.Gpt(0))) < mx) mx = r;
@@ -144,12 +145,12 @@ vfloat polyline::dist_two_inter(polyline& pl2, vfloat prec) const {
   return mx;
 }
 
-vfloat polyline::distance(const point& fpt) const {
-  pvecerror("vfloat polyline::distance(const point& fpt) const");
+double polyline::distance(const point& fpt) const {
+  pvecerror("double polyline::distance(const point& fpt) const");
   check_econd11(qsl, <= 0, mcerr);
-  vfloat sldist;
+  double sldist;
   point cpt;
-  vfloat mx = max_vfloat;
+  double mx = std::numeric_limits<double>::max();
   int n;
   for (n = 0; n < qsl; n++) {
     sldist = sl[n].distance(fpt, cpt);
@@ -166,12 +167,12 @@ vfloat polyline::distance(const point& fpt) const {
   return mx;
 }
 
-vfloat polyline::distance(const point& fpt, point& fcpt) const {
-  pvecerror("vfloat polyline::distance(const point& fpt) const");
+double polyline::distance(const point& fpt, point& fcpt) const {
+  pvecerror("double polyline::distance(const point& fpt) const");
   check_econd11(qsl, <= 0, mcerr);
-  vfloat sldist;
+  double sldist;
   point cpt;
-  vfloat mx = max_vfloat;
+  double mx = std::numeric_limits<double>::max();
   int n;
   for (n = 0; n < qsl; n++) {
     sldist = sl[n].distance(fpt, cpt);
@@ -197,7 +198,7 @@ vfloat polyline::distance(const point& fpt, point& fcpt) const {
   return mx;
 }
 
-int cross4pllines(const polyline pl[4], vfloat precision, straight& sl,
+int cross4pllines(const polyline pl[4], double precision, straight& sl,
                   point ptc[4][2]) {
   pvecerror(
       "int cross4pllines(const polyline pl[4], straight& sl, point ptc[4][2])");
@@ -277,7 +278,7 @@ std::ostream& operator<<(std::ostream& file, const polyline_pl& p) {
 
 //             **** polygon (in plane) ****
 
-polygon::polygon(const straight* fsl, int fqsl, vfloat prec)
+polygon::polygon(const straight* fsl, int fqsl, double prec)
     : polyline_pl(), s_convex(1) {
   pvecerror("polygon::polygon(const straight* fsl, int fqsl)");
   check_econd11a(fqsl, < 3, "fqsl cannot be less 3\n", mcerr);
@@ -336,7 +337,7 @@ polygon& polygon::operator=(const polygon& fpl) {
   return *this;
 }
 
-int polygon::check_point_in(const point& fpt, vfloat prec) const {
+int polygon::check_point_in(const point& fpt, double prec) const {
   pvecerror("int polygon::check_point_in(point& fpt)");
   int i;
   if ((i = polyline::check_point_in(fpt, prec)) > 0) {
@@ -376,7 +377,7 @@ int polygon::check_point_in(const point& fpt, vfloat prec) const {
   return 0;
 }
 
-point polygon::cross(const straight& fsl, vfloat prec) const {
+point polygon::cross(const straight& fsl, double prec) const {
   pvecerror("point polygon::cross(straight& fsl)");
   point cpt = pn.cross(fsl);  // does it cross the plane
   // mcout<<"polygon::cross: cpt="<<cpt;
@@ -390,10 +391,10 @@ point polygon::cross(const straight& fsl, vfloat prec) const {
     return cpt;
   }
 }
-int polygon::range(const point& fpt, const vec& dir, vfloat& rng, point& fptenr,
-                   vfloat prec) const {
+int polygon::range(const point& fpt, const vec& dir, double& rng, point& fptenr,
+  double prec) const {
   pvecerror(
-      "int polygon::range(const point& fpt, const vec& dir, vfloat& rng, "
+      "int polygon::range(const point& fpt, const vec& dir, double& rng, "
       " point &fptenr)");
   straight stl(fpt, dir);
   point pnt = cross(stl, prec);
@@ -429,13 +430,13 @@ absref_transmit rectangle::get_components() {
   return absref_transmit(4, aref_rct, qpt + qsl, aref);
 }
 
-rectangle::rectangle(const point& fpiv, vec fdir[2], vfloat fdim[2],
-                     vfloat prec) {
+rectangle::rectangle(const point& fpiv, vec fdir[2], double fdim[2],
+  double prec) {
   pvecerror(
-      "rectangle::rectangle(point fpiv, vec fdir[2], vfloat fdim[2], "
-      "vfloat prec)");
+      "rectangle::rectangle(point fpiv, vec fdir[2], double fdim[2], "
+      "double prec)");
   if (check_perp(fdir[0], fdir[1], prec) != 1) {
-    mcerr << "rectangle::rectangle(point fpiv, vec fdir[2], vfloat fdim[2]):\n"
+    mcerr << "rectangle::rectangle(point fpiv, vec fdir[2], double fdim[2]):\n"
           << " error: sides are not perpendicular\n";
     // There is stil no reason found in applications for sides to be
     // necessary perpendicular. The only reason in name of this class
@@ -445,7 +446,7 @@ rectangle::rectangle(const point& fpiv, vec fdir[2], vfloat fdim[2],
     spexit(mcerr);
   }
   if (fdim[0] <= 0 || fdim[1] <= 0) {
-    mcerr << "rectangle::rectangle(point fpiv, vec fdir[2], vfloat fdim[2]):\n"
+    mcerr << "rectangle::rectangle(point fpiv, vec fdir[2], double fdim[2]):\n"
           << " error: fdim[0] <=0 || fdim[1] <=0\n";
     mcerr << "fdim (dimensions):" << fdim[0] << ' ' << fdim[1] << '\n';
     mcerr << "fdir[2](directions of sides):\n" << fdir[0] << fdir[1];
@@ -488,7 +489,7 @@ absref_transmit spquadr::get_components() {
   return absref_transmit(4, aref_sp, qpt + qsl, aref);
 }
 
-point spquadr::pt_angle_rad(vfloat rad, vfloat angle) {
+point spquadr::pt_angle_rad(double rad, double angle) {
   vec axis = unit_vec(dir1 || dir2);
   vec rv = dir1;
   rv.turn(axis, angle);
@@ -515,7 +516,7 @@ spquadr::spquadr(const spquadr& sq)
 }
 
 spquadr::spquadr(const point& fpiv, const straight& sl1, const straight& sl2,
-                 const vec& fdir1, const vec& fdir2, vfloat prec)
+                 const vec& fdir1, const vec& fdir2, double prec)
     : polygon(), piv(fpiv), dir1(unit_vec(fdir1)), dir2(unit_vec(fdir2)) {
   straight slh[4];
   slh[0] = sl1;

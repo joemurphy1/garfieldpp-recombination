@@ -23,8 +23,8 @@ absref_transmit splane::get_components() {
 }
 
 int splane::check_point_inside(const point& fpt, const vec& dir,
-                               vfloat fprec) const {
-  mfunname("int splane::check_point_inside(const point&, const vec&, vfloat)");
+  double fprec) const {
+  mfunname("int splane::check_point_inside(const point&, const vec&, double)");
   if (dir == dv0) {
     // this is not useful
     if (fpt == pn.Gpiv()) return 1;
@@ -33,7 +33,7 @@ int splane::check_point_inside(const point& fpt, const vec& dir,
     return 0;
   }
   if (pn.check_point_in(fpt, fprec) == 1) {
-    vfloat ca = cos2vec(dir, dir_ins);
+    double ca = cos2vec(dir, dir_ins);
     if (ca < 0) return 0;
     return 1;
   }
@@ -43,7 +43,7 @@ int splane::check_point_inside(const point& fpt, const vec& dir,
 }
 
 int splane::check_point_inside1(const point& fpt, int s_ext,
-                                vfloat fprec) const {
+  double fprec) const {
   if (pn.check_point_in(fpt, fprec) == 1) {
     if (s_ext == 1) return 0;
     return 1;
@@ -53,7 +53,7 @@ int splane::check_point_inside1(const point& fpt, int s_ext,
   return 0;
 }
 
-int splane::range(const trajestep& fts, vfloat* crange, point* cpt,
+int splane::range(const trajestep& fts, double* crange, point* cpt,
                   int* s_ext) const {
   mfunname("int splane::range(...)");
   if (fts.s_range_cf == 0) {
@@ -63,7 +63,7 @@ int splane::range(const trajestep& fts, vfloat* crange, point* cpt,
       vecerror = 0;
       return 0;
     }
-    vfloat rng = (pt - fts.currpos).length();
+    double rng = (pt - fts.currpos).length();
     if (pt == fts.currpos || check_par(pt - fts.currpos, fts.dir, 0.01) == 1) {
       //                                   looks like not matter ^
       // otherwise the point is behind plane
@@ -71,7 +71,7 @@ int splane::range(const trajestep& fts, vfloat* crange, point* cpt,
         // otherwise it can not reach the plane
         cpt[0] = pt;
         crange[0] = rng;
-        vfloat t = cos2vec(fts.dir, dir_ins);
+        double t = cos2vec(fts.dir, dir_ins);
         if (t < 0)
           s_ext[0] = 1;
         else if (t > 0)
@@ -100,12 +100,12 @@ int splane::range(const trajestep& fts, vfloat* crange, point* cpt,
     if (q == 1) {
       vec r1 = -fts.relcen;
       vec r2 = pt[0] - cf.Gpiv();
-      vfloat angle = ang2projvec(r1, r2, cf.Gdir());
-      vfloat rng = cf.Grad() * angle;
+      double angle = ang2projvec(r1, r2, cf.Gdir());
+      double rng = cf.Grad() * angle;
       if (fts.mrange >= rng) {
         cpt[0] = pt[0];
         crange[0] = rng;
-        vfloat c = cos2vec(dir_ins, fts.relcen);
+        double c = cos2vec(dir_ins, fts.relcen);
         if (angle == 0.0) {
           // cross in the current point
           if (c > 0)
@@ -132,25 +132,25 @@ int splane::range(const trajestep& fts, vfloat* crange, point* cpt,
       vec vcr[2];
       vcr[0] = pt[0] - cf.Gpiv();
       vcr[1] = pt[1] - cf.Gpiv();
-      vfloat angle[2];
+      double angle[2];
       angle[0] = ang2projvec(r, vcr[0], cf.Gdir());
       angle[1] = ang2projvec(r, vcr[1], cf.Gdir());
       if (angle[0] > angle[1]) {  // ordering
-        vfloat a = angle[0];
+        double a = angle[0];
         angle[0] = angle[1];
         angle[1] = a;
         point p = pt[0];
         pt[0] = pt[1];
         pt[1] = p;
       }
-      vfloat rng;
+      double rng;
       rng = cf.Grad() * angle[0];
       if (fts.mrange >= rng) {
         // find out what the first point means
         int ins = 0;  // 1 if the point inside and exits
         vec td = fts.dir;
         td.turn(cf.Gdir(), angle[0]);  // local dir in the crossing point
-        vfloat t = cos2vec(td, dir_ins);
+        double t = cos2vec(td, dir_ins);
         if (t < 0)
           ins = 1;  // means the point was inside and now exiting
         else
@@ -216,7 +216,7 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
   mcout << fts;
 #endif
   constexpr int pqcrossurf = 4;
-  vfloat crange[pqcrossurf];
+  double crange[pqcrossurf];
   point cpt[pqcrossurf];
   int fs_ext[pqcrossurf];
   int n, m, nc;
@@ -332,7 +332,7 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
 */
 
 void ulsvolume::ulsvolume_init(const std::vector<std::shared_ptr<surface> >& fsurf,
-                               const std::string& fname, vfloat fprec) {
+                               const std::string& fname, double fprec) {
   prec = fprec;
   name = fname;
   if (qsurf > 0) {
@@ -345,7 +345,7 @@ void ulsvolume::ulsvolume_init(const std::vector<std::shared_ptr<surface> >& fsu
 }
 
 ulsvolume::ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf,
-                     char* fname, vfloat fprec)
+                     char* fname, double fprec)
     : qsurf(fsurf.size()), name(fname) {
   mfunname("ulsvolume::ulsvolume(...)");
   check_econd12(qsurf, >, pqqsurf, mcerr);

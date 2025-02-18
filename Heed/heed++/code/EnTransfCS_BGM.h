@@ -29,7 +29,6 @@ class EnTransfCS_BGM {
   BGMesh* mesh = nullptr;
   std::vector<EnTransfCS> etcs_bgm;
 
-  EnTransfCS_BGM* copy() const { return new EnTransfCS_BGM(*this); }
   void print(std::ostream& file, int l) const;
 };
 }

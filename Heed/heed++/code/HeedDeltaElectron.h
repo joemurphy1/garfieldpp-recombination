@@ -17,14 +17,11 @@ class HeedDeltaElectron : public eparticle {
   HeedDeltaElectron() = default;
   /// Constructor.
   HeedDeltaElectron(manip_absvol* primvol, const point& pt, const vec& vel,
-                    vfloat ftime, long fparent_particle_number,
+                    double ftime, long fparent_particle_number,
                     fieldmap* fm, bool fs_print_listing = false);
   /// Destructor
   virtual ~HeedDeltaElectron() {}
 
-  HeedDeltaElectron* copy() const override {
-    return new HeedDeltaElectron(*this);
-  }
   void print(std::ostream& file, int l) const override;
 
   std::vector<HeedCondElectron> conduction_electrons;

@@ -29,7 +29,7 @@ class stvpoint {
   /// Unit vector, in the local system (last system in the tree).
   vec dirloc;
   /// Longitudinal velocity
-  vfloat speed = 0.;
+  double speed = 0.;
   manip_absvol_treeid tid;
 
   /// Position flag
@@ -44,14 +44,14 @@ class stvpoint {
 
   manip_absvol* next_eid = nullptr;  // if nextpos.sb==2
   /// Range from previous point.
-  vfloat prange = 0.;
-  vfloat time = 0.;
+  double prange = 0.;
+  double time = 0.;
 
   /// Default constructor.
   stvpoint() = default;
   /// Constructor.
-  stvpoint(const point& fpt, const vec& fdir, vfloat fspeed,
-           manip_absvol_treeid& ftid, vfloat fprange, vfloat ftime, int fsb,
+  stvpoint(const point& fpt, const vec& fdir, double fspeed,
+           manip_absvol_treeid& ftid, double fprange, double ftime, int fsb,
            int fs_ent, manip_absvol* faeid)
       : pt(fpt),
         dir(unit_vec(fdir)),
@@ -75,7 +75,7 @@ class stvpoint {
     * \param fs_ent "entering" flag
     * \param faeid next volume
     **/
-  stvpoint(const stvpoint& pstv, const trajestep& ts, vfloat mrange,
+  stvpoint(const stvpoint& pstv, const trajestep& ts, double mrange,
            int fsb, int fs_ent, manip_absvol* faeid)
       : pt(),
         dir(),
@@ -150,7 +150,7 @@ class gparticle {
   gparticle() = default;
   /// Constructor.
   gparticle(manip_absvol* primvol, const point& pt, const vec& vel,
-            vfloat time);
+    double time);
   /// Destructor.
   virtual ~gparticle() {}
 
@@ -175,10 +175,10 @@ class gparticle {
   }
 
   /// Set limits/parameters for trajectory steps.
-  void set_step_limits(const vfloat fmax_range, 
-                       const vfloat frad_for_straight,
-                       const vfloat fmax_straight_arange,
-                       const vfloat fmax_circ_arange) {
+  void set_step_limits(const double fmax_range, 
+                       const double frad_for_straight,
+                       const double fmax_straight_arange,
+                       const double fmax_circ_arange) {
     m_max_range = fmax_range;
     m_rad_for_straight = frad_for_straight;
     m_max_straight_arange = fmax_straight_arange;
@@ -188,7 +188,7 @@ class gparticle {
   /// Get the current position of the particle.
   const vec& position() const { return m_currpos.pt.v; }
   /// Get the current time of the particle.
-  vfloat time() const { return m_currpos.time; }
+  double time() const { return m_currpos.time; }
   /// Get the current direction of the particle.
   const vec& direction() const { return m_currpos.dir; }
   /// Alive?
@@ -199,8 +199,6 @@ class gparticle {
 
   /// Print-out.
   virtual void print(std::ostream& file, int l) const;
-  /// Clone the particle.
-  virtual gparticle* copy() const { return new gparticle(*this); }
 
  protected:
   /// Assign prevpos = currpos and currpos = nextpos,
@@ -228,8 +226,8 @@ class gparticle {
     *        dir. In the latter case, the range is restricted by the end point.
     *        In calc_step_to_bord() it is set to m_max_straight_arange.
     */
-  virtual void curvature(bool& curved, vec& frelcen, vfloat& fmrange,
-                         vfloat prec);
+  virtual void curvature(bool& curved, vec& frelcen, double& fmrange,
+    double prec);
 
   /// Apply any other processes (turn the trajectory, kill the particle, ...).
   virtual void physics_after_new_speed(std::vector<gparticle*>& /*secondaries*/) {}
@@ -279,13 +277,13 @@ class gparticle {
 
  private:
   /// Max. length of trajectory steps.
-  vfloat m_max_range = 100. * CLHEP::cm;
+  double m_max_range = 100. * CLHEP::cm;
   /// Bending radius beyond which to use straight-line steps.
-  vfloat m_rad_for_straight = 1000. * CLHEP::cm;
+  double m_rad_for_straight = 1000. * CLHEP::cm;
   /// Angular step limit when using straight-line approximation.
-  vfloat m_max_straight_arange = 0.1 * CLHEP::rad;
+  double m_max_straight_arange = 0.1 * CLHEP::rad;
   /// Angular step limit for curved lines.
-  vfloat m_max_circ_arange = 0.2 * CLHEP::rad;
+  double m_max_circ_arange = 0.2 * CLHEP::rad;
 };
 }
 

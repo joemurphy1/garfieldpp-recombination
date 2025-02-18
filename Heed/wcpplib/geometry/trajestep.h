@@ -43,32 +43,32 @@ class trajestep : public absref {
     * \param fmrange can be used for reducing/limiting the step length.
     * \param prec tolerance for checking if frelcen is perpendicular to dir.
     */
-  trajestep(const vfloat fmax_range, const vfloat frad_for_straight,
-            const vfloat fmax_straight_arange, const vfloat fmax_circ_arange,
+  trajestep(const double fmax_range, const double frad_for_straight,
+            const double fmax_straight_arange, const double fmax_circ_arange,
             const point& fcurrpos, const vec& fdir, const bool fcurved, 
-            const vec& frelcen, vfloat fmrange, vfloat prec);
+            const vec& frelcen, double fmrange, double prec);
   /** Constructor to continue propagation from the end point of another step.
     * \param fts old step to continue
     * \param fmrange new range to travel
     */ 
-  trajestep(const trajestep& fts, vfloat fmrange);
+  trajestep(const trajestep& fts, double fmrange);
   /// Default constructor.
   trajestep() = default;
   /// Destructor
   virtual ~trajestep() {}
 
   /// Move to the next point.
-  void Gnextpoint(vfloat frange, point& fpos, vec& fdir) const;
+  void Gnextpoint(double frange, point& fpos, vec& fdir) const;
 
   /// Max. step length.
-  vfloat max_range = 100. * CLHEP::cm;
+  double max_range = 100. * CLHEP::cm;
   // The three following parameters regulate the precision for curved lines.
   /// Radius beyond which to prefer straight lines to reduce calculation time.
-  vfloat rad_for_straight = 1000. * CLHEP::cm;
+  double rad_for_straight = 1000. * CLHEP::cm;
   /// Angular step for curved lines when using straight-line approximation.
-  vfloat max_straight_arange = 0.1 * CLHEP::rad;
+  double max_straight_arange = 0.1 * CLHEP::rad;
   /// Angular step for curved lines.
-  vfloat max_circ_arange = 0.2 * CLHEP::rad;
+  double max_circ_arange = 0.2 * CLHEP::rad;
 
   /// Current position.
   point currpos;
@@ -90,7 +90,7 @@ class trajestep : public absref {
   int s_prec = 0; 
 
   /// Maximal possible range
-  vfloat mrange = 0.;
+  double mrange = 0.;
 
   // Finishing point
   // It looks like that at s_prec=1 mpoint is not initiated
@@ -102,7 +102,7 @@ class trajestep : public absref {
   static absref absref::* aref[4];
 
  private:
-  void Gnextpoint1(vfloat frange, point& fpos, vec& fdir, vec& frelcen) const;
+  void Gnextpoint1(double frange, point& fpos, vec& fdir, vec& frelcen) const;
 };
 std::ostream& operator<<(std::ostream& file, const trajestep& f);
 }

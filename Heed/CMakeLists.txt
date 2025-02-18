@@ -36,9 +36,6 @@ add_library(Heed SHARED
             wcpplib/math/kinem.cpp
             wcpplib/math/linexi2.cpp
             wcpplib/math/lorgamma.cpp
-            wcpplib/math/parabola.cpp
-            wcpplib/matrix/inverse.cpp
-            wcpplib/matrix/multiply.cpp
             wcpplib/matter/AtomDef.cpp
             wcpplib/matter/GasDef.cpp
             wcpplib/matter/MatterDef.cpp

@@ -20,13 +20,12 @@ class HeedPhoton : public gparticle {
   HeedPhoton() = default;
   /// Constructor.
   HeedPhoton(manip_absvol* primvol, const point& pt, const vec& vel,
-             vfloat time, long fparent_particle_number, double fenergy,
+             double time, long fparent_particle_number, double fenergy,
              fieldmap* fm, const bool fs_print_listing = false);
   /// Destructor
   virtual ~HeedPhoton() {}
 
   void print(std::ostream& file, int l) const override;
-  HeedPhoton* copy() const override { return new HeedPhoton(*this); }
 
   long m_particle_number;
   long m_parent_particle_number;

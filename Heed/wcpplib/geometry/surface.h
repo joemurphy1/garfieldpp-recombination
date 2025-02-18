@@ -25,20 +25,19 @@ namespace Heed {
 
 class surface : public absref {
  public:
-  virtual surface* copy() const = 0;
   virtual ~surface() {}
   virtual int check_point_inside(const point& fpt, const vec& dir,
-                                 vfloat fprec) const = 0;
+    double fprec) const = 0;
   // If two volumes are exactly adjusted, it may happens that the point
   // belongs to both volumes, to their borders. If dir != dv0,
   // the exiting volume is ignored.
 
   virtual int check_point_inside1(const point& fpt, int s_ext,
-                                  vfloat fprec) const = 0;
+    double fprec) const = 0;
   // s_ext=0 - entering
   //       1 - exiting
 
-  virtual int range(const trajestep& fts, vfloat* crange, point* cpt,
+  virtual int range(const trajestep& fts, double* crange, point* cpt,
                     int* s_ext) const = 0;
   // Does not change fts
   // If no cross or cross father than fts.mrange,
@@ -59,7 +58,7 @@ class surface : public absref {
   // In case of parallel to border, s_ext=2.
 
   virtual int cross(const polyline& fpl, point* cntrpt, int& qcntrpt,
-                    vfloat prec) const = 0;
+    double prec) const = 0;
   virtual void print(std::ostream& file, int l) const = 0;
 };
 
@@ -82,8 +81,8 @@ class splane : public surface {
   /// Destructor
   virtual ~splane() {}
 
-  int check_point_inside(const point& fpt, const vec& dir, vfloat fprec) const override;
-  int check_point_inside1(const point& fpt, int s_ext, vfloat fprec) const override;
+  int check_point_inside(const point& fpt, const vec& dir, double fprec) const override;
+  int check_point_inside1(const point& fpt, int s_ext, double fprec) const override;
   // s_ext=0 - entering
   //       1 - exiting
   // 15.02.2006: Remark on check_point_inside vs. check_point_inside1.
@@ -100,14 +99,14 @@ class splane : public surface {
   // all the surfaces, thus faking the entering even if the particle is
   // actually exiting. This allows to make a stop there.
 
-  int range(const trajestep& fts, vfloat* crange, point* cpt, int* s_ext) const override;
+  int range(const trajestep& fts, double* crange, point* cpt, int* s_ext) const override;
   // Does not change fts
   // If no cross, returns 0 a
   // If there are crosses, returns number of them and
   // assign crange and cpt
 
   int cross(const polyline& fpl, point* cntrpt, int& qcntrpt,
-            vfloat prec) const override {
+    double prec) const override {
     polyline* plh = new polyline[fpl.Gqsl()];
     int qplh;
     int i = pn.cross(fpl, cntrpt, qcntrpt, plh, qplh, prec);
@@ -115,7 +114,6 @@ class splane : public surface {
     return i;
   }
   void print(std::ostream& file, int l) const override;
-  splane* copy() const override { return new splane(*this); }
 };
 
 /// Unlimited surfaces volume.
@@ -155,7 +153,7 @@ class ulsvolume : public absvol {
   /// Default constructor.
   ulsvolume() {}
   /// Constructor from surfaces.
-  ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf, char* fname, vfloat fprec);
+  ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf, char* fname, double fprec);
   ulsvolume(ulsvolume& f);
   ulsvolume(const ulsvolume& fv);
   /// Destructor
@@ -168,7 +166,7 @@ class ulsvolume : public absvol {
   // If there is cross, returns 1 and assign fts.mrange and fts.mpoint
 
   void ulsvolume_init(const std::vector<std::shared_ptr<surface> >& fsurf,
-                      const std::string& fname, vfloat fprec);
+                      const std::string& fname, double fprec);
 
   void income(gparticle* /*gp*/) override {}
   void chname(char* nm) const override {
@@ -176,7 +174,6 @@ class ulsvolume : public absvol {
     strcat(nm, name.c_str());
   }
   void print(std::ostream& file, int l) const override;
-  ulsvolume* copy() const override { return new ulsvolume(*this); }
 };
 
 class manip_ulsvolume : public manip_absvol, public ulsvolume {
@@ -193,7 +190,6 @@ class manip_ulsvolume : public manip_absvol, public ulsvolume {
     strcat(nm, name.c_str());
   }
   virtual void print(std::ostream& file, int l) const;
-  virtual manip_ulsvolume* copy() const { return new manip_ulsvolume(*this); }
 };
 }
 

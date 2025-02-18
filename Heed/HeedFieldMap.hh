@@ -23,8 +23,7 @@ class HeedFieldMap : public Heed::fieldmap {
   void UseEfield(const bool flag) { m_useEfield = flag; }
   void UseBfield(const bool flag) { m_useBfield = flag; }
 
-  void evaluate(const Heed::point& pt, Heed::vec& efield, Heed::vec& bfield,
-                Heed::vfloat& mrange) const override {
+  void evaluate(const Heed::point& pt, Heed::vec& efield, Heed::vec& bfield, double& mrange) const override {
     const double x = pt.v.x * conv + m_x;
     const double y = pt.v.y * conv + m_y;
     const double z = pt.v.z * conv + m_z;

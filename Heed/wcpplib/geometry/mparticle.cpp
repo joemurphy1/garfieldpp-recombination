@@ -1,5 +1,6 @@
 #include "wcpplib/geometry/mparticle.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include <limits>
 /*
 Copyright (c) 2000 Igor B. Smirnov
 
@@ -18,7 +19,7 @@ using CLHEP::c_light;
 using CLHEP::c_squared;
 
 mparticle::mparticle(manip_absvol* primvol, const point& pt, const vec& vel,
-                     vfloat ftime, double fmass) 
+  double ftime, double fmass) 
     : gparticle(primvol, pt, vel, ftime),
       m_mass(fmass) {
 
@@ -52,17 +53,17 @@ void mparticle::check_consistency() const {
 
   const double mc2 = m_mass * c_squared;
   double ek = m_orig_gamma_1 * mc2;
-  if (ek > 1000.0 * DBL_MIN) {
+  if (ek > 1000.0 * std::numeric_limits<double>::min()) {
     check_econd11a(fabs(m_orig_ekin - ek) / (m_orig_ekin + ek), > 1.0e-9, 
         "ek=" << ek << '\n' << (*this), mcerr);
   }
   ek = m_prev_gamma_1 * mc2;
-  if (ek > 1000.0 * DBL_MIN) {
+  if (ek > 1000.0 * std::numeric_limits<double>::min()) {
     check_econd11a(fabs(m_prev_ekin - ek) / (m_prev_ekin + ek), > 1.0e-9, 
         "ek=" << ek << '\n' << (*this), mcerr);
   }
   ek = m_curr_gamma_1 * mc2;
-  if (ek > 1000.0 * DBL_MIN) {
+  if (ek > 1000.0 * std::numeric_limits<double>::min()) {
     check_econd11a(fabs(m_curr_ekin - ek) / (m_curr_ekin + ek), > 1.0e-9, 
         "ek=" << ek << '\n' << (*this), mcerr);
   }
@@ -95,8 +96,8 @@ void mparticle::step(std::vector<gparticle*>& secondaries) {
   }
 }
 
-void mparticle::curvature(bool& curved, vec& frelcen, vfloat& fmrange,
-                          vfloat prec) {
+void mparticle::curvature(bool& curved, vec& frelcen, double& fmrange,
+  double prec) {
 
   pvecerror("void mparticle::curvature(...)");
   vec f;
@@ -128,7 +129,7 @@ void mparticle::curvature(bool& curved, vec& frelcen, vfloat& fmrange,
     vec fn = project_to_plane(f, m_currpos.dir);  // normal component
     frelcen = unit_vec(fn);
     double len = fn.length();
-    vfloat rad =
+    double rad =
         (m_currpos.speed * m_currpos.speed * (m_curr_gamma_1 + 1) * m_mass) / len;
     frelcen *= rad;
   }
@@ -136,11 +137,11 @@ void mparticle::curvature(bool& curved, vec& frelcen, vfloat& fmrange,
   m_currpos.tid.up_absref(&m_currpos.dirloc);
 }
 
-int mparticle::force(const point& /*pt*/, vec& f, vec& f_perp, vfloat& mrange) {
+int mparticle::force(const point& /*pt*/, vec& f, vec& f_perp, double& mrange) {
   f.x = f_perp.x = 0.;
   f.y = f_perp.y = 0.;
   f.z = f_perp.z = 0.;
-  mrange = max_vfloat;
+  mrange = std::numeric_limits<double>::max();
   return 0;
 }
 
@@ -151,7 +152,7 @@ void mparticle::new_speed() {
     return;
   }
   vec f1, f2, f_perp1, f_perp2, f_perp_fl1, f_perp_fl2;
-  vfloat r1, r2;  // ranges, do not need here
+  double r1, r2;  // ranges, do not need here
   int i = force(m_prevpos.pt, f1, f_perp_fl1, r1);
   int j = force(m_currpos.pt, f2, f_perp_fl2, r2);
   check_econd11a(vecerror, != 0, "position 1, after computing force\n", mcerr);
@@ -200,11 +201,11 @@ void mparticle::new_speed() {
     if (mean_fn_len > 0.0) {
       vec relcen = unit_vec(mean_fn);
       double mean_speed = (m_prevpos.speed + m_currpos.speed) * 0.5;
-      vfloat new_rad = (mean_speed * mean_speed *
+      double new_rad = (mean_speed * mean_speed *
                         ((m_prev_gamma_1 + m_curr_gamma_1) * 0.5 + 1) * m_mass) /
                        mean_fn_len;
       if (new_rad > 0.0) {
-        vfloat ang = m_currpos.prange / new_rad;  // angle to turn
+        double ang = m_currpos.prange / new_rad;  // angle to turn
         fdir.turn(m_prevpos.dir || relcen, ang);  // direction at the end
       }
     }

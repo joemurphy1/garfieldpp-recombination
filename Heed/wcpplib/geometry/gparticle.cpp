@@ -1,4 +1,5 @@
 #include "wcpplib/geometry/gparticle.h"
+#include <limits>
 /*
 Copyright (c) 2000 Igor B. Smirnov
 
@@ -40,7 +41,7 @@ void stvpoint::print(std::ostream& file, int l) const {
 std::atomic<long> gparticle::s_counter{0L};
  
 gparticle::gparticle(manip_absvol* primvol, const point& pt, const vec& vel,
-                     vfloat ftime)
+  double ftime)
     : m_prevpos(),
       m_nextpos() {
   mfunname("gparticle::gparticle(...)");
@@ -88,19 +89,19 @@ void gparticle::step(std::vector<gparticle*>& secondaries) {
   }
 }
 
-void gparticle::curvature(bool& curved, vec& frelcen, vfloat& fmrange,
-                          vfloat /*prec*/) {
+void gparticle::curvature(bool& curved, vec& frelcen, double& fmrange,
+  double /*prec*/) {
   curved = false;
   frelcen.x = 0.;
   frelcen.y = 0.;
   frelcen.z = 0.;
-  fmrange = max_vfloat;
+  fmrange = std::numeric_limits<double>::max();
   /* The following is for debug
   vec field(0,1,0);
-  vfloat rad = 10;
+  double rad = 10;
   if (length(m_currpos.dir) > 0 && check_par(m_currpos.dir, field) == 0) {
     curved = true;
-    vfloat coef = sin2vec(m_currpos.dir, field);
+    double coef = sin2vec(m_currpos.dir, field);
     rad = rad / coef;
     frelcen = unit_vec(m_currpos.dir || field) * rad;
   }
@@ -118,7 +119,7 @@ stvpoint gparticle::calc_step_to_bord() {
   }
   bool curved = false;
   vec relcen;
-  vfloat mrange;
+  double mrange;
   curvature(curved, relcen, mrange, m_max_straight_arange);
   if (mrange <= 0) {
     // Preserve current point for modification by physics.

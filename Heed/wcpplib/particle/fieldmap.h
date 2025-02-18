@@ -1,8 +1,8 @@
 #ifndef FIELDMAP_H
 #define FIELDMAP_H
 
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/geometry/vec.h"
+#include <limits>
 
 namespace Heed {
 
@@ -11,13 +11,12 @@ namespace Heed {
 class fieldmap {
  public:
   fieldmap() = default;
-
-  virtual void evaluate(const point& /*pt*/, vec& efield, vec& bfield,
-                vfloat& mrange) const {
+  virtual ~fieldmap() = default;
+  virtual void evaluate(const point& /*pt*/, vec& efield, vec& bfield, double& mrange) const {
     efield.x = bfield.x = 0.;
     efield.y = bfield.y = 0.;
     efield.z = bfield.z = 0.;
-    mrange = DBL_MAX;
+    mrange = std::numeric_limits<double>::max();
   }
   virtual bool inside(const point& /*pt*/) { return true; }
 

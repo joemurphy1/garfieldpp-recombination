@@ -20,15 +20,12 @@ class HeedParticle_BGM : public eparticle {
   /// no generation of virtual photons.
   /// Thus it is just a PAI without even clusters
   HeedParticle_BGM(manip_absvol* primvol, const point& pt, const vec& vel,
-                   vfloat time, particle_def* fpardef, fieldmap* fm,
+                   double time, particle_def* fpardef, fieldmap* fm,
                    bool fs_loss_only = false, bool fs_print_listing = false);
   /// Destructor
   virtual ~HeedParticle_BGM() {}
 
   void print(std::ostream& file, int l) const override;
-  HeedParticle_BGM* copy() const override { 
-    return new HeedParticle_BGM(*this); 
-  }
 
  protected:
   void physics(std::vector<gparticle*>& secondaries) override;

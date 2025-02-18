@@ -48,7 +48,6 @@ class MatterDef : public AtomMixDef {
   double I_eff() const { return I_effh; }
 
   void print(std::ostream& file, int l) const;
-  MatterDef* copy() const { return new MatterDef(*this); }
 };
 std::ostream& operator<<(std::ostream& file, const MatterDef& f);
 

@@ -69,7 +69,7 @@ inline int operator!=(manip_absvol_treeid& tid1, manip_absvol_treeid& tid2) {
 /// For interface with external system please use manip_absvol.
 class absvol : virtual public absref {
  public:
-  vfloat prec = 1.;
+ double prec = 1.;
   bool s_sensitive;
 
   /// Destructor
@@ -120,7 +120,6 @@ class absvol : virtual public absref {
   virtual void income(gparticle*) {}
   virtual void chname(char* nm) const { strcpy(nm, "absvol"); }
   virtual void print(std::ostream& file, int l) const;
-  virtual absvol* copy() const;
   virtual std::vector<manip_absvol*> Gamanip_embed() const;
 };
 
@@ -158,7 +157,6 @@ class manip_absvol : virtual public absref {
   }
   void m_chname(char* nm) const;
   virtual void m_print(std::ostream& file, int l) const;
-  manip_absvol* copy() const;
   virtual ~manip_absvol() {}
 };
 
@@ -185,7 +183,6 @@ class sh_manip_absvol : public manip_absvol {
 
   virtual void m_chname(char* nm) const;
   virtual void m_print(std::ostream& file, int l) const override;
-  sh_manip_absvol* copy() const;
 };
 
 }

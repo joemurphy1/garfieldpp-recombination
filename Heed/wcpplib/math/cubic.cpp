@@ -1,7 +1,6 @@
 #include <cfloat>
 #include <iomanip>
 #include "wcpplib/math/cubic.h"
-#include "wcpplib/math/parabola.h"
 #include "wcpplib/util/FunNameStack.h"
 
 /*
@@ -118,67 +117,4 @@ int Cubic::find_real_zero(double z[3]) const {
   return q;
 }
 
-int Cubic::find_maxmin(double xmm[2], double ymm[2], int s_mm[2]) const {
-  mfunname(
-      "int Cubic::find_maxmin(double xmm[2], double ymm[2], int s_mm[2]) "
-      "const");
-  double ap = 3 * da;
-  double bp = 2 * db;
-  double cp = dc;
-  Parabola par(ap, bp, cp);
-  s_mm[0] = 0;
-  s_mm[1] = 0;
-  int qz = par.find_zero(xmm);
-  if (qz == 1) {
-    s_mm[0] = 0;
-  }
-  if (qz == 2) {
-    if (a() > 0) {
-      s_mm[0] = 1;
-      s_mm[1] = -1;
-    } else {
-      s_mm[0] = -1;
-      s_mm[1] = 1;
-    }
-  }
-  for (int n = 0; n < qz; ++n) {
-    ymm[n] = y(xmm[n]);
-  }
-  return qz;
-}
-
-std::ostream& operator<<(std::ostream& file, const Cubic& f) {
-  Cubic::double_complex z1;
-  Cubic::double_complex z2;
-  Cubic::double_complex z3;
-  Ifile << "Cubic: s_xzero=" << f.s_xzero() << '\n';
-  indn.n += 2;
-  f.find_zero(z1, z2, z3);
-  Ifile << "Cubic: a=" << f.a() << " b=" << f.b() << " c=" << f.c()
-        << " d=" << f.d() << '\n';
-  file << " z1,2,3=" << z1 << ' ' << z2 << ' ' << z3 << '\n';
-  double r[3];
-  int q;
-  q = f.find_real_zero(r);
-  Ifile << "The number of real zeros =" << q << '\n';
-  int n;
-  Ifile << "Solutions=";
-  for (n = 0; n < q; n++) file << ' ' << r[n];
-  file << '\n';
-  double xmm[2];
-  double ymm[2];
-  int s_mm[2];
-  q = f.find_maxmin(xmm, ymm, s_mm);
-  Ifile << "Max/Min, q=" << q << '\n';
-  indn.n += 2;
-  for (n = 0; n < q; n++) {
-    Ifile << "n=" << n << " xmm[n]=" << std::setw(13) << xmm[n]
-          << " ymm[n]=" << std::setw(13) << ymm[n]
-          << " s_mm[n]=" << std::setw(13) << s_mm[n] << '\n';
-  }
-  indn.n -= 2;
-  indn.n -= 2;
-
-  return file;
-}
 }

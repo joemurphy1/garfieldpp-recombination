@@ -17,7 +17,6 @@ class BGMesh {
   long q = 0;
   std::vector<double> x;
   void print(std::ostream& file, int l) const;
-  BGMesh* copy() const { return new BGMesh(*this); }
 };
 std::ostream& operator<<(std::ostream& file, const BGMesh& bgm);
 }

@@ -8,18 +8,6 @@
 
 namespace Heed {
 
-/* The function below looks for string in cin input stream,
-read a value of a corresponding type and return it.
-They may be dangerous because they do not require a separator in front of
-string.
-Therefore the longer name which has the same ending can be erroneously taken
-instead of the looked one.
-The rewind is not made. Therefore the names should appear in order.
-The returning the read value is useful because such a functions can be used
-for initialization of global variables.
-*/
-int definp_int(const std::string& str = std::string());
-
 // New experimental routines
 
 long set_position(const std::string& word, std::istream& istrm, int s_rewind,

@@ -26,7 +26,7 @@ class mparticle : public gparticle {
   mparticle() = default;
   /// Constructor, \f$\gamma - 1\f$ calculated from the from velocity vector.
   mparticle(manip_absvol* primvol, const point& pt, const vec& vel, 
-            vfloat ftime, double fmass);
+    double ftime, double fmass);
   /// Destructor.
   virtual ~mparticle() {}
 
@@ -34,7 +34,6 @@ class mparticle : public gparticle {
   double kinetic_energy() const { return m_curr_ekin; }
 
   void print(std::ostream& file, int l) const override;
-  mparticle* copy() const override { return new mparticle(*this); }
 
 
  protected:
@@ -48,8 +47,8 @@ class mparticle : public gparticle {
   ///   set curved = false, frelcen = (0, 0, 0).
   /// - If force is anti-parallel to dir, restrict range till exceeding
   ///   kinetic energy.
-  void curvature(bool& curved, vec& frelcen, vfloat& fmrange, 
-                 vfloat prec) override;
+  void curvature(bool& curved, vec& frelcen, double& fmrange, 
+    double prec) override;
 
   /// The force is considered to be split in two components.
   /// One component, f, can be in any direction and is
@@ -64,7 +63,7 @@ class mparticle : public gparticle {
   /// mrange is the distance at which the force should not change much.
   /// The dimension of f is [weight] * [lenght] / [time]^2
   /// The dimension of f_perp is [weight] / [time];
-  virtual int force(const point& pt, vec& f, vec& f_perp, vfloat& mrange);
+  virtual int force(const point& pt, vec& f, vec& f_perp, double& mrange);
 
   /// Mass (not mass * speed_of_light^2)
   double m_mass = 0.;

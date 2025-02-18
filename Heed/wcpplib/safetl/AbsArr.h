@@ -69,7 +69,6 @@ The file is provided "as is" without express or implied warranty.
 #include <sstream>
 #include "wcpplib/util/FunNameStack.h"
 #include "wcpplib/stream/definp.h"
-#include "wcpplib/util/String.h"
 #include "wcpplib/safetl/AbsPtr.h"
 
 // Here there is a good place to switch on the bound check in all programs
@@ -338,19 +337,6 @@ class DynLinArr : public RegPassivePtr {
 
   void check(void) const;
 
-  /*
-  void print(std::ostream& file, long qpr) const
-    {
-      Ifile<<"DynLinArr<T>: qel="<<get_qel()<<" qpr="<<qpr<<'\n';
-      long n;
-      indn.n+=2;
-      for( n=0; n<qpr; n++)
-      {
-        Ifile<<"n="<<n<<" el[n]="<<this->DynLinArr<T>::operator[](n)<<'\n';
-      }
-      indn.n-=2;
-    }
-  */
   DynArr<T> top(void);  // transpose the vector, rotate it
   // from vertical colunm to horisontal line for the purpose
   // of linear algebra calculations.
@@ -401,8 +387,6 @@ class DynLinArr : public RegPassivePtr {
   void sort_select_decreasing(DynLinArr<long>& sort_ind,
                               long q_to_sort = 0) const;
 
-  virtual DynLinArr* copy() const;
-
   virtual ~DynLinArr() {
     check();
     if (el) delete[] el;
@@ -413,10 +397,6 @@ class DynLinArr : public RegPassivePtr {
   mutable T* el;     // array of qel elements, mutable only for pilfer
   //(regarding mutable and pilfer see ActivePtr for more comments).
 };
-template <class T>
-DynLinArr<T>* DynLinArr<T>::copy() const {
-  return new DynLinArr<T>(*this);  
-}
 
 template <class T>
 void apply1(DynLinArr<T>& ar, void (*fun)(T& f)) {
@@ -1004,33 +984,6 @@ long append(const T& t,         // value to assign
 #endif
 
 template <class T>
-std::ostream& operator<<(std::ostream& file, const DynLinArr<T>& f) {
-  // mfunnamep("template<class T> std::ostream& operator<<(std::ostream& file,
-  // const DynLinArr<T>& f)");
-  // mcout<<"operator<<(std::ostream& file, const DynLinArr<T>& f) is
-  // started\n";
-  Ifile << "DynLinArr<T>: qel=" << f.get_qel() << '\n';
-  f.check();
-  long n;
-  indn.n += 2;
-  for (n = 0; n < f.get_qel(); n++) {
-    // Ifile<<"n="<<n<<" el[n]="<<noindent<<f[n]<<yesindent<<'\n';
-    if (s_short_output == 0) {
-      Ifile << "n=" << n << " el[n]=";
-    }
-    std::ostringstream ost;
-    ost << indn << noindent << f[n] << yesindent;
-    put_one_n(ost);
-    file << ost.str();
-  }
-  // file<<yesindent;
-  indn.n -= 2;
-  return file;
-}
-
-
-
-template <class T>
 std::istream& operator>>(std::istream& file, DynLinArr<T>& f) {
   mfunnamep(
       "template<class T> istream& operator>>(istream& file, DynLinArr<T>& f)");
@@ -1058,154 +1011,7 @@ std::istream& operator>>(std::istream& file, DynLinArr<T>& f) {
   return file;
 }
 
-// Commented out unused function (hschindl)
-/*
-template<class T>
-void output_DynLinArr(std::ostream& file, const DynLinArr<T>& f, int l, long q)
-{
-  //mfunnamep("template<class T> void output_DynLinArr(std::ostream& file, const
-DynLinArr<T>& f, int l, long q)");
-  Ifile<<"DynLinArr<T>: qel="<<f.get_qel()<<" q to print is "<<q<<'\n';
-  f.check();
-  if(q>f.get_qel())
-  {
-    mcerr<<"output_DynLinArr(...): q>f.get_qel(), q="<<q
-         <<" f.get_qel()="<<f.get_qel()<<'\n';
-    mcerr<<"Type of T is (in internal notations) "<<typeid(T).name()<<'\n';
-    spexit(mcerr);
-  }
-  long n;
-  indn.n+=2;
-  for( n=0; n<q; n++)
-  {
-    //Ifile<<"n="<<n<<" el[n]="<<noindent<<f[n]<<yesindent<<'\n';
-    Ifile<<"n="<<n<<" el[n]="<<noindent;
-    std::ostringstream ost;
-    ost<<f[n]<<yesindent;
-    put_one_n(ost);
-    file<<ost.str();
-  }
-  //file<<yesindent;
-  indn.n-=2;
-}
-*/
-
-template <class T>
-void print_DynLinArr(std::ostream& file, const DynLinArr<T>& f, int l) {
-  // mfunnamep("template<class T> void print_DynLinArr(std::ostream& file, const
-  // DynLinArr<T>& f, int l)");
-  Ifile << "DynLinArr<T>: qel=" << f.get_qel() << '\n';
-  f.check();
-  long n;
-  indn.n += 2;
-  for (n = 0; n < f.get_qel(); n++) {
-    // Ifile<<"n="<<n<<" el[n]="<<noindent; f[n].print(file, l);
-    // file<<yesindent;
-    Ifile << "n=" << n << " el[n]=" << noindent;
-    std::ostringstream ost;
-    f[n].print(ost, l);
-    ost << yesindent;
-    put_one_n(ost);
-    file << ost.str();
-  }
-  indn.n -= 2;
-}
-
-template <class T>
-void print_DynLinArr(std::ostream& file, const DynLinArr<T>& f, int l, long q) {
-  // mfunnamep("template<class T> void print_DynLinArr(std::ostream& file, const
-  // DynLinArr<T>& f, int l, long q)");
-  Ifile << "DynLinArr<T>: qel=" << f.get_qel() << " q to print is " << q
-        << '\n';
-  f.check();
-  if (q > f.get_qel()) {
-    mcerr << "print_DynLinArr(...): q>f.get_qel(), q=" << q
-          << " f.get_qel()=" << f.get_qel() << '\n';
-    mcerr << "Type of T is (in internal notations) " << typeid(T).name()
-          << '\n';
-    spexit(mcerr);
-  }
-  long n;
-  indn.n += 2;
-  for (n = 0; n < q; n++) {
-    // Ifile<<"n="<<n<<" el[n]="<<noindent; f[n].print(file, l);
-    // file<<yesindent;
-    Ifile << "n=" << n << " el[n]=" << noindent;
-    std::ostringstream ost;
-    f[n].print(ost, l);
-    ost << yesindent;
-    put_one_n(ost);
-    file << ost.str();
-  }
-  indn.n -= 2;
-}
-
-template <class T>
-void print_adr_DynLinArr(std::ostream& file, const DynLinArr<T>& f, int l,
-                         long q) {
-  // mfunnamep("template<class T> void print_adr_DynLinArr(std::ostream& file,
-  // const DynLinArr<T>& f, int l, long q)");
-  Ifile << "DynLinArr<T>: qel=" << f.get_qel() << " q to print is " << q
-        << '\n';
-  f.check();
-  if (q > f.get_qel()) {
-    mcerr << "print_adr_DynLinArr(...): q>f.get_qel(), q=" << q
-          << " f.get_qel()=" << f.get_qel() << '\n';
-    mcerr << "Type of T is (in internal notations) " << typeid(T).name()
-          << '\n';
-    spexit(mcerr);
-  }
-  long n;
-  indn.n += 2;
-  for (n = 0; n < q; n++) {
-    // Ifile<<"n="<<n<<" el[n]="<<noindent; f[n]->print(file, l);
-    // file<<yesindent;
-    Ifile << "n=" << n << " el[n]=" << noindent;
-    std::ostringstream ost;
-    f[n]->print(ost, l);
-    ost << yesindent;
-    put_one_n(ost);
-    file << ost.str();
-  }
-  indn.n -= 2;
-}
-
 const int pq_arrelem_in_line = 5;
-
-void print_DynLinArr_int(std::ostream& file, const DynLinArr<int>& f);
-void print_DynLinArr_long(std::ostream& file, const DynLinArr<long>& f);
-void print_DynLinArr_float(std::ostream& file, const DynLinArr<float>& f);
-void print_DynLinArr_double(std::ostream& file, const DynLinArr<double>& f);
-// See AbsArrD for similar function with DoubleAc
-
-void print_DynLinArr_double2(std::ostream& file, const DynLinArr<double>& f1,
-                             const DynLinArr<double>& f2);
-// Print two arrays in two colums side-by-side.
-// Good for arrays of equal dimensions.
-
-void print_DynLinArr_int_double(std::ostream& file, const DynLinArr<int>& iar,
-                                const DynLinArr<double>& dar);
-
-void print_DynLinArr_int_double3(std::ostream& file, const DynLinArr<int>& iar,
-                                 const DynLinArr<double>& dar1,
-                                 const DynLinArr<double>& dar2,
-                                 const DynLinArr<double>& dar3);
-// Print 4 arrays in two colums side-by-side.
-// Good for arrays of equal dimensions.
-
-#define Iprintdla_int(file, name)           \
-  file << indn << #name << "=" << noindent; \
-  print_DynLinArr_int(file, name);
-#define Iprintdla_long(file, name)          \
-  file << indn << #name << "=" << noindent; \
-  print_DynLinArr_long(file, name);
-#define Iprintdla_float(file, name)         \
-  file << indn << #name << "=" << noindent; \
-  print_DynLinArr_float(file, name);
-#define Iprintdla_double(file, name)        \
-  file << indn << #name << "=" << noindent; \
-  print_DynLinArr_double(file, name);
-// See AbsArrD for similar function with DoubleAc
 
 template <class T, class X>
 void copy_DynLinArr(const T& s, X& d) {
@@ -2199,7 +2005,6 @@ qel.acu(1)\n";
     }
     return 1;
   }
-  virtual DynArr* copy() const { return new DynArr(*this); }
   virtual ~DynArr() {}
 
  private:
@@ -2586,84 +2391,6 @@ DynLinArr<T>::DynLinArr(const DynArr<T>& f, int n_of_dim,
 }
 
 template <class T>
-std::ostream& operator<<(std::ostream& file, const DynArr<T>& f) {
-  // mfunnamep("template<class T> std::ostream& operator<<(std::ostream& file,
-  // const DynArr<T>& f)");
-  f.check();
-  Ifile << "DynArr<T>: qdim=" << f.get_qdim() << '\n';
-  indn.n += 2;
-  if (s_short_output > 0) {
-    Ifile << noindent << f.get_qel() << yesindent;
-  } else {
-    Ifile << "qel=" << noindent << f.get_qel() << yesindent;
-    Ifile << "cum_qel=" << noindent << f.get_cum_qel() << yesindent;
-  }
-  if (f.get_s_non_emplty() == 1) {
-    if (s_short_output == 0) {
-      Ifile << "Content element by element:\n";
-      Ifile << "(The first number is sequencial number, then there are "
-               "indexes, the last is the element)\n";
-      // DynArr<T>& ff(f);
-    }
-    long nseq = 0;
-    IterDynArr<T> iter_f(&((DynArr<T>&)f));
-    T* at;
-    while ((at = iter_f.more()) != NULL) {
-      std::ostringstream ost;
-      if (s_short_output == 0) {
-        // Ifile<<"ncur="<<noindent<<iter_f.get_ncur()<<yesindent;
-        Ifile << "nseq=" << std::setw(5) << nseq << " ncur=";
-        long n;
-        for (n = 0; n < iter_f.get_ncur().get_qel(); n++) {
-          file << ' ' << std::setw(5) << iter_f.get_ncur()[n];
-        }
-        ost << indn << " element=" << noindent << (*at) << yesindent;
-      } else {
-        ost << indn << noindent << (*at) << yesindent;
-      }
-      put_one_n(ost);
-      file << ost.str();
-      nseq++;
-    }
-    file << yesindent;
-  } else {
-    if (s_short_output == 0) {
-      Ifile << "Content is empty.\n";
-    }
-  }
-  indn.n -= 2;
-  return file;
-}
-/*
-template<class T>
-void DybArr<T>::short_output(std::ostream& file)
-{
-  mfunnamep("template<class T> void DybArr<T>::short_output(std::ostream&
-file))");
-  f.check();
-  Ifile<<"DynArr<T>: qdim="<<f.get_qdim()<<'\n';
-  indn.n+=2;
-  qel.short_output(file);
-  if(f.get_s_non_emplty() == 1)
-  {
-    long nseq=0;
-    IterDynArr<T> iter_f( &((DynArr<T>&) f));
-    T* at;
-    while( (at=iter_f.more()) != NULL )
-    {
-      std::ostringstream ost;
-      ost<<indn<<noindent<<(*at)<<yesindent;
-      put_one_n(ost);
-      file<<ost.str();
-      nseq++;
-    }
-    file<<yesindent;
-  }
-  indn.n-=2;
-  return file;
-}
-*/
-template <class T>
 std::istream& operator>>(std::istream& file, DynArr<T>& f) {
   mfunnamep(
       "template<class T> istream& operator>>(istream& file, DynArr<T>& f)");
@@ -2723,98 +2450,6 @@ std::istream& operator>>(std::istream& file, DynArr<T>& f) {
   }
   return file;
 }
-
-/*
-template<class T>
-void DynArr<T>::short_read(istream& file)
-{
-  mfunnamep("template<class T> void DynArr<T>::short_read(istream& file)");
-  definp_endpar dep(&file, 0, 1, 0);
-  long qdim=0;
-  DEFINPAP(qdim);
-  check_econd11(qdim, < 0 , mcerr);
-  DynLinArr<long> qel_loc;
-  qel_loc.short_read(file);
-  // generate cum
-  if(qel_loc.get_qel() > 0 )
-  {
-    f.pilfer(DynArr<T>(qel_loc, NULL));
-    long nseq;
-    long n;
-    long qseq=qel[0];
-    for(n=1; n<el.get_qel(); n++)
-    {
-      qseq*=el[n];
-    }
-    for(n=0; n<qseq; n++)
-    {
-      file>>f.ac(ncur);
-    }
-  }
-  else
-  {
-    // just pass to end
-    set_position("Content is empty.",
-                 *dep.istrm, dep.s_rewind, dep.s_req_sep);
-  }
-  return file;
-}
-*/
-
-template <class T>
-void print_DynArr(std::ostream& file, const DynArr<T>& f, int l) {
-  // mfunnamep("template<class T> oid print_DynArr(std::ostream& file, const
-  // DynArr<T>& f, int l)");
-  f.check();
-  // Ifile<<"DynArr<T>: qdim="<<f.get_qdim()
-  //     <<" qel="<<noindent<<f.get_qel()<<yesindent<<'\n';
-  Ifile << "DynArr<T>: qdim=" << f.get_qdim() << '\n';
-  indn.n += 2;
-  Ifile << "qel=" << noindent << f.get_qel() << yesindent;
-  Ifile << "cum_qel=" << noindent << f.get_cum_qel() << yesindent;
-  Ifile << "Content element by element:\n";
-  Ifile << "(The first number is sequencial number, then there are indexes, "
-           "the last is the element)\n";
-  // DynArr<T>& ff(f);
-  long nseq = 0;
-  IterDynArr<T> iter_f(&((DynArr<T>&)f));
-  T* at;
-  while ((at = iter_f.more()) != NULL) {
-    // Ifile<<"ncur="<<noindent<<iter_f.get_ncur()<<yesindent;
-    Ifile << "nseq=" << std::setw(5) << nseq << " ncur=";
-    long n;
-    for (n = 0; n < iter_f.get_ncur().get_qel(); n++) {
-      file << ' ' << std::setw(5) << iter_f.get_ncur()[n];
-    }
-    // file<<'\n';
-    // Ifile<<"element="<<noindent; at->print(file, l);
-    // file<<yesindent<<'\n';
-    std::ostringstream ost;
-    ost << indn << " element=" << noindent;
-    at->print(ost, l);
-    ost << yesindent;
-    put_one_n(ost);
-    file << ost.str();
-  }
-  file << yesindent;
-  indn.n -= 2;
-}
-
-// New experimental approach.
-// give the width of field, which is put in setw().
-// Whether the array will be printed in single lines
-// or by columns, is determined by whether 80 symbols are enough
-void print_DynArr_int_w(std::ostream& file, const DynArr<int>& f, int w);
-
-void print_DynArr_float(std::ostream& file, const DynArr<float>& f);
-void print_DynArr_double(std::ostream& file, const DynArr<double>& f);
-// ^Identical functions
-// See AbsArrD for similar function with DoubleAc
-
-#define Iprintda_double(file, name)         \
-  file << indn << #name << "=" << noindent; \
-  print_DynArr_double(file, name);
-// See AbsArrD for similar function with DoubleAc
 
 }
 
