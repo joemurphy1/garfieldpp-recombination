@@ -373,9 +373,91 @@ class FunNameStack {
                                       // stack
   void printdel(std::ostream& file);  // called at deletion of name from stack
  public:
-  inline int put(const char* fname);
-  inline void del(int nname);
-  inline void replace(const char* fname);
+  inline int put(const char* fname)
+  {
+      // if(s_init != 1) init();
+  if (s_act != 1) return 0;
+  #ifdef USE_BOOST_MULTITHREADING
+    NameStack* ns = get_thread_stack();
+    if (ns->qname >= pqname) {
+      mcerr << "FunNameStack::put: error: qname == pqname\n";
+      mcerr << "Most oftenly this happens due to infinite recursion.\n";
+      mcerr << "ns->id=" << ns->id << '\n';
+      mcerr << "*this=" << (*this);
+      exit(1);
+    }
+    ns->name[ns->qname++] = fname;
+    if (s_print > 0) {
+      printput(mcout);
+    }
+    return ns->qname - 1;
+  #else
+    if (qname >= pqname) {
+      mcerr << "FunNameStack::put: error: qname == pqname\n";
+      mcerr << "Most oftenly this happens due to infinite recursion.\n";
+      mcerr << "*this=" << (*this);
+      exit(1);
+    }
+    name[qname++] = const_cast<char*>(fname);
+    if (s_print > 0) {
+      printput(mcout);
+    }
+    return qname - 1;
+  #endif
+  }
+  inline void del(int nname)
+  {
+    if (s_act != 1) return;
+    #ifdef USE_BOOST_MULTITHREADING
+      NameStack* ns = get_thread_stack();
+      if (nname != ns->qname - 1) {
+        // not last
+        ns->qname = nname;
+      } else {
+        if (s_print > 0) {
+          printdel(mcout);
+        }
+        ns->qname--;
+      }
+      if (ns->qname == 0) remove_thread_stack();
+    #else
+      if (nname != qname - 1) {
+        // not last
+        qname = nname;
+      } else {
+        if (s_print > 0) {
+          printdel(mcout);
+        }
+        qname--;
+      }
+    #endif
+  }
+  inline void replace(const char* fname)
+  {
+      // if(s_init != 1) init();
+  if (s_act != 1) return;
+  #ifdef USE_BOOST_MULTITHREADING
+    NameStack* ns = get_thread_stack();
+    if (ns->qname >= pqname) {
+      mcerr << "FunNameStack::put: error: qname == pqname\n";
+      mcerr << "Most oftenly this happens due to infinite recursion.\n";
+      mcerr << "ns->id=" << ns->id << '\n';
+      mcerr << "*this=" << (*this);
+      exit(1);
+    }
+    ns->name[ns->qname - 1] = fname;
+    if (s_print > 0) printput(mcout);
+  #else
+    if (qname >= pqname) {
+      mcerr << "FunNameStack::put: error: qname == pqname\n";
+      mcerr << "Most oftenly this happens due to infinite recursion.\n";
+      mcerr << "*this=" << (*this);
+      exit(1);
+    }
+    name[qname - 1] = const_cast<char*>(fname);
+    if (s_print > 0) printput(mcout);
+  #endif
+  }
   friend std::ostream& operator<<(std::ostream& file, const FunNameStack& f);
 };
 std::ostream& operator<<(std::ostream& file, const FunNameStack& f);
@@ -390,8 +472,20 @@ class FunNameWatch {
   const char* name;  // it is memorized independenlty on s_act.
                      // Used for printing of headers.
  public:
-  inline FunNameWatch(const char* fname);
-  inline ~FunNameWatch();
+  inline FunNameWatch(const char* fname)
+  {
+      //#ifdef FUNNAMESTACK
+  nname = FunNameStack::instance().put(fname);
+  //#else
+  // nname=0;
+  //#endif
+  }
+  inline ~FunNameWatch()
+  {
+      //#ifdef FUNNAMESTACK
+  if (nname >= 0) FunNameStack::instance().del(nname);
+  //#endif
+  }
 
   // print header
   std::ostream& hdr(std::ostream& file) const {
@@ -410,8 +504,6 @@ class FunNameWatch {
   }
 };
 std::ostream& operator<<(std::ostream& file, const FunNameWatch& f);
-
-#include "wcpplib/util/FunNameStack.ic"
 
 }
 
