@@ -104,72 +104,10 @@ It is provided "as is" without express or implied warranty.
 
 #include <iostream>
 
-#define USE_DEFAULT_STREAMS
-// otherwise everything will be flushed to a file
-// If the macro OPEN_LOGFILE_EXPLICITLY (see below) is NOT defined,
-// the file name is fixed as "prstream_log.out" (see below).
-// Otherwise the file can be opened with any name by lines like those:
-//	HelperForMcout::get_ofstream().clear();
-//      HelperForMcout::get_ofstream().open("logfile.out");
-//      if(!HelperForMcout::get_ofstream())
-//      {
-//	      cout<<"cannot open file\n";
-//      }
-//
-// If user wants this file to contain all the protocol from the full program,
-// this file prstream.h should be included in the main program
-// (which is ordinary practice).
-
-#ifdef USE_DEFAULT_STREAMS
-
 //#ifndef mcout
 #define mcout std::cout /* change to ordinary default C++ stream */
 //#endif
 #define mcerr std::cerr
-
-#else
-
-#define OPEN_LOGFILE_EXPLICITLY
-
-#include <fstream>
-
-class HelperForMcout {
-  // and also for mcerr. Used for switching them to file
- public:
-  static long count;  // will be common for all modules
-
-  static std::ofstream& get_ofstream(void) {
-    static std::ofstream prstream_output_file;
-    return prstream_output_file;
-  }
-
-  HelperForMcout(void) {
-#ifndef OPEN_LOGFILE_EXPLICITLY
-    if (count++ == 0) {
-      get_ofstream().open("prstream_log.out");
-    }
-#else
-    count++;
-#endif
-  }
-  ~HelperForMcout(void) {
-    if (--count == 0) {
-      get_ofstream().flush();
-      get_ofstream().close();
-    }
-  }
-};
-
-namespace {
-HelperForMcout __helper_for_mcout;
-}  // thanks to
-   // unnamed namespace the object __helper_for_mcout will be different for
-   // all modules, but the counter will be nevertheless common.
-
-#define mcout HelperForMcout::get_ofstream()
-#define mcerr HelperForMcout::get_ofstream()
-
-#endif
 
 namespace Heed {
 
