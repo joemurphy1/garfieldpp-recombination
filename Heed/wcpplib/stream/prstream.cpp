@@ -25,9 +25,3 @@ std::ostream& yesindent(std::ostream& f) {
 int s_short_output = 0;
 
 }
-
-#ifndef USE_DEFAULT_STREAMS
-
-long HelperForMcout::count = 0;
-
-#endif

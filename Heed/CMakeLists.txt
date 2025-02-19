@@ -44,9 +44,6 @@ add_library(Heed SHARED
             wcpplib/particle/particle_def.cpp
             wcpplib/random/PointsRan.cpp
             wcpplib/random/chisran.cpp
-            wcpplib/safetl/AbsArr.cpp
-            wcpplib/safetl/AbsPtr.cpp
-            wcpplib/stream/definp.cpp
             wcpplib/stream/findmark.cpp
             wcpplib/stream/prstream.cpp
             wcpplib/util/FunNameStack.cpp)
