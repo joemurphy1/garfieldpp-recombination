@@ -23,12 +23,15 @@ class ComponentParallelPlate : public Component {
 
   /** Define the geometry.
    * \param N amount of layers in the geometry, this includes the gas gaps
-   * \f$y\f$. \param d thickness of the layers starting from the bottom to the
-   * top lauer along \f$y\f$. \param eps relative permittivities of the layers
-   * starting from the bottom to the top lauer along \f$y\f$ . Here, the  gas
-   * gaps having a value of 1. \param sigmaIndex Indices of the resistive
-   * layers (optional). \param V applied potential difference between the
-   * parallel plates.
+   *        \f$y\f$. 
+   * \param d thickness of the layers starting from the bottom to the
+   *        top layer along \f$y\f$. 
+   * \param eps relative permittivities of the layers
+   *        starting from the bottom to the top layer along \f$y\f$ . 
+   *        Here, the gas gaps having a value of 1. 
+   * \param sigmaIndex Indices of the resistive layers (optional). 
+   * \param V applied potential difference between the
+   *        parallel plates.
    */
   void Setup(const int N, std::vector<double> eps, std::vector<double> d,
              const double V, std::vector<int> sigmaIndex = {});
@@ -86,19 +89,16 @@ class ComponentParallelPlate : public Component {
                                   const double zmin, const double zmax,
                                   const double zsteps);
 
-  /// This will load a previously calculated grid of time-dependant weighting
+  /// This will load a previously calculated grid of time-dependent weighting
   /// potential values.
   void LoadWeightingPotentialGrid(const std::string &label) {
     for (auto &electrode : m_readout_p) {
-      if (electrode.label == label) {
-        if (electrode.grid.LoadWeightingField(label + "map", "xyz", true)) {
-          std::cerr
-              << m_className
-              << "::LoadWeightingPotentialGrid: Weighting potential set for "
-              << label << ".\n";
-          electrode.m_usegrid = true;
-          return;
-        }
+      if (electrode.label != label) continue;
+      if (electrode.grid.LoadWeightingField(label + "map", "xyz", true)) {
+        std::cout << m_className << "::LoadWeightingPotentialGrid: "
+                  << "Weighting potential set for " << label << ".\n";
+        electrode.m_usegrid = true;
+        return;
       }
     }
     std::cerr << m_className
@@ -112,6 +112,7 @@ class ComponentParallelPlate : public Component {
                       double &ymax, double &zmax) override;
 
   // Obtain the index and permitivity of the layer at height z.
+  // TODO: getLayer -> GetLayer
   bool getLayer(const double y, int &m, double &epsM) {
 
     m = -1;
@@ -135,7 +136,7 @@ class ComponentParallelPlate : public Component {
     ztop = m_z.at(m);
     zbottom = m_z.at(m - 1);
   }
-  // Obtain amount of layers
+  // Obtain number of layers
   int NumberOfLayers() { return m_N - 1; }
   // Get the indices of the gas gaps
   void IndexOfGasGaps(std::vector<int>& indexGasGap) {
@@ -258,7 +259,7 @@ class ComponentParallelPlate : public Component {
   double constWEFieldLayer(const int indexLayer) {
     double invEz = 0;
     for (int i = 1; i <= m_N - 1; i++) {
-      invEz += (m_z[i] - m_z[i - 1]) / m_epsHolder[i - 1];
+      invEz += m_d[i - 1] / m_epsHolder[i - 1];
     }
     return 1 / (m_epsHolder[indexLayer - 1] * invEz);
   }
@@ -270,7 +271,7 @@ class ComponentParallelPlate : public Component {
     if (!getLayer(z, im, epsM)) return 0.;
     double v = 1 - (z - m_z[im - 1]) * constWEFieldLayer(im);
     for (int i = 1; i <= im - 1; i++) {
-      v -= (m_z[i] - m_z[i - 1]) * constWEFieldLayer(i);
+      v -= m_d[i - 1] * constWEFieldLayer(i);
     }
 
     return v;
@@ -281,8 +282,9 @@ class ComponentParallelPlate : public Component {
     if (m_conductive[indexLayer]) return 0.;
     double invEz = 0;
     for (int i = 1; i <= m_N - 1; i++) {
+      // TODO!
       if (m_conductive[indexLayer]) continue;
-      invEz += -(m_z[i] - m_z[i - 1]) / m_epsHolder[i - 1];
+      invEz -= m_d[i - 1] / m_epsHolder[i - 1];
     }
     return m_V / (m_epsHolder[indexLayer - 1] * invEz);
   }
