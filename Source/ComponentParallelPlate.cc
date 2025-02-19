@@ -194,9 +194,9 @@ void ComponentParallelPlate::ElectricField(const double x, const double y,
 
   ey = constEFieldLayer(im);
 
-  v = -m_V - (y - m_z[im - 1]) * constEFieldLayer(im);
+  v = -m_V - (y - m_z[im - 1]) * ey;
   for (int i = 1; i <= im - 1; i++) {
-    v -= (m_z[i] - m_z[i - 1]) * constEFieldLayer(i);
+    v -= m_d[i - 1] * constEFieldLayer(i);
   }
 
   m = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
