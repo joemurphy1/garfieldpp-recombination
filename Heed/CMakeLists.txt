@@ -30,7 +30,6 @@ add_library(Heed SHARED
             wcpplib/geometry/volume.cpp
             wcpplib/ioniz/bethe_bloch.cpp
             wcpplib/ioniz/e_cont_enloss.cpp
-            wcpplib/math/DoubleAc.cpp
             wcpplib/math/PolLeg.cpp
             wcpplib/math/cubic.cpp
             wcpplib/math/kinem.cpp

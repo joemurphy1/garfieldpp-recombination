@@ -68,27 +68,8 @@ static constexpr double meter = 1000. * millimeter;
 static constexpr double meter2 = meter * meter;
 static constexpr double meter3 = meter * meter * meter;
 
-static constexpr double kilometer = 1000. * meter;
-static constexpr double kilometer2 = kilometer * kilometer;
-static constexpr double kilometer3 = kilometer * kilometer * kilometer;
-
-static constexpr double parsec = 3.0856775807e+16 * meter;
-
-static constexpr double micrometer = 1.e-6 * meter;
-static constexpr double nanometer = 1.e-9 * meter;
-static constexpr double angstrom = 1.e-10 * meter;
-static constexpr double fermi = 1.e-15 * meter;
-
-static constexpr double barn = 1.e-28 * meter2;
-static constexpr double millibarn = 1.e-3 * barn;
-static constexpr double microbarn = 1.e-6 * barn;
-static constexpr double nanobarn = 1.e-9 * barn;
-static constexpr double picobarn = 1.e-12 * barn;
 
 // symbols
-static constexpr double mm = millimeter;
-static constexpr double mm2 = millimeter2;
-static constexpr double mm3 = millimeter3;
 
 static constexpr double cm = centimeter;
 static constexpr double cm2 = centimeter2;
@@ -98,44 +79,25 @@ static constexpr double m = meter;
 static constexpr double m2 = meter2;
 static constexpr double m3 = meter3;
 
-static constexpr double km = kilometer;
-static constexpr double km2 = kilometer2;
-static constexpr double km3 = kilometer3;
-
-static constexpr double pc = parsec;
-
 //
 // Angle
 //
 static constexpr double radian = 1.;
-static constexpr double milliradian = 1.e-3 * radian;
 static constexpr double degree = (3.14159265358979323846 / 180.0) * radian;
-
-static constexpr double steradian = 1.;
 
 // symbols
 static constexpr double rad = radian;
-static constexpr double mrad = milliradian;
-static constexpr double sr = steradian;
-static constexpr double deg = degree;
 
 //
 // Time [T]
 //
 static constexpr double nanosecond = 1.;
 static constexpr double second = 1.e+9 * nanosecond;
-static constexpr double millisecond = 1.e-3 * second;
-static constexpr double microsecond = 1.e-6 * second;
-static constexpr double picosecond = 1.e-12 * second;
 
-static constexpr double hertz = 1. / second;
-static constexpr double kilohertz = 1.e+3 * hertz;
-static constexpr double megahertz = 1.e+6 * hertz;
 
 // symbols
 static constexpr double ns = nanosecond;
 static constexpr double s = second;
-static constexpr double ms = millisecond;
 
 //
 // Electric charge [Q]
@@ -151,8 +113,6 @@ static constexpr double megaelectronvolt = 1.;
 static constexpr double electronvolt = 1.e-6 * megaelectronvolt;
 static constexpr double kiloelectronvolt = 1.e-3 * megaelectronvolt;
 static constexpr double gigaelectronvolt = 1.e+3 * megaelectronvolt;
-static constexpr double teraelectronvolt = 1.e+6 * megaelectronvolt;
-static constexpr double petaelectronvolt = 1.e+9 * megaelectronvolt;
 
 static constexpr double joule = electronvolt / e_SI;  // joule = 6.24150 e+12 * MeV
 
@@ -161,8 +121,6 @@ static constexpr double MeV = megaelectronvolt;
 static constexpr double eV = electronvolt;
 static constexpr double keV = kiloelectronvolt;
 static constexpr double GeV = gigaelectronvolt;
-static constexpr double TeV = teraelectronvolt;
-static constexpr double PeV = petaelectronvolt;
 
 //
 // Mass [E][T^2][L^-2]
@@ -177,11 +135,6 @@ static constexpr double g = gram;
 static constexpr double mg = milligram;
 
 //
-// Power [E][T^-1]
-//
-static constexpr double watt = joule / second;  // watt = 6.24150 e+3 * MeV/ns
-
-//
 // Force [E][L^-1]
 //
 static constexpr double newton = joule / meter;  // newton = 6.24150 e+9 * MeV/mm
@@ -190,19 +143,15 @@ static constexpr double newton = joule / meter;  // newton = 6.24150 e+9 * MeV/m
 // Pressure [E][L^-3]
 //
 #define pascal hep_pascal                      // a trick to avoid warnings
-static constexpr double hep_pascal = newton / m2;  // pascal = 6.24150 e+3 * MeV/mm3
+static constexpr double pascal = newton / m2;  // pascal = 6.24150 e+3 * MeV/mm3
 static constexpr double bar = 100000 * pascal;     // bar    = 6.24150 e+8 * MeV/mm3
-static constexpr double atmosphere =
-    101325 * pascal;  // atm    = 6.32420 e+8 * MeV/mm3
+static constexpr double atmosphere = 101325 * pascal;  // atm    = 6.32420 e+8 * MeV/mm3
 
 //
 // Electric current [Q][T^-1]
 //
-static constexpr double ampere =
-    coulomb / second;  // ampere = 6.24150 e+9 * eplus/ns
-static constexpr double milliampere = 1.e-3 * ampere;
-static constexpr double microampere = 1.e-6 * ampere;
-static constexpr double nanoampere = 1.e-9 * ampere;
+static constexpr double ampere = coulomb / second;  // ampere = 6.24150 e+9 * eplus/ns
+
 
 //
 // Electric potential [E][Q^-1]
@@ -217,15 +166,6 @@ static constexpr double volt = 1.e-6 * megavolt;
 static constexpr double ohm =
     volt / ampere;  // ohm = 1.60217e-16*(MeV/eplus)/(eplus/ns)
 
-//
-// Electric capacitance [Q^2][E^-1]
-//
-static constexpr double farad =
-    coulomb / volt;  // farad = 6.24150e+24 * eplus/Megavolt
-static constexpr double millifarad = 1.e-3 * farad;
-static constexpr double microfarad = 1.e-6 * farad;
-static constexpr double nanofarad = 1.e-9 * farad;
-static constexpr double picofarad = 1.e-12 * farad;
 
 //
 // Magnetic Flux [T][E][Q^-1]
@@ -257,38 +197,7 @@ static constexpr double kelvin = 1.;
 //
 static constexpr double mole = 1.;
 
-//
-// Activity [T^-1]
-//
-static constexpr double becquerel = 1. / second;
-static constexpr double curie = 3.7e+10 * becquerel;
 
-//
-// Absorbed dose [L^2][T^-2]
-//
-static constexpr double gray = joule / kilogram;
-
-//
-// Luminous intensity [I]
-//
-static constexpr double candela = 1.;
-
-//
-// Luminous flux [I]
-//
-static constexpr double lumen = candela * steradian;
-
-//
-// Illuminance [I][L^-2]
-//
-static constexpr double lux = lumen / meter2;
-
-//
-// Miscellaneous
-//
-static constexpr double perCent = 0.01;
-static constexpr double perThousand = 0.001;
-static constexpr double perMillion = 0.000001;
 }
 
 }

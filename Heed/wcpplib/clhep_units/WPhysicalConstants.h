@@ -75,8 +75,6 @@ static constexpr double e_squared = eplus * eplus;
 static constexpr double electron_mass_c2 = 0.51099906 * MeV;
 static constexpr double proton_mass_c2 = 938.27231 * MeV;
 static constexpr double neutron_mass_c2 = 939.56563 * MeV;
-static constexpr double amu_c2 = 931.49432 * MeV;
-static constexpr double amu = amu_c2 / c_squared;
 
 //
 // permeability of free space mu0    = 2.01334e-16 Mev*(ns*eplus)^2/mm
@@ -85,37 +83,13 @@ static constexpr double amu = amu_c2 / c_squared;
 static constexpr double mu0 = 4 * pi * 1.e-7 * henry / m;
 static constexpr double epsilon0 = 1. / (c_squared * mu0);
 
-//
-// electromagnetic coupling = 1.43996e-12 MeV*mm/(eplus^2)
-//
 static constexpr double elm_coupling = e_squared / (4 * pi * epsilon0);
 static constexpr double fine_structure_const = elm_coupling / hbarc;
 static constexpr double classic_electr_radius = elm_coupling / electron_mass_c2;
 static constexpr double electron_Compton_length = hbarc / electron_mass_c2;
-static constexpr double Bohr_radius =
-    electron_Compton_length / fine_structure_const;
 
-static constexpr double alpha_rcl2 =
-    fine_structure_const * classic_electr_radius * classic_electr_radius;
-
-static constexpr double twopi_mc2_rcl2 =
-    twopi * electron_mass_c2 * classic_electr_radius * classic_electr_radius;
-//
-//
-//
 static constexpr double k_Boltzmann = 8.617385e-11 * MeV / kelvin;
 
-//
-//
-//
-static constexpr double STP_Temperature = 273.15 * kelvin;
-static constexpr double STP_Pressure = 1. * atmosphere;
-static constexpr double kGasThreshold = 10. * mg / cm3;
-
-//
-//
-//
-static constexpr double universe_mean_density = 1.e-25 * g / cm3;
 }
 
 }
