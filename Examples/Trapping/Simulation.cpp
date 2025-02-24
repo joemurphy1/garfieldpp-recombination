@@ -77,8 +77,7 @@ int main(int argc, char* argv[]) {
     }
   }
   constexpr bool plotSignal = true;
-  ViewSignal signalView;
-  signalView.SetSensor(&sensor);
+  ViewSignal signalView(&sensor);
   signalView.PlotSignal("pixel", "t");
 
   std::ofstream outfile;

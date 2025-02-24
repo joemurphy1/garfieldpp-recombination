@@ -81,10 +81,9 @@ int main(int argc, char * argv[]) {
   sensor.ClearSignal();
 
   // Set up Heed.
-  TrackHeed track;
+  TrackHeed track(&sensor);
   track.SetParticle("muon");
   track.SetEnergy(170.e9);
-  track.SetSensor(&sensor);
 
   // RKF integration.
   DriftLineRKF drift(&sensor);

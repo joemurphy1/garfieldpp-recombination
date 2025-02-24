@@ -45,10 +45,9 @@ infile.close()
 sensor.SetTransferFunction(times, values)
 
 # Set up Heed.
-track = ROOT.Garfield.TrackHeed()
+track = ROOT.Garfield.TrackHeed(sensor)
 track.SetParticle('muon')
 track.SetEnergy(170.e9)
-track.SetSensor(sensor)
 
 # RKF integration.
 drift = ROOT.Garfield.DriftLineRKF(sensor)
