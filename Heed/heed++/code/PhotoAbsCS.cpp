@@ -1,6 +1,8 @@
 #include <cmath>
 #include <fstream>
 #include <iomanip>
+#include <sstream>
+#include <string>
 #include "wcpplib/stream/findmark.h"
 #include "wcpplib/math/tline.h"
 #include "heed++/code/PhotoAbsCS.h"
