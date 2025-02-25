@@ -6,7 +6,7 @@ build-gpu-nvidia:
   stage: build
   image: rootproject/root:6.30.02-alma9
   tags:
-    - docker-gpu-nvidia
+    - k8s-gpu
   script:
     - cmake3 -E rm -rf ./build
     - cmake3 -E make_directory ./build
