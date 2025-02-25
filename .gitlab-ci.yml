@@ -9,8 +9,8 @@ build-gpu-nvidia:
     - k8s-gpu
   before_script:
     - pacman-key --init
-    - pacman -Syu
-    - pacman -S root-cuda
+    - pacman -Syu --noconfirm
+    - pacman -S --noconfirm root-cuda
   script:
     - nvidia-smi
     - cmake3 -E rm -rf ./build
