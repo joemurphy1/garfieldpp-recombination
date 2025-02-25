@@ -10,7 +10,7 @@ build-gpu-nvidia:
   before_script:
     - pacman-key --init
     - pacman -Syu --noconfirm
-    - pacman -S --noconfirm root-cuda
+    - pacman -S --noconfirm --assume-installed opencl-nvidia root-cuda
   script:
     - nvidia-smi
     - cmake3 -E rm -rf ./build
