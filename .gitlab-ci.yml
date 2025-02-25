@@ -8,9 +8,10 @@ build-gpu-nvidia:
   tags:
     - k8s-gpu
   script:
+    - nvidia-smi
     - cmake3 -E rm -rf ./build
     - cmake3 -E make_directory ./build
-    - cmake3 -S . -B ./build
+    - cmake3 -S . -B ./build --install-prefix ./install -D USEGPU:BOOL=TRUE
 
 
 build-alma9:
