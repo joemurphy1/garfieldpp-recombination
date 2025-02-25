@@ -3,6 +3,7 @@
 
 
 build-gpu-nvidia:
+  stage: build
   image: rootproject/root:6.30.02-alma9
   tags:
     - docker-gpu-nvidia
