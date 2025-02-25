@@ -11,7 +11,8 @@ build-gpu-nvidia:
     - nvidia-smi
     - cmake3 -E rm -rf ./build
     - cmake3 -E make_directory ./build
-    - cmake3 -S . -B ./build --install-prefix ./install -D USEGPU:BOOL=TRUE
+    - cmake3 -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D USEGPU:BOOL=TRUE
+    - cmake3 --build ./build --config Debug --parallel 5
 
 
 build-alma9:
