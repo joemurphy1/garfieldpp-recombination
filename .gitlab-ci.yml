@@ -4,9 +4,13 @@
 
 build-gpu-nvidia:
   stage: build
-  image: rootproject/root:6.30.02-alma9
+  image: archlinux/archlinux:base-devel
   tags:
     - k8s-gpu
+  before_script:
+    - pacman-key --init
+    - pacman -Syu
+    - pacman -S root-cuda
   script:
     - nvidia-smi
     - cmake3 -E rm -rf ./build
