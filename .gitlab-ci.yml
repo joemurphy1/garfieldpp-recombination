@@ -10,7 +10,7 @@ build-gpu-nvidia:
   before_script:
     - pacman-key --init
     - pacman -Syu --noconfirm
-    - pacman -S --noconfirm --assume-installed opencl-nvidia root-cuda cmake cern-vdt unuran openmpi vc ninja
+    - pacman -S --noconfirm --assume-installed opencl-nvidia root-cuda cmake cern-vdt unuran openmpi vc ninja gcc-fortran
     - source /etc/profile
   script:
     - nvidia-smi
