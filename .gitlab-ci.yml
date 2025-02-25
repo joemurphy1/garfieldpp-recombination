@@ -10,12 +10,12 @@ build-gpu-nvidia:
   before_script:
     - pacman-key --init
     - pacman -Syu --noconfirm
-    - pacman -S --noconfirm --assume-installed opencl-nvidia root-cuda
+    - pacman -S --noconfirm --assume-installed opencl-nvidia root-cuda cmake cern-vdt unuran openmpi vc ninja
   script:
     - nvidia-smi
     - cmake -E rm -rf ./build
     - cmake -E make_directory ./build
-    - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D USEGPU:BOOL=TRUE
+    - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D USEGPU:BOOL=TRUE -G Ninja
     - cmake --build ./build --config Debug --parallel 5
 
 
