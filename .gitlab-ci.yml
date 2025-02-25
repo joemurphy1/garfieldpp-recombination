@@ -2,6 +2,16 @@
 # https://github.com/root-project/root-docker
 
 
+build-gpu-nvidia:
+  image: rootproject/root:6.30.02-alma9
+  tags:
+    - docker-gpu-nvidia
+  script:
+    - cmake3 -E rm -rf ./build
+    - cmake3 -E make_directory ./build
+    - cmake3 -S . -B ./build
+
+
 build-alma9:
   stage: build
   image: rootproject/root:6.30.02-alma9
