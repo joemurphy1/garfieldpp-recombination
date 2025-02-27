@@ -1,21 +1,35 @@
 #ifndef G_VIEW_FE_MESH
 #define G_VIEW_FE_MESH
 
-#include <memory>
-#include <string>
-#include <map>
+#include<string>
+#include<map>
+#include<vector>
 
-#include <TArrayD.h>
-#include <TGaxis.h>
+//#include <memory>
+//#include <string>
+//#include <map>
+
+//#include <TArrayD.h>
+//#include <TGaxis.h>
 #include <TGeoManager.h>
-#include <TMatrixD.h>
+#include <TMatrixDfwd.h>
+//#include <TMatrixD.h>
 
-#include "ComponentCST.hh"
-#include "Component.hh"
-#include "ViewBase.hh"
-#include "ViewDrift.hh"
+//#include "ComponentCST.hh"
+//#include "Component.hh"
+//#include "ViewDrift.hh"
+
+#include "Garfield/ViewBase.hh"
+
+class TGaxis;
+class TGeoVolume;
+class TGeoMedium;
+class ComponentCST;
 
 namespace Garfield {
+
+  class Component;
+  class ViewDrift;
 
 /// Draw the mesh of a field-map component.
 

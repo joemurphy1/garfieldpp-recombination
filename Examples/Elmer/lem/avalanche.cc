@@ -25,6 +25,7 @@
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/ViewDrift.hh"
 
 using namespace Garfield;
 

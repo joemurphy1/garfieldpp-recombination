@@ -11,6 +11,7 @@
 #include <TGeoSphere.h>
 #include <TGeoTessellated.h>
 #include <TPolyLine3D.h>
+#include <TGaxis.h>
 
 #include "Garfield/ComponentCST.hh"
 #include "Garfield/Component.hh"
@@ -19,6 +20,7 @@
 #include "Garfield/Random.hh"
 #include "Garfield/TGeoTet.hh"
 #include "Garfield/ViewFEMesh.hh"
+#include "Garfield/ViewDrift.hh"
 
 namespace {
 
