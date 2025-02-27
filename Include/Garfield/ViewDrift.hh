@@ -1,16 +1,15 @@
 #ifndef G_VIEW_DRIFT
 #define G_VIEW_DRIFT
 
-#include <string>
-#include <vector>
-#include <array>
-#include <utility>
-#include <mutex>
+#include<cstddef>
+#include<vector>
+#include<array>
+#include<mutex>
 
 #include <Rtypes.h>
 
-#include "GarfieldConstants.hh"
-#include "ViewBase.hh"
+#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/ViewBase.hh"
 
 namespace Garfield {
 
@@ -64,25 +63,25 @@ class ViewDrift : public ViewBase {
   void SetElectronsToFront() { m_eTop = true; }
 
   /// Get the number of drift lines stored. 
-  size_t GetNumberOfDriftLines() const { return m_driftLines.size(); }
+  std::size_t GetNumberOfDriftLines() const { return m_driftLines.size(); }
   /// Retrieve the coordinates of a given drift line.
-  void GetDriftLine(const size_t i, 
+  void GetDriftLine(const std::size_t i, 
                     std::vector<std::array<float, 3> >& driftLine, 
                     bool& electron) const;
 
   // Functions used by the transport classes.
-  size_t NewDriftLine(const Particle particle, const size_t np,  
+  std::size_t NewDriftLine(const Particle particle, const std::size_t np,  
                       const float x0, const float y0, const float z0);
-  void NewChargedParticleTrack(const size_t np, size_t& id, const float x0,
+  void NewChargedParticleTrack(const std::size_t np, std::size_t& id, const float x0,
                                const float y0, const float z0);
 
-  void SetDriftLinePoint(const size_t iL, const size_t iP,
+  void SetDriftLinePoint(const std::size_t iL, const std::size_t iP,
                          const float x, const float y, const float z);
-  void AddDriftLinePoint(const size_t iL, const float x, const float y,
+  void AddDriftLinePoint(const std::size_t iL, const float x, const float y,
                          const float z);
-  void SetTrackPoint(const size_t iL, const size_t iP,
+  void SetTrackPoint(const std::size_t iL, const std::size_t iP,
                      const float x, const float y, const float z);
-  void AddTrackPoint(const size_t iL, const float x, const float y,
+  void AddTrackPoint(const std::size_t iL, const float x, const float y,
                      const float z);
   void AddExcitation(const float x, const float y, const float z);
   void AddIonisation(const float x, const float y, const float z);
