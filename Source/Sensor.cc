@@ -110,14 +110,14 @@ void Sensor::ElectricField(const double x, const double y, const double z,
 #endif
 
 __GPULABEL__
-void __SENSORCLASS__::ElectricField(const double x, const double y, const double z,
-                           double &ex, double &ey, double &ez, __MEDIUMCLASS__ *&medium,
+void GARFIELD_CLASS_NAME(Sensor)::ElectricField(const double x, const double y, const double z,
+                           double &ex, double &ey, double &ez, GARFIELD_CLASS_NAME(Medium) *&medium,
                            int &status) __GPUCONST__ {
   ex = ey = ez = 0.;
   status = -10;
   medium = nullptr;
   double fx = 0., fy = 0., fz = 0.;
-  __MEDIUMCLASS__ *med = nullptr;
+  GARFIELD_CLASS_NAME(Medium) *med = nullptr;
   int stat = 0;
   // Add up electric field contributions from all components.
   #ifdef __GPUCOMPILE__
@@ -283,7 +283,7 @@ bool Sensor::GetArea(double &xmin, double &ymin, double &zmin, double &xmax,
 #endif
 
 __GPULABEL__
-bool __SENSORCLASS__::IsInArea(const double x, const double y, const double z) __GPUCONST__ {
+bool GARFIELD_CLASS_NAME(Sensor)::IsInArea(const double x, const double y, const double z) __GPUCONST__ {
   #ifndef __GPUCOMPILE__
   if (!m_hasUserArea) {
     if (!SetArea()) {

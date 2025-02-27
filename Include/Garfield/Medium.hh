@@ -19,42 +19,43 @@
 #endif
 
 #include "GarfieldConstants.hh"
+#include "Garfield/HelperMacros.hh"
 
 class TPad;
 
 namespace Garfield {
 
 // undefine everything first 
-#ifdef __MEDIUMCLASS__
-#undef __MEDIUMCLASS__
+//#ifdef __MEDIUMCLASS__
+//#undef __MEDIUMCLASS__
 #undef __GPULABEL__
-#endif
+//#endif
 
 // setup class names depending on if this is compiling the GPU static version or not
 #ifdef __GPUCOMPILE__
-#define __MEDIUMCLASS__ MediumGPU
+//#define __MEDIUMCLASS__ MediumGPU
 #define __GPULABEL__ __device__
 #else
-#define __MEDIUMCLASS__ Medium
+//#define __MEDIUMCLASS__ Medium
 #define __GPULABEL__
   class MediumGPU;
 #endif
 
 /// Abstract base class for components.
 
-class __MEDIUMCLASS__ {
+class GARFIELD_CLASS_NAME(Medium) {
  public:
 
  #ifdef __GPUCOMPILE__
   /// Constructor
-  __MEDIUMCLASS__() = default;
+  GARFIELD_CLASS_NAME(Medium)() = default;
   /// Destructor
-  ~__MEDIUMCLASS__() {};
+  ~GARFIELD_CLASS_NAME(Medium)() {};
  #else
   /// Constructor
-  __MEDIUMCLASS__();
+  GARFIELD_CLASS_NAME(Medium)();
   /// Destructor
-  virtual ~__MEDIUMCLASS__();
+  virtual ~GARFIELD_CLASS_NAME(Medium)();
 #endif
 
   /// Return the id number of the class instance.

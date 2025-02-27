@@ -5,6 +5,8 @@
 #define G_COMPONENT_H
 #endif
 
+#include "Garfield/HelperMacros.hh"
+
 #ifdef __GPUCOMPILE__
 
 #include "TetrahedralTreeGPU.h"
@@ -22,32 +24,32 @@
 namespace Garfield {
 
 // undefine everything first 
-#ifdef __COMPONENTCLASS__
-#undef __COMPONENTCLASS__
-#endif
+//#ifdef __COMPONENTCLASS__
+//#undef __COMPONENTCLASS__
+//#endif
 
 // setup class names depending on if this is compiling the GPU static version or not
 #ifdef __GPUCOMPILE__
-#define __COMPONENTCLASS__ ComponentGPU
+//#define __COMPONENTCLASS__ ComponentGPU
 #else
-#define __COMPONENTCLASS__ Component
+//#define __COMPONENTCLASS__ Component
   class ComponentGPU;
 #endif
 
 /// Abstract base class for components.
-class __COMPONENTCLASS__ {
+class GARFIELD_CLASS_NAME(Component) {
  public:
 
   #ifdef __GPUCOMPILE__
-  __COMPONENTCLASS__() = default;
+  GARFIELD_CLASS_NAME(Component)() = default;
   #else
   /// Default constructor.
-  __COMPONENTCLASS__() = delete;
+  GARFIELD_CLASS_NAME(Component)() = delete;
   /// Constructor
-  __COMPONENTCLASS__(const std::string& name);
+  GARFIELD_CLASS_NAME(Component)(const std::string& name);
   #endif
   /// Destructor
-  virtual ~__COMPONENTCLASS__() {};
+  virtual ~GARFIELD_CLASS_NAME(Component)() {};
 
 #ifndef __GPUCOMPILE__
   /// Define the geometry.
