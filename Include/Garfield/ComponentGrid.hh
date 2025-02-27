@@ -1,9 +1,10 @@
 #ifndef G_COMPONENT_GRID_H
 #define G_COMPONENT_GRID_H
 
+#include<string>
 #include <vector>
 
-#include "Component.hh"
+#include "Garfield/Component.hh"
 
 namespace Garfield {
 

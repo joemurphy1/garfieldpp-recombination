@@ -3,8 +3,8 @@
 
 #include <memory>
 
-#include "ComponentTcadBase.hh"
-#include "TetrahedralTree.hh"
+#include "Garfield/ComponentTcadBase.hh"
+#include "Garfield/TetrahedralTree.hh"
 
 namespace Garfield {
 

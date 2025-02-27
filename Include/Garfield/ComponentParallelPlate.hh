@@ -3,14 +3,18 @@
 
 #include <string>
 
-#include "Component.hh"
-#include "ComponentGrid.hh"
-#include "Medium.hh"
+#include "Garfield/Component.hh"
+#include "Garfield/ComponentGrid.hh"
+//#include "Medium.hh"
 
 #include <TF1.h>
 #include <TF2.h>
 
+
 namespace Garfield {
+
+  class Medium;
+  class ComponentGrid;
 
 /// Component for parallel-plate geometries.
 

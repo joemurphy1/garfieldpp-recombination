@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "ComponentTcadBase.hh"
+#include "Garfield/ComponentTcadBase.hh"
 #include "QuadTree.hh"
 
 namespace Garfield {

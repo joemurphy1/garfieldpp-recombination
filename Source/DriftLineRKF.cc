@@ -8,6 +8,9 @@
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/Medium.hh"
+#include "Garfield/ViewDrift.hh"
 
 namespace {
 
