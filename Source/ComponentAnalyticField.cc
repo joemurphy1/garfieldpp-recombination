@@ -5,6 +5,7 @@
 #include <iostream>
 #include <limits>
 #include <numeric>
+#include<array>
 
 #include <TCanvas.h>
 #include <TPad.h>

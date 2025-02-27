@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cmath>
 #include <limits>
+#include<array>
 
 #include <TROOT.h>
 #include <TGraph.h>

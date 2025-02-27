@@ -3,6 +3,7 @@
 #include <iostream>
 #include <numeric>
 #include <string>
+#include<array>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/FundamentalConstants.hh"

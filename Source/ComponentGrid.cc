@@ -7,6 +7,7 @@
 #include <limits>
 #include <set>
 #include <sstream>
+#include<array>
 
 #include "Garfield/ComponentGrid.hh"
 #include "Garfield/GarfieldConstants.hh"

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <unordered_set>
+#include<array>
 
 #include <TH1F.h>
 #include <TPolyLine.h>

@@ -1,6 +1,7 @@
 #ifndef G_TRACK_TRIM_H
 #define G_TRACK_TRIM_H
 
+#include<array>
 #include <string>
 #include <vector>
 

@@ -1,6 +1,7 @@
 #ifndef G_COMPONENT_USER_H
 #define G_COMPONENT_USER_H
 
+#include<array>
 #include <functional>
 #include <map>
 

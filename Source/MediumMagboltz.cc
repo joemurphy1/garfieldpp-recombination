@@ -12,6 +12,7 @@
 #include <map>
 #include <numeric>
 #include <regex>
+#include<array>
 
 #include <TCanvas.h>
 #include <TColor.h>

@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cmath>
 #include <numeric>
+#include<array>
 
 #include "Garfield/DriftLineRKF.hh"
 #include "Garfield/FundamentalConstants.hh"

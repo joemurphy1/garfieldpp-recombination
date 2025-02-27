@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <numeric>
 #include <complex>
+#include<array>
 
 #include "Garfield/ComponentNeBem2d.hh"
 #include "Garfield/FundamentalConstants.hh"

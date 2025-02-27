@@ -1,5 +1,6 @@
 #include <iostream>
 #include <numeric>
+#include<array>
 
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/GarfieldConstants.hh"

@@ -6,6 +6,7 @@
 #include <TMath.h>
 #include <math.h>
 #include <stdio.h>
+#include<array>
 
 #include <algorithm>
 #include <fstream>

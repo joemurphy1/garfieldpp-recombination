@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include<array>
 
 #include "Garfield/ComponentTcadBase.hh"
 #include "Garfield/GarfieldConstants.hh"

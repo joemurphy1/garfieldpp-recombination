@@ -1,6 +1,7 @@
 #ifndef G_COMPONENT_NEBEM_3D_H
 #define G_COMPONENT_NEBEM_3D_H
 
+#include<array>
 #include <map>
 
 #include "Garfield/Component.hh"

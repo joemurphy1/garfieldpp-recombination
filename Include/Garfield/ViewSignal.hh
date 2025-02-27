@@ -1,6 +1,7 @@
 #ifndef G_VIEW_SIGNAL
 #define G_VIEW_SIGNAL
 
+#include<array>
 #include <Rtypes.h>
 #include <string>
 

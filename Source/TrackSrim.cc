@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include<array>
 
 #include <TCanvas.h>
 #include <TGraph.h>

@@ -1,6 +1,7 @@
 #ifndef G_SOLID_RIDGE_H
 #define G_SOLID_RIDGE_H
 
+#include<array>
 #include "Solid.hh"
 
 namespace Garfield {

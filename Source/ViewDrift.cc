@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iterator>
 #include <limits>
+#include<array>
 
 #include <TGraph.h>
 #include <TPolyLine3D.h>

@@ -13,7 +13,7 @@
 #include "ComponentGPU.h"
 
 #else
-
+#include<array>
 #include <fstream>
 #include <functional>
 #include <mutex>

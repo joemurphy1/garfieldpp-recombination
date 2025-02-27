@@ -1,6 +1,7 @@
 #ifndef G_SOLID_HOLE_H
 #define G_SOLID_HOLE_H
 
+#include<array>
 #include <mutex>
 
 #include "Solid.hh"
