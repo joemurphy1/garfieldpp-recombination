@@ -9,7 +9,6 @@
 #include "GarfieldConstants.hh"
 #include "Sensor.hh"
 #include "ViewDrift.hh"
-//#include "GPUInterface.hh"
 
 #include "MultiProcessInterface.hh"
 

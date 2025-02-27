@@ -1,5 +1,4 @@
 #ifdef __GPUCOMPILE__
-//#include "Garfield/GPUInterface.hh"
 #include "SensorGPU.h"
 #include "GPUFunctions.h"
 #else

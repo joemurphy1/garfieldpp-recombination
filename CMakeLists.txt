@@ -252,14 +252,13 @@ if(ROOT_VERSION VERSION_LESS 6.17)
     Include/Garfield/LinkDef.h
     OPTIONS
     -I${CMAKE_CURRENT_SOURCE_DIR}/Include
-    -I${CMAKE_CURRENT_SOURCE_DIR}/GPU
     -I${PROJECT_SOURCE_DIR}/Heed)
 else()
   file(
     GLOB garfield_header
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/Include
     Include/Garfield/*.hh)
-  include_directories(Include Heed GPU)
+  include_directories(Include Heed)
   root_generate_dictionary(GarfieldDict ${garfield_header} LINKDEF
                            Include/Garfield/LinkDef.h)
 endif()

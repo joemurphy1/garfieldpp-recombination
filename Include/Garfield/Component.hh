@@ -11,7 +11,7 @@
 
 #include "TetrahedralTreeGPU.h"
 #include "MediumGPU.h"
-#include "Garfield/GPUInterface.hh"
+#include "GPUInterface.hh"
 
 #else
 

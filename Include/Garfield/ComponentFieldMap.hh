@@ -11,7 +11,7 @@
 #endif
 
 #ifdef __GPUCOMPILE__
-#include "Garfield/GPUInterface.hh"
+#include "GPUInterface.hh"
 #include "TetrahedralTreeGPU.h"
 #define __GPULABEL__ __device__
 #else

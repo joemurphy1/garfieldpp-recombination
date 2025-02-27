@@ -6,7 +6,7 @@
 #endif
 
 #ifdef __GPUCOMPILE__
-#include "Garfield/GPUInterface.hh"
+#include "GPUInterface.hh"
 #include "Garfield/MagboltzInterface.hh"
 
 #else
@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "FundamentalConstants.hh"
-//#include "GPUInterface.hh"
 #endif
 
 #include "GarfieldConstants.hh"

@@ -1,7 +1,7 @@
 #ifndef G_RANDOMGPU_H
 #define G_RANDOMGPU_H
 
-#include "Garfield/GPUInterface.hh"
+#include "GPUInterface.hh"
 
 namespace Garfield {
 
