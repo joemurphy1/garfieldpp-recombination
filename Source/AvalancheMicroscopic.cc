@@ -10,10 +10,14 @@
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/ViewDrift.hh"
 
 #define __GPUCOMPILE__
 #include "AvalancheMicroscopicGPU.h"
 #undef __GPUCOMPILE__
+
+#include <TH1.h>
 
 using highres_clock_t = std::chrono::high_resolution_clock;
 using second_t = std::chrono::duration<double, std::ratio<1> >;
