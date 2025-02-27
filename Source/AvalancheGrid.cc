@@ -5,8 +5,12 @@
 #include <iostream>
 #include <numeric>
 
+#include "Garfield/Sensor.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/ComponentParallelPlate.hh"
+
 
 namespace {
 
