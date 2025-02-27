@@ -5,7 +5,6 @@
 
 #include "Garfield/Component.hh"
 #include "Garfield/ComponentGrid.hh"
-//#include "Medium.hh"
 
 #include <TF1.h>
 #include <TF2.h>

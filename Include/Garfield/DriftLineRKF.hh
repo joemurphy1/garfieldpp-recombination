@@ -7,8 +7,6 @@
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh" //TODO remove this!
-//#include "Sensor.hh"
-//#include "ViewDrift.hh"
 
 namespace Garfield {
 

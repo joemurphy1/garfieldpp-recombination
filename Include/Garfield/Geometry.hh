@@ -1,10 +1,8 @@
 #ifndef G_GEOMETRY_H
 #define G_GEOMETRY_H
 
-#include <string>
-
-//#include "Medium.hh"
-//#include "Solid.hh"
+#include<cstddef>
+#include<string>
 
 namespace Garfield {
 
@@ -26,11 +24,11 @@ class Geometry {
                             const bool tesselated = false) const = 0;
 
   /// Return the number of solids in the geometry.
-  virtual size_t GetNumberOfSolids() const { return 0; }
+  virtual std::size_t GetNumberOfSolids() const { return 0; }
   /// Get a solid from the list.
-  virtual Solid* GetSolid(const size_t /*i*/) const { return nullptr; }
+  virtual Solid* GetSolid(const std::size_t /*i*/) const { return nullptr; }
   /// Get a solid from the list, together with the associated medium.
-  virtual Solid* GetSolid(const size_t /*i*/, Medium*& medium) const {
+  virtual Solid* GetSolid(const std::size_t /*i*/, Medium*& medium) const {
     return nullptr;
   }
   /// Check if a point is inside the geometry.

@@ -5,15 +5,6 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-//#include <numeric>
-//#include <string>
-//#include <utility>
-//#include <vector>
-
-//#include "AvalancheMicroscopic.hh"
-//#include "ComponentParallelPlate.hh"
-//#include "GarfieldConstants.hh"
-//#include "Sensor.hh"
 
 namespace Garfield {
   class Sensor;

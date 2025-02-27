@@ -4,8 +4,8 @@
 #include <array>
 #include <string>
 
-#include "Component.hh"
-#include "Medium.hh"
+#include "Garfield/Component.hh"
+//#include "Medium.hh"
 
 namespace Garfield {
 

@@ -2,10 +2,6 @@
 #define G_VIEW_SIGNAL
 
 #include <Rtypes.h>
-//#include <TH1D.h>
-
-//#include <array>
-//#include <memory>
 #include <string>
 
 #include "Garfield/ViewBase.hh"

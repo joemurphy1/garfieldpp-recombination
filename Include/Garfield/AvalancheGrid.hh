@@ -4,12 +4,6 @@
 #include<cmath>
 #include<vector>
 #include<string>
-//#include <string>
-//#include <vector>
-
-//#include "AvalancheMicroscopic.hh"
-//#include "Garfield/ComponentParallelPlate.hh"
-//#include "Sensor.hh"
 
 namespace Garfield {
 

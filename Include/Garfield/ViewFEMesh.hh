@@ -5,19 +5,8 @@
 #include<map>
 #include<vector>
 
-//#include <memory>
-//#include <string>
-//#include <map>
-
-//#include <TArrayD.h>
-//#include <TGaxis.h>
 #include <TGeoManager.h>
 #include <TMatrixDfwd.h>
-//#include <TMatrixD.h>
-
-//#include "ComponentCST.hh"
-//#include "Component.hh"
-//#include "ViewDrift.hh"
 
 #include "Garfield/ViewBase.hh"
 

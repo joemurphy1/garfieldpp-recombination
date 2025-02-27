@@ -6,12 +6,10 @@
 #include <string>
 #include <array>
 
-//#include <TH1.h>
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/MultiProcessInterface.hh"
 #include "Garfield/Sensor.hh" //TODO remove this !
-//#include "ViewDrift.hh"
 
 
 

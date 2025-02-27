@@ -3,6 +3,7 @@
 
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

@@ -6,11 +6,8 @@
 #include <vector>
 #include <complex>
 #include <mutex>
-//#include <cmath>
-
 
 #include "Garfield/Component.hh"
-//#include "FundamentalConstants.hh"
 
 class TPad;
 class Medium;
@@ -333,7 +330,7 @@ class ComponentAnalyticField : public Component {
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,
                      int& status) override;
-                     
+
   using Component::ElectricField;
   bool GetVoltageRange(double& pmin, double& pmax) override;
 

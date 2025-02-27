@@ -1,14 +1,10 @@
 #ifndef G_AVALANCHE_MC_H
 #define G_AVALANCHE_MC_H
 
-//#include <array>
 #include <string>
 #include <vector>
 
-//#include "FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
-//#include "Sensor.hh"
-//#include "ViewDrift.hh"
 
 namespace Garfield {
 
