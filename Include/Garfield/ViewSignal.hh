@@ -2,13 +2,16 @@
 #define G_VIEW_SIGNAL
 
 #include <Rtypes.h>
-#include <TH1D.h>
+//#include <TH1D.h>
 
-#include <array>
-#include <memory>
+//#include <array>
+//#include <memory>
 #include <string>
 
-#include "ViewBase.hh"
+#include "Garfield/ViewBase.hh"
+
+class TH1;
+class TH1D;
 
 namespace Garfield {
 

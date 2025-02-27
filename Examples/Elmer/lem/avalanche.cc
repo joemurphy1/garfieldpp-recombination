@@ -14,6 +14,7 @@
 #include <TCanvas.h>
 #include <TApplication.h>
 #include <TFile.h>
+#include <TH1D.h>
 
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ComponentElmer.hh"
