@@ -12,7 +12,7 @@ namespace Garfield {
 
     #include "MediumMagboltz.cc"
 
-    __device__ double MediumGPU::GetElectronCollisionRate(const GPUFLOAT e,
+    __device__ double MediumGPU::GetElectronCollisionRate(const cuda_t e,
         const int band)
     {
         switch(m_MediumType)

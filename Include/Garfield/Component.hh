@@ -11,6 +11,7 @@
 
 #include "TetrahedralTreeGPU.h"
 #include "MediumGPU.h"
+#include "Garfield/GPUInterface.hh"
 
 #else
 
@@ -80,9 +81,9 @@ class GARFIELD_CLASS_NAME(Component) {
   #endif
 
   #ifdef __GPUCOMPILE__
-  __device__ void ElectricField(const GPUFLOAT xin, const GPUFLOAT yin,
-                                const GPUFLOAT zin, GPUFLOAT& ex, GPUFLOAT& ey,
-                                GPUFLOAT& ez, MediumGPU*& m, int& status);
+  __device__ void ElectricField(const cuda_t xin, const cuda_t yin,
+                                const cuda_t zin, cuda_t& ex, cuda_t& ey,
+                                cuda_t& ez, MediumGPU*& m, int& status);
   #else
   virtual void ElectricField(const double x, const double y, const double z,
                              double& ex, double& ey, double& ez, Medium*& m,

@@ -23,7 +23,7 @@
 
 #include "Component.hh"
 #include "Shaper.hh"
-#include "GPUInterface.hh"
+//#include "GPUInterface.hh"
 #endif
 
 class TPad;

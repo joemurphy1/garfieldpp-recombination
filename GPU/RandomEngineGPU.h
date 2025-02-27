@@ -14,7 +14,7 @@ class RandomEngineGPU {
   /// Destructor
   ~RandomEngineGPU();
   /// Call the random number generator.
-  __device__ GPUFLOAT Draw();
+  __device__ cuda_t Draw();
   void setRandomEngineOnDevice();
 
   // cuRAND specifics

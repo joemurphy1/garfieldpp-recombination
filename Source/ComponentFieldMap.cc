@@ -1191,9 +1191,9 @@ int ComponentFieldMap
   std::array<double, 10> yn;
   std::array<double, 10> zn;
   #else
-  double xn[10];
-  double yn[10];
-  double zn[10];
+  cuda_t xn[10];
+  cuda_t yn[10];
+  cuda_t zn[10];
   #endif
 
   #ifndef __GPUCOMPILE__
@@ -1217,6 +1217,7 @@ int ComponentFieldMap
       continue;
     }
     #ifndef __GPUCOMPILE__
+
     for (size_t j = 0; j < 10; ++j) {
     #else
     // TODO: GPU doesn't seem to like size_t, double check this
@@ -2136,7 +2137,7 @@ __device__ int ComponentGPU::Coordinates13(
   const double xn[10],
   const double yn[10],
   const double zn[10],
-  GPUFLOAT** w) const
+  cuda_t** w) const
 #else
 int ComponentFieldMap::Coordinates13(
     const double x, const double y, const double z, 
@@ -2262,12 +2263,12 @@ int ComponentFieldMap::Coordinates13(
     const double zmin = std::min({zn[0], zn[1], zn[2], zn[3]});
     const double zmax = std::max({zn[0], zn[1], zn[2], zn[3]});
     #else
-    const GPUFLOAT xmin = fmin(fmin(fmin(xn[0], xn[1]), xn[2]), xn[3]);
-    const GPUFLOAT xmax = fmax(fmax(fmax(xn[0], xn[1]), xn[2]), xn[3]);
-    const GPUFLOAT ymin = fmin(fmin(fmin(yn[0], yn[1]), yn[2]), yn[3]);
-    const GPUFLOAT ymax = fmax(fmax(fmax(yn[0], yn[1]), yn[2]), yn[3]);
-    const GPUFLOAT zmin = fmin(fmin(fmin(zn[0], zn[1]), zn[2]), zn[3]);
-    const GPUFLOAT zmax = fmax(fmax(fmax(zn[0], zn[1]), zn[2]), zn[3]);
+    const cuda_t xmin = fmin(fmin(fmin(xn[0], xn[1]), xn[2]), xn[3]);
+    const cuda_t xmax = fmax(fmax(fmax(xn[0], xn[1]), xn[2]), xn[3]);
+    const cuda_t ymin = fmin(fmin(fmin(yn[0], yn[1]), yn[2]), yn[3]);
+    const cuda_t ymax = fmax(fmax(fmax(yn[0], yn[1]), yn[2]), yn[3]);
+    const cuda_t zmin = fmin(fmin(fmin(zn[0], zn[1]), zn[2]), zn[3]);
+    const cuda_t zmax = fmax(fmax(fmax(zn[0], zn[1]), zn[2]), zn[3]);
     #endif
     if (x >= xmin && x <= xmax && y >= ymin && y <= ymax && z >= zmin &&
         z <= zmax) {

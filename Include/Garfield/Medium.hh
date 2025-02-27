@@ -6,7 +6,7 @@
 #endif
 
 #ifdef __GPUCOMPILE__
-
+#include "Garfield/GPUInterface.hh"
 #include "Garfield/MagboltzInterface.hh"
 
 #else
@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "FundamentalConstants.hh"
-#include "GPUInterface.hh"
+//#include "GPUInterface.hh"
 #endif
 
 #include "GarfieldConstants.hh"
@@ -210,12 +210,12 @@ class GARFIELD_CLASS_NAME(Medium) {
 
 #ifdef __GPUCOMPILE__
 
-  __device__ GPUFLOAT GetElectronCollisionRate(const GPUFLOAT e, const int band);
+  __device__ cuda_t GetElectronCollisionRate(const cuda_t e, const int band);
 
   __device__ bool ElectronCollision(
-      const GPUFLOAT e, int& type, int& level, GPUFLOAT& e1,
-      GPUFLOAT& dx, GPUFLOAT& dy, GPUFLOAT& dz,
-      Particle *secondaries_type, GPUFLOAT *secondaries_energy, int &num_secondaries, int& ndxc,
+      const cuda_t e, int& type, int& level, cuda_t& e1,
+      cuda_t& dx, cuda_t& dy, cuda_t& dz,
+      Particle *secondaries_type, cuda_t *secondaries_energy, int &num_secondaries, int& ndxc,
       int& band);
 #else
   /// Collision rate [ns-1] for given electron energy

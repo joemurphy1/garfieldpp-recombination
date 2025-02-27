@@ -93,15 +93,15 @@ namespace Garfield {
         checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_degenerate), sizeof(bool) * comp_gpu->numElements));
         alloc += sizeof(bool) * comp_gpu->numElements;
 
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_bbMin), sizeof(GPUFLOAT*) * comp_gpu->numElements));
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_bbMax), sizeof(GPUFLOAT*) * comp_gpu->numElements));
-        alloc += sizeof(GPUFLOAT*) * comp_gpu->numElements * 2;
+        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_bbMin), sizeof(cuda_t*) * comp_gpu->numElements));
+        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_bbMax), sizeof(cuda_t*) * comp_gpu->numElements));
+        alloc += sizeof(cuda_t*) * comp_gpu->numElements * 2;
 
         for (int i = 0; i < comp_gpu->numElements; i++)
         {
-            checkCudaErrors(cudaMallocManaged(&comp_gpu->m_bbMin[i], sizeof(GPUFLOAT) * 3));
-            checkCudaErrors(cudaMallocManaged(&comp_gpu->m_bbMax[i], sizeof(GPUFLOAT) * 3));
-            alloc += sizeof(GPUFLOAT) * 3 * 2;
+            checkCudaErrors(cudaMallocManaged(&comp_gpu->m_bbMin[i], sizeof(cuda_t) * 3));
+            checkCudaErrors(cudaMallocManaged(&comp_gpu->m_bbMax[i], sizeof(cuda_t) * 3));
+            alloc += sizeof(cuda_t) * 3 * 2;
             for (int j = 0; j < 3; j++)
             {
             comp_gpu->m_bbMin[i][j] = m_bbMin[i][j];
@@ -139,18 +139,18 @@ namespace Garfield {
             comp_gpu->m_pot[i] = m_pot[i];
         }
 
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_w12), sizeof(GPUFLOAT**) * comp_gpu->numElements));
-        alloc += sizeof(GPUFLOAT**) * comp_gpu->numElements;
+        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_w12), sizeof(cuda_t**) * comp_gpu->numElements));
+        alloc += sizeof(cuda_t**) * comp_gpu->numElements;
 
         for (int i = 0; i < comp_gpu->numElements; i++)
         {
-            checkCudaErrors(cudaMallocManaged(&comp_gpu->m_w12[i], sizeof(GPUFLOAT*) * 4));
-            alloc += sizeof(GPUFLOAT*) * 4;
+            checkCudaErrors(cudaMallocManaged(&comp_gpu->m_w12[i], sizeof(cuda_t*) * 4));
+            alloc += sizeof(cuda_t*) * 4;
 
             for (int j = 0; j < 4; j++)
             {
-                checkCudaErrors(cudaMallocManaged(&comp_gpu->m_w12[i][j], sizeof(GPUFLOAT) * 3));
-                alloc += sizeof(GPUFLOAT) * 3;
+                checkCudaErrors(cudaMallocManaged(&comp_gpu->m_w12[i][j], sizeof(cuda_t) * 3));
+                alloc += sizeof(cuda_t) * 3;
 
                 for (int k = 0; k < 3; k++)
                 {
