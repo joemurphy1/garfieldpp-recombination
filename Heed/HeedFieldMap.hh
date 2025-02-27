@@ -5,8 +5,10 @@
 #include "wcpplib/particle/fieldmap.h"
 
 #include "Garfield/Sensor.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
+
 
 /// Retrieve electric and magnetic field from Sensor.
 

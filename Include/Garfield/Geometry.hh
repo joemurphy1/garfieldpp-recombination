@@ -3,13 +3,15 @@
 
 #include <string>
 
-#include "Medium.hh"
-#include "Solid.hh"
+//#include "Medium.hh"
+//#include "Solid.hh"
 
 namespace Garfield {
 
-/// Abstract base class for geometry classes.
+class Medium;
+class Solid;
 
+/// Abstract base class for geometry classes.
 class Geometry {
  public:
   /// Default constructor.
@@ -29,7 +31,6 @@ class Geometry {
   virtual Solid* GetSolid(const size_t /*i*/) const { return nullptr; }
   /// Get a solid from the list, together with the associated medium.
   virtual Solid* GetSolid(const size_t /*i*/, Medium*& medium) const {
-    medium = nullptr;
     return nullptr;
   }
   /// Check if a point is inside the geometry.

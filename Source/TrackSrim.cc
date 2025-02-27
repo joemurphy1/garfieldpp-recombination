@@ -15,6 +15,7 @@
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewBase.hh"
 #include "Garfield/TrackSrim.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 

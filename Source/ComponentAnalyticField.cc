@@ -11258,6 +11258,40 @@ bool ComponentAnalyticField::OptimiseOnWires(
   return true;
 }
 
+void ComponentAnalyticField::ElectricField(const double x, const double y, const double z, double& ex,
+  double& ey, double& ez, Medium*& m, int& status)  {
+m = nullptr;
+// Calculate the field.
+double v = 0.;
+status = Field(x, y, z, ex, ey, ez, v, false);
+// If the field is ok, get the medium.
+if (status == 0) {
+m = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
+if (!m) {
+status = -6;
+} else if (!m->IsDriftable()) {
+status = -5;
+}
+}
+}
+
+void ComponentAnalyticField::ElectricField(const double x, const double y, const double z, double& ex,
+  double& ey, double& ez, double& v, Medium*& m,
+  int& status)  {
+m = nullptr;
+// Calculate the field.
+status = Field(x, y, z, ex, ey, ez, v, true);
+// If the field is ok, get the medium.
+if (status == 0) {
+m = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
+if (!m) {
+status = -6;
+} else if (!m->IsDriftable()) {
+status = -5;
+}
+}
+}
+
 void ComponentAnalyticField::InitialiseFitParameters(
     const std::vector<std::string>& groups,
     std::vector<double>& vw0, std::array<double, 5>& vp0,

@@ -5,6 +5,7 @@
 #include "Garfield/ComponentAnsys123.hh"
 #include "Garfield/ComponentComsol.hh"
 #include "Garfield/ComponentElmer.hh"
+#include "Garfield/Medium.hh"
 
 
 #define __GPUCOMPILE__

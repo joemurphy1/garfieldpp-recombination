@@ -10,6 +10,7 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/ComponentNeBem2d.hh"
+#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/ViewCell.hh"
 

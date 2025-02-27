@@ -3,7 +3,9 @@
 
 #include <map>
 
-#include "Component.hh"
+#include "Garfield/Component.hh"
+#include "Garfield/Solid.hh"
+
 
 namespace Garfield {
 

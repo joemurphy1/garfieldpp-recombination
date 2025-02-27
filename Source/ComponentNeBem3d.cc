@@ -16,6 +16,7 @@
 #include "NR.h"
 #include "neBEM.h"
 #include "neBEMInterface.h"
+#include "Garfield/Medium.hh"
 
 namespace {
 

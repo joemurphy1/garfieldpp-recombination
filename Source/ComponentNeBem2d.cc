@@ -11,6 +11,8 @@
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Polygon.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/Medium.hh"
+
 
 namespace {
 

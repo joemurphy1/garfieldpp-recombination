@@ -8,6 +8,7 @@
 #include "Garfield/Sensor.hh"
 #include "Garfield/ComponentParallelPlate.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 

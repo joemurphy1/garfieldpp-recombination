@@ -10,6 +10,7 @@
 
 #include "Garfield/ComponentGrid.hh"
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Utilities.hh"
 
 namespace {
@@ -300,7 +301,7 @@ bool ComponentGrid::SetMesh(const unsigned int nx, const unsigned int ny,
     }
   }
   if (m_coordinates == Coordinates::Cylindrical) {
-    if (fabs(m_xMax[1] - m_xMin[1] - TwoPi) < tol) {
+    if (fabs(m_xMax[1] - m_xMin[1] - Garfield::TwoPi) < tol) {
       if (!m_periodic[1]) {
         std::cerr << m_className << "::SetMesh: Enabling theta periodicity.\n";
       }

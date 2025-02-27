@@ -12,6 +12,7 @@
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewDrift.hh"
+#include "Garfield/Medium.hh"
 
 #define __GPUCOMPILE__
 #include "AvalancheMicroscopicGPU.h"

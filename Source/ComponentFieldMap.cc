@@ -14,6 +14,7 @@
 #include <string>
 
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

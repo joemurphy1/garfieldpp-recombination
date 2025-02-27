@@ -10,6 +10,7 @@
 #include "Garfield/Sensor.hh"
 #include "Garfield/Utilities.hh"
 #include "Garfield/TrackTrim.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 

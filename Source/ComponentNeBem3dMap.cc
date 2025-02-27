@@ -7,6 +7,7 @@
 
 #include "Garfield/ComponentNeBem3dMap.hh"
 #include "Garfield/Utilities.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

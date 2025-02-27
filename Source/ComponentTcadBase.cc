@@ -10,6 +10,7 @@
 #include "Garfield/ComponentTcadBase.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Utilities.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 
