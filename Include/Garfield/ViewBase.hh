@@ -5,8 +5,11 @@
 #include <array>
 #include <string>
 
-#include <TPad.h>
+//#include <TPad.h>
 #include <TCanvas.h>
+
+class TPad;
+class TVirtualPad;
 
 namespace Garfield {
 
