@@ -7,6 +7,7 @@
 #include <numeric>
 
 #include <TCanvas.h>
+#include <TPad.h>
 #include <TGraph.h>
 #include <TInterpreter.h>
 #include <TROOT.h>
@@ -16,6 +17,7 @@
 #include "Garfield/Numerics.hh"
 #include "Garfield/ViewBase.hh"
 #include "Garfield/ViewCell.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 

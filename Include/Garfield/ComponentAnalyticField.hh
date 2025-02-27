@@ -1,14 +1,19 @@
 #ifndef G_COMPONENT_ANALYTIC_FIELD_H
 #define G_COMPONENT_ANALYTIC_FIELD_H
 
-#include <mutex>
-#include <cmath>
+#include <string>
+#include <array>
+#include <vector>
 #include <complex>
+#include <mutex>
+//#include <cmath>
 
-#include "Component.hh"
-#include "FundamentalConstants.hh"
+
+#include "Garfield/Component.hh"
+//#include "FundamentalConstants.hh"
 
 class TPad;
+class Medium;
 
 namespace Garfield {
 
