@@ -2,6 +2,24 @@
 # https://github.com/root-project/root-docker
 
 
+build-gpu-nvidia:
+  stage: build
+  image: archlinux/archlinux:base-devel
+  tags:
+    - k8s-gpu
+  before_script:
+    - pacman-key --init
+    - pacman -Syu --noconfirm
+    - pacman -S --noconfirm --assume-installed opencl-nvidia root-cuda cmake cern-vdt unuran openmpi vc gcc-fortran
+    - source /etc/profile
+  script:
+    - nvidia-smi
+    - cmake -E rm -rf ./build
+    - cmake -E make_directory ./build
+    - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D USEGPU:BOOL=TRUE
+    - cmake --build ./build --config Debug --parallel 5
+
+
 build-alma9:
   stage: build
   image: rootproject/root:6.30.02-alma9
