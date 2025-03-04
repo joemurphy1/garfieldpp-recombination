@@ -24,7 +24,7 @@ fieldView.SetPlaneXZ()
 fieldView.SetArea(-0.5 * pitch, -0.02, 0.5 * pitch, 0.02)
 fieldView.SetVoltageRange(-160., 160.)
 fieldView.GetCanvas().SetLeftMargin(0.16)
-fieldView.PlotContour();
+fieldView.PlotContour()
 
 # Setup the gas.
 gas = ROOT.Garfield.MediumMagboltz("ar", 80., "co2", 20.)

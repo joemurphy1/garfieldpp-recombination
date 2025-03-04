@@ -236,8 +236,7 @@ Using \texttt{ViewMedium} directly, another way to produce the first plot
 in the above example would be:
 \begin{lstlisting}
 MediumSilicon si;
-ViewMedium view;
-view.SetMedium(&si);
+ViewMedium view(&si);
 view.PlotVelocity("eh", 'e');
 \end{lstlisting}
 The second argument (of type \texttt{char}) of the function \texttt{ViewMedium::PlotVelocity} indicates the quantity to plot on the $x$-axis. 
