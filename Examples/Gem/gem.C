@@ -134,7 +134,8 @@ int main(int argc, char * argv[]) {
       meshView.SetColor(2, kYellow + 3);
       meshView.EnableAxes();
       meshView.SetViewDrift(&driftView);
-      meshView.Plot(twod);
+      const bool outline = twod ? false : true;
+      meshView.Plot(twod, outline);
     } else {
       driftView.SetPlane(0, -1, 0, 0, 0, 0);
       driftView.SetArea(-2 * pitch, -0.02, 2 * pitch, 0.02);

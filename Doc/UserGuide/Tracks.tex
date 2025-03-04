@@ -164,17 +164,14 @@ secondary electrons, the corresponding parameters in
 
 Heed can also be used for simulating x-ray photoabsorption. 
 \begin{lstlisting}
-void TransportPhoton(const double x0, const double y0, const double z0,
-                     const double t0, const double e0,
-                     const double dx0, const double dy0, const double dz0,
-                     int& nel);
+Cluster TransportPhoton(const double x0, const double y0, const double z0,
+                        const double t0, const double e0,
+                        const double dx0, const double dy0, const double dz0);
 \end{lstlisting}
 \begin{description}
 \item[x0, y0, z0, t0] initial position and time of the photon
 \item[e0] photon energy in eV
 \item[dx0, dy0, dz0] direction of the photon
-\item[nel] number of photoelectrons and Auger-electrons produced 
-           in the photon conversion
 \end{description}
 
 \subsection{Magnetic fields}
@@ -330,8 +327,11 @@ To calculate the number of electrons for given amount of deposited energy,
 Fano factor of the target material. 
 By default, \texttt{TrackSrim} retrieves these parameters from the 
 relevant \texttt{Medium} object.
-Altenatively, they can be set explicitly using 
+Alternatively, they can be set explicitly using 
 \texttt{TrackSrim::SetWorkFunction} and \texttt{TrackSrim::SetFanoFactor}.
+
+The \texttt{Cluster} objects returned by \texttt{TrackSrim::GetClusters} 
+contain the location and time of the cluster (variables \texttt{x, y, z, t}), the energy spent to make the cluster (\texttt{energy}), the ion energy when the cluster was created (\texttt{kinetic}), and the number of electrons in the cluster (\texttt{n}). 
 
 \section{TRIM}
 TRIM\footnote{TRansport of Ions in Matter} is a Monte Carlo simulation program 
@@ -372,6 +372,8 @@ At the next call to \texttt{NewTrack}, \texttt{TrackTrim} moves to the
 next ion trajectory in the list (if it reaches the end of the list, 
 it rewinds to the first one). 
 
+The variables contained in the \texttt{Cluster} objects returned by \texttt{TrackTrim::GetClusters} are the same as for \texttt{TrackSrim}.
+ 
 \section{Degrade}
 The class \texttt{TrackDegrade} simulates ionisation by primary electrons 
 in a gas and the subsequent degradation of $\delta$ electrons, 

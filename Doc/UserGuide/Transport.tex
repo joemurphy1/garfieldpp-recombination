@@ -12,7 +12,7 @@ For the solution of \eqref{Eqn:FirstOrderEquationOfMotion},
 two methods are available in Garfield++:
 \begin{itemize}
   \item
-  Runge-Kutta-Fehlberg integration, and
+  Runge-Kutta-Fehlberg integration (\texttt{DriftLineRKF}), and
   \item
   Monte Carlo integration (\texttt{AvalancheMC}).
 \end{itemize}
@@ -466,22 +466,20 @@ produced in the avalanche can be retrieved using
 \begin{lstlisting}
 void GetAvalancheSize(int& ne, int& ni);
 \end{lstlisting}
-Information about the ``history'' of each avalanche electron can be 
-retrieved by
+Information about the ``history'' of each avalanche electron can be retrieved using
 \begin{lstlisting}
-size_t GetNumberOfElectronEndpoints() const;
-void GetElectronEndpoint(const size_t i, 
-                         double& x0, double& y0, double& z0, double& t0, double& e0,
-                         double& x1, double& y1, double& z1, double& t1, double& e1,
-                         int& status); 
+const std::vector<Electron>& GetElectrons();
 \end{lstlisting}
-\begin{description}
-  \item[i] index of the electron
-  \item[x0, y0, z0, t0, e0] initial position, time and energy of the electron
-  \item[x1, y1, z1, t1, e1] final position, time and energy of the electron
-  \item[status] status code indicating why the tracking of the electron was stopped.  
-\end{description}
+where \texttt{Electron} is a \texttt{struct} containing an integer status code indicating why the simulation of the electron drift line was terminated, a vector of points along the trajectory and the total path length. 
+\begin{lstlisting}
+struct Electron {
+  int status = 0;
+  std::vector<Point> path;
+  double pathLength = 0.;
+};
+\end{lstlisting}
 A list of status codes is given in Table~\ref{Tab:DriftLineStatusCodes}.
+The \texttt{Point} objects contain the location (\texttt{x, y, z}), time (\texttt{t}), kinetic energy (\texttt{energy}), and direction vector (\texttt{kx, ky, kz}) of the electron.
 
 The function
 \begin{lstlisting}
@@ -529,6 +527,17 @@ In order to explicitly switch the use of magnetic fields on or off
 one can use the function
 \begin{lstlisting}
 void EnableMagneticField(const bool on);
+\end{lstlisting}
+
+The default stepping algorithm evaluates the electric field only at the start of a free-flight step, assuming that it is constant throughout the step. This is an exact solution for uniform fields, and usually a good approximation if the electric field does not change drastically over a step.
+To improve the accuracy of the free-flight calculation, in particular at low gas pressure, a stepping algorithm based on Runge-Kutta-Nystr\"om integration can be requested using 
+\begin{lstlisting}
+void EnableRKNSteps(const bool on = true);
+\end{lstlisting}
+The error tolerance and minimum step size in the algorithm can be set using
+\begin{lstlisting}
+void SetRKNTolerance(const double sTol = 1.e-10,
+                     const double sMinStep = 1.e-5);
 \end{lstlisting}
 
 Using 
@@ -634,12 +643,12 @@ int main(int argc, char* argv[]) {
 
   // Setup gas, geometry, and field
   ...
-  AvalancheMicroscopic* aval = new AvalancheMicroscopic();
+  AvalancheMicroscopic aval;
   ...
-  aval->SetUserHandleInelastic(userHandle);
+  aval.SetUserHandleInelastic(userHandle);
   double x0 = 0., y0 = 0., z0 = 0., t0 = 0.;
   double e0 = 1.;
-  aval->AvalancheElectron(x0, y0, z0, t0, e0, 0., 0., 0.); 
+  aval.AvalancheElectron(x0, y0, z0, t0, e0, 0., 0., 0.); 
   ...
 
 }

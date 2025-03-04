@@ -1,6 +1,6 @@
 The calculation of electric fields is done by classes 
 derived from the abstract base class \texttt{Component}. 
-The key functions are 
+The key functions, used internally in the classes for simulating charge transport, are 
 \begin{lstlisting}
 void ElectricField(const double x, const double y, const double z,
                    double& ex, double& ey, double& ez,
@@ -19,6 +19,16 @@ Medium* GetMedium(const double& x, const double& y, const double& z);
   \item[status] status flag indicating where the point is located
   (see Table~\ref{Tab:StatusFlagsField})
 \end{description}
+
+To retrieve only the electrostatic potential, the function
+\begin{lstlisting}
+double ElectricPotential(const double x, const double y, const double z);
+\end{lstlisting}
+can be used, and the function
+\begin{lstlisting}
+std::array<double, 3> ElectricField(const double x, const double y, const double z);
+\end{lstlisting}
+returns the three components of the electric field.
 
 \begin{table} 
   \centering
@@ -415,18 +425,17 @@ bool GetElement(const size_t i, double& vol, double& dmin, double& dmax);
 \item[dmin, dmax] min./max. distance between two node points
 \end{description}
 
-In the following example we make histograms of the aspect ratio and 
-element size.
+In the following example we make histograms of the aspect ratio and element size.
 \begin{lstlisting}
-ComponentAnsys123* fm = new ComponentAnsys123();
-...
+ComponentAnsys123 fm;
+// ...
 TH1F* hAspectRatio = new TH1F("hAspectRatio"; "Aspect Ratio", 100, 0., 50.);
 TH1F* hSize = new TH1F("hSize", "Element Size", 100, 0., 30.);
-const size_t nel = fm->GetNumberOfElements();
+const size_t nel = fm.GetNumberOfElements();
 // Loop over the elements.
 double volume, dmin, dmax;
 for (size_t i = 0; i < nel; ++i) {
-  fm->GetElement(i, volume, dmin, dmax);
+  fm.GetElement(i, volume, dmin, dmax);
   if (dmin > 0.) hAspectRatio->Fill(dmax / dmin);
   hSize->Fill(volume);
 }
@@ -822,7 +831,7 @@ void EnableInterpolation(const bool on = true);
  
 \subsection{Visualizing the mesh}
 
-For visualizing the mesh imported from a FEM field map, the class 
+For visualizing the mesh imported from a FEM field map (or a TCAD field map), the class 
 \texttt{ViewFEMesh} (written by J. Renner) is available. 
 Using 
 \begin{lstlisting}
@@ -1010,7 +1019,7 @@ to the cell, the same function is used
 for both Cartesian and polar coordinates. In the latter case, the 
 first coordinate corresponds to the radius of the wire (in cm), 
 and the second coordinate corresponds to the angle (in degrees). 
-A wire may not be positioned at the origin if polar coordinates are being used.
+A wire must not be positioned at the origin if polar coordinates are being used.
 
 Planes at constant radius or at constant angle are specified using
 \begin{lstlisting}
@@ -1691,6 +1700,20 @@ shall assign the variables \texttt{ex}, \texttt{ey}, \texttt{ez}
 If a field component is not assigned in the expression, it is assumed 
 to be zero.
 
+If the active volume is a box, its limits can be set using the functions
+\begin{lstlisting}
+void SetArea(const double xmin, const double ymin, const double zmin,
+             const double xmax, const double ymax, const double zmax);
+\end{lstlisting}
+In this case, the medium associated to the active volume is set using
+\begin{lstlisting}
+void SetMedium(Medium* medium);
+\end{lstlisting}
+Alternatively, the geometry can be defined using
+\begin{lstlisting}
+void SetGeometry(Geometry* geo);
+\end{lstlisting}
+
 As an example, let us consider the electric field in the bulk 
 of an overdepleted planar silicon sensor, given by
 \begin{equation*}
@@ -1769,6 +1792,7 @@ void SetWeightingPotential(const double x, const double y, const double z,
   \item[x, y, z] coordinates where the weighting potential is specified
   \item[v] weighting potential at the given position 
 \end{description}
+As is the case with \texttt{ComponentUser}, the active volume can be set using \texttt{SetArea} and \texttt{SetMedium} (if it is a box), or using \texttt{SetGeometry} in case of more complex geometries.
 
 \section{Visualizing the field}
 
@@ -1776,17 +1800,15 @@ The class \texttt{ViewField} provides some basic functions
 for plotting the potential and field of a component/sensor.
 
 The \texttt{Component} or \texttt{Sensor} from which to retrieve the 
-field/potential to be plotted is set by means of
+field/potential to be plotted is set through the constructor of \texttt{ViewField} or by means of
 \begin{lstlisting}
 void SetComponent(Component* c);
 void SetSensor(Sensor* s);
 \end{lstlisting}
 
-By default, the voltage range is retrieved from the 
-minimum and maximum values of the 
-potential in the component/sensor, and
-the range of the electric and weighting fields is
-``guessed'' by taking random samples.
+By default, the voltage range is retrieved from the minimum and maximum 
+values of the potential in the component/sensor, and the range of the 
+electric and weighting fields is ``guessed'' by taking random samples.
 This feature can be switched on or off using the function
 \begin{lstlisting}
 void EnableAutoRange(const bool on = true, const bool samplePotential = true);

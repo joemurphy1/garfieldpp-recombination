@@ -110,9 +110,8 @@ cmp.AddTube(rTube, vTube, 0);
 Finally we assemble a \texttt{Sensor} object which acts as an 
 interface to the transport classes discussed below.
 \begin{lstlisting}
-Sensor sensor;
 // Calculate the electric field using the Component object cmp.
-sensor.AddComponent(&cmp);
+Sensor sensor(&cmp);
 // Request signal calculation for the electrode named "s", 
 // using the weighting field provided by the Component object cmp.
 sensor.AddElectrode(&cmp, "s"); 
@@ -262,8 +261,7 @@ Using the class \texttt{ViewField}, we do a visual inspection of the
 field map to make sure it looks sensible.
 We first make a plot of the potential along the hole axis ($z$ axis).
 \begin{lstlisting}
-ViewField fieldView;
-fieldView.SetComponent(&fm);
+ViewField fieldView(&fm);
 // Plot the potential along the hole axis.
 fieldView.PlotProfile(0., 0., 0.02, 0., 0., -0.02);
 \end{lstlisting}
@@ -276,11 +274,9 @@ fieldView.SetArea(-pitch / 2., -0.02, pitch / 2., 0.02);
 fieldView.SetVoltageRange(-160., 160.);
 fieldView.PlotContour();
 \end{lstlisting}
-Next we create a \texttt{Sensor} and add the field map 
-component to it
+Next we create a \texttt{Sensor} based on the field map component.
 \begin{lstlisting}
-Sensor sensor;
-sensor.AddComponent(&fm);
+Sensor sensor(&fm);
 \end{lstlisting}
 Normally, particles are transported until they exit the mesh. 
 To speed up the calculation we restrict the drift region to 
@@ -454,10 +450,9 @@ drift.EnablePlotting(&driftView);
 \end{lstlisting}
 After having calculated the electron avalanche and ion drift lines, we create a plot using the snippet of code below.
 \begin{lstlisting}
-ViewFEMesh* meshView = new ViewFEMesh();
+ViewFEMesh* meshView = new ViewFEMesh(&fm);
 meshView->SetArea(-2 * pitch, -2 * pitch, -0.02,
                    2 * pitch,  2 * pitch,  0.02);
-meshView->SetComponent(&fm);
 // x-z projection
 meshView->SetPlane(0, -1, 0, 0, 0, 0);
 meshView->SetFillMesh(true); 
@@ -493,28 +488,22 @@ In this example, we will use the default parameterizations,
 which correspond to the default models in Sentaurus Device \cite{Synopsys}. 
 The diffusion coefficients are calculated according to the Einstein relation.
 
-\subsubsection{Geometry}
-As a next step, we define the active volume, 
-which in our case is simply a box with a length of $d = 100$\,\textmu{m} 
-along $y$, centred at $y = 50$\,\textmu{m}, and made of silicon. 
-To describe the shape of our detector, 
-we therefore create a \texttt{SolidBox} object.
-\begin{lstlisting}
-// Thickness of the silicon [cm]
-constexpr double d = 100.e-4;
-SolidBox box(0, 0.5 * d, 0, 2 * d, 0.5 * d, 2 * d);
-\end{lstlisting}
-We then create a \texttt{GeometrySimple} object, and attach the box to it 
-(\ie we pass it a pointer to the \texttt{SolidBox} object), 
-together with the medium inside 
-(\ie a pointer to the \texttt{MediumSilicon} object).
-\begin{lstlisting}
-// Set up the geometry.
-GeometrySimple geo;
-geo.AddSolid(&box, &si);
-\end{lstlisting}
+%\subsubsection{Geometry}
+%To describe the shape of our detector, we create a \texttt{SolidBox} object.
+%\begin{lstlisting}
+%// Thickness of the silicon [cm]
+%constexpr double d = 100.e-4;
+%SolidBox box(0, 0.5 * d, 0, 2 * d, 0.5 * d, 2 * d);
+%\end{lstlisting}
+%We then create a \texttt{GeometrySimple} object, and attach the box to it (\ie we pass it a pointer to the \texttt{SolidBox} object), together with the medium inside (\ie a pointer to the \texttt{MediumSilicon} object).
+%\begin{lstlisting}
+%// Set up the geometry.
+%GeometrySimple geo;
+%geo.AddSolid(&box, &si);
+%\end{lstlisting}
 
 \subsubsection{Electric field}
+The active volume in our example is a box with a length of $d = 100$\,\textmu{m} along $y$, centred at $y = 50$\,\textmu{m}, and made of silicon. 
 For accurate calculations of the electric field in a segmented silicon sensor, 
 one normally uses TCAD device simulation programs such as 
 Synopsys Sentaurus Device \cite{Synopsys}. 
@@ -551,7 +540,8 @@ and set up a \texttt{ComponentUser} object
 which delegates the calculation of the electric field to this function.
 \begin{lstlisting}
 ComponentUser linearField;
-linearField.SetGeometry(&geo);
+linearField.SetArea(-2 * d, 0., -2 * d, 2 * d, d, 2 * d);
+linearField.SetMedium(&si);
 linearField.SetElectricField(eLinear);
 \end{lstlisting}
 A pointer to this \texttt{Component} is then passed to a \texttt{Sensor}
@@ -579,7 +569,7 @@ in the sensor though, so the voltage settings don't actually matter
 for our purposes.
 \begin{lstlisting}
 ComponentAnalyticField wField;
-wField.SetGeometry(&geo);
+wField.SetMedium(&si);
 wField.AddPlaneY(0, vbias, "back");
 wField.AddPlaneY(d, 0, "front");
 \end{lstlisting}
@@ -635,8 +625,7 @@ This means that at each step, the electron/hole will be propagated by
 1\,\textmu{m} in the direction of the drift velocity at the local field, 
 followed by a random step based on the diffusion coefficient.
 \begin{lstlisting}
-AvalancheMC drift;
-drift.SetSensor(&sensor);
+AvalancheMC drift(&sensor);
 // Set the step size [cm].
 drift.SetDistanceSteps(1.e-4);
 \end{lstlisting}

@@ -92,8 +92,7 @@ ComponentAnsys123 fm;
 ...
 fm.SetWeightingField("WPOT.lis", label);
 
-Sensor sensor;
-sensor.AddComponent(&fm);
+Sensor sensor(&fm);
 sensor.AddElectrode(&fm, label);
 // Setup the binning (0 to 100 ns in 100 steps).
 const double tStart =   0.;
@@ -101,8 +100,7 @@ const double tStop  = 100.;
 const int nSteps = 100;
 const double tStep = (tStop - tStart) / nSteps;
 
-AvalancheMicroscopic aval;
-aval.SetSensor(&sensor);
+AvalancheMicroscopic aval(&sensor);
 // Calculate some drift lines.
 ...
 // Plot the induced current.
@@ -121,7 +119,7 @@ void AvalancheMicroscopic::UseWeightingPotential(const bool on = true);
 
 The weighting potential method (which is the default) 
 should be used if one wants to ensure that 
-the integrated current is correct (equal to the collected charge).
+the integral of the current is equal to the collected charge.
 It takes $\phi_{w}$ at the start and end of each step $j \rightarrow j + 1$ along the drift path
 and calculates the average current $q\Delta\phi_{w}/\left(t_{j+1} - t_{j}\right)$. 
 For electron drift lines calculated using \texttt{DriftLineRKF}, 
@@ -299,4 +297,32 @@ in a time bin $\Delta{t}$ is
   \sigma_{q} = q_{0} \sqrt{\nu\Delta{t}}.
 \end{equation*}
 With the flag \texttt{poisson} set to \texttt{false}, 
-a Gaussian-distributed noise charge is added to each signal bin. 
+a Gaussian-distributed noise charge is added to each signal bin.
+
+\section{Delayed signals}
+For detectors with resistive elements, the induced signal as function of time is not only given by the movement of the charges in the drift medium but also by the time dependent reaction of the resistive materials. 
+Computing the induced current in such a configuration requires an extended version of the Ramo-Shockley theorem, 
+\begin{equation}\label{Eqn:ExtendedRamoShockleyWeightingField}
+i\left(t\right) = -q\int\limits_{0}^{t}\text{d}t'\mathbf{H}\left[\mathbf{x}\left(t'\right), t - t'\right]\cdot \dot{\mathbf{x}}\left(t'\right), 
+\end{equation}
+where 
+\begin{equation*}
+\mathbf{H}_{w}\left(\mathbf{x}, t\right) = -\nabla \frac{\partial\phi_{w}\left(\mathbf{x}, t\right)}{\partial t}
+\end{equation*}
+is the time-dependent weighting vector.
+
+The time-dependent weighting potential $\phi_{w}\left(\mathbf{x}, t\right)$
+can be written as the sum of a static prompt component and a dynamic delayed component
+\begin{equation}
+\phi_{w}\left(\mathbf{x}, t\right) = \phi_{w}^{p}\left(\mathbf{x}\right) + \phi_{w}^{d}\left(\mathbf{x}, t\right), \qquad \text{where}~\phi_{w}^{d}\left(\mathbf{x}, 0\right) = 0.
+\end{equation} 
+We can then write Eq.~\eqref{Eqn:ExtendedRamoShockleyWeightingField} as 
+\begin{equation}\label{Eqn:PromptDelayedCurrent}
+i\left(t\right) = \underbrace{-q\mathbf{E}_{w}\left(\mathbf{x}\left(t\right)\right)\cdot \dot{\mathbf{x}}\left(t\right)}_{\text{direct induction}} \underbrace{-q\int\limits_{0}^{t}\text{d}t'\mathbf{H}_{w}^{d}\left[\mathbf{x}\left(t'\right), t - t'\right]\cdot \dot{\mathbf{x}}\left(t'\right)}_{\text{reaction from resistive material}}.
+\end{equation}
+
+The computation of the delayed component of the induced current, \textit{i. e.} the second term in Eq.~\ref{Eqn:PromptDelayedCurrent}, can be activated or deactivated using the function
+\begin{lstlisting}
+void Sensor::EnableDelayedSignal(const bool on);
+\end{lstlisting}
+To be able to compute the delayed component, the dynamic weighting potential or weighting field of the electrode must be defined. The method for doing so depends on the type of \texttt{Component}. At present, \texttt{ComponentComsol}, \texttt{ComponentGrid}, \texttt{ComponentTcad2d}, \texttt{ComponentTcad3d} and \texttt{ComponentUser} support time-dependent weighting fields/potentials.
