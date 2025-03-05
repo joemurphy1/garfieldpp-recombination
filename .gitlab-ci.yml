@@ -105,8 +105,8 @@ build-fedora33:
 #  script:
 #    - ./runmytests.sh
 
-publish:
-  stage: publish
+docs:
+  stage: build
   needs: []
   image: archlinux/archlinux:base-devel
   before_script:
