@@ -8,6 +8,7 @@
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackPAI.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

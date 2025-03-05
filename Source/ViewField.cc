@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include<array>
 #include <limits>
 
 #include <TAxis.h>

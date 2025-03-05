@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include<array>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Polygon.hh"

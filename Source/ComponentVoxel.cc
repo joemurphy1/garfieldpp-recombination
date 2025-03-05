@@ -8,6 +8,7 @@
 #include "Garfield/ComponentVoxel.hh"
 #include "Garfield/Utilities.hh"
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

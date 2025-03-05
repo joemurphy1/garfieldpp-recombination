@@ -1,4 +1,5 @@
 #include <cmath>
+#include<array>
 #include <iostream>
 
 #include <TGeoBBox.h>
@@ -16,6 +17,7 @@
 #include "Garfield/Plotting.hh"
 #include "Garfield/Solid.hh"
 #include "Garfield/ViewGeometry.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

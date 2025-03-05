@@ -1,5 +1,7 @@
 #ifndef G_TRACK_SRIM_H
 #define G_TRACK_SRIM_H
+
+#include<array>
 #include <vector>
 #include "Track.hh"
 

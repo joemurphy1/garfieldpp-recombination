@@ -3,6 +3,7 @@
 #include <iostream>
 #include <limits>
 #include <string>
+#include<array>
 
 #include "Garfield/ComponentTcad3d.hh"
 

@@ -1,21 +1,25 @@
 #ifndef G_AVALANCHE_MICROSCOPIC_H
 #define G_AVALANCHE_MICROSCOPIC_H
 
-#include <string>
+#include <cstddef>
 #include <vector>
+#include <string>
+#include <array>
 
-#include <TH1.h>
 
-#include "GarfieldConstants.hh"
-#include "Sensor.hh"
-#include "ViewDrift.hh"
-#include "GPUInterface.hh"
+#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/MultiProcessInterface.hh"
+#include "Garfield/Sensor.hh" //TODO remove this !
 
-#include "MultiProcessInterface.hh"
+
+
+class TH1;
 
 namespace Garfield {
 
   class AvalancheMicroscopicGPU;
+  class ViewDrift;
+  class Medium;
 
 /// Calculate electron drift lines and avalanches using microscopic tracking.
 
@@ -32,7 +36,7 @@ class AvalancheMicroscopic {
   void SetSensor(Sensor* sensor);
 
   /// Switch on drift line plotting.
-  void EnablePlotting(ViewDrift* view, const size_t nColl = 100);
+  void EnablePlotting(ViewDrift* view, const std::size_t nColl = 100);
   /// Switch off drift line plotting.
   void DisablePlotting() { m_viewer = nullptr; }
   /// Draw a marker at every excitation or not.

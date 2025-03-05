@@ -5,13 +5,15 @@
 #define G_SENSOR_H
 #endif
 
+#include "Garfield/HelperMacros.hh"
+
 #ifdef __GPUCOMPILE__
 
 #include "MediumGPU.h"
 #include "ComponentGPU.h"
 
 #else
-
+#include<array>
 #include <fstream>
 #include <functional>
 #include <mutex>
@@ -21,7 +23,6 @@
 
 #include "Component.hh"
 #include "Shaper.hh"
-#include "GPUInterface.hh"
 #endif
 
 class TPad;
@@ -29,22 +30,26 @@ class TPad;
 namespace Garfield {
 
 // undefine everything first 
-#ifdef __SENSORCLASS__
-#undef __SENSORCLASS__
-#undef __MEDIUMCLASS__
-#undef __GPULABEL__
-#undef __GPUCONST__
+//#ifdef __SENSORCLASS__
+//#undef __SENSORCLASS__
+//#undef __MEDIUMCLASS__
+//#undef __GPULABEL__
+//#undef __GPUCONST__
+//#endif
+
+#if defined(__GPUCONST__)
+  #undef __GPUCONST__
 #endif
 
 // setup class names depending on if this is compiling the GPU static version or not
 #ifdef __GPUCOMPILE__
-#define __SENSORCLASS__ SensorGPU
-#define __MEDIUMCLASS__ MediumGPU
+//#define __SENSORCLASS__ SensorGPU
+//#define __MEDIUMCLASS__ MediumGPU
 #define __GPULABEL__ __device__
 #define __GPUCONST__ const
 #else
-#define __SENSORCLASS__ Sensor
-#define __MEDIUMCLASS__ Medium
+//#define __SENSORCLASS__ Sensor
+//#define __MEDIUMCLASS__ Medium
 #define __GPULABEL__ 
 #define __GPUCONST__
 class SensorGPU;
@@ -52,12 +57,13 @@ class SensorGPU;
 
 /// %Sensor
 
-class __SENSORCLASS__ {
+class GARFIELD_CLASS_NAME(Sensor)
+{
  public:
   /// Default constructor.
-  __SENSORCLASS__() = default;
+  GARFIELD_CLASS_NAME(Sensor)() = default;
   /// Destructor.
-  ~__SENSORCLASS__() {}
+  ~GARFIELD_CLASS_NAME(Sensor)() = default;
 
 #ifndef __GPUCOMPILE__
   /// Constructor from a single component.
@@ -92,7 +98,7 @@ class __SENSORCLASS__ {
   /// Get the drift field at (x, y, z).
   __GPULABEL__ 
   void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, __MEDIUMCLASS__*& medium, int& status) __GPUCONST__;
+                     double& ey, double& ez, GARFIELD_CLASS_NAME(Medium)*& medium, int& status) __GPUCONST__;
 
 #ifndef __GPUCOMPILE__
   /// Get the magnetic field at (x, y, z).

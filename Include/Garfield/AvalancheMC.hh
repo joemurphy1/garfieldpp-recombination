@@ -1,20 +1,18 @@
 #ifndef G_AVALANCHE_MC_H
 #define G_AVALANCHE_MC_H
 
-#include <array>
 #include <string>
 #include <vector>
+#include <array>
 
-#include "FundamentalConstants.hh"
-#include "GarfieldConstants.hh"
-#include "Sensor.hh"
-#include "ViewDrift.hh"
+#include "Garfield/GarfieldConstants.hh"
 
 namespace Garfield {
 
-/// Calculate drift lines and avalanches based on macroscopic transport
-/// coefficients, using Monte Carlo integration.
-
+  class Sensor;
+  class ViewDrift;
+  class Medium;
+/// Calculate drift lines and avalanches based on macroscopic transport coefficients, using Monte Carlo integration.
 class AvalancheMC {
  public:
   /// Default constructor

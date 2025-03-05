@@ -15,6 +15,7 @@
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/ViewDrift.hh"
 
 using namespace Garfield;
 

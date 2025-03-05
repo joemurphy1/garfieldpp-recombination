@@ -5,6 +5,27 @@
 #include "Garfield/ComponentFieldMap.hh"
 #include "Garfield/Sensor.hh"
 namespace Garfield {
+  // https://github.com/FLAMEGPU/FLAMEGPU2/issues/847
+  #if __CUDA_ARCH__ < 600
+  __device__ double atomicAdd(double* address, double val)
+  {
+      unsigned long long int* address_as_ull =
+                                (unsigned long long int*)address;
+      unsigned long long int old = *address_as_ull, assumed;
+  
+      do {
+          assumed = old;
+          old = atomicCAS(address_as_ull, assumed,
+                          __double_as_longlong(val +
+                                 __longlong_as_double(assumed)));
+  
+      // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
+      } while (assumed != old);
+  
+      return __longlong_as_double(old);
+  }
+  #endif
+
 
 double Sensor::CreateGPUTransferObject(SensorGPU*& sensor_gpu) {
   // create main sensor GPU class
@@ -183,7 +204,13 @@ void SensorGPU::AddSignal(
 __device__
 void SensorGPU::FillBin(ElectrodeGPU& electrode, const unsigned int bin, const double signal,
                         const bool electron, const bool delayed, const int particle_idx) {
+                          
+                          
+                          #if __CUDA_ARCH__ < 600
+                            Garfield::atomicAdd(&electrode.signal[bin], signal);
+                          #else
   atomicAdd(&electrode.signal[bin], signal);
+  #endif
   /*GPUREMOVE: if (electron) {
     electrode.electronsignal[bin] += signal;
     if (delayed) electrode.delayedElectronSignal[bin] += signal;

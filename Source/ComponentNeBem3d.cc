@@ -1,5 +1,5 @@
 #include "Garfield/ComponentNeBem3d.hh"
-
+#include<array>
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
@@ -16,6 +16,7 @@
 #include "NR.h"
 #include "neBEM.h"
 #include "neBEMInterface.h"
+#include "Garfield/Medium.hh"
 
 namespace {
 

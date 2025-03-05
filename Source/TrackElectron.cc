@@ -7,6 +7,7 @@
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackElectron.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

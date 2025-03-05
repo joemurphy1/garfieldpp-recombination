@@ -4,7 +4,7 @@
 #include <TGraph.h>
 #include <TLegend.h>
 #include <TPaveLabel.h>
-
+#include <TH1D.h>
 #include <iostream>
 
 #include "Garfield/GarfieldConstants.hh"

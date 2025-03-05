@@ -3,6 +3,7 @@
 #include <sstream>
 #include <algorithm>
 #include <numeric>
+#include<array>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
@@ -10,6 +11,7 @@
 #include "Garfield/Sensor.hh"
 #include "Garfield/Utilities.hh"
 #include "Garfield/TrackTrim.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 

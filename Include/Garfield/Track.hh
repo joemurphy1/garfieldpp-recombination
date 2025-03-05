@@ -1,6 +1,7 @@
 #ifndef G_TRACK_H
 #define G_TRACK_H
 
+#include<array>
 #include <cmath>
 #include <string>
 

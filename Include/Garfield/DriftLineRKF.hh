@@ -5,16 +5,15 @@
 #include <vector>
 #include <array>
 
-#include "GarfieldConstants.hh"
-#include "Medium.hh"
-#include "Sensor.hh"
-#include "ViewDrift.hh"
+#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Medium.hh" //TODO remove this!
 
 namespace Garfield {
 
-/// Calculation of drift lines based on macroscopic transport coefficients
-/// using Runge-Kutta-Fehlberg integration.
+  class Sensor;
+  class ViewDrift;
 
+/// Calculation of drift lines based on macroscopic transport coefficients using Runge-Kutta-Fehlberg integration.
 class DriftLineRKF {
  public:
   /// Default constructor

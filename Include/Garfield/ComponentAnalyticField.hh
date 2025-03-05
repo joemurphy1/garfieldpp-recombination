@@ -1,14 +1,16 @@
 #ifndef G_COMPONENT_ANALYTIC_FIELD_H
 #define G_COMPONENT_ANALYTIC_FIELD_H
 
-#include <mutex>
-#include <cmath>
+#include <string>
+#include <array>
+#include <vector>
 #include <complex>
+#include <mutex>
 
-#include "Component.hh"
-#include "FundamentalConstants.hh"
+#include "Garfield/Component.hh"
 
 class TPad;
+class Medium;
 
 namespace Garfield {
 
@@ -323,38 +325,12 @@ class ComponentAnalyticField : public Component {
 
   Medium* GetMedium(const double x, const double y, const double z) override;
   void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, Medium*& m, int& status) override {
-    m = nullptr;
-    // Calculate the field.
-    double v = 0.;
-    status = Field(x, y, z, ex, ey, ez, v, false);
-    // If the field is ok, get the medium.
-    if (status == 0) {
-      m = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
-      if (!m) {
-        status = -6;
-      } else if (!m->IsDriftable()) {
-        status = -5;
-      }
-    }
-  }
+                     double& ey, double& ez, Medium*& m, int& status) override;
 
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,
-                     int& status) override {
-    m = nullptr;
-    // Calculate the field.
-    status = Field(x, y, z, ex, ey, ez, v, true);
-    // If the field is ok, get the medium.
-    if (status == 0) {
-      m = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
-      if (!m) {
-        status = -6;
-      } else if (!m->IsDriftable()) {
-        status = -5;
-      }
-    }
-  }
+                     int& status) override;
+
   using Component::ElectricField;
   bool GetVoltageRange(double& pmin, double& pmax) override;
 

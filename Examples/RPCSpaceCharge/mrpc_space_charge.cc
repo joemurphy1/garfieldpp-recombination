@@ -12,6 +12,7 @@
 #include <TSystem.h>
 
 #include "Garfield/AvalancheGridSpaceCharge.hh"
+#include "Garfield/ComponentParallelPlate.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"

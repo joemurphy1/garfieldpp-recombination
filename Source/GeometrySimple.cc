@@ -2,6 +2,8 @@
 #include <iostream>
 
 #include "Garfield/GeometrySimple.hh"
+#include "Garfield/Solid.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

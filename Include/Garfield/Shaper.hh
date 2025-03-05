@@ -2,7 +2,6 @@
 #define G_SHAPER_H
 
 #include <string>
-#include <cmath>
 
 namespace Garfield {
 

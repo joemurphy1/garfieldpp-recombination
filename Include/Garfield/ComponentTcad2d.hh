@@ -1,9 +1,10 @@
 #ifndef G_COMPONENT_TCAD_2D_H
 #define G_COMPONENT_TCAD_2D_H
 
+#include<array>
 #include <memory>
 
-#include "ComponentTcadBase.hh"
+#include "Garfield/ComponentTcadBase.hh"
 #include "QuadTree.hh"
 
 namespace Garfield {

@@ -1,4 +1,5 @@
 #include <cmath>
+#include<array>
 #include <iostream>
 #include <fstream>
 #include <string>

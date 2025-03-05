@@ -6,10 +6,12 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include<array>
 
 #include "Garfield/ComponentTcadBase.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Utilities.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 

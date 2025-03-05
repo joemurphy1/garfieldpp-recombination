@@ -12,6 +12,7 @@
 #include <map>
 #include <numeric>
 #include <regex>
+#include<array>
 
 #include <TCanvas.h>
 #include <TColor.h>
@@ -573,7 +574,7 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
   // Calculate the collision rate by log-log interpolation.
   const double fmax = m_cfTotLog[iE];
   #ifdef __GPUCOMPILE__
-  const GPUFLOAT fmin = iE == 0 ? log(m_cfTot[m_numcfTot - 1]) : m_cfTotLog[iE - 1];
+  const cuda_t fmin = iE == 0 ? log(m_cfTot[m_numcfTot - 1]) : m_cfTotLog[iE - 1];
   #else
   const double fmin = iE == 0 ? log(m_cfTot.back()) : m_cfTotLog[iE - 1];
   #endif
@@ -623,9 +624,9 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
 #endif
 
 #ifdef __GPUCOMPILE__
-__device__ bool MediumGPU::ElectronCollision(const GPUFLOAT e, int& type,
+__device__ bool MediumGPU::ElectronCollision(const cuda_t e, int& type,
     int& level, double& e1, double& dx, double& dy, double& dz,
-    Particle *secondaries_type, GPUFLOAT *secondaries_energy, int &num_secondaries, int& ndxc,
+    Particle *secondaries_type, cuda_t *secondaries_energy, int &num_secondaries, int& ndxc,
     int& band)
 #else
 bool MediumMagboltz::ElectronCollision(const double e, int& type, 
@@ -911,7 +912,7 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type,
   const double s1 = m_rgas[igas];
   const double theta0 = acos(ctheta0);
   #ifdef __GPUCOMPILE__
-  const double arg = fmax((GPUFLOAT)1. - s1 * loss / e, SmallGPU);
+  const double arg = fmax((cuda_t)1. - s1 * loss / e, SmallGPU);
   #else
   const double arg = std::max(1. - s1 * loss / e, Small);
   #endif

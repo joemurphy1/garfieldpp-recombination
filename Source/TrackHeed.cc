@@ -21,6 +21,7 @@
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/ViewDrift.hh"
 
 #include "Garfield/TrackHeed.hh"
