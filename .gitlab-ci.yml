@@ -106,7 +106,7 @@ build-fedora33:
 #    - ./runmytests.sh
 
 docs:
-  stage: build
+  stage: publish
   needs: []
   pages: true
   image: archlinux/archlinux:base-devel
@@ -120,6 +120,7 @@ docs:
     - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D WITH_DOC:BOOL=TRUE
     - cmake --build ./build --config Debug --parallel 5 --target all docs
     - cmake --install ./build --config Debug --parallel 5
+    - cmake -E copy_directory ./install/share/doc/Garfield/pdf ./install/share/doc/Garfield/html
   artifacts:
     paths:
     - ./install/share/doc/Garfield/html/
