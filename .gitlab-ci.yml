@@ -112,7 +112,7 @@ docs:
   before_script:
     - pacman-key --init
     - pacman -Syu --noconfirm
-    - pacman -S --noconfirm doxygen texlive-bin texlive-basic texlive-latex texlive-luatex texlive-fontutils cmake gcc-fortran root cern-vdt
+    - pacman -S --noconfirm doxygen texlive-bin texlive-basic texlive-latex texlive-luatex texlive-fontutils texlive-latexrecommended cmake gcc-fortran root cern-vdt
   script:
     - cmake -E rm -rf ./build
     - cmake -E make_directory ./build
