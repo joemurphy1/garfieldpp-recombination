@@ -119,3 +119,6 @@ docs:
     - cmake -E make_directory ./build
     - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D WITH_DOC:BOOL=TRUE
     - cmake --build ./build --config Debug --parallel 5 --target docs
+  artifacts:
+    paths:
+    - ./install/share/doc/Garfield/html/

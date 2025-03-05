@@ -79,16 +79,14 @@ if(LATEX_LUALATEX_FOUND)
     ${CMAKE_CURRENT_SOURCE_DIR}/UserGuide/UserGuide.tex
     ${CMAKE_CURRENT_SOURCE_DIR}/UserGuide/garfield.jpg
   )
-  #add_custom_target(doc-user-guide-mkdir COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/)
   add_custom_target(doc-user-guide SOURCES ${USERGUIDE_SOURCE}
-                    #DEPENDS doc-user-guide-mkdir
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/
                     COMMAND "${LUALATEX_COMPILER}" -shell-escape -draftmode --output-directory=${CMAKE_CURRENT_BINARY_DIR}/UserGuide/ ${CMAKE_CURRENT_SOURCE_DIR}/UserGuide/UserGuide.tex
                     COMMAND "${LUALATEX_COMPILER}" -shell-escape --output-directory=${CMAKE_CURRENT_BINARY_DIR}/UserGuide/ ${CMAKE_CURRENT_SOURCE_DIR}/UserGuide/UserGuide.tex
                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/UserGuide/
                     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/refman.pdf
                     COMMENT "Generating User Guide.")
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/refman.pdf DESTINATION ${CMAKE_INSTALL_DOCDIR}/doxygen OPTIONAL)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/UserGuide.pdf DESTINATION "${CMAKE_INSTALL_DOCDIR}/pdf")
 else()
   add_custom_target(doc-user-guide "${CMAKE_COMMAND}" -E true COMMENT "${Yellow}LuaLaTeX not found ! Can compile UserGuide.pdf${Reset}")
 endif()
