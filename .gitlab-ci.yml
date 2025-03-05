@@ -105,10 +105,9 @@ build-fedora33:
 #  script:
 #    - ./runmytests.sh
 
-docs:
+publish:
   stage: publish
   needs: []
-  pages: true
   image: archlinux/archlinux:base-devel
   before_script:
     - pacman-key --init
