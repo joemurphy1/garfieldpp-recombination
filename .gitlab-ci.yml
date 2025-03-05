@@ -1,7 +1,6 @@
 # Docker images all from:
 # https://github.com/root-project/root-docker
 
-
 build-gpu-nvidia:
   stage: build
   image: archlinux/archlinux:base-devel
@@ -105,3 +104,17 @@ build-fedora33:
 #  stage: test
 #  script:
 #    - ./runmytests.sh
+
+docs:
+  stage: build
+  needs: []
+  image: archlinux/archlinux:base-devel
+  before_script:
+    - pacman-key --init
+    - pacman -Syu --noconfirm
+    - pacman -S --noconfirm doxygen latex-bin
+  script:
+    - cmake -E rm -rf ./build
+    - cmake -E make_directory ./build
+    - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install
+    - cmake --build ./build --config Debug --parallel 5 --target docs
