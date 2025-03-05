@@ -2,12 +2,16 @@
 #include <cstdio>
 #include <cmath>
 #include <numeric>
+#include<array>
 
 #include "Garfield/DriftLineRKF.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/Medium.hh"
+#include "Garfield/ViewDrift.hh"
 
 namespace {
 

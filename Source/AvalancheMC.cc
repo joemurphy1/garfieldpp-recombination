@@ -3,12 +3,16 @@
 #include <iostream>
 #include <numeric>
 #include <string>
+#include<array>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/ViewDrift.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdio>
 #include <algorithm>
+#include<array>
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/MediumGas.hh"

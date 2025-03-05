@@ -6,7 +6,7 @@
 #endif
 
 #ifdef __GPUCOMPILE__
-
+#include "GPUInterface.hh"
 #include "Garfield/MagboltzInterface.hh"
 
 #else
@@ -15,46 +15,46 @@
 #include <vector>
 
 #include "FundamentalConstants.hh"
-#include "GPUInterface.hh"
 #endif
 
 #include "GarfieldConstants.hh"
+#include "Garfield/HelperMacros.hh"
 
 class TPad;
 
 namespace Garfield {
 
 // undefine everything first 
-#ifdef __MEDIUMCLASS__
-#undef __MEDIUMCLASS__
+//#ifdef __MEDIUMCLASS__
+//#undef __MEDIUMCLASS__
 #undef __GPULABEL__
-#endif
+//#endif
 
 // setup class names depending on if this is compiling the GPU static version or not
 #ifdef __GPUCOMPILE__
-#define __MEDIUMCLASS__ MediumGPU
+//#define __MEDIUMCLASS__ MediumGPU
 #define __GPULABEL__ __device__
 #else
-#define __MEDIUMCLASS__ Medium
+//#define __MEDIUMCLASS__ Medium
 #define __GPULABEL__
   class MediumGPU;
 #endif
 
 /// Abstract base class for components.
 
-class __MEDIUMCLASS__ {
+class GARFIELD_CLASS_NAME(Medium) {
  public:
 
  #ifdef __GPUCOMPILE__
   /// Constructor
-  __MEDIUMCLASS__() = default;
+  GARFIELD_CLASS_NAME(Medium)() = default;
   /// Destructor
-  ~__MEDIUMCLASS__() {};
+  ~GARFIELD_CLASS_NAME(Medium)() {};
  #else
   /// Constructor
-  __MEDIUMCLASS__();
+  GARFIELD_CLASS_NAME(Medium)();
   /// Destructor
-  virtual ~__MEDIUMCLASS__();
+  virtual ~GARFIELD_CLASS_NAME(Medium)();
 #endif
 
   /// Return the id number of the class instance.
@@ -209,12 +209,12 @@ class __MEDIUMCLASS__ {
 
 #ifdef __GPUCOMPILE__
 
-  __device__ GPUFLOAT GetElectronCollisionRate(const GPUFLOAT e, const int band);
+  __device__ cuda_t GetElectronCollisionRate(const cuda_t e, const int band);
 
   __device__ bool ElectronCollision(
-      const GPUFLOAT e, int& type, int& level, GPUFLOAT& e1,
-      GPUFLOAT& dx, GPUFLOAT& dy, GPUFLOAT& dz,
-      Particle *secondaries_type, GPUFLOAT *secondaries_energy, int &num_secondaries, int& ndxc,
+      const cuda_t e, int& type, int& level, cuda_t& e1,
+      cuda_t& dx, cuda_t& dy, cuda_t& dz,
+      Particle *secondaries_type, cuda_t *secondaries_energy, int &num_secondaries, int& ndxc,
       int& band);
 #else
   /// Collision rate [ns-1] for given electron energy

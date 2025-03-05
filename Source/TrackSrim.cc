@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include<array>
 
 #include <TCanvas.h>
 #include <TGraph.h>
@@ -15,6 +16,7 @@
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewBase.hh"
 #include "Garfield/TrackSrim.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 

@@ -1,6 +1,8 @@
 #ifndef G_COMPONENT_NEBEM_2D_H
 #define G_COMPONENT_NEBEM_2D_H
 
+#include<array>
+
 #include "Component.hh"
 
 namespace Garfield {

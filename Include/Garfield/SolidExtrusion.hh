@@ -1,6 +1,7 @@
 #ifndef G_SOLID_EXTRUSION_H
 #define G_SOLID_EXTRUSION_H
 
+#include<array>
 #include "Solid.hh"
 
 namespace Garfield {

@@ -1,10 +1,11 @@
 #ifndef G_COMPONENT_TCAD_3D_H
 #define G_COMPONENT_TCAD_3D_H
 
+#include<array>
 #include <memory>
 
-#include "ComponentTcadBase.hh"
-#include "TetrahedralTree.hh"
+#include "Garfield/ComponentTcadBase.hh"
+#include "Garfield/TetrahedralTree.hh"
 
 namespace Garfield {
 

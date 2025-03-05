@@ -1,21 +1,21 @@
 #ifndef GARFIELD_AVALANCHEGRIDSPACECHARGE_HH
 #define GARFIELD_AVALANCHEGRIDSPACECHARGE_HH
 
-#include <numeric>
-#include <string>
 #include <utility>
+#include <string>
 #include <vector>
-
-#include "AvalancheMicroscopic.hh"
-#include "ComponentParallelPlate.hh"
-#include "GarfieldConstants.hh"
-#include "Sensor.hh"
+#include <algorithm>
 
 namespace Garfield {
+  class Sensor;
+  class AvalancheMicroscopic;
+  class ComponentParallelPlate;
+
 /// Propagates avalanches with the 2d (axi-symmetric) space-charge routine from
 /// Lippmann, Riegler (2004) in uniform background fields. Different options to
 /// calculate space-charge-fields can be chosen.
-class AvalancheGridSpaceCharge {
+class AvalancheGridSpaceCharge
+{
  public:
   /// Constructor
   AvalancheGridSpaceCharge();
@@ -77,19 +77,7 @@ class AvalancheGridSpaceCharge {
   void SetStopAtK(bool option = true) { m_bStopAtK = option; }
 
   /// Set the sensor (+ determines if base Cmp is CmpParallelPlate (MRPCS)).
-  void SetSensor(Sensor *sensor) {
-    m_sensor = sensor;
-    // Determine if any component is CmpParallelPlate (if not it will stay
-    // nullptr).
-    m_ParallelPlate = nullptr;
-    const size_t nofCmp = m_sensor->GetNumberOfComponents();
-    for (size_t i = 0; i < nofCmp; i++) {
-      if (!m_ParallelPlate) {
-        m_ParallelPlate =
-            dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(i));
-      }
-    }
-  }
+  void SetSensor(Sensor *sensor);
 
   /**
    *

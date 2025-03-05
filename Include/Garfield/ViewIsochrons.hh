@@ -1,6 +1,7 @@
 #ifndef G_VIEW_ISOCHRONS
 #define G_VIEW_ISOCHRONS
 
+#include<array>
 #include "GarfieldConstants.hh"
 #include "ViewBase.hh"
 

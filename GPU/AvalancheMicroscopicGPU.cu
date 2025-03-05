@@ -1,4 +1,4 @@
-#include "Garfield/GPUInterface.hh"
+#include "GPUInterface.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "AvalancheMicroscopicGPU.h"
 
@@ -169,29 +169,29 @@ namespace Garfield {
         }
         if (init_dest)
         {
-            checkCudaErrors( cudaMemcpy(dest.x + offset, source.x0, num*sizeof(GPUFLOAT), cuda_type ) );
-            checkCudaErrors( cudaMemcpy(dest.y + offset, source.y0, num*sizeof(GPUFLOAT), cuda_type ) );
-            checkCudaErrors( cudaMemcpy(dest.z + offset, source.z0, num*sizeof(GPUFLOAT), cuda_type ));
-            checkCudaErrors( cudaMemcpy(dest.t + offset, source.t0, num*sizeof(GPUFLOAT), cuda_type ));
-            checkCudaErrors( cudaMemcpy(dest.energy + offset, source.e0, num*sizeof(GPUFLOAT), cuda_type ));
+            checkCudaErrors( cudaMemcpy(dest.x + offset, source.x0, num*sizeof(cuda_t), cuda_type ) );
+            checkCudaErrors( cudaMemcpy(dest.y + offset, source.y0, num*sizeof(cuda_t), cuda_type ) );
+            checkCudaErrors( cudaMemcpy(dest.z + offset, source.z0, num*sizeof(cuda_t), cuda_type ));
+            checkCudaErrors( cudaMemcpy(dest.t + offset, source.t0, num*sizeof(cuda_t), cuda_type ));
+            checkCudaErrors( cudaMemcpy(dest.energy + offset, source.e0, num*sizeof(cuda_t), cuda_type ));
             thrust::fill_n(thrust::device, dest.status + stackOldGPU.stack_size, num, 0);
         } else {
-            checkCudaErrors( cudaMemcpy(dest.x + offset, source.x, num*sizeof(GPUFLOAT), cuda_type ) );
-            checkCudaErrors( cudaMemcpy(dest.y + offset, source.y, num*sizeof(GPUFLOAT), cuda_type ) );
-            checkCudaErrors( cudaMemcpy(dest.z + offset, source.z, num*sizeof(GPUFLOAT), cuda_type ));
-            checkCudaErrors( cudaMemcpy(dest.t + offset, source.t, num*sizeof(GPUFLOAT), cuda_type ));
-            checkCudaErrors( cudaMemcpy(dest.energy + offset, source.energy, num*sizeof(GPUFLOAT), cuda_type ));
+            checkCudaErrors( cudaMemcpy(dest.x + offset, source.x, num*sizeof(cuda_t), cuda_type ) );
+            checkCudaErrors( cudaMemcpy(dest.y + offset, source.y, num*sizeof(cuda_t), cuda_type ) );
+            checkCudaErrors( cudaMemcpy(dest.z + offset, source.z, num*sizeof(cuda_t), cuda_type ));
+            checkCudaErrors( cudaMemcpy(dest.t + offset, source.t, num*sizeof(cuda_t), cuda_type ));
+            checkCudaErrors( cudaMemcpy(dest.energy + offset, source.energy, num*sizeof(cuda_t), cuda_type ));
             checkCudaErrors( cudaMemcpy(dest.status + offset, source.status, num*sizeof(int), cuda_type ));
         }
-        checkCudaErrors( cudaMemcpy(dest.x0 + offset, source.x0, num*sizeof(GPUFLOAT), cuda_type ) );
-        checkCudaErrors( cudaMemcpy(dest.y0 + offset, source.y0, num*sizeof(GPUFLOAT), cuda_type ) );
-        checkCudaErrors( cudaMemcpy(dest.z0 + offset, source.z0, num*sizeof(GPUFLOAT), cuda_type ));
-        checkCudaErrors( cudaMemcpy(dest.t0 + offset, source.t0, num*sizeof(GPUFLOAT), cuda_type ));
-        checkCudaErrors( cudaMemcpy(dest.e0 + offset, source.e0, num*sizeof(GPUFLOAT), cuda_type ));
+        checkCudaErrors( cudaMemcpy(dest.x0 + offset, source.x0, num*sizeof(cuda_t), cuda_type ) );
+        checkCudaErrors( cudaMemcpy(dest.y0 + offset, source.y0, num*sizeof(cuda_t), cuda_type ) );
+        checkCudaErrors( cudaMemcpy(dest.z0 + offset, source.z0, num*sizeof(cuda_t), cuda_type ));
+        checkCudaErrors( cudaMemcpy(dest.t0 + offset, source.t0, num*sizeof(cuda_t), cuda_type ));
+        checkCudaErrors( cudaMemcpy(dest.e0 + offset, source.e0, num*sizeof(cuda_t), cuda_type ));
         checkCudaErrors( cudaMemcpy(dest.band + offset, source.band, num*sizeof(int), cuda_type ));
-        checkCudaErrors( cudaMemcpy(dest.kx + offset, source.kx, num*sizeof(GPUFLOAT), cuda_type ));
-        checkCudaErrors( cudaMemcpy(dest.ky + offset, source.ky, num*sizeof(GPUFLOAT), cuda_type ));
-        checkCudaErrors( cudaMemcpy(dest.kz + offset, source.kz, num*sizeof(GPUFLOAT), cuda_type ));
+        checkCudaErrors( cudaMemcpy(dest.kx + offset, source.kx, num*sizeof(cuda_t), cuda_type ));
+        checkCudaErrors( cudaMemcpy(dest.ky + offset, source.ky, num*sizeof(cuda_t), cuda_type ));
+        checkCudaErrors( cudaMemcpy(dest.kz + offset, source.kz, num*sizeof(cuda_t), cuda_type ));
         checkCudaErrors( cudaMemcpy(dest.ptype + offset, source.ptype, num*sizeof(Particle), cuda_type ));
     }
 
@@ -353,10 +353,10 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
     }
 
     __device__ void Update(AvalancheMicroscopicGPU::ParticleStack &raw_ptr_stack, int thread_idx,
-        const GPUFLOAT x, const GPUFLOAT y,
-        const GPUFLOAT z, const GPUFLOAT t,
-        const GPUFLOAT energy, const GPUFLOAT kx,
-        const GPUFLOAT ky, const GPUFLOAT kz,
+        const cuda_t x, const cuda_t y,
+        const cuda_t z, const cuda_t t,
+        const cuda_t energy, const cuda_t kx,
+        const cuda_t ky, const cuda_t kz,
         const int band)
     {
 
@@ -373,10 +373,10 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
 
     __device__ void AddToStack(AvalancheMicroscopicGPU::ParticleStack &raw_ptr_stack, unsigned int &num_new_particles, int thread_idx,
         int *new_status_array,
-        const GPUFLOAT x, const GPUFLOAT y,
-        const GPUFLOAT z, const GPUFLOAT t,
-        const GPUFLOAT energy, const GPUFLOAT kx,
-        const GPUFLOAT ky, const GPUFLOAT kz,
+        const cuda_t x, const cuda_t y,
+        const cuda_t z, const cuda_t t,
+        const cuda_t energy, const cuda_t kx,
+        const cuda_t ky, const cuda_t kz,
         const int band, const Particle ptype)
     {
         unsigned int step = MAXCREATEDPARTICLES;
@@ -399,31 +399,31 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
 
     __device__ void AddToStack(AvalancheMicroscopicGPU::ParticleStack &raw_ptr_stack, unsigned int &num_new_particles, int thread_idx,
         int *new_status_array,
-        const GPUFLOAT x, const GPUFLOAT y,
-        const GPUFLOAT z, const GPUFLOAT t,
-        const GPUFLOAT energy, const Particle ptype)
+        const cuda_t x, const cuda_t y,
+        const cuda_t z, const cuda_t t,
+        const cuda_t energy, const Particle ptype)
     {
-        GPUFLOAT dx = 0., dy = 0., dz = 1.;
+        cuda_t dx = 0., dy = 0., dz = 1.;
         RndmDirectionGPU(dx, dy, dz);
         AddToStack(raw_ptr_stack, num_new_particles, thread_idx, new_status_array, x, y, z, t, energy, dx, dy, dz, 0, ptype);
     }
 
-    __device__ void Terminate(GPUFLOAT x0, GPUFLOAT y0, GPUFLOAT z0, GPUFLOAT t0,
-        GPUFLOAT& x1, GPUFLOAT& y1, GPUFLOAT& z1,
-        GPUFLOAT& t1, SensorGPU* m_sensor) {
+    __device__ void Terminate(cuda_t x0, cuda_t y0, cuda_t z0, cuda_t t0,
+        cuda_t& x1, cuda_t& y1, cuda_t& z1,
+        cuda_t& t1, SensorGPU* m_sensor) {
 
-        const GPUFLOAT dx = x1 - x0;
-        const GPUFLOAT dy = y1 - y0;
-        const GPUFLOAT dz = z1 - z0;
-        GPUFLOAT d = Mag(dx, dy, dz);
+        const cuda_t dx = x1 - x0;
+        const cuda_t dy = y1 - y0;
+        const cuda_t dz = z1 - z0;
+        cuda_t d = Mag(dx, dy, dz);
         while (d > BoundaryDistance) {
             d *= 0.5;
-            const GPUFLOAT xm = 0.5 * (x0 + x1);
-            const GPUFLOAT ym = 0.5 * (y0 + y1);
-            const GPUFLOAT zm = 0.5 * (z0 + z1);
-            const GPUFLOAT tm = 0.5 * (t0 + t1);
+            const cuda_t xm = 0.5 * (x0 + x1);
+            const cuda_t ym = 0.5 * (y0 + y1);
+            const cuda_t zm = 0.5 * (z0 + z1);
+            const cuda_t tm = 0.5 * (t0 + t1);
             // Check if the mid-point is inside the drift medium.
-            GPUFLOAT ex = 0., ey = 0., ez = 0.;
+            cuda_t ex = 0., ey = 0., ez = 0.;
             MediumGPU* medium = nullptr;
             int status = 0;
             m_sensor->ElectricField(xm, ym, zm, ex, ey, ez, medium, status);
@@ -446,13 +446,13 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
                                       int *all_status_array,
                                       int *new_status_array,
                                       SensorGPU *m_sensor,
-                                      GPUFLOAT m_deltaCut,
+                                      cuda_t m_deltaCut,
                                       int /*id*/,
                                       bool /*useBandStructure*/,
-                                      GPUFLOAT c1,
-                                      GPUFLOAT c2,
-                                      GPUFLOAT /*fLim*/,
-                                      GPUFLOAT /*fInv*/,
+                                      cuda_t c1,
+                                      cuda_t c2,
+                                      cuda_t /*fLim*/,
+                                      cuda_t /*fInv*/,
                                       unsigned int max_thread_idx,
                                       bool doSignal,
                                       bool integrateWeightingField,
@@ -463,7 +463,7 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
         //GPU_REMOVE: std::vector<std::pair<int, double> > secondaries;
         int num_secondaries;
         Particle secondaries_type[MAXCREATEDPARTICLES];
-        GPUFLOAT secondaries_energy[MAXCREATEDPARTICLES];
+        cuda_t secondaries_energy[MAXCREATEDPARTICLES];
 
         // find the thread id
         int thread_idx = (threadIdx.x + blockIdx.x * blockDim.x);
@@ -488,15 +488,15 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
 
         // Get an electron/hole from the stack.
         //int status = raw_ptr_stack.status[particle_idx];
-        GPUFLOAT x = raw_ptr_stack.x[particle_idx];
-        GPUFLOAT y = raw_ptr_stack.y[particle_idx];
-        GPUFLOAT z = raw_ptr_stack.z[particle_idx];
-        GPUFLOAT t = raw_ptr_stack.t[particle_idx];
-        GPUFLOAT en = raw_ptr_stack.energy[particle_idx];
+        cuda_t x = raw_ptr_stack.x[particle_idx];
+        cuda_t y = raw_ptr_stack.y[particle_idx];
+        cuda_t z = raw_ptr_stack.z[particle_idx];
+        cuda_t t = raw_ptr_stack.t[particle_idx];
+        cuda_t en = raw_ptr_stack.energy[particle_idx];
         int band = raw_ptr_stack.band[particle_idx];
-        GPUFLOAT kx = raw_ptr_stack.kx[particle_idx];
-        GPUFLOAT ky = raw_ptr_stack.ky[particle_idx];
-        GPUFLOAT kz = raw_ptr_stack.kz[particle_idx];
+        cuda_t kx = raw_ptr_stack.kx[particle_idx];
+        cuda_t ky = raw_ptr_stack.ky[particle_idx];
+        cuda_t kz = raw_ptr_stack.kz[particle_idx];
         Particle ptype = raw_ptr_stack.ptype[particle_idx];
 
         bool ok = true;
@@ -509,7 +509,7 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
         unsigned int nCollTemp = 0;
 
         // Get the local electric field and medium.
-        GPUFLOAT ex = 0., ey = 0., ez = 0.;
+        cuda_t ex = 0., ey = 0., ez = 0.;
         int status = 0;
         m_sensor->ElectricField(x, y, z, ex, ey, ez, medium, status);
 
@@ -600,12 +600,12 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
             }*/
 
         // Calculate the initial velocity vector
-        const GPUFLOAT vmag = c1 * sqrt(en);
-        GPUFLOAT vx = vmag * kx;
-        GPUFLOAT vy = vmag * ky;
-        GPUFLOAT vz = vmag * kz;
-        const GPUFLOAT a1 = vx * ex + vy * ey + vz * ez;
-        const GPUFLOAT a2 = c2 * (ex * ex + ey * ey + ez * ez);
+        const cuda_t vmag = c1 * sqrt(en);
+        cuda_t vx = vmag * kx;
+        cuda_t vy = vmag * ky;
+        cuda_t vz = vmag * kz;
+        const cuda_t a1 = vx * ex + vy * ey + vz * ez;
+        const cuda_t a2 = c2 * (ex * ex + ey * ey + ez * ez);
 
         /* GPUREMOVE
         if (m_userHandleStep) {
@@ -613,22 +613,22 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
         }*/
 
         // Energy after the step.
-        GPUFLOAT en1 = en;
+        cuda_t en1 = en;
         // Determine the timestep.
-        GPUFLOAT dt = 0.;
+        cuda_t dt = 0.;
 
         if (thread_idx == debug_electron) printf("GPU %d (C, line %d):   %.8f %.8f %.8f %.8f %.8f %.8f %.8f\n", thread_idx, __LINE__, x, y, z, en, ex, ey, ez);
 
         while (1) {
             // Sample the flight time.
-            const GPUFLOAT r = RndmUniformPosGPU();
+            const cuda_t r = RndmUniformPosGPU();
             dt += -log(r) * fInv;
             // Calculate the energy after the proposed step.
             en1 = en + (a1 + a2 * dt) * dt;
             en1 = fmax(en1, SmallGPU);
 
             // Get the real collision rate at the updated energy.
-            GPUFLOAT fReal = medium->GetElectronCollisionRate(en1, band);
+            cuda_t fReal = medium->GetElectronCollisionRate(en1, band);
             /*GPUREMOVE
             if (fReal <= 0.) {
                 printf("Got collision rate <= 0 at %f.\n", en1);
@@ -657,18 +657,18 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
         // Increase the collision counter.
 
         // Calculate the direction at the instant before the collision.
-        const GPUFLOAT b1 = sqrt(en / en1);
-        const GPUFLOAT b2 = 0.5 * c1 * dt / sqrt(en1);
-        GPUFLOAT kx1 = kx * b1 + ex * b2;
-        GPUFLOAT ky1 = ky * b1 + ey * b2;
-        GPUFLOAT kz1 = kz * b1 + ez * b2;
+        const cuda_t b1 = sqrt(en / en1);
+        const cuda_t b2 = 0.5 * c1 * dt / sqrt(en1);
+        cuda_t kx1 = kx * b1 + ex * b2;
+        cuda_t ky1 = ky * b1 + ey * b2;
+        cuda_t kz1 = kz * b1 + ez * b2;
 
         // Calculate the step in coordinate space.
-        const GPUFLOAT b3 = dt * dt * c2;
-        GPUFLOAT x1 = x + vx * dt + ex * b3;
-        GPUFLOAT y1 = y + vy * dt + ey * b3;
-        GPUFLOAT z1 = z + vz * dt + ez * b3;
-        GPUFLOAT t1 = t + dt;
+        const cuda_t b3 = dt * dt * c2;
+        cuda_t x1 = x + vx * dt + ex * b3;
+        cuda_t y1 = y + vy * dt + ey * b3;
+        cuda_t z1 = z + vz * dt + ez * b3;
+        cuda_t t1 = t + dt;
 
 #ifndef GPUOPTIMISE
         if (thread_idx == debug_electron) printf("GPU %d (E, line %d):   %.8f %.8f %.8f %.8f %.8f %.8f %.8f\n", thread_idx, __LINE__, x, y, z, en, ex, ey, ez);
@@ -710,8 +710,8 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
 
         // Check if the electron/hole has crossed a wire.
         /* GPUREMOVE:
-        GPUFLOAT xc = x, yc = y, zc = z;
-        GPUFLOAT rc = 0.;
+        cuda_t xc = x, yc = y, zc = z;
+        cuda_t rc = 0.;
 
         if (m_sensor->IsWireCrossed(x, y, z, x1, y1, z1,
                                     xc, yc, zc, false, rc)) {
@@ -811,12 +811,12 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
                 }
                 for (const auto& secondary : secondaries) {
                     if (secondary.first == Particle::Electron) {
-                    const GPUFLOAT esec = std::max(secondary.second, Small);
+                    const cuda_t esec = std::max(secondary.second, Small);
                     if (m_histSecondary) m_histSecondary->Fill(esec);
                     // Add the secondary electron to the stack.
                     AddToStack(x, y, z, t, esec, Particle::Electron, stackNew);
                     } else if (secondary.first == Particle::Hole) {
-                    const GPUFLOAT esec = std::max(secondary.second, Small);
+                    const cuda_t esec = std::max(secondary.second, Small);
                     // Add the secondary hole to the stack.
                     AddToStack(x, y, z, t, esec, Particle::Ion, stackNew);
                     } else if (secondary.first == Particle::Ion) {
@@ -828,13 +828,13 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
                 for (int k = 0; k < num_secondaries; k++) {
 
                     if (secondaries_type[k] == Particle::Electron) {
-                        const GPUFLOAT esec = fmax(secondaries_energy[k], SmallGPU);
+                        const cuda_t esec = fmax(secondaries_energy[k], SmallGPU);
 
                         // Add the secondary electron to the stack.
                         AddToStack(raw_ptr_stack_new, num_new_particles, thread_idx, new_status_array, x, y, z, t, esec, Particle::Electron);
 
                     } else if (secondaries_type[k] == Particle::Hole) {
-                        const GPUFLOAT esec = fmax(secondaries_energy[k], SmallGPU);
+                        const cuda_t esec = fmax(secondaries_energy[k], SmallGPU);
 
                         // Add the secondary hole to the stack.
                         printf("ERROR: HOLE CREATEAD!\n");

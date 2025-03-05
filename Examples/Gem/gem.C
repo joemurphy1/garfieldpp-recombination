@@ -14,6 +14,7 @@
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewFEMesh.hh"
+#include "Garfield/ViewDrift.hh"
 
 using namespace Garfield;
 

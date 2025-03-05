@@ -5,15 +5,19 @@
 #define G_COMPONENT_H
 #endif
 
+#include "Garfield/HelperMacros.hh"
+
 #ifdef __GPUCOMPILE__
 
 #include "TetrahedralTreeGPU.h"
 #include "MediumGPU.h"
+#include "GPUInterface.hh"
 
 #else
 
 #include <array>
 #include <string>
+#include<vector>
 
 #include "Geometry.hh"
 
@@ -22,32 +26,32 @@
 namespace Garfield {
 
 // undefine everything first 
-#ifdef __COMPONENTCLASS__
-#undef __COMPONENTCLASS__
-#endif
+//#ifdef __COMPONENTCLASS__
+//#undef __COMPONENTCLASS__
+//#endif
 
 // setup class names depending on if this is compiling the GPU static version or not
 #ifdef __GPUCOMPILE__
-#define __COMPONENTCLASS__ ComponentGPU
+//#define __COMPONENTCLASS__ ComponentGPU
 #else
-#define __COMPONENTCLASS__ Component
+//#define __COMPONENTCLASS__ Component
   class ComponentGPU;
 #endif
 
 /// Abstract base class for components.
-class __COMPONENTCLASS__ {
+class GARFIELD_CLASS_NAME(Component) {
  public:
 
   #ifdef __GPUCOMPILE__
-  __COMPONENTCLASS__() = default;
+  GARFIELD_CLASS_NAME(Component)() = default;
   #else
   /// Default constructor.
-  __COMPONENTCLASS__() = delete;
+  GARFIELD_CLASS_NAME(Component)() = delete;
   /// Constructor
-  __COMPONENTCLASS__(const std::string& name);
+  GARFIELD_CLASS_NAME(Component)(const std::string& name);
   #endif
   /// Destructor
-  virtual ~__COMPONENTCLASS__() {};
+  virtual ~GARFIELD_CLASS_NAME(Component)() {};
 
 #ifndef __GPUCOMPILE__
   /// Define the geometry.
@@ -78,9 +82,9 @@ class __COMPONENTCLASS__ {
   #endif
 
   #ifdef __GPUCOMPILE__
-  __device__ void ElectricField(const GPUFLOAT xin, const GPUFLOAT yin,
-                                const GPUFLOAT zin, GPUFLOAT& ex, GPUFLOAT& ey,
-                                GPUFLOAT& ez, MediumGPU*& m, int& status);
+  __device__ void ElectricField(const cuda_t xin, const cuda_t yin,
+                                const cuda_t zin, cuda_t& ex, cuda_t& ey,
+                                cuda_t& ez, MediumGPU*& m, int& status);
   #else
   virtual void ElectricField(const double x, const double y, const double z,
                              double& ex, double& ey, double& ez, Medium*& m,

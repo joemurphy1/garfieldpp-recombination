@@ -6,6 +6,7 @@
 #include <TList.h>
 
 #include "Garfield/GeometryRoot.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

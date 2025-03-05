@@ -2,6 +2,8 @@
 # Authors: Klaus Zenker, Pere Mato, Stefano Caiazza 
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
+option(GARFIELD_CUDA_USE_FLOAT "Use float with CUDA code (for some performances issues on some hardware) default:double" FALSE)
+
 # Setting the default build type to be Release.
 # Otherwise the default mode is Debug.
 set(default_build_type "Release")
@@ -14,7 +16,10 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
                                                "RelWithDebInfo")
 endif()
 
+
+
 if (USEGPU)
+
   ADD_DEFINITIONS(-DUSEGPU)
   project(Garfield
     LANGUAGES CXX Fortran CUDA
@@ -123,6 +128,9 @@ set_property(TARGET GarfieldRandom PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD
 
 # Creating the main Garfield library
 add_library(Garfield SHARED "")
+if(GARFIELD_CUDA_USE_FLOAT)
+target_compile_definitions(Garfield PRIVATE GARFIELD_CUDA_USE_FLOAT)
+endif()
 target_link_libraries(Garfield PUBLIC GarfieldRandom)
 set_property(TARGET Garfield PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(TARGET Garfield PROPERTY CXX_EXTENSIONS OFF)
@@ -244,14 +252,13 @@ if(ROOT_VERSION VERSION_LESS 6.17)
     Include/Garfield/LinkDef.h
     OPTIONS
     -I${CMAKE_CURRENT_SOURCE_DIR}/Include
-    -I${CMAKE_CURRENT_SOURCE_DIR}/GPU
     -I${PROJECT_SOURCE_DIR}/Heed)
 else()
   file(
     GLOB garfield_header
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/Include
     Include/Garfield/*.hh)
-  include_directories(Include Heed GPU)
+  include_directories(Include Heed)
   root_generate_dictionary(GarfieldDict ${garfield_header} LINKDEF
                            Include/Garfield/LinkDef.h)
 endif()

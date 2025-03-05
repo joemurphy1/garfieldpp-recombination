@@ -5,12 +5,15 @@
 #include <algorithm>
 #include <numeric>
 #include <complex>
+#include<array>
 
 #include "Garfield/ComponentNeBem2d.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Polygon.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/Medium.hh"
+
 
 namespace {
 

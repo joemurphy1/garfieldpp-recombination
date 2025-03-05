@@ -11,7 +11,7 @@
 #endif
 
 #ifdef __GPUCOMPILE__
-
+#include "GPUInterface.hh"
 #include "TetrahedralTreeGPU.h"
 #define __GPULABEL__ __device__
 #else
@@ -205,15 +205,15 @@ class ComponentFieldMap : public Component {
 
   // Bounding boxes of the elements.
   #ifdef __GPUCOMPILE__
-  GPUFLOAT** m_bbMin = nullptr;
-  GPUFLOAT** m_bbMax = nullptr;
+  cuda_t** m_bbMin = nullptr;
+  cuda_t** m_bbMax = nullptr;
   #else
   std::vector<std::array<double, 3> > m_bbMin;
   std::vector<std::array<double, 3> > m_bbMax;
   #endif
 
   #ifdef __GPUCOMPILE__
-  GPUFLOAT*** m_w12 = nullptr;
+  cuda_t*** m_w12 = nullptr;
   #else
   std::vector<std::array<std::array<double, 3>, 4> > m_w12;
   #endif
@@ -504,7 +504,7 @@ protected:
                     const double xn[10],
                     const double yn[10],
                     const double zn[10],
-                    GPUFLOAT** w
+                    cuda_t** w
                     #else
                     const std::array<double, 10>& xn,
                     const std::array<double, 10>& yn,

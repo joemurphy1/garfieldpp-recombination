@@ -1,9 +1,14 @@
 #include "Garfield/AvalancheGridSpaceCharge.hh"
 
+#include<numeric>
 #include <iostream>
 #include <sstream>
 
 #include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/ComponentParallelPlate.hh"
+#include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 
@@ -208,6 +213,22 @@ void AvalancheGridSpaceCharge::Reset() {
 
   std::cout << m_className << "::Reset: Instance reset, ready to use again.\n";
 }
+
+  /// Set the sensor (+ determines if base Cmp is CmpParallelPlate (MRPCS)).
+  void AvalancheGridSpaceCharge::SetSensor(Sensor *sensor) {
+    m_sensor = sensor;
+    // Determine if any component is CmpParallelPlate (if not it will stay
+    // nullptr).
+    m_ParallelPlate = nullptr;
+    const size_t nofCmp = m_sensor->GetNumberOfComponents();
+    for (size_t i = 0; i < nofCmp; i++) {
+      if (!m_ParallelPlate) {
+        m_ParallelPlate =
+            dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(i));
+      }
+    }
+  }
+
 
 void AvalancheGridSpaceCharge::Set2dGrid(const double zmin, const double zmax,
                                          const int zsteps, const double rmax,

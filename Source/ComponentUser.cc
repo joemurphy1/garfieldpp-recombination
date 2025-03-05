@@ -4,6 +4,7 @@
 #include <TROOT.h>
 
 #include "Garfield/ComponentUser.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 

@@ -1,26 +1,25 @@
 #ifndef G_AVALANCHE_GRID_H
 #define G_AVALANCHE_GRID_H
 
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "AvalancheMicroscopic.hh"
-#include "Garfield/ComponentParallelPlate.hh"
-#include "GarfieldConstants.hh"
-#include "Sensor.hh"
+#include<cmath>
+#include<vector>
+#include<string>
+#include<array>
 
 namespace Garfield {
 
-/// Calculate avalanches in a uniform electric field using avalanche
-/// statistics.
+class Sensor;
+class AvalancheMicroscopic;
+class ComponentParallelPlate;
 
-class AvalancheGrid {
+/// Calculate avalanches in a uniform electric field using avalanche statistics.
+class AvalancheGrid
+{
  public:
   /// Constructor
-  AvalancheGrid() {}
+  AvalancheGrid()=default;
   /// Destructor
-  ~AvalancheGrid() {}
+  ~AvalancheGrid()=default;
   /// Set the sensor.
   void SetSensor(Sensor *sensor) { m_sensor = sensor; }
 
@@ -33,10 +32,10 @@ class AvalancheGrid {
    */
   void StartGridAvalanche();
   /// Set the electron drift velocity (in cm / ns).
-  void SetElectronVelocity(const double vx, const double vy, const double vz) {
-    double vel = sqrt(vx * vx + vy * vy + vz * vz);
-    if (vel != std::abs(vx) && vel != std::abs(vy) && vel != std::abs(vz))
-      return;
+  void SetElectronVelocity(const double vx, const double vy, const double vz)
+  {
+    double vel = std::sqrt(vx * vx + vy * vy + vz * vz);
+    if (vel != std::abs(vx) && vel != std::abs(vy) && vel != std::abs(vz)) return;
     int nx = (int)vx / vel;
     int ny = (int)vy / vel;
     int nz = (int)vz / vel;

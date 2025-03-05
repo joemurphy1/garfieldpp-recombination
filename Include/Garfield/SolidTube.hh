@@ -1,6 +1,7 @@
 #ifndef G_SOLID_TUBE_H
 #define G_SOLID_TUBE_H
 
+#include<array>
 #include <mutex>
 
 #include "Solid.hh"

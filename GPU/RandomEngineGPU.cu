@@ -14,22 +14,22 @@ namespace Garfield {
         randomEngineGPU = engine;
     }
 
-    __device__ GPUFLOAT RndmUniformGPU()
+    __device__ cuda_t RndmUniformGPU()
     {
         return randomEngineGPU->Draw();
     }
 
-    __device__ GPUFLOAT RndmUniformPosGPU() {
-        GPUFLOAT r = RndmUniformGPU();
+    __device__ cuda_t RndmUniformPosGPU() {
+        cuda_t r = RndmUniformGPU();
         while (r <= 0.) r = RndmUniformGPU();
         return r;
     }
 
-    __device__ void RndmDirectionGPU(GPUFLOAT& dx, GPUFLOAT& dy, GPUFLOAT& dz,
-        const GPUFLOAT length) {
-        const GPUFLOAT phi = TwoPi * RndmUniformGPU();
-        const GPUFLOAT ctheta = 2 * RndmUniformGPU() - 1.;
-        const GPUFLOAT stheta = sqrt(1. - ctheta * ctheta);
+    __device__ void RndmDirectionGPU(cuda_t& dx, cuda_t& dy, cuda_t& dz,
+        const cuda_t length) {
+        const cuda_t phi = TwoPi * RndmUniformGPU();
+        const cuda_t ctheta = 2 * RndmUniformGPU() - 1.;
+        const cuda_t stheta = sqrt(1. - ctheta * ctheta);
         dx = length * cos(phi) * stheta;
         dy = length * sin(phi) * stheta;
         dz = length * ctheta;
@@ -59,7 +59,7 @@ namespace Garfield {
         setRandomEngine_d<<<1,1>>>(this);
     }
 
-    __device__ GPUFLOAT RandomEngineGPU::Draw()
+    __device__ cuda_t RandomEngineGPU::Draw()
     {
         unsigned int tid = (threadIdx.x + blockIdx.x * blockDim.x);
         return curand_uniform(&(d_curand_states[tid]));

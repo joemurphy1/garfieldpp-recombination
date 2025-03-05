@@ -6,6 +6,7 @@
 #include <TROOT.h>
 #include <TApplication.h>
 #include <TSystem.h>
+#include <TH1D.h>
 
 #include "Garfield/ComponentUser.hh"
 #include "Garfield/Sensor.hh"
@@ -13,6 +14,7 @@
 #include "Garfield/Utilities.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Plotting.hh"
+
 
 using namespace Garfield;
 

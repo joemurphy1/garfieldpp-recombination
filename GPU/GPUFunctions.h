@@ -1,7 +1,7 @@
 #ifndef G_GPUFUNCTIONS_H
 #define G_GPUFUNCTIONS_H
 
-#include "Garfield/GPUInterface.hh"
+#include "GPUInterface.hh"
 #include <iostream>
 #include <vector>
 

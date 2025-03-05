@@ -13,6 +13,7 @@
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewFEMesh.hh"
+#include "Garfield/ViewDrift.hh"
 
 using namespace Garfield;
 
@@ -21,7 +22,7 @@ int main(int argc, char * argv[]) {
   TApplication app("app", &argc, argv);
 
   // Load the field map.
-  ComponentCST fm;
+  Garfield::ComponentCST fm;
   fm.Initialise("drift_std_200_320_2500.efm", "m");
   fm.EnableMirrorPeriodicityX();
   fm.EnableMirrorPeriodicityY();

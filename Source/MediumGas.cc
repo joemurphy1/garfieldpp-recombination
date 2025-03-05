@@ -10,6 +10,7 @@
 #include <numeric>
 #include <sstream>
 #include <utility>
+#include<array>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"

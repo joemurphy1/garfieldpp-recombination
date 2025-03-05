@@ -1,9 +1,12 @@
 #ifndef G_COMPONENT_NEBEM_3D_H
 #define G_COMPONENT_NEBEM_3D_H
 
+#include<array>
 #include <map>
 
-#include "Component.hh"
+#include "Garfield/Component.hh"
+#include "Garfield/Solid.hh"
+
 
 namespace Garfield {
 

@@ -1,13 +1,13 @@
 #ifndef G_RANDOMGPU_H
 #define G_RANDOMGPU_H
 
-#include "Garfield/GPUInterface.hh"
+#include "GPUInterface.hh"
 
 namespace Garfield {
 
-  __device__ GPUFLOAT RndmUniformGPU();
-  __device__ GPUFLOAT RndmUniformPosGPU();
-  __device__ void RndmDirectionGPU(GPUFLOAT& dx, GPUFLOAT& dy, GPUFLOAT& dz, const GPUFLOAT length = 1.);
+  __device__ cuda_t RndmUniformGPU();
+  __device__ cuda_t RndmUniformPosGPU();
+  __device__ void RndmDirectionGPU(cuda_t& dx, cuda_t& dy, cuda_t& dz, const cuda_t length = 1.);
 
 }
 

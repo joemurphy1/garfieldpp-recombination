@@ -14,6 +14,7 @@
 #include <TCanvas.h>
 #include <TApplication.h>
 #include <TFile.h>
+#include <TH1D.h>
 
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ComponentElmer.hh"
@@ -25,6 +26,7 @@
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/ViewDrift.hh"
 
 using namespace Garfield;
 

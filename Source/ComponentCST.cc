@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "Garfield/ComponentCST.hh"
+#include "Garfield/Medium.hh"
 
 namespace {
 
