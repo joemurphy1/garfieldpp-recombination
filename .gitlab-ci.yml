@@ -121,6 +121,4 @@ docs:
     - cmake --build ./build --config Debug --parallel 5 --target all docs
     - cmake --install ./build --config Debug --parallel 5
     - cmake -E copy_directory ./install/share/doc/Garfield/pdf ./install/share/doc/Garfield/html
-  artifacts:
-    paths:
-    - ./install/share/doc/Garfield/html/
+    - cmake -E copy_directory ./install/share/doc/Garfield/html ./public
