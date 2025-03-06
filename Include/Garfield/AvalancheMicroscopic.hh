@@ -1,17 +1,15 @@
 #ifndef G_AVALANCHE_MICROSCOPIC_H
 #define G_AVALANCHE_MICROSCOPIC_H
 
-#include <cstddef>
-#include <vector>
-#include <string>
 #include <array>
-
+#include <cstddef>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/MultiProcessInterface.hh"
 #include "Garfield/Sensor.hh" //TODO remove this !
-
-
 
 class TH1;
 
@@ -160,6 +158,10 @@ class AvalancheMicroscopic {
   void GetAvalancheSize(int& ne, int& ni) const {
     ne = m_nElectrons;
     ni = m_nIons;
+  }
+  /// Return the number of electrons and ions in the avalanche.
+  std::pair<int, int> GetAvalancheSize() const {
+    return std::make_pair(m_nElectrons, m_nIons);
   }
   void GetAvalancheSize(int& ne, int& nh, int& ni) const {
     ne = m_nElectrons;
