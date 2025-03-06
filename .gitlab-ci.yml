@@ -107,6 +107,7 @@ build-fedora33:
 
 docs:
   stage: build
+  pages: true 
   needs: []
   image: archlinux/archlinux:base-devel
   before_script:
