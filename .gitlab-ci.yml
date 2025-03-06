@@ -125,3 +125,5 @@ docs:
   artifacts:
     paths:
     - ./public
+  only:
+    - master
