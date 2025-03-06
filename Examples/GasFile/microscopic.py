@@ -60,10 +60,8 @@ for i in range(nAval):
   if i % 10 == 0: print('{:5d}\r'.format(i), end='')
   e0 = hEnergy.GetRandom()
   aval.AvalancheElectron(0, 0, 0, 0, e0)
-  ne = ctypes.c_int(0) 
-  ni = ctypes.c_int(0)
-  aval.GetAvalancheSize(ne, ni)
-  hNe.Fill(ne.value)
+  ne, ni = aval.GetAvalancheSize(ne, ni)
+  hNe.Fill(ne)
 print('{:5d}'.format(nAval))
 
 alpha = log(hNe.GetMean()) / gap 

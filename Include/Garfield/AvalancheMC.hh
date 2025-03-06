@@ -1,9 +1,10 @@
 #ifndef G_AVALANCHE_MC_H
 #define G_AVALANCHE_MC_H
 
-#include <string>
-#include <vector>
 #include <array>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "Garfield/GarfieldConstants.hh"
 
@@ -200,7 +201,10 @@ class AvalancheMC {
     ne = m_nElectrons;
     ni = std::max(m_nIons, m_nHoles);
   }
-
+  /// Return the number of electrons and ions/holes in the avalanche.
+  std::pair<unsigned int, unsigned int> GetAvalancheSize() const {
+    return std::make_pair(m_nElectrons, std::max(m_nIons, m_nHoles));
+  }
   /// Switch debugging messages on/off (default: off).
   void EnableDebugging(const bool on = true) { m_debug = on; }
 
