@@ -106,7 +106,7 @@ build-fedora33:
 #    - ./runmytests.sh
 
 docs:
-  stage: build
+  stage: deploy
   pages: true 
   needs: []
   image: archlinux/archlinux:base-devel
