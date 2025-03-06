@@ -2,6 +2,7 @@
 #define G_DRIFTLINE_RKF_H
 
 #include <string>
+#include <utility>
 #include <vector>
 #include <array>
 
@@ -124,7 +125,12 @@ class DriftLineRKF {
   /// Get the cumulative path length.
   double GetPathLength() const;
 
+  /// Return the number of electrons and ions in the avalanche.
   void GetAvalancheSize(double& ne, double& ni) const { ne = m_nE; ni = m_nI; }
+  /// Return the number of electrons and ions in the avalanche.
+  std::pair<double, double> GetAvalancheSize() const {
+    return std::make_pair(m_nE, m_nI);
+  }
 
   /** Compute an electric field line.
     * \param xi,yi,zi starting point

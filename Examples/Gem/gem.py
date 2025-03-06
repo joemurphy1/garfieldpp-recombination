@@ -69,6 +69,7 @@ for i in range(nEvents):
   t0 = 0.
   e0 = 0.1
   aval.AvalancheElectron(x0, y0, z0, t0, e0, 0., 0., 0.)
+  ne, ni = aval.GetAvalancheSize()
   for electron in aval.GetElectrons():
     p0 = electron.path[0]
     drift.DriftIon(p0.x, p0.y, p0.z, p0.t)
