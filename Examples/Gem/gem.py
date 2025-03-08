@@ -1,9 +1,6 @@
 import ROOT
 import Garfield
-import os
 import ctypes
-
-path = os.getenv('GARFIELD_INSTALL')
 
 # Load the field map.
 fm = ROOT.Garfield.ComponentAnsys123()
@@ -36,7 +33,7 @@ gas.Initialise(True)
 rPenning = 0.51
 gas.EnablePenningTransfer(rPenning, 0., "ar")
 # Load the ion mobilities.
-gas.LoadIonMobility(path + '/share/Garfield/Data/IonMobility_Ar+_Ar.txt')
+gas.LoadIonMobility('IonMobility_Ar+_Ar.txt')
  
 fm.SetGas(gas)
 fm.PrintMaterials()

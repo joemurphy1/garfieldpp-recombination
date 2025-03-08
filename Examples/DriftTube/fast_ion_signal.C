@@ -34,13 +34,7 @@ int main(int argc, char * argv[]) {
   
   // Make a gas medium
   MediumMagboltz gas;
-  auto installdir = std::getenv("GARFIELD_INSTALL");
-  if (!installdir) {
-    std::cerr << "GARFIELD_INSTALL variable not set.\n";
-    return 1;
-  }
-  const std::string path = installdir;
-  gas.LoadIonMobility(path + "/share/Garfield/Data/IonMobility_Ar+_Ar.txt");
+  gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
  
   ComponentAnalyticField cmp;
   cmp.SetMedium(&gas);
