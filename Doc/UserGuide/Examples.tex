@@ -205,9 +205,7 @@ to the induced signal.
 If we want to include the contribution from the ions produced in 
 the avalanche we need to import a table of ion mobilities
 \begin{lstlisting}
-auto installdir = std::getenv("GARFIELD_INSTALL");
-const std::string path = installdir;
-gas.LoadIonMobility(path + "/share/Garfield/Data/IonMobility_Ar+_Ar.txt");
+gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
 \end{lstlisting}
 and we need to call
 \begin{lstlisting}
@@ -338,14 +336,10 @@ In this example, we use the mobility of Ar$^{+}$ ions in Ar
 as an approximation because there is no literature data for drift in the
 mixture.
 Example files with mobility data for various pure gases are located
-in the \texttt{Data} directory of the project.
-Note that the \texttt{LoadIonMobility} method does not prefix
-the file name with a directory.
-If your mobility file is not located in your current working directory,
-then you have to specify a fully qualified file name.
+in the \texttt{Data} directory of the project source tree and are copied to the \texttt{install} directory during installation. 
+If you don't provide a full path or if the mobility file is not in your current working directory, \texttt{MediumMagboltz} will look for it in the subdirectory \texttt{share/Garfield/Data} of the \texttt{install} folder.
 \begin{lstlisting}
-const std::string path = std::getenv("GARFIELD_INSTALL");
-gas.LoadIonMobility(path + "/share/Garfield/Data/IonMobility_Ar+_Ar.txt");
+gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
 \end{lstlisting}
 \paragraph{Associating the gas to a field map region}
 In order to track a particle through the detector we have to 
