@@ -31,8 +31,7 @@ int main(int argc, char * argv[]) {
   // Set the Penning transfer efficiency.
   gas.EnablePenningTransfer();
   // Load the ion mobilities.
-  const std::string path = std::getenv("GARFIELD_INSTALL");
-  gas.LoadIonMobility(path + "/share/Garfield/Data/IonMobility_Ar+_Ar.txt");
+  gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
 
   // Load the field map.
   ComponentAnsys123 fm;
