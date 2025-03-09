@@ -185,6 +185,13 @@ bool DriftLineRKF::AddIonTail(const std::vector<double>& te,
   // SIGETR, SIGIOR
   const size_t nPoints = te.size();
   if (nPoints < 2 || ni.size() != nPoints) return false;
+  if (m_doIonTailAuto) {
+    // Do we have ion mobility data for the medium 
+    // in which the electron drift line starts?
+    Medium* medium = m_sensor->GetMedium(xe[1][0], xe[1][1], xe[1][2]);
+    if (!medium) return false;
+    if (!medium->HasIonVelocity()) return false;
+  }
   // Loop over the electron track.
   for (size_t i = 1; i < nPoints; ++i) {
     // Skip points at which there are no ions yet.

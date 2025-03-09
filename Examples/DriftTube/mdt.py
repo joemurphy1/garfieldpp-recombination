@@ -49,7 +49,6 @@ track.SetEnergy(170.e9)
 # RKF integration.
 drift = ROOT.Garfield.DriftLineRKF(sensor)
 drift.SetGainFluctuationsPolya(0., 20000.)
-# drift.EnableIonTail()
 
 driftView = ROOT.Garfield.ViewDrift()
 cD = ROOT.TCanvas('cD', '', 600, 600)
