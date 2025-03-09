@@ -263,6 +263,7 @@ class GARFIELD_CLASS_NAME(Medium) {
   virtual bool IonVelocity(const double ex, const double ey, const double ez,
                            const double bx, const double by, const double bz,
                            double& vx, double& vy, double& vz);
+  bool HasIonVelocity() const { return !(m_iVel.empty() && m_iMob.empty()); }
   /// Longitudinal and transverse diffusion coefficients [cm1/2]
   virtual bool IonDiffusion(const double ex, const double ey, const double ez,
                             const double bx, const double by, const double bz,

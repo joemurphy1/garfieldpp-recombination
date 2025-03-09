@@ -207,11 +207,10 @@ the avalanche we need to import a table of ion mobilities
 \begin{lstlisting}
 gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
 \end{lstlisting}
-and we need to call
-\begin{lstlisting}
-drift.EnableIonTail();
-\end{lstlisting}
-before simulating the drift lines.
+By default, \texttt{DriftLineRKF} will then include the ion tail in the simulation. 
+%\begin{lstlisting}
+%drift.EnableIonTail();
+%\end{lstlisting}
 
 \subsection{GEM}\label{Sec:ExampleGem}
 In this example, we will simulate the drift of electrons and ions 

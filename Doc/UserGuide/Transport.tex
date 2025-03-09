@@ -204,7 +204,7 @@ This can be activated or deactivated using
 void EnableSignalCalculation(const bool on = true);
 \end{lstlisting}
 
-For electron drift lines, multiplication is taken into account in the signal 
+For electron drift lines, multiplication is by default taken into account in the signal 
 calculation. For this purpose, after calculating a drift line
 the number of electrons and ions at each point of the line is calculated 
 by integrating the Townsend and attachment coefficient along the line. 
@@ -223,6 +223,11 @@ void SetGainFluctuationsFixed(const double gain = -1.);
   obtained by integrating $\alpha - \eta$ along the 
   drift line is used instead (as is the default).
 \end{description} 
+Using 
+\begin{lstlisting}
+EnableAvalanche(const bool on);
+\end{lstlisting}
+the simulation of avalanches for electron drift lines can be switched on or off. 
 
 In order to take fluctuations of the avalanche size into account in 
 the signal calculation, the number of electrons in the avalanche 
@@ -246,6 +251,18 @@ void SetGainFluctuationsPolya(const double theta, const double mean = -1.);
   obtained by integrating $\alpha - \eta$ along the 
   drift line is used instead (as is the default).
 \end{description}
+
+By default, \texttt{DriftLineRKF} also simulates the ion tail, \textit{i. e.} the signal due to the ions created in an avalanche, provided that the drift medium has ion mobility data.
+Using the function
+\begin{lstlisting}
+EnableIonTail(const bool on);
+\end{lstlisting}
+the simulation of the ion tail can be switched on or off explicitly.
+
+The signal component due to negative ions created in the avalanche is not simulated by default, and needs to be requested explicitly using
+\begin{lstlisting}
+EnableNegativeIonTail(const bool on = true);
+\end{lstlisting}
 
 \section{Monte Carlo integration}\label{Sec:DriftLineMC}
 In the class \texttt{AvalancheMC}, Eq.~\eqref{Eqn:FirstOrderEquationOfMotion}

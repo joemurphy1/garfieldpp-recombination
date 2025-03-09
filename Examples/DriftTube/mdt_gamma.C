@@ -80,7 +80,6 @@ int main(int argc, char * argv[]) {
   // RKF integration.
   DriftLineRKF drift(&sensor);
   drift.SetGainFluctuationsPolya(0., 20000.);
-  // drift.EnableIonTail();
  
   TCanvas* cD = nullptr;
   ViewDrift driftView;
