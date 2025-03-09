@@ -83,9 +83,6 @@ class AvalancheMC {
   /** Return the number of electron trajectories in the last
    * simulated avalanche (including captured electrons). */
   size_t GetNumberOfElectronEndpoints() const { return m_electrons.size(); }
-  /** Return the number of hole trajectories in the last
-   * simulated avalanche (including captured holes). */
-  size_t GetNumberOfHoleEndpoints() const { return m_holes.size(); }
   /// Return the number of ion trajectories.
   size_t GetNumberOfIonEndpoints() const { return m_ions.size(); }
 
@@ -99,9 +96,6 @@ class AvalancheMC {
   void GetElectronEndpoint(const size_t i, double& x0, double& y0,
                            double& z0, double& t0, double& x1, double& y1,
                            double& z1, double& t1, int& status) const;
-  void GetHoleEndpoint(const size_t i, double& x0, double& y0, double& z0,
-                       double& t0, double& x1, double& y1, double& z1,
-                       double& t1, int& status) const;
   void GetIonEndpoint(const size_t i, double& x0, double& y0, double& z0,
                       double& t0, double& x1, double& y1, double& z1,
                       double& t1, int& status) const;

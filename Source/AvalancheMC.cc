@@ -154,26 +154,6 @@ void AvalancheMC::SetTimeWindow(const double t0, const double t1) {
   m_hasTimeWindow = true;
 }
 
-void AvalancheMC::GetHoleEndpoint(const size_t i, double& x0, double& y0,
-                                  double& z0, double& t0, double& x1,
-                                  double& y1, double& z1, double& t1,
-                                  int& status) const {
-  if (i >= m_holes.size()) {
-    std::cerr << m_className << "::GetHoleEndpoint: Index out of range.\n";
-    return;
-  }
-
-  x0 = m_holes[i].path.front().x;
-  y0 = m_holes[i].path.front().y;
-  z0 = m_holes[i].path.front().z;
-  t0 = m_holes[i].path.front().t;
-  x1 = m_holes[i].path.back().x;
-  y1 = m_holes[i].path.back().y;
-  z1 = m_holes[i].path.back().z;
-  t1 = m_holes[i].path.back().t;
-  status = m_holes[i].status;
-}
-
 void AvalancheMC::GetIonEndpoint(const size_t i, double& x0, double& y0,
                                  double& z0, double& t0, double& x1, double& y1,
                                  double& z1, double& t1, int& status) const {
