@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <TROOT.h>
 #include <TApplication.h>
 

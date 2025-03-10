@@ -1,7 +1,8 @@
 #ifndef G_TRACK_SIMPLE_H
 #define G_TRACK_SIMPLE_H
 
-#include "Track.hh"
+#include<vector>
+#include "Garfield/Track.hh"
 
 namespace Garfield {
 

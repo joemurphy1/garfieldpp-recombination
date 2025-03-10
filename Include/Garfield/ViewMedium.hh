@@ -5,8 +5,8 @@
 #include <vector>
 #include <array>
 
-#include "ViewBase.hh"
-#include "FundamentalConstants.hh"
+#include "Garfield/ViewBase.hh"
+#include "Garfield/FundamentalConstants.hh"
 
 namespace Garfield {
 

@@ -19,6 +19,7 @@
 #include "Garfield/Random.hh"
 #include "Garfield/ViewBase.hh"
 #include "Garfield/ViewSignal.hh"
+#include "Garfield/Shaper.hh"
 #endif
 
 #ifndef __GPUCOMPILE__

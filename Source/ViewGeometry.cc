@@ -11,10 +11,7 @@
 #include <TPolyLine.h>
 #include <TPolyLine3D.h>
 
-#include "Garfield/FundamentalConstants.hh"
-#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/GeometrySimple.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Solid.hh"
 #include "Garfield/ViewGeometry.hh"
 #include "Garfield/Medium.hh"

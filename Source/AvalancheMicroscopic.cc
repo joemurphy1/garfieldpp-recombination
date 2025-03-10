@@ -1,11 +1,8 @@
 #include <algorithm>
 #include <cmath>
-#include <functional>
 #include <iostream>
 #include <string>
 #include <chrono>
-#include <fstream>
-#include <iomanip>
 #include<array>
 
 #include "Garfield/AvalancheMicroscopic.hh"
@@ -15,9 +12,11 @@
 #include "Garfield/ViewDrift.hh"
 #include "Garfield/Medium.hh"
 
+#if defined(USEGPU)
 #define __GPUCOMPILE__
 #include "AvalancheMicroscopicGPU.h"
 #undef __GPUCOMPILE__
+#endif
 
 #include <TH1.h>
 

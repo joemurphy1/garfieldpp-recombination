@@ -13,7 +13,7 @@
 #include <vector>
 #include <bitset>
 
-#include "Medium.hh"
+#include "Garfield/Medium.hh"
 
 #endif
 

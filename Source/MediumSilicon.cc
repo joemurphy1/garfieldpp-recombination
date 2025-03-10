@@ -2,7 +2,6 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include<array>
 
 #include "Garfield/FundamentalConstants.hh"

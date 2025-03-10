@@ -5,6 +5,10 @@
 build-gpu-nvidia:
   stage: build
   image: archlinux/archlinux:base-devel
+  parallel:
+    matrix:
+    - GPU: ['ON','OFF']
+
   tags:
     - k8s-gpu
   before_script:
@@ -16,7 +20,7 @@ build-gpu-nvidia:
     - nvidia-smi
     - cmake -E rm -rf ./build
     - cmake -E make_directory ./build
-    - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D USEGPU:BOOL=TRUE
+    - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D USEGPU:BOOL=$GPU
     - cmake --build ./build --config Debug --parallel 5
 
 
@@ -105,3 +109,4 @@ build-fedora33:
 #  stage: test
 #  script:
 #    - ./runmytests.sh
+

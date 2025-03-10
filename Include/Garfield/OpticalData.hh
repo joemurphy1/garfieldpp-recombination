@@ -2,7 +2,6 @@
 #define G_OPTICAL_DATA_H
 
 #include <string>
-#include <vector>
 
 namespace Garfield {
 

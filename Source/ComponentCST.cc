@@ -3,8 +3,6 @@
 #include <sys/stat.h>
 #include <algorithm>
 #include <fstream>
-#include <functional>
-#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <vector>

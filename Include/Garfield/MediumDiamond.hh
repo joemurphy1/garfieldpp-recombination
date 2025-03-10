@@ -3,7 +3,7 @@
 
 #include <mutex>
 
-#include "Medium.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

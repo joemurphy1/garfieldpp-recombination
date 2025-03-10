@@ -1,7 +1,8 @@
 #ifndef G_COMPONENT_ELMER_2D_H
 #define G_COMPONENT_ELMER_2D_H
 
-#include "ComponentFieldMap.hh"
+#include <string>
+#include "Garfield/ComponentFieldMap.hh"
 
 namespace Garfield {
 

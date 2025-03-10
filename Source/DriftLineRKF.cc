@@ -5,7 +5,6 @@
 #include<array>
 
 #include "Garfield/DriftLineRKF.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"

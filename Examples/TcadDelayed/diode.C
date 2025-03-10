@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -14,9 +13,6 @@
 #include "Garfield/AvalancheMC.hh"
 
 #include "Garfield/ViewSignal.hh"
-#include "Garfield/Plotting.hh"
-
-#include "Garfield/FundamentalConstants.hh"
 
 using namespace Garfield;
 

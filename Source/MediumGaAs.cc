@@ -1,13 +1,9 @@
 #include <algorithm>
 #include <cmath>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/MediumGaAs.hh"
-#include "Garfield/Random.hh"
 
 namespace Garfield {
 

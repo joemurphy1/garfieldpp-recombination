@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
@@ -5,7 +6,6 @@
 
 #include "heed++/code/ElElasticScat.h"
 #include "heed++/code/EnTransfCS.h"
-#include "heed++/code/HeedCluster.h"
 #include "heed++/code/HeedCondElectron.h"
 #include "heed++/code/HeedDeltaElectron.h"
 #include "heed++/code/HeedDeltaElectronCS.h"
@@ -22,7 +22,6 @@
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/Medium.hh"
-#include "Garfield/ViewDrift.hh"
 
 #include "Garfield/TrackHeed.hh"
 

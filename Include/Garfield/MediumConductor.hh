@@ -1,7 +1,7 @@
 #ifndef G_MEDIUM_CONDUCTOR_H
 #define G_MEDIUM_CONDUCTOR_H
 
-#include "Medium.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

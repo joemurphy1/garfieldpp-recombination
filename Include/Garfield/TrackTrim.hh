@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "Track.hh"
+#include "Garfield/Track.hh"
 
 namespace Garfield {
 

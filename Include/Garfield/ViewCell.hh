@@ -2,11 +2,10 @@
 #define G_VIEW_CELL
 
 #include <memory>
-#include <string>
 
 #include <TGeoManager.h>
 
-#include "ViewBase.hh"
+#include "Garfield/ViewBase.hh"
 
 namespace Garfield {
 

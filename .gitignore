@@ -11,6 +11,7 @@ Build
 # Visual Code
 .vscode
 .build
+.cache
 
 Doc/UserGuide/UserGuide.aux
 Doc/UserGuide/UserGuide.bbl

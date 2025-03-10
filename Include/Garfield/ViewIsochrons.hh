@@ -2,8 +2,8 @@
 #define G_VIEW_ISOCHRONS
 
 #include<array>
-#include "GarfieldConstants.hh"
-#include "ViewBase.hh"
+#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/ViewBase.hh"
 
 namespace Garfield {
 

@@ -8,7 +8,6 @@
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackSrim.hh"
-#include "Garfield/Random.hh"
 #include "Garfield/ViewDrift.hh"
 
 using namespace Garfield;

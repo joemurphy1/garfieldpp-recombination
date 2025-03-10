@@ -10,10 +10,7 @@
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentGrid.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/MediumSilicon.hh"
-#include "Garfield/Plotting.hh"
-#include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
 #include "Garfield/ViewSignal.hh"

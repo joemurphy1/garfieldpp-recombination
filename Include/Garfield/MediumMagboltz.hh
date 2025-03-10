@@ -8,10 +8,9 @@
 #include <mutex>
 #include <array>
 
-#include "MagboltzInterface.hh"
-#include "MediumGas.hh"
+#include "Garfield/MagboltzInterface.hh"
 #endif
-
+#include "Garfield/MediumGas.hh"
 #ifndef __GPUCOMPILE__
 
 class TPad;

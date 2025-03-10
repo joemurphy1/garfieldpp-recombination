@@ -1,7 +1,7 @@
 #ifndef G_COMPONENT_NEBEM3DMAP_H
 #define G_COMPONENT_NEBEM3DMAP_H
 
-#include "Component.hh"
+#include "Garfield/Component.hh"
 
 namespace Garfield {
 

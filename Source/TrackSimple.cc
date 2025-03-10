@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"

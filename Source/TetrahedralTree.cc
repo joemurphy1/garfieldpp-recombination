@@ -3,7 +3,6 @@
 #include "GPUFunctions.h"
 #else
 #include "Garfield/TetrahedralTree.hh"
-#include <iostream>
 #endif
 
 namespace Garfield {

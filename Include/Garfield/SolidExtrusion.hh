@@ -2,7 +2,7 @@
 #define G_SOLID_EXTRUSION_H
 
 #include<array>
-#include "Solid.hh"
+#include "Garfield/Solid.hh"
 
 namespace Garfield {
 

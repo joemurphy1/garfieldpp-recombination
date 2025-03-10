@@ -4,8 +4,6 @@
 #define G_COMPONENT_FIELD_MAP_H
 #endif
 
-//#ifdef __TETRAHEDRALTREECLASS__
-//#undef __TETRAHEDRALTREECLASS__
 #ifdef __GPULABEL__
 #undef __GPULABEL__
 #endif
@@ -17,15 +15,15 @@
 #else
 
 #include <array>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <vector>
+#include<string>
 
-#include "Component.hh"
+#include "Garfield/Component.hh"
 #include "TMatrixD.h"
 #include "TVectorD.h"
-#include "TetrahedralTree.hh"
+#include "Garfield/TetrahedralTree.hh"
 #define __GPULABEL__
 
 #endif

@@ -7,7 +7,7 @@
 
 #ifndef __GPUCOMPILE__
 
-#include "ComponentFieldMap.hh"
+#include "Garfield/ComponentFieldMap.hh"
 
 namespace Garfield {
 

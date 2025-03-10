@@ -4,7 +4,7 @@
 #include <array>
 #include <vector>
 
-#include "Geometry.hh"
+#include "Garfield/Geometry.hh"
 
 namespace Garfield {
 

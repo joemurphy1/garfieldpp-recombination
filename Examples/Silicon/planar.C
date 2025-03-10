@@ -12,7 +12,6 @@
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/ComponentUser.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/MediumSilicon.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"

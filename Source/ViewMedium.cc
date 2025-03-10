@@ -1,3 +1,4 @@
+#include <TStyle.h>
 #include <cmath>
 #include<array>
 #include <iostream>
@@ -13,7 +14,6 @@
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/ViewMedium.hh"
 
 namespace {

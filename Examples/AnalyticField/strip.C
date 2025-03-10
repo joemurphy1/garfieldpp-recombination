@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <TCanvas.h>
 #include <TROOT.h>
 #include <TApplication.h>
@@ -8,7 +6,6 @@
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
-#include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"

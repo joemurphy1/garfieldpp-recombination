@@ -6,7 +6,6 @@
 
 #include <algorithm> 
 #include <limits>
-#include <iostream>
 #include<array>
 
 #include "Garfield/KDTree.hh"

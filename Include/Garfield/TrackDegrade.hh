@@ -2,11 +2,13 @@
 #define G_TRACK_DEGRADE_H
 
 #include <array>
-#include <utility>
+#include <vector>
 
-#include "Track.hh"
+#include "Garfield/Track.hh"
 
-namespace Garfield {
+namespace Garfield
+{
+  class Medium;
 
 /// Interface to Degrade.
 

@@ -1,10 +1,8 @@
 #include <cmath>
-#include <fstream>
 #include <iostream>
 #include <cstdio>
 #include <algorithm>
 #include <numeric>
-#include <complex>
 #include<array>
 
 #include "Garfield/ComponentNeBem2d.hh"

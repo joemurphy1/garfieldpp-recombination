@@ -2,7 +2,6 @@
 
 #include "neBEMInterface.h"
 #include "NR.h"
-#include "Vector.h"
 #include "neBEM.h"
 
 #include "Garfield/ComponentNeBem3d.hh"

@@ -1,7 +1,7 @@
 #ifndef G_SOLID_WIRE_H
 #define G_SOLID_WIRE_H
 
-#include "Solid.hh"
+#include "Garfield/Solid.hh"
 
 namespace Garfield {
 
