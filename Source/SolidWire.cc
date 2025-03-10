@@ -1,7 +1,6 @@
 #include <cmath>
 #include <iostream>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/SolidWire.hh"
 
 namespace Garfield {

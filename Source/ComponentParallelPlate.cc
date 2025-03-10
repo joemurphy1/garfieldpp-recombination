@@ -8,7 +8,6 @@
 #include <iostream>
 #include <limits>
 
-#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/FundamentalConstants.hh"
 
 namespace Garfield {

@@ -1,10 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <iomanip>
-#include <iostream>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/OpticalData.hh"
 
 namespace {

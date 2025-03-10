@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include "Garfield/FundamentalConstants.hh"
-#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Polygon.hh"
 #include "Garfield/SolidSphere.hh"
 

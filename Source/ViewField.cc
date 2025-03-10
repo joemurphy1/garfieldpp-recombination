@@ -13,7 +13,6 @@
 #include <TH1F.h>
 
 #include "Garfield/Component.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/DriftLineRKF.hh"

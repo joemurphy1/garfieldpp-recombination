@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
-#include <numeric>
 
 #include "Garfield/Sensor.hh"
 #include "Garfield/Medium.hh"

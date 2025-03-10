@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <cmath>
-#include <iomanip>
 #include <iostream>
-#include <sstream>
 #include <unordered_set>
 #include<array>
 
@@ -17,7 +15,6 @@
 #include "Garfield/ComponentCST.hh"
 #include "Garfield/Component.hh"
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/TGeoTet.hh"
 #include "Garfield/ViewFEMesh.hh"

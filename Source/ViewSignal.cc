@@ -8,7 +8,6 @@
 #include <iostream>
 
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 
 namespace Garfield {

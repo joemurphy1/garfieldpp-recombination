@@ -4,8 +4,6 @@
 #include "Garfield/TGeoTet.hh"
 
 #include "TGeoManager.h"
-#include "TGeoMatrix.h"
-#include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
