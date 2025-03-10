@@ -858,7 +858,6 @@ class GARFIELD_CLASS_NAME(Medium) {
 
 #else
 
-#include "MediumGas.hh"
 #include "MediumMagboltz.hh"
 
 friend class MediumGas;

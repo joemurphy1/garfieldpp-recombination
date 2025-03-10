@@ -9,9 +9,8 @@
 #include <array>
 
 #include "MagboltzInterface.hh"
-#include "MediumGas.hh"
 #endif
-
+#include "Garfield/MediumGas.hh"
 #ifndef __GPUCOMPILE__
 
 class TPad;
