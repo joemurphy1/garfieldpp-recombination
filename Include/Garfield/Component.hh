@@ -25,16 +25,8 @@
 
 namespace Garfield {
 
-// undefine everything first 
-//#ifdef __COMPONENTCLASS__
-//#undef __COMPONENTCLASS__
-//#endif
-
 // setup class names depending on if this is compiling the GPU static version or not
-#ifdef __GPUCOMPILE__
-//#define __COMPONENTCLASS__ ComponentGPU
-#else
-//#define __COMPONENTCLASS__ Component
+#if !defined(__GPUCOMPILE__)
   class ComponentGPU;
 #endif
 

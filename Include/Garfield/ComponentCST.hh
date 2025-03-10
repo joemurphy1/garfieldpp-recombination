@@ -2,6 +2,7 @@
 #define G_COMPONENT_CST_H
 
 #include <map>
+#include<vector>
 
 #include "Garfield/ComponentFieldMap.hh"
 

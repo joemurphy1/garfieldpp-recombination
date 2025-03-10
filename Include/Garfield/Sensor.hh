@@ -28,27 +28,15 @@ class TPad;
 
 namespace Garfield {
 
-// undefine everything first 
-//#ifdef __SENSORCLASS__
-//#undef __SENSORCLASS__
-//#undef __MEDIUMCLASS__
-//#undef __GPULABEL__
-//#undef __GPUCONST__
-//#endif
-
 #if defined(__GPUCONST__)
   #undef __GPUCONST__
 #endif
 
 // setup class names depending on if this is compiling the GPU static version or not
 #ifdef __GPUCOMPILE__
-//#define __SENSORCLASS__ SensorGPU
-//#define __MEDIUMCLASS__ MediumGPU
 #define __GPULABEL__ __device__
 #define __GPUCONST__ const
 #else
-//#define __SENSORCLASS__ Sensor
-//#define __MEDIUMCLASS__ Medium
 #define __GPULABEL__ 
 #define __GPUCONST__
 class SensorGPU;

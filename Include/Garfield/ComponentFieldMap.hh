@@ -4,8 +4,6 @@
 #define G_COMPONENT_FIELD_MAP_H
 #endif
 
-//#ifdef __TETRAHEDRALTREECLASS__
-//#undef __TETRAHEDRALTREECLASS__
 #ifdef __GPULABEL__
 #undef __GPULABEL__
 #endif
@@ -20,6 +18,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include<string>
 
 #include "Garfield/Component.hh"
 #include "TMatrixD.h"

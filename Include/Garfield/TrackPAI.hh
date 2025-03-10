@@ -3,6 +3,7 @@
 
 #include <string>
 #include <array>
+#include <vector>
 
 #include "Garfield/Track.hh"
 

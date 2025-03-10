@@ -2,6 +2,7 @@
 #define G_TRACK_BICHSEL_H
 
 #include <array>
+#include <vector>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Track.hh"

@@ -5,7 +5,6 @@
 #include <string>
 
 #include "Garfield/Component.hh"
-//#include "Medium.hh"
 
 namespace Garfield {
 
