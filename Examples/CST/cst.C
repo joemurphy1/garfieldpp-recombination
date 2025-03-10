@@ -50,8 +50,7 @@ int main(int argc, char * argv[]) {
   gas.Initialise();
 
   // Load the ion mobilities.
-  const std::string path = std::getenv("GARFIELD_INSTALL");
-  gas.LoadIonMobility(path + "/share/Garfield/Data/IonMobility_Ar+_Ar.txt");
+  gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
   // Associate the gas with the corresponding field map material. 
   fm.SetGas(&gas);
   fm.PrintMaterials();

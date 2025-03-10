@@ -430,15 +430,22 @@ a table of reduced electric fields \(E/N\) and reduced mobilities.
 The reduced electric fields are given in units of   
 Td\footnote{1\,Td = 10\(^{-17}\) V\,cm\(^{2}\)} (Townsend) and the mobility values 
 in cm\(^{2}\)\,V\(^{-1}\)\,s\(^{-1}\). 
-These mobility files can be imported using
+Mobility files for positive ions can be imported using
 \begin{lstlisting}
-bool MediumGas::LoadIonMobility(const std::string& filename);
+bool MediumGas::LoadIonMobility(const std::string& filename,
+                                const bool quiet = false);
 \end{lstlisting}
 \begin{description}
   \item[filename] path and filename of the mobility file
 \end{description}
 Extensive compilations of ion mobilities and diffusion coefficients 
 can be found in Refs.~\cite{Ellis1976,Ellis1978,Ellis1984,Viehland1995}. 
+
+Analogously, mobility data for negative ions can be imported using
+\begin{lstlisting}
+bool LoadNegativeIonMobility(const std::string& filename,
+                             const bool quiet = false);
+\end{lstlisting}
 
 \subsection{Magboltz}
 

@@ -45,13 +45,7 @@ int main(int argc, char * argv[]) {
   // Make a gas medium.
   MediumMagboltz gas;
   gas.LoadGasFile("ar_93_co2_7_3bar.gas");
-  auto installdir = std::getenv("GARFIELD_INSTALL");
-  if (!installdir) {
-    std::cerr << "GARFIELD_INSTALL variable not set.\n";
-    return 1;
-  }
-  const std::string path = installdir;
-  gas.LoadIonMobility(path + "/share/Garfield/Data/IonMobility_Ar+_Ar.txt");
+  gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
 
   // Make a component with analytic electric field.
   ComponentAnalyticField cmp;
@@ -88,7 +82,6 @@ int main(int argc, char * argv[]) {
   // RKF integration.
   DriftLineRKF drift(&sensor);
   drift.SetGainFluctuationsPolya(0., 20000.);
-  // drift.EnableIonTail();
  
   TCanvas* cD = nullptr;
   ViewDrift driftView;
@@ -123,7 +116,7 @@ int main(int argc, char * argv[]) {
       constexpr bool drawaxis = false;
       driftView.Plot(twod, drawaxis);
     }
-    sensor.ConvoluteSignals();
+    // sensor.ConvoluteSignals();
     int nt = 0;
     if (!sensor.ComputeThresholdCrossings(-2., "s", nt)) continue;
     if (plotSignal) sensor.PlotSignal("s", cS);

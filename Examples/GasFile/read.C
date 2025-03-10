@@ -17,8 +17,7 @@ int main(int argc, char * argv[]) {
   // Setup the gas.
   MediumMagboltz gas;
   gas.LoadGasFile("ar_80_co2_20_2T.gas");
-  const std::string path = std::getenv("GARFIELD_INSTALL");
-  gas.LoadIonMobility(path + "/share/Garfield/Data/IonMobility_Ar+_Ar.txt");
+  gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
   gas.PrintGas();
 
   ViewMedium view(&gas);

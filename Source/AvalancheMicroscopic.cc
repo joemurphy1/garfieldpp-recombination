@@ -335,33 +335,6 @@ void AvalancheMicroscopic::GetElectronEndpointGPU(const size_t i, double& x0,
   status = m_electrons_gpu[i].status;
 }
 
-void AvalancheMicroscopic::GetHoleEndpoint(const size_t i, 
-    double& x0, double& y0, double& z0, double& t0, double& e0, 
-    double& x1, double& y1, double& z1, double& t1, double& e1,
-    int& status) const {
-  if (i >= m_holes.size()) {
-    std::cerr << m_className << "::GetHoleEndpoint: Index out of range.\n";
-    status = -3;
-    return;
-  }
-  if (m_electrons[i].path.empty()) {
-    std::cerr << m_className << "::GetHoleEndpoint: Empty drift line.\n";
-    status = -3;
-    return;
-  }
-  x0 = m_holes[i].path[0].x;
-  y0 = m_holes[i].path[0].y;
-  z0 = m_holes[i].path[0].z;
-  t0 = m_holes[i].path[0].t;
-  e0 = m_holes[i].path[0].energy;
-  x1 = m_holes[i].path.back().x;
-  y1 = m_holes[i].path.back().y;
-  z1 = m_holes[i].path.back().z;
-  t1 = m_holes[i].path.back().t;
-  e1 = m_holes[i].path.back().energy;
-  status = m_holes[i].status;
-}
-
 size_t AvalancheMicroscopic::GetNumberOfElectronDriftLinePoints(
     const size_t i) const {
   if (i >= m_electrons.size()) {
@@ -370,16 +343,6 @@ size_t AvalancheMicroscopic::GetNumberOfElectronDriftLinePoints(
     return 0;
   }
   return m_electrons[i].path.size();
-}
-
-size_t AvalancheMicroscopic::GetNumberOfHoleDriftLinePoints(
-    const size_t i) const {
-  if (i >= m_holes.size()) {
-    std::cerr << m_className << "::GetNumberOfHoleDriftLinePoints: "
-              << "Index out of range.\n";
-    return 0;
-  }
-  return m_holes[i].path.size();
 }
 
 void AvalancheMicroscopic::GetElectronDriftLinePoint(
@@ -399,26 +362,6 @@ void AvalancheMicroscopic::GetElectronDriftLinePoint(
   y = m_electrons[ie].path[ip].y;
   z = m_electrons[ie].path[ip].z;
   t = m_electrons[ie].path[ip].t;
-}
-
-void AvalancheMicroscopic::GetHoleDriftLinePoint(double& x, double& y,
-                                                 double& z, double& t,
-                                                 const size_t ip,
-                                                 const size_t ih) const {
-  if (ih >= m_holes.size()) {
-    std::cerr << m_className << "::GetHoleDriftLinePoint:\n"
-              << "    Endpoint index (" << ih << ") out of range.\n";
-    return;
-  }
-  if (ip >= m_holes[ih].path.size()) {
-    std::cerr << m_className << "::GetHoleDriftLinePoint:\n"
-              << "    Drift line point index (" << ip << ") out of range.\n";
-    return;
-  }
-  x = m_holes[ih].path[ip].x;
-  y = m_holes[ih].path[ip].y;
-  z = m_holes[ih].path[ip].z;
-  t = m_holes[ih].path[ip].t;
 }
 
 void AvalancheMicroscopic::GetPhoton(const size_t i, double& e,
@@ -2379,16 +2322,16 @@ void AvalancheMicroscopic::TransportPhoton(
         t += dt;
       }
     }
-    photon newPhoton;
-    newPhoton.x0 = x0;
-    newPhoton.y0 = y0;
-    newPhoton.z0 = z0;
-    newPhoton.x1 = x;
-    newPhoton.y1 = y;
-    newPhoton.z1 = z;
-    newPhoton.energy = e0;
-    newPhoton.status = StatusLeftDriftMedium;
-    m_photons.push_back(std::move(newPhoton));
+    Photon photon;
+    photon.x0 = x0;
+    photon.y0 = y0;
+    photon.z0 = z0;
+    photon.x1 = x;
+    photon.y1 = y;
+    photon.z1 = z;
+    photon.energy = e0;
+    photon.status = StatusLeftDriftMedium;
+    m_photons.push_back(std::move(photon));
     if (m_viewer) m_viewer->AddPhoton(x0, y0, z0, x, y, z);
     return;
   }
@@ -2437,17 +2380,17 @@ void AvalancheMicroscopic::TransportPhoton(
     }
   }
 
-  photon newPhoton;
-  newPhoton.x0 = x0;
-  newPhoton.y0 = y0;
-  newPhoton.z0 = z0;
-  newPhoton.x1 = x;
-  newPhoton.y1 = y;
-  newPhoton.z1 = z;
-  newPhoton.energy = e0;
-  newPhoton.status = -2;
+  Photon photon;
+  photon.x0 = x0;
+  photon.y0 = y0;
+  photon.z0 = z0;
+  photon.x1 = x;
+  photon.y1 = y;
+  photon.z1 = z;
+  photon.energy = e0;
+  photon.status = -2;
   if (m_viewer) m_viewer->AddPhoton(x0, y0, z0, x, y, z);
-  m_photons.push_back(std::move(newPhoton));
+  m_photons.push_back(std::move(photon));
 }
 
 void AvalancheMicroscopic::Terminate(double x0, double y0, double z0, double t0,

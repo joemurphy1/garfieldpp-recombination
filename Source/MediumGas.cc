@@ -1,8 +1,10 @@
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -10,7 +12,6 @@
 #include <numeric>
 #include <sstream>
 #include <utility>
-#include<array>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
@@ -2310,15 +2311,26 @@ bool MediumGas::LoadNegativeIonMobility(const std::string& filename,
 
 bool MediumGas::LoadMobility(const std::string& filename, 
                              const bool quiet, const bool negative) {
+
   // Open the file.
-  std::ifstream infile(filename);
+  std::string path = filename;
+  std::ifstream infile(path);
+  if (!infile.is_open()) {
+    // Could not open the file.
+    // See if we can find the file in the install folder.
+    auto installdir = std::getenv("GARFIELD_INSTALL");
+    if (installdir) {
+      path = std::string(installdir) + "/share/Garfield/Data/" + filename;
+      infile.open(path);
+    }
+  }
   // Make sure the file could actually be opened.
   if (!infile) {
     std::cerr << m_className << "::LoadMobility:\n"
-              << "    Cannot open file " << filename << ".\n";
+              << "    Cannot open file " << path << ".\n";
     return false;
   } else if (m_debug) {
-    std::cout << m_className << "::LoadMobility: Opened " << filename 
+    std::cout << m_className << "::LoadMobility: Opened " << path
               << " for reading.\n";
   }
 
@@ -2377,7 +2389,7 @@ bool MediumGas::LoadMobility(const std::string& filename,
   }
   if (!quiet) {
     std::cout << m_className << "::LoadMobility:\n"
-              << "    Read " << ne << " values from file " << filename << "\n";
+              << "    Read " << ne << " values from file " << path << "\n";
   }
   return SetIonMobility(efields, mobilities, negative);
 }
