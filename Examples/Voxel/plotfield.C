@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <TCanvas.h>
 #include <TROOT.h>
 #include <TApplication.h>

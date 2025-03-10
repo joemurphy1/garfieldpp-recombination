@@ -1,4 +1,3 @@
-#include <iostream>
 #include <vector>
 
 #include <TApplication.h>
@@ -6,7 +5,6 @@
 #include <TCanvas.h>
 
 #include "Garfield/ComponentAnalyticField.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
 

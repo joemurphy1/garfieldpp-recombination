@@ -3,7 +3,6 @@
 #include <TH1F.h>
 
 #include <cstdlib>
-#include <fstream>
 #include <iostream>
 
 #include "Garfield/AvalancheMC.hh"
@@ -13,7 +12,6 @@
 #include "Garfield/Random.hh"
 #include "Garfield/RandomEngineRoot.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/ViewFEMesh.hh"
 #include "Garfield/ViewField.hh"
 
 using namespace Garfield;

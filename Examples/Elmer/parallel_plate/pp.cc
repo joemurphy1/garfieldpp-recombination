@@ -6,10 +6,8 @@
  * from Gmsh/Elmer into Garfield++.
  *
 */
-#include <iostream>
 #include <cmath> 
 #include <cstring>
-#include <fstream>
 #include <TCanvas.h>
 #include <TApplication.h>
 
@@ -17,7 +15,6 @@
 #include "Garfield/ComponentElmer.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewField.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/ViewFEMesh.hh"
 
 using namespace Garfield;

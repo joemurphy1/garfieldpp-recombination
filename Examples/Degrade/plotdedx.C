@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <TCanvas.h>
 #include <TROOT.h>
 #include <TApplication.h>
@@ -9,7 +7,6 @@
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/TrackDegrade.hh"
 #include "Garfield/Plotting.hh"
-#include "Garfield/Random.hh"
 
 using namespace Garfield;
 

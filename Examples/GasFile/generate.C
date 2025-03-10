@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/FundamentalConstants.hh"
 

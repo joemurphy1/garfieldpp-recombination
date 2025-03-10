@@ -2,15 +2,13 @@
 
 #include "TCanvas.h"
 #include "TGraph.h"
-#include "TAxis.h"
 #include "TGaxis.h"
 #include "TLegend.h"
-#include "TH1F.h"
 #include "TStyle.h"
 #include "TApplication.h"
+#include "TH1.h"
 
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/ViewMedium.hh"
 #include "Garfield/Plotting.hh"
 

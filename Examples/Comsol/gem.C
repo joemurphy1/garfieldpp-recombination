@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <iostream>
-#include <fstream>
 
 #include <TApplication.h>
 #include <TCanvas.h>

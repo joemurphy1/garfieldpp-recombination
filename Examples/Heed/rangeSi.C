@@ -15,7 +15,6 @@
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Plotting.hh"
 
 using namespace Garfield;

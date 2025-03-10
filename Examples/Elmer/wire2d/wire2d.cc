@@ -17,7 +17,6 @@
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewField.hh"
 #include "Garfield/ViewFEMesh.hh"
-#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ViewDrift.hh"

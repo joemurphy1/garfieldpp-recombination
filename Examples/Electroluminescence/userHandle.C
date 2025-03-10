@@ -9,7 +9,6 @@
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 
 TH1F* hZ = nullptr;

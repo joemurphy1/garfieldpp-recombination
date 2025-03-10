@@ -1,4 +1,3 @@
-#include <iostream>
 #include <cstdlib>
 
 #include <TCanvas.h>
@@ -7,7 +6,6 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/DriftLineRKF.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"

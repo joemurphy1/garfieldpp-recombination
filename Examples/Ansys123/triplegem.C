@@ -1,7 +1,5 @@
 #include <iostream>
-#include <fstream>
 #include <cmath>
-#include <vector>
 #include <time.h>
 
 #include <TCanvas.h>
