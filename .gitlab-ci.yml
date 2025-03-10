@@ -7,7 +7,9 @@ build-gpu-nvidia:
   image: archlinux/archlinux:base-devel
   parallel:
     matrix:
-      - GPU: [ON, OFF]
+      - GPU:
+        - ON
+        - OFF
 
   tags:
     - k8s-gpu
