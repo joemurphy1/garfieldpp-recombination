@@ -77,8 +77,7 @@ int main(int argc, char *argv[]) {
   RPC->SetMedium(&gas);
 
   // Create the sensor.
-  Sensor sensor;
-  sensor.AddComponent(RPC);
+  Sensor sensor(RPC);
   sensor.AddElectrode(RPC, label);
 
   // Set the time bins.
@@ -97,8 +96,7 @@ int main(int argc, char *argv[]) {
   // Create the AvalancheGrid for grid-based avalanche calculations that are
   // suited for constant drift fields. This class will take over the
   // calculations of the microscopic class after the set time-window.
-  AvalancheGrid avalgrid;
-  avalgrid.SetSensor(&sensor);
+  AvalancheGrid avalgrid(&sensor);
 
   int steps = totalThickness * 1e4;
   avalgrid.SetGrid(-0.05, 0.05, 5, 0.0, totalThickness, steps, -0.05, 0.05, 5);
@@ -140,7 +138,7 @@ int main(int argc, char *argv[]) {
       aval.AvalancheElectron(electron.x, electron.y, electron.z, electron.t,
                              0.1, 0., 0., 0.);
       // Stops calculation after tMaxWindow ns and import electrons in.
-      avalgrid.ImportElectronsFromAvalancheMicroscopic(&aval);
+      avalgrid.AddElectrons(&aval);
     }
   }
 

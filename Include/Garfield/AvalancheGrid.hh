@@ -16,20 +16,17 @@ class ComponentParallelPlate;
 class AvalancheGrid
 {
  public:
+  /// Default constructor
+  AvalancheGrid() : AvalancheGrid(nullptr) {}
   /// Constructor
-  AvalancheGrid()=default;
+  AvalancheGrid(Sensor* sensor);
   /// Destructor
-  ~AvalancheGrid()=default;
+  ~AvalancheGrid() = default;
+
   /// Set the sensor.
   void SetSensor(Sensor *sensor) { m_sensor = sensor; }
 
-  /** Start grid based avalanche simulation.
-   *
-   * \param zmin,zmax z-coordinate range of grid [cm].
-   * \param zsteps amount of z-coordinate points in grid.
-   * \param xmin,xmax x-coordinate range of grid [cm].
-   * \param xsteps amount of x-coordinate points in grid.
-   */
+  /// Start grid based avalanche simulation.
   void StartGridAvalanche();
   /// Set the electron drift velocity (in cm / ns).
   void SetElectronVelocity(const double vx, const double vy, const double vz)
@@ -48,12 +45,7 @@ class AvalancheGrid
   void SetElectronAttachment(const double att) { m_Attachment = att; }
   /// Set the maximum avalanche size (1e7 by default).
   void SetMaxAvalancheSize(const double size) { m_MaxSize = size; }
-  /// Enable transverse diffusion of electrons with transverse diffusion
-  /// coefficients (in √cm).
-  void EnableDiffusion(const double diffSigma) {
-    m_diffusion = true;
-    m_DiffSigma = diffSigma;
-  }
+
   /** Add an electron to the initial configuration.
    *
    * \param x x-coordinate of initial electron.
@@ -62,12 +54,20 @@ class AvalancheGrid
    * \param t starting time of avalanche.
    * \param n number of electrons at this point.
    */
-  void AvalancheElectron(const double x, const double y, const double z,
-                         const double t = 0, const int n = 1);
-  /// Import electron data from AvalancheMicroscopic class
-  void ImportElectronsFromAvalancheMicroscopic(AvalancheMicroscopic *avmc);
+  void AddElectron(const double x, const double y, const double z,
+                   const double t = 0, const int n = 1);
+  /// Import electrons from AvalancheMicroscopic object.
+  void AddElectrons(AvalancheMicroscopic *avmc);
 
-  /// Import electron data from AvalancheMicroscopic class
+  /** Set the grid.
+   *
+   * \param xmin,xmax x-coordinate range of the grid [cm].
+   * \param xsteps number of x-coordinate points in the grid.
+   * \param ymin,ymax y-coordinate range of the grid [cm].
+   * \param ysteps number of y-coordinate points in the grid.
+   * \param zmin,zmax z-coordinate range of the grid [cm].
+   * \param zsteps number of z-coordinate points in the grid.
+   */
   void SetGrid(const double xmin, const double xmax, const int xsteps,
                const double ymin, const double ymax, const int ysteps,
                const double zmin, const double zmax, const int zsteps);
@@ -101,17 +101,8 @@ class AvalancheGrid
   // Time when the avalanche has reached maximum size
   double m_SaturationTime = -1.;  
 
-
-  bool m_diffusion = false;  // Check if transverse diffusion is enabled.
-
-  double m_DiffSigma = 0.;  // Transverse diffusion coefficients (in √cm).
-
   int m_nestart = 0.;
 
-  bool m_driftAvalanche = false;
-  bool m_importAvalanche = false;
-
-  bool m_layerIndix = false;
   std::vector<double> m_nLayer;
 
   std::string m_className = "AvalancheGrid";
@@ -121,15 +112,12 @@ class AvalancheGrid
   bool m_printPar = false;
 
   std::vector<double> m_zgrid;  ///< Grid points of z-coordinate.
-  int m_zsteps = 0;             ///< Number of grid points.
   double m_zStepSize = 0.;      ///< Distance between the grid points.
 
   std::vector<double> m_ygrid;  ///< Grid points of y-coordinate.
-  int m_ysteps = 0;             ///< Number of grid points.
   double m_yStepSize = 0.;      ///< Distance between the grid points.
 
   std::vector<double> m_xgrid;  ///< Grid points of x-coordinate.
-  int m_xsteps = 0;             ///< Number of grid points.
   double m_xStepSize = 0.;      ///< Distance between the grid points.
 
   bool m_gridset = false; ///< Keeps track if the grid has been defined.
@@ -163,8 +151,6 @@ class AvalancheGrid
     double dt = -1.;   ///< time step.
 
     bool active = true;
-    double dSigmaL = 0;
-    double dSigmaT = 0;
       
     Path path;
   };
