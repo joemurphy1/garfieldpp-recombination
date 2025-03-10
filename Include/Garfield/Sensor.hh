@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "Garfield/Component.hh"
-#include "Garfield/Shaper.hh"
 #endif
 
 class TPad;
@@ -40,6 +39,7 @@ namespace Garfield {
 #define __GPULABEL__ 
 #define __GPUCONST__
 class SensorGPU;
+class Shaper;
 #endif
 
 /// %Sensor
