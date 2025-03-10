@@ -9,7 +9,7 @@
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/MultiProcessInterface.hh"
-#include "Garfield/Sensor.hh" //TODO remove this !
+//#include "Garfield/Sensor.hh" //TODO remove this !
 
 class TH1;
 
@@ -18,6 +18,7 @@ namespace Garfield {
   class AvalancheMicroscopicGPU;
   class ViewDrift;
   class Medium;
+  class Sensor;
 
 /// Calculate electron drift lines and avalanches using microscopic tracking.
 

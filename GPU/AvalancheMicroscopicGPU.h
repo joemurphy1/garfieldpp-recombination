@@ -2,11 +2,11 @@
 #define G_AVALANCHMICROSCOPICGPU_H
 
 #include <vector>
+#include "Garfield/AvalancheMicroscopic.hh"
 
 namespace Garfield {
-
     class RandomEngineGPU;
-
+    class SensorGPU;
     class AvalancheMicroscopicGPU {
     public:
         /// Constructor

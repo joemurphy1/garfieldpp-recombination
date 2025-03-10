@@ -10,6 +10,7 @@
 #define __GPUCOMPILE__
 #include "SensorGPU.h"
 #undef __GPUCOMPILE__
+#include "Garfield/Sensor.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Random.hh"
 #include "RandomEngineGPU.h"

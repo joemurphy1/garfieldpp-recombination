@@ -20,7 +20,7 @@ endif()
 
 if (USEGPU)
 
-  ADD_DEFINITIONS(-DUSEGPU)
+  #ADD_DEFINITIONS(-DUSEGPU)
   project(Garfield
     LANGUAGES CXX Fortran CUDA
     VERSION 0.3.0)
@@ -217,27 +217,27 @@ if(WITH_DEGRADE)
 endif()
 
 #--- Add GPU support if requested ---------------------------------------------
-if (USEGPU)
-  set(gpu_sources
-    GPU/AvalancheMicroscopicGPU.cu
-    GPU/ComponentGPU.cu
-    GPU/GPUFunctions.cu
-    GPU/MediumGPU.cu
-    GPU/RandomEngineGPU.cu
-    GPU/SensorGPU.cu
-    GPU/TetrahedralTreeGPU.cu)
+#if (USEGPU)
+  #set(gpu_sources
+  #  GPU/AvalancheMicroscopicGPU.cu
+  #  GPU/ComponentGPU.cu
+  #  GPU/GPUFunctions.cu
+  #  GPU/MediumGPU.cu
+  #  GPU/RandomEngineGPU.cu
+  #  GPU/SensorGPU.cu
+  #  GPU/TetrahedralTreeGPU.cu)
 
   # for cuda builds, need to remove -pedantic and -Wshadow to avoid *a lot* of errors/warnings
-  set_source_files_properties(${gpu_sources} PROPERTIES POSITION_INDEPENDENT_CODE ON
-    CXX_STANDARD 17
-    CMAKE_CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-    COMPILE_OPTIONS "-Wall;-Wextra;-Wfatal-errors;-Wno-missing-braces"
-    INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/Source)
+  #set_source_files_properties(${gpu_sources} PROPERTIES POSITION_INDEPENDENT_CODE ON
+  #  CXX_STANDARD 17
+  #  CMAKE_CXX_STANDARD_REQUIRED ON
+  #  CXX_EXTENSIONS OFF
+  #  COMPILE_OPTIONS "-Wall;-Wextra;-Wfatal-errors;-Wno-missing-braces"
+  #  INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/Source)
 
-  target_sources( Garfield PRIVATE ${gpu_sources})
-  set_property(TARGET Garfield PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-endif()
+  #target_sources( Garfield PRIVATE ${gpu_sources})
+  #set_property(TARGET Garfield PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+#endif()
 
 #--- Create ROOT dictionary ---------------------------------------------------
 if(ROOT_VERSION VERSION_LESS 6.17)
@@ -306,6 +306,8 @@ target_sources(Garfield PRIVATE ${nebem_sources})
 # Add Heed
 add_subdirectory(Heed)
 
+add_subdirectory(GPU)
+
 target_link_libraries(Garfield PUBLIC ROOT::Geom
                                       ROOT::Gdml
                                       ROOT::Graf3d 
@@ -314,14 +316,12 @@ target_link_libraries(Garfield PUBLIC ROOT::Geom
                                       Magboltz::Magboltz
                                       $<$<BOOL:${WITH_DEGRADE}>:Degrade::Degrade>
                                       $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
+                                      $<$<BOOL:${USEGPU}>:GarfieldGPU>
                                       )
-
-target_include_directories(
-  Garfield
-  PUBLIC $<INSTALL_INTERFACE:include>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>)
+target_compile_definitions(Garfield PRIVATE $<$<BOOL:${USEGPU}>:USEGPU>)
+target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
+                                    PRIVATE $<$<BOOL:${USEGPU}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
+                                    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
 
 #--- Install the header files -------------------------------------------------
 install(

@@ -12,9 +12,11 @@
 #include "Garfield/ViewDrift.hh"
 #include "Garfield/Medium.hh"
 
+#if defined(USEGPU)
 #define __GPUCOMPILE__
 #include "AvalancheMicroscopicGPU.h"
 #undef __GPUCOMPILE__
+#endif
 
 #include <TH1.h>
 
