@@ -28,7 +28,7 @@ class Geometry {
   /// Get a solid from the list.
   virtual Solid* GetSolid(const std::size_t /*i*/) const { return nullptr; }
   /// Get a solid from the list, together with the associated medium.
-  virtual Solid* GetSolid(const std::size_t /*i*/, Medium*& medium) const {
+  virtual Solid* GetSolid(const std::size_t /*i*/, Medium*& /*medium*/) const {
     return nullptr;
   }
   /// Check if a point is inside the geometry.
