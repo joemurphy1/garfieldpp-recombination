@@ -2,12 +2,11 @@
 #define G_VIEW_GEOMETRY
 
 #include <memory>
-#include <string>
 #include <vector>
 
 #include <TGeoManager.h>
 
-#include "ViewBase.hh"
+#include "Garfield/ViewBase.hh"
 
 namespace Garfield {
 

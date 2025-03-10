@@ -14,10 +14,10 @@
 #include <string>
 #include <vector>
 
-#include "FundamentalConstants.hh"
+#include "Garfield/FundamentalConstants.hh"
 #endif
 
-#include "GarfieldConstants.hh"
+#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/HelperMacros.hh"
 
 class TPad;

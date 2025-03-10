@@ -3,6 +3,7 @@
 #include<numeric>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"

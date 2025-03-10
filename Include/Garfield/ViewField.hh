@@ -3,7 +3,7 @@
 
 #include <Rtypes.h>
 
-#include "ViewBase.hh"
+#include "Garfield/ViewBase.hh"
 
 namespace Garfield {
 

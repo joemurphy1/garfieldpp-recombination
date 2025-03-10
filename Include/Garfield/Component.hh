@@ -19,7 +19,7 @@
 #include <string>
 #include<vector>
 
-#include "Geometry.hh"
+#include "Garfield/Geometry.hh"
 
 #endif
 

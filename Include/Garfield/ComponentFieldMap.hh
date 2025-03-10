@@ -17,15 +17,14 @@
 #else
 
 #include <array>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <vector>
 
-#include "Component.hh"
+#include "Garfield/Component.hh"
 #include "TMatrixD.h"
 #include "TVectorD.h"
-#include "TetrahedralTree.hh"
+#include "Garfield/TetrahedralTree.hh"
 #define __GPULABEL__
 
 #endif

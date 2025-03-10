@@ -1,7 +1,7 @@
 #ifndef G_RANDOM_ENGINE_STL_H
 #define G_RANDOM_ENGINE_STL_H
 
-#include "RandomEngine.hh"
+#include "Garfield/RandomEngine.hh"
 #include<random>
 
 namespace Garfield {

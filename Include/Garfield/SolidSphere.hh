@@ -3,7 +3,7 @@
 
 #include <mutex>
 
-#include "Solid.hh"
+#include "Garfield/Solid.hh"
 
 namespace Garfield {
 

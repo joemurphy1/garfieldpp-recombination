@@ -14,15 +14,14 @@
 
 #else
 #include<array>
-#include <fstream>
 #include <functional>
 #include <mutex>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-#include "Component.hh"
-#include "Shaper.hh"
+#include "Garfield/Component.hh"
+#include "Garfield/Shaper.hh"
 #endif
 
 class TPad;

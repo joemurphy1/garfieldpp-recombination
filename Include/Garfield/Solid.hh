@@ -2,7 +2,6 @@
 #define G_SOLID_H
 
 #include <vector>
-#include <array>
 
 namespace Garfield {
 

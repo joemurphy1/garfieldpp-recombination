@@ -3,7 +3,7 @@
 
 #include <map>
 
-#include "ComponentFieldMap.hh"
+#include "Garfield/ComponentFieldMap.hh"
 
 namespace Garfield {
 

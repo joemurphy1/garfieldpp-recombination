@@ -8,7 +8,7 @@
 #include <mutex>
 #include <array>
 
-#include "MagboltzInterface.hh"
+#include "Garfield/MagboltzInterface.hh"
 #endif
 #include "Garfield/MediumGas.hh"
 #ifndef __GPUCOMPILE__

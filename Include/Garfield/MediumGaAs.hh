@@ -1,7 +1,7 @@
 #ifndef G_MEDIUM_GAAS_H
 #define G_MEDIUM_GAAS_H
 
-#include "Medium.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

@@ -3,7 +3,7 @@
 
 #include<array>
 
-#include "Component.hh"
+#include "Garfield/Component.hh"
 
 namespace Garfield {
 

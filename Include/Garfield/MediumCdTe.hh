@@ -1,7 +1,7 @@
 #ifndef G_MEDIUM_CDTE_H
 #define G_MEDIUM_CDTE_H
 
-#include "Medium.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 

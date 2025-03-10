@@ -2,7 +2,7 @@
 #define G_RANDOM_ENGINE_ROOT_H
 
 #include <TRandom3.h>
-#include "RandomEngine.hh"
+#include "Garfield/RandomEngine.hh"
 
 namespace Garfield {
 

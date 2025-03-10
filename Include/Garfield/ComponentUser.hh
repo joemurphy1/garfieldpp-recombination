@@ -5,7 +5,7 @@
 #include <functional>
 #include <map>
 
-#include "Component.hh"
+#include "Garfield/Component.hh"
 
 namespace Garfield {
 
