@@ -2,6 +2,12 @@
 # Authors: Klaus Zenker, Pere Mato, Stefano Caiazza 
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
+project(Garfield VERSION 0.3 
+                 DESCRIPTION "Toolkit for the detailed simulation of particle detectors based on ionization measurement in gases and semiconductors"
+                 HOMEPAGE_URL "https://garfieldpp.web.cern.ch/garfieldpp/"
+                 LANGUAGES Fortran CXX)
+
+option(GARFIELD_WITH_CUDA "Build CUDA code if possible" OFF)
 option(GARFIELD_CUDA_USE_FLOAT "Use float with CUDA code (for some performances issues on some hardware) default:double" FALSE)
 option(GARFIELD_WITH_DEGRADE "Build Degrade." ON)
 option(GARFIELD_WITH_EXAMPLES "Build Garfield++ examples" ON)
@@ -21,21 +27,39 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
                                                "RelWithDebInfo")
 endif()
 
+if(GARFIELD_WITH_CUDA)
+  cmake_policy(PUSH)
+  include(CheckLanguage)
+  check_language(CUDA2)
+  if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+    cmake_policy(SET CMP0104 NEW)
+    if(NOT CMAKE_CUDA_ARCHITECTURES STREQUAL "")
+      set(CMAKE_CUDA_ARCHITECTURES "native")
+    endif()
+    add_subdirectory(GPU)
+  else()
+    message(WARNING "No CUDA support !")
+    unset(GARFIELD_WITH_CUDA)
+    unset(GARFIELD_WITH_CUDA FORCE)
+    option(GARFIELD_WITH_CUDA "Build CUDA code if possible" OFF)
+  endif()
+  cmake_policy(POP)
+endif()
 
-
-if (USEGPU)
+#if (USEGPU)
 
   #ADD_DEFINITIONS(-DUSEGPU)
-  project(Garfield
-    LANGUAGES CXX Fortran CUDA
-    VERSION 0.3.0)
-  set(CMAKE_CUDA_ARCHITECTURES native)
-else()
-  project(
-    Garfield
-    LANGUAGES CXX Fortran
-    VERSION 0.3.0)
-endif()
+  #project(Garfield
+  #  LANGUAGES CXX Fortran CUDA
+  #  VERSION 0.3.0)
+  #set(CMAKE_CUDA_ARCHITECTURES native)
+#else()
+  #project(
+  #  Garfield
+  #  LANGUAGES CXX Fortran
+  #  VERSION 0.3.0)
+#endif()
 
 #--- Set default installation prefix ------------------------------------------
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -306,21 +330,19 @@ target_sources(Garfield PRIVATE ${nebem_sources})
 # Add Heed
 add_subdirectory(Heed)
 
-add_subdirectory(GPU)
-
 target_link_libraries(Garfield PUBLIC ROOT::Geom
                                       ROOT::Gdml
                                       ROOT::Graf3d 
                                       GSL::gsl
                                       Garfield::Heed
                                       Magboltz::Magboltz
-                                      $<$<BOOL:${WITH_DEGRADE}>:Degrade::Degrade>
+                                      $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Degrade::Degrade>
                                       $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
-                                      $<$<BOOL:${USEGPU}>:GarfieldGPU>
+                                      $<$<BOOL:${GARFIELD_WITH_CUDA}>:GarfieldGPU>
                                       )
-target_compile_definitions(Garfield PRIVATE $<$<BOOL:${USEGPU}>:USEGPU>)
+target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU>)
 target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
-                                    PRIVATE $<$<BOOL:${USEGPU}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
+                                    PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
                                     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
 
 #--- Install the header files -------------------------------------------------
