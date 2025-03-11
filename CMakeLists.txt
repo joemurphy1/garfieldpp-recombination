@@ -17,14 +17,10 @@ option(GARFIELD_WITH_TESTS "Build Garfield++ tests" ON)
 
 # Setting the default build type to be Release.
 # Otherwise the default mode is Debug.
-set(default_build_type "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE
-      "${default_build_type}"
-      CACHE STRING "Choose the type of build.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build.")
   # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel"
-                                               "RelWithDebInfo")
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
 if(GARFIELD_WITH_CUDA)
@@ -93,7 +89,7 @@ elseif(DEFINED ROOT_CMAKE_DIR)
 #       "Please consider to set ROOTSYS or use -DROOTSYS=..."
 #       "If still there is a problem, point to the directory which includes FindROOT.cmake using -DROOT_CMAKE_DIR=..."
 # )
-endif(DEFINED ENV{ROOTSYS})
+endif()
 
 find_package(ROOT 6.0 REQUIRED COMPONENTS Geom Gdml MathCore)
 #--- Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY) --
