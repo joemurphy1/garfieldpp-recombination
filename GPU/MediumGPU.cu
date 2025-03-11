@@ -1,5 +1,4 @@
 #include "GPUFunctions.h"
-#define __GPUCOMPILE__
 #include "MediumGPU.h"
 #undef __GPUCOMPILE__
 #include "Garfield/MediumMagboltz.hh"

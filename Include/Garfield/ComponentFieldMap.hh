@@ -442,9 +442,9 @@ class ComponentFieldMap : public Component {
   // Tetrahedral tree
   bool m_useTetrahedralTree = true;
   #ifdef __GPUCOMPILE__
-  __TETRAHEDRALTREECLASS__* m_octree = nullptr;
+  GARFIELD_CLASS_NAME(TetrahedralTree)* m_octree = nullptr;
   #else
-  std::unique_ptr<__TETRAHEDRALTREECLASS__> m_octree;
+  std::unique_ptr<GARFIELD_CLASS_NAME(TetrahedralTree)> m_octree;
   #endif
 
 protected:

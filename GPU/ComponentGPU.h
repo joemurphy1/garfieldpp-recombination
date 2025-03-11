@@ -7,7 +7,6 @@
 
 #include "TetrahedralTreeGPU.h"
 #include "MediumGPU.h"
-#include "GPUInterface.hh"
 #include "Garfield/Component.hh"
 
 

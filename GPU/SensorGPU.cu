@@ -1,4 +1,3 @@
-#define __GPUCOMPILE__
 #include "Sensor.cc"
 #undef __GPUCOMPILE__
 

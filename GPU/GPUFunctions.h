@@ -1,7 +1,5 @@
 #ifndef G_GPUFUNCTIONS_H
 #define G_GPUFUNCTIONS_H
-
-#include "GPUInterface.hh"
 #include <vector>
 #include <cstddef>
 

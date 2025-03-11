@@ -1,5 +1,4 @@
 #include "GPUFunctions.h"
-#define __GPUCOMPILE__
 #include "ComponentGPU.h"
 #undef __GPUCOMPILE__
 #include "Garfield/ComponentAnsys123.hh"

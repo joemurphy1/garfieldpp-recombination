@@ -1,4 +1,3 @@
-#define __GPUCOMPILE__
 #include "TetrahedralTree.cc"
 #undef __GPUCOMPILE__
 #include "Garfield/TetrahedralTree.hh"
