@@ -141,90 +141,89 @@ set_property(TARGET GarfieldRandom PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET GarfieldRandom PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 
 # Creating the main Garfield library
-add_library(Garfield SHARED "")
+add_library(Garfield SHARED 
+            Source/AvalancheGrid.cc
+            Source/AvalancheGridSpaceCharge.cc
+            Source/AvalancheMC.cc
+            Source/AvalancheMicroscopic.cc
+            Source/Component.cc
+            Source/ComponentAnalyticField.cc
+            Source/ComponentAnsys121.cc
+            Source/ComponentAnsys123.cc
+            Source/ComponentCST.cc
+            Source/ComponentComsol.cc
+            Source/ComponentConstant.cc
+            Source/ComponentElmer.cc
+            Source/ComponentElmer2d.cc
+            Source/ComponentFieldMap.cc
+            Source/ComponentGrid.cc
+            Source/ComponentNeBem2d.cc
+            Source/ComponentNeBem3d.cc
+            Source/ComponentNeBem3dMap.cc
+            Source/ComponentParallelPlate.cc
+            Source/ComponentTcad2d.cc
+            Source/ComponentTcad3d.cc
+            Source/ComponentTcadBase.cc
+            Source/ComponentUser.cc
+            Source/ComponentVoxel.cc
+            Source/DriftLineRKF.cc
+            Source/GeometryRoot.cc
+            Source/GeometrySimple.cc
+            Source/KDTree.cc
+            Source/Medium.cc
+            Source/MediumCdTe.cc
+            Source/MediumDiamond.cc
+            Source/MediumGaAs.cc
+            Source/MediumGaN.cc
+            Source/MediumGas.cc
+            Source/MediumMagboltz.cc
+            Source/MediumSilicon.cc
+            Source/NeBemInterface.cpp
+            Source/Numerics.cc
+            Source/OpticalData.cc
+            Source/PlottingEngine.cc
+            Source/Polygon.cc
+            Source/QuadTree.cc
+            Source/Sensor.cc
+            Source/Shaper.cc
+            Source/Solid.cc
+            Source/SolidBox.cc
+            Source/SolidExtrusion.cc
+            Source/SolidHole.cc
+            Source/SolidRidge.cc
+            Source/SolidSphere.cc
+            Source/SolidTube.cc
+            Source/SolidWire.cc
+            Source/TetrahedralTree.cc
+            Source/TGeoTet.cc
+            Source/Track.cc
+            Source/TrackBichsel.cc
+            Source/TrackElectron.cc
+            Source/TrackHeed.cc
+            Source/TrackPAI.cc
+            Source/TrackSimple.cc
+            Source/TrackSrim.cc
+            Source/TrackTrim.cc
+            Source/ViewBase.cc
+            Source/ViewCell.cc
+            Source/ViewDrift.cc
+            Source/ViewFEMesh.cc
+            Source/ViewField.cc
+            Source/ViewGeometry.cc
+            Source/ViewIsochrons.cc
+            Source/ViewMedium.cc
+            Source/ViewSignal.cc
+            $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Source/TrackDegrade.cc>
+)
+
 if(GARFIELD_CUDA_USE_FLOAT)
-target_compile_definitions(Garfield PRIVATE GARFIELD_CUDA_USE_FLOAT)
+  target_compile_definitions(Garfield PRIVATE GARFIELD_CUDA_USE_FLOAT)
 endif()
 target_link_libraries(Garfield PUBLIC GarfieldRandom)
-set_property(TARGET Garfield PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
+set_property(TARGET Garfield PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET Garfield PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET Garfield PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 add_library(Garfield::Garfield ALIAS Garfield)
-target_sources(
-  Garfield
-  PRIVATE Source/AvalancheGrid.cc
-          Source/AvalancheGridSpaceCharge.cc
-          Source/AvalancheMC.cc
-          Source/AvalancheMicroscopic.cc
-          Source/Component.cc
-          Source/ComponentAnalyticField.cc
-          Source/ComponentAnsys121.cc
-          Source/ComponentAnsys123.cc
-          Source/ComponentCST.cc
-          Source/ComponentComsol.cc
-          Source/ComponentConstant.cc
-          Source/ComponentElmer.cc
-          Source/ComponentElmer2d.cc
-          Source/ComponentFieldMap.cc
-          Source/ComponentGrid.cc
-          Source/ComponentNeBem2d.cc
-          Source/ComponentNeBem3d.cc
-          Source/ComponentNeBem3dMap.cc
-          Source/ComponentParallelPlate.cc
-          Source/ComponentTcad2d.cc
-          Source/ComponentTcad3d.cc
-          Source/ComponentTcadBase.cc
-          Source/ComponentUser.cc
-          Source/ComponentVoxel.cc
-          Source/DriftLineRKF.cc
-          Source/GeometryRoot.cc
-          Source/GeometrySimple.cc
-          Source/KDTree.cc
-          Source/Medium.cc
-          Source/MediumCdTe.cc
-          Source/MediumDiamond.cc
-          Source/MediumGaAs.cc
-          Source/MediumGaN.cc
-          Source/MediumGas.cc
-          Source/MediumMagboltz.cc
-          Source/MediumSilicon.cc
-          Source/NeBemInterface.cpp
-          Source/Numerics.cc
-          Source/OpticalData.cc
-          Source/PlottingEngine.cc
-          Source/Polygon.cc
-          Source/QuadTree.cc
-          Source/Sensor.cc
-          Source/Shaper.cc
-          Source/Solid.cc
-          Source/SolidBox.cc
-          Source/SolidExtrusion.cc
-          Source/SolidHole.cc
-          Source/SolidRidge.cc
-          Source/SolidSphere.cc
-          Source/SolidTube.cc
-          Source/SolidWire.cc
-          Source/TetrahedralTree.cc
-          Source/TGeoTet.cc
-          Source/Track.cc
-          Source/TrackBichsel.cc
-          Source/TrackElectron.cc
-          Source/TrackHeed.cc
-          Source/TrackPAI.cc
-          Source/TrackSimple.cc
-          Source/TrackSrim.cc
-          Source/TrackTrim.cc
-          Source/ViewBase.cc
-          Source/ViewCell.cc
-          Source/ViewDrift.cc
-          Source/ViewFEMesh.cc
-          Source/ViewField.cc
-          Source/ViewGeometry.cc
-          Source/ViewIsochrons.cc
-          Source/ViewMedium.cc
-          Source/ViewSignal.cc
-          $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Source/TrackDegrade.cc>
-          )
 
 #--- Create ROOT dictionary ---------------------------------------------------
 if(ROOT_VERSION VERSION_LESS 6.17)
