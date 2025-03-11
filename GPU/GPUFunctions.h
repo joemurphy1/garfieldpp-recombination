@@ -2,8 +2,8 @@
 #define G_GPUFUNCTIONS_H
 
 #include "GPUInterface.hh"
-#include <iostream>
 #include <vector>
+#include <cstddef>
 
 #define checkCudaErrors(val) check_cuda( (val), #val, __FILE__, __LINE__ )
 
@@ -19,7 +19,7 @@ template <typename SRC, typename DEST>
     checkCudaErrors(cudaMallocManaged(&(dest_arr), sizeof(DEST) * vec_src.size()));
     alloc += sizeof(DEST) * vec_src.size();
 
-    for (size_t i = 0; i < vec_src.size(); i++)
+    for (std::size_t i = 0; i < vec_src.size(); i++)
     {
       alloc += vec_src[i]->CreateGPUTransferObject(dest_arr[i]);
     }
@@ -36,7 +36,7 @@ template <typename SRC, typename DEST>
     checkCudaErrors(cudaMallocManaged(&(dest_arr), sizeof(T) * vec_src.size()));
     alloc += sizeof(T) * vec_src.size();
 
-    for (size_t i = 0; i < vec_src.size(); i++)
+    for (std::size_t i = 0; i < vec_src.size(); i++)
     {
       dest_arr[i] = vec_src[i];
     }
@@ -54,11 +54,11 @@ template <typename SRC, typename DEST>
   alloc += sizeof(int) * vec_src.size();
   num_idx = vec_src.size();
 
-  for (int i = 0; i < vec_src.size(); i++)
+  for (std::size_t i = 0; i < vec_src.size(); i++)
   {
       checkCudaErrors(cudaMallocManaged(&dest_arr[i], sizeof(T) * vec_src[i].size()));
       alloc += sizeof(T) * vec_src[i].size();
-      for (int j = 0; j < vec_src[i].size(); j++)
+      for (std::size_t j = 0; j < vec_src[i].size(); j++)
       {
           dest_arr[i][j] = vec_src[i][j];
       }
