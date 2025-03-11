@@ -9,8 +9,6 @@
 
 #ifdef __GPUCOMPILE__
 
-#include "MediumGPU.h"
-#include "ComponentGPU.h"
 
 #else
 #include<array>

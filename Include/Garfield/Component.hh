@@ -8,11 +8,6 @@
 #include "Garfield/HelperMacros.hh"
 
 #ifdef __GPUCOMPILE__
-
-#include "TetrahedralTreeGPU.h"
-#include "MediumGPU.h"
-#include "GPUInterface.hh"
-
 #else
 
 #include <array>

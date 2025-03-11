@@ -6,6 +6,4 @@
   #define GARFIELD_CLASS_NAME(name) name ## GPU
 #else 
   #define GARFIELD_CLASS_NAME(name) name
-  //#define __device__
-  //#define __host__
 #endif

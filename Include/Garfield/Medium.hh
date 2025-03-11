@@ -6,8 +6,6 @@
 #endif
 
 #ifdef __GPUCOMPILE__
-#include "GPUInterface.hh"
-#include "Garfield/MagboltzInterface.hh"
 
 #else
 

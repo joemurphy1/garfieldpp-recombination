@@ -5,6 +5,8 @@
 #error GPU HEADER INCLUDED WITHOUT SETTING __GPUCOMPILE__
 #endif
 
+#include "GPUInterface.hh"
+#include "Garfield/MagboltzInterface.hh"
 #include "Garfield/Medium.hh"
 
 

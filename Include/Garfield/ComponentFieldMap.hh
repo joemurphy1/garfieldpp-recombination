@@ -9,8 +9,6 @@
 #endif
 
 #ifdef __GPUCOMPILE__
-#include "GPUInterface.hh"
-#include "TetrahedralTreeGPU.h"
 #define __GPULABEL__ __device__
 #else
 
