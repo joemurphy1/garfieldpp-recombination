@@ -77,9 +77,6 @@ class AvalancheGrid
   /// Returns the final number of electrons in the avalanche.
   int GetAvalancheSize() { return m_nTotal; }
 
-  /// Asigning layer index to all Avalanche nodes.
-  void AsignLayerIndex(ComponentParallelPlate *RPC);
-
   void EnableDebugging() { m_debug = true; }
 
   void Reset();

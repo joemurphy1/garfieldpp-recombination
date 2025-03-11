@@ -293,6 +293,25 @@ void AvalancheGrid::StartGridAvalanche() {
     return;
   }
 
+  // If the sensor contains a parallel plate component, assign the nodes 
+  // to a layer and initialize the per-layer avalanche size counters.
+  const auto nComponents = m_sensor->GetNumberOfComponents();
+  for (size_t i = 0; i < nComponents; ++i) {
+    auto cmp = m_sensor->GetComponent(i);
+    auto pp = dynamic_cast<ComponentParallelPlate*>(cmp);
+    if (!pp) continue;  
+    m_nLayer.assign(pp->NumberOfLayers(), 0);
+    for (auto& node : m_activeNodes) {
+      const double y = m_ygrid[node.iy];
+      int im = 0;
+      double epsM = 0;
+      pp->getLayer(y, im, epsM);
+      node.layer = im;
+      m_nLayer[im - 1] += node.n;
+    }
+    break;
+  }
+
   m_nestart = m_nTotal;
 
   // Main loop.
@@ -460,19 +479,6 @@ void AvalancheGrid::Reset() {
 
   m_activeNodes.clear();
   m_nLayer.clear();
-}
-
-void AvalancheGrid::AsignLayerIndex(ComponentParallelPlate *RPC) {
-  m_nLayer.assign(RPC->NumberOfLayers(), 0);
-  for (AvalancheNode &node : m_activeNodes) {
-    double y = m_ygrid[node.iy];
-    int im = 0;
-    double epsM = 0;
-    RPC->getLayer(y, im, epsM);
-    node.layer = im;
-    m_nLayer[im - 1] += node.n;
-    // std::cout << m_className << "::AssignLayerIndex: im = " << im << ".\n";
-  }
 }
 
 }  // namespace Garfield

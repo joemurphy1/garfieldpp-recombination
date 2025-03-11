@@ -145,7 +145,6 @@ int main(int argc, char *argv[]) {
   // Start grid based avalanche calculations starting from where the microsocpic
   // calculations stopped.
   LOG("Switching to grid based method.");
-  avalgrid.AsignLayerIndex(RPC);
   avalgrid.StartGridAvalanche();
   // Stop timer.
   double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
