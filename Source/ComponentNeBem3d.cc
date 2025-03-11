@@ -15,6 +15,7 @@
 #include "neBEM.h"
 #include "neBEMInterface.h"
 #include "Garfield/Medium.hh"
+#include "Garfield/Geometry.hh"
 
 namespace {
 

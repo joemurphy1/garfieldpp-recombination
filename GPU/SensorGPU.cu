@@ -1,7 +1,8 @@
-#define __GPUCOMPILE__
 #include "Sensor.cc"
 #undef __GPUCOMPILE__
 
+#include "GPUInterface.hh"
+#include "TetrahedralTreeGPU.h"
 #include "Garfield/ComponentFieldMap.hh"
 #include "Garfield/Sensor.hh"
 namespace Garfield {

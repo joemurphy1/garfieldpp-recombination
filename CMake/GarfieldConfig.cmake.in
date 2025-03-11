@@ -14,7 +14,7 @@ if(@OpenMP_CXX_FOUND@)
   find_dependency(OpenMP)
 endif()
 
-if(@WITH_DEGRADE@)
+if(@GARFIELD_WITH_DEGRADE@)
   find_dependency(Degrade)
 endif()
 

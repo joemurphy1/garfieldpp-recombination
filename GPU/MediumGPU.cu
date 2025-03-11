@@ -1,10 +1,10 @@
 #include "GPUFunctions.h"
-#define __GPUCOMPILE__
 #include "MediumGPU.h"
 #undef __GPUCOMPILE__
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "RandomGPU.h"
+#include <cstddef>
 
 #define __GPUCOMPILE__
 
@@ -77,7 +77,7 @@ namespace Garfield {
         alloc += CreateGPUArrayOfArraysFromVector<double>(m_scatCut, med_gpu->m_scatCut, med_gpu->m_numscatCut, med_gpu->m_numscatCutIdx);
         alloc += CreateGPUArrayOfArraysFromVector<double>(m_scatCutLog, med_gpu->m_scatCutLog, med_gpu->m_numscatCutLog, med_gpu->m_numscatCutLogIdx);
 
-        for (int i = 0; i < Magboltz::nMaxLevels; i++)
+        for (std::size_t i = 0; i < Magboltz::nMaxLevels; i++)
         {
             med_gpu->m_csType[i] = m_csType[i];
             med_gpu->m_wOpalBeaty[i] = m_wOpalBeaty[i];
@@ -92,7 +92,7 @@ namespace Garfield {
             med_gpu->m_energyLoss[i] = m_energyLoss[i];
         }
 
-        for (int i = 0; i < m_nMaxGases; i++)
+        for (std::size_t i = 0; i < m_nMaxGases; i++)
         {
             med_gpu->m_rgas[i] = m_rgas[i];
             med_gpu->m_s2[i] = m_s2[i];

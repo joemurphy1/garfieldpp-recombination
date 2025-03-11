@@ -9,8 +9,6 @@
 
 #ifdef __GPUCOMPILE__
 
-#include "MediumGPU.h"
-#include "ComponentGPU.h"
 
 #else
 #include<array>
@@ -33,10 +31,8 @@ namespace Garfield {
 
 // setup class names depending on if this is compiling the GPU static version or not
 #ifdef __GPUCOMPILE__
-#define __GPULABEL__ __device__
 #define __GPUCONST__ const
 #else
-#define __GPULABEL__ 
 #define __GPUCONST__
 class SensorGPU;
 class Shaper;
@@ -83,7 +79,7 @@ class GARFIELD_CLASS_NAME(Sensor)
                      int& status);
 #endif
   /// Get the drift field at (x, y, z).
-  __GPULABEL__ 
+  __DEVICE__ 
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, GARFIELD_CLASS_NAME(Medium)*& medium, int& status) __GPUCONST__;
 
@@ -121,7 +117,7 @@ class GARFIELD_CLASS_NAME(Sensor)
                double& ymax, double& zmax);
 #endif
   /// Check if a point is inside the user area.
-  __GPULABEL__  
+  __DEVICE__  
   bool IsInArea(const double x, const double y, const double z) __GPUCONST__;
 
 #ifndef __GPUCOMPILE__

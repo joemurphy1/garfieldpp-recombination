@@ -9,7 +9,6 @@
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/MultiProcessInterface.hh"
-//#include "Garfield/Sensor.hh" //TODO remove this !
 
 class TH1;
 

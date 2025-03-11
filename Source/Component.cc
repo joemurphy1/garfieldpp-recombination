@@ -6,6 +6,7 @@
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
+#include "Garfield/Geometry.hh"
 
 namespace Garfield {
 
