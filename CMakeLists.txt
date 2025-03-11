@@ -47,20 +47,6 @@ if(GARFIELD_WITH_CUDA)
   cmake_policy(POP)
 endif()
 
-#if (USEGPU)
-
-  #ADD_DEFINITIONS(-DUSEGPU)
-  #project(Garfield
-  #  LANGUAGES CXX Fortran CUDA
-  #  VERSION 0.3.0)
-  #set(CMAKE_CUDA_ARCHITECTURES native)
-#else()
-  #project(
-  #  Garfield
-  #  LANGUAGES CXX Fortran
-  #  VERSION 0.3.0)
-#endif()
-
 #--- Set default installation prefix ------------------------------------------
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   if(DEFINED ENV{GARFIELD_INSTALL} )
@@ -239,29 +225,6 @@ target_sources(
           Source/ViewSignal.cc
           $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Source/TrackDegrade.cc>
           )
-
-#--- Add GPU support if requested ---------------------------------------------
-#if (USEGPU)
-  #set(gpu_sources
-  #  GPU/AvalancheMicroscopicGPU.cu
-  #  GPU/ComponentGPU.cu
-  #  GPU/GPUFunctions.cu
-  #  GPU/MediumGPU.cu
-  #  GPU/RandomEngineGPU.cu
-  #  GPU/SensorGPU.cu
-  #  GPU/TetrahedralTreeGPU.cu)
-
-  # for cuda builds, need to remove -pedantic and -Wshadow to avoid *a lot* of errors/warnings
-  #set_source_files_properties(${gpu_sources} PROPERTIES POSITION_INDEPENDENT_CODE ON
-  #  CXX_STANDARD 17
-  #  CMAKE_CXX_STANDARD_REQUIRED ON
-  #  CXX_EXTENSIONS OFF
-  #  COMPILE_OPTIONS "-Wall;-Wextra;-Wfatal-errors;-Wno-missing-braces"
-  #  INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/Source)
-
-  #target_sources( Garfield PRIVATE ${gpu_sources})
-  #set_property(TARGET Garfield PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-#endif()
 
 #--- Create ROOT dictionary ---------------------------------------------------
 if(ROOT_VERSION VERSION_LESS 6.17)
