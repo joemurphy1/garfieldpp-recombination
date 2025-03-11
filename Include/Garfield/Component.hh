@@ -14,8 +14,6 @@
 #include <string>
 #include<vector>
 
-#include "Garfield/Geometry.hh"
-
 #endif
 
 namespace Garfield {
@@ -23,6 +21,8 @@ namespace Garfield {
 // setup class names depending on if this is compiling the GPU static version or not
 #if !defined(__GPUCOMPILE__)
   class ComponentGPU;
+  class Geometry;
+  class Medium;
 #endif
 
 /// Abstract base class for components.

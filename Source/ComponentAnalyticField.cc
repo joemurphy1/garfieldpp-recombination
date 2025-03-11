@@ -18,6 +18,7 @@
 #include "Garfield/ViewBase.hh"
 #include "Garfield/ViewCell.hh"
 #include "Garfield/Medium.hh"
+#include "Garfield/Geometry.hh"
 
 namespace {
 

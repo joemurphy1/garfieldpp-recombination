@@ -9,6 +9,7 @@
 #include <limits>
 
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/Geometry.hh"
 
 namespace Garfield {
 
