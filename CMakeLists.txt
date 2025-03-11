@@ -3,6 +3,11 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 option(GARFIELD_CUDA_USE_FLOAT "Use float with CUDA code (for some performances issues on some hardware) default:double" FALSE)
+option(GARFIELD_WITH_DEGRADE "Build Degrade." ON)
+option(GARFIELD_WITH_EXAMPLES "Build Garfield++ examples" ON)
+option(GARFIELD_WITH_DOC "Whether or not to create doxygen doc target." OFF)
+option(GARFIELD_WITH_TESTS "Build Garfield++ tests" ON)
+
 
 # Setting the default build type to be Release.
 # Otherwise the default mode is Debug.
@@ -109,8 +114,7 @@ find_package(OpenMP)
 add_subdirectory(Magboltz)
 
 # Add Degrade
-option(WITH_DEGRADE "Build Degrade." ON)
-if(WITH_DEGRADE)
+if(GARFIELD_WITH_DEGRADE)
   add_subdirectory(Degrade)
 endif()
 
@@ -208,13 +212,9 @@ target_sources(
           Source/ViewGeometry.cc
           Source/ViewIsochrons.cc
           Source/ViewMedium.cc
-          Source/ViewSignal.cc)
-if(WITH_DEGRADE)
-  target_sources(
-    Garfield
-    PRIVATE Source/TrackDegrade.cc
-  )
-endif()
+          Source/ViewSignal.cc
+          $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Source/TrackDegrade.cc>
+          )
 
 #--- Add GPU support if requested ---------------------------------------------
 #if (USEGPU)
@@ -340,14 +340,12 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Data
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Garfield/)
 
 #--- Target for Doxygen documentation -----------------------------------------
-option(WITH_DOC "Whether or not to create doxygen doc target." OFF)
-if(WITH_DOC)
+if(GARFIELD_WITH_DOC)
   add_subdirectory(Doc)
 endif()
 
 #--- Build the examples -------------------------------------------------------
-option(WITH_EXAMPLES "Build Garfield++ examples" ON)
-if(WITH_EXAMPLES)
+if(GARFIELD_WITH_EXAMPLES)
   message(
     STATUS
       "Garfield++ examples will be built. In order disable this option use -DWITH_EXAMPLES=OFF"
@@ -359,8 +357,7 @@ endif()
 
 add_subdirectory(CMake)
 
-option(WITH_TESTS "Build Garfield++ tests" ON)
-if(WITH_TESTS)
+if(GARFIELD_WITH_TESTS)
   include(CTest)
   add_subdirectory(Tests)
 endif()
