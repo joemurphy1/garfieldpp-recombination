@@ -73,8 +73,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
 
 #--- Use GNU-style hierarchy for installing build products --------------------
 include(GNUInstallDirs)
-include(BuildUtils)
-# force_color_output()
 
 #--- Dependencies -------------------------------------------------------------
 if(DEFINED ENV{ROOTSYS})
