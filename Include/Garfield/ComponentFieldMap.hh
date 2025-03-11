@@ -4,12 +4,8 @@
 #define G_COMPONENT_FIELD_MAP_H
 #endif
 
-#ifdef __GPULABEL__
-#undef __GPULABEL__
-#endif
 
 #ifdef __GPUCOMPILE__
-#define __GPULABEL__ __device__
 #else
 
 #include <array>
@@ -22,7 +18,6 @@
 #include "TMatrixD.h"
 #include "TVectorD.h"
 #include "Garfield/TetrahedralTree.hh"
-#define __GPULABEL__
 
 #endif
 
@@ -111,7 +106,7 @@ class ComponentFieldMap : public Component {
                      int& status) override;
   using Component::ElectricField;
 #endif
-  __GPULABEL__
+  __DEVICE__
   void WeightingField(const double x, const double y, const double z,
                       double& wx, double& wy, double& wz,
 #ifdef __GPUCOMPILE__
@@ -346,7 +341,7 @@ class ComponentFieldMap : public Component {
 
   #endif
   /// Compute the electric/weighting field.
-  __GPULABEL__ 
+  __DEVICE__ 
   int Field(const double x, const double y, const double z,
             double& fx, double& fy, double& fz, int& iel, 
             #ifdef __GPUCOMPILE__
@@ -379,7 +374,7 @@ class ComponentFieldMap : public Component {
                             const std::array<double, 4>& t);
   #endif
   /// Interpolate the field in a curved quadratic tetrahedron.
-  __GPULABEL__ static void Field13(
+  __DEVICE__ static void Field13(
     #ifndef __GPUCOMPILE__
                       const std::array<double, 10>& v,
                       const std::array<double, 4>& t,
@@ -396,7 +391,7 @@ class ComponentFieldMap : public Component {
                    double& det) const;
   #endif
   /// Find the element for a point in curved quadratic tetrahedra.
-  __GPULABEL__ 
+  __DEVICE__ 
   int FindElement13(const double x, const double y, const double z, double& t1,
                     double& t2, double& t3, double& t4, double jac[4][4],
                     double& det) const;
@@ -408,12 +403,12 @@ class ComponentFieldMap : public Component {
   #endif
 
   /// Move (xpos, ypos, zpos) to field map coordinates.
-  __GPULABEL__ 
+  __DEVICE__ 
   void MapCoordinates(double& xpos, double& ypos, double& zpos, bool& xmirrored,
                       bool& ymirrored, bool& zmirrored, double& rcoordinate,
                       double& rotation) const;
   /// Move (ex, ey, ez) to global coordinates.
-  __GPULABEL__ 
+  __DEVICE__ 
   void UnmapFields(double& ex, double& ey, double& ez, 
                    const double xpos, const double ypos, const double zpos,
                    const bool xmirrored, const bool ymirrored,
@@ -475,7 +470,7 @@ protected:
   #endif
 
   /// Calculate local coordinates in linear tetrahedra.
-  __GPULABEL__ 
+  __DEVICE__ 
   void Coordinates12(const double x, const double y, const double z,
                      double& t1, double& t2, double& t3, double& t4,
                      #ifdef __GPUCOMPILE__
@@ -492,7 +487,7 @@ protected:
                      ) const;
 
   /// Calculate local coordinates for curved quadratic tetrahedra.
-  __GPULABEL__ 
+  __DEVICE__ 
   int Coordinates13(const double x, const double y, const double z, 
                     double& t1, double& t2, double& t3, double& t4, 
                     double jac[4][4], double& det, 
@@ -528,7 +523,7 @@ protected:
   #endif
 
   /// Calculate Jacobian for curved quadratic tetrahedra.
-  __GPULABEL__ 
+  __DEVICE__ 
   static void Jacobian13(
                          #ifdef __GPUCOMPILE__
                          const double xn[10],

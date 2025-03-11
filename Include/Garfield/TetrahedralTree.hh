@@ -5,18 +5,18 @@
 #define TETRAHEDRAL_TREE_H
 #endif
 
+#include "Garfield/HelperMacros.hh"
+
 // undefine everything first 
 #ifdef __TETRAHEDRALTREECLASS__
 #undef __TETRAHEDRALTREECLASS__
 #undef __VEC3CLASS__
-#undef __GPULABEL__
 #endif
 
 #ifdef __GPUCOMPILE__
 
 #define __TETRAHEDRALTREECLASS__ TetrahedralTreeGPU
 #define __VEC3CLASS__ Vec3GPU
-#define __GPULABEL__ __device__
 
 #else
 
@@ -24,7 +24,6 @@ class TetrahedralTreeGPU;
 
 #define __TETRAHEDRALTREECLASS__ TetrahedralTree
 #define __VEC3CLASS__ Vec3
-#define __GPULABEL__
 
 #endif
 
@@ -39,34 +38,34 @@ namespace Garfield {
 struct __VEC3CLASS__ {
   float x = 0., y = 0., z = 0.;
 
-  __GPULABEL__ __VEC3CLASS__() {}
-  __GPULABEL__ __VEC3CLASS__(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
+  __DEVICE__ __VEC3CLASS__() {}
+  __DEVICE__ __VEC3CLASS__(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
 
-  __GPULABEL__ __VEC3CLASS__ operator+(const __VEC3CLASS__& r) const {
+  __DEVICE__ __VEC3CLASS__ operator+(const __VEC3CLASS__& r) const {
     return __VEC3CLASS__(x + r.x, y + r.y, z + r.z);
   }
 
-  __GPULABEL__ __VEC3CLASS__ operator-(const __VEC3CLASS__& r) const {
+  __DEVICE__ __VEC3CLASS__ operator-(const __VEC3CLASS__& r) const {
     return __VEC3CLASS__(x - r.x, y - r.y, z - r.z);
   }
 
-  __GPULABEL__ __VEC3CLASS__& operator+=(const __VEC3CLASS__& r) {
+  __DEVICE__ __VEC3CLASS__& operator+=(const __VEC3CLASS__& r) {
     x += r.x;
     y += r.y;
     z += r.z;
     return *this;
   }
 
-  __GPULABEL__ __VEC3CLASS__& operator-=(const __VEC3CLASS__& r) {
+  __DEVICE__ __VEC3CLASS__& operator-=(const __VEC3CLASS__& r) {
     x -= r.x;
     y -= r.y;
     z -= r.z;
     return *this;
   }
 
-  __GPULABEL__ __VEC3CLASS__ operator*(float r) const { return __VEC3CLASS__(x * r, y * r, z * r); }
+  __DEVICE__ __VEC3CLASS__ operator*(float r) const { return __VEC3CLASS__(x * r, y * r, z * r); }
 
-  __GPULABEL__ __VEC3CLASS__ operator/(float r) const { return __VEC3CLASS__(x / r, y / r, z / r); }
+  __DEVICE__ __VEC3CLASS__ operator/(float r) const { return __VEC3CLASS__(x / r, y / r, z / r); }
 };
 
 /**
@@ -148,7 +147,7 @@ class __TETRAHEDRALTREECLASS__ {
   bool DoesBoxOverlap(const double bb[6]) const;
   #endif
   // Check if this tree node is a leaf or intermediate node.
-  __GPULABEL__ bool IsLeafNode() const;
+  __DEVICE__ bool IsLeafNode() const;
 
 
 public:
@@ -160,12 +159,12 @@ public:
   #endif
 
 private:
-  __GPULABEL__ int GetOctantContainingPoint(const __VEC3CLASS__& point) const;
+__DEVICE__ int GetOctantContainingPoint(const __VEC3CLASS__& point) const;
   // Get a block containing the input point
-  __GPULABEL__ const __TETRAHEDRALTREECLASS__* GetBlockFromPoint(const __VEC3CLASS__& point) const;
+  __DEVICE__ const __TETRAHEDRALTREECLASS__* GetBlockFromPoint(const __VEC3CLASS__& point) const;
   // A helper function used by the function above.
   // Called recursively on the child nodes.
-  __GPULABEL__ const __TETRAHEDRALTREECLASS__* GetBlockFromPointHelper(const __VEC3CLASS__& point) const;  
+  __DEVICE__ const __TETRAHEDRALTREECLASS__* GetBlockFromPointHelper(const __VEC3CLASS__& point) const;  
 
 #ifdef __GPUCOMPILE__
   friend class TetrahedralTree;

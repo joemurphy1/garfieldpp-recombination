@@ -45,7 +45,7 @@ bool TetrahedralTree::DoesBoxOverlap(const double bb[6]) const {
 #endif
 
 // Determine which octant of the tree would contain 'point'
-__GPULABEL__ int __TETRAHEDRALTREECLASS__::GetOctantContainingPoint(const __VEC3CLASS__& point) const
+__DEVICE__ int __TETRAHEDRALTREECLASS__::GetOctantContainingPoint(const __VEC3CLASS__& point) const
 {
   int oct = 0;
   if (point.x >= m_origin.x) oct |= 4;
@@ -54,7 +54,7 @@ __GPULABEL__ int __TETRAHEDRALTREECLASS__::GetOctantContainingPoint(const __VEC3
   return oct;
 }
 
-__GPULABEL__ bool __TETRAHEDRALTREECLASS__::IsLeafNode() const {
+__DEVICE__ bool __TETRAHEDRALTREECLASS__::IsLeafNode() const {
   // We are a leaf if we have no children. Since we either have none, or
   // all eight, it is sufficient to just check the first.
   return children[0] == nullptr;
@@ -146,7 +146,7 @@ const std::vector<int>& TetrahedralTree::GetElementsInBlock(const Vec3& point) c
 // the mesh's bounding box
 // If we don't check this, the case when root is leaf node itself will return
 // wrong block
-__GPULABEL__ const __TETRAHEDRALTREECLASS__* __TETRAHEDRALTREECLASS__::GetBlockFromPoint(const __VEC3CLASS__& point) const
+__DEVICE__ const __TETRAHEDRALTREECLASS__* __TETRAHEDRALTREECLASS__::GetBlockFromPoint(const __VEC3CLASS__& point) const
 {
   if (!(m_min.x <= point.x && point.x <= m_max.x &&
         m_min.y <= point.y && point.y <= m_max.y &&
@@ -156,7 +156,7 @@ __GPULABEL__ const __TETRAHEDRALTREECLASS__* __TETRAHEDRALTREECLASS__::GetBlockF
   return GetBlockFromPointHelper(point);
 }
 
-__GPULABEL__ const __TETRAHEDRALTREECLASS__* __TETRAHEDRALTREECLASS__::GetBlockFromPointHelper(
+__DEVICE__ const __TETRAHEDRALTREECLASS__* __TETRAHEDRALTREECLASS__::GetBlockFromPointHelper(
     const __VEC3CLASS__& point) const
 {
   // If we're at a leaf node, it means, the point is inside this block

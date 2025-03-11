@@ -22,13 +22,10 @@ class TPad;
 
 namespace Garfield {
 
-#undef __GPULABEL__
 
 // setup class names depending on if this is compiling the GPU static version or not
 #ifdef __GPUCOMPILE__
-#define __GPULABEL__ __device__
 #else
-#define __GPULABEL__
   class MediumGPU;
 #endif
 
@@ -50,7 +47,7 @@ class GARFIELD_CLASS_NAME(Medium) {
 #endif
 
   /// Return the id number of the class instance.
-  __GPULABEL__ int GetId() const { return m_id; }
+  __DEVICE__ int GetId() const { return m_id; }
 
 #ifndef __GPUCOMPILE__
   /// Get the medium name/identifier.
@@ -106,9 +103,9 @@ class GARFIELD_CLASS_NAME(Medium) {
 #endif
 
   /// Is charge carrier transport enabled in this medium?
-  __GPULABEL__ bool IsDriftable() const { return m_driftable; }
+  __DEVICE__ bool IsDriftable() const { return m_driftable; }
   /// Does the medium have electron scattering rates?
-  __GPULABEL__ bool IsMicroscopic() const { return m_microscopic; }
+  __DEVICE__ bool IsMicroscopic() const { return m_microscopic; }
 
 #ifndef __GPUCOMPILE__
   /// Is charge deposition by charged particles/photon enabled in this medium?

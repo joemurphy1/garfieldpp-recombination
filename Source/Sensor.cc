@@ -110,7 +110,7 @@ void Sensor::ElectricField(const double x, const double y, const double z,
 }
 #endif
 
-__GPULABEL__
+__DEVICE__
 void GARFIELD_CLASS_NAME(Sensor)::ElectricField(const double x, const double y, const double z,
                            double &ex, double &ey, double &ez, GARFIELD_CLASS_NAME(Medium) *&medium,
                            int &status) __GPUCONST__ {
@@ -283,7 +283,7 @@ bool Sensor::GetArea(double &xmin, double &ymin, double &zmin, double &xmax,
 }
 #endif
 
-__GPULABEL__
+__DEVICE__
 bool GARFIELD_CLASS_NAME(Sensor)::IsInArea(const double x, const double y, const double z) __GPUCONST__ {
   #ifndef __GPUCOMPILE__
   if (!m_hasUserArea) {
