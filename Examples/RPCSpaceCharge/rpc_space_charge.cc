@@ -81,9 +81,8 @@ int main(int argc, char *argv[]) {
   avalsc.Set2dGrid(y_mid - 0.5 * d_gas + 1.e-8, 
                    y_mid + 0.5 * d_gas - 1.e-8, 400, 0.05, 100);
 
-  // Avalanche electron
-  // place 1000 electrons in the middle of the gas gap
-  avalsc.AvalancheElectron(0., y_mid, 0., 0., 1000.);
+  // Place 1000 electrons in the middle of the gas gap
+  avalsc.AddElectron(0., y_mid, 0., 0., 1000.);
   avalsc.StartGridAvalanche();
   // export grid
   avalsc.ExportGrid("my_rpc_grid");

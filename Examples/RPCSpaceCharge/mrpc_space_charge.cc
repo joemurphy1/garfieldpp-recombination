@@ -77,14 +77,13 @@ int main(int argc, char *argv[]) {
   sens.SetTimeWindow(0, (25. - 0) / 200., 200);
 
   // AvalancheGridSpaceCharge
-  AvalancheGridSpaceCharge avalsc;
+  AvalancheGridSpaceCharge avalsc(&sens);
   avalsc.EnableDebugging();
   avalsc.EnableDiffusion(true);
   avalsc.EnableStickyAnode(true);
   avalsc.EnableAdaptiveTimeStepping(true);
   avalsc.SetStopAtK(true);
   avalsc.EnableSpaceChargeEffect(true);
-  avalsc.SetSensor(&sens);
 
   avalsc.Set2dGrid(y_mid - (d_bakelite / 2 + d_gas) + 1.e-8, 
                    y_mid + (d_bakelite / 2 + d_gas) - 1.e-8, 3 * 400, 0.05,
@@ -110,7 +109,7 @@ int main(int argc, char *argv[]) {
       // Propagate electrons microscopically
       avalmicro.AvalancheElectron(electron.x, electron.y, electron.z, electron.t, 0.1, 0., 0., 0.);
       // Add electrons to the grid.
-      avalsc.ImportElectronsFromAvalancheMicroscopic(&avalmicro);
+      avalsc.AddElectrons(&avalmicro);
     }
   }
 

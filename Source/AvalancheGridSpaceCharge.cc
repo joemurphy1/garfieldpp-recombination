@@ -1,9 +1,9 @@
 #include "Garfield/AvalancheGridSpaceCharge.hh"
 
-#include<numeric>
 #include <iostream>
-#include <sstream>
 #include <fstream>
+#include <numeric>
+#include <sstream>
 
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
@@ -176,13 +176,14 @@ void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn,
 
 namespace Garfield {
 
-// Public:
-AvalancheGridSpaceCharge::AvalancheGridSpaceCharge() {
+AvalancheGridSpaceCharge::AvalancheGridSpaceCharge(Sensor* sensor) {
   m_vEElliptic.reserve(20000);
   m_vKElliptic.reserve(20000);
   m_vXElliptic.reserve(20000);
   m_zGrid.reserve(5000);
   m_rGrid.reserve(1000);
+
+  SetSensor(sensor);
 
   // Import the elliptic integral values
   const std::string path = std::getenv("GARFIELD_INSTALL");
@@ -215,21 +216,20 @@ void AvalancheGridSpaceCharge::Reset() {
   std::cout << m_className << "::Reset: Instance reset, ready to use again.\n";
 }
 
-  /// Set the sensor (+ determines if base Cmp is CmpParallelPlate (MRPCS)).
-  void AvalancheGridSpaceCharge::SetSensor(Sensor *sensor) {
-    m_sensor = sensor;
-    // Determine if any component is CmpParallelPlate (if not it will stay
-    // nullptr).
-    m_ParallelPlate = nullptr;
-    const size_t nofCmp = m_sensor->GetNumberOfComponents();
-    for (size_t i = 0; i < nofCmp; i++) {
-      if (!m_ParallelPlate) {
-        m_ParallelPlate =
-            dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(i));
-      }
+/// Set the sensor (+ determines if base Cmp is CmpParallelPlate (MRPCS)).
+void AvalancheGridSpaceCharge::SetSensor(Sensor *sensor) {
+  m_sensor = sensor;
+  // Determine if any component is CmpParallelPlate (if not it will stay
+  // nullptr).
+  m_ParallelPlate = nullptr;
+  const size_t nofCmp = m_sensor->GetNumberOfComponents();
+  for (size_t i = 0; i < nofCmp; i++) {
+    if (!m_ParallelPlate) {
+      m_ParallelPlate =
+          dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(i));
     }
   }
-
+}
 
 void AvalancheGridSpaceCharge::Set2dGrid(const double zmin, const double zmax,
                                          const int zsteps, const double rmax,
@@ -265,8 +265,7 @@ void AvalancheGridSpaceCharge::Set2dGrid(const double zmin, const double zmax,
   }
 }
 
-void AvalancheGridSpaceCharge::ImportElectronsFromAvalancheMicroscopic(
-    Garfield::AvalancheMicroscopic *avmc) {
+void AvalancheGridSpaceCharge::AddElectrons(AvalancheMicroscopic *avmc) {
   if (!avmc) return;
 
   if (!m_bImportAvalanche) {
@@ -285,8 +284,7 @@ void AvalancheGridSpaceCharge::ImportElectronsFromAvalancheMicroscopic(
     if (electron.status != -17) {
       if (m_bDebug)
         std::cerr << m_className
-                  << "::ImportElectronsFromAvalancheMicroscopic: Status is not "
-                     "-17, continue.\n";
+                  << "::AddElectrons: Status is not -17, continue.\n";
       continue;
     }
     int k = 0;
@@ -295,15 +293,13 @@ void AvalancheGridSpaceCharge::ImportElectronsFromAvalancheMicroscopic(
       double eps;
       if (!m_ParallelPlate->getLayer(electron.path.back().y, ind, eps)) {
         std::cerr << m_className
-                  << "::ImportElectronsFromAvalancheMicroscopic: Electron "
-                     "outside component.\n";
+                  << "::AddElectrons: Electron outside component.\n";
         continue;
       }
       k = GetGasGapNumber(ind);
       if (k == -1) {
-        std::cerr << m_className
-                  << "::ImportElectronsFromAvalancheMicroscopic: Electron is "
-                     "not in a gas gap, continue.\n";
+        std::cerr << m_className << "AddElectrons:\n"
+                  << "    Electron is not in a gas gap, continue.\n";
         continue;
       }
     }
@@ -317,13 +313,12 @@ void AvalancheGridSpaceCharge::ImportElectronsFromAvalancheMicroscopic(
 
     if (m_bDebug)
       std::cout
-          << m_className
-          << "::ImportElectronsFromAvalancheMicroscopic: Electron added, y: "
+          << m_className << "::AddElectrons: Electron added, y: "
           << electron.path.back().y << " and gas gap: " << k + 1 << "\n";
   }
 }
 
-void AvalancheGridSpaceCharge::AvalancheElectron(const double x, const double y,
+void AvalancheGridSpaceCharge::AddElectron(const double x, const double y,
                                                  const double z, const double t,
                                                  const int n) {
   int gasGap = 0;
@@ -333,7 +328,7 @@ void AvalancheGridSpaceCharge::AvalancheElectron(const double x, const double y,
     double eps = -1;
     if (!m_ParallelPlate->getLayer(y, ind, eps) && eps != 1.) {
       std::cerr << m_className
-                << "AvalancheElectron: Electron is not in a gas gap.";
+                << "AddElectron: Electron is not in a gas gap.";
       return;
     }
     // determine indices of gas gaps
@@ -351,7 +346,7 @@ void AvalancheGridSpaceCharge::AvalancheElectron(const double x, const double y,
   if (m_time == 0 && m_time != t && m_bDebug)
     std::cerr
         << m_className
-        << "::AvalancheElectron: Overwriting start time of avalanche for t "
+        << "::AddElectron: Overwriting start time of avalanche for t "
            "= 0 to "
         << t << ".\n";
 
@@ -370,20 +365,20 @@ void AvalancheGridSpaceCharge::AvalancheElectron(const double x, const double y,
 
   if (m_vCoNGasLayer.size() == 0) {
     std::cerr << m_className
-              << "::AvalancheElectron: Could not determine center.\n";
+              << "::AddElectron: Could not determine center.\n";
   }
   Prepare2dMesh();
   // HS: check!!
   if (SnapTo2dGrid(x, y, z, n, gasGap) && m_bDebug)
     std::cerr << m_className
-              << "::AvalancheElectron: Electron added at (t, x, y, z) =  (" << t
+              << "::AddElectron: Electron added at (t, x, y, z) =  (" << t
               << ", " << x << ", " << y << ", " << z << ").\n";
 }
 
-void AvalancheGridSpaceCharge::AddExtraAvalancheElectron(double y, int n) {
+void AvalancheGridSpaceCharge::AddExtraElectron(double y, int n) {
   if (!m_bDriftAvalanche) {
     std::cerr << m_className
-              << "::AddExtraAvalancheElectron: First use AvalancheElectron.\n";
+              << "::AddExtraElectron: First use AddElectron.\n";
     return;
   }
 
@@ -394,7 +389,7 @@ void AvalancheGridSpaceCharge::AddExtraAvalancheElectron(double y, int n) {
     double eps = -1;
     if (!m_ParallelPlate->getLayer(y, ind, eps) && eps != 1.) {
       std::cerr << m_className
-                << "AddExtraAvalancheElectron: Electron is not in a gas gap.";
+                << "AddExtraElectron: Electron is not in a gas gap.";
       return;
     }
     gasGap = GetGasGapNumber(ind);
@@ -408,7 +403,7 @@ void AvalancheGridSpaceCharge::AddExtraAvalancheElectron(double y, int n) {
   if (SnapTo2dGrid(m_vCoNGasLayer[gasGap][0], y, m_vCoNGasLayer[gasGap][2], n,
                    gasGap) &&
       m_bDebug)
-    std::cout << m_className << "::AddExtraAvalancheElectron: "
+    std::cout << m_className << "::AddExtraElectron: "
               << "Electron added at (t, x, y, z) =  (" << m_time << ", "
               << m_vCoNGasLayer[gasGap][0] << ", " << y << ", "
               << m_vCoNGasLayer[gasGap][2] << ").\n";
