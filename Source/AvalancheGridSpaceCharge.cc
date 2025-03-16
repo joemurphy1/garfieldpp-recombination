@@ -1215,9 +1215,13 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(double dx, long nElectron,
     sinTheta = (-(nd.eFieldR) / MagEField);
   }
 
+  double f = (double)groupSize / (double)nElectron;
   for (int group = 0; group < groups; group++) {
-    // in the last loop we add the rest to the groupSize.
-    if (group == groups - 1) groupSize += rest;
+    // In the last loop we add the rest to the groupSize.
+    if (group == groups - 1) {
+      groupSize += rest;
+      f = (double)groupSize / (double)nElectron;
+    }
     // diffuse each group as if it is a particle.
     // (U,V,W) Local coord system along E field.
     //<W is along E field, V is along e_phi and U perpendicular V and W
@@ -1236,11 +1240,10 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(double dx, long nElectron,
     const double stepR = std::sqrt((r + dX) * (r + dX) + dV * dV) -
                          r;  //< sign correct and stepR >= -r
 
-    // distribute nodes and add electrons/ions to Holder
-    DistributeCharges(
-        groupSize, nPosIon * (double)groupSize / (double)nElectron,
-        nNegIon * (double)groupSize / (double)nElectron, iz, ir, stepZ, stepR,
-        gasGap);  // < fractional ion number is allowed otherwise loss of ions
+    // Distribute nodes and add electrons/ions to Holder.
+    // Fractional ion number is allowed otherwise loss of ions.
+    DistributeCharges(groupSize, nPosIon * f, nNegIon * f, iz, ir, 
+                      stepZ, stepR, gasGap);  
   }
 }
 
@@ -1315,13 +1318,13 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nElectron, double nPosIon,
   // will mix)
   if (nElectron > 200) {
     m_grid[izPost][irPost].nElectronHolder +=
-        (long)std::round((double)nElectron * az * ar);
+        (long)std::round(nElectron * az * ar);
     m_grid[izPost][irPost2].nElectronHolder +=
-        (long)std::round((double)nElectron * az * br);
+        (long)std::round(nElectron * az * br);
     m_grid[izPost2][irPost].nElectronHolder +=
-        (long)std::round((double)nElectron * bz * ar);
+        (long)std::round(nElectron * bz * ar);
     m_grid[izPost2][irPost2].nElectronHolder +=
-        (long)std::round((double)nElectron * bz * br);
+        (long)std::round(nElectron * bz * br);
 
     // add positive ions to the nodes (smeared values allowed)
     m_grid[izPost][irPost].nPosIonHolder += nPosIon * az * ar;
@@ -1609,21 +1612,16 @@ void AvalancheGridSpaceCharge::GetEllipticIntegrals(double x, double &K,
     // not included in list.
     if (m_bDebug)
       std::cerr << m_className
-                << "::GetEllipticIntegrals value not included in list.\n";
+                << "::GetEllipticIntegrals: Value not included in list.\n";
     K = m_vKElliptic.back();
     E = m_vEElliptic.back();
     return;
   }
 
-  // linear interpolation:
-  // HS: rewrite the linear interpolation,
-  //     f * k[i] + (1. - f) * k[i + 1]
-  K = m_vKElliptic.at(arg) +
-      (-x - m_vXElliptic.at(arg)) *
-          (m_vKElliptic.at(arg + 1) - m_vKElliptic.at(arg)) * invStep;
-  E = m_vEElliptic.at(arg) +
-      (-x - m_vXElliptic.at(arg)) *
-          (m_vEElliptic.at(arg + 1) - m_vEElliptic.at(arg)) * invStep;
+  // Linear interpolation:
+  const double f = (-x - m_vXElliptic.at(arg)) * invStep;
+  K = (1. - f) * m_vKElliptic.at(arg) + f * m_vKElliptic.at(arg + 1);
+  E = (1. - f) * m_vEElliptic.at(arg) + f * m_vEElliptic.at(arg + 1);
 }
 
 double AvalancheGridSpaceCharge::GetMeanDistance() {
