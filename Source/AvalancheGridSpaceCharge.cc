@@ -369,7 +369,6 @@ void AvalancheGridSpaceCharge::AddElectron(const double x, const double y,
               << "::AddElectron: Could not determine center.\n";
   }
   Prepare2dMesh();
-  // HS: check!!
   if (SnapTo2dGrid(x, y, z, n, gasGap) && m_bDebug)
     std::cerr << m_className
               << "::AddElectron: Electron added at (t, x, y, z) =  (" << t
@@ -400,7 +399,6 @@ void AvalancheGridSpaceCharge::AddExtraElectron(double y, int n) {
   if (std::isnan(m_vCoNGasLayer[gasGap][0])) {
     m_vCoNGasLayer[gasGap] = {0, y, 0};
   }
-  // HS: check!!
   if (SnapTo2dGrid(m_vCoNGasLayer[gasGap][0], y, m_vCoNGasLayer[gasGap][2], n,
                    gasGap) &&
       m_bDebug)
@@ -1376,10 +1374,10 @@ void AvalancheGridSpaceCharge::GetLocalField(const int iz, const int ir,
         AddFieldFromChargeAt(iz, ir, fz, fr, N, eFieldZ, eFieldR);
       }
     }
-    // add prefactor (final field units V/cm)
-    // HS: make the prefactor constexpr
-    eFieldZ *= ElementaryCharge / (TwoPi * FourPiEpsilon0);
-    eFieldR *= ElementaryCharge / (TwoPi * FourPiEpsilon0);
+    // Multiply by prefactor (final field units V/cm)
+    constexpr double prefactor = ElementaryCharge / (TwoPi * FourPiEpsilon0);
+    eFieldZ *= prefactor;
+    eFieldR *= prefactor;
   } else if (fieldOption == "mirror") {
     // assume symmetric single layer rpc with equal permittivity resistive
     // layers.
@@ -1452,10 +1450,10 @@ void AvalancheGridSpaceCharge::GetLocalField(const int iz, const int ir,
         }
       }
     }
-    // add prefactor (final field units V/cm)
-    // HS: precompute (constexpr)
-    eFieldZ *= ElementaryCharge / (TwoPi * FourPiEpsilon0);
-    eFieldR *= ElementaryCharge / (TwoPi * FourPiEpsilon0);
+    // Multiply by prefactor (final field units V/cm)
+    constexpr double prefactor = ElementaryCharge / (TwoPi * FourPiEpsilon0); 
+    eFieldZ *= prefactor;
+    eFieldR *= prefactor;
   } else if (fieldOption == "relaxation") {
     // TODO: relaxation field method
   } else {
