@@ -33,6 +33,7 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
       // Otherwise, the single electron will be attached or retrieve
       // additional electrons from the gas.
       const double p = alpha * dx / (1. + alpha * dx);
+      const double q = 1. + alpha * dx;
       const double f = 1. / log(p);
       // Running over all electrons in the avalanche.
       for (long i = 0; i < nElectronIn; i++) {
@@ -42,7 +43,7 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
         // else 1 neg ion.
         if (s >= p) {
           // Deviation/improvement wrt Lippmann?
-          nElectronOut += (long)(log((1 - s) * (1 + alpha * dx)) * f);
+          nElectronOut += (long)(log((1. - s) * q) * f);
         } else {
           nNegIonOut += 1;
         }
@@ -70,11 +71,11 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
   } else if (alpha < 1.e-8 && eta > 1.e-8) {
     // alpha == 0, only attachment possible
     if (nElectronIn < 1000L) {
-      const double prob = exp(-eta * dx);
+      const double p = exp(-eta * dx);
       for (long i = 0; i < nElectronIn; i++) {
         // Draw a random number from the uniform distribution (0,1).
         const double s = Garfield::RndmUniformPos();
-        if (s >= prob) {
+        if (s >= p) {
           nNegIonOut += 1;
         } else {
           nElectronOut += 1;
@@ -84,7 +85,7 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
       // Central limit theorem.
       const double ndx = exp(-eta * dx);
       const double mu = nElectronIn * ndx;
-      const double sigma = std::sqrt(mu * ndx * (ndx - 1));
+      const double sigma = std::sqrt(mu * ndx * (ndx - 1.));
       nElectronOut = (long)Garfield::RndmGaussian(mu, sigma);
 
       // boundary conditions
@@ -108,16 +109,16 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
       // If the number is smaller than the condition, nothing happens.
       // Otherwise, the single electron will be attached or retrieve
       // additional electrons from the gas.
-      const double p = k * (ndx - 1) / (ndx - k);
-      const double f = 1. / log(1 - (1 - k) / (ndx - k));
+      const double p = k * (ndx - 1.) / (ndx - k);
+      const double q = (ndx - k) / (ndx * (1. - k));
+      const double f = 1. / log(1. - (1. - k) / (ndx - k));
       // Running over all electrons in the avalanche.
       for (long i = 0; i < nElectronIn; i++) {
         // Draw a random number from the uniform distribution (0,1).
         const double s = Garfield::RndmUniformPos();
         if (s >= p) {
           // deviation/improvement wrt Lippmann?
-          nElectronOut +=
-              (long)(1 + log((ndx - k) * (1. - s) / (ndx * (1. - k))) * f);
+          nElectronOut += (long)(1. + log((1. - s) * q) * f);
         } else {
           nNegIonOut += 1;
         }
@@ -1256,21 +1257,22 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nElectron, double nPosIon,
   double rRatio = std::abs(m_rGrid[ir] + stepR) /
                   m_rStepSize;  // can travel through r=0
 
-  int izPost, irPost, signZstep, signRstep;
+  int iz1, signZstep;
   if (stepZ < 0) {
-    izPost = (int)ceil(zRatio);
+    iz1 = (int)ceil(zRatio);
     signZstep = -1;
   } else if (stepZ == 0) {
-    izPost = iz;
+    iz1 = iz;
     signZstep = 0;
   } else {
-    izPost = (int)floor(zRatio);
+    iz1 = (int)floor(zRatio);
     signZstep = +1;
   }
 
+  int ir1, signRstep;
   if (stepR < 0) {
-    irPost = (int)ceil(rRatio);
-    if (irPost == 0) {
+    ir1 = (int)ceil(rRatio);
+    if (ir1 == 0) {
       // otherwise it travels to ir = -1
       signRstep = +1;
     } else {
@@ -1278,22 +1280,22 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nElectron, double nPosIon,
     }
   } else if (stepR == 0) {
     // no movement in r direction
-    irPost = ir;
+    ir1 = ir;
     signRstep = 0;
   } else {
-    irPost = (int)floor(rRatio);
+    ir1 = (int)floor(rRatio);
     signRstep = +1;
   }
 
   // 4 point approximation:
-  int izPost2 = izPost + signZstep;
-  // always: irPost2 >= 0
-  int irPost2 = irPost + signRstep;
+  int iz2 = iz1 + signZstep;
+  // always: ir2 >= 0
+  int ir2 = ir1 + signRstep;
 
-  const double bz = std::abs(zRatio - (double)izPost);
-  const double az = 1 - bz;
-  const double br = std::abs(rRatio - (double)irPost);
-  const double ar = 1 - br;
+  const double bz = std::abs(zRatio - (double)iz1);
+  const double az = 1. - bz;
+  const double br = std::abs(rRatio - (double)ir1);
+  const double ar = 1. - br;
 
   if (az < 0 || az > 1) throw std::runtime_error("az not in range");
   if (bz < 0 || bz > 1) throw std::runtime_error("bz not in range");
@@ -1304,47 +1306,43 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nElectron, double nPosIon,
   // step)?
   int izMin = m_zGasGapBoundaries[gasGap].front();
   int izMax = m_zGasGapBoundaries[gasGap].back();
-  if (izPost < izMin) izPost = izMin;
-  if (izPost2 < izMin) izPost2 = izMin;
-  if (izPost > izMax) izPost = izMax;
-  if (izPost2 > izMax) izPost2 = izMax;
+  if (iz1 < izMin) iz1 = izMin;
+  if (iz2 < izMin) iz2 = izMin;
+  if (iz1 > izMax) iz1 = izMax;
+  if (iz2 > izMax) iz2 = izMax;
 
-  if (irPost > m_rSteps) irPost = m_rSteps;
-  if (irPost2 > m_rSteps) irPost2 = m_rSteps;
+  if (ir1 > m_rSteps) ir1 = m_rSteps;
+  if (ir2 > m_rSteps) ir2 = m_rSteps;
 
   // add to the nodes the electrons travelled to (into nElectronHolder as they
   // will mix)
   if (nElectron > 200) {
-    m_grid[izPost][irPost].nElectronHolder +=
-        (long)std::round(nElectron * az * ar);
-    m_grid[izPost][irPost2].nElectronHolder +=
-        (long)std::round(nElectron * az * br);
-    m_grid[izPost2][irPost].nElectronHolder +=
-        (long)std::round(nElectron * bz * ar);
-    m_grid[izPost2][irPost2].nElectronHolder +=
-        (long)std::round(nElectron * bz * br);
+    m_grid[iz1][ir1].nElectronHolder += (long)std::round(nElectron * az * ar);
+    m_grid[iz1][ir2].nElectronHolder += (long)std::round(nElectron * az * br);
+    m_grid[iz2][ir1].nElectronHolder += (long)std::round(nElectron * bz * ar);
+    m_grid[iz2][ir2].nElectronHolder += (long)std::round(nElectron * bz * br);
 
     // add positive ions to the nodes (smeared values allowed)
-    m_grid[izPost][irPost].nPosIonHolder += nPosIon * az * ar;
-    m_grid[izPost][irPost2].nPosIonHolder += nPosIon * az * br;
-    m_grid[izPost2][irPost].nPosIonHolder += nPosIon * bz * ar;
-    m_grid[izPost2][irPost2].nPosIonHolder += nPosIon * bz * br;
+    m_grid[iz1][ir1].nPosIonHolder += nPosIon * az * ar;
+    m_grid[iz1][ir2].nPosIonHolder += nPosIon * az * br;
+    m_grid[iz2][ir1].nPosIonHolder += nPosIon * bz * ar;
+    m_grid[iz2][ir2].nPosIonHolder += nPosIon * bz * br;
 
     // add negative ions to the nodes (smeared values allowed)
-    m_grid[izPost][irPost].nNegIonHolder += nNegIon * az * ar;
-    m_grid[izPost][irPost2].nNegIonHolder += nNegIon * az * br;
-    m_grid[izPost2][irPost].nNegIonHolder += nNegIon * bz * ar;
-    m_grid[izPost2][irPost2].nNegIonHolder += nNegIon * bz * br;
+    m_grid[iz1][ir1].nNegIonHolder += nNegIon * az * ar;
+    m_grid[iz1][ir2].nNegIonHolder += nNegIon * az * br;
+    m_grid[iz2][ir1].nNegIonHolder += nNegIon * bz * ar;
+    m_grid[iz2][ir2].nNegIonHolder += nNegIon * bz * br;
 
   } else {
     // too large movement of few electrons -> only move it to 1 node (instead of
     // 4)
-    izPost = (az >= bz) ? izPost : izPost2;
-    irPost = (ar >= br) ? irPost : irPost2;
+    iz1 = (az >= bz) ? iz1 : iz2;
+    ir1 = (ar >= br) ? ir1 : ir2;
 
-    m_grid[izPost][irPost].nElectronHolder += nElectron;
-    m_grid[izPost][irPost].nPosIonHolder += nPosIon;
-    m_grid[izPost][irPost].nNegIonHolder += nNegIon;
+    m_grid[iz1][ir1].nElectronHolder += nElectron;
+    m_grid[iz1][ir1].nPosIonHolder += nPosIon;
+    m_grid[iz1][ir1].nNegIonHolder += nNegIon;
   }
 }
 
@@ -1571,7 +1569,7 @@ void AvalancheGridSpaceCharge::GetFreeChargedRing(double zi, double ri,
   if (ri < Small) {
     eFieldR = 0;
   } else {
-    eFieldR *= 2 / (ri * a2 * b);
+    eFieldR *= 2. / (ri * a2 * b);
   }
 }
 
