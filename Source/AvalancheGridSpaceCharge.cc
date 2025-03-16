@@ -32,17 +32,17 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
       // If the number is smaller than the condition, nothing happens.
       // Otherwise, the single electron will be attached or retrieve
       // additional electrons from the gas.
-      const double prob = alpha * dx / (1 + alpha * dx);
+      const double p = alpha * dx / (1. + alpha * dx);
+      const double f = 1. / log(p);
       // Running over all electrons in the avalanche.
       for (long i = 0; i < nElectronIn; i++) {
         // Draw a random number from the uniform distribution (0,1).
         const double s = Garfield::RndmUniformPos();
         // We (wrongly) assume if s >= prob only pos ions are created
         // else 1 neg ion.
-        if (s >= prob) {
-          // deviation/improvement wrt Lippmann?
-          // HS: compute log(prob) outside of the loop.
-          nElectronOut += (long)(log((1 - s) * (1 + alpha * dx)) / log(prob));
+        if (s >= p) {
+          // Deviation/improvement wrt Lippmann?
+          nElectronOut += (long)(log((1 - s) * (1 + alpha * dx)) * f);
         } else {
           nNegIonOut += 1;
         }
@@ -82,18 +82,20 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
       }
     } else {
       // Central limit theorem.
-      // HS: compute exp(-eta * dx) only once?
-      const double sigma =
-          std::sqrt(nElectronIn * exp(-2 * eta * dx) * (exp(-eta * dx) - 1));
-      nElectronOut =
-          (long)Garfield::RndmGaussian(nElectronIn * exp(-eta * dx), sigma);
+      const double ndx = exp(-eta * dx);
+      const double mu = nElectronIn * ndx;
+      const double sigma = std::sqrt(mu * ndx * (ndx - 1));
+      nElectronOut = (long)Garfield::RndmGaussian(mu, sigma);
 
       // boundary conditions
-      if (nElectronOut <= 0) nElectronOut = 0;  //< unphysical
-      if (nElectronOut > nElectronIn)
-        nElectronOut = nElectronIn;  //< unphysical with alpha = 0
-
-      // charge conservation
+      if (nElectronOut <= 0) {
+        // Unphysical
+        nElectronOut = 0;
+      } else if (nElectronOut > nElectronIn) {
+        // Unphysical with alpha = 0
+        nElectronOut = nElectronIn;  
+      }
+      // Charge conservation
       nNegIonOut = -(nElectronOut - nElectronIn);
     }
   } else {
@@ -106,17 +108,16 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
       // If the number is smaller than the condition, nothing happens.
       // Otherwise, the single electron will be attached or retrieve
       // additional electrons from the gas.
-      const double prob = k * (ndx - 1) / (ndx - k);
+      const double p = k * (ndx - 1) / (ndx - k);
+      const double f = 1. / log(1 - (1 - k) / (ndx - k));
       // Running over all electrons in the avalanche.
       for (long i = 0; i < nElectronIn; i++) {
         // Draw a random number from the uniform distribution (0,1).
         const double s = Garfield::RndmUniformPos();
-        if (s >= prob) {
+        if (s >= p) {
           // deviation/improvement wrt Lippmann?
-          // HS: compute the denominator outside of the loop.
           nElectronOut +=
-              (long)(1 + log((ndx - k) * (1 - s) / (ndx * (1 - k))) /
-                             log(1 - (1 - k) / (ndx - k)));
+              (long)(1 + log((ndx - k) * (1. - s) / (ndx * (1. - k))) * f);
         } else {
           nNegIonOut += 1;
         }
@@ -126,9 +127,9 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
 
     } else {
       // Central limit theorem.
-      const double sigma =
-          sqrt(nElectronIn * (1 + k) * ndx * (ndx - 1) / (1 - k));
-      nElectronOut = (long)Garfield::RndmGaussian(nElectronIn * ndx, sigma);
+      const double mu = nElectronIn * ndx;
+      const double sigma = std::sqrt(mu * (1. + k) * (ndx - 1.) / (1. - k));
+      nElectronOut = (long)Garfield::RndmGaussian(mu, sigma);
 
       // boundary conditions (alpha dx ElectronIn = dPosOut),
       //  the procedure guarantees positive values
@@ -522,9 +523,8 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   }
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      GridNode *nd = &m_grid[iz][ir];
-      int gasGap = nd->gasGapIndex;
-      double EField = nd->eFieldZ + m_ezBkg[gasGap];
+      int gasGap = m_grid[iz][ir].gasGapIndex;
+      double EField = m_grid[iz][ir].eFieldZ + m_ezBkg[gasGap];
       exportZField << std::round(EField) << " ";
     }
     exportZField << "\n";
@@ -552,9 +552,9 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   }
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      GridNode *nd = &m_grid[iz][ir];
-      int gasGap = nd->gasGapIndex;
-      double EField = Mag(nd->eFieldZ + m_ezBkg[gasGap], nd->eFieldR);
+      int gasGap = m_grid[iz][ir].gasGapIndex;
+      double EField = Mag(m_grid[iz][ir].eFieldZ + m_ezBkg[gasGap], 
+                          m_grid[iz][ir].eFieldR);
       exportMagField << std::round(EField) << " ";
     }
     exportMagField << "\n";
