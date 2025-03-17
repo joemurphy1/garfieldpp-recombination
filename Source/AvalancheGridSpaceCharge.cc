@@ -1475,7 +1475,8 @@ bool AvalancheGridSpaceCharge::AddFieldFromChargeAt(int iz, int ir, int fz,
 
   if (fr == 0) {
     // Coulomb ball of radius dr / 2
-    const double f = TwoPi * pow((zi - zf) * (zi - zf) + ri * ri, -1.5); 
+    const double d = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
+    const double f = TwoPi / (d * d * d);
     intermediateEr = f * ri;
     intermediateEz = f * (zi - zf);
   } else {  //< rf != 0
@@ -1502,7 +1503,8 @@ bool AvalancheGridSpaceCharge::AddFieldFromChargeAt(int iz, int ir, double zf,
 
   if (std::abs(rf) / m_rStepSize < 0.5) {
     // Coulomb ball of radius dr / 2
-    const double f = TwoPi * pow((zi - zf) * (zi - zf) + ri * ri, -1.5);
+    const double d = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
+    const double f = TwoPi / (d * d * d);
     intermediateEr = f * ri;
     intermediateEz = f * (zi - zf);
   } else {  //< rf != 0
