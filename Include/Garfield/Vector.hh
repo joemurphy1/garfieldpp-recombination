@@ -47,7 +47,7 @@ namespace Garfield
     }
     __host__ __device__ constexpr const std::size_t& dimension() const noexcept { return m_dimension;}
     __host__ __device__ constexpr const std::size_t& size() const noexcept { return m_dimension;}
-    template<typename T, size_t D> __host__ __device__ Vector operator+(const Vector<T,D>& vec)
+    template<typename T, std::size_t D> __host__ __device__ Vector operator+(const Vector<T,D>& vec)
     {
       static_assert(Dimension==D,"The vectors don't have the same dimension!");
       Vector ret = *this;
@@ -57,7 +57,7 @@ namespace Garfield
       }
       return ret;
     }
-    template<typename T, size_t D> __host__ __device__ Vector operator-(const Vector<T,D>& vec)
+    template<typename T, std::size_t D> __host__ __device__ Vector operator-(const Vector<T,D>& vec)
     {
       static_assert(Dimension==D,"The vectors don't have the same dimension!");
       Vector ret = *this;
@@ -67,8 +67,6 @@ namespace Garfield
       }
       return ret;
     }
-    private:
-     static const constexpr std::size_t m_dimension{Dimension};
   };
 
   template<typename type> class Vec1Impl : public Vector<type,1>
