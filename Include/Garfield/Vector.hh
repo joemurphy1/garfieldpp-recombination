@@ -3,10 +3,8 @@
 
 #if defined(__NVCC__)
   #include<cuda/std/array>
-  #include<cstddef>
   template<typename T, std::size_t D> using GarfieldArray = cuda::std::array<T,D>;
 #else
-  #include<cstddef>
   #include<array>
   #if !defined(__device__)
     #define __GARFIELD_DEFINED_DEVICE__
@@ -15,6 +13,7 @@
   #endif
   template<typename T, std::size_t D> using GarfieldArray = std::array<T,D>;
 #endif
+#include<cstddef>
 
 
 namespace Garfield
