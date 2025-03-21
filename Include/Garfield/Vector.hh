@@ -45,8 +45,6 @@ namespace Garfield
       }
       return ret;
     }
-    __host__ __device__ constexpr const std::size_t& dimension() const noexcept { return m_dimension;}
-    __host__ __device__ constexpr const std::size_t& size() const noexcept { return m_dimension;}
     template<typename T, std::size_t D> __host__ __device__ Vector operator+(const Vector<T,D>& vec)
     {
       static_assert(Dimension==D,"The vectors don't have the same dimension!");
