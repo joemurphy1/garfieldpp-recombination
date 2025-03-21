@@ -1205,7 +1205,7 @@ int ComponentFieldMap
   const int *tetList{nullptr};
   int tetListSize{0};
   if (m_useTetrahedralTree && m_octree) {
-    m_octree->GetElementsInBlock(Vec3GPU{x, y, z}, tetList, tetListSize);
+    m_octree->GetElementsInBlock(Vec3{x, y, z}, tetList, tetListSize);
   } else {
     tetList = m_elementIndices;
     tetListSize = numElements;

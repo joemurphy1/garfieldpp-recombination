@@ -4,7 +4,6 @@
 #define G_COMPONENT_FIELD_MAP_H
 #endif
 
-
 #ifdef __GPUCOMPILE__
 #else
 
