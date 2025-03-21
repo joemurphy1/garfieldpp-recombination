@@ -6,54 +6,26 @@
 #endif
 
 #include "Garfield/HelperMacros.hh"
+#include "Garfield/Vector.hh"
 
-
-#ifdef __GPUCOMPILE__
+#if defined(__GPUCOMPILE__)
+  #include"GPUInterface.hh"
 #else
-class TetrahedralTreeGPU;
+  class TetrahedralTreeGPU;
 #endif
 
 #include <cstddef>
 #include <vector>
 #include <utility>
 
-namespace Garfield {
-
-// TODO: replace this class with ROOT's TVector3 class
-
-struct GARFIELD_CLASS_NAME(Vec3)
+namespace Garfield
 {
-  float x = 0., y = 0., z = 0.;
 
-  __DEVICE__ GARFIELD_CLASS_NAME(Vec3)() {}
-  __DEVICE__ GARFIELD_CLASS_NAME(Vec3)(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
-
-  __DEVICE__ GARFIELD_CLASS_NAME(Vec3) operator+(const GARFIELD_CLASS_NAME(Vec3)& r) const {
-    return GARFIELD_CLASS_NAME(Vec3)(x + r.x, y + r.y, z + r.z);
-  }
-
-  __DEVICE__ GARFIELD_CLASS_NAME(Vec3) operator-(const GARFIELD_CLASS_NAME(Vec3)& r) const {
-    return GARFIELD_CLASS_NAME(Vec3)(x - r.x, y - r.y, z - r.z);
-  }
-
-  __DEVICE__ GARFIELD_CLASS_NAME(Vec3)& operator+=(const GARFIELD_CLASS_NAME(Vec3)& r) {
-    x += r.x;
-    y += r.y;
-    z += r.z;
-    return *this;
-  }
-
-  __DEVICE__ GARFIELD_CLASS_NAME(Vec3)& operator-=(const GARFIELD_CLASS_NAME(Vec3)& r) {
-    x -= r.x;
-    y -= r.y;
-    z -= r.z;
-    return *this;
-  }
-
-  __DEVICE__ GARFIELD_CLASS_NAME(Vec3) operator*(float r) const { return GARFIELD_CLASS_NAME(Vec3)(x * r, y * r, z * r); }
-
-  __DEVICE__ GARFIELD_CLASS_NAME(Vec3) operator/(float r) const { return GARFIELD_CLASS_NAME(Vec3)(x / r, y / r, z / r); }
-};
+#ifdef __GPUCOMPILE__
+  using Vec3 =  Vec3Impl<cuda_t>;
+#else
+  using Vec3 =  Vec3Impl<double>;
+#endif
 
 /**
 
@@ -98,11 +70,11 @@ class GARFIELD_CLASS_NAME(TetrahedralTree) {
   static std::vector<int> emptyBlock;
 
   // Physical centre of this tree node.
-  GARFIELD_CLASS_NAME(Vec3) m_origin;
+  Vec3 m_origin;
   // Half the width/height/depth of this tree node. 
-  GARFIELD_CLASS_NAME(Vec3) m_halfDimension;
+  Vec3 m_halfDimension;
   // Storing min and max points for convenience
-  GARFIELD_CLASS_NAME(Vec3) m_min, m_max;  
+  Vec3 m_min, m_max;  
 
   // The tree has up to eight children and can additionally store
   // a list of mesh nodes and mesh elements.
@@ -117,7 +89,7 @@ class GARFIELD_CLASS_NAME(TetrahedralTree) {
   // z:     - + - + - + - +
 
   #ifndef __GPUCOMPILE__
-  std::vector<std::pair<GARFIELD_CLASS_NAME(Vec3), int> > nodes;
+  std::vector<std::pair<Vec3, int> > nodes;
   #endif
 
   #ifdef __GPUCOMPILE__
@@ -140,18 +112,18 @@ class GARFIELD_CLASS_NAME(TetrahedralTree) {
 public:
   // Get all tetrahedra linked to a block corresponding to the given point
   #ifdef __GPUCOMPILE__
-  __device__ void GetElementsInBlock(const Vec3GPU& point, const int *&tet_list_elems, int &num_elems) const;
+  __device__ void GetElementsInBlock(const Vec3& point, const int *&tet_list_elems, int &num_elems) const;
   #else
   const std::vector<int>& GetElementsInBlock(const Vec3& point) const;
   #endif
 
 private:
-__DEVICE__ int GetOctantContainingPoint(const GARFIELD_CLASS_NAME(Vec3)& point) const;
+__DEVICE__ int GetOctantContainingPoint(const Vec3& point) const;
   // Get a block containing the input point
-  __DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GetBlockFromPoint(const GARFIELD_CLASS_NAME(Vec3)& point) const;
+  __DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GetBlockFromPoint(const Vec3& point) const;
   // A helper function used by the function above.
   // Called recursively on the child nodes.
-  __DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GetBlockFromPointHelper(const GARFIELD_CLASS_NAME(Vec3)& point) const;  
+  __DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GetBlockFromPointHelper(const Vec3& point) const;  
 
 #ifdef __GPUCOMPILE__
   friend class TetrahedralTree;

@@ -20,12 +20,12 @@ Organization: Texas A&M University at Qatar
 */
 TetrahedralTree::TetrahedralTree(const Vec3& origin, const Vec3& halfDimension)
     : m_origin(origin), m_halfDimension(halfDimension) {
-  m_min.x = origin.x - halfDimension.x;
-  m_min.y = origin.y - halfDimension.y;
-  m_min.z = origin.z - halfDimension.z;
-  m_max.x = origin.x + halfDimension.x;
-  m_max.y = origin.y + halfDimension.y;
-  m_max.z = origin.z + halfDimension.z;
+  m_min.x() = origin.x() - halfDimension.x();
+  m_min.y() = origin.y() - halfDimension.y();
+  m_min.z() = origin.z() - halfDimension.z();
+  m_max.x() = origin.x() + halfDimension.x();
+  m_max.y() = origin.y() + halfDimension.y();
+  m_max.z() = origin.z() + halfDimension.z();
 
   // Initially, there are no children
   for (int i = 0; i < 8; ++i) children[i] = nullptr;
@@ -38,19 +38,19 @@ TetrahedralTree::~TetrahedralTree() {
 
 // Check if a box overlaps with this node
 bool TetrahedralTree::DoesBoxOverlap(const double bb[6]) const {
-  if (m_max.x < bb[0] || m_max.y < bb[1] || m_max.z < bb[2]) return false;
-  if (m_min.x > bb[3] || m_min.y > bb[4] || m_min.z > bb[5]) return false;
+  if (m_max.x() < bb[0] || m_max.y() < bb[1] || m_max.z() < bb[2]) return false;
+  if (m_min.x() > bb[3] || m_min.y() > bb[4] || m_min.z() > bb[5]) return false;
   return true;
 }
 #endif
 
 // Determine which octant of the tree would contain 'point'
-__DEVICE__ int GARFIELD_CLASS_NAME(TetrahedralTree)::GetOctantContainingPoint(const GARFIELD_CLASS_NAME(Vec3)& point) const
+__DEVICE__ int GARFIELD_CLASS_NAME(TetrahedralTree)::GetOctantContainingPoint(const Vec3& point) const
 {
   int oct = 0;
-  if (point.x >= m_origin.x) oct |= 4;
-  if (point.y >= m_origin.y) oct |= 2;
-  if (point.z >= m_origin.z) oct |= 1;
+  if (point.x() >= m_origin.x()) oct |= 4;
+  if (point.y() >= m_origin.y()) oct |= 2;
+  if (point.z() >= m_origin.z()) oct |= 1;
   return oct;
 }
 
@@ -81,9 +81,9 @@ void TetrahedralTree::InsertMeshNode(Vec3 point, const int index) {
   for (int i = 0; i < 8; ++i) {
     // Compute new bounding box for this child
     Vec3 newOrigin = m_origin;
-    newOrigin.x += m_halfDimension.x * (i & 4 ? .5f : -.5f);
-    newOrigin.y += m_halfDimension.y * (i & 2 ? .5f : -.5f);
-    newOrigin.z += m_halfDimension.z * (i & 1 ? .5f : -.5f);
+    newOrigin.x() += m_halfDimension.x() * (i & 4 ? .5f : -.5f);
+    newOrigin.y() += m_halfDimension.y() * (i & 2 ? .5f : -.5f);
+    newOrigin.z() += m_halfDimension.z() * (i & 1 ? .5f : -.5f);
     children[i] = new TetrahedralTree(newOrigin, m_halfDimension * .5f);
   }
 
@@ -117,7 +117,7 @@ void TetrahedralTree::InsertMeshElement(const double bb[6], const int index) {
 // block) that contains the
 // point passed as input.
 #ifdef __GPUCOMPILE__
-__device__ void TetrahedralTreeGPU::GetElementsInBlock(const Vec3GPU& point, const int *&tet_list_elems, int &num_elems) const {
+__device__ void TetrahedralTreeGPU::GetElementsInBlock(const Vec3& point, const int *&tet_list_elems, int &num_elems) const {
     const TetrahedralTreeGPU* octreeNode = GetBlockFromPoint(point);
 
     if (octreeNode) {
@@ -146,18 +146,18 @@ const std::vector<int>& TetrahedralTree::GetElementsInBlock(const Vec3& point) c
 // the mesh's bounding box
 // If we don't check this, the case when root is leaf node itself will return
 // wrong block
-__DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GARFIELD_CLASS_NAME(TetrahedralTree)::GetBlockFromPoint(const GARFIELD_CLASS_NAME(Vec3)& point) const
+__DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GARFIELD_CLASS_NAME(TetrahedralTree)::GetBlockFromPoint(const Vec3& point) const
 {
-  if (!(m_min.x <= point.x && point.x <= m_max.x &&
-        m_min.y <= point.y && point.y <= m_max.y &&
-        m_min.z <= point.z && point.z <= m_max.z))
+  if (!(m_min.x() <= point.x() && point.x() <= m_max.x() &&
+        m_min.y() <= point.y() && point.y() <= m_max.y() &&
+        m_min.z() <= point.z() && point.z() <= m_max.z()))
     return nullptr;
 
   return GetBlockFromPointHelper(point);
 }
 
 __DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GARFIELD_CLASS_NAME(TetrahedralTree)::GetBlockFromPointHelper(
-    const GARFIELD_CLASS_NAME(Vec3)& point) const
+    const Vec3& point) const
 {
   // If we're at a leaf node, it means, the point is inside this block
   if (IsLeafNode()) return this;
