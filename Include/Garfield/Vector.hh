@@ -49,7 +49,7 @@ namespace Garfield
     __host__ __device__ constexpr const std::size_t& size() const noexcept { return m_dimension;}
     template<typename T, size_t D> __host__ __device__ Vector operator+(const Vector<T,D>& vec)
     {
-      static_assert(vec.dimension()==this->dimension(),"The vector don't have the same dimension!");
+      static_assert(Dimension==D,"The vectors don't have the same dimension!");
       Vector ret = *this;
       for(std::size_t j=0;j!=ret.size();++j)
       {
@@ -59,7 +59,7 @@ namespace Garfield
     }
     template<typename T, size_t D> __host__ __device__ Vector operator-(const Vector<T,D>& vec)
     {
-      static_assert(vec.dimension()==this->dimension(),"The vector don't have the same dimension!");
+      static_assert(Dimension==D,"The vectors don't have the same dimension!");
       Vector ret = *this;
       for(std::size_t j=0;j!=ret.size();++j)
       {
