@@ -107,6 +107,7 @@ namespace Garfield
 
 #if defined(__GARFIELD_DEFINED_DEVICE__)
   #undef __device__
+  #undef __host__
   #undef __GARFIELD_DEFINED_DEVICE__
 #endif
 
