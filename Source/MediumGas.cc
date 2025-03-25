@@ -1015,7 +1015,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
     return false;
   }
 
-  int version = 12;
+  int version = 13;
   std::bitset<20> gasok;
   bool new3d = false;
   constexpr int nMagboltzGases = 60;
@@ -1032,7 +1032,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
     return false;
   } 
   // Check the version.
-  if (version != 12) {
+  if (version != 13) {
     std::cout << m_className << "::MergeGasFile:\n    "
               << "This dataset cannot be read because of a change in format.\n";
     gasfile.close();
