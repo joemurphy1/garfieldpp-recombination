@@ -5,69 +5,27 @@
 #define TETRAHEDRAL_TREE_H
 #endif
 
-// undefine everything first 
-#ifdef __TETRAHEDRALTREECLASS__
-#undef __TETRAHEDRALTREECLASS__
-#undef __VEC3CLASS__
-#undef __GPULABEL__
-#endif
+#include "Garfield/HelperMacros.hh"
+#include "Garfield/Vector.hh"
 
-#ifdef __GPUCOMPILE__
-
-#define __TETRAHEDRALTREECLASS__ TetrahedralTreeGPU
-#define __VEC3CLASS__ Vec3GPU
-#define __GPULABEL__ __device__
-
+#if defined(__GPUCOMPILE__)
+  #include"GPUInterface.hh"
 #else
-
-class TetrahedralTreeGPU;
-
-#define __TETRAHEDRALTREECLASS__ TetrahedralTree
-#define __VEC3CLASS__ Vec3
-#define __GPULABEL__
-
+  class TetrahedralTreeGPU;
 #endif
 
 #include <cstddef>
 #include <vector>
 #include <utility>
 
-namespace Garfield {
+namespace Garfield
+{
 
-// TODO: replace this class with ROOT's TVector3 class
-
-struct __VEC3CLASS__ {
-  float x = 0., y = 0., z = 0.;
-
-  __GPULABEL__ __VEC3CLASS__() {}
-  __GPULABEL__ __VEC3CLASS__(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
-
-  __GPULABEL__ __VEC3CLASS__ operator+(const __VEC3CLASS__& r) const {
-    return __VEC3CLASS__(x + r.x, y + r.y, z + r.z);
-  }
-
-  __GPULABEL__ __VEC3CLASS__ operator-(const __VEC3CLASS__& r) const {
-    return __VEC3CLASS__(x - r.x, y - r.y, z - r.z);
-  }
-
-  __GPULABEL__ __VEC3CLASS__& operator+=(const __VEC3CLASS__& r) {
-    x += r.x;
-    y += r.y;
-    z += r.z;
-    return *this;
-  }
-
-  __GPULABEL__ __VEC3CLASS__& operator-=(const __VEC3CLASS__& r) {
-    x -= r.x;
-    y -= r.y;
-    z -= r.z;
-    return *this;
-  }
-
-  __GPULABEL__ __VEC3CLASS__ operator*(float r) const { return __VEC3CLASS__(x * r, y * r, z * r); }
-
-  __GPULABEL__ __VEC3CLASS__ operator/(float r) const { return __VEC3CLASS__(x / r, y / r, z / r); }
-};
+#ifdef __GPUCOMPILE__
+  using Vec3 =  Vec3Impl<cuda_t>;
+#else
+  using Vec3 =  Vec3Impl<double>;
+#endif
 
 /**
 
@@ -81,20 +39,20 @@ Author: Ali Sheharyar
 Organization: Texas A&M University at Qatar
 
 */
-class __TETRAHEDRALTREECLASS__ {
+class GARFIELD_CLASS_NAME(TetrahedralTree) {
  public:
  #ifdef __GPUCOMPILE__
   // Constructor
-  TetrahedralTreeGPU() = default;
+  GARFIELD_CLASS_NAME(TetrahedralTree)() = default;
 
   // Destructor
-  ~TetrahedralTreeGPU() {};
+  ~GARFIELD_CLASS_NAME(TetrahedralTree)() = default;
  #else
   // Constructor
-  TetrahedralTree(const Vec3& origin, const Vec3& halfDimension);
+  GARFIELD_CLASS_NAME(TetrahedralTree)(const Vec3& origin, const Vec3& halfDimension);
 
   /// Destructor
-  ~TetrahedralTree();
+  ~GARFIELD_CLASS_NAME(TetrahedralTree)();
 #endif
 
   #ifndef __GPUCOMPILE__
@@ -112,16 +70,16 @@ class __TETRAHEDRALTREECLASS__ {
   static std::vector<int> emptyBlock;
 
   // Physical centre of this tree node.
-  __VEC3CLASS__ m_origin;
+  Vec3 m_origin;
   // Half the width/height/depth of this tree node. 
-  __VEC3CLASS__ m_halfDimension;
+  Vec3 m_halfDimension;
   // Storing min and max points for convenience
-  __VEC3CLASS__ m_min, m_max;  
+  Vec3 m_min, m_max;  
 
   // The tree has up to eight children and can additionally store
   // a list of mesh nodes and mesh elements.
   // Pointers to child octants.
-  __TETRAHEDRALTREECLASS__* children[8];  
+  GARFIELD_CLASS_NAME(TetrahedralTree)* children[8];  
 
   // Children follow a predictable pattern to make accesses simple.
   // Here, - means less than 'origin' in that dimension, + means greater than.
@@ -131,7 +89,7 @@ class __TETRAHEDRALTREECLASS__ {
   // z:     - + - + - + - +
 
   #ifndef __GPUCOMPILE__
-  std::vector<std::pair<__VEC3CLASS__, int> > nodes;
+  std::vector<std::pair<Vec3, int> > nodes;
   #endif
 
   #ifdef __GPUCOMPILE__
@@ -148,24 +106,24 @@ class __TETRAHEDRALTREECLASS__ {
   bool DoesBoxOverlap(const double bb[6]) const;
   #endif
   // Check if this tree node is a leaf or intermediate node.
-  __GPULABEL__ bool IsLeafNode() const;
+  __DEVICE__ bool IsLeafNode() const;
 
 
 public:
   // Get all tetrahedra linked to a block corresponding to the given point
   #ifdef __GPUCOMPILE__
-  __device__ void GetElementsInBlock(const Vec3GPU& point, const int *&tet_list_elems, int &num_elems) const;
+  __device__ void GetElementsInBlock(const Vec3& point, const int *&tet_list_elems, int &num_elems) const;
   #else
   const std::vector<int>& GetElementsInBlock(const Vec3& point) const;
   #endif
 
 private:
-  __GPULABEL__ int GetOctantContainingPoint(const __VEC3CLASS__& point) const;
+__DEVICE__ int GetOctantContainingPoint(const Vec3& point) const;
   // Get a block containing the input point
-  __GPULABEL__ const __TETRAHEDRALTREECLASS__* GetBlockFromPoint(const __VEC3CLASS__& point) const;
+  __DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GetBlockFromPoint(const Vec3& point) const;
   // A helper function used by the function above.
   // Called recursively on the child nodes.
-  __GPULABEL__ const __TETRAHEDRALTREECLASS__* GetBlockFromPointHelper(const __VEC3CLASS__& point) const;  
+  __DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GetBlockFromPointHelper(const Vec3& point) const;  
 
 #ifdef __GPUCOMPILE__
   friend class TetrahedralTree;

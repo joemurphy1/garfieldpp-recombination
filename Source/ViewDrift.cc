@@ -14,7 +14,6 @@
 #include <TView3D.h>
 #include <TVirtualViewer3D.h>
 
-#include "Garfield/Plotting.hh"
 #include "Garfield/ViewDrift.hh"
 
 namespace Garfield {

@@ -1,20 +1,15 @@
-#include "GPUInterface.hh"
-#include "Garfield/AvalancheMicroscopic.hh"
 #include "AvalancheMicroscopicGPU.h"
 
 #include "GPUFunctions.h"
 
 #include <iostream>
 #include <chrono>
-
-#define __GPUCOMPILE__
 #include "SensorGPU.h"
 #undef __GPUCOMPILE__
+#include "Garfield/Sensor.hh"
 #include "Garfield/FundamentalConstants.hh"
-#include "Garfield/Random.hh"
 #include "RandomEngineGPU.h"
 #include "Garfield/RandomEngineRoot.hh"
-#include "GPUFunctions.h"
 #include "RandomGPU.h"
 
 #include <thrust/host_vector.h>

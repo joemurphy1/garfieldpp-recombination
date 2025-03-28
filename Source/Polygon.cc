@@ -2,11 +2,8 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
-#include <numeric>
 
 #include "Garfield/Polygon.hh"
-#include "Garfield/FundamentalConstants.hh"
-#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Random.hh"
 
 namespace {

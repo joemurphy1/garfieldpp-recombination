@@ -1,4 +1,3 @@
-#include <iostream>
 #include <cstdlib>
 
 #include <TCanvas.h>
@@ -7,7 +6,6 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/DriftLineRKF.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
@@ -65,8 +63,7 @@ int main(int argc, char * argv[]) {
   // Read the electron transport coefficients from a .gas file.
   gas.LoadGasFile("Ne_90_CO2_10_N2_5_with_mg.gas");
   // Read the ion mobility table.
-  const std::string path = std::getenv("GARFIELD_INSTALL");
-  gas.LoadIonMobility(path + "/share/Garfield/Data/IonMobility_Ne+_Ne.txt");
+  gas.LoadIonMobility("IonMobility_Ne+_Ne.txt");
 
   // Setup the electric field.
   ComponentAnalyticField cmp;

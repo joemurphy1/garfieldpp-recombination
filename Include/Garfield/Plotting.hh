@@ -1,7 +1,7 @@
 #ifndef G_PLOTTING_H
 #define G_PLOTTING_H
 
-#include "PlottingEngine.hh"
+#include "Garfield/PlottingEngine.hh"
 
 namespace Garfield {
 

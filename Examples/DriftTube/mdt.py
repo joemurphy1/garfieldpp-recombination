@@ -1,14 +1,11 @@
 import ROOT
 import Garfield
-import os
 import math
 import ctypes
 
-path = os.getenv('GARFIELD_INSTALL')
-
 gas = ROOT.Garfield.MediumMagboltz()
 gas.LoadGasFile('ar_93_co2_7_3bar.gas')
-gas.LoadIonMobility(path + '/share/Garfield/Data/IonMobility_Ar+_Ar.txt')
+gas.LoadIonMobility('IonMobility_Ar+_Ar.txt')
 
 cmp = ROOT.Garfield.ComponentAnalyticField()
 cmp.SetMedium(gas)
@@ -52,7 +49,6 @@ track.SetEnergy(170.e9)
 # RKF integration.
 drift = ROOT.Garfield.DriftLineRKF(sensor)
 drift.SetGainFluctuationsPolya(0., 20000.)
-# drift.EnableIonTail()
 
 driftView = ROOT.Garfield.ViewDrift()
 cD = ROOT.TCanvas('cD', '', 600, 600)

@@ -9,33 +9,21 @@
 
 #ifdef __GPUCOMPILE__
 
-#include "MediumGPU.h"
-#include "ComponentGPU.h"
 
 #else
 #include<array>
-#include <fstream>
 #include <functional>
 #include <mutex>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-#include "Component.hh"
-#include "Shaper.hh"
+#include "Garfield/Component.hh"
 #endif
 
 class TPad;
 
 namespace Garfield {
-
-// undefine everything first 
-//#ifdef __SENSORCLASS__
-//#undef __SENSORCLASS__
-//#undef __MEDIUMCLASS__
-//#undef __GPULABEL__
-//#undef __GPUCONST__
-//#endif
 
 #if defined(__GPUCONST__)
   #undef __GPUCONST__
@@ -43,16 +31,11 @@ namespace Garfield {
 
 // setup class names depending on if this is compiling the GPU static version or not
 #ifdef __GPUCOMPILE__
-//#define __SENSORCLASS__ SensorGPU
-//#define __MEDIUMCLASS__ MediumGPU
-#define __GPULABEL__ __device__
 #define __GPUCONST__ const
 #else
-//#define __SENSORCLASS__ Sensor
-//#define __MEDIUMCLASS__ Medium
-#define __GPULABEL__ 
 #define __GPUCONST__
 class SensorGPU;
+class Shaper;
 #endif
 
 /// %Sensor
@@ -96,7 +79,7 @@ class GARFIELD_CLASS_NAME(Sensor)
                      int& status);
 #endif
   /// Get the drift field at (x, y, z).
-  __GPULABEL__ 
+  __DEVICE__ 
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, GARFIELD_CLASS_NAME(Medium)*& medium, int& status) __GPUCONST__;
 
@@ -134,7 +117,7 @@ class GARFIELD_CLASS_NAME(Sensor)
                double& ymax, double& zmax);
 #endif
   /// Check if a point is inside the user area.
-  __GPULABEL__  
+  __DEVICE__  
   bool IsInArea(const double x, const double y, const double z) __GPUCONST__;
 
 #ifndef __GPUCOMPILE__

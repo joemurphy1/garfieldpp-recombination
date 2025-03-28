@@ -1,13 +1,10 @@
 import ROOT
 import Garfield
-import os
-
-path = os.getenv('GARFIELD_INSTALL')
 
 # Set up the gas.
 gas = ROOT.Garfield.MediumMagboltz()
 gas.LoadGasFile('ar_80_co2_20_2T.gas')
-gas.LoadIonMobility(path + '/share/Garfield/Data/IonMobility_Ar+_Ar.txt')
+gas.LoadIonMobility('IonMobility_Ar+_Ar.txt')
 gas.PrintGas()
 
 view = ROOT.Garfield.ViewMedium(gas)

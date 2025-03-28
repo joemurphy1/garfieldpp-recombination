@@ -5,6 +5,8 @@
 #error GPU HEADER INCLUDED WITHOUT SETTING __GPUCOMPILE__
 #endif
 
+#include "TetrahedralTreeGPU.h"
+#include "MediumGPU.h"
 #include "Garfield/Component.hh"
 
 

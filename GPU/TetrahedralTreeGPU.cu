@@ -1,4 +1,3 @@
-#define __GPUCOMPILE__
 #include "TetrahedralTree.cc"
 #undef __GPUCOMPILE__
 #include "Garfield/TetrahedralTree.hh"
@@ -36,10 +35,10 @@ namespace Garfield {
         }
 
         // copy other vars
-        tree_gpu->m_origin = Vec3GPU{m_origin.x, m_origin.y, m_origin.z};
-        tree_gpu->m_halfDimension = Vec3GPU{m_halfDimension.x, m_halfDimension.y, m_halfDimension.z};
-        tree_gpu->m_min = Vec3GPU{m_min.x, m_min.y, m_min.z};
-        tree_gpu->m_max = Vec3GPU{m_max.x, m_max.y, m_max.z};
+        tree_gpu->m_origin = Vec3{m_origin.x(), m_origin.y(), m_origin.z()};
+        tree_gpu->m_halfDimension = Vec3{m_halfDimension.x(), m_halfDimension.y(), m_halfDimension.z()};
+        tree_gpu->m_min = Vec3{m_min.x(), m_min.y(), m_min.z()};
+        tree_gpu->m_max = Vec3{m_max.x(), m_max.y(), m_max.z()};
 
         return alloc;
     }

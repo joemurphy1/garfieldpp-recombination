@@ -6,37 +6,26 @@
 #endif
 
 #ifdef __GPUCOMPILE__
-#include "GPUInterface.hh"
-#include "Garfield/MagboltzInterface.hh"
 
 #else
 
 #include <string>
 #include <vector>
 
-#include "FundamentalConstants.hh"
+#include "Garfield/FundamentalConstants.hh"
 #endif
 
-#include "GarfieldConstants.hh"
+#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/HelperMacros.hh"
 
 class TPad;
 
 namespace Garfield {
 
-// undefine everything first 
-//#ifdef __MEDIUMCLASS__
-//#undef __MEDIUMCLASS__
-#undef __GPULABEL__
-//#endif
 
 // setup class names depending on if this is compiling the GPU static version or not
 #ifdef __GPUCOMPILE__
-//#define __MEDIUMCLASS__ MediumGPU
-#define __GPULABEL__ __device__
 #else
-//#define __MEDIUMCLASS__ Medium
-#define __GPULABEL__
   class MediumGPU;
 #endif
 
@@ -58,7 +47,7 @@ class GARFIELD_CLASS_NAME(Medium) {
 #endif
 
   /// Return the id number of the class instance.
-  __GPULABEL__ int GetId() const { return m_id; }
+  __DEVICE__ int GetId() const { return m_id; }
 
 #ifndef __GPUCOMPILE__
   /// Get the medium name/identifier.
@@ -114,9 +103,9 @@ class GARFIELD_CLASS_NAME(Medium) {
 #endif
 
   /// Is charge carrier transport enabled in this medium?
-  __GPULABEL__ bool IsDriftable() const { return m_driftable; }
+  __DEVICE__ bool IsDriftable() const { return m_driftable; }
   /// Does the medium have electron scattering rates?
-  __GPULABEL__ bool IsMicroscopic() const { return m_microscopic; }
+  __DEVICE__ bool IsMicroscopic() const { return m_microscopic; }
 
 #ifndef __GPUCOMPILE__
   /// Is charge deposition by charged particles/photon enabled in this medium?
@@ -263,6 +252,7 @@ class GARFIELD_CLASS_NAME(Medium) {
   virtual bool IonVelocity(const double ex, const double ey, const double ez,
                            const double bx, const double by, const double bz,
                            double& vx, double& vy, double& vz);
+  bool HasIonVelocity() const { return !(m_iVel.empty() && m_iMob.empty()); }
   /// Longitudinal and transverse diffusion coefficients [cm1/2]
   virtual bool IonDiffusion(const double ex, const double ey, const double ez,
                             const double bx, const double by, const double bz,
@@ -857,7 +847,6 @@ class GARFIELD_CLASS_NAME(Medium) {
 
 #else
 
-#include "MediumGas.hh"
 #include "MediumMagboltz.hh"
 
 friend class MediumGas;

@@ -14,6 +14,7 @@
 #include "Garfield/Utilities.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Plotting.hh"
+#include "Garfield/Shaper.hh"
 
 
 using namespace Garfield;

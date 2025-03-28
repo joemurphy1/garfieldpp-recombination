@@ -1,7 +1,6 @@
 #include <cmath>
 #include <iostream>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Polygon.hh"
 #include "Garfield/SolidRidge.hh"
 

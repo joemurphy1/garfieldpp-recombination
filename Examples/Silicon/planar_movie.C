@@ -9,7 +9,6 @@
 #include "Garfield/ComponentUser.hh"
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumSilicon.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"

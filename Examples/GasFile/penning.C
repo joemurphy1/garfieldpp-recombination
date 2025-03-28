@@ -1,11 +1,8 @@
-#include <iostream>
-
 #include <TCanvas.h>
 #include <TROOT.h>
 #include <TApplication.h>
 
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Plotting.hh"
 
 using namespace Garfield;

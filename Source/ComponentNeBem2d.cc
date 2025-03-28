@@ -1,10 +1,8 @@
 #include <cmath>
-#include <fstream>
 #include <iostream>
 #include <cstdio>
 #include <algorithm>
 #include <numeric>
-#include <complex>
 #include<array>
 
 #include "Garfield/ComponentNeBem2d.hh"
@@ -13,6 +11,7 @@
 #include "Garfield/Polygon.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Medium.hh"
+#include "Garfield/Geometry.hh"
 
 
 namespace {

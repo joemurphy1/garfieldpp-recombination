@@ -7,13 +7,12 @@
 #include <array>
 
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/Medium.hh" //TODO remove this!
 
 namespace Garfield {
 
   class Sensor;
   class ViewDrift;
-
+  class Medium;
 /// Calculation of drift lines based on macroscopic transport coefficients using Runge-Kutta-Fehlberg integration.
 class DriftLineRKF {
  public:
@@ -67,8 +66,11 @@ class DriftLineRKF {
 
   /// Enable/disable simulation electron multiplication (default: on).
   void EnableAvalanche(const bool on = true) { m_doAvalanche = on; }
-  /// Enable/disable simulation of the ion tail (default: off).
-  void EnableIonTail(const bool on = true) { m_doIonTail = on; }
+  /// Enable/disable simulation of the ion tail (default: on).
+  void EnableIonTail(const bool on = true) { 
+     m_doIonTail = on; 
+     m_doIonTailAuto = false;
+  }
   /// Enable/disable simulation of the negative ion tail (default: off).
   void EnableNegativeIonTail(const bool on = true) { m_doNegativeIonTail = on; }
   /// Do not randomize the avalanche size.
@@ -202,7 +204,9 @@ class DriftLineRKF {
   double m_gain = -1.;
 
   // Flag whether to simulate the ion tail or not.
-  bool m_doIonTail = false;
+  bool m_doIonTail = true;
+  // Simulate the ion tail automatically if the medium has mobility data?
+  bool m_doIonTailAuto = true;
   // Flag whether to simulate the negative ion tail or not.
   bool m_doNegativeIonTail = false;
   // Avalanche size.

@@ -1,5 +1,4 @@
 #include "Garfield/QuadTree.hh"
-#include <iostream>
 
 namespace Garfield {
 

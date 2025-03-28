@@ -4,9 +4,10 @@
 #include <string>
 #include <vector>
 
-#include "Track.hh"
+#include "Garfield/Track.hh"
 
-namespace Garfield {
+namespace Garfield{
+  class Medium;
 
 /// [WIP] Ionization calculation based on MIP program (S. Biagi). 
 

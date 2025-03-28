@@ -1,4 +1,5 @@
 #include "GPUFunctions.h"
+#include<iostream>
 
 namespace Garfield {
 

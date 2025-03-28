@@ -1,11 +1,12 @@
 #include "GPUFunctions.h"
-#define __GPUCOMPILE__
 #include "ComponentGPU.h"
 #undef __GPUCOMPILE__
 #include "Garfield/ComponentAnsys123.hh"
 #include "Garfield/ComponentComsol.hh"
 #include "Garfield/ComponentElmer.hh"
 #include "Garfield/Medium.hh"
+
+#include<iostream>
 
 
 #define __GPUCOMPILE__

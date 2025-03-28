@@ -3,7 +3,6 @@
 #include <TH1F.h>
 
 #include <cstdlib>
-#include <fstream>
 #include <iostream>
 
 #include "Garfield/AvalancheMC.hh"
@@ -13,7 +12,6 @@
 #include "Garfield/Random.hh"
 #include "Garfield/RandomEngineRoot.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/ViewFEMesh.hh"
 #include "Garfield/ViewField.hh"
 
 using namespace Garfield;
@@ -42,8 +40,7 @@ int main(int argc, char* argv[]) {
   // Penning transfer is not supported by the GPU - so disable for comparisons
   // gas.EnablePenningTransfer(rPenning, lambdaPenning, "ar");
   // Load the ion mobilities.
-  const std::string path = std::getenv("GARFIELD_INSTALL");
-  gas.LoadIonMobility(path + "/share/Garfield/Data/IonMobility_Ar+_Ar.txt");
+  gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
 
   // Load the field map.
   ComponentAnsys123 fm;

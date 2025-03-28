@@ -1,7 +1,7 @@
 #ifndef G_COMPONENT_ANSYS121_H
 #define G_COMPONENT_ANSYS121_H
 
-#include "ComponentFieldMap.hh"
+#include "Garfield/ComponentFieldMap.hh"
 
 namespace Garfield {
 

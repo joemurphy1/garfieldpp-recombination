@@ -260,7 +260,7 @@ bool ComponentTcadBase<N>::Initialise(const std::string& gridfilename,
   if (N == 2) {
     nElementsByShape = {{0, 0}, {1, 0}, {2, 0}, {3, 0}};
   } else {
-    nElementsByShape = {{2, 0}, {5, 0}};
+    nElementsByShape = {{0, 0}, {2, 0}, {5, 0}};
   }
   unsigned int nElementsOther = 0;
 
@@ -1024,9 +1024,9 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
           }
           // Rearrange vertices such that point 0 is on the left.
           while (m_vertices[m_elements[j].vertex[0]][0] >
-                     m_vertices[m_elements[j].vertex[1]][0] ||
+                 m_vertices[m_elements[j].vertex[1]][0] ||
                  m_vertices[m_elements[j].vertex[0]][0] >
-                     m_vertices[m_elements[j].vertex[2]][0]) {
+                 m_vertices[m_elements[j].vertex[2]][0]) {
             const int tmp = m_elements[j].vertex[0];
             m_elements[j].vertex[0] = m_elements[j].vertex[1];
             m_elements[j].vertex[1] = m_elements[j].vertex[2];
@@ -1051,11 +1051,11 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
           }
           // Rearrange vertices such that point 0 is on the left.
           while (m_vertices[m_elements[j].vertex[0]][0] >
-                     m_vertices[m_elements[j].vertex[1]][0] ||
+                 m_vertices[m_elements[j].vertex[1]][0] ||
                  m_vertices[m_elements[j].vertex[0]][0] >
-                     m_vertices[m_elements[j].vertex[2]][0] ||
+                 m_vertices[m_elements[j].vertex[2]][0] ||
                  m_vertices[m_elements[j].vertex[0]][0] >
-                     m_vertices[m_elements[j].vertex[3]][0]) {
+                 m_vertices[m_elements[j].vertex[3]][0]) {
             const int tmp = m_elements[j].vertex[0];
             m_elements[j].vertex[0] = m_elements[j].vertex[1];
             m_elements[j].vertex[1] = m_elements[j].vertex[2];
@@ -1070,7 +1070,18 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
           return false;
         }
       } else if (N == 3) {
-        if (type == 2) {
+        if (type == 0) {
+          // Point
+          unsigned int p = 0;
+          gridfile >> p;
+          // Make sure the index is not out of range.
+          if (p >= nVertices) {
+            PrintError(m_className + "::LoadGrid", filename, iLine);
+            std::cerr << "    Vertex index out of range.\n";
+            return false;
+          }
+          m_elements[j].vertex[0] = p;
+        } else if (type == 2) {
           // Triangle
           int edge0, edge1, edge2;
           gridfile >> edge0 >> edge1 >> edge2;

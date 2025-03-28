@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
-#include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <numeric>
 #include <set>
@@ -17,6 +15,7 @@
 #include "neBEM.h"
 #include "neBEMInterface.h"
 #include "Garfield/Medium.hh"
+#include "Garfield/Geometry.hh"
 
 namespace {
 

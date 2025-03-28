@@ -45,13 +45,7 @@ int main(int argc, char * argv[]) {
   // Make a gas medium.
   MediumMagboltz gas;
   gas.LoadGasFile("ar_93_co2_7_3bar.gas");
-  auto installdir = std::getenv("GARFIELD_INSTALL");
-  if (!installdir) {
-    std::cerr << "GARFIELD_INSTALL variable not set.\n";
-    return 1;
-  }
-  const std::string path = installdir;
-  gas.LoadIonMobility(path + "/share/Garfield/Data/IonMobility_Ar+_Ar.txt");
+  gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
 
   // Make a component with analytic electric field.
   ComponentAnalyticField cmp;
@@ -118,7 +112,6 @@ int main(int argc, char * argv[]) {
     for (size_t k = 0; k < ne; ++k) {
       DriftLineRKF drift(&sensor);
       drift.SetGainFluctuationsPolya(0., 20000., true);
-      // drift.EnableIonTail();
       if (plotDrift) drift.EnablePlotting(&driftView);
       const double xe = electrons[k][0];
       const double ye = electrons[k][1];

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "Medium.hh"
+#include "Garfield/Medium.hh"
 
 namespace Garfield {
 /// %Solid crystalline silicon

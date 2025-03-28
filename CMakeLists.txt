@@ -2,34 +2,45 @@
 # Authors: Klaus Zenker, Pere Mato, Stefano Caiazza 
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
+project(Garfield VERSION 0.3 
+                 DESCRIPTION "Toolkit for the detailed simulation of particle detectors based on ionization measurement in gases and semiconductors"
+                 HOMEPAGE_URL "https://garfieldpp.web.cern.ch/garfieldpp/"
+                 LANGUAGES Fortran CXX)
+
+option(GARFIELD_WITH_CUDA "Build CUDA code if possible" OFF)
 option(GARFIELD_CUDA_USE_FLOAT "Use float with CUDA code (for some performances issues on some hardware) default:double" FALSE)
+option(GARFIELD_WITH_DEGRADE "Build Degrade." ON)
+option(GARFIELD_WITH_EXAMPLES "Build Garfield++ examples" ON)
+option(GARFIELD_WITH_DOC "Whether or not to create doxygen doc target." OFF)
+option(GARFIELD_WITH_TESTS "Build Garfield++ tests" ON)
+
 
 # Setting the default build type to be Release.
 # Otherwise the default mode is Debug.
-set(default_build_type "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE
-      "${default_build_type}"
-      CACHE STRING "Choose the type of build.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build.")
   # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel"
-                                               "RelWithDebInfo")
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-
-
-if (USEGPU)
-
-  ADD_DEFINITIONS(-DUSEGPU)
-  project(Garfield
-    LANGUAGES CXX Fortran CUDA
-    VERSION 0.3.0)
-  set(CMAKE_CUDA_ARCHITECTURES native)
-else()
-  project(
-    Garfield
-    LANGUAGES CXX Fortran
-    VERSION 0.3.0)
+if(GARFIELD_WITH_CUDA)
+  cmake_policy(PUSH)
+  include(CheckLanguage)
+  check_language(CUDA)
+  if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+    cmake_policy(SET CMP0104 NEW)
+    if(NOT CMAKE_CUDA_ARCHITECTURES STREQUAL "")
+      set(CMAKE_CUDA_ARCHITECTURES "native")
+    endif()
+    add_subdirectory(GPU)
+  else()
+    message(WARNING "No CUDA support !")
+    unset(GARFIELD_WITH_CUDA)
+    unset(GARFIELD_WITH_CUDA CACHE)
+    option(GARFIELD_WITH_CUDA "Build CUDA code if possible" OFF)
+  endif()
+  cmake_policy(POP)
 endif()
 
 #--- Set default installation prefix ------------------------------------------
@@ -62,8 +73,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
 
 #--- Use GNU-style hierarchy for installing build products --------------------
 include(GNUInstallDirs)
-include(BuildUtils)
-# force_color_output()
 
 #--- Dependencies -------------------------------------------------------------
 if(DEFINED ENV{ROOTSYS})
@@ -78,7 +87,7 @@ elseif(DEFINED ROOT_CMAKE_DIR)
 #       "Please consider to set ROOTSYS or use -DROOTSYS=..."
 #       "If still there is a problem, point to the directory which includes FindROOT.cmake using -DROOT_CMAKE_DIR=..."
 # )
-endif(DEFINED ENV{ROOTSYS})
+endif()
 
 find_package(ROOT 6.0 REQUIRED COMPONENTS Geom Gdml MathCore)
 #--- Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY) --
@@ -109,8 +118,7 @@ find_package(OpenMP)
 add_subdirectory(Magboltz)
 
 # Add Degrade
-option(WITH_DEGRADE "Build Degrade." ON)
-if(WITH_DEGRADE)
+if(GARFIELD_WITH_DEGRADE)
   add_subdirectory(Degrade)
 endif()
 
@@ -127,117 +135,89 @@ set_property(TARGET GarfieldRandom PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET GarfieldRandom PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 
 # Creating the main Garfield library
-add_library(Garfield SHARED "")
+add_library(Garfield SHARED 
+            Source/AvalancheGrid.cc
+            Source/AvalancheGridSpaceCharge.cc
+            Source/AvalancheMC.cc
+            Source/AvalancheMicroscopic.cc
+            Source/Component.cc
+            Source/ComponentAnalyticField.cc
+            Source/ComponentAnsys121.cc
+            Source/ComponentAnsys123.cc
+            Source/ComponentCST.cc
+            Source/ComponentComsol.cc
+            Source/ComponentConstant.cc
+            Source/ComponentElmer.cc
+            Source/ComponentElmer2d.cc
+            Source/ComponentFieldMap.cc
+            Source/ComponentGrid.cc
+            Source/ComponentNeBem2d.cc
+            Source/ComponentNeBem3d.cc
+            Source/ComponentNeBem3dMap.cc
+            Source/ComponentParallelPlate.cc
+            Source/ComponentTcad2d.cc
+            Source/ComponentTcad3d.cc
+            Source/ComponentTcadBase.cc
+            Source/ComponentUser.cc
+            Source/ComponentVoxel.cc
+            Source/DriftLineRKF.cc
+            Source/GeometryRoot.cc
+            Source/GeometrySimple.cc
+            Source/KDTree.cc
+            Source/Medium.cc
+            Source/MediumCdTe.cc
+            Source/MediumDiamond.cc
+            Source/MediumGaAs.cc
+            Source/MediumGaN.cc
+            Source/MediumGas.cc
+            Source/MediumMagboltz.cc
+            Source/MediumSilicon.cc
+            Source/NeBemInterface.cpp
+            Source/Numerics.cc
+            Source/OpticalData.cc
+            Source/PlottingEngine.cc
+            Source/Polygon.cc
+            Source/QuadTree.cc
+            Source/Sensor.cc
+            Source/Shaper.cc
+            Source/Solid.cc
+            Source/SolidBox.cc
+            Source/SolidExtrusion.cc
+            Source/SolidHole.cc
+            Source/SolidRidge.cc
+            Source/SolidSphere.cc
+            Source/SolidTube.cc
+            Source/SolidWire.cc
+            Source/TetrahedralTree.cc
+            Source/TGeoTet.cc
+            Source/Track.cc
+            Source/TrackBichsel.cc
+            Source/TrackElectron.cc
+            Source/TrackHeed.cc
+            Source/TrackPAI.cc
+            Source/TrackSimple.cc
+            Source/TrackSrim.cc
+            Source/TrackTrim.cc
+            Source/ViewBase.cc
+            Source/ViewCell.cc
+            Source/ViewDrift.cc
+            Source/ViewFEMesh.cc
+            Source/ViewField.cc
+            Source/ViewGeometry.cc
+            Source/ViewIsochrons.cc
+            Source/ViewMedium.cc
+            Source/ViewSignal.cc
+            $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Source/TrackDegrade.cc>
+)
+
 if(GARFIELD_CUDA_USE_FLOAT)
-target_compile_definitions(Garfield PRIVATE GARFIELD_CUDA_USE_FLOAT)
+  target_compile_definitions(Garfield PRIVATE GARFIELD_CUDA_USE_FLOAT)
 endif()
 target_link_libraries(Garfield PUBLIC GarfieldRandom)
-set_property(TARGET Garfield PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
+set_property(TARGET Garfield PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET Garfield PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET Garfield PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 add_library(Garfield::Garfield ALIAS Garfield)
-target_sources(
-  Garfield
-  PRIVATE Source/AvalancheGrid.cc
-          Source/AvalancheGridSpaceCharge.cc
-          Source/AvalancheMC.cc
-          Source/AvalancheMicroscopic.cc
-          Source/Component.cc
-          Source/ComponentAnalyticField.cc
-          Source/ComponentAnsys121.cc
-          Source/ComponentAnsys123.cc
-          Source/ComponentCST.cc
-          Source/ComponentComsol.cc
-          Source/ComponentConstant.cc
-          Source/ComponentElmer.cc
-          Source/ComponentElmer2d.cc
-          Source/ComponentFieldMap.cc
-          Source/ComponentGrid.cc
-          Source/ComponentNeBem2d.cc
-          Source/ComponentNeBem3d.cc
-          Source/ComponentNeBem3dMap.cc
-          Source/ComponentParallelPlate.cc
-          Source/ComponentTcad2d.cc
-          Source/ComponentTcad3d.cc
-          Source/ComponentTcadBase.cc
-          Source/ComponentUser.cc
-          Source/ComponentVoxel.cc
-          Source/DriftLineRKF.cc
-          Source/GeometryRoot.cc
-          Source/GeometrySimple.cc
-          Source/KDTree.cc
-          Source/Medium.cc
-          Source/MediumCdTe.cc
-          Source/MediumDiamond.cc
-          Source/MediumGaAs.cc
-          Source/MediumGaN.cc
-          Source/MediumGas.cc
-          Source/MediumMagboltz.cc
-          Source/MediumSilicon.cc
-          Source/NeBemInterface.cpp
-          Source/Numerics.cc
-          Source/OpticalData.cc
-          Source/PlottingEngine.cc
-          Source/Polygon.cc
-          Source/QuadTree.cc
-          Source/Sensor.cc
-          Source/Shaper.cc
-          Source/Solid.cc
-          Source/SolidBox.cc
-          Source/SolidExtrusion.cc
-          Source/SolidHole.cc
-          Source/SolidRidge.cc
-          Source/SolidSphere.cc
-          Source/SolidTube.cc
-          Source/SolidWire.cc
-          Source/TetrahedralTree.cc
-          Source/TGeoTet.cc
-          Source/Track.cc
-          Source/TrackBichsel.cc
-          Source/TrackElectron.cc
-          Source/TrackHeed.cc
-          Source/TrackPAI.cc
-          Source/TrackSimple.cc
-          Source/TrackSrim.cc
-          Source/TrackTrim.cc
-          Source/ViewBase.cc
-          Source/ViewCell.cc
-          Source/ViewDrift.cc
-          Source/ViewFEMesh.cc
-          Source/ViewField.cc
-          Source/ViewGeometry.cc
-          Source/ViewIsochrons.cc
-          Source/ViewMedium.cc
-          Source/ViewSignal.cc)
-if(WITH_DEGRADE)
-  target_sources(
-    Garfield
-    PRIVATE Source/TrackDegrade.cc
-  )
-endif()
-
-#--- Add GPU support if requested ---------------------------------------------
-if (USEGPU)
-  set(gpu_sources
-    GPU/AvalancheMicroscopicGPU.cu
-    GPU/ComponentGPU.cu
-    GPU/GPUFunctions.cu
-    GPU/MediumGPU.cu
-    GPU/RandomEngineGPU.cu
-    GPU/SensorGPU.cu
-    GPU/TetrahedralTreeGPU.cu)
-
-  # for cuda builds, need to remove -pedantic and -Wshadow to avoid *a lot* of errors/warnings
-  set_source_files_properties(${gpu_sources} PROPERTIES POSITION_INDEPENDENT_CODE ON
-    CXX_STANDARD 17
-    CMAKE_CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-    COMPILE_OPTIONS "-Wall;-Wextra;-Wfatal-errors;-Wno-missing-braces"
-    INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/Source)
-
-  target_sources( Garfield PRIVATE ${gpu_sources})
-  set_property(TARGET Garfield PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-endif()
 
 #--- Create ROOT dictionary ---------------------------------------------------
 if(ROOT_VERSION VERSION_LESS 6.17)
@@ -312,16 +292,14 @@ target_link_libraries(Garfield PUBLIC ROOT::Geom
                                       GSL::gsl
                                       Garfield::Heed
                                       Magboltz::Magboltz
-                                      $<$<BOOL:${WITH_DEGRADE}>:Degrade::Degrade>
+                                      $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Degrade::Degrade>
                                       $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
+                                      $<$<BOOL:${GARFIELD_WITH_CUDA}>:GarfieldGPU>
                                       )
-
-target_include_directories(
-  Garfield
-  PUBLIC $<INSTALL_INTERFACE:include>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>)
+target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU>)
+target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
+                                    PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
+                                    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
 
 #--- Install the header files -------------------------------------------------
 install(
@@ -340,14 +318,12 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Data
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Garfield/)
 
 #--- Target for Doxygen documentation -----------------------------------------
-option(WITH_DOC "Whether or not to create doxygen doc target." OFF)
-if(WITH_DOC)
+if(GARFIELD_WITH_DOC)
   add_subdirectory(Doc)
 endif()
 
 #--- Build the examples -------------------------------------------------------
-option(WITH_EXAMPLES "Build Garfield++ examples" ON)
-if(WITH_EXAMPLES)
+if(GARFIELD_WITH_EXAMPLES)
   message(
     STATUS
       "Garfield++ examples will be built. In order disable this option use -DWITH_EXAMPLES=OFF"
@@ -359,8 +335,7 @@ endif()
 
 add_subdirectory(CMake)
 
-option(WITH_TESTS "Build Garfield++ tests" ON)
-if(WITH_TESTS)
+if(GARFIELD_WITH_TESTS)
   include(CTest)
   add_subdirectory(Tests)
 endif()

@@ -9,7 +9,6 @@
 // 05 APR 2018
 
 #include <iostream>
-#include <fstream>
 #include <cmath>
 
 #include <TCanvas.h>

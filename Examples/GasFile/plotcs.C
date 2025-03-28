@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "TCanvas.h"
 
 #include "Garfield/MediumMagboltz.hh"

@@ -2,7 +2,6 @@
 #define G_UTILITIES_H
 
 #include <algorithm>
-#include <functional>
 #include <string>
 #include <sstream>
 #include <vector>

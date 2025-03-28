@@ -9,7 +9,6 @@
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/MultiProcessInterface.hh"
-#include "Garfield/Sensor.hh" //TODO remove this !
 
 class TH1;
 
@@ -18,6 +17,7 @@ namespace Garfield {
   class AvalancheMicroscopicGPU;
   class ViewDrift;
   class Medium;
+  class Sensor;
 
 /// Calculate electron drift lines and avalanches using microscopic tracking.
 
@@ -220,16 +220,8 @@ class AvalancheMicroscopic {
                            double& dx1, double& dy1, double& dz1,
                            int& status) const;
   size_t GetNumberOfElectronDriftLinePoints(const size_t i = 0) const;
-  size_t GetNumberOfHoleDriftLinePoints(const size_t i = 0) const;
   void GetElectronDriftLinePoint(double& x, double& y, double& z, double& t,
                                  const size_t ip, const size_t ie = 0) const;
-  void GetHoleDriftLinePoint(double& x, double& y, double& z, double& t,
-                             const size_t ip, const size_t ih = 0) const;
-
-  size_t GetNumberOfHoleEndpoints() const { return m_holes.size(); }
-  void GetHoleEndpoint(const size_t i, double& x0, double& y0, double& z0,
-                       double& t0, double& e0, double& x1, double& y1,
-                       double& z1, double& t1, double& e1, int& status) const;
 
   size_t GetNumberOfPhotons() const { return m_photons.size(); }
   // Status codes:
@@ -336,13 +328,13 @@ class AvalancheMicroscopic {
   std::vector<std::pair<Point, Particle> > m_stackStoreCPU;
   std::vector<Electron> m_stackStoreGPU;
 
-  struct photon {
+  struct Photon {
     int status;             ///< Status
     double energy;          ///< Energy
     double x0, y0, z0, t0;  ///< Starting point and time.
     double x1, y1, z1, t1;  ///< End point and time.
   };
-  std::vector<photon> m_photons;
+  std::vector<Photon> m_photons;
 
   /// Number of electrons produced
   int m_nElectrons = 0;

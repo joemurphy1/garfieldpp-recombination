@@ -1,7 +1,7 @@
 #ifndef G_COMPONENT_VOXEL_H
 #define G_COMPONENT_VOXEL_H
 
-#include "Component.hh"
+#include "Garfield/Component.hh"
 
 namespace Garfield {
 

@@ -2,9 +2,10 @@
 #define G_TRACK_BICHSEL_H
 
 #include <array>
+#include <vector>
 
-#include "FundamentalConstants.hh"
-#include "Track.hh"
+#include "Garfield/FundamentalConstants.hh"
+#include "Garfield/Track.hh"
 
 namespace Garfield {
 

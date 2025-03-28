@@ -13,7 +13,6 @@
 #include <vector>
 #include <array>
 #include <queue>
-#include <algorithm>
 
 namespace Garfield {
 

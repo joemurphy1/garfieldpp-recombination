@@ -8,34 +8,21 @@
 #include "Garfield/HelperMacros.hh"
 
 #ifdef __GPUCOMPILE__
-
-#include "TetrahedralTreeGPU.h"
-#include "MediumGPU.h"
-#include "GPUInterface.hh"
-
 #else
 
 #include <array>
 #include <string>
 #include<vector>
 
-#include "Geometry.hh"
-
 #endif
 
 namespace Garfield {
 
-// undefine everything first 
-//#ifdef __COMPONENTCLASS__
-//#undef __COMPONENTCLASS__
-//#endif
-
 // setup class names depending on if this is compiling the GPU static version or not
-#ifdef __GPUCOMPILE__
-//#define __COMPONENTCLASS__ ComponentGPU
-#else
-//#define __COMPONENTCLASS__ Component
+#if !defined(__GPUCOMPILE__)
   class ComponentGPU;
+  class Geometry;
+  class Medium;
 #endif
 
 /// Abstract base class for components.
