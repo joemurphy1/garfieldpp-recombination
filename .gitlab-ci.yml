@@ -1,7 +1,6 @@
 # Docker images all from:
 # https://github.com/root-project/root-docker
 
-
 build-gpu-nvidia:
   stage: build
   image: archlinux/archlinux:base-devel
@@ -110,3 +109,25 @@ build-fedora33:
 #  script:
 #    - ./runmytests.sh
 
+docs:
+  stage: deploy
+  pages: true 
+  needs: []
+  image: archlinux/archlinux:base-devel
+  before_script:
+    - pacman-key --init
+    - pacman -Syu --noconfirm
+    - pacman -S --noconfirm doxygen texlive-bin texlive-basic texlive-latex texlive-latexextra texlive-luatex texlive-fontutils texlive-latexrecommended texlive-fontsextra texlive-fontsrecommended texlive-plaingeneric otf-latinmodern-math otf-latin-modern cmake gcc-fortran root cern-vdt
+  script:
+    - cmake -E rm -rf ./build
+    - cmake -E make_directory ./build
+    - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D WITH_DOC:BOOL=TRUE
+    - cmake --build ./build --config Debug --parallel 5 --target all docs
+    - cmake --install ./build --config Debug --parallel 5
+    - cmake -E copy_directory ./install/share/doc/Garfield/pdf ./install/share/doc/Garfield/html
+    - cmake -E copy_directory ./install/share/doc/Garfield/html ./public
+  artifacts:
+    paths:
+    - ./public
+  only:
+    - master

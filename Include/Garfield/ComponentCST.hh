@@ -48,34 +48,33 @@ class ComponentCST : public ComponentFieldMap {
 
   double WeightingPotential(const double x, const double y, const double z,
                             const std::string& label) override;
-  /**
-   * Deprecated version of the interface based on text file import of field
-   * data.
-   * \param elist Information about the element material of mesh cells. Each
-   * line contains the element number
-   * and the material index:
+  /* FIX DOXYGEN ERROR ON PDF GENERATION
+   * Deprecated version of the interface based on text file import of field data.
+   * \param elist Information about the element material of mesh cells. Each line contains the element number and the material index:
    * \code
    * 0  3
    * ...
    * \endcode
+   *
    * \param nlist Information about the mesh like this:
    * \code
    *  xmax 136 ymax 79 zmax 425
-   *  x−l i n e s
+   *  x−lines
    * 0
    * 8 . 9 2 8 5 7 e −07
    * 1 . 7 8 5 7 1 e −06
    * ...
-   * y−l i n e s
+   * y−lines
    * 0
    * 8 . 9 2 8 5 7 e −07
    * 1 . 7 8 5 7 1 e −06
    * ...
-   * z−l i n e s
+   * z−lines
    * 0.0027
    * 0.00270674
    * ...
    * \endcode
+   *
    * \param mplist Information about material properties used in the simulation:
    * \code
    *  Materials 4
@@ -84,8 +83,8 @@ class ComponentCST : public ComponentFieldMap {
    *  Material 3 PERX 3 . 5 0 0 0 0 0
    *  Material 4 PERX 4 . 8 0 0 0 0 0
    *  \endcode
-   *  \param prnsol Information about the node potentials. Each line contains
-   * the node number and the potential:
+   *
+   * \param prnsol Information about the node potentials. Each line contains the node number and the potential:
    *  \code
    *  0 1000.00
    *  ...
@@ -98,10 +97,8 @@ class ComponentCST : public ComponentFieldMap {
    * Import of field data based on binary files.
    * See http://www.desy.de/~zenker/garfieldpp.html to get information about the
    * binary files export from CST.
-   * \param dataFile The binary file containing the field data exported from
-   * CST.
-   * \param unit The units used in the binary file. They are not necessarily
-   * equal to CST units.
+   * \param dataFile The binary file containing the field data exported from CST.
+   * \param unit The units used in the binary file. They are not necessarily equal to CST units.
    */
 
   bool Initialise(std::string dataFile, std::string unit = "cm");
@@ -112,8 +109,7 @@ class ComponentCST : public ComponentFieldMap {
    * the expected file format, which is similar to prnsol.
    * It also also handles binary files including the weighting field.
    * \param prnsol The input file (binary/text file)
-   * \param label The name of the weighting field to be added. If a weighting
-   * field with same name already exist it is replaced by the new one.
+   * \param label The name of the weighting field to be added. If a weighting field with same name already exist it is replaced by the new one.
    * \param isBinary Depending on the file type you use, adapt this switch.
    *
    */
