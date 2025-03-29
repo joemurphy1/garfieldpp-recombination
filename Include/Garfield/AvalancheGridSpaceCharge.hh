@@ -14,19 +14,19 @@ namespace Garfield {
 /// Propagates avalanches with the 2d (axi-symmetric) space-charge routine from
 /// Lippmann, Riegler (2004) in uniform background fields. Different options to
 /// calculate space-charge-fields can be chosen.
-class AvalancheGridSpaceCharge
-{
+class AvalancheGridSpaceCharge {
  public:
+  /// Default constructor
+  AvalancheGridSpaceCharge() : AvalancheGridSpaceCharge(nullptr) {}
   /// Constructor
-  AvalancheGridSpaceCharge();
-
+  AvalancheGridSpaceCharge(Sensor* sensor);
   /// Destructor
   ~AvalancheGridSpaceCharge() = default;
 
-  /// Reset grid i.e. ImportElectrons can be called again.
+  /// Reset the charges.
   void Reset();
 
-  /// Enable/disable debugging ( = log messages) (default off)
+  /// Enable/disable debugging (log messages) (default off)
   void EnableDebugging(const bool option = true) { m_bDebug = option; }
 
   /// Enable sticky anode (default on)
@@ -91,21 +91,21 @@ class AvalancheGridSpaceCharge
 
   /// Import electron (no ions) data from AvalancheMicroscopic class to
   /// axi-symmetric grid
-  void ImportElectronsFromAvalancheMicroscopic(AvalancheMicroscopic *avmc);
+  void AddElectrons(AvalancheMicroscopic *avmc);
 
   /// Set n electrons onto the grid
-  void AvalancheElectron(double x, double y, double z, double t = 0, int n = 1);
+  void AddElectron(double x, double y, double z, double t = 0, int n = 1);
 
-  /// (After calling AvalancheElectron) add more electrons on the same
-  /// transversal line (y-freedom)
-  void AddExtraAvalancheElectron(double y, int n = 1);
+  /// After calling AddElectron, add more electrons on the same
+  /// transversal line (y-freedom).
+  void AddExtraElectron(double y, int n = 1);
 
   /// Starts the simulation with the imported electrons for a time step dt
   /// (dt = -1 until there are no electrons left in the gap).
   void StartGridAvalanche(double dtime = -1);
 
   /// Returns the total positive charge in the gap's
-  long GetAvalancheSize() { return m_nTotPosIons; }
+  long GetAvalancheSize() const { return m_nTotPosIons; }
 
   /// Return current mean distance of the electrons on the grid
   double GetMeanDistance();
