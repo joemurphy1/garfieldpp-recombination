@@ -193,8 +193,7 @@ double Sensor::DelayedWeightingPotential(const double x, const double y,
   // Add up contributions from all components.
   for (const auto &electrode : m_electrodes) {
     if (electrode.label == label) {
-      v += std::max(
-          electrode.comp->DelayedWeightingPotential(x, y, z, t, label), 0.);
+      v += electrode.comp->DelayedWeightingPotential(x, y, z, t, label);
     }
   }
   return v;

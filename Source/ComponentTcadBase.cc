@@ -448,11 +448,15 @@ bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::SetWeightingPotential(const std::string& datfile1,
+bool ComponentTcadBase<N>::SetDynamicWeightingPotential(const std::string& datfile1,
                                                  const std::string& datfile2,
                                                  const double dv,
                                                  const double t,
                                                  const std::string& label) {
+  
+  if(t < Small) {
+    return SetWeightingField(datfile1, datfile2, dv, label);
+  }
 
   if (!m_ready) {
     std::cerr << m_className << "::SetWeightingPotential:\n"

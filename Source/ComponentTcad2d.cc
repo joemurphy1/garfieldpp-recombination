@@ -74,7 +74,7 @@ void ComponentTcad2d::DelayedWeightingPotentials(
     return;
   }
 
-  const size_t nt = m_wdtimes.size();
+  const size_t nt = m_dwtp[label].size();
   dwp.assign(nt, 0.);
 
   if (m_hasRangeZ && (zin < m_bbMin[2] || zin > m_bbMax[2])) {

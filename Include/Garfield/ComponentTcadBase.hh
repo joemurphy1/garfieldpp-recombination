@@ -45,15 +45,23 @@ class ComponentTcadBase : public Component {
   bool SetWeightingField(const std::string& datfile1,
                          const std::string& datfile2, const double dv,
                          const std::string& label);
+  
+  /** Import field maps defining the prompt weighting field and potential.
+   */
+  bool SetWeightingPotential(const std::string& datfile1,
+                             const std::string& datfile2, const double dv,
+                             const std::string& label){
+    return SetWeightingField(datfile1, datfile2, dv, label);
+  }
   /// Shift the maps of weighting field/potential for a given electrode
   /// with respect to the original mesh. If the electrode does not exist
   /// yet, a new one will be added to the list.
   bool SetWeightingFieldShift(const std::string& label, const double x,
                               const double y, const double z);
   /// Import time-dependent weighting potentials at t > 0.
-  bool SetWeightingPotential(const std::string& datfile1,
-                             const std::string& datfile2, const double dv,
-                             const double t, const std::string& label);
+  bool SetDynamicWeightingPotential(const std::string& datfile1,
+                                    const std::string& datfile2, const double dv,
+                                    const double t, const std::string& label);
   /// Import time-dependent weighting fields at t > 0.
   bool SetWeightingField(const std::string& datfile1,
                          const std::string& datfile2, const double dv,

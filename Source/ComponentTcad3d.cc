@@ -75,7 +75,7 @@ void ComponentTcad3d::DelayedWeightingPotentials(
     return;
   }
 
-  const size_t nt = m_wdtimes.size();
+  const size_t nt = m_dwtp[label].size();
   dwp.assign(nt, 0.);
 
   std::array<double, 3> x = {xin, yin, zin};
