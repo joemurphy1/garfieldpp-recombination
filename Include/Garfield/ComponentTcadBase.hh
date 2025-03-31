@@ -46,8 +46,7 @@ class ComponentTcadBase : public Component {
                          const std::string& datfile2, const double dv,
                          const std::string& label);
   
-  /** Import field maps defining the prompt weighting field and potential.
-   */
+  /// Import field maps defining the prompt weighting field and potential.
   bool SetWeightingPotential(const std::string& datfile1,
                              const std::string& datfile2, const double dv,
                              const std::string& label){
@@ -58,12 +57,12 @@ class ComponentTcadBase : public Component {
   /// yet, a new one will be added to the list.
   bool SetWeightingFieldShift(const std::string& label, const double x,
                               const double y, const double z);
-  /// Import time-dependent weighting potentials at t > 0.
+  /// Import time-dependent weighting potentials at t >= 0.
   bool SetDynamicWeightingPotential(const std::string& datfile1,
                                     const std::string& datfile2, const double dv,
                                     const double t, const std::string& label);
-  /// Import time-dependent weighting fields at t > 0.
-  bool SetWeightingField(const std::string& datfile1,
+  /// Import time-dependent weighting fields at t >= 0.
+  bool SetDynamicWeightingField(const std::string& datfile1,
                          const std::string& datfile2, const double dv,
                          const double t, const std::string& label);
 
