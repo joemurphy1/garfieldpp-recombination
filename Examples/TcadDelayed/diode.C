@@ -56,7 +56,7 @@ int main(int argc, char * argv[]) {
     std::stringstream decay_file;
     decay_file << data_file_prefix << "_decay_" << std::setfill('0') << std::setw(4) << tt << "_dut_des.dat";
 
-    diode.SetWeightingField(
+    diode.SetDynamicWeightingField(
       data_file_prefix + "_steady_dut_des.dat", decay_file.str(),
       1.0*150e-12*1e9, times[tt]*1e9, "N"
     );

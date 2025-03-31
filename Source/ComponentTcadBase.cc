@@ -459,12 +459,12 @@ bool ComponentTcadBase<N>::SetDynamicWeightingPotential(const std::string& datfi
   }
 
   if (!m_ready) {
-    std::cerr << m_className << "::SetWeightingPotential:\n"
+    std::cerr << m_className << "::SetDynamicWeightingPotential:\n"
               << "    Mesh is not available. Call Initialise first.\n";
     return false;
   }
   if (dv < Small) {
-    std::cerr << m_className << "::SetWeightingPotential:\n"
+    std::cerr << m_className << "::SetDynamicWeightingPotential:\n"
               << "    Voltage difference must be > 0.\n";
     return false;
   }
@@ -472,7 +472,7 @@ bool ComponentTcadBase<N>::SetDynamicWeightingPotential(const std::string& datfi
 
   // Check if the prompt weighting potential with the same label already exists.
   if (m_wpot.count(label) == 0 || m_wpot[label].empty()) {
-    std::cerr << m_className << "::SetWeightingPotential:\n"
+    std::cerr << m_className << "::SetDynamicWeightingPotential:\n"
               << "    Prompt component not present.\n"
               << "    Import the map for t = 0 first.\n";
     return false;
@@ -482,7 +482,7 @@ bool ComponentTcadBase<N>::SetDynamicWeightingPotential(const std::string& datfi
   std::vector<std::array<double, N> > wf1;
   std::vector<double> wp1;
   if (!LoadWeightingField(datfile1, wf1, wp1)) {
-    std::cerr << m_className << "::SetWeightingPotential:\n"
+    std::cerr << m_className << "::SetDynamicWeightingPotential:\n"
               << "    Could not import data from " << datfile1 << ".\n";
     return false;
   }
@@ -490,18 +490,18 @@ bool ComponentTcadBase<N>::SetDynamicWeightingPotential(const std::string& datfi
   std::vector<std::array<double, N> > wf2;
   std::vector<double> wp2;
   if (!LoadWeightingField(datfile2, wf2, wp2)) {
-    std::cerr << m_className << "::SetWeightingPotential:\n"
+    std::cerr << m_className << "::SetDynamicWeightingPotential:\n"
               << "    Could not import data from " << datfile2 << ".\n";
     return false;
   }
   const size_t nVertices = m_vertices.size();
   if (wp1.size() != nVertices || wp2.size() != nVertices) {
-    std::cerr << m_className << "::SetWeightingPotential:\n"
+    std::cerr << m_className << "::SetDynamicWeightingPotential:\n"
               << "    Could not load electrostatic potentials.\n";
     return false;
   }
   if (m_wpot[label].size() != nVertices) {
-    std::cerr << m_className << "::SetWeightingPotential:\n"
+    std::cerr << m_className << "::SetDynamicWeightingPotential:\n"
               << "    Prompt weighting potential not present.\n";
     return false;
   }
@@ -525,18 +525,21 @@ bool ComponentTcadBase<N>::SetDynamicWeightingPotential(const std::string& datfi
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
+bool ComponentTcadBase<N>::SetDynamicWeightingField(const std::string& datfile1,
                                              const std::string& datfile2,
                                              const double dv, const double t,
                                              const std::string& label) {
 
+  if(t < Small) {
+    return SetWeightingField(datfile1, datfile2, dv, label);
+  }
   if (!m_ready) {
-    std::cerr << m_className << "::SetWeightingField:\n"
+    std::cerr << m_className << "::SetDynamicWeightingField:\n"
               << "    Mesh is not available. Call Initialise first.\n";
     return false;
   }
   if (dv < Small) {
-    std::cerr << m_className << "::SetWeightingField:\n"
+    std::cerr << m_className << "::SetDynamicWeightingField:\n"
               << "    Voltage difference must be > 0.\n";
     return false;
   }
@@ -544,7 +547,7 @@ bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
 
   // Check if the prompt weighting potential with the same label already exists.
   if (m_wfield.count(label) == 0 || m_wfield[label].empty()) {
-    std::cerr << m_className << "::SetWeightingField:\n"
+    std::cerr << m_className << "::SetDynamicWeightingField:\n"
               << "    Prompt component not present.\n"
               << "    Import the map for t = 0 first.\n";
     return false;
@@ -554,7 +557,7 @@ bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
   std::vector<std::array<double, N> > wf1;
   std::vector<double> wp1;
   if (!LoadWeightingField(datfile1, wf1, wp1)) {
-    std::cerr << m_className << "::SetWeightingField:\n"
+    std::cerr << m_className << "::SetDynamicWeightingField:\n"
               << "    Could not import data from " << datfile1 << ".\n";
     return false;
   }
@@ -562,18 +565,18 @@ bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
   std::vector<std::array<double, N> > wf2;
   std::vector<double> wp2;
   if (!LoadWeightingField(datfile2, wf2, wp2)) {
-    std::cerr << m_className << "::SetWeightingField:\n"
+    std::cerr << m_className << "::SetDynamicWeightingField:\n"
               << "    Could not import data from " << datfile2 << ".\n";
     return false;
   }
   const size_t nVertices = m_vertices.size();
   if (wf1.size() != nVertices || wf2.size() != nVertices) {
-    std::cerr << m_className << "::SetWeightingField:\n"
+    std::cerr << m_className << "::SetDynamicWeightingField:\n"
               << "    Could not load electric field values.\n";
     return false;
   }
   if (m_wfield[label].size() != nVertices) {
-    std::cerr << m_className << "::SetWeightingField:\n"
+    std::cerr << m_className << "::SetDynamicWeightingField:\n"
               << "    Prompt weighting field not present.\n";
     return false;
   }
