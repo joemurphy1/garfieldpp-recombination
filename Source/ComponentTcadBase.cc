@@ -453,6 +453,10 @@ bool ComponentTcadBase<N>::SetDynamicWeightingPotential(const std::string& datfi
                                                  const double dv,
                                                  const double t,
                                                  const std::string& label) {
+  
+  if(t < Small) {
+    return SetWeightingField(datfile1, datfile2, dv, label);
+  }
 
   if (!m_ready) {
     std::cerr << m_className << "::SetWeightingPotential:\n"
