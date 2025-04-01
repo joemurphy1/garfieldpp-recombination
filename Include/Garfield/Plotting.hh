@@ -7,18 +7,12 @@ namespace Garfield {
 
 extern PlottingEngine plottingEngine;
 
-inline void SetDefaultStyle() { 
-  plottingEngine.SetDefaultStyle();
-}
+inline void SetDefaultStyle() { plottingEngine.SetDefaultStyle(); }
 
-inline void SetSerif() {
-  plottingEngine.SetSerif();
-}
+inline void SetSerif() { plottingEngine.SetSerif(); }
 
-inline void SetSansSerif() {
-  plottingEngine.SetSansSerif();
-}
+inline void SetSansSerif() { plottingEngine.SetSansSerif(); }
 
-}
+}  // namespace Garfield
 
 #endif

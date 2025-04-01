@@ -1,11 +1,11 @@
+#include <TApplication.h>
+#include <TCanvas.h>
+#include <TH1F.h>
+
 #include <iostream>
 
-#include <TApplication.h>
-#include <TH1F.h>
-#include <TCanvas.h>
-
-#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ComponentConstant.hh"
+#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackSrim.hh"
 #include "Garfield/ViewDrift.hh"
@@ -13,7 +13,6 @@
 using namespace Garfield;
 
 int main(int argc, char *argv[]) {
-
   // Application
   TApplication app("app", &argc, argv);
 
@@ -31,10 +30,10 @@ int main(int argc, char *argv[]) {
   cmp.SetMedium(&gas);
   cmp.SetElectricField(1000., 0., 0.);
   cmp.SetMagneticField(0., 0., 4.);
-  
+
   // Make a sensor.
   Sensor sensor(&cmp);
-  
+
   // Create a track class and connect it to a sensor.
   TrackSrim tr(&sensor);
   // Read SRIM output from file.

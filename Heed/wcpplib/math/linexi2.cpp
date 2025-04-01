@@ -1,5 +1,7 @@
-#include <cfloat>
 #include "wcpplib/math/linexi2.h"
+
+#include <cfloat>
+
 #include "wcpplib/util/FunNameStack.h"
 /*
 Copyright (c) 2000 I. B. Smirnov
@@ -28,7 +30,8 @@ linexi2_coor::linexi2_coor(const long fqlr, const double* fax)
 std::ostream& operator<<(std::ostream& file, const linexi2_coor& l) {
   Ifile << "linexi2_coor: qlr=" << l.qlr << " x_mean=" << l.x_mean
         << " Dx=" << l.Dx << '\n';
-  for (int n = 0; n < l.qlr; n++) Ifile << "n=" << n << " x=" << l.ax[n] << '\n';
+  for (int n = 0; n < l.qlr; n++)
+    Ifile << "n=" << n << " x=" << l.ax[n] << '\n';
   return file;
 }
 linexi2::linexi2(const linexi2_coor& lc, const double* fay)
@@ -72,4 +75,4 @@ std::ostream& operator<<(std::ostream& file, const linexi2& l) {
     Ifile << "n=" << n << " x=" << l.ax[n] << " y=" << l.ay[n] << '\n';
   return file;
 }
-}
+}  // namespace Heed

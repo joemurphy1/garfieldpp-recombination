@@ -1,16 +1,15 @@
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   // Gas mixture.
@@ -20,7 +19,7 @@ int main(int argc, char * argv[]) {
   constexpr double gap = 0.1;
   ComponentAnalyticField cmp;
   cmp.SetMedium(&gas);
-  cmp.AddPlaneY( 0.,    0.);
+  cmp.AddPlaneY(0., 0.);
   cmp.AddPlaneY(gap, 10.e3);
   cmp.AddCharge(0., 0.5 * gap, 0., 5.e6 * ElementaryCharge);
 
@@ -38,6 +37,4 @@ int main(int argc, char * argv[]) {
   cellView.Plot2d();
 
   app.Run(true);
-
 }
-

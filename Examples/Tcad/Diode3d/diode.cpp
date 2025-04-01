@@ -1,31 +1,30 @@
-#include <cmath>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 #include <TSystem.h>
 
-#include "Garfield/MediumSilicon.hh"
+#include <cmath>
+
+#include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentTcad3d.hh"
+#include "Garfield/FundamentalConstants.hh"
+#include "Garfield/MediumSilicon.hh"
+#include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
-#include "Garfield/AvalancheMC.hh"
 #include "Garfield/ViewDrift.hh"
 #include "Garfield/ViewField.hh"
-#include "Garfield/FundamentalConstants.hh"
-#include "Garfield/Random.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-  
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  
-  // Create a drift medium. 
+
+  // Create a drift medium.
   MediumSilicon si;
   // Set the temperature [K].
   si.SetTemperature(266.15);
-  
+
   // Make a component with three-dimensional TCAD field map.
   ComponentTcad3d cmp;
   // Load the mesh (.grd file) and electric field profile (.dat).
@@ -39,7 +38,7 @@ int main(int argc, char * argv[]) {
   // Make a sensor.
   Sensor sensor(&cmp);
   sensor.SetArea();
- 
+
   // Plot the electrostatic potential.
   ViewField fieldView(&sensor);
   fieldView.SetPlaneXZ();
@@ -73,7 +72,7 @@ int main(int argc, char * argv[]) {
       drift.DriftHole(electron.x, electron.y, electron.z, electron.t);
     }
   }
-  driftView.SetPlaneXZ();  
+  driftView.SetPlaneXZ();
   driftView.Plot2d(true);
   app.Run(true);
 }

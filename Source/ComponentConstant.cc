@@ -1,8 +1,9 @@
+#include "Garfield/ComponentConstant.hh"
+
+#include <array>
 #include <iostream>
 #include <numeric>
-#include<array>
 
-#include "Garfield/ComponentConstant.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 
@@ -10,11 +11,10 @@ namespace Garfield {
 
 ComponentConstant::ComponentConstant() : Component("Constant") {}
 
-Medium* ComponentConstant::GetMedium(const double x, const double y, 
+Medium* ComponentConstant::GetMedium(const double x, const double y,
                                      const double z) {
-
   if (!m_hasArea) return Component::GetMedium(x, y, z);
-  return InArea(x, y, z) ? m_medium : nullptr; 
+  return InArea(x, y, z) ? m_medium : nullptr;
 }
 
 void ComponentConstant::ElectricField(const double x, const double y,
@@ -57,8 +57,8 @@ void ComponentConstant::ElectricField(const double x, const double y,
   m = GetMedium(x, y, z);
   if (!m) {
     if (m_debug) {
-      std::cout << m_className << "::ElectricField: No medium at ("
-                << x << ", " << y << ", " << z << ").\n";
+      std::cout << m_className << "::ElectricField: No medium at (" << x << ", "
+                << y << ", " << z << ").\n";
     }
     status = -6;
     return;
@@ -106,10 +106,9 @@ bool ComponentConstant::GetVoltageRange(double& vmin, double& vmax) {
   return true;
 }
 
-bool ComponentConstant::GetBoundingBox(
-    double& xmin, double& ymin, double& zmin,
-    double& xmax, double& ymax, double& zmax) {
-
+bool ComponentConstant::GetBoundingBox(double& xmin, double& ymin, double& zmin,
+                                       double& xmax, double& ymax,
+                                       double& zmax) {
   if (!m_hasArea) {
     return Component::GetBoundingBox(xmin, ymin, zmin, xmax, ymax, zmax);
   }
@@ -131,8 +130,8 @@ void ComponentConstant::WeightingField(const double x, const double y,
   if (!m) {
     wx = wy = wz = 0.;
     if (m_debug) {
-      std::cout << m_className << "::WeightingField: No medium at ("
-                << x << ", " << y << ", " << z << ")\n";
+      std::cout << m_className << "::WeightingField: No medium at (" << x
+                << ", " << y << ", " << z << ")\n";
     }
     return;
   }
@@ -192,17 +191,16 @@ void ComponentConstant::SetWeightingPotential(const double x, const double y,
   m_hasWeightingPotential = true;
 }
 
-void ComponentConstant::SetArea(
-    const double xmin, const double ymin, const double zmin,
-    const double xmax, const double ymax, const double zmax) {
-
+void ComponentConstant::SetArea(const double xmin, const double ymin,
+                                const double zmin, const double xmax,
+                                const double ymax, const double zmax) {
   m_xmin[0] = std::min(xmin, xmax);
   m_xmin[1] = std::min(ymin, ymax);
   m_xmin[2] = std::min(zmin, zmax);
   m_xmax[0] = std::max(xmin, xmax);
   m_xmax[1] = std::max(ymin, ymax);
   m_xmax[2] = std::max(zmin, zmax);
-  m_hasArea = true; 
+  m_hasArea = true;
 }
 
 void ComponentConstant::UnsetArea() {
@@ -229,4 +227,4 @@ void ComponentConstant::UpdatePeriodicity() {
               << "    Periodicities are not supported.\n";
   }
 }
-}
+}  // namespace Garfield

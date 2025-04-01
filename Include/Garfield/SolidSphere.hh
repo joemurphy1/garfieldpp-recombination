@@ -36,7 +36,7 @@ class SolidSphere : public Solid {
   double GetOuterRadius() const override { return m_rMax; }
 
   /// When calculating surface panels, the sphere is approximated by a set of
-  /// parallelograms, much the same way maps are drawn ("UV sphere"). 
+  /// parallelograms, much the same way maps are drawn ("UV sphere").
   /// N specifies the number of meridians and also the number of parallels.
   void SetMeridians(const unsigned int n);
 
@@ -44,12 +44,12 @@ class SolidSphere : public Solid {
   void SetDiscretisationLevel(const double dis) override { m_dis = dis; }
   double GetDiscretisationLevel(const Panel& panel) override;
 
-  void Cut(const double x0, const double y0, const double z0,
-           const double xn, const double yn, const double zn,
+  void Cut(const double x0, const double y0, const double z0, const double xn,
+           const double yn, const double zn,
            std::vector<Panel>& panels) override;
 
  private:
-  /// Mutex. 
+  /// Mutex.
   std::mutex m_mutex;
 
   /// Inner and outer radii.
@@ -67,8 +67,8 @@ class SolidSphere : public Solid {
 
   void UpdatePanels();
   void MakePanels(const int vol, const double r, const bool out,
-                  std::vector<Panel>& panels) const; 
+                  std::vector<Panel>& panels) const;
 };
-}
+}  // namespace Garfield
 
 #endif

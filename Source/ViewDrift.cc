@@ -1,20 +1,20 @@
-#include <iostream>
-#include <cmath>
-#include <algorithm>
-#include <iterator>
-#include <limits>
-#include<array>
+#include "Garfield/ViewDrift.hh"
 
-#include <TGraph.h>
-#include <TPolyLine3D.h>
-#include <TPolyMarker3D.h>
 #include <TAxis.h>
 #include <TAxis3D.h>
+#include <TGraph.h>
 #include <TH1F.h>
+#include <TPolyLine3D.h>
+#include <TPolyMarker3D.h>
 #include <TView3D.h>
 #include <TVirtualViewer3D.h>
 
-#include "Garfield/ViewDrift.hh"
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <iostream>
+#include <iterator>
+#include <limits>
 
 namespace Garfield {
 
@@ -51,7 +51,7 @@ void ViewDrift::SetCollisionMarkerSize(const double size) {
   }
 }
 
-void ViewDrift::GetDriftLine(const size_t i, 
+void ViewDrift::GetDriftLine(const size_t i,
                              std::vector<std::array<float, 3> >& driftLine,
                              bool& electron) const {
   driftLine.clear();
@@ -65,8 +65,8 @@ void ViewDrift::GetDriftLine(const size_t i,
   }
 }
 
-size_t ViewDrift::NewDriftLine(const Particle particle, const size_t np, 
-    const float x0, const float y0, const float z0) {
+size_t ViewDrift::NewDriftLine(const Particle particle, const size_t np,
+                               const float x0, const float y0, const float z0) {
   std::lock_guard<std::mutex> guard(m_mutex);
   // Create a new drift line and add it to the list.
   std::array<float, 3> p = {x0, y0, z0};
@@ -77,7 +77,7 @@ size_t ViewDrift::NewDriftLine(const Particle particle, const size_t np,
   return m_driftLines.size() - 1;
 }
 
-void ViewDrift::AddPhoton(const float x0, const float y0, const float z0, 
+void ViewDrift::AddPhoton(const float x0, const float y0, const float z0,
                           const float x1, const float y1, const float z1) {
   std::lock_guard<std::mutex> guard(m_mutex);
   std::array<float, 3> p0 = {x0, y0, z0};
@@ -99,8 +99,7 @@ void ViewDrift::NewChargedParticleTrack(const size_t np, size_t& id,
 }
 
 void ViewDrift::SetDriftLinePoint(const size_t iL, const size_t iP,
-                                  const float x, const float y,
-                                  const float z) {
+                                  const float x, const float y, const float z) {
   std::lock_guard<std::mutex> guard(m_mutex);
   if (iL >= m_driftLines.size() || iP >= m_driftLines[iL].first.size()) {
     std::cerr << m_className << "::SetDriftLinePoint: Index out of range.\n";
@@ -109,8 +108,8 @@ void ViewDrift::SetDriftLinePoint(const size_t iL, const size_t iP,
   m_driftLines[iL].first[iP] = {x, y, z};
 }
 
-void ViewDrift::AddDriftLinePoint(const size_t iL, const float x,
-                                  const float y, const float z) {
+void ViewDrift::AddDriftLinePoint(const size_t iL, const float x, const float y,
+                                  const float z) {
   std::lock_guard<std::mutex> guard(m_mutex);
   if (iL >= m_driftLines.size()) {
     std::cerr << m_className << "::AddDriftLinePoint: Index out of range.\n";
@@ -120,8 +119,8 @@ void ViewDrift::AddDriftLinePoint(const size_t iL, const float x,
   m_driftLines[iL].first.push_back(std::move(p));
 }
 
-void ViewDrift::SetTrackPoint(const size_t iL, const size_t iP,
-                              const float x, const float y, const float z) {
+void ViewDrift::SetTrackPoint(const size_t iL, const size_t iP, const float x,
+                              const float y, const float z) {
   std::lock_guard<std::mutex> guard(m_mutex);
   if (iL >= m_tracks.size() || iP >= m_tracks[iL].size()) {
     std::cerr << m_className << "::SetTrackPoint: Index out of range.\n";
@@ -130,8 +129,8 @@ void ViewDrift::SetTrackPoint(const size_t iL, const size_t iP,
   m_tracks[iL][iP] = {x, y, z};
 }
 
-void ViewDrift::AddTrackPoint(const size_t iL, const float x,
-                              const float y, const float z) {
+void ViewDrift::AddTrackPoint(const size_t iL, const float x, const float y,
+                              const float z) {
   std::lock_guard<std::mutex> guard(m_mutex);
   if (iL >= m_tracks.size()) {
     std::cerr << m_className << "::AddTrackPoint: Index out of range.\n";
@@ -182,13 +181,12 @@ void ViewDrift::Plot2d(const bool axis, const bool snapshot) {
     }
   }
   if (axis) {
-    auto frame = pad->DrawFrame(m_xMinPlot, m_yMinPlot, 
-                                m_xMaxPlot, m_yMaxPlot);
+    auto frame = pad->DrawFrame(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot);
     frame->GetXaxis()->SetTitle(LabelX().c_str());
     frame->GetYaxis()->SetTitle(LabelY().c_str());
   } else if (!rangeSet) {
     SetRange(pad, m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot);
-  } 
+  }
   if (snapshot) {
     std::vector<std::array<float, 3> > electrons;
     std::vector<std::array<float, 3> > holes;
@@ -205,11 +203,11 @@ void ViewDrift::Plot2d(const bool axis, const bool snapshot) {
         ions.push_back(driftLine.first.back());
       }
     }
-    if(!m_eTop) DrawMarkers2d(electrons, m_colElectron, m_markerSizeCollision);
+    if (!m_eTop) DrawMarkers2d(electrons, m_colElectron, m_markerSizeCollision);
     DrawMarkers2d(holes, m_colHole, m_markerSizeCollision);
     DrawMarkers2d(negativeIons, m_colNegativeIon, m_markerSizeCollision);
     DrawMarkers2d(ions, m_colIon, m_markerSizeCollision);
-    if(m_eTop) DrawMarkers2d(electrons, m_colElectron, m_markerSizeCollision);
+    if (m_eTop) DrawMarkers2d(electrons, m_colElectron, m_markerSizeCollision);
   } else {
     for (const auto& driftLine : m_driftLines) {
       const short lw = 1;
@@ -242,25 +240,24 @@ void ViewDrift::Plot2d(const bool axis, const bool snapshot) {
     ToPlane(photon[1][0], photon[1][1], photon[1][2], xp1, yp1);
     std::vector<float> xgr = {xp0, xp1};
     std::vector<float> ygr = {yp0, yp1};
-    gr.DrawGraph(2, xgr.data(), ygr.data(), "Lsame"); 
+    gr.DrawGraph(2, xgr.data(), ygr.data(), "Lsame");
   }
 
   if (!m_exc.empty()) {
     DrawMarkers2d(m_exc, m_colExcitation, m_markerSizeCollision);
-  } 
+  }
   if (!m_ion.empty()) {
     DrawMarkers2d(m_ion, m_colIonisation, m_markerSizeCollision);
   }
   if (!m_att.empty()) {
     DrawMarkers2d(m_att, m_colAttachment, m_markerSizeCollision);
   }
- 
+
   gPad->Update();
 }
 
-void ViewDrift::DrawMarkers2d(
-    const std::vector<std::array<float, 3> >& points, const short col,
-    const double size) {
+void ViewDrift::DrawMarkers2d(const std::vector<std::array<float, 3> >& points,
+                              const short col, const double size) {
   if (points.empty()) return;
   TGraph gr;
   gr.SetMarkerColor(col);
@@ -273,15 +270,14 @@ void ViewDrift::DrawMarkers2d(
     float xp = 0., yp = 0.;
     ToPlane(p[0], p[1], p[2], xp, yp);
     xgr.push_back(xp);
-    ygr.push_back(yp); 
+    ygr.push_back(yp);
   }
   if (!xgr.empty()) {
     gr.DrawGraph(xgr.size(), xgr.data(), ygr.data(), "Psame");
   }
 }
 
-void ViewDrift::Plot3d(const bool axis, const bool ogl, 
-                       const bool snapshot) {
+void ViewDrift::Plot3d(const bool axis, const bool ogl, const bool snapshot) {
   auto pad = GetCanvas();
   pad->cd();
   pad->SetTitle("Drift lines");
@@ -291,8 +287,8 @@ void ViewDrift::Plot3d(const bool axis, const bool ogl,
                 << "     Could not determine the plot limits.\n";
     }
     auto view = TView::CreateView(1, 0, 0);
-    view->SetRange(m_xMinBox, m_yMinBox, m_zMinBox, 
-                   m_xMaxBox, m_yMaxBox, m_zMaxBox);
+    view->SetRange(m_xMinBox, m_yMinBox, m_zMinBox, m_xMaxBox, m_yMaxBox,
+                   m_zMaxBox);
     if (axis) view->ShowAxis();
     pad->SetView(view);
     if (ogl) pad->GetViewer3D("ogl");
@@ -310,17 +306,17 @@ void ViewDrift::Plot3d(const bool axis, const bool ogl,
         holes.push_back(driftLine.first.back());
       } else if (driftLine.second == Particle::NegativeIon) {
         negativeIons.push_back(driftLine.first.back());
-      } else if (!m_eTop){
+      } else if (!m_eTop) {
         ions.push_back(driftLine.first.back());
       } else {
         electrons.push_back(driftLine.first.back());
       }
     }
-    if(!m_eTop) DrawMarkers3d(electrons, m_colElectron, m_markerSizeCollision);
+    if (!m_eTop) DrawMarkers3d(electrons, m_colElectron, m_markerSizeCollision);
     DrawMarkers3d(holes, m_colHole, m_markerSizeCollision);
     DrawMarkers3d(negativeIons, m_colNegativeIon, m_markerSizeCollision);
     DrawMarkers3d(ions, m_colIon, m_markerSizeCollision);
-    if(m_eTop) DrawMarkers3d(electrons, m_colElectron, m_markerSizeCollision);
+    if (m_eTop) DrawMarkers3d(electrons, m_colElectron, m_markerSizeCollision);
   } else {
     for (const auto& driftLine : m_driftLines) {
       std::vector<float> points;
@@ -337,7 +333,7 @@ void ViewDrift::Plot3d(const bool axis, const bool ogl,
         pl.SetLineColor(m_colHole);
       } else if (driftLine.second == Particle::NegativeIon) {
         pl.SetLineColor(m_colNegativeIon);
-      } else if (!m_eTop){
+      } else if (!m_eTop) {
         pl.SetLineColor(m_colIon);
       } else {
         pl.SetLineColor(m_colElectron);
@@ -371,7 +367,7 @@ void ViewDrift::Plot3d(const bool axis, const bool ogl,
   }
   if (!m_att.empty()) {
     DrawMarkers3d(m_att, m_colAttachment, m_markerSizeCollision);
-  } 
+  }
   pad->Modified();
   pad->Update();
 
@@ -388,10 +384,8 @@ void ViewDrift::Plot3d(const bool axis, const bool ogl,
   }
 }
 
-void ViewDrift::DrawMarkers3d(
-    const std::vector<std::array<float, 3> >& points, const short col,
-    const double size) {
-
+void ViewDrift::DrawMarkers3d(const std::vector<std::array<float, 3> >& points,
+                              const short col, const double size) {
   const size_t nP = points.size();
   std::vector<float> xyz;
   for (size_t i = 0; i < nP; ++i) {
@@ -406,7 +400,6 @@ void ViewDrift::DrawMarkers3d(
 }
 
 bool ViewDrift::SetPlotLimits2d() {
-
   if (m_userPlotLimits) return true;
   double xmin = 0., ymin = 0., xmax = 0., ymax = 0.;
   if (m_userBox) {
@@ -427,7 +420,7 @@ bool ViewDrift::SetPlotLimits2d() {
   for (const auto& driftLine : m_driftLines) {
     for (const auto& p : driftLine.first) {
       for (unsigned int i = 0; i < 3; ++i) {
-        bbmin[i] = std::min(bbmin[i], double(p[i])); 
+        bbmin[i] = std::min(bbmin[i], double(p[i]));
         bbmax[i] = std::max(bbmax[i], double(p[i]));
       }
     }
@@ -435,17 +428,16 @@ bool ViewDrift::SetPlotLimits2d() {
   for (const auto& track : m_tracks) {
     for (const auto& p : track) {
       for (unsigned int i = 0; i < 3; ++i) {
-        bbmin[i] = std::min(bbmin[i], double(p[i])); 
+        bbmin[i] = std::min(bbmin[i], double(p[i]));
         bbmax[i] = std::max(bbmax[i], double(p[i]));
       }
     }
   }
-  return PlotLimits(bbmin, bbmax, 
-                    m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot);
+  return PlotLimits(bbmin, bbmax, m_xMinPlot, m_yMinPlot, m_xMaxPlot,
+                    m_yMaxPlot);
 }
 
 bool ViewDrift::SetPlotLimits3d() {
-
   if (m_userBox) return true;
   if (m_driftLines.empty() && m_tracks.empty()) return false;
   // Try to determine the limits from the drift lines themselves.
@@ -456,7 +448,7 @@ bool ViewDrift::SetPlotLimits3d() {
   for (const auto& driftLine : m_driftLines) {
     for (const auto& p : driftLine.first) {
       for (unsigned int i = 0; i < 3; ++i) {
-        bbmin[i] = std::min(bbmin[i], double(p[i])); 
+        bbmin[i] = std::min(bbmin[i], double(p[i]));
         bbmax[i] = std::max(bbmax[i], double(p[i]));
       }
     }
@@ -464,7 +456,7 @@ bool ViewDrift::SetPlotLimits3d() {
   for (const auto& track : m_tracks) {
     for (const auto& p : track) {
       for (unsigned int i = 0; i < 3; ++i) {
-        bbmin[i] = std::min(bbmin[i], double(p[i])); 
+        bbmin[i] = std::min(bbmin[i], double(p[i]));
         bbmax[i] = std::max(bbmax[i], double(p[i]));
       }
     }
@@ -492,4 +484,4 @@ bool ViewDrift::SetPlotLimits3d() {
   return true;
 }
 
-}
+}  // namespace Garfield

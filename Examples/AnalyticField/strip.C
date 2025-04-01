@@ -1,19 +1,18 @@
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 #include <TSystem.h>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
 
@@ -22,10 +21,10 @@ int main(int argc, char * argv[]) {
   // Define the cell layout.
   ComponentAnalyticField cmp;
   cmp.SetMedium(&gas);
-  cmp.AddPlaneX(-0.5,    0.);
-  cmp.AddPlaneX( 0.5, 1000.);
+  cmp.AddPlaneX(-0.5, 0.);
+  cmp.AddPlaneX(0.5, 1000.);
   // Add a readout strip along z.
-  cmp.AddStripOnPlaneX('z', -0.5, -0.1, 0.1, "strip"); 
+  cmp.AddStripOnPlaneX('z', -0.5, -0.1, 0.1, "strip");
   cmp.PrintCell();
 
   Sensor sensor(&cmp);
@@ -33,9 +32,9 @@ int main(int argc, char * argv[]) {
 
   // Plot the weighting potential.
   const double xmin = -0.6;
-  const double xmax =  0.6;
+  const double xmax = 0.6;
   const double ymin = -0.6;
-  const double ymax =  0.6;
+  const double ymax = 0.6;
   TCanvas canvas("c", "", 600, 600);
   ViewField fieldView(&sensor);
   fieldView.SetCanvas(&canvas);

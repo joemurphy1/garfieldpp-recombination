@@ -6,9 +6,9 @@
 #include <TMath.h>
 #include <math.h>
 #include <stdio.h>
-#include<array>
 
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -25,22 +25,23 @@ ComponentFieldMap::~ComponentFieldMap() {}
 
 void ComponentFieldMap::ElectricField(const double x, const double y,
                                       const double z, double& ex, double& ey,
-                                      double& ez, double& volt, Medium*& m, int& status) {
+                                      double& ez, double& volt, Medium*& m,
+                                      int& status) {
   ElectricField(x, y, z, ex, ey, ez, m, status);
-  #ifdef __GPUCOMPILE__
+#ifdef __GPUCOMPILE__
   // TODO TN GPU: Volt not supported on GPU
   volt = 0
-  #else
+#else
   volt = Potential(x, y, z, m_pot);
-  #endif
+#endif
 }
 #endif
 
 #ifdef __GPUCOMPILE__
 __device__ void ComponentGPU::ElectricField(const double xin, const double yin,
-                                            const double zin, double& ex, double& ey,
-                                            double& ez, MediumGPU*& m,
-                                            int& status)
+                                            const double zin, double& ex,
+                                            double& ey, double& ez,
+                                            MediumGPU*& m, int& status)
 #else
 void ComponentFieldMap::ElectricField(const double xin, const double yin,
                                       const double zin, double& ex, double& ey,
@@ -51,45 +52,45 @@ void ComponentFieldMap::ElectricField(const double xin, const double yin,
   ex = ey = ez = 0.;
   m = nullptr;
   int iel = -1;
-  #ifdef __GPUCOMPILE__
+#ifdef __GPUCOMPILE__
   status = Field(xin, yin, zin, ex, ey, ez, iel, m_pot, m_numpot);
-  #else
+#else
   status = Field(xin, yin, zin, ex, ey, ez, iel, m_pot);
-  #endif
+#endif
 
   if (status < 0 || iel < 0) {
     if (status == -10) {
-      #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
       PrintNotReady("ElectricField");
-      #endif
+#endif
     }
     return;
   }
 
   const auto& element = m_elements[iel];
-  // Drift medium?
-  #ifndef __GPUCOMPILE__
+// Drift medium?
+#ifndef __GPUCOMPILE__
   if (element.matmap >= m_materials.size()) {
-  #else
+#else
   if (element.matmap >= numMaterials) {
-  #endif
-    #ifndef __GPUCOMPILE__
+#endif
+#ifndef __GPUCOMPILE__
     if (m_debug) {
       std::cout << m_className << "::ElectricField: "
                 << "Out-of-range material number.\n";
     }
-    #endif
+#endif
     status = -5;
     return;
   }
 
   const auto& mat = m_materials[element.matmap];
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << "    Material " << element.matmap << ", drift flag "
               << mat.driftmedium << ".\n";
   }
-  #endif
+#endif
   m = mat.medium;
   status = -5;
   if (mat.driftmedium) {
@@ -99,20 +100,19 @@ void ComponentFieldMap::ElectricField(const double xin, const double yin,
 
 int
 #ifdef __GPUCOMPILE__
-__device__ ComponentGPU
+    __device__
+    ComponentGPU
 #else
 ComponentFieldMap
 #endif
-::Field(const double xin, const double yin,
-        const double zin, double& fx, double& fy,
-        double& fz, int& imap,
-        #ifdef __GPUCOMPILE__
-        const double* pot,
-        const int numPot
-        #else
+    ::Field(const double xin, const double yin, const double zin, double& fx,
+            double& fy, double& fz, int& imap,
+#ifdef __GPUCOMPILE__
+            const double* pot, const int numPot
+#else
         const std::vector<double>& pot
-        #endif
-        ) const {
+#endif
+    ) const {
   // Do not proceed if not properly initialised.
   if (!m_ready) return -10;
 
@@ -125,15 +125,15 @@ ComponentFieldMap
   double rcoordinate, rotation;
   MapCoordinates(x, y, z, xmirr, ymirr, zmirr, rcoordinate, rotation);
 
-  // TODO TN GPU: We don't support 2D field maps on the GPU yet and it will
-  // silently ignore these
-  #ifndef __GPUCOMPILE__
+// TODO TN GPU: We don't support 2D field maps on the GPU yet and it will
+// silently ignore these
+#ifndef __GPUCOMPILE__
   if (!m_is3d) {
     if (zin < m_minBoundingBox[2] || zin > m_maxBoundingBox[2]) {
       return -5;
     }
   }
-  #endif
+#endif
 
   // Find the element that contains this point.
   double t1 = 0., t2 = 0., t3 = 0., t4 = 0.;
@@ -141,28 +141,28 @@ ComponentFieldMap
   double det = 0.;
   imap = -1;
   if (m_elementType == ElementType::Serendipity) {
-    // TODO TN GPU: ElementType::Serendipity not supported on GPU
-    #ifndef __GPUCOMPILE__
+// TODO TN GPU: ElementType::Serendipity not supported on GPU
+#ifndef __GPUCOMPILE__
     imap = FindElement5(x, y, t1, t2, t3, t4, jac, det);
-    #endif
+#endif
   } else if (m_elementType == ElementType::CurvedTetrahedron) {
     imap = FindElement13(x, y, z, t1, t2, t3, t4, jac, det);
   }
   // Stop if the point is not in the mesh.
   if (imap < 0) {
-    #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
     if (m_debug) {
-      std::cerr << m_className << "::Field: (" 
-                << x << ", " << y << ", " << z << ") is not in the mesh.\n";
+      std::cerr << m_className << "::Field: (" << x << ", " << y << ", " << z
+                << ") is not in the mesh.\n";
     }
-    #endif
+#endif
     return -6;
   }
 
   const Element& element = m_elements[imap];
   if (m_elementType == ElementType::Serendipity) {
-    // TODO TN GPU: ElementType::Serendipity not supported (see above)
-    #ifndef __GPUCOMPILE__
+// TODO TN GPU: ElementType::Serendipity not supported (see above)
+#ifndef __GPUCOMPILE__
     if (m_degenerate[imap]) {
       std::array<double, 6> v;
       for (size_t i = 0; i < 6; ++i) v[i] = pot[element.emap[i]];
@@ -172,36 +172,35 @@ ComponentFieldMap
       for (size_t i = 0; i < 8; ++i) v[i] = pot[element.emap[i]];
       Field5(v, {t1, t2}, jac, det, fx, fy);
     }
-    #endif
+#endif
   } else if (m_elementType == ElementType::CurvedTetrahedron) {
-    #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
     std::array<double, 10> v;
     for (size_t i = 0; i < 10; ++i) v[i] = pot[element.emap[i]];
     Field13(v, {t1, t2, t3, t4}, jac, 4 * det, fx, fy, fz);
-    #else
+#else
     double v[10];
     // TODO TN GPU: Warning can not use size_t here for some reason...
     for (int i = 0; i < 10; ++i) v[i] = pot[element.emap[i]];
     // CUDA doesn't like passing initialiser list directly to method
     double t[4] = {t1, t2, t3, t4};
     Field13(v, t, jac, 4 * det, fx, fy, fz);
-    #endif
-    }
-  #ifndef __GPUCOMPILE__
+#endif
+  }
+#ifndef __GPUCOMPILE__
   if (m_debug) {
     PrintElement("Field", x, y, z, t1, t2, t3, t4, imap, pot);
   }
-  #endif
+#endif
   // Transform field to global coordinates.
   UnmapFields(fx, fy, fz, x, y, z, xmirr, ymirr, zmirr, rcoordinate, rotation);
   return 0;
 }
 
 #ifndef __GPUCOMPILE__
-double ComponentFieldMap::Potential(const double xin, const double yin, 
+double ComponentFieldMap::Potential(const double xin, const double yin,
                                     const double zin,
                                     const std::vector<double>& pot) const {
-
   // Do not proceed if not properly initialised.
   if (!m_ready) return 0.;
 
@@ -272,16 +271,17 @@ __device__ void ComponentGPU
   // Do not proceed if not properly initialised.
   if (!m_ready) return;
 
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   // Do not proceed if the requested weighting field does not exist.
   if (m_wpot.count(label) == 0) return;
-  if (m_wpot[label].empty()) return; 
+  if (m_wpot[label].empty()) return;
   int iel = -1;
   Field(xin, yin, zin, wx, wy, wz, iel, m_wpot[label]);
-  #else
+#else
   int iel = -1;
-  Field(xin, yin, zin, wx, wy, wz, iel, m_wpot[label], m_num_entries_wpot[label]);
-  #endif
+  Field(xin, yin, zin, wx, wy, wz, iel, m_wpot[label],
+        m_num_entries_wpot[label]);
+#endif
 }
 #ifndef __GPUCOMPILE__
 double ComponentFieldMap::WeightingPotential(double xin, double yin, double zin,
@@ -405,10 +405,11 @@ double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,
   return f0 * dp0 + f1 * dp1;
 }
 
-void ComponentFieldMap::DelayedWeightingPotentials(
-    const double xin, const double yin, const double zin,
-    const std::string& label0, std::vector<double>& dwp) {
-
+void ComponentFieldMap::DelayedWeightingPotentials(const double xin,
+                                                   const double yin,
+                                                   const double zin,
+                                                   const std::string& label0,
+                                                   std::vector<double>& dwp) {
   const size_t nt = m_wdtimes.size();
   dwp.assign(nt, 0.);
 
@@ -808,19 +809,21 @@ double ComponentFieldMap::GetElementVolume(const size_t i) const {
     const Node& n3 = m_nodes[element.emap[3]];
     // Uses formula V = |a (dot) b x c|/6
     // with a => "3", b => "1", c => "2" and origin "0"
-    const double vol = (n3.x - n0.x) * ((n1.y - n0.y) * (n2.z - n0.z) -
-                                        (n2.y - n0.y) * (n1.z - n0.z)) +
-                       (n3.y - n0.y) * ((n1.z - n0.z) * (n2.x - n0.x) -
-                                        (n2.z - n0.z) * (n1.x - n0.x)) +
-                       (n3.z - n0.z) * ((n1.x - n0.x) * (n2.y - n0.y) -
-                                        (n3.x - n0.x) * (n1.y - n0.y));
+    const double vol =
+        (n3.x - n0.x) *
+            ((n1.y - n0.y) * (n2.z - n0.z) - (n2.y - n0.y) * (n1.z - n0.z)) +
+        (n3.y - n0.y) *
+            ((n1.z - n0.z) * (n2.x - n0.x) - (n2.z - n0.z) * (n1.x - n0.x)) +
+        (n3.z - n0.z) *
+            ((n1.x - n0.x) * (n2.y - n0.y) - (n3.x - n0.x) * (n1.y - n0.y));
     return fabs(vol) / 6.;
   } else if (m_elementType == ElementType::Serendipity) {
     const Node& n0 = m_nodes[element.emap[0]];
     const Node& n1 = m_nodes[element.emap[1]];
     const Node& n2 = m_nodes[element.emap[2]];
     const Node& n3 = m_nodes[element.emap[3]];
-    const double surf = 0.5 *
+    const double surf =
+        0.5 *
         (fabs((n1.x - n0.x) * (n2.y - n0.y) - (n2.x - n0.x) * (n1.y - n0.y)) +
          fabs((n3.x - n0.x) * (n2.y - n0.y) - (n2.x - n0.x) * (n3.y - n0.y)));
     return surf;
@@ -878,7 +881,7 @@ void ComponentFieldMap::GetAspectRatio(const size_t i, double& dmin,
   }
 }
 
-bool ComponentFieldMap::GetElementNodes(const size_t i, 
+bool ComponentFieldMap::GetElementNodes(const size_t i,
                                         std::vector<size_t>& nodes) const {
   if (i >= m_elements.size()) {
     std::cerr << m_className << "::GetElementNodes: Index out of range.\n";
@@ -894,8 +897,8 @@ bool ComponentFieldMap::GetElementNodes(const size_t i,
   return true;
 }
 
-bool ComponentFieldMap::GetElementRegion(const size_t i, 
-                                         size_t& mat, bool& drift) const {
+bool ComponentFieldMap::GetElementRegion(const size_t i, size_t& mat,
+                                         bool& drift) const {
   if (i >= m_elements.size()) {
     std::cerr << m_className << "::GetElementRegion: Index out of range.\n";
     return false;
@@ -1022,46 +1025,44 @@ void ComponentFieldMap::Field13(const std::array<double, 10>& v,
                                 double jac[4][4], const double det, double& ex,
                                 double& ey, double& ez)
 #else
-__device__ void ComponentGPU::Field13(const double v[10],
-                                      const double t[4],
+__device__ void ComponentGPU::Field13(const double v[10], const double t[4],
                                       double jac[4][4], const double det,
                                       double& ex, double& ey, double& ez)
 #endif
 {
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   std::array<double, 4> g;
-  #else
+#else
   double g[4];
-  #endif
+#endif
   g[0] = v[0] * (t[0] - 0.25) + v[4] * t[1] + v[5] * t[2] + v[6] * t[3];
   g[1] = v[1] * (t[1] - 0.25) + v[4] * t[0] + v[7] * t[2] + v[8] * t[3];
   g[2] = v[2] * (t[2] - 0.25) + v[5] * t[0] + v[7] * t[1] + v[9] * t[3];
   g[3] = v[3] * (t[3] - 0.25) + v[6] * t[0] + v[8] * t[1] + v[9] * t[2];
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   std::array<double, 3> f = {0., 0., 0.};
   for (size_t j = 0; j < 4; ++j) {
     for (size_t i = 0; i < 3; ++i) {
       f[i] += g[j] * jac[j][i + 1];
     }
   }
-  #else
+#else
   double f[3] = {0., 0., 0.};
   for (int j = 0; j < 4; ++j) {
     for (int i = 0; i < 3; ++i) {
       f[i] += g[j] * jac[j][i + 1];
     }
   }
-  #endif
+#endif
   ex = -f[0] * det;
   ey = -f[1] * det;
   ez = -f[2] * det;
 }
 
 #ifndef __GPUCOMPILE__
-int ComponentFieldMap::FindElement5(const double x, const double y,
-                                    double& t1, double& t2,
-                                    double& t3, double& t4, double jac[4][4],
-                                    double& det) const {
+int ComponentFieldMap::FindElement5(const double x, const double y, double& t1,
+                                    double& t2, double& t3, double& t4,
+                                    double jac[4][4], double& det) const {
   // Backup
   double jacbak[4][4], detbak = 1.;
   double t1bak = 0., t2bak = 0., t3bak = 0., t4bak = 0.;
@@ -1075,12 +1076,13 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
   int imap = -1;
   std::array<double, 8> xn;
   std::array<double, 8> yn;
-  const auto& elements = (m_useTetrahedralTree && m_octree) ? 
-      m_octree->GetElementsInBlock(Vec3(x, y, 0.)) :
-      m_elementIndices;
+  const auto& elements = (m_useTetrahedralTree && m_octree)
+                             ? m_octree->GetElementsInBlock(Vec3(x, y, 0.))
+                             : m_elementIndices;
   for (const auto i : elements) {
-    if (x < m_bbMin[i][0] || y < m_bbMin[i][1] ||
-        x > m_bbMax[i][0] || y > m_bbMax[i][1]) continue;
+    if (x < m_bbMin[i][0] || y < m_bbMin[i][1] || x > m_bbMax[i][0] ||
+        y > m_bbMax[i][1])
+      continue;
     const Element& element = m_elements[i];
     if (m_degenerate[i]) {
       // Degenerate element
@@ -1140,8 +1142,8 @@ int ComponentFieldMap::FindElement5(const double x, const double y,
     }
     if (nfound > 1) {
       std::cout << m_className << "::FindElement5:\n"
-                << "    Found " << nfound << " elements matching point (" 
-                << x << ", " << y << ").\n";
+                << "    Found " << nfound << " elements matching point (" << x
+                << ", " << y << ").\n";
     }
     for (int j = 0; j < 4; ++j) {
       for (int k = 0; k < 4; ++k) jac[j][k] = jacbak[j][k];
@@ -1169,10 +1171,9 @@ __device__ int ComponentGPU
 #else
 int ComponentFieldMap
 #endif
-::FindElement13(
-    const double x, const double y, const double z, 
-    double& t1, double& t2, double& t3, double& t4, 
-    double jac[4][4], double& det) const {
+    ::FindElement13(const double x, const double y, const double z, double& t1,
+                    double& t2, double& t3, double& t4, double jac[4][4],
+                    double& det) const {
 
   // Backup
   double jacbak[4][4];
@@ -1187,22 +1188,23 @@ int ComponentFieldMap
   int nfound = 0;
   int imap = -1;
 
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   std::array<double, 10> xn;
   std::array<double, 10> yn;
   std::array<double, 10> zn;
-  #else
+#else
   cuda_t xn[10];
   cuda_t yn[10];
   cuda_t zn[10];
-  #endif
+#endif
 
-  #ifndef __GPUCOMPILE__
-  const auto& elements = (m_useTetrahedralTree && m_octree) ? 
-      m_octree->GetElementsInBlock(Vec3(x, y, z)) : m_elementIndices;
+#ifndef __GPUCOMPILE__
+  const auto& elements = (m_useTetrahedralTree && m_octree)
+                             ? m_octree->GetElementsInBlock(Vec3(x, y, z))
+                             : m_elementIndices;
   for (const auto i : elements) {
-  #else
-  const int *tetList{nullptr};
+#else
+  const int* tetList{nullptr};
   int tetListSize{0};
   if (m_useTetrahedralTree && m_octree) {
     m_octree->GetElementsInBlock(Vec3{x, y, z}, tetList, tetListSize);
@@ -1210,38 +1212,39 @@ int ComponentFieldMap
     tetList = m_elementIndices;
     tetListSize = numElements;
   }
-  for (int teti=0; teti<tetListSize; ++teti) {
+  for (int teti = 0; teti < tetListSize; ++teti) {
     int i = tetList[teti];
-  #endif
+#endif
     if (x < m_bbMin[i][0] || y < m_bbMin[i][1] || z < m_bbMin[i][2] ||
         x > m_bbMax[i][0] || y > m_bbMax[i][1] || z > m_bbMax[i][2]) {
       continue;
     }
-    #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
 
     for (size_t j = 0; j < 10; ++j) {
-    #else
+#else
     // TODO: GPU doesn't seem to like size_t, double check this
     for (int j = 0; j < 10; ++j) {
-    #endif
+#endif
       const auto& node = m_nodes[m_elements[i].emap[j]];
       xn[j] = node.x;
       yn[j] = node.y;
       zn[j] = node.z;
     }
-    if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn, m_w12[i]) != 0) {
+    if (Coordinates13(x, y, z, t1, t2, t3, t4, jac, det, xn, yn, zn,
+                      m_w12[i]) != 0) {
       continue;
     }
     if (t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1 || t3 < 0 || t3 > 1 || t4 < 0 ||
         t4 > 1) {
       continue;
     }
-    #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
     if (m_debug) {
       std::cout << m_className << "::FindElement13:\n"
                 << "    Found matching element " << i << ".\n";
     }
-    #endif
+#endif
     if (!m_checkMultipleElement) return i;
     ++nfound;
     imap = i;
@@ -1259,23 +1262,26 @@ int ComponentFieldMap
   // In checking mode, verify the tetrahedron/triangle count.
   if (m_checkMultipleElement) {
     if (nfound < 1) {
-      #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
       if (m_debug) {
         std::cout << m_className << "::FindElement13:\n"
-                  << "    No element matching point (" 
-                  << x << ", " << y << ", " << z << ") found.\n";
+                  << "    No element matching point (" << x << ", " << y << ", "
+                  << z << ") found.\n";
       }
-      #endif
+#endif
       return -1;
     }
     if (nfound > 1) {
-      #ifdef __GPUCOMPILE__
-      printf("ComponentGPU::FindElement13:\n    Found %d elements matching point (%f, %f, %f).\n", nfound, x, y, z);
-      #else
+#ifdef __GPUCOMPILE__
+      printf(
+          "ComponentGPU::FindElement13:\n    Found %d elements matching point "
+          "(%f, %f, %f).\n",
+          nfound, x, y, z);
+#else
       std::cerr << m_className << "::FindElement13:\n"
                 << "    Found << " << nfound << " elements matching point ("
                 << x << ", " << y << ", " << z << ").\n";
-      #endif
+#endif
     }
     for (int j = 0; j < 4; ++j) {
       for (int k = 0; k < 4; ++k) jac[j][k] = jacbak[j][k];
@@ -1288,13 +1294,13 @@ int ComponentFieldMap
     imap = imapbak;
     return imap;
   }
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << m_className << "::FindElement13:\n"
               << "    No element matching point (" << x << ", " << y << ", "
               << z << ") found.\n";
   }
-  #endif
+#endif
   return -1;
 }
 
@@ -1349,11 +1355,11 @@ int ComponentFieldMap::FindElementCube(const double x, const double y,
   return imap;
 }
 
-void ComponentFieldMap::Jacobian3(
-    const std::array<double, 8>& xn,
-    const std::array<double, 8>& yn,
-    const double u, const double v, const double w, 
-    double& det, double jac[4][4]) {
+void ComponentFieldMap::Jacobian3(const std::array<double, 8>& xn,
+                                  const std::array<double, 8>& yn,
+                                  const double u, const double v,
+                                  const double w, double& det,
+                                  double jac[4][4]) {
   // Shorthands.
   const double fouru = 4 * u;
   const double fourv = 4 * v;
@@ -1380,10 +1386,10 @@ void ComponentFieldMap::Jacobian3(
   jac[2][2] = j11 - j10;
 }
 
-void ComponentFieldMap::Jacobian5(
-    const std::array<double, 8>& xn,
-    const std::array<double, 8>& yn,
-    const double u, const double v, double& det, double jac[4][4]) {
+void ComponentFieldMap::Jacobian5(const std::array<double, 8>& xn,
+                                  const std::array<double, 8>& yn,
+                                  const double u, const double v, double& det,
+                                  double jac[4][4]) {
   // Jacobian terms
   const double g0 = (1 - u) * (2 * v + u);
   const double g1 = (1 + u) * (2 * v - u);
@@ -1392,12 +1398,10 @@ void ComponentFieldMap::Jacobian5(
   const double g4 = (1 - u) * (1 + u);
   const double g5 = (1 + u) * v;
   const double g7 = (1 - u) * v;
-  jac[0][0] =  0.25 * (g0 * yn[0] + g1 * yn[1] + g2 * yn[2] + g3 * yn[3]) -
-    0.5 * g4 * yn[4] - g5 * yn[5] +
-    0.5 * g4 * yn[6] - g7 * yn[7];
+  jac[0][0] = 0.25 * (g0 * yn[0] + g1 * yn[1] + g2 * yn[2] + g3 * yn[3]) -
+              0.5 * g4 * yn[4] - g5 * yn[5] + 0.5 * g4 * yn[6] - g7 * yn[7];
   jac[0][1] = -0.25 * (g0 * xn[0] + g1 * xn[1] + g2 * xn[2] + g3 * xn[3]) +
-    0.5 * g4 * xn[4] + g5 * xn[5] -
-    0.5 * g4 * xn[6] + g7 * xn[7];
+              0.5 * g4 * xn[4] + g5 * xn[5] - 0.5 * g4 * xn[6] + g7 * xn[7];
   const double h0 = (1 - v) * (2 * u + v);
   const double h1 = (1 - v) * (2 * u - v);
   const double h2 = (1 + v) * (2 * u + v);
@@ -1406,11 +1410,9 @@ void ComponentFieldMap::Jacobian5(
   const double h5 = (1 - v) * (1 + v);
   const double h6 = (1 + v) * u;
   jac[1][0] = -0.25 * (h0 * yn[0] + h1 * yn[1] + h2 * yn[2] + h3 * yn[3]) +
-    h4 * yn[4] - 0.5 * h5 * yn[5] + 
-    h6 * yn[6] + 0.5 * h5 * yn[7];
-  jac[1][1] =  0.25 * (h0 * xn[0] + h1 * xn[1] + h2 * xn[2] + h3 * xn[3]) -
-    h4 * xn[4] + 0.5 * h5 * xn[5] - 
-    h6 * xn[6] - 0.5 * h5 * xn[7];
+              h4 * yn[4] - 0.5 * h5 * yn[5] + h6 * yn[6] + 0.5 * h5 * yn[7];
+  jac[1][1] = 0.25 * (h0 * xn[0] + h1 * xn[1] + h2 * xn[2] + h3 * xn[3]) -
+              h4 * xn[4] + 0.5 * h5 * xn[5] - h6 * xn[6] - 0.5 * h5 * xn[7];
 
   // Determinant.
   det = jac[0][0] * jac[1][1] - jac[0][1] * jac[1][0];
@@ -1419,41 +1421,49 @@ void ComponentFieldMap::Jacobian5(
 
 #ifdef __GPUCOMPILE__
 __device__ void ComponentGPU::Jacobian13(
-  const double xn[10],
-  const double yn[10],
-  const double zn[10],
-  const double fourt0, const double fourt1, 
-  const double fourt2, const double fourt3, 
-  double& det, double jac[4][4])
+    const double xn[10], const double yn[10], const double zn[10],
+    const double fourt0, const double fourt1, const double fourt2,
+    const double fourt3, double& det, double jac[4][4])
 #else
-void ComponentFieldMap::Jacobian13(
-    const std::array<double, 10>& xn,
-    const std::array<double, 10>& yn,
-    const std::array<double, 10>& zn,
-    const double fourt0, const double fourt1, 
-    const double fourt2, const double fourt3, 
-    double& det, double jac[4][4])
+void ComponentFieldMap::Jacobian13(const std::array<double, 10>& xn,
+                                   const std::array<double, 10>& yn,
+                                   const std::array<double, 10>& zn,
+                                   const double fourt0, const double fourt1,
+                                   const double fourt2, const double fourt3,
+                                   double& det, double jac[4][4])
 #endif
 {
   const double fourt0m1 = fourt0 - 1.;
-  const double j10 = fourt0m1 * xn[0] + fourt1 * xn[4] + fourt2 * xn[5] + fourt3 * xn[6];
-  const double j20 = fourt0m1 * yn[0] + fourt1 * yn[4] + fourt2 * yn[5] + fourt3 * yn[6];
-  const double j30 = fourt0m1 * zn[0] + fourt1 * zn[4] + fourt2 * zn[5] + fourt3 * zn[6];
+  const double j10 =
+      fourt0m1 * xn[0] + fourt1 * xn[4] + fourt2 * xn[5] + fourt3 * xn[6];
+  const double j20 =
+      fourt0m1 * yn[0] + fourt1 * yn[4] + fourt2 * yn[5] + fourt3 * yn[6];
+  const double j30 =
+      fourt0m1 * zn[0] + fourt1 * zn[4] + fourt2 * zn[5] + fourt3 * zn[6];
 
   const double fourt1m1 = fourt1 - 1.;
-  const double j11 = fourt1m1 * xn[1] + fourt0 * xn[4] + fourt2 * xn[7] + fourt3 * xn[8];
-  const double j21 = fourt1m1 * yn[1] + fourt0 * yn[4] + fourt2 * yn[7] + fourt3 * yn[8];
-  const double j31 = fourt1m1 * zn[1] + fourt0 * zn[4] + fourt2 * zn[7] + fourt3 * zn[8];
+  const double j11 =
+      fourt1m1 * xn[1] + fourt0 * xn[4] + fourt2 * xn[7] + fourt3 * xn[8];
+  const double j21 =
+      fourt1m1 * yn[1] + fourt0 * yn[4] + fourt2 * yn[7] + fourt3 * yn[8];
+  const double j31 =
+      fourt1m1 * zn[1] + fourt0 * zn[4] + fourt2 * zn[7] + fourt3 * zn[8];
 
   const double fourt2m1 = fourt2 - 1.;
-  const double j12 = fourt2m1 * xn[2] + fourt0 * xn[5] + fourt1 * xn[7] + fourt3 * xn[9];
-  const double j22 = fourt2m1 * yn[2] + fourt0 * yn[5] + fourt1 * yn[7] + fourt3 * yn[9];
-  const double j32 = fourt2m1 * zn[2] + fourt0 * zn[5] + fourt1 * zn[7] + fourt3 * zn[9];
+  const double j12 =
+      fourt2m1 * xn[2] + fourt0 * xn[5] + fourt1 * xn[7] + fourt3 * xn[9];
+  const double j22 =
+      fourt2m1 * yn[2] + fourt0 * yn[5] + fourt1 * yn[7] + fourt3 * yn[9];
+  const double j32 =
+      fourt2m1 * zn[2] + fourt0 * zn[5] + fourt1 * zn[7] + fourt3 * zn[9];
 
   const double fourt3m1 = fourt3 - 1.;
-  const double j13 = fourt3m1 * xn[3] + fourt0 * xn[6] + fourt1 * xn[8] + fourt2 * xn[9];
-  const double j23 = fourt3m1 * yn[3] + fourt0 * yn[6] + fourt1 * yn[8] + fourt2 * yn[9];
-  const double j33 = fourt3m1 * zn[3] + fourt0 * zn[6] + fourt1 * zn[8] + fourt2 * zn[9];
+  const double j13 =
+      fourt3m1 * xn[3] + fourt0 * xn[6] + fourt1 * xn[8] + fourt2 * xn[9];
+  const double j23 =
+      fourt3m1 * yn[3] + fourt0 * yn[6] + fourt1 * yn[8] + fourt2 * yn[9];
+  const double j33 =
+      fourt3m1 * zn[3] + fourt0 * zn[6] + fourt1 * zn[8] + fourt2 * zn[9];
 
   const double a1 = j10 * j21 - j20 * j11;
   const double a2 = j10 * j22 - j20 * j12;
@@ -1478,25 +1488,26 @@ void ComponentFieldMap::Jacobian13(
 
   jac[0][0] = -a5 * j32 + a4 * j33 + a6 * j31;
   jac[0][1] = -d2123 * j32 + d2122 * j33 + d2223 * j31;
-  jac[0][2] =  d1113 * j32 - d1112 * j33 - d1213 * j31;
+  jac[0][2] = d1113 * j32 - d1112 * j33 - d1213 * j31;
   jac[0][3] = -d1113 * j22 + d1112 * j23 + d1213 * j21;
 
   jac[1][0] = -a6 * j30 + a3 * j32 - a2 * j33;
   jac[1][1] = -d2223 * j30 + d2023 * j32 - d2022 * j33;
-  jac[1][2] =  d1213 * j30 - d1013 * j32 + d1012 * j33;
+  jac[1][2] = d1213 * j30 - d1013 * j32 + d1012 * j33;
   jac[1][3] = -d1213 * j20 + d1013 * j22 - d1012 * j23;
 
-  jac[2][0] =  a5 * j30 + a1 * j33 - a3 * j31;
-  jac[2][1] =  d2123 * j30 + d2021 * j33 - d2023 * j31;
+  jac[2][0] = a5 * j30 + a1 * j33 - a3 * j31;
+  jac[2][1] = d2123 * j30 + d2021 * j33 - d2023 * j31;
   jac[2][2] = -d1113 * j30 - d1011 * j33 + d1013 * j31;
-  jac[2][3] =  d1113 * j20 + d1011 * j23 - d1013 * j21;
+  jac[2][3] = d1113 * j20 + d1011 * j23 - d1013 * j21;
 
   jac[3][0] = -a4 * j30 - a1 * j32 + a2 * j31;
   jac[3][1] = -d2122 * j30 - d2021 * j32 + d2022 * j31;
-  jac[3][2] =  d1112 * j30 + d1011 * j32 - d1012 * j31;
+  jac[3][2] = d1112 * j30 + d1011 * j32 - d1012 * j31;
   jac[3][3] = -d1112 * j20 - d1011 * j22 + d1012 * j21;
 
-  det = 1. / (jac[0][3] * j30 + jac[1][3] * j31 + jac[2][3] * j32 + jac[3][3] * j33);
+  det = 1. /
+        (jac[0][3] * j30 + jac[1][3] * j31 + jac[2][3] * j32 + jac[3][3] * j33);
 }
 
 #ifndef __GPUCOMPILE__
@@ -1585,12 +1596,11 @@ void ComponentFieldMap::JacobianCube(const Element& element, const double t1,
   }
 }
 
-int ComponentFieldMap::Coordinates3(
-    const double x, const double y,  
-    double& t1, double& t2, double& t3, double& t4, 
-    double jac[4][4], double& det,
-    const std::array<double, 8>& xn,
-    const std::array<double, 8>& yn) const {
+int ComponentFieldMap::Coordinates3(const double x, const double y, double& t1,
+                                    double& t2, double& t3, double& t4,
+                                    double jac[4][4], double& det,
+                                    const std::array<double, 8>& xn,
+                                    const std::array<double, 8>& yn) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates3:\n"
               << "   Point (" << x << ", " << y << ")\n";
@@ -1601,30 +1611,24 @@ int ComponentFieldMap::Coordinates3(
 
   // Make a first order approximation, using the linear triangle.
   const double d1 =
-      (xn[0] - xn[1]) * (yn[2] - yn[1]) - 
-      (xn[2] - xn[1]) * (yn[0] - yn[1]);
+      (xn[0] - xn[1]) * (yn[2] - yn[1]) - (xn[2] - xn[1]) * (yn[0] - yn[1]);
   const double d2 =
-      (xn[1] - xn[2]) * (yn[0] - yn[2]) - 
-      (xn[0] - xn[2]) * (yn[1] - yn[2]);
+      (xn[1] - xn[2]) * (yn[0] - yn[2]) - (xn[0] - xn[2]) * (yn[1] - yn[2]);
   const double d3 =
-      (xn[2] - xn[0]) * (yn[1] - yn[0]) - 
-      (xn[1] - xn[0]) * (yn[2] - yn[0]);
+      (xn[2] - xn[0]) * (yn[1] - yn[0]) - (xn[1] - xn[0]) * (yn[2] - yn[0]);
   if (d1 == 0 || d2 == 0 || d3 == 0) {
     std::cerr << m_className << "::Coordinates3:\n"
               << "    Calculation of linear coordinates failed; abandoned.\n";
     return 1;
   }
-  t1 = ((x - xn[1]) * (yn[2] - yn[1]) - 
-        (y - yn[1]) * (xn[2] - xn[1])) / d1;
-  t2 = ((x - xn[2]) * (yn[0] - yn[2]) - 
-        (y - yn[2]) * (xn[0] - xn[2])) / d2;
-  t3 = ((x - xn[0]) * (yn[1] - yn[0]) - 
-        (y - yn[0]) * (xn[1] - xn[0])) / d3;
+  t1 = ((x - xn[1]) * (yn[2] - yn[1]) - (y - yn[1]) * (xn[2] - xn[1])) / d1;
+  t2 = ((x - xn[2]) * (yn[0] - yn[2]) - (y - yn[2]) * (xn[0] - xn[2])) / d2;
+  t3 = ((x - xn[0]) * (yn[1] - yn[0]) - (y - yn[0]) * (xn[1] - xn[0])) / d3;
 
   // Start iterative refinement.
   double td1 = t1, td2 = t2, td3 = t3;
   bool converged = false;
-  std::array<double, 6> f; 
+  std::array<double, 6> f;
   for (int iter = 0; iter < 10; iter++) {
     if (m_debug) {
       std::cout << m_className << "::Coordinates3:\n";
@@ -1715,10 +1719,10 @@ int ComponentFieldMap::Coordinates3(
     const double f3 = 4 * td1 * td2;
     const double f4 = 4 * td1 * td3;
     const double f5 = 4 * td2 * td3;
-    const double xr =
-        xn[0] * f0 + xn[1] * f1 + xn[2] * f2 + xn[3] * f3 + xn[4] * f4 + xn[5] * f5;
-    const double yr =
-        yn[0] * f0 + yn[1] * f1 + yn[2] * f2 + yn[3] * f3 + yn[4] * f4 + yn[5] * f5;
+    const double xr = xn[0] * f0 + xn[1] * f1 + xn[2] * f2 + xn[3] * f3 +
+                      xn[4] * f4 + xn[5] * f5;
+    const double yr = yn[0] * f0 + yn[1] * f1 + yn[2] * f2 + yn[3] * f3 +
+                      yn[4] * f4 + yn[5] * f5;
     const double sr = td1 + td2 + td3;
     std::cout << m_className << "::Coordinates3:\n";
     std::cout << "    Position requested:     (" << x << ", " << y << ")\n";
@@ -1732,11 +1736,11 @@ int ComponentFieldMap::Coordinates3(
   return 0;
 }
 
-int ComponentFieldMap::Coordinates4(
-    const double x, const double y,
-    double& t1, double& t2, double& t3, double& t4, double& det,
-    const std::array<double, 8>& xn,
-    const std::array<double, 8>& yn) const {
+int ComponentFieldMap::Coordinates4(const double x, const double y, double& t1,
+                                    double& t2, double& t3, double& t4,
+                                    double& det,
+                                    const std::array<double, 8>& xn,
+                                    const std::array<double, 8>& yn) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates4:\n"
               << "   Point (" << x << ", " << y << ")\n";
@@ -1748,19 +1752,16 @@ int ComponentFieldMap::Coordinates4(
   t1 = t2 = t3 = t4 = 0.;
 
   // Compute determinant.
-  const double dd = 
-      -(xn[0] * yn[1]) + xn[3] * yn[2] - 
-        xn[2] * yn[3] + 
-      x * (-yn[0] + yn[1] - yn[2] + yn[3]) + 
-      xn[1] * (yn[0] - y) + 
-      (xn[0] + xn[2] - xn[3]) * y;
-  det = -(-((xn[0] - xn[3]) * (yn[1] - yn[2])) + 
-            (xn[1] - xn[2]) * (yn[0] - yn[3])) *
-         (2 * x * (-yn[0] + yn[1] + yn[2] - yn[3]) -
-          (xn[0] + xn[3]) * (yn[1] + yn[2] - 2 * y) +
-          xn[1] * (yn[0] + yn[3] - 2 * y) + 
-          xn[2] * (yn[0] + yn[3] - 2 * y)) +
-        dd * dd;
+  const double dd = -(xn[0] * yn[1]) + xn[3] * yn[2] - xn[2] * yn[3] +
+                    x * (-yn[0] + yn[1] - yn[2] + yn[3]) + xn[1] * (yn[0] - y) +
+                    (xn[0] + xn[2] - xn[3]) * y;
+  det =
+      -(-((xn[0] - xn[3]) * (yn[1] - yn[2])) +
+        (xn[1] - xn[2]) * (yn[0] - yn[3])) *
+          (2 * x * (-yn[0] + yn[1] + yn[2] - yn[3]) -
+           (xn[0] + xn[3]) * (yn[1] + yn[2] - 2 * y) +
+           xn[1] * (yn[0] + yn[3] - 2 * y) + xn[2] * (yn[0] + yn[3] - 2 * y)) +
+      dd * dd;
 
   // Check that the determinant is non-negative
   // (this can happen if the point is out of range).
@@ -1774,16 +1775,16 @@ int ComponentFieldMap::Coordinates4(
   }
 
   // Vector products for evaluation of T1.
-  double prod = ((xn[2] - xn[3]) * (yn[0] - yn[1]) - 
-                 (xn[0] - xn[1]) * (yn[2] - yn[3]));
+  double prod =
+      ((xn[2] - xn[3]) * (yn[0] - yn[1]) - (xn[0] - xn[1]) * (yn[2] - yn[3]));
   if (prod * prod > 1.0e-12 *
-      ((xn[0] - xn[1]) * (xn[0] - xn[1]) + 
-       (yn[0] - yn[1]) * (yn[0] - yn[1])) *
-      ((xn[2] - xn[3]) * (xn[2] - xn[3]) + 
-       (yn[2] - yn[3]) * (yn[2] - yn[3]))) {
-    t1 = (-(xn[3] * yn[0]) + x * yn[0] + xn[2] * yn[1] - x * yn[1] - xn[1] * yn[2] +
-          x * yn[2] + xn[0] * yn[3] - x * yn[3] - xn[0] * y + xn[1] * y - xn[2] * y +
-          xn[3] * y + sqrt(det)) /
+                        ((xn[0] - xn[1]) * (xn[0] - xn[1]) +
+                         (yn[0] - yn[1]) * (yn[0] - yn[1])) *
+                        ((xn[2] - xn[3]) * (xn[2] - xn[3]) +
+                         (yn[2] - yn[3]) * (yn[2] - yn[3]))) {
+    t1 = (-(xn[3] * yn[0]) + x * yn[0] + xn[2] * yn[1] - x * yn[1] -
+          xn[1] * yn[2] + x * yn[2] + xn[0] * yn[3] - x * yn[3] - xn[0] * y +
+          xn[1] * y - xn[2] * y + xn[3] * y + sqrt(det)) /
          prod;
   } else {
     double xp = yn[0] - yn[1];
@@ -1819,16 +1820,16 @@ int ComponentFieldMap::Coordinates4(
   }
 
   // Vector products for evaluation of T2.
-  prod = ((xn[0] - xn[3]) * (yn[1] - yn[2]) - 
-          (xn[1] - xn[2]) * (yn[0] - yn[3]));
+  prod =
+      ((xn[0] - xn[3]) * (yn[1] - yn[2]) - (xn[1] - xn[2]) * (yn[0] - yn[3]));
   if (prod * prod > 1.0e-12 *
-      ((xn[0] - xn[3]) * (xn[0] - xn[3]) + 
-       (yn[0] - yn[3]) * (yn[0] - yn[3])) *
-      ((xn[1] - xn[2]) * (xn[1] - xn[2]) + 
-       (yn[1] - yn[2]) * (yn[1] - yn[2]))) {
-    t2 = (-(xn[1] * yn[0]) + x * yn[0] + xn[0] * yn[1] - x * yn[1] - xn[3] * yn[2] +
-          x * yn[2] + xn[2] * yn[3] - x * yn[3] - xn[0] * y + xn[1] * y - xn[2] * y +
-          xn[3] * y - sqrt(det)) /
+                        ((xn[0] - xn[3]) * (xn[0] - xn[3]) +
+                         (yn[0] - yn[3]) * (yn[0] - yn[3])) *
+                        ((xn[1] - xn[2]) * (xn[1] - xn[2]) +
+                         (yn[1] - yn[2]) * (yn[1] - yn[2]))) {
+    t2 = (-(xn[1] * yn[0]) + x * yn[0] + xn[0] * yn[1] - x * yn[1] -
+          xn[3] * yn[2] + x * yn[2] + xn[2] * yn[3] - x * yn[3] - xn[0] * y +
+          xn[1] * y - xn[2] * y + xn[3] * y - sqrt(det)) /
          prod;
   } else {
     double xp = yn[0] - yn[3];
@@ -1884,11 +1885,11 @@ int ComponentFieldMap::Coordinates4(
   return ifail;
 }
 
-int ComponentFieldMap::Coordinates5(const double x, const double y,
-    double& t1, double& t2, double& t3, double& t4, 
-    double jac[4][4], double& det, 
-    const std::array<double, 8>& xn,
-    const std::array<double, 8>& yn) const {
+int ComponentFieldMap::Coordinates5(const double x, const double y, double& t1,
+                                    double& t2, double& t3, double& t4,
+                                    double jac[4][4], double& det,
+                                    const std::array<double, 8>& xn,
+                                    const std::array<double, 8>& yn) const {
   // Debugging
   if (m_debug) {
     std::cout << m_className << "::Coordinates5:\n"
@@ -2025,53 +2026,51 @@ int ComponentFieldMap::Coordinates5(const double x, const double y,
 }
 
 std::array<std::array<double, 3>, 4> ComponentFieldMap::Weights12(
-    const std::array<double, 10>& xn,
-    const std::array<double, 10>& yn,
+    const std::array<double, 10>& xn, const std::array<double, 10>& yn,
     const std::array<double, 10>& zn) {
-
   std::array<std::array<double, 3>, 4> w;
-  w[0][0] = (yn[2] - yn[1]) * (zn[3] - zn[1]) -
-            (yn[3] - yn[1]) * (zn[2] - zn[1]);
-  w[0][1] = (zn[2] - zn[1]) * (xn[3] - xn[1]) -
-            (zn[3] - zn[1]) * (xn[2] - xn[1]);
-  w[0][2] = (xn[2] - xn[1]) * (yn[3] - yn[1]) - 
-            (xn[3] - xn[1]) * (yn[2] - yn[1]);
-  const double s0 = 1. / ((xn[0] - xn[1]) * w[0][0] + 
-                          (yn[0] - yn[1]) * w[0][1] + 
-                          (zn[0] - zn[1]) * w[0][2]);
+  w[0][0] =
+      (yn[2] - yn[1]) * (zn[3] - zn[1]) - (yn[3] - yn[1]) * (zn[2] - zn[1]);
+  w[0][1] =
+      (zn[2] - zn[1]) * (xn[3] - xn[1]) - (zn[3] - zn[1]) * (xn[2] - xn[1]);
+  w[0][2] =
+      (xn[2] - xn[1]) * (yn[3] - yn[1]) - (xn[3] - xn[1]) * (yn[2] - yn[1]);
+  const double s0 =
+      1. / ((xn[0] - xn[1]) * w[0][0] + (yn[0] - yn[1]) * w[0][1] +
+            (zn[0] - zn[1]) * w[0][2]);
   for (size_t i = 0; i < 3; ++i) w[0][i] *= s0;
 
-  w[1][0] = (yn[0] - yn[2]) * (zn[3] - zn[2]) -
-            (yn[3] - yn[2]) * (zn[0] - zn[2]);
-  w[1][1] = (zn[0] - zn[2]) * (xn[3] - xn[2]) -
-            (zn[3] - zn[2]) * (xn[0] - xn[2]);
-  w[1][2] = (xn[0] - xn[2]) * (yn[3] - yn[2]) - 
-            (xn[3] - xn[2]) * (yn[0] - yn[2]);
-  const double s1 = 1. / ((xn[1] - xn[2]) * w[1][0] + 
-                          (yn[1] - yn[2]) * w[1][1] + 
-                          (zn[1] - zn[2]) * w[1][2]);
+  w[1][0] =
+      (yn[0] - yn[2]) * (zn[3] - zn[2]) - (yn[3] - yn[2]) * (zn[0] - zn[2]);
+  w[1][1] =
+      (zn[0] - zn[2]) * (xn[3] - xn[2]) - (zn[3] - zn[2]) * (xn[0] - xn[2]);
+  w[1][2] =
+      (xn[0] - xn[2]) * (yn[3] - yn[2]) - (xn[3] - xn[2]) * (yn[0] - yn[2]);
+  const double s1 =
+      1. / ((xn[1] - xn[2]) * w[1][0] + (yn[1] - yn[2]) * w[1][1] +
+            (zn[1] - zn[2]) * w[1][2]);
   for (size_t i = 0; i < 3; ++i) w[1][i] *= s1;
 
-  w[2][0] = (yn[0] - yn[3]) * (zn[1] - zn[3]) -
-            (yn[1] - yn[3]) * (zn[0] - zn[3]);
-  w[2][1] = (zn[0] - zn[3]) * (xn[1] - xn[3]) - 
-            (zn[1] - zn[3]) * (xn[0] - xn[3]);
-  w[2][2] = (xn[0] - xn[3]) * (yn[1] - yn[3]) - 
-            (xn[1] - xn[3]) * (yn[0] - yn[3]);
-  const double s2 = 1. / ((xn[2] - xn[3]) * w[2][0] + 
-                          (yn[2] - yn[3]) * w[2][1] + 
-                          (zn[2] - zn[3]) * w[2][2]);
+  w[2][0] =
+      (yn[0] - yn[3]) * (zn[1] - zn[3]) - (yn[1] - yn[3]) * (zn[0] - zn[3]);
+  w[2][1] =
+      (zn[0] - zn[3]) * (xn[1] - xn[3]) - (zn[1] - zn[3]) * (xn[0] - xn[3]);
+  w[2][2] =
+      (xn[0] - xn[3]) * (yn[1] - yn[3]) - (xn[1] - xn[3]) * (yn[0] - yn[3]);
+  const double s2 =
+      1. / ((xn[2] - xn[3]) * w[2][0] + (yn[2] - yn[3]) * w[2][1] +
+            (zn[2] - zn[3]) * w[2][2]);
   for (size_t i = 0; i < 3; ++i) w[2][i] *= s2;
 
-  w[3][0] = (yn[2] - yn[0]) * (zn[1] - zn[0]) -
-            (yn[1] - yn[0]) * (zn[2] - zn[0]);
-  w[3][1] = (zn[2] - zn[0]) * (xn[1] - xn[0]) - 
-            (zn[1] - zn[0]) * (xn[2] - xn[0]);
-  w[3][2] = (xn[2] - xn[0]) * (yn[1] - yn[0]) - 
-            (xn[1] - xn[0]) * (yn[2] - yn[0]);
-  const double s3 = 1. / ((xn[3] - xn[0]) * w[3][0] + 
-                          (yn[3] - yn[0]) * w[3][1] + 
-                          (zn[3] - zn[0]) * w[3][2]);
+  w[3][0] =
+      (yn[2] - yn[0]) * (zn[1] - zn[0]) - (yn[1] - yn[0]) * (zn[2] - zn[0]);
+  w[3][1] =
+      (zn[2] - zn[0]) * (xn[1] - xn[0]) - (zn[1] - zn[0]) * (xn[2] - xn[0]);
+  w[3][2] =
+      (xn[2] - xn[0]) * (yn[1] - yn[0]) - (xn[1] - xn[0]) * (yn[2] - yn[0]);
+  const double s3 =
+      1. / ((xn[3] - xn[0]) * w[3][0] + (yn[3] - yn[0]) * w[3][1] +
+            (zn[3] - zn[0]) * w[3][2]);
   for (size_t i = 0; i < 3; ++i) w[3][i] *= s3;
   return w;
 }
@@ -2079,28 +2078,23 @@ std::array<std::array<double, 3>, 4> ComponentFieldMap::Weights12(
 
 #ifdef __GPUCOMPILE__
 __device__ void ComponentGPU::Coordinates12(
-  const double x, const double y, const double z,
-  double& t1, double& t2, double& t3, double& t4,
-  const double xn[10],
-  const double yn[10],
-  const double zn[10],
-  const double w[4][3]) const
+    const double x, const double y, const double z, double& t1, double& t2,
+    double& t3, double& t4, const double xn[10], const double yn[10],
+    const double zn[10], const double w[4][3]) const
 #else
 void ComponentFieldMap::Coordinates12(
-    const double x, const double y, const double z, 
-    double& t1, double& t2, double& t3, double& t4,
-    const std::array<double, 10>& xn,
-    const std::array<double, 10>& yn,
-    const std::array<double, 10>& zn,
+    const double x, const double y, const double z, double& t1, double& t2,
+    double& t3, double& t4, const std::array<double, 10>& xn,
+    const std::array<double, 10>& yn, const std::array<double, 10>& zn,
     const std::array<std::array<double, 3>, 4>& w) const
-    #endif
+#endif
 {
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << m_className << "::Coordinates12:\n"
               << "   Point (" << x << ", " << y << ", " << z << ").\n";
   }
-  #endif
+#endif
 
   // Compute tetrahedral coordinates.
   t1 = (x - xn[1]) * w[0][0] + (y - yn[1]) * w[0][1] + (z - zn[1]) * w[0][2];
@@ -2108,8 +2102,8 @@ void ComponentFieldMap::Coordinates12(
   t3 = (x - xn[3]) * w[2][0] + (y - yn[3]) * w[2][1] + (z - zn[3]) * w[2][2];
   t4 = (x - xn[0]) * w[3][0] + (y - yn[0]) * w[3][1] + (z - zn[0]) * w[3][2];
 
-  // Result.
-  #ifndef __GPUCOMPILE__
+// Result.
+#ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << "    Tetrahedral coordinates (t, u, v, w) = (" << t1 << ", "
               << t2 << ", " << t3 << ", " << t4
@@ -2127,25 +2121,19 @@ void ComponentFieldMap::Coordinates12(
               << ", " << z - zr << ")\n";
     std::cout << "    Checksum - 1:           " << sr - 1 << "\n";
   }
-  #endif
+#endif
 }
 
 #ifdef __GPUCOMPILE__
 __device__ int ComponentGPU::Coordinates13(
-  const double x, const double y, const double z,
-  double& t1, double& t2, double& t3, double& t4,
-  double jac[4][4], double& det,
-  const double xn[10],
-  const double yn[10],
-  const double zn[10],
-  cuda_t** w) const
+    const double x, const double y, const double z, double& t1, double& t2,
+    double& t3, double& t4, double jac[4][4], double& det, const double xn[10],
+    const double yn[10], const double zn[10], cuda_t** w) const
 #else
 int ComponentFieldMap::Coordinates13(
-    const double x, const double y, const double z, 
-    double& t1, double& t2, double& t3, double& t4, 
-    double jac[4][4], double& det,
-    const std::array<double, 10>& xn,
-    const std::array<double, 10>& yn,
+    const double x, const double y, const double z, double& t1, double& t2,
+    double& t3, double& t4, double jac[4][4], double& det,
+    const std::array<double, 10>& xn, const std::array<double, 10>& yn,
     const std::array<double, 10>& zn,
     const std::array<std::array<double, 3>, 4>& w) const
 #endif
@@ -2161,23 +2149,23 @@ int ComponentFieldMap::Coordinates13(
   t4 = (x - xn[0]) * w[3][0] + (y - yn[0]) * w[3][1] + (z - zn[0]) * w[3][2];
   if (t4 < -0.5 || t4 > 1.5) return 1;
 
-  // Start iteration.
-  #ifndef __GPUCOMPILE__
+// Start iteration.
+#ifndef __GPUCOMPILE__
   std::array<double, 4> td = {t1, t2, t3, t4};
-  #else
+#else
   double td[4] = {t1, t2, t3, t4};
-  #endif
+#endif
 
   // Loop
   bool converged = false;
   for (int iter = 0; iter < 10; ++iter) {
-    #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
     if (m_debug) {
       std::printf("    Iteration %4u: t = (%15.8f, %15.8f %15.8f %15.8f)\n",
                   iter, td[0], td[1], td[2], td[3]);
     }
-    #endif
-    // Evaluate the shape functions and re-compute the (x,y,z) position 
+#endif
+    // Evaluate the shape functions and re-compute the (x,y,z) position
     // for this set of isoparametric coordinates.
     const double f0 = td[0] * (td[0] - 0.5);
     const double f1 = td[1] * (td[1] - 0.5);
@@ -2196,41 +2184,41 @@ int ComponentFieldMap::Coordinates13(
     const double f7 = fourt1 * td[2];
     const double f8 = fourt1 * td[3];
     const double f9 = fourt2 * td[3];
-    xr += f4 * xn[4] + f5 * xn[5] + f6 * xn[6] + f7 * xn[7] + 
-          f8 * xn[8] + f9 * xn[9];
-    yr += f4 * yn[4] + f5 * yn[5] + f6 * yn[6] + f7 * yn[7] + 
-          f8 * yn[8] + f9 * yn[9];
-    zr += f4 * zn[4] + f5 * zn[5] + f6 * zn[6] + f7 * zn[7] + 
-          f8 * zn[8] + f9 * zn[9];
+    xr += f4 * xn[4] + f5 * xn[5] + f6 * xn[6] + f7 * xn[7] + f8 * xn[8] +
+          f9 * xn[9];
+    yr += f4 * yn[4] + f5 * yn[5] + f6 * yn[6] + f7 * yn[7] + f8 * yn[8] +
+          f9 * yn[9];
+    zr += f4 * zn[4] + f5 * zn[5] + f6 * zn[6] + f7 * zn[7] + f8 * zn[8] +
+          f9 * zn[9];
     // Compute the Jacobian.
     Jacobian13(xn, yn, zn, fourt0, fourt1, fourt2, fourt3, det, jac);
-    // Compute the difference vector.
-    #ifndef __GPUCOMPILE__
+// Compute the difference vector.
+#ifndef __GPUCOMPILE__
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
-    #else
+#else
     double sr{0};
-    for (int i=0; i<4; ++i) {
+    for (int i = 0; i < 4; ++i) {
       sr += td[i];
     }
-    #endif
+#endif
     const double diff[4] = {1. - sr, x - xr, y - yr, z - zr};
     // Update the estimate.
     double corr[4] = {0., 0., 0., 0.};
-    // TODO TN GPU: I've seen in the past that the GPU doesn't like size_t
-    #ifdef __GPUCOMPILE__
+// TODO TN GPU: I've seen in the past that the GPU doesn't like size_t
+#ifdef __GPUCOMPILE__
     for (int l = 0; l < 4; ++l) {
       for (int k = 0; k < 4; ++k) {
-    #else
+#else
     for (size_t l = 0; l < 4; ++l) {
       for (size_t k = 0; k < 4; ++k) {
-    #endif
+#endif
         corr[l] += jac[l][k] * diff[k];
       }
       corr[l] *= det;
       td[l] += corr[l];
     }
 
-    #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
     // Debugging
     if (m_debug) {
       std::cout << "    Difference vector:  (1, x, y, z)  = (" << diff[0]
@@ -2240,15 +2228,15 @@ int ComponentFieldMap::Coordinates13(
                 << ", " << corr[1] << ", " << corr[2] << ", " << corr[3]
                 << ").\n";
     }
-    #endif
+#endif
 
     // Check for convergence.
     constexpr double tol = 1.e-5;
     if (fabs(corr[0]) < tol && fabs(corr[1]) < tol && fabs(corr[2]) < tol &&
         fabs(corr[3]) < tol) {
-      #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
       if (m_debug) std::cout << "    Convergence reached.\n";
-      #endif
+#endif
       converged = true;
       break;
     }
@@ -2256,27 +2244,28 @@ int ComponentFieldMap::Coordinates13(
 
   // No convergence reached.
   if (!converged) {
-    #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
     const double xmin = std::min({xn[0], xn[1], xn[2], xn[3]});
     const double xmax = std::max({xn[0], xn[1], xn[2], xn[3]});
     const double ymin = std::min({yn[0], yn[1], yn[2], yn[3]});
     const double ymax = std::max({yn[0], yn[1], yn[2], yn[3]});
     const double zmin = std::min({zn[0], zn[1], zn[2], zn[3]});
     const double zmax = std::max({zn[0], zn[1], zn[2], zn[3]});
-    #else
+#else
     const cuda_t xmin = fmin(fmin(fmin(xn[0], xn[1]), xn[2]), xn[3]);
     const cuda_t xmax = fmax(fmax(fmax(xn[0], xn[1]), xn[2]), xn[3]);
     const cuda_t ymin = fmin(fmin(fmin(yn[0], yn[1]), yn[2]), yn[3]);
     const cuda_t ymax = fmax(fmax(fmax(yn[0], yn[1]), yn[2]), yn[3]);
     const cuda_t zmin = fmin(fmin(fmin(zn[0], zn[1]), zn[2]), zn[3]);
     const cuda_t zmax = fmax(fmax(fmax(zn[0], zn[1]), zn[2]), zn[3]);
-    #endif
+#endif
     if (x >= xmin && x <= xmax && y >= ymin && y <= ymax && z >= zmin &&
         z <= zmax) {
-
-      #ifdef __GPUCOMPILE__
-      printf("ComponentGPU::Coordinates13:\n    No convergence achieved when refining internal isoparametric coordinates\n");
-      #else
+#ifdef __GPUCOMPILE__
+      printf(
+          "ComponentGPU::Coordinates13:\n    No convergence achieved when "
+          "refining internal isoparametric coordinates\n");
+#else
       if (m_printConvergenceWarnings) {
         std::cout << m_className << "::Coordinates13:\n"
                   << "    No convergence achieved "
@@ -2284,7 +2273,7 @@ int ComponentFieldMap::Coordinates13(
                   << "    at position (" << x << ", " << y << ", " << z
                   << ").\n";
       }
-      #endif
+#endif
       t1 = t2 = t3 = t4 = -1;
       return 1;
     }
@@ -2295,7 +2284,7 @@ int ComponentFieldMap::Coordinates13(
   t2 = td[1];
   t3 = td[2];
   t4 = td[3];
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << "    Convergence reached at (t1, t2, t3, t4) = (" << t1 << ", "
               << t2 << ", " << t3 << ", " << t4 << ").\n";
@@ -2316,12 +2305,12 @@ int ComponentFieldMap::Coordinates13(
     const double f7 = fourt1 * td[2];
     const double f8 = fourt1 * td[3];
     const double f9 = fourt2 * td[3];
-    xr += f4 * xn[4] + f5 * xn[5] + f6 * xn[6] + f7 * xn[7] + 
-          f8 * xn[8] + f9 * xn[9];
-    yr += f4 * yn[4] + f5 * yn[5] + f6 * yn[6] + f7 * yn[7] + 
-          f8 * yn[8] + f9 * yn[9];
-    zr += f4 * zn[4] + f5 * zn[5] + f6 * zn[6] + f7 * zn[7] + 
-          f8 * zn[8] + f9 * zn[9];
+    xr += f4 * xn[4] + f5 * xn[5] + f6 * xn[6] + f7 * xn[7] + f8 * xn[8] +
+          f9 * xn[9];
+    yr += f4 * yn[4] + f5 * yn[5] + f6 * yn[6] + f7 * yn[7] + f8 * yn[8] +
+          f9 * yn[9];
+    zr += f4 * zn[4] + f5 * zn[5] + f6 * zn[6] + f7 * zn[7] + f8 * zn[8] +
+          f9 * zn[9];
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
     std::cout << "    Position requested:     (" << x << ", " << y << ", " << z
               << ")\n";
@@ -2459,7 +2448,7 @@ void ComponentFieldMap::Prepare() {
       }
       m_w12.emplace_back(Weights12(xn, yn, zn));
     }
-  } 
+  }
 }
 
 void ComponentFieldMap::UpdatePeriodicityCommon() {
@@ -2762,10 +2751,9 @@ __device__ void ComponentGPU::
 #else
 void ComponentFieldMap::
 #endif
-MapCoordinates(double& xpos, double& ypos, double& zpos,
-               bool& xmirrored, bool& ymirrored,
-               bool& zmirrored, double& rcoordinate,
-               double& rotation) const {
+    MapCoordinates(double& xpos, double& ypos, double& zpos, bool& xmirrored,
+                   bool& ymirrored, bool& zmirrored, double& rcoordinate,
+                   double& rotation) const {
   // Initial values
   rotation = 0;
 
@@ -2880,15 +2868,17 @@ MapCoordinates(double& xpos, double& ypos, double& zpos,
 }
 
 #ifdef __GPUCOMPILE__
-__device__ void ComponentGPU::UnmapFields(double& ex, double& ey, double& ez,
-    const double xpos, const double ypos, const double zpos,
-    const bool xmirrored, const bool ymirrored, const bool zmirrored,
-    const double rcoordinate, const double rotation) const
+__device__ void ComponentGPU::UnmapFields(
+    double& ex, double& ey, double& ez, const double xpos, const double ypos,
+    const double zpos, const bool xmirrored, const bool ymirrored,
+    const bool zmirrored, const double rcoordinate, const double rotation) const
 #else
 void ComponentFieldMap::UnmapFields(double& ex, double& ey, double& ez,
-    const double xpos, const double ypos, const double zpos,
-    const bool xmirrored, const bool ymirrored, const bool zmirrored, 
-    const double rcoordinate, const double rotation) const
+                                    const double xpos, const double ypos,
+                                    const double zpos, const bool xmirrored,
+                                    const bool ymirrored, const bool zmirrored,
+                                    const double rcoordinate,
+                                    const double rotation) const
 #endif
 {
   // Apply mirror imaging.
@@ -3166,8 +3156,7 @@ void ComponentFieldMap::CopyWeightingPotential(
 
   if (m_wpot.count(labelSource) == 0) {
     std::cout << m_className << "::CopyWeightingPotential:\n"
-              << "    Source electrode " << labelSource
-              << " does not exist.\n";
+              << "    Source electrode " << labelSource << " does not exist.\n";
     return;
   }
 
@@ -3222,10 +3211,9 @@ void ComponentFieldMap::TimeInterpolation(const double t, double& f0,
 }
 
 #ifndef USEGPU
-  double ComponentFieldMap::CreateGPUTransferObject(ComponentGPU *&/*comp_gpu*/)
-  {
-    return 0;
-  }
+double ComponentFieldMap::CreateGPUTransferObject(ComponentGPU*& /*comp_gpu*/) {
+  return 0;
+}
 #endif
 
 }  // namespace Garfield

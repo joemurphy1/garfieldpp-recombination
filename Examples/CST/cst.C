@@ -1,8 +1,8 @@
-#include <cstdlib>
-#include <iostream>
-
 #include <TApplication.h>
 #include <TCanvas.h>
+
+#include <cstdlib>
+#include <iostream>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
@@ -10,14 +10,13 @@
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/ViewField.hh"
-#include "Garfield/ViewFEMesh.hh"
 #include "Garfield/ViewDrift.hh"
+#include "Garfield/ViewFEMesh.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   // Load the field map.
@@ -50,14 +49,13 @@ int main(int argc, char * argv[]) {
 
   // Load the ion mobilities.
   gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
-  // Associate the gas with the corresponding field map material. 
+  // Associate the gas with the corresponding field map material.
   fm.SetGas(&gas);
   fm.PrintMaterials();
 
   // Create the sensor.
   Sensor sensor(&fm);
-  sensor.SetArea(-5 * pitch, -5 * pitch, -0.01,
-                  5 * pitch,  5 * pitch,  0.025);
+  sensor.SetArea(-5 * pitch, -5 * pitch, -0.01, 5 * pitch, 5 * pitch, 0.025);
   AvalancheMicroscopic aval(&sensor);
 
   AvalancheMC drift(&sensor);
@@ -71,12 +69,12 @@ int main(int argc, char * argv[]) {
   }
 
   constexpr unsigned int nEvents = 1;
-  for (unsigned int i = 0; i < nEvents; ++i) { 
+  for (unsigned int i = 0; i < nEvents; ++i) {
     std::cout << i << "/" << nEvents << "\n";
-    // Randomize the initial position. 
+    // Randomize the initial position.
     const double x0 = -0.5 * pitch + RndmUniform() * pitch;
     const double y0 = 0.;
-    const double z0 = 0.02; 
+    const double z0 = 0.02;
     const double t0 = 0.;
     const double e0 = 0.1;
     aval.AvalancheElectron(x0, y0, z0, t0, e0, 0., 0., 0.);
@@ -91,8 +89,8 @@ int main(int argc, char * argv[]) {
     constexpr bool plotMesh = true;
     if (plotMesh) {
       ViewFEMesh* meshView = new ViewFEMesh(&fm);
-      meshView->SetArea(-2 * pitch, -2 * pitch, -0.02, 
-                         2 * pitch,  2 * pitch, 0.02);
+      meshView->SetArea(-2 * pitch, -2 * pitch, -0.02, 2 * pitch, 2 * pitch,
+                        0.02);
       meshView->SetCanvas(cd);
       // x-z projection.
       meshView->SetPlane(0, -1, 0, 0, 0, 0);
@@ -113,5 +111,4 @@ int main(int argc, char * argv[]) {
   }
 
   app.Run(true);
-
 }

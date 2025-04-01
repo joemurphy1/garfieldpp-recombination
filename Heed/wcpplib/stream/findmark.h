@@ -16,6 +16,7 @@ The file is provided "as is" without express or implied warranty.
 */
 
 #include <cstring>
+
 #include "wcpplib/util/FunNameStack.h"
 
 namespace Heed {
@@ -25,6 +26,6 @@ namespace Heed {
 // Finding no string it returns 0.
 int findmark(std::istream& file, const char* s);
 
-}
+}  // namespace Heed
 
 #endif

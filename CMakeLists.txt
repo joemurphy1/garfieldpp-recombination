@@ -1,8 +1,8 @@
-# Build Garfield++ library and examples 
-# Authors: Klaus Zenker, Pere Mato, Stefano Caiazza 
+# Build Garfield++ library and examples
+# Authors: Klaus Zenker, Pere Mato, Stefano Caiazza
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-project(Garfield VERSION 0.3 
+project(Garfield VERSION 0.3
                  DESCRIPTION "Toolkit for the detailed simulation of particle detectors based on ionization measurement in gases and semiconductors"
                  HOMEPAGE_URL "https://garfieldpp.web.cern.ch/garfieldpp/"
                  LANGUAGES Fortran CXX)
@@ -46,7 +46,7 @@ endif()
 #--- Set default installation prefix ------------------------------------------
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   if(DEFINED ENV{GARFIELD_INSTALL} )
-    set(CMAKE_INSTALL_PREFIX 
+    set(CMAKE_INSTALL_PREFIX
         $ENV{GARFIELD_INSTALL}
         CACHE PATH "Install path prefix, prepended onto install directories." FORCE)
   elseif(DEFINED ENV{GARFIELD_HOME} )
@@ -92,7 +92,7 @@ endif()
 find_package(ROOT 6.0 REQUIRED COMPONENTS Geom Gdml MathCore)
 #--- Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY) --
 if(${ROOT_VERSION} VERSION_LESS "6.20.0")
-  # It only makes sense for ROOT < 6.20. 
+  # It only makes sense for ROOT < 6.20.
   # Afterwards it is loaded automatically by the find_package
   get_filename_component(Root_Use_File_Dir ${ROOT_USE_FILE} DIRECTORY)
   include("${Root_Use_File_Dir}/modules/RootNewMacros.cmake")
@@ -124,8 +124,8 @@ endif()
 
 # Create GarfieldRandom library
 add_library(GarfieldRandom SHARED
-  Source/Random.cc 
-  Source/RandomEngineRoot.cc 
+  Source/Random.cc
+  Source/RandomEngineRoot.cc
   Source/RandomEngineSTL.cc
 )
 target_include_directories(GarfieldRandom PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
@@ -135,7 +135,7 @@ set_property(TARGET GarfieldRandom PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET GarfieldRandom PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 
 # Creating the main Garfield library
-add_library(Garfield SHARED 
+add_library(Garfield SHARED
             Source/AvalancheGrid.cc
             Source/AvalancheGridSpaceCharge.cc
             Source/AvalancheMC.cc
@@ -260,10 +260,10 @@ if(BUILD_WITH_VERSION_NUMBER)
 endif()
 mark_as_advanced(BUILD_WITH_VERSION_NUMBER)
 
-# Add neBEM 
+# Add neBEM
 # TODO Decouple Nebem interface from the Garfield components
 # The Nebem interface is somewhat coupled with Garfield itself.
-# We should decouple them to keep them independent, but until then 
+# We should decouple them to keep them independent, but until then
 # they have to be compiled in the same library to make it work
 set(nebem_sources
   NeBem/ComputeProperties.c
@@ -276,8 +276,8 @@ set(nebem_sources
   NeBem/svdcmp.c
   NeBem/Vector.c)
 
-# Until CMake 3.18 the source file properties are only visible to targets 
-# added in the same directory therefore we cannot add Nebem through the 
+# Until CMake 3.18 the source file properties are only visible to targets
+# added in the same directory therefore we cannot add Nebem through the
 # add_subdirectory mechanism unless we change the cpp file extension so that
 # CMake can recognize them automatically as CXX and not C
 set_source_files_properties(${nebem_sources} PROPERTIES LANGUAGE CXX)
@@ -288,14 +288,14 @@ add_subdirectory(Heed)
 
 target_link_libraries(Garfield PUBLIC ROOT::Geom
                                       ROOT::Gdml
-                                      ROOT::Graf3d 
+                                      ROOT::Graf3d
                                       GSL::gsl
                                       Garfield::Heed
                                       Magboltz::Magboltz
                                       $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Degrade::Degrade>
                                       $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
                                       $<$<BOOL:${GARFIELD_WITH_CUDA}>:GarfieldGPU>
-                                      )
+)
 target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU>)
 target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
                                     PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>

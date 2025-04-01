@@ -194,7 +194,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
       return false;
     }
   } while (line.find("# Geometric entity indices") == std::string::npos);
-  for (auto& element : allElements) {
+  for (auto &element : allElements) {
     int domain;
     fmesh >> domain;
     if (domain2material.count(domain) > 0) {
@@ -205,7 +205,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
   }
   fmesh.close();
 
-  for (auto& element : allElements) {
+  for (auto &element : allElements) {
     if (ElementInRange(element, allNodes)) {
       for (int j = 0; j < 10; j++) {
         nodeIndices.push_back(element.emap[j]);
@@ -227,9 +227,9 @@ bool ComponentComsol::Initialise(const std::string &mesh,
       // Update map to get correct node index.
       nodeMap[i] = m_nodes.size() - 1;
     }
-    // Go over the elements and update the node indices 
+    // Go over the elements and update the node indices
     // using the map you just created.
-    for (Element& element : m_elements) {
+    for (Element &element : m_elements) {
       for (int j = 0; j < 10; ++j) {
         element.emap[j] = nodeMap[element.emap[j]];
         if (element.emap[j] == -1) return false;
@@ -308,8 +308,8 @@ bool ComponentComsol::Initialise(const std::string &mesh,
     kdtree.n_nearest({x, y, z}, 1, res);
     if (res.empty()) {
       std::cerr << m_className << "::Initialise:\n"
-                << "    Could not find a matching mesh node for point (" 
-                << x << ", " << y << ", " << z << ")\n.";
+                << "    Could not find a matching mesh node for point (" << x
+                << ", " << y << ", " << z << ")\n.";
       ffield.close();
       return false;
     }
@@ -319,7 +319,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
     m_pot[k] = v;
     for (size_t j = 0; j < nWeightingFields; ++j) {
       m_wpot[wfields[j]][k] = w[j];
-    } 
+    }
     if ((i + 1) % nPrint == 0) PrintProgress(double(i + 1) / nNodes);
   }
   PrintProgress(1.);
@@ -355,16 +355,15 @@ bool ComponentComsol::SetWeightingPotential(const std::string &field,
     std::cout << "    Replacing existing weighting field.\n";
     m_wpot[label].clear();
   }
-  
+
   std::vector<double> pot(m_nodes.size(), 0.);
   if (!LoadPotentials(field, pot)) return false;
   m_wpot[label] = pot;
   return true;
 }
 
-bool ComponentComsol::LoadPotentials(const std::string& field,
-                                     std::vector<double>& pot) {
-
+bool ComponentComsol::LoadPotentials(const std::string &field,
+                                     std::vector<double> &pot) {
   // Open the file.
   std::ifstream ffield(field);
   if (!ffield) {
@@ -373,7 +372,7 @@ bool ComponentComsol::LoadPotentials(const std::string& field,
   }
   // Build a k-d tree from the node coordinates.
   std::vector<std::vector<double> > points;
-  for (const auto& node : m_nodes) {
+  for (const auto &node : m_nodes) {
     std::vector<double> point = {node.x, node.y, node.z};
     points.push_back(std::move(point));
   }
@@ -406,8 +405,8 @@ bool ComponentComsol::LoadPotentials(const std::string& field,
     kdtree.n_nearest({x, y, z}, 1, res);
     if (res.empty()) {
       std::cerr << m_className << "::LoadPotentials:\n"
-                << "    Could not find a matching mesh node for point (" 
-                << x << ", " << y << ", " << z << ")\n.";
+                << "    Could not find a matching mesh node for point (" << x
+                << ", " << y << ", " << z << ")\n.";
       ffield.close();
       return false;
     }
@@ -504,8 +503,8 @@ bool ComponentComsol::SetDynamicWeightingPotential(const std::string &field,
     kdtree.n_nearest({x, y, z}, 1, res);
     if (res.empty()) {
       std::cerr << m_className << "::SetDynamicWeightingPotential:\n"
-                << "    Could not find a matching mesh node for point (" 
-                << x << ", " << y << ", " << z << ")\n.";
+                << "    Could not find a matching mesh node for point (" << x
+                << ", " << y << ", " << z << ")\n.";
       ffield.close();
       return false;
     }

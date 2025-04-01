@@ -1,3 +1,5 @@
+#include "Garfield/Medium.hh"
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -5,7 +7,6 @@
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/Medium.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/ViewMedium.hh"
@@ -51,7 +52,7 @@ bool CheckFields(const std::vector<double>& fields, const std::string& hdr,
   }
   return true;
 }
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -192,13 +193,13 @@ void Medium::PlotAlphaEta(const std::string& opt, TPad* pad) {
   view.PlotAlphaEta(opt, 'e');
 }
 
-bool Medium::Velocity(const double ex, const double ey, const double ez,
-    const double bx, const double by, const double bz,
+bool Medium::Velocity(
+    const double ex, const double ey, const double ez, const double bx,
+    const double by, const double bz,
     const std::vector<std::vector<std::vector<double> > >& velE,
     const std::vector<std::vector<std::vector<double> > >& velB,
-    const std::vector<std::vector<std::vector<double> > >& velX,
-    const double q, double& vx, double& vy, double& vz) const {
-
+    const std::vector<std::vector<std::vector<double> > >& velX, const double q,
+    double& vx, double& vy, double& vz) const {
   vx = vy = vz = 0.;
   // Make sure there is at least a table of velocities along E.
   if (velE.empty()) return false;
@@ -249,8 +250,7 @@ bool Medium::Velocity(const double ex, const double ey, const double ez,
     uexb[2] = ue[2];
   }
 
-  double ubt[3] = {uexb[1] * ez - uexb[2] * ey, 
-                   uexb[2] * ex - uexb[0] * ez,
+  double ubt[3] = {uexb[1] * ez - uexb[2] * ey, uexb[2] * ex - uexb[0] * ez,
                    uexb[0] * ey - uexb[1] * ex};
   const double bt = sqrt(ubt[0] * ubt[0] + ubt[1] * ubt[1] + ubt[2] * ubt[2]);
   if (bt > 0.) {
@@ -297,49 +297,51 @@ bool Medium::Velocity(const double ex, const double ey, const double ez,
   return true;
 }
 
-bool Medium::VelocityFluxBulk(const double ex, const double ey, const double ez,
-                 const double bx, const double by, const double bz,
-                 const std::vector<std::vector<std::vector<double> > >& velWv,
-                 const std::vector<std::vector<std::vector<double> > >& velWr,
-                 const double q, double& wv, double& wr) const {
-    wv = wr = 0;
-    // Make sure there is at least a table of velocities along E.
-    if (velWv.empty() || velWr.empty()) return false;
+bool Medium::VelocityFluxBulk(
+    const double ex, const double ey, const double ez, const double bx,
+    const double by, const double bz,
+    const std::vector<std::vector<std::vector<double> > >& velWv,
+    const std::vector<std::vector<std::vector<double> > >& velWr,
+    const double q, double& wv, double& wr) const {
+  wv = wr = 0;
+  // Make sure there is at least a table of velocities along E.
+  if (velWv.empty() || velWr.empty()) return false;
 
-    // Compute the magnitude of the electric field.
-    const double e = sqrt(ex * ex + ey * ey + ez * ez);
-    const double e0 = ScaleElectricField(e);
-    if (e < Small || e0 < Small) return false;
+  // Compute the magnitude of the electric field.
+  const double e = sqrt(ex * ex + ey * ey + ez * ez);
+  const double e0 = ScaleElectricField(e);
+  if (e < Small || e0 < Small) return false;
 
-    // Compute the magnitude of the magnetic field.
-    const double b = sqrt(bx * bx + by * by + bz * bz);
-    // Compute the angle between B field and E field.
-    const double ebang = GetAngle(ex, ey, ez, bx, by, bz, e, b);
+  // Compute the magnitude of the magnetic field.
+  const double b = sqrt(bx * bx + by * by + bz * bz);
+  // Compute the angle between B field and E field.
+  const double ebang = GetAngle(ex, ey, ez, bx, by, bz, e, b);
 
-    // Calculate the velocity along E.
-    double wv_hold = 0., wr_hold = 0.;
-    if (!Interpolate(e0, b, ebang, velWv, wv_hold, m_intpVel, m_extrVel)) {
-        std::cerr << m_className << "::ExtVelocity: Interpolation of flux velocity (Wv) failed.\n";
-        return false;
-    }
-    if (!Interpolate(e0, b, ebang, velWr, wr_hold, m_intpVel, m_extrVel)) {
-        std::cerr << m_className << "::ExtVelocity: Interpolation of bulk velocity (Wr) failed.\n";
-        return false;
-    }
-    // only needed in B = 0 case so far.
-    if (b < Small) {
-        // No magnetic field.
-        wv = wv_hold;
-        wr = wr_hold;
-        return true;
-    }
+  // Calculate the velocity along E.
+  double wv_hold = 0., wr_hold = 0.;
+  if (!Interpolate(e0, b, ebang, velWv, wv_hold, m_intpVel, m_extrVel)) {
+    std::cerr << m_className
+              << "::ExtVelocity: Interpolation of flux velocity (Wv) failed.\n";
+    return false;
+  }
+  if (!Interpolate(e0, b, ebang, velWr, wr_hold, m_intpVel, m_extrVel)) {
+    std::cerr << m_className
+              << "::ExtVelocity: Interpolation of bulk velocity (Wr) failed.\n";
+    return false;
+  }
+  // only needed in B = 0 case so far.
+  if (b < Small) {
+    // No magnetic field.
+    wv = wv_hold;
+    wr = wr_hold;
     return true;
+  }
+  return true;
 }
 
 void Medium::Langevin(const double ex, const double ey, const double ez,
                       double bx, double by, double bz, const double mu,
                       double& vx, double& vy, double& vz) {
-
   bx *= Tesla2Internal;
   by *= Tesla2Internal;
   bz *= Tesla2Internal;
@@ -353,10 +355,8 @@ void Medium::Langevin(const double ex, const double ey, const double ez,
 }
 
 void Medium::Langevin(const double ex, const double ey, const double ez,
-                      double bx, double by, double bz, 
-                      const double mu, const double muH,
-                      double& vx, double& vy, double& vz) {
-
+                      double bx, double by, double bz, const double mu,
+                      const double muH, double& vx, double& vy, double& vz) {
   bx *= Tesla2Internal;
   by *= Tesla2Internal;
   bz *= Tesla2Internal;
@@ -369,12 +369,12 @@ void Medium::Langevin(const double ex, const double ey, const double ez,
   vz = f * (ez + muH * (ex * by - ey * bx) + mu2 * bz * eb);
 }
 
-bool Medium::Diffusion(const double ex, const double ey, const double ez,
-                       const double bx, const double by, const double bz,
-                       const std::vector<std::vector<std::vector<double> > >& difL,
-                       const std::vector<std::vector<std::vector<double> > >& difT,
-                       double& dl, double& dt) const { 
-
+bool Medium::Diffusion(
+    const double ex, const double ey, const double ez, const double bx,
+    const double by, const double bz,
+    const std::vector<std::vector<std::vector<double> > >& difL,
+    const std::vector<std::vector<std::vector<double> > >& difT, double& dl,
+    double& dt) const {
   dl = dt = 0.;
   // Compute the magnitude of the electric field.
   const double e = sqrt(ex * ex + ey * ey + ez * ez);
@@ -407,11 +407,11 @@ bool Medium::Diffusion(const double ex, const double ey, const double ez,
   return true;
 }
 
-bool Medium::Diffusion(const double ex, const double ey, const double ez,
-  const double bx, const double by, const double bz,
-  const std::vector<std::vector<std::vector<std::vector<double> > > >& diff,
-  double cov[3][3]) const {
-
+bool Medium::Diffusion(
+    const double ex, const double ey, const double ez, const double bx,
+    const double by, const double bz,
+    const std::vector<std::vector<std::vector<std::vector<double> > > >& diff,
+    double cov[3][3]) const {
   // Initialise the tensor.
   cov[0][0] = cov[0][1] = cov[0][2] = 0.;
   cov[1][0] = cov[1][1] = cov[1][2] = 0.;
@@ -451,10 +451,9 @@ bool Medium::Diffusion(const double ex, const double ey, const double ez,
 bool Medium::Alpha(const double ex, const double ey, const double ez,
                    const double bx, const double by, const double bz,
                    const std::vector<std::vector<std::vector<double> > >& tab,
-                   unsigned int intp, const unsigned int thr, 
-                   const std::pair<unsigned int, unsigned int>& extr, 
+                   unsigned int intp, const unsigned int thr,
+                   const std::pair<unsigned int, unsigned int>& extr,
                    double& alpha) const {
-                  
   alpha = 0.;
   if (tab.empty()) return false;
 
@@ -482,23 +481,22 @@ bool Medium::Alpha(const double ex, const double ey, const double ez,
 bool Medium::ElectronVelocity(const double ex, const double ey, const double ez,
                               const double bx, const double by, const double bz,
                               double& vx, double& vy, double& vz) {
-
-  return Velocity(ex, ey, ez, bx, by, bz, m_eVelE, m_eVelB, m_eVelX, -1., 
-                  vx, vy, vz);
+  return Velocity(ex, ey, ez, bx, by, bz, m_eVelE, m_eVelB, m_eVelX, -1., vx,
+                  vy, vz);
 }
 
-bool Medium::ElectronVelocityFluxBulk(const double ex, const double ey, const double ez,
-                                 const double bx, const double by,
-                                 const double bz, double &wv, double &wr) {
-    return VelocityFluxBulk(ex, ey, ez, bx, by, bz, m_eVelWv, m_eVelWr, -1.,
-                            wv, wr);
+bool Medium::ElectronVelocityFluxBulk(const double ex, const double ey,
+                                      const double ez, const double bx,
+                                      const double by, const double bz,
+                                      double& wv, double& wr) {
+  return VelocityFluxBulk(ex, ey, ez, bx, by, bz, m_eVelWv, m_eVelWr, -1., wv,
+                          wr);
 }
 
 bool Medium::ElectronDiffusion(const double ex, const double ey,
                                const double ez, const double bx,
                                const double by, const double bz, double& dl,
                                double& dt) {
-
   return Diffusion(ex, ey, ez, bx, by, bz, m_eDifL, m_eDifT, dl, dt);
 }
 
@@ -506,18 +504,16 @@ bool Medium::ElectronDiffusion(const double ex, const double ey,
                                const double ez, const double bx,
                                const double by, const double bz,
                                double cov[3][3]) {
-
   return Diffusion(ex, ey, ez, bx, by, bz, m_eDifM, cov);
 }
 
 bool Medium::ElectronTownsend(const double ex, const double ey, const double ez,
                               const double bx, const double by, const double bz,
                               double& alpha) {
-
-  if (!Alpha(ex, ey, ez, bx, by, bz, m_eAlp, m_intpAlp, m_eThrAlp, m_extrAlp, 
+  if (!Alpha(ex, ey, ez, bx, by, bz, m_eAlp, m_intpAlp, m_eThrAlp, m_extrAlp,
              alpha)) {
     return false;
-  } 
+  }
   // Apply scaling.
   alpha = ScaleTownsend(alpha);
   return true;
@@ -526,36 +522,37 @@ bool Medium::ElectronTownsend(const double ex, const double ey, const double ez,
 bool Medium::ElectronAttachment(const double ex, const double ey,
                                 const double ez, const double bx,
                                 const double by, const double bz, double& eta) {
-
-  if (!Alpha(ex, ey, ez, bx, by, bz, m_eAtt, m_intpAtt, m_eThrAtt, m_extrAtt, 
+  if (!Alpha(ex, ey, ez, bx, by, bz, m_eAtt, m_intpAtt, m_eThrAtt, m_extrAtt,
              eta)) {
     return false;
-  } 
+  }
   // Apply scaling.
   eta = ScaleAttachment(eta);
   return true;
 }
 
-bool Medium::ElectronTOFIonisation(const double ex, const double ey, const double ez,
-                                   const double bx, const double by, const double bz,
+bool Medium::ElectronTOFIonisation(const double ex, const double ey,
+                                   const double ez, const double bx,
+                                   const double by, const double bz,
                                    double& riontof) {
-    // m_eThrAlp? maybe set to 0
-    if (!Alpha(ex, ey, ez, bx, by, bz, m_eRIon, m_intpAlp, m_eThrAlp, m_extrAlp,
-               riontof)) {
-        return false;
-    }
-    return true;
+  // m_eThrAlp? maybe set to 0
+  if (!Alpha(ex, ey, ez, bx, by, bz, m_eRIon, m_intpAlp, m_eThrAlp, m_extrAlp,
+             riontof)) {
+    return false;
+  }
+  return true;
 }
 
-bool Medium::ElectronTOFAttachment(const double ex, const double ey, const double ez,
-                                   const double bx, const double by, const double bz,
+bool Medium::ElectronTOFAttachment(const double ex, const double ey,
+                                   const double ez, const double bx,
+                                   const double by, const double bz,
                                    double& ratttof) {
-    // m_eThrAtt? maybe set to 0
-    if (!Alpha(ex, ey, ez, bx, by, bz, m_eRAtt, m_intpAtt, m_eThrAtt, m_extrAtt,
-               ratttof)) {
-        return false;
-    }
-    return true;
+  // m_eThrAtt? maybe set to 0
+  if (!Alpha(ex, ey, ez, bx, by, bz, m_eRAtt, m_intpAtt, m_eThrAtt, m_extrAtt,
+             ratttof)) {
+    return false;
+  }
+  return true;
 }
 
 bool Medium::ElectronLorentzAngle(const double ex, const double ey,
@@ -620,9 +617,10 @@ double Medium::GetElectronCollisionRate(const double /*e*/,
   return 0.;
 }
 
-bool Medium::ElectronCollision(const double e, int& type, int& level, 
-    double& e1, double& dx, double& dy, double& dz, 
-    std::vector<Secondary>& /*secondaries*/, int& band) {
+bool Medium::ElectronCollision(const double e, int& type, int& level,
+                               double& e1, double& dx, double& dy, double& dz,
+                               std::vector<Secondary>& /*secondaries*/,
+                               int& band) {
   type = level = -1;
   e1 = e;
   band = 0;
@@ -635,9 +633,8 @@ bool Medium::ElectronCollision(const double e, int& type, int& level,
 bool Medium::HoleVelocity(const double ex, const double ey, const double ez,
                           const double bx, const double by, const double bz,
                           double& vx, double& vy, double& vz) {
-
-  return Velocity(ex, ey, ez, bx, by, bz, m_hVelE, m_hVelB, m_hVelX, +1., 
-                  vx, vy, vz);
+  return Velocity(ex, ey, ez, bx, by, bz, m_hVelE, m_hVelB, m_hVelX, +1., vx,
+                  vy, vz);
 }
 
 bool Medium::HoleDiffusion(const double ex, const double ey, const double ez,
@@ -649,18 +646,16 @@ bool Medium::HoleDiffusion(const double ex, const double ey, const double ez,
 bool Medium::HoleDiffusion(const double ex, const double ey, const double ez,
                            const double bx, const double by, const double bz,
                            double cov[3][3]) {
-
   return Diffusion(ex, ey, ez, bx, by, bz, m_hDifM, cov);
 }
 
 bool Medium::HoleTownsend(const double ex, const double ey, const double ez,
                           const double bx, const double by, const double bz,
                           double& alpha) {
-
-  if (!Alpha(ex, ey, ez, bx, by, bz, m_hAlp, m_intpAlp, m_hThrAlp, m_extrAlp, 
+  if (!Alpha(ex, ey, ez, bx, by, bz, m_hAlp, m_intpAlp, m_hThrAlp, m_extrAlp,
              alpha)) {
     return false;
-  } 
+  }
   // Apply scaling.
   alpha = ScaleTownsend(alpha);
   return true;
@@ -669,11 +664,10 @@ bool Medium::HoleTownsend(const double ex, const double ey, const double ez,
 bool Medium::HoleAttachment(const double ex, const double ey, const double ez,
                             const double bx, const double by, const double bz,
                             double& eta) {
-
-  if (!Alpha(ex, ey, ez, bx, by, bz, m_hAtt, m_intpAtt, m_hThrAtt, m_extrAtt, 
+  if (!Alpha(ex, ey, ez, bx, by, bz, m_hAtt, m_intpAtt, m_hThrAtt, m_extrAtt,
              eta)) {
     return false;
-  } 
+  }
   // Apply scaling.
   eta = ScaleAttachment(eta);
   return true;
@@ -691,38 +685,33 @@ bool Medium::IonVelocity(const double ex, const double ey, const double ez,
   if (m_iVel.empty() && !m_iMob.empty()) {
     VelocityFromMobility(m_iMob, m_iVel);
   }
-  return Velocity(ex, ey, ez, bx, by, bz, m_iVel, vB, vB, +1., 
-                  vx, vy, vz);
+  return Velocity(ex, ey, ez, bx, by, bz, m_iVel, vB, vB, +1., vx, vy, vz);
 }
 
 bool Medium::IonDiffusion(const double ex, const double ey, const double ez,
                           const double bx, const double by, const double bz,
                           double& dl, double& dt) {
-
   return Diffusion(ex, ey, ez, bx, by, bz, m_iDifL, m_iDifT, dl, dt);
 }
 
 bool Medium::IonDissociation(const double ex, const double ey, const double ez,
                              const double bx, const double by, const double bz,
                              double& diss) {
-
-  if (!Alpha(ex, ey, ez, bx, by, bz, m_iDis, m_intpDis, m_iThrDis, m_extrDis, 
+  if (!Alpha(ex, ey, ez, bx, by, bz, m_iDis, m_intpDis, m_iThrDis, m_extrDis,
              diss)) {
     return false;
-  } 
+  }
   // Apply scaling.
   diss = ScaleDissociation(diss);
   return true;
 }
 
-double Medium::IonMobility() {
-  return m_iMob.empty() ? -1. : m_iMob[0][0][0];
-}
+double Medium::IonMobility() { return m_iMob.empty() ? -1. : m_iMob[0][0][0]; }
 
-bool Medium::NegativeIonVelocity(
-    const double ex, const double ey, const double ez,
-    const double bx, const double by, const double bz,
-    double& vx, double& vy, double& vz) {
+bool Medium::NegativeIonVelocity(const double ex, const double ey,
+                                 const double ez, const double bx,
+                                 const double by, const double bz, double& vx,
+                                 double& vy, double& vz) {
   vx = vy = vz = 0.;
   if (m_iMob.empty() && m_nMob.empty()) return false;
 
@@ -772,12 +761,14 @@ bool Medium::GetOpticalDataRange(double& emin, double& emax,
 bool Medium::GetDielectricFunction(const double e, double& eps1, double& eps2,
                                    const unsigned int i) {
   if (i >= m_nComponents) {
-    std::cerr << m_className << "::GetDielectricFunction: Index out of range.\n";
+    std::cerr << m_className
+              << "::GetDielectricFunction: Index out of range.\n";
     return false;
   }
 
   if (e < 0.) {
-    std::cerr << m_className << "::GetDielectricFunction: Energy must be > 0.\n";
+    std::cerr << m_className
+              << "::GetDielectricFunction: Energy must be > 0.\n";
     return false;
   }
 
@@ -815,8 +806,8 @@ double Medium::GetPhotonCollisionRate(const double e) {
   return sigma * m_density * SpeedOfLight;
 }
 
-bool Medium::PhotonCollision(const double e, int& type, int& level,
-                             double& e1, double& ctheta, 
+bool Medium::PhotonCollision(const double e, int& type, int& level, double& e1,
+                             double& ctheta,
                              std::vector<Secondary>& secondaries) {
   type = level = -1;
   e1 = e;
@@ -944,14 +935,14 @@ void Medium::SetFieldGrid(const std::vector<double>& efields,
         "electron longitudinal diffusion");
   Clone(m_eDifT, efields, bfields, angles, m_intpDif, m_extrDif, 0.,
         "electron transverse diffusion");
-  Clone(m_eAlp, efields, bfields, angles, m_intpAlp, m_extrAlp, -30., 
+  Clone(m_eAlp, efields, bfields, angles, m_intpAlp, m_extrAlp, -30.,
         "electron Townsend coefficient");
-  Clone(m_eAtt, efields, bfields, angles, m_intpAtt, m_extrAtt, -30., 
+  Clone(m_eAtt, efields, bfields, angles, m_intpAtt, m_extrAtt, -30.,
         "electron attachment coefficient");
-  Clone(m_eLor, efields, bfields, angles, m_intpLor, m_extrLor, 0., 
+  Clone(m_eLor, efields, bfields, angles, m_intpLor, m_extrLor, 0.,
         "electron Lorentz angle");
   if (!m_eDifM.empty()) {
-    Clone(m_eDifM, 6, efields, bfields, angles, m_intpDif, m_extrDif, 0., 
+    Clone(m_eDifM, 6, efields, bfields, angles, m_intpDif, m_extrDif, 0.,
           "electron diffusion tensor");
   }
 
@@ -966,12 +957,12 @@ void Medium::SetFieldGrid(const std::vector<double>& efields,
         "hole longitudinal diffusion");
   Clone(m_hDifT, efields, bfields, angles, m_intpDif, m_extrDif, 0.,
         "hole transverse diffusion");
-  Clone(m_hAlp, efields, bfields, angles, m_intpAlp, m_extrAlp, -30., 
+  Clone(m_hAlp, efields, bfields, angles, m_intpAlp, m_extrAlp, -30.,
         "hole Townsend coefficient");
-  Clone(m_hAtt, efields, bfields, angles, m_intpAtt, m_extrAtt, -30., 
+  Clone(m_hAtt, efields, bfields, angles, m_intpAtt, m_extrAtt, -30.,
         "hole attachment coefficient");
   if (!m_hDifM.empty()) {
-    Clone(m_hDifM, 6, efields, bfields, angles, m_intpDif, m_extrDif, 0., 
+    Clone(m_hDifM, 6, efields, bfields, angles, m_intpDif, m_extrDif, 0.,
           "hole diffusion tensor");
   }
 
@@ -982,11 +973,11 @@ void Medium::SetFieldGrid(const std::vector<double>& efields,
     Clone(m_iVel, efields, bfields, angles, m_intpVel, m_extrVel, 0.,
           "ion velocity");
   }
-  Clone(m_iDifL, efields, bfields, angles, m_intpDif, m_extrDif, 0., 
+  Clone(m_iDifL, efields, bfields, angles, m_intpDif, m_extrDif, 0.,
         "ion longitudinal diffusion");
-  Clone(m_iDifT, efields, bfields, angles, m_intpDif, m_extrDif, 0., 
+  Clone(m_iDifT, efields, bfields, angles, m_intpDif, m_extrDif, 0.,
         "ion transverse diffusion");
-  Clone(m_iDis, efields, bfields, angles, m_intpDis, m_extrDis, -30., 
+  Clone(m_iDis, efields, bfields, angles, m_intpDis, m_extrDis, -30.,
         "ion dissociation");
 
   Clone(m_nMob, efields, bfields, angles, m_intpMob, m_extrMob, 0.,
@@ -1014,7 +1005,6 @@ bool Medium::SetEntry(const size_t i, const size_t j, const size_t k,
                       const std::string& fcn,
                       std::vector<std::vector<std::vector<double> > >& tab,
                       const double val) {
-
   if (i >= m_eFields.size() || j >= m_bFields.size() || k >= m_bAngles.size()) {
     PrintOutOfRange(m_className, "Set" + fcn, i, j, k);
     return false;
@@ -1026,10 +1016,10 @@ bool Medium::SetEntry(const size_t i, const size_t j, const size_t k,
   return true;
 }
 
-bool Medium::GetEntry(const size_t i, const size_t j, const size_t k, 
-                      const std::string& fcn, 
-                      const std::vector<std::vector<std::vector<double> > >& tab,
-                      double& val) const {
+bool Medium::GetEntry(
+    const size_t i, const size_t j, const size_t k, const std::string& fcn,
+    const std::vector<std::vector<std::vector<double> > >& tab,
+    double& val) const {
   val = 0.;
   if (i >= m_eFields.size() || j >= m_bFields.size() || k >= m_bAngles.size()) {
     PrintOutOfRange(m_className, "Get" + fcn, i, j, k);
@@ -1050,7 +1040,7 @@ void Medium::ResetTables() {
   ResetElectronAttachment();
   ResetElectronTOFRates();
   ResetElectronLorentzAngle();
-  
+
   ResetHoleVelocity();
   ResetHoleDiffusion();
   ResetHoleTownsend();
@@ -1066,8 +1056,7 @@ void Medium::ResetTables() {
 void Medium::Clone(std::vector<std::vector<std::vector<double> > >& tab,
                    const std::vector<double>& efields,
                    const std::vector<double>& bfields,
-                   const std::vector<double>& angles,
-                   const unsigned int intp,
+                   const std::vector<double>& angles, const unsigned int intp,
                    const std::pair<unsigned int, unsigned int>& extr,
                    const double init, const std::string& lbl) {
   if (m_debug) {
@@ -1154,8 +1143,8 @@ void Medium::Clone(
   tab.swap(tabClone);
 }
 
-bool Medium::SetIonMobility(const size_t ie, const size_t ib,
-                            const size_t ia, const double mu) {
+bool Medium::SetIonMobility(const size_t ie, const size_t ib, const size_t ia,
+                            const double mu) {
   // Check the index.
   if (ie >= m_eFields.size() || ib >= m_bFields.size() ||
       ia >= m_bAngles.size()) {
@@ -1177,10 +1166,10 @@ bool Medium::SetIonMobility(const size_t ie, const size_t ib,
   m_iMob[ia][ib][ie] = mu;
   if (!m_iVel.empty()) m_iVel[ia][ib][ie] = mu * m_eFields[ie];
   if (m_debug) {
-    std::cout << m_className << "::SetIonMobility:\n    Ion mobility at E = "
-              << m_eFields[ie] << " V/cm, B = " 
-              << m_bFields[ib] << " T, angle " 
-              << m_bAngles[ia] << " set to " << mu << " cm2/(V ns).\n";
+    std::cout << m_className
+              << "::SetIonMobility:\n    Ion mobility at E = " << m_eFields[ie]
+              << " V/cm, B = " << m_bFields[ib] << " T, angle " << m_bAngles[ia]
+              << " set to " << mu << " cm2/(V ns).\n";
   }
   return true;
 }
@@ -1201,7 +1190,7 @@ bool Medium::SetNegativeIonMobility(const size_t ie, const size_t ib,
   }
 
   if (mu == 0.) {
-    std::cerr << m_className 
+    std::cerr << m_className
               << "::SetNegativeIonMobility: Zero value not allowed.\n";
     return false;
   }
@@ -1210,9 +1199,9 @@ bool Medium::SetNegativeIonMobility(const size_t ie, const size_t ib,
   if (!m_nVel.empty()) m_nVel[ia][ib][ie] = mu * m_eFields[ie];
   if (m_debug) {
     std::cout << m_className << "::SetNegativeIonMobility:\n"
-              << "    Ion mobility at E = " << m_eFields[ie] 
-              << " V/cm, B = " << m_bFields[ib] << " T, angle " 
-              << m_bAngles[ia] << " set to " << mu << " cm2/(V ns).\n";
+              << "    Ion mobility at E = " << m_eFields[ie]
+              << " V/cm, B = " << m_bFields[ib] << " T, angle " << m_bAngles[ia]
+              << " set to " << mu << " cm2/(V ns).\n";
   }
   return true;
 }
@@ -1233,7 +1222,7 @@ bool Medium::SetIonMobility(const std::vector<double>& efields,
     for (size_t i = 0; i < efields.size(); ++i) {
       std::printf("%15.3f  %15.5f\n", efields[i], 1.e9 * mobs[i]);
     }
-  } 
+  }
   if (negativeIons) {
     ResetNegativeIonMobility();
   } else {
@@ -1248,19 +1237,19 @@ bool Medium::SetIonMobility(const std::vector<double>& efields,
     Init(nE, nB, nA, m_iMob, 0.);
   }
   if (m_debug) {
-    std::cout << "  Interpolated table (interpolation order " 
-              << m_intpMob << "):\n"
+    std::cout << "  Interpolated table (interpolation order " << m_intpMob
+              << "):\n"
               << "    E [V/cm]   mu [cm2/(V s)]\n";
   }
   for (size_t i = 0; i < nE; ++i) {
-    const double mu = Interpolate1D(m_eFields[i], mobs, efields, 
-                                    m_intpMob, m_extrMob);
+    const double mu =
+        Interpolate1D(m_eFields[i], mobs, efields, m_intpMob, m_extrMob);
     if (negativeIons) {
       m_nMob[0][0][i] = mu;
     } else {
       m_iMob[0][0][i] = mu;
     }
-    if (m_debug) std::printf("%15.3f  %15.5f\n", m_eFields[i], 1.e9 * mu); 
+    if (m_debug) std::printf("%15.3f  %15.5f\n", m_eFields[i], 1.e9 * mu);
   }
   if (!m_tab2d) return true;
   for (size_t i = 0; i < nA; ++i) {
@@ -1280,7 +1269,6 @@ bool Medium::SetIonMobility(const std::vector<double>& efields,
 void Medium::VelocityFromMobility(
     const std::vector<std::vector<std::vector<double> > >& mob,
     std::vector<std::vector<std::vector<double> > >& vel) {
-
   const auto nE = m_eFields.size();
   const auto nB = m_bFields.size();
   const auto nA = m_bAngles.size();
@@ -1366,7 +1354,6 @@ bool Medium::GetExtrapolationIndex(std::string str, unsigned int& nb) const {
 
 size_t Medium::SetThreshold(
     const std::vector<std::vector<std::vector<double> > >& tab) const {
-
   if (tab.empty()) return 0;
   const auto nE = m_eFields.size();
   const auto nB = m_bFields.size();
@@ -1378,14 +1365,14 @@ size_t Medium::SetThreshold(
         if (tab[k][j][i] < -20.) {
           below = true;
           break;
-        } 
+        }
       }
-      if (below) break; 
+      if (below) break;
     }
     if (below) continue;
     return i;
-  } 
-  return nE - 1; 
+  }
+  return nE - 1;
 }
 
 void Medium::SetInterpolationMethodVelocity(const unsigned int intrp) {
@@ -1415,13 +1402,13 @@ void Medium::SetInterpolationMethodIonDissociation(const unsigned int intrp) {
 double Medium::GetAngle(const double ex, const double ey, const double ez,
                         const double bx, const double by, const double bz,
                         const double emag, const double bmag) const {
-  const double eb = emag * bmag; 
+  const double eb = emag * bmag;
   if (eb <= 0.) return m_bAngles[0];
   const double einb = fabs(ex * bx + ey * by + ez * bz);
   if (einb > 0.2 * eb) {
     double exb[3] = {ex * by - ey * bx, ex * bz - ez * bx, ez * by - ey * bz};
-    return asin(
-        std::min(1., sqrt(exb[0] * exb[0] + exb[1] * exb[1] + exb[2] * exb[2]) / eb));
+    return asin(std::min(
+        1., sqrt(exb[0] * exb[0] + exb[1] * exb[1] + exb[2] * exb[2]) / eb));
   }
   return acos(std::min(1., einb / eb));
 }
@@ -1429,8 +1416,7 @@ double Medium::GetAngle(const double ex, const double ey, const double ez,
 bool Medium::Interpolate(
     const double e, const double b, const double a,
     const std::vector<std::vector<std::vector<double> > >& table, double& y,
-    const unsigned int intp,
-    const std::pair<unsigned int, unsigned int>& extr,
+    const unsigned int intp, const std::pair<unsigned int, unsigned int>& extr,
     const bool logval) const {
   if (table.empty()) {
     y = 0.;
@@ -1439,19 +1425,19 @@ bool Medium::Interpolate(
 
   if (m_tab2d) {
     return Numerics::Boxin3(table, m_bAngles, m_bFields, m_eFields,
-                            m_bAngles.size(), m_bFields.size(), m_eFields.size(),
-                            a, b, e, y, intp);
+                            m_bAngles.size(), m_bFields.size(),
+                            m_eFields.size(), a, b, e, y, intp);
   } else {
     y = Interpolate1D(e, table[0][0], m_eFields, intp, extr, logval);
   }
   return true;
 }
 
-double Medium::Interpolate1D(
-    const double x, const std::vector<double>& ytab,
-    const std::vector<double>& xtab, const unsigned int intpMeth,
-    const std::pair<unsigned int, unsigned int>& extr,
-    const bool logval) const {
+double Medium::Interpolate1D(const double x, const std::vector<double>& ytab,
+                             const std::vector<double>& xtab,
+                             const unsigned int intpMeth,
+                             const std::pair<unsigned int, unsigned int>& extr,
+                             const bool logval) const {
   // This function is a generalized version of the Fortran functions
   // GASVEL, GASVT1, GASVT2, GASLOR, GASMOB, GASDFT, and GASDFL
   // for the case of a 1D table. All variables are generic.
@@ -1475,13 +1461,13 @@ double Medium::Interpolate1D(
       result = ytab[0];
     } else if (extr.first == 1) {
       // Linear extrapolation
-      if (!logval) { 
+      if (!logval) {
         const double extr4 = (ytab[1] - ytab[0]) / (xtab[1] - xtab[0]);
         result = ytab[0] + extr4 * (x - xtab[0]);
-      } else { 
+      } else {
         // Log values in gas table for alpha, eta.
-        const double extr4 = (std::exp(ytab[1]) - std::exp(ytab[0])) / 
-                             (xtab[1] - xtab[0]);
+        const double extr4 =
+            (std::exp(ytab[1]) - std::exp(ytab[0])) / (xtab[1] - xtab[0]);
         result = log(std::exp(ytab[0]) + extr4 * (x - xtab[0]));
       }
     } else if (extr.first == 2) {
@@ -1490,7 +1476,7 @@ double Medium::Interpolate1D(
         const double extr4 = log(ytab[1] / ytab[0]) / (xtab[1] - xtab[0]);
         const double extr3 = log(ytab[0]) - extr4 * xtab[0];
         result = std::exp(std::min(50., extr3 + extr4 * x));
-      } else { 
+      } else {
         // Log values in gastable for alpha, eta.
         const double extr4 = (ytab[1] - ytab[0]) / (xtab[1] - xtab[0]);
         const double extr3 = ytab[0] - extr4 * xtab[0];
@@ -1511,25 +1497,25 @@ double Medium::Interpolate1D(
     } else if (extr.second == 1) {
       // Linear extrapolation
       if (!logval) {
-        const double extr2 = (ytab[nt - 1] - ytab[nt - 2]) /
-                             (xtab[nt - 1] - xtab[nt - 2]);
+        const double extr2 =
+            (ytab[nt - 1] - ytab[nt - 2]) / (xtab[nt - 1] - xtab[nt - 2]);
         result = ytab[nt - 1] + extr2 * (x - xtab[nt - 1]);
-      } else { 
+      } else {
         // Log values in gas table for alpha, eta.
         const double extr2 = (std::exp(ytab[nt - 1]) - std::exp(ytab[nt - 2])) /
                              (xtab[nt - 1] - xtab[nt - 2]);
         result = log(std::exp(ytab[nt - 1]) + extr2 * (x - xtab[nt - 1]));
       }
     } else if (extr.second == 2) {
-      if (!logval) { 
-        const double extr2 = log(ytab[nt - 1] / ytab[nt - 2]) /
-                             (xtab[nt - 1] - xtab[nt - 2]);
+      if (!logval) {
+        const double extr2 =
+            log(ytab[nt - 1] / ytab[nt - 2]) / (xtab[nt - 1] - xtab[nt - 2]);
         const double extr1 = log(ytab[nt - 1]) - extr2 * xtab[nt - 1];
         result = exp(std::min(50., extr1 + extr2 * x));
-      } else { 
+      } else {
         // Log values in gas table for alpha, eta.
-        const double extr2 = (ytab[nt - 1] - ytab[nt - 2]) /
-                             (xtab[nt - 1] - xtab[nt - 2]);
+        const double extr2 =
+            (ytab[nt - 1] - ytab[nt - 2]) / (xtab[nt - 1] - xtab[nt - 2]);
         const double extr1 = ytab[nt - 1] - extr2 * xtab[nt - 1];
         result = std::min(50., extr1 + extr2 * x);
       }
@@ -1542,8 +1528,8 @@ double Medium::Interpolate1D(
   } else {
     // Intermediate points, spline interpolation (not implemented).
     // Intermediate points, Newtonian interpolation
-    result = intpMeth == 1 ? Numerics::LinearInterpolation(ytab, xtab, x) :
-                             Numerics::Divdif(ytab, xtab, nt, x, intpMeth);
+    result = intpMeth == 1 ? Numerics::LinearInterpolation(ytab, xtab, x)
+                           : Numerics::Divdif(ytab, xtab, nt, x, intpMeth);
   }
 
   return result;
@@ -1574,6 +1560,6 @@ void Medium::Init(
                              nB, std::vector<double>(nE, val))));
 }
 #ifndef USEGPU
-double Medium::CreateGPUTransferObject(MediumGPU *&/*med_gpu*/) { return 0; }
+double Medium::CreateGPUTransferObject(MediumGPU*& /*med_gpu*/) { return 0; }
 #endif
-}
+}  // namespace Garfield

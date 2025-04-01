@@ -1,9 +1,9 @@
 #ifndef G_VIEW_CELL
 #define G_VIEW_CELL
 
-#include <memory>
-
 #include <TGeoManager.h>
+
+#include <memory>
 
 #include "Garfield/ViewBase.hh"
 
@@ -21,7 +21,7 @@ class ViewCell : public ViewBase {
   /// Constructor from analytic-field component.
   ViewCell(ComponentAnalyticField* cmp);
   /// Constructor from two-dimenstional neBEM component.
-  ViewCell(ComponentNeBem2d* cmp); 
+  ViewCell(ComponentNeBem2d* cmp);
   /// Destructor
   ~ViewCell() = default;
 
@@ -34,7 +34,7 @@ class ViewCell : public ViewBase {
   /// Make a three-dimensional drawing of the cell layout (using TGeo).
   void Plot3d();
 
-  /// Visualize wirers using markers (default setting) 
+  /// Visualize wirers using markers (default setting)
   /// or as a circle with the actual wire radius.
   void EnableWireMarkers(const bool on = true) { m_useWireMarker = on; }
   void DisableWireMarkers() { EnableWireMarkers(false); }
@@ -57,20 +57,18 @@ class ViewCell : public ViewBase {
   // Draw a tube in 2D.
   void PlotTube(const double x0, const double y0, const double r, const int n);
   // Draw a tube in 3D.
-  void PlotTube(const double x0, const double y0,
-                const double r1, const double r2, const int n,
-                const double lz); 
+  void PlotTube(const double x0, const double y0, const double r1,
+                const double r2, const int n, const double lz);
   // Draw a plane in 2D.
-  void PlotPlane(const double x0, const double y0, 
-                 const double x1, const double y1);
+  void PlotPlane(const double x0, const double y0, const double x1,
+                 const double y1);
   // Draw a plane in 3D.
   void PlotPlane(const double dx, const double dy, const double dz,
                  const double x0, const double y0);
   // Draw a neBEM 2D layout.
   bool PlotNeBem(const bool twod);
-  // Setup the TGeoManager. 
+  // Setup the TGeoManager.
   void SetupGeo(const double dx, const double dy, const double dz);
-
 };
-}
+}  // namespace Garfield
 #endif

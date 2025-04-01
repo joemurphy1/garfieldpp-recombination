@@ -1,5 +1,7 @@
-#include <iomanip>
 #include "wcpplib/matter/AtomDef.h"
+
+#include <iomanip>
+
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/util/FunNameStack.h"
 
@@ -7,9 +9,9 @@
 
 namespace Heed {
 
+using CLHEP::Avogadro;
 using CLHEP::gram;
 using CLHEP::mole;
-using CLHEP::Avogadro;
 
 AtomDef::AtomDef(const std::string& fnameh, const std::string& fnotationh,
                  int fZh, double fAh)
@@ -59,8 +61,7 @@ const std::list<AtomDef>& AtomDefs::getAtoms() {
   addAtom("Sulfur", "S", 16, 32.066 * gram / mole);
   addAtom("Chlorine", "Cl", 17, 35.066 * gram / mole);
   addAtom("Argon", "Ar", 18, 39.948 * gram / mole);
-  addAtom("Argon_without_K", "Ar_without_K", 16,
-                          39.948 * gram / mole);
+  addAtom("Argon_without_K", "Ar_without_K", 16, 39.948 * gram / mole);
   addAtom("Potassium", "K", 19, 39.098 * gram / mole);
   addAtom("Calcium", "Ca", 20, 40.08 * gram / mole);
   addAtom("Scandium", "Sc", 21, 44.9559 * gram / mole);
@@ -264,8 +265,8 @@ std::ostream& operator<<(std::ostream& file, const AtomMixDef& f) {
   Ifile << "Z_mean()=" << std::setw(3) << f.Z_mean()
         << " A_mean()/(gram/mole)=" << f.A_mean() / gpm << '\n';
   Ifile << "inv_A_mean()*(gram/mole)=" << f.inv_A_mean() * gpm << '\n';
-  Ifile << "mean_ratio_Z_to_A()*(gram/mole)=" 
-        << f.mean_ratio_Z_to_A() * gpm << '\n';
+  Ifile << "mean_ratio_Z_to_A()*(gram/mole)=" << f.mean_ratio_Z_to_A() * gpm
+        << '\n';
   Ifile << "NumberOfElectronsInGram()=" << f.NumberOfElectronsInGram() << '\n';
   // Here above the mass unit is defined,
   // therefore there is no need to divide by gram.
@@ -283,4 +284,4 @@ std::ostream& operator<<(std::ostream& file, const AtomMixDef& f) {
   indn.n -= 2;
   return file;
 }
-}
+}  // namespace Heed

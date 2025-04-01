@@ -1,12 +1,11 @@
 #ifndef G_COMPONENT_NEBEM_3D_H
 #define G_COMPONENT_NEBEM_3D_H
 
-#include<array>
+#include <array>
 #include <map>
 
 #include "Garfield/Component.hh"
 #include "Garfield/Solid.hh"
-
 
 namespace Garfield {
 
@@ -186,7 +185,7 @@ class ComponentNeBem3d : public Component {
   void SetNumberOfThreads(const unsigned int n) { m_nThreads = n > 0 ? n : 1; }
 
   /// Set the number of repetitions after which primitive properties are used
-  /// for the physical field. 
+  /// for the physical field.
   /// A negative value (default) implies all the elements are always evaluated.
   void SetPrimAfter(const int n) { m_primAfter = n; }
 
@@ -336,16 +335,16 @@ class ComponentNeBem3d : public Component {
 
   // Number of repetitions, after which only primitive properties are used.
   // a negative value implies elements are used always.
-  int m_primAfter = -1;  
+  int m_primAfter = -1;
 
   // Number of repetitions, after which only primitive properties are used
   // for weighting field calculations.
   // A negative value implies only elements are used.
-  int m_wtFldPrimAfter = -1;  
+  int m_wtFldPrimAfter = -1;
 
   // Option for removing primitives from a device geometry.
   // Zero implies none to be removed.
-  unsigned int m_optRmPrim = 0;  
+  unsigned int m_optRmPrim = 0;
 
   static constexpr double MinDist = 1.e-6;
   /// Target size of elements [cm].

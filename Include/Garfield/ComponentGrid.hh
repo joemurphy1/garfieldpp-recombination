@@ -1,9 +1,9 @@
 #ifndef G_COMPONENT_GRID_H
 #define G_COMPONENT_GRID_H
 
-#include<string>
+#include <array>
+#include <string>
 #include <vector>
-#include<array>
 
 #include "Garfield/Component.hh"
 
@@ -53,7 +53,7 @@ class ComponentGrid : public Component {
    * Format types are:
    *  - "xy", "xz", "xyz": nodes are specified by their coordinates
    *  - "ij", "ik", "ijk": nodes are specified by their indices
-   * 
+   *
    * If cylindrical coordinates are used, the first coordinate (x)
    * corresponds to the radial distance and the second coordinate (y)
    * corresponds to the azimuth (in radian).
@@ -96,8 +96,7 @@ class ComponentGrid : public Component {
    * \param fmt format string, see @ref LoadElectricField
    */
   bool SaveWeightingField(Component* cmp, const std::string& id,
-                          const std::string& filename,
-                          const std::string& fmt);
+                          const std::string& filename, const std::string& fmt);
 
   /// Return the field at a given node.
   bool GetElectricField(const unsigned int i, const unsigned int j,
@@ -117,32 +116,25 @@ class ComponentGrid : public Component {
    * \param fmt format string, see @ref LoadElectricField.
    * \param col column in the file which has the attachment coefficient.
    * \param scaleX scaling factor to be applied to the coordinates.
-   */ 
-  bool LoadElectronAttachment(const std::string& fname, 
-                              const std::string& fmt,
-                              const unsigned int col, 
-                              const double scaleX = 1.);
+   */
+  bool LoadElectronAttachment(const std::string& fname, const std::string& fmt,
+                              const unsigned int col, const double scaleX = 1.);
   /// Import hole attachment coefficients from a file.
-  bool LoadHoleAttachment(const std::string& fname, 
-                          const std::string& fmt,
-                          const unsigned int col,
-                          const double scaleX = 1.);
+  bool LoadHoleAttachment(const std::string& fname, const std::string& fmt,
+                          const unsigned int col, const double scaleX = 1.);
 
   /** Import a map of electron drift velocities from a file.
    * \param fname name of the text file.
    * \param fmt format string, see @ref LoadElectricField
    * \param scaleX scaling factor to be applied to the coordinates.
    * \param scaleV scaling factor to be applied to the velocity components.
-   */ 
-  bool LoadElectronVelocity(const std::string& fname, 
-                            const std::string& fmt,
+   */
+  bool LoadElectronVelocity(const std::string& fname, const std::string& fmt,
                             const double scaleX = 1.,
                             const double scaleV = 1.e-9);
   /// Import a map of hole drift velocities from a file.
-  bool LoadHoleVelocity(const std::string& fname, 
-                        const std::string& fmt,
-                        const double scaleX = 1.,
-                        const double scaleV = 1.e-9);
+  bool LoadHoleVelocity(const std::string& fname, const std::string& fmt,
+                        const double scaleX = 1., const double scaleV = 1.e-9);
 
   void Clear() override { Reset(); }
   void ElectricField(const double x, const double y, const double z, double& ex,
@@ -170,52 +162,41 @@ class ComponentGrid : public Component {
   bool GetVoltageRange(double& vmin, double& vmax) override;
   bool GetElectricFieldRange(double& exmin, double& exmax, double& eymin,
                              double& eymax, double& ezmin, double& ezmax);
-  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, 
-                      double& xmax, double& ymax, double& zmax) override;
-  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, 
-                         double& xmax, double& ymax, double& zmax) override;
+  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
+                      double& ymax, double& zmax) override;
+  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, double& xmax,
+                         double& ymax, double& zmax) override;
 
   bool HasMagneticField() const override;
 
   bool HasAttachmentMap() const override {
     return !(m_eAttachment.empty() && m_hAttachment.empty());
-  } 
+  }
   bool ElectronAttachment(const double x, const double y, const double z,
                           double& att) override;
   bool HoleAttachment(const double x, const double y, const double z,
                       double& att) override;
   bool HasMobilityMap() const override {
     return !(m_eMobility.empty() && m_hMobility.empty());
-  } 
+  }
   bool ElectronMobility(const double x, const double y, const double z,
-                          double& mu) override;
+                        double& mu) override;
   bool HoleMobility(const double x, const double y, const double z,
-                      double& mu) override;
+                    double& mu) override;
 
   bool HasVelocityMap() const override {
     return !(m_eVelocity.empty() && m_hVelocity.empty());
-  } 
+  }
   bool ElectronVelocity(const double x, const double y, const double z,
                         double& vx, double& vy, double& vz) override;
-  bool HoleVelocity(const double x, const double y, const double z,
-                    double& vx, double& vy, double& vz) override;
+  bool HoleVelocity(const double x, const double y, const double z, double& vx,
+                    double& vy, double& vz) override;
+
  private:
-  enum class Format {
-    Unknown,
-    XY,
-    XZ,
-    XYZ,
-    IJ,
-    IK,
-    IJK,
-    YXZ
-  };
-  enum class Coordinates {
-    Cartesian,
-    Cylindrical
-  };
+  enum class Format { Unknown, XY, XZ, XYZ, IJ, IK, IJK, YXZ };
+  enum class Coordinates { Cartesian, Cylindrical };
   Coordinates m_coordinates = Coordinates::Cartesian;
- 
+
   Medium* m_medium = nullptr;
   struct Node {
     double fx, fy, fz;  ///< Field
@@ -266,7 +247,7 @@ class ComponentGrid : public Component {
                 const bool withPotential, const bool withFlag,
                 const double scaleX, const double scaleF, const double scaleP,
                 std::vector<std::vector<std::vector<Node> > >& field);
-  /// Load scalar data (e. g. attachment coefficients) from file. 
+  /// Load scalar data (e. g. attachment coefficients) from file.
   bool LoadData(const std::string& filename, std::string format,
                 const double scaleX,
                 std::vector<std::vector<std::vector<double> > >& tab,
@@ -281,8 +262,8 @@ class ComponentGrid : public Component {
                 double& fx, double& fy, double& fz, double& p, bool& active);
   /// Interpolation in a table of scalars.
   bool GetData(const double x, const double y, const double z,
-      const std::vector<std::vector<std::vector<double> > >& table,
-      double& value);
+               const std::vector<std::vector<std::vector<double> > >& table,
+               double& value);
 
   /// Reduce a coordinate to the basic cell (in case of periodicity).
   double Reduce(const double xin, const double xmin, const double xmax,

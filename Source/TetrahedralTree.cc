@@ -1,6 +1,6 @@
 #ifdef __GPUCOMPILE__
-#include "TetrahedralTreeGPU.h"
 #include "GPUFunctions.h"
+#include "TetrahedralTreeGPU.h"
 #else
 #include "Garfield/TetrahedralTree.hh"
 #endif
@@ -45,8 +45,8 @@ bool TetrahedralTree::DoesBoxOverlap(const double bb[6]) const {
 #endif
 
 // Determine which octant of the tree would contain 'point'
-__DEVICE__ int GARFIELD_CLASS_NAME(TetrahedralTree)::GetOctantContainingPoint(const Vec3& point) const
-{
+__DEVICE__ int GARFIELD_CLASS_NAME(TetrahedralTree)::GetOctantContainingPoint(
+    const Vec3& point) const {
   int oct = 0;
   if (point.x() >= m_origin.x()) oct |= 4;
   if (point.y() >= m_origin.y()) oct |= 2;
@@ -70,12 +70,12 @@ void TetrahedralTree::InsertMeshNode(Vec3 point, const int index) {
     children[octant]->InsertMeshNode(point, index);
     return;
   }
-  
+
   // Add the new point if the block is not full.
   if (nodes.size() < BlockCapacity) {
     nodes.push_back(std::make_pair(point, index));
     return;
-  } 
+  }
   // Block is full, so we need to partition it.
   // Split the current node and create new empty trees for each child octant.
   for (int i = 0; i < 8; ++i) {
@@ -104,7 +104,7 @@ void TetrahedralTree::InsertMeshElement(const double bb[6], const int index) {
     // Add the element to the list of this octant.
     elements.push_back(index);
     return;
-  } 
+  }
   // Check which children overlap with the element's bounding box.
   for (int i = 0; i < 8; i++) {
     if (!children[i]->DoesBoxOverlap(bb)) continue;
@@ -117,20 +117,22 @@ void TetrahedralTree::InsertMeshElement(const double bb[6], const int index) {
 // block) that contains the
 // point passed as input.
 #ifdef __GPUCOMPILE__
-__device__ void TetrahedralTreeGPU::GetElementsInBlock(const Vec3& point, const int *&tet_list_elems, int &num_elems) const {
-    const TetrahedralTreeGPU* octreeNode = GetBlockFromPoint(point);
+__device__ void TetrahedralTreeGPU::GetElementsInBlock(
+    const Vec3& point, const int*& tet_list_elems, int& num_elems) const {
+  const TetrahedralTreeGPU* octreeNode = GetBlockFromPoint(point);
 
-    if (octreeNode) {
-        tet_list_elems = octreeNode->elements;
-        num_elems = octreeNode->numelements;
-        return;
-    }
-
-    tet_list_elems = nullptr;
-    num_elems = 0;
+  if (octreeNode) {
+    tet_list_elems = octreeNode->elements;
+    num_elems = octreeNode->numelements;
+    return;
   }
+
+  tet_list_elems = nullptr;
+  num_elems = 0;
+}
 #else
-const std::vector<int>& TetrahedralTree::GetElementsInBlock(const Vec3& point) const {
+const std::vector<int>& TetrahedralTree::GetElementsInBlock(
+    const Vec3& point) const {
   const TetrahedralTree* octreeNode = GetBlockFromPoint(point);
 
   if (octreeNode) {
@@ -146,8 +148,9 @@ const std::vector<int>& TetrahedralTree::GetElementsInBlock(const Vec3& point) c
 // the mesh's bounding box
 // If we don't check this, the case when root is leaf node itself will return
 // wrong block
-__DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GARFIELD_CLASS_NAME(TetrahedralTree)::GetBlockFromPoint(const Vec3& point) const
-{
+__DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree) *
+    GARFIELD_CLASS_NAME(TetrahedralTree)::GetBlockFromPoint(
+        const Vec3& point) const {
   if (!(m_min.x() <= point.x() && point.x() <= m_max.x() &&
         m_min.y() <= point.y() && point.y() <= m_max.y() &&
         m_min.z() <= point.z() && point.z() <= m_max.z()))
@@ -156,9 +159,9 @@ __DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GARFIELD_CLASS_NAME(Tetra
   return GetBlockFromPointHelper(point);
 }
 
-__DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GARFIELD_CLASS_NAME(TetrahedralTree)::GetBlockFromPointHelper(
-    const Vec3& point) const
-{
+__DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree) *
+    GARFIELD_CLASS_NAME(TetrahedralTree)::GetBlockFromPointHelper(
+        const Vec3& point) const {
   // If we're at a leaf node, it means, the point is inside this block
   if (IsLeafNode()) return this;
   // We are at the interior node, so check which child octant contains the
@@ -168,11 +171,10 @@ __DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree)* GARFIELD_CLASS_NAME(Tetra
 }
 #ifndef __GPUCOMPILE__
 #ifndef USEGPU
-double TetrahedralTree::CreateGPUTransferObject(TetrahedralTreeGPU *&tree_gpu)
-{
+double TetrahedralTree::CreateGPUTransferObject(TetrahedralTreeGPU*& tree_gpu) {
   tree_gpu = nullptr;
   return 0;
 }
 #endif
 #endif
-}
+}  // namespace Garfield

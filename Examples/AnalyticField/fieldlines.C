@@ -1,18 +1,17 @@
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 #include <TStyle.h>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetPalette(kGreyScale);
 
@@ -21,18 +20,18 @@ int main(int argc, char * argv[]) {
   // Periodicity (wire spacing) [cm].
   constexpr double period = 0.25;
   // Wire diameters [cm].
-  constexpr double ds = 0.0020; // sense wires
-  constexpr double dc = 0.0075; // cathode wires
-  constexpr double dg = 0.0075; // gate wires
+  constexpr double ds = 0.0020;  // sense wires
+  constexpr double dc = 0.0075;  // cathode wires
+  constexpr double dg = 0.0075;  // gate wires
 
   // Voltage settings [V].
-  constexpr double vs = 1460.; // sense wires
-  constexpr double vg = -70.;  // gate wires
- 
+  constexpr double vs = 1460.;  // sense wires
+  constexpr double vg = -70.;   // gate wires
+
   // HV plane (drift field).
   constexpr double yHV = 249.7;
   constexpr double vHV = -100000;
- 
+
   // Gas mixture.
   MediumMagboltz gas("ne", 85.72, "co2", 9.52, "n2", 4.76);
 
@@ -61,7 +60,7 @@ int main(int argc, char * argv[]) {
   // Plot isopotential contours.
   ViewField fieldView(&cmp);
   constexpr double xmin = -3 * period;
-  constexpr double xmax =  3 * period;
+  constexpr double xmax = 3 * period;
   fieldView.SetArea(xmin, 0., xmax, 5 * gap);
   fieldView.SetVoltageRange(-400., 1000.);
   fieldView.SetNumberOfContours(40);
@@ -70,9 +69,9 @@ int main(int argc, char * argv[]) {
   std::vector<double> xf;
   std::vector<double> yf;
   std::vector<double> zf;
-  fieldView.EqualFluxIntervals(xmin, 5 * gap, 0., xmax, 5 * gap, 0.,
-                               xf, yf, zf, 50);
-  fieldView.PlotFieldLines(xf, yf, zf, true, false); 
+  fieldView.EqualFluxIntervals(xmin, 5 * gap, 0., xmax, 5 * gap, 0., xf, yf, zf,
+                               50);
+  fieldView.PlotFieldLines(xf, yf, zf, true, false);
 
   // Plot the cell layout.
   ViewCell cellView(&cmp);
@@ -81,6 +80,4 @@ int main(int argc, char * argv[]) {
   cellView.Plot2d();
 
   app.Run(true);
-
 }
-

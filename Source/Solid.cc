@@ -1,9 +1,10 @@
+#include "Garfield/Solid.hh"
+
 #include <cmath>
 #include <iostream>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/Solid.hh"
 
 namespace Garfield {
 
@@ -39,11 +40,10 @@ void Solid::SetDirection(const double dx, const double dy, const double dz) {
 
 bool Solid::GetProfile(std::vector<double>& /*xv*/,
                        std::vector<double>& /*yv*/) const {
-
   std::cerr << m_className << "::GetProfile: function not implemented.\n";
   return false;
 }
- 
+
 double Solid::NotImplemented(const std::string& fcn) const {
   std::cerr << m_className << "::" << fcn << ": function not implemented.\n";
   return 0.;
@@ -85,4 +85,4 @@ bool Solid::Intersect(const double x1, const double y1, const double z1,
   return on;
 }
 
-}
+}  // namespace Garfield

@@ -12,17 +12,18 @@ appear in all copies and in supporting documentation.
 It is provided "as is" without express or implied warranty.
 */
 
-#include <list>
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+#include <list>
+
 #include "wcpplib/stream/prstream.h"
 
-//#define USE_BOOST_MULTITHREADING
-//#define PRINT_MESSAGE_ABOUT_THREAD_INITIALIZATION
-// Prints a long message at initialization of FunNameStack.
-// The message is quite long and it is unlikely that
-// it can be visually missed even if it is interrupted by play of threads.
-// This message is not necessary in routine work.
+// #define USE_BOOST_MULTITHREADING
+// #define PRINT_MESSAGE_ABOUT_THREAD_INITIALIZATION
+//  Prints a long message at initialization of FunNameStack.
+//  The message is quite long and it is unlikely that
+//  it can be visually missed even if it is interrupted by play of threads.
+//  This message is not necessary in routine work.
 
 #ifdef USE_BOOST_MULTITHREADING
 #include "boost/thread/mutex.hpp"
@@ -115,25 +116,25 @@ It is provided "as is" without express or implied warranty.
   }
 
 // and of two conditions for one variable
-#define check_econd23(a, sign1, b1, sign0, sign2, b2, stream)              \
-  if (a sign1 b1 sign0 a sign2 b2) {                                       \
-    funnw.ehdr(stream);                                                    \
-    stream << '\n' << #a << #sign1 << #b1 << #sign0 << #a << #sign2 << #b2 \
-           << '\n';                                                        \
-    stream << #a << '=' << (a) << ' ' << #b1 << '=' << (b1) << ' ' << #b2  \
-           << '=' << (b2) << '\n';                                         \
-    spexit(stream);                                                        \
+#define check_econd23(a, sign1, b1, sign0, sign2, b2, stream)               \
+  if (a sign1 b1 sign0 a sign2 b2) {                                        \
+    funnw.ehdr(stream);                                                     \
+    stream << '\n'                                                          \
+           << #a << #sign1 << #b1 << #sign0 << #a << #sign2 << #b2 << '\n'; \
+    stream << #a << '=' << (a) << ' ' << #b1 << '=' << (b1) << ' ' << #b2   \
+           << '=' << (b2) << '\n';                                          \
+    spexit(stream);                                                         \
   }
 
 // two conditions for four variables
-#define check_econd24(a1, sign1, b1, sign0, a2, sign2, b2, stream)           \
-  if (a1 sign1 b1 sign0 a2 sign2 b2) {                                       \
-    funnw.ehdr(stream);                                                      \
-    stream << '\n' << #a1 << #sign1 << #b1 << #sign0 << #a2 << #sign2 << #b2 \
-           << '\n';                                                          \
-    stream << #a1 << '=' << (a1) << ' ' << #b1 << '=' << (b1) << '\n';       \
-    stream << #a2 << '=' << (a2) << ' ' << #b2 << '=' << (b2) << '\n';       \
-    spexit(stream);                                                          \
+#define check_econd24(a1, sign1, b1, sign0, a2, sign2, b2, stream)            \
+  if (a1 sign1 b1 sign0 a2 sign2 b2) {                                        \
+    funnw.ehdr(stream);                                                       \
+    stream << '\n'                                                            \
+           << #a1 << #sign1 << #b1 << #sign0 << #a2 << #sign2 << #b2 << '\n'; \
+    stream << #a1 << '=' << (a1) << ' ' << #b1 << '=' << (b1) << '\n';        \
+    stream << #a2 << '=' << (a2) << ' ' << #b2 << '=' << (b2) << '\n';        \
+    spexit(stream);                                                           \
   }
 
 #else  // without FUNNAMESTACK, print only condition
@@ -197,25 +198,25 @@ It is provided "as is" without express or implied warranty.
   }
 
 // and of two conditions for one variable
-#define check_econd23(a, sign1, b1, sign0, sign2, b2, stream)              \
-  if (a sign1 b1 sign0 a sign2 b2) {                                       \
-    stream << "ERROR:\n";                                                  \
-    stream << '\n' << #a << #sign1 << #b1 << #sign0 << #a << #sign2 << #b2 \
-           << '\n';                                                        \
-    stream << #a << '=' << (a) << ' ' << #b1 << '=' << (b1) << ' ' << #b2  \
-           << '=' << (b2) << '\n';                                         \
-    spexit(stream);                                                        \
+#define check_econd23(a, sign1, b1, sign0, sign2, b2, stream)               \
+  if (a sign1 b1 sign0 a sign2 b2) {                                        \
+    stream << "ERROR:\n";                                                   \
+    stream << '\n'                                                          \
+           << #a << #sign1 << #b1 << #sign0 << #a << #sign2 << #b2 << '\n'; \
+    stream << #a << '=' << (a) << ' ' << #b1 << '=' << (b1) << ' ' << #b2   \
+           << '=' << (b2) << '\n';                                          \
+    spexit(stream);                                                         \
   }
 
 // two conditions for four variables
-#define check_econd24(a1, sign1, b1, sign0, a2, sign2, b2, stream)           \
-  if (a1 sign1 b1 sign0 a2 sign2 b2) {                                       \
-    stream << "ERROR:\n";                                                    \
-    stream << '\n' << #a1 << #sign1 << #b1 << #sign0 << #a2 << #sign2 << #b2 \
-           << '\n';                                                          \
-    stream << #a1 << '=' << (a1) << ' ' << #b1 << '=' << (b1) << '\n';       \
-    stream << #a2 << '=' << (a2) << ' ' << #b2 << '=' << (b2) << '\n';       \
-    spexit(stream);                                                          \
+#define check_econd24(a1, sign1, b1, sign0, a2, sign2, b2, stream)            \
+  if (a1 sign1 b1 sign0 a2 sign2 b2) {                                        \
+    stream << "ERROR:\n";                                                     \
+    stream << '\n'                                                            \
+           << #a1 << #sign1 << #b1 << #sign0 << #a2 << #sign2 << #b2 << '\n'; \
+    stream << #a1 << '=' << (a1) << ' ' << #b1 << '=' << (b1) << '\n';        \
+    stream << #a2 << '=' << (a2) << ' ' << #b2 << '=' << (b2) << '\n';        \
+    spexit(stream);                                                           \
   }
 
 #endif
@@ -250,7 +251,7 @@ extern int s_throw_exception_in_spexit;  // if == 1, does exit(1) of abort()
                                          // depending on the key below
 extern int s_exit_without_core;          // the key above have larger priority
 
-}
+}  // namespace Heed
 
 // Normal exit:
 #define spexit(stream)                                                   \
@@ -360,9 +361,9 @@ class FunNameStack {
               //     to time expense
 
 #ifdef USE_BOOST_MULTITHREADING
-  std::ostream& printname(std::ostream& file, NameStack* ns, int n); 
+  std::ostream& printname(std::ostream& file, NameStack* ns, int n);
 #else
-  std::ostream& printname(std::ostream& file, int n); 
+  std::ostream& printname(std::ostream& file, int n);
 #endif
  public:
   void set_parameters(int fs_act = 1, int fs_print = 0);
@@ -373,11 +374,10 @@ class FunNameStack {
                                       // stack
   void printdel(std::ostream& file);  // called at deletion of name from stack
  public:
-  inline int put(const char* fname)
-  {
-      // if(s_init != 1) init();
-  if (s_act != 1) return 0;
-  #ifdef USE_BOOST_MULTITHREADING
+  inline int put(const char* fname) {
+    // if(s_init != 1) init();
+    if (s_act != 1) return 0;
+#ifdef USE_BOOST_MULTITHREADING
     NameStack* ns = get_thread_stack();
     if (ns->qname >= pqname) {
       mcerr << "FunNameStack::put: error: qname == pqname\n";
@@ -391,7 +391,7 @@ class FunNameStack {
       printput(mcout);
     }
     return ns->qname - 1;
-  #else
+#else
     if (qname >= pqname) {
       mcerr << "FunNameStack::put: error: qname == pqname\n";
       mcerr << "Most oftenly this happens due to infinite recursion.\n";
@@ -403,40 +403,38 @@ class FunNameStack {
       printput(mcout);
     }
     return qname - 1;
-  #endif
+#endif
   }
-  inline void del(int nname)
-  {
+  inline void del(int nname) {
     if (s_act != 1) return;
-    #ifdef USE_BOOST_MULTITHREADING
-      NameStack* ns = get_thread_stack();
-      if (nname != ns->qname - 1) {
-        // not last
-        ns->qname = nname;
-      } else {
-        if (s_print > 0) {
-          printdel(mcout);
-        }
-        ns->qname--;
+#ifdef USE_BOOST_MULTITHREADING
+    NameStack* ns = get_thread_stack();
+    if (nname != ns->qname - 1) {
+      // not last
+      ns->qname = nname;
+    } else {
+      if (s_print > 0) {
+        printdel(mcout);
       }
-      if (ns->qname == 0) remove_thread_stack();
-    #else
-      if (nname != qname - 1) {
-        // not last
-        qname = nname;
-      } else {
-        if (s_print > 0) {
-          printdel(mcout);
-        }
-        qname--;
+      ns->qname--;
+    }
+    if (ns->qname == 0) remove_thread_stack();
+#else
+    if (nname != qname - 1) {
+      // not last
+      qname = nname;
+    } else {
+      if (s_print > 0) {
+        printdel(mcout);
       }
-    #endif
+      qname--;
+    }
+#endif
   }
-  inline void replace(const char* fname)
-  {
-      // if(s_init != 1) init();
-  if (s_act != 1) return;
-  #ifdef USE_BOOST_MULTITHREADING
+  inline void replace(const char* fname) {
+    // if(s_init != 1) init();
+    if (s_act != 1) return;
+#ifdef USE_BOOST_MULTITHREADING
     NameStack* ns = get_thread_stack();
     if (ns->qname >= pqname) {
       mcerr << "FunNameStack::put: error: qname == pqname\n";
@@ -447,7 +445,7 @@ class FunNameStack {
     }
     ns->name[ns->qname - 1] = fname;
     if (s_print > 0) printput(mcout);
-  #else
+#else
     if (qname >= pqname) {
       mcerr << "FunNameStack::put: error: qname == pqname\n";
       mcerr << "Most oftenly this happens due to infinite recursion.\n";
@@ -456,7 +454,7 @@ class FunNameStack {
     }
     name[qname - 1] = const_cast<char*>(fname);
     if (s_print > 0) printput(mcout);
-  #endif
+#endif
   }
   friend std::ostream& operator<<(std::ostream& file, const FunNameStack& f);
 };
@@ -472,19 +470,17 @@ class FunNameWatch {
   const char* name;  // it is memorized independenlty on s_act.
                      // Used for printing of headers.
  public:
-  inline FunNameWatch(const char* fname)
-  {
-      //#ifdef FUNNAMESTACK
-  nname = FunNameStack::instance().put(fname);
-  //#else
-  // nname=0;
-  //#endif
+  inline FunNameWatch(const char* fname) {
+    // #ifdef FUNNAMESTACK
+    nname = FunNameStack::instance().put(fname);
+    // #else
+    //  nname=0;
+    // #endif
   }
-  inline ~FunNameWatch()
-  {
-      //#ifdef FUNNAMESTACK
-  if (nname >= 0) FunNameStack::instance().del(nname);
-  //#endif
+  inline ~FunNameWatch() {
+    // #ifdef FUNNAMESTACK
+    if (nname >= 0) FunNameStack::instance().del(nname);
+    // #endif
   }
 
   // print header
@@ -505,6 +501,6 @@ class FunNameWatch {
 };
 std::ostream& operator<<(std::ostream& file, const FunNameWatch& f);
 
-}
+}  // namespace Heed
 
 #endif

@@ -2,33 +2,27 @@
 #define G_RANDOM_H
 
 #include <cmath>
-#include "Garfield/FundamentalConstants.hh"
 #include <functional>
+
+#include "Garfield/FundamentalConstants.hh"
 
 namespace Garfield {
 
+class Random {
+ public:
+  Random() = default;
+  template <typename T>
+  static inline void SetEngine(T engine) {
+    draw = std::bind(&T::Draw, engine);
+  }
+  inline double static Draw() noexcept { return draw(); };
 
-class Random
-{
-  public:
-    Random() = default;
-    template<typename T> static inline void SetEngine(T engine)
-    {
-      draw=std::bind(&T::Draw, engine);
-    }
-    inline double static Draw() noexcept
-    {
-      return draw();
-    };
-  private:
-    static std::function<double(void)> draw;
+ private:
+  static std::function<double(void)> draw;
 };
 
 /// Draw a random number uniformly distributed in the range [0, 1).
-inline double RndmUniform()
-{ 
-  return Random::Draw();
-}
+inline double RndmUniform() { return Random::Draw(); }
 
 /// Draw a random number uniformly distributed in the range (0, 1).
 inline double RndmUniformPos() {
@@ -85,14 +79,13 @@ inline double RndmVoigt(const double mu, const double sigma,
 
 /// Draw a random number from a geometric distribution.
 inline unsigned int RndmYuleFurry(const double mean) {
-
   if (mean <= 0.) return 0;
-  return 1 + static_cast<unsigned int>(std::log(RndmUniformPos()) / 
+  return 1 + static_cast<unsigned int>(std::log(RndmUniformPos()) /
                                        std::log1p(-1. / mean));
   /*
-  const double u = RndmUniform(); 
+  const double u = RndmUniform();
   double p = 1. / mean;
-  const double q = 1. - p; 
+  const double q = 1. - p;
   double sum = p;
   unsigned int k = 1;
   while (sum < u) {
@@ -151,6 +144,6 @@ inline void RndmDirection(double& dx, double& dy, double& dz,
   dy = length * sin(phi) * stheta;
   dz = length * ctheta;
 }
-}
+}  // namespace Garfield
 
 #endif

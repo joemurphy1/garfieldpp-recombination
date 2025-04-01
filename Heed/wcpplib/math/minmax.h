@@ -23,11 +23,9 @@ It is provided "as is" without express or implied warranty.
  */
 #endif
 
-namespace Heed {  
+namespace Heed {
 
-inline long left_round(double f) {
-  return f >= 0 ? long(f) : -long(-f) - 1;
-}
+inline long left_round(double f) { return f >= 0 ? long(f) : -long(-f) - 1; }
 
 template <class T>
 inline T tabs(const T& x) {
@@ -44,6 +42,6 @@ int apeq_mant(const T& x1, const T& x2, T prec) {
   return 0;
 }
 
-}
+}  // namespace Heed
 
 #endif

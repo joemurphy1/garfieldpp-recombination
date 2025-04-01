@@ -2,6 +2,7 @@
 #define MOLECULE_DEF_H
 
 #include <memory>
+
 #include "wcpplib/matter/AtomDef.h"
 
 namespace Heed {
@@ -91,8 +92,7 @@ std::ostream& operator<<(std::ostream& file, const MoleculeDef& f);
 /// Library of molecules.
 
 class MoleculeDefs {
-
-public:
+ public:
   static const std::list<MoleculeDef>& getMolecules();
   /// Return the address of the molecule with this name.
   /// If there is no molecule with this notation, the function returns NULL
@@ -100,10 +100,11 @@ public:
   static const MoleculeDef* getMolecule(const std::string& fnotation);
   /// Print all registered molecules.
   static void printMolecules(std::ostream& file);
-private:
+
+ private:
   static std::list<MoleculeDef> molecules;
 };
 
-}
+}  // namespace Heed
 
 #endif

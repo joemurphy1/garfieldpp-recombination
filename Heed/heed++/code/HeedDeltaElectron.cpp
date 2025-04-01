@@ -1,7 +1,8 @@
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "heed++/code/HeedDeltaElectron.h"
-#include "heed++/code/HeedDeltaElectronCS.h"
+
 #include "Garfield/Random.hh"
+#include "heed++/code/HeedDeltaElectronCS.h"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 
 // 2003, I. Smirnov
 
@@ -11,14 +12,12 @@
 namespace {
 
 long findInterval(Heed::EnergyMesh* emesh, const double energy) {
-
   const long n = emesh->get_interval_number_between_centers(energy);
   return std::min(std::max(n, 0L), emesh->get_q() - 2);
 }
 
 double interpolate(Heed::EnergyMesh* emesh, const double x,
                    const std::vector<double>& y) {
-
   const long n = findInterval(emesh, x);
   const double x1 = emesh->get_ec(n);
   const double x2 = emesh->get_ec(n + 1);
@@ -40,17 +39,17 @@ double sample_ctheta(const double sigma) {
   return ctheta;
 }
 
-}
+}  // namespace
 
 namespace Heed {
 
-using CLHEP::degree;
+using CLHEP::c_light;
+using CLHEP::c_squared;
 using CLHEP::cm;
+using CLHEP::degree;
 using CLHEP::eV;
 using CLHEP::keV;
 using CLHEP::MeV;
-using CLHEP::c_light;
-using CLHEP::c_squared;
 
 bool HeedDeltaElectron::s_low_mult_scattering = true;
 bool HeedDeltaElectron::s_high_mult_scattering = true;
@@ -58,8 +57,8 @@ bool HeedDeltaElectron::s_direct_low_if_little = true;
 
 HeedDeltaElectron::HeedDeltaElectron(manip_absvol* primvol, const point& pt,
                                      const vec& vel, double ftime,
-                                     long fparent_particle_number,
-                                     fieldmap* fm, bool fprint_listing)
+                                     long fparent_particle_number, fieldmap* fm,
+                                     bool fprint_listing)
     : eparticle(primvol, pt, vel, ftime, &electron_def, fm),
       parent_particle_number(fparent_particle_number),
       m_particle_number(s_counter++),
@@ -126,7 +125,8 @@ void HeedDeltaElectron::physics_mrange(double& fmrange) {
   if (s_high_mult_scattering) {
     const double mean_path = interpolate(emesh, ek_restr, hdecs->lambda);
     if (m_print_listing) Iprintnf(mcout, mean_path);
-    const double path_length = -mean_path * cm * log(1.0 - Garfield::RndmUniform());
+    const double path_length =
+        -mean_path * cm * log(1.0 - Garfield::RndmUniform());
     if (m_print_listing) Iprintnf(mcout, path_length);
     if (fmrange > path_length) {
       fmrange = path_length;
@@ -234,7 +234,8 @@ void HeedDeltaElectron::physics_after_new_speed(
     m_path_length = false;
     if (s_low_mult_scattering) {
       EnergyMesh* emesh = hdecs->hmd->energy_mesh;
-      const double low_path_length = interpolate(emesh, ek_restr, hdecs->low_lambda) * cm;
+      const double low_path_length =
+          interpolate(emesh, ek_restr, hdecs->low_lambda) * cm;
       if (m_print_listing) Iprintnf(mcout, low_path_length / cm);
       m_mult_low_path_length = false;
       m_q_low_path_length = m_currpos.prange / low_path_length;
@@ -263,7 +264,8 @@ void HeedDeltaElectron::physics_after_new_speed(
       for (long nscat = 0; nscat < m_q_low_path_length; ++nscat) {
         if (m_print_listing) Iprintn(mcout, nscat);
         const double theta =
-            hdecs->low_angular_points_ran[n1r].ran(Garfield::RndmUniform()) * degree;
+            hdecs->low_angular_points_ran[n1r].ran(Garfield::RndmUniform()) *
+            degree;
         if (m_print_listing) Iprintnf(mcout, theta);
         turn(cos(theta), sin(theta));
       }
@@ -293,7 +295,8 @@ void HeedDeltaElectron::physics_after_new_speed(
     }
     EnergyMesh* emesh = hdecs->hmd->energy_mesh;
     const long n1r = findInterval(emesh, ek_restr);
-    const double theta = hdecs->angular_points_ran[n1r].ran(Garfield::RndmUniform()) * degree;
+    const double theta =
+        hdecs->angular_points_ran[n1r].ran(Garfield::RndmUniform()) * degree;
     if (m_print_listing) Iprintnf(mcout, theta);
     turn(cos(theta), sin(theta));
   }
@@ -302,7 +305,6 @@ void HeedDeltaElectron::physics_after_new_speed(
 
 void HeedDeltaElectron::ionisation(const double eloss, const double dedx,
                                    PairProd* pairprod) {
-
   if (eloss < m_necessary_energy) {
     m_necessary_energy -= eloss;
     return;
@@ -331,7 +333,8 @@ void HeedDeltaElectron::ionisation(const double eloss, const double dedx,
     m_prevpos.tid.up_absref(&ptloc);
     if (m_print_listing) mcout << "New conduction electron\n";
     if (m_fm->inside(ptloc)) {
-      conduction_electrons.emplace_back(HeedCondElectron(ptloc, m_currpos.time));
+      conduction_electrons.emplace_back(
+          HeedCondElectron(ptloc, m_currpos.time));
       conduction_ions.emplace_back(HeedCondElectron(ptloc, m_currpos.time));
     }
     eloss_left -= m_necessary_energy;
@@ -358,8 +361,7 @@ void HeedDeltaElectron::print(std::ostream& file, int l) const {
   if (l <= 1) return;
   file << " s_low_mult_scattering=" << s_low_mult_scattering
        << " s_high_mult_scattering=" << s_high_mult_scattering << '\n'
-       << " phys_mrange=" << m_phys_mrange 
-       << " stop_eloss=" << m_stop_eloss
+       << " phys_mrange=" << m_phys_mrange << " stop_eloss=" << m_stop_eloss
        << " mult_low_path_length=" << m_mult_low_path_length << '\n'
        << " q_low_path_length=" << m_q_low_path_length
        << " path_length=" << m_path_length
@@ -367,4 +369,4 @@ void HeedDeltaElectron::print(std::ostream& file, int l) const {
        << " parent_particle_number=" << parent_particle_number << '\n';
   mparticle::print(file, l - 1);
 }
-}
+}  // namespace Heed

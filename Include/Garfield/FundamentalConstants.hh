@@ -67,6 +67,6 @@ static constexpr double ZeroCelsius = 273.15;
 
 /// Standard gravitational acceleration [m s-2]
 static constexpr double GravitationalAcceleration = 9.80665;
-}
+}  // namespace Garfield
 
 #endif

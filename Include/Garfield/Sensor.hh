@@ -1,4 +1,5 @@
-// Include this header if we're compiling with the GPU or this is the first time without
+// Include this header if we're compiling with the GPU or this is the first time
+// without
 #if defined(__GPUCOMPILE__) || !defined(G_SENSOR_H)
 
 #if !defined(__GPUCOMPILE__) && !defined(G_SENSOR_H)
@@ -9,9 +10,8 @@
 
 #ifdef __GPUCOMPILE__
 
-
 #else
-#include<array>
+#include <array>
 #include <functional>
 #include <mutex>
 #include <tuple>
@@ -26,10 +26,11 @@ class TPad;
 namespace Garfield {
 
 #if defined(__GPUCONST__)
-  #undef __GPUCONST__
+#undef __GPUCONST__
 #endif
 
-// setup class names depending on if this is compiling the GPU static version or not
+// setup class names depending on if this is compiling the GPU static version or
+// not
 #ifdef __GPUCOMPILE__
 #define __GPUCONST__ const
 #else
@@ -40,8 +41,7 @@ class Shaper;
 
 /// %Sensor
 
-class GARFIELD_CLASS_NAME(Sensor)
-{
+class GARFIELD_CLASS_NAME(Sensor) {
  public:
   /// Default constructor.
   GARFIELD_CLASS_NAME(Sensor)() = default;
@@ -79,9 +79,11 @@ class GARFIELD_CLASS_NAME(Sensor)
                      int& status);
 #endif
   /// Get the drift field at (x, y, z).
-  __DEVICE__ 
+  __DEVICE__
   void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez, GARFIELD_CLASS_NAME(Medium)*& medium, int& status) __GPUCONST__;
+                     double& ey, double& ez,
+                     GARFIELD_CLASS_NAME(Medium) * &medium,
+                     int& status) __GPUCONST__;
 
 #ifndef __GPUCOMPILE__
   /// Get the magnetic field at (x, y, z).
@@ -117,7 +119,7 @@ class GARFIELD_CLASS_NAME(Sensor)
                double& ymax, double& zmax);
 #endif
   /// Check if a point is inside the user area.
-  __DEVICE__  
+  __DEVICE__
   bool IsInArea(const double x, const double y, const double z) __GPUCONST__;
 
 #ifndef __GPUCOMPILE__
@@ -131,16 +133,17 @@ class GARFIELD_CLASS_NAME(Sensor)
   void NewSignal() { ++m_nEvents; }
   /// Reset signals and induced charges of all electrodes.
   void ClearSignal();
-  #else
+#else
   /// Add the signal on the GPU
   __device__ void AddSignal(const double q, const double t0, const double t1,
                             const double x0, const double y0, const double z0,
                             const double x1, const double y1, const double z1,
                             const bool integrateWeightingField,
-                            const bool useWeightingPotential, const int particle_idx);
-  #endif 
+                            const bool useWeightingPotential,
+                            const int particle_idx);
+#endif
 
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   /** Set the time window and binning for the signal calculation.
    * \param tstart start time [ns]
    * \param tstep bin width [ns]
@@ -172,8 +175,7 @@ class GARFIELD_CLASS_NAME(Sensor)
   void SetSignal(const std::string& label, const unsigned int bin,
                  const double signal);
   /// Set/override the signal.
-  void SetSignal(const std::string& label,
-                 const std::vector<double>& ts,
+  void SetSignal(const std::string& label, const std::vector<double>& ts,
                  const std::vector<double>& is);
   /// Retrieve the total signal for a given electrode and time bin.
   double GetSignal(const std::string& label, const unsigned int bin);
@@ -273,35 +275,34 @@ class GARFIELD_CLASS_NAME(Sensor)
   bool GetThresholdCrossing(const unsigned int i, double& time, double& level,
                             bool& rise) const;
 
-  /// Calculate the signal from a drift line using the 
+  /// Calculate the signal from a drift line using the
   /// weighting potential method.
-  void AddSignalWeightingPotential(const double q, 
-    const std::vector<double>& ts,
-    const std::vector<std::array<double, 3> >& xs);
-  /// Calculate the signal from an avalanche using the 
+  void AddSignalWeightingPotential(
+      const double q, const std::vector<double>& ts,
+      const std::vector<std::array<double, 3> >& xs);
+  /// Calculate the signal from an avalanche using the
   /// weighting potential method.
-  void AddSignalWeightingPotential(const double q, 
-    const std::vector<double>& ts,
-    const std::vector<std::array<double, 3> >& xs,
-    const std::vector<double>& qs);
-  /// Calculate the signal from a drift line using the 
+  void AddSignalWeightingPotential(
+      const double q, const std::vector<double>& ts,
+      const std::vector<std::array<double, 3> >& xs,
+      const std::vector<double>& qs);
+  /// Calculate the signal from a drift line using the
   /// weighting field method.
-  void AddSignalWeightingField(const double q, 
-    const std::vector<double>& ts,
-    const std::vector<std::array<double, 3> >& xs,
-    const bool integrateWeightingField);
-  /// Calculate the signal from a drift line using the 
-  /// weighting field method, given the drift velocities at each 
+  void AddSignalWeightingField(const double q, const std::vector<double>& ts,
+                               const std::vector<std::array<double, 3> >& xs,
+                               const bool integrateWeightingField);
+  /// Calculate the signal from a drift line using the
+  /// weighting field method, given the drift velocities at each
   /// drift line point.
-  void AddSignalWeightingField(const double q, 
-    const std::vector<double>& ts,
-    const std::vector<std::array<double, 3> >& xs,
-    const std::vector<std::array<double, 3> >& vs,
-    const std::vector<double>& ns, const int navg);
+  void AddSignalWeightingField(const double q, const std::vector<double>& ts,
+                               const std::vector<std::array<double, 3> >& xs,
+                               const std::vector<std::array<double, 3> >& vs,
+                               const std::vector<double>& ns, const int navg);
 
   /// Plot the induced signal.
   void PlotSignal(const std::string& label, TPad* pad,
-                  const std::string optTotal = "t", const std::string optPrompt = "",
+                  const std::string optTotal = "t",
+                  const std::string optPrompt = "",
                   const std::string optDelayed = "");
   /// Exporting induced signal to a csv file.
   void ExportSignal(const std::string& label, const std::string& filename,
@@ -339,11 +340,11 @@ class GARFIELD_CLASS_NAME(Sensor)
   double StepSizeHint();
 
   /// Create and initialise GPU Transfer class
-  double CreateGPUTransferObject(SensorGPU *&sensor_gpu);
-  #if USEGPU
+  double CreateGPUTransferObject(SensorGPU*& sensor_gpu);
+#if USEGPU
   /// Transfer the electrode signals from the GPU to the CPU
   void TransferGPUElectrodeSignals(SensorGPU*& sensor_gpu);
-  #endif
+#endif
 
  private:
   std::string m_className = "Sensor";
@@ -391,7 +392,7 @@ class GARFIELD_CLASS_NAME(Sensor)
   double m_tStep = 10.;
   unsigned int m_nTimeBins = 200;
   unsigned int m_nEvents = 0;
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   bool m_delayedSignal = false;
   std::vector<double> m_delayedSignalTimes;
   unsigned int m_nAvgDelayedSignal = 0;

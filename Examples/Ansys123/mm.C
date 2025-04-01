@@ -1,13 +1,12 @@
 #include <TApplication.h>
 
-#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ComponentAnsys123.hh"
+#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   MediumMagboltz gas("ar", 95., "cf4", 3., "ic4h10", 2.);
@@ -21,7 +20,7 @@ int main(int argc, char * argv[]) {
   fm.EnableMirrorPeriodicityY();
   fm.PrintRange();
 
-  // Associate the gas with the corresponding field map material. 
+  // Associate the gas with the corresponding field map material.
   fm.SetGas(&gas);
   fm.PrintMaterials();
 
@@ -29,7 +28,7 @@ int main(int argc, char * argv[]) {
   double xmin, ymin, zmin, xmax, ymax, zmax;
   fm.GetElementaryCell(xmin, ymin, zmin, xmax, ymax, zmax);
   const double pitch = 2 * (xmax - xmin);
- 
+
   ViewField fieldView(&fm);
   fieldView.SetPlaneXZ();
   fieldView.SetArea(-pitch, 0, pitch, zmax);
@@ -38,8 +37,8 @@ int main(int argc, char * argv[]) {
   std::vector<double> xf;
   std::vector<double> yf;
   std::vector<double> zf;
-  fieldView.EqualFluxIntervals(-pitch, 0, 0.95 * zmax, 
-                                pitch, 0, 0.95 * zmax, xf, yf, zf, 25);
+  fieldView.EqualFluxIntervals(-pitch, 0, 0.95 * zmax, pitch, 0, 0.95 * zmax,
+                               xf, yf, zf, 25);
   // fieldView.PlotFieldLines(xf, yf, zf);
 
   app.Run();

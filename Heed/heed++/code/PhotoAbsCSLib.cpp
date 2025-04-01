@@ -1,14 +1,14 @@
 #include "heed++/code/PhotoAbsCSLib.h"
-#include "heed++/code/PhysicalConstants.h"
 
 #include <iostream>
+
+#include "heed++/code/PhysicalConstants.h"
 
 // 2004, I. Smirnov
 
 namespace {
 
-std::string getDataBasePath() { 
-
+std::string getDataBasePath() {
   std::string path;
   // First try if the environment variable HEED_DATABASE is defined.
   char* heed_database = std::getenv("HEED_DATABASE");
@@ -32,7 +32,6 @@ std::string getDataBasePath() {
 
 Heed::ExAtomPhotoAbsCS generate_Ar_PACS(const std::string& shelllist_dir,
                                         const std::string& pacs_table_dir) {
-
   Heed::ExAtomPhotoAbsCS Argon_PACS_mod_esc(18, shelllist_dir + "shelllist.dat",
                                             pacs_table_dir + "Ar.dat");
 
@@ -72,13 +71,12 @@ Heed::ExAtomPhotoAbsCS generate_Ar_PACS(const std::string& shelllist_dir,
 
   return Argon_PACS_mod_esc;
 }
-}
+}  // namespace
 
 namespace Heed {
 
 using CLHEP::gram;
 using CLHEP::mole;
-
 
 std::map<std::string, ExAtomPhotoAbsCS> PhotoAbsCSLib::apacs;
 std::map<std::string, SimpleAtomPhotoAbsCS> PhotoAbsCSLib::hpacs;
@@ -95,15 +93,20 @@ AtomPhotoAbsCS* PhotoAbsCSLib::getAPACS(const std::string& name) {
 void PhotoAbsCSLib::initialise() {
   if (!hpacs.empty() || !apacs.empty()) return;
   // Hydrogen.
-  hpacs.emplace("H", 
-      SimpleAtomPhotoAbsCS(1, std::make_shared<HydrogenPhotoAbsCS>()));
-  hpacs.emplace("H for H2", 
-      SimpleAtomPhotoAbsCS(1, std::make_shared<PhenoPhotoAbsCS>("Hydrogen_for_H2", 1, 15.43e-6, 3.228)));
-  hpacs.emplace("H for CH4", 
-      SimpleAtomPhotoAbsCS(1, std::make_shared<PhenoPhotoAbsCS>("Hydrogen_for_CH4", 1, 12.65e-06, 3.228)));
-  hpacs.emplace("H for NH4",
-      SimpleAtomPhotoAbsCS(1, std::make_shared<PhenoPhotoAbsCS>("Hydrogen_for_NH4", 1, 10.0e-06, 3.228))); 
-  // hpacs.emplace("H for CH4", 
+  hpacs.emplace(
+      "H", SimpleAtomPhotoAbsCS(1, std::make_shared<HydrogenPhotoAbsCS>()));
+  hpacs.emplace("H for H2", SimpleAtomPhotoAbsCS(
+                                1, std::make_shared<PhenoPhotoAbsCS>(
+                                       "Hydrogen_for_H2", 1, 15.43e-6, 3.228)));
+  hpacs.emplace(
+      "H for CH4",
+      SimpleAtomPhotoAbsCS(1, std::make_shared<PhenoPhotoAbsCS>(
+                                  "Hydrogen_for_CH4", 1, 12.65e-06, 3.228)));
+  hpacs.emplace(
+      "H for NH4",
+      SimpleAtomPhotoAbsCS(1, std::make_shared<PhenoPhotoAbsCS>(
+                                  "Hydrogen_for_NH4", 1, 10.0e-06, 3.228)));
+  // hpacs.emplace("H for CH4",
   //     SimpleTablePhotoAbsCS("Hydrogen_for_CH4", 1, 12.65e-6,
   //                           dbpath + "H_for_CH4.dat");
 
@@ -120,14 +123,13 @@ void PhotoAbsCSLib::initialise() {
   apacs.emplace("Ar", generate_Ar_PACS(dbpath, pacs_table_dir));
 
   // Other atoms.
-  std::string shells = dbpath + "shelllist.dat"; 
+  std::string shells = dbpath + "shelllist.dat";
   const std::map<std::string, int> atoms = {
-    {"He",  2}, {"Li",  3}, {"Be",  4}, {"B",   5}, {"C",   6}, 
-    {"O",   8}, {"F",   9}, {"Ne", 10}, {"Na", 11}, {"Mg", 12},
-    {"Al", 13}, {"Si", 14}, {"P",  15}, {"S",  16}, {"Cl", 17}, 
-    {"Ga", 31}, {"Ge", 32}, {"As", 33}, {"Br", 35}, {"Kr", 36}, 
-    {"Cd", 48}, {"Te", 52}, {"Xe", 54}, {"Cs", 55}, {"Hg", 80}, 
-    {"U",  92}};
+      {"He", 2},  {"Li", 3},  {"Be", 4},  {"B", 5},   {"C", 6},   {"O", 8},
+      {"F", 9},   {"Ne", 10}, {"Na", 11}, {"Mg", 12}, {"Al", 13}, {"Si", 14},
+      {"P", 15},  {"S", 16},  {"Cl", 17}, {"Ga", 31}, {"Ge", 32}, {"As", 33},
+      {"Br", 35}, {"Kr", 36}, {"Cd", 48}, {"Te", 52}, {"Xe", 54}, {"Cs", 55},
+      {"Hg", 80}, {"U", 92}};
   for (const auto& atom : atoms) {
     std::string pacstable = pacs_table_dir + atom.first + ".dat";
     apacs.emplace(atom.first, ExAtomPhotoAbsCS(atom.second, shells, pacstable));
@@ -159,57 +161,58 @@ void PhotoAbsCSLib::initialise() {
   //                                             pacs_table_dir + "C.dat",
   //                                             "C_for_CH4", 12.65e-06);
 
-  apacs.emplace("C for CH4", ExAtomPhotoAbsCS(6, shells,
-                                              dbpath + "C_for_CH4.dat",
-                                              "C_for_CH4", 12.65e-6));
-  apacs.emplace("C for C2H4", ExAtomPhotoAbsCS(6, shells,
-                                               pacs_table_dir + "C.dat",
-                                               "C_for_C2H4", 10.51e-06));
-  apacs.emplace("C for C2H6", ExAtomPhotoAbsCS(6, shells,
-                                               pacs_table_dir + "C.dat",
-                                               "C_for_C2H6", 11.52e-06));
-  apacs.emplace("C for C4H10", ExAtomPhotoAbsCS(6, shells,
-                                                pacs_table_dir + "C.dat",
-                                                "C_for_C4H10", 10.55e-06));
-  apacs.emplace("C for Methylal", ExAtomPhotoAbsCS(6, shells,
-                                                   pacs_table_dir + "C.dat",
-                                                   "C_for_Methylal", 10.0e-06));
-  apacs.emplace("C for CF4", ExAtomPhotoAbsCS(6, shells,
-                                              pacs_table_dir + "C.dat", 
-                                              "C_for_CF4", 16.23e-06));
-  apacs.emplace("C for CO2", ExAtomPhotoAbsCS(6, shells,
-                                              pacs_table_dir + "C.dat", 
-                                              "C_for_CO2", 13.79e-06));
-  apacs.emplace("N", ExAtomPhotoAbsCS(7, shells, pacs_table_dir + "N.dat", 
+  apacs.emplace("C for CH4",
+                ExAtomPhotoAbsCS(6, shells, dbpath + "C_for_CH4.dat",
+                                 "C_for_CH4", 12.65e-6));
+  apacs.emplace("C for C2H4",
+                ExAtomPhotoAbsCS(6, shells, pacs_table_dir + "C.dat",
+                                 "C_for_C2H4", 10.51e-06));
+  apacs.emplace("C for C2H6",
+                ExAtomPhotoAbsCS(6, shells, pacs_table_dir + "C.dat",
+                                 "C_for_C2H6", 11.52e-06));
+  apacs.emplace("C for C4H10",
+                ExAtomPhotoAbsCS(6, shells, pacs_table_dir + "C.dat",
+                                 "C_for_C4H10", 10.55e-06));
+  apacs.emplace("C for Methylal",
+                ExAtomPhotoAbsCS(6, shells, pacs_table_dir + "C.dat",
+                                 "C_for_Methylal", 10.0e-06));
+  apacs.emplace("C for CF4",
+                ExAtomPhotoAbsCS(6, shells, pacs_table_dir + "C.dat",
+                                 "C_for_CF4", 16.23e-06));
+  apacs.emplace("C for CO2",
+                ExAtomPhotoAbsCS(6, shells, pacs_table_dir + "C.dat",
+                                 "C_for_CO2", 13.79e-06));
+  apacs.emplace("N", ExAtomPhotoAbsCS(7, shells, pacs_table_dir + "N.dat",
                                       "N_for_N2", 15.581e-6));
-  apacs.emplace("O for CO2", ExAtomPhotoAbsCS(8, shells,
-                                              pacs_table_dir + "O.dat", 
-                                              "O_for_CO2", 13.79e-6));
+  apacs.emplace("O for CO2",
+                ExAtomPhotoAbsCS(8, shells, pacs_table_dir + "O.dat",
+                                 "O_for_CO2", 13.79e-6));
 
   std::string sshells = dbpath + "shelllist_solid.dat";
 
-  apacs.emplace("Diamond", ExAtomPhotoAbsCS(6, sshells,
-                                            pacs_table_dir + "C.dat", 
-                                            "Diamond"));
-  apacs.emplace("Si crystal", ExAtomPhotoAbsCS(14, sshells,
-                                               pacs_table_dir + "Si.dat",
-                                               "Si_crystal"));
-  apacs.emplace("Ge crystal", ExAtomPhotoAbsCS(32, shells,
-                                               pacs_table_dir + "Ge.dat",
-                                               "Ge_crystal", 0.67e-06));
-  apacs.emplace("Si G4", ExAtomPhotoAbsCS(14, sshells,                                                                     dbpath + "Si_G4.dat", "Si_G4"));
-  apacs.emplace("Ga for GaAs", ExAtomPhotoAbsCS(31, sshells,
-                                                pacs_table_dir + "Ga.dat",
-                                                "Ga_for_GaAs"));
-  apacs.emplace("As for GaAs", ExAtomPhotoAbsCS(33, sshells,
-                                                pacs_table_dir + "As.dat",
-                                                "As_for_GaAs"));
-  apacs.emplace("Cd for CdTe", ExAtomPhotoAbsCS(48, sshells,
-                                                pacs_table_dir + "Cd.dat",
-                                                "Cd_for_CdTe"));
-  apacs.emplace("Te for CdTe", ExAtomPhotoAbsCS(52, sshells,
-                                                pacs_table_dir + "Te.dat",
-                                                "Te_for_CdTe"));
+  apacs.emplace(
+      "Diamond",
+      ExAtomPhotoAbsCS(6, sshells, pacs_table_dir + "C.dat", "Diamond"));
+  apacs.emplace(
+      "Si crystal",
+      ExAtomPhotoAbsCS(14, sshells, pacs_table_dir + "Si.dat", "Si_crystal"));
+  apacs.emplace("Ge crystal",
+                ExAtomPhotoAbsCS(32, shells, pacs_table_dir + "Ge.dat",
+                                 "Ge_crystal", 0.67e-06));
+  apacs.emplace("Si G4",
+                ExAtomPhotoAbsCS(14, sshells, dbpath + "Si_G4.dat", "Si_G4"));
+  apacs.emplace(
+      "Ga for GaAs",
+      ExAtomPhotoAbsCS(31, sshells, pacs_table_dir + "Ga.dat", "Ga_for_GaAs"));
+  apacs.emplace(
+      "As for GaAs",
+      ExAtomPhotoAbsCS(33, sshells, pacs_table_dir + "As.dat", "As_for_GaAs"));
+  apacs.emplace(
+      "Cd for CdTe",
+      ExAtomPhotoAbsCS(48, sshells, pacs_table_dir + "Cd.dat", "Cd_for_CdTe"));
+  apacs.emplace(
+      "Te for CdTe",
+      ExAtomPhotoAbsCS(52, sshells, pacs_table_dir + "Te.dat", "Te_for_CdTe"));
 }
 
-}
+}  // namespace Heed

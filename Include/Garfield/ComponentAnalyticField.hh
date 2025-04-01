@@ -1,11 +1,11 @@
 #ifndef G_COMPONENT_ANALYTIC_FIELD_H
 #define G_COMPONENT_ANALYTIC_FIELD_H
 
-#include <string>
 #include <array>
-#include <vector>
 #include <complex>
 #include <mutex>
+#include <string>
+#include <vector>
 
 #include "Garfield/Component.hh"
 
@@ -47,13 +47,13 @@ class ComponentAnalyticField : public Component {
   void AddPlanePhi(const double phi, const double voltage,
                    const std::string& label = "");
   /** Add a strip in the y or z direction on an existing plane at constant x.
-    * \param direction 'y' or 'z'.
-    * \param x coordinate of the plane.
-    * \param smin lower limit of the strip in y or z.
-    * \param smax upper limit of the strip in y or z.
-    * \param label weighting field identifier.
-    * \param gap distance to the opposite plane (optional).
-    */
+   * \param direction 'y' or 'z'.
+   * \param x coordinate of the plane.
+   * \param smin lower limit of the strip in y or z.
+   * \param smax upper limit of the strip in y or z.
+   * \param label weighting field identifier.
+   * \param gap distance to the opposite plane (optional).
+   */
   void AddStripOnPlaneX(const char direction, const double x, const double smin,
                         const double smax, const std::string& label,
                         const double gap = -1.);
@@ -61,24 +61,25 @@ class ComponentAnalyticField : public Component {
   void AddStripOnPlaneY(const char direction, const double y, const double smin,
                         const double smax, const std::string& label,
                         const double gap = -1.);
-  /// Add a strip in the phi or z direction on an existing plane at constant radius.
+  /// Add a strip in the phi or z direction on an existing plane at constant
+  /// radius.
   void AddStripOnPlaneR(const char direction, const double r, const double smin,
                         const double smax, const std::string& label,
                         const double gap = -1.);
   /// Add a strip in the r or z direction on an existing plane at constant phi.
-  void AddStripOnPlanePhi(const char direction, const double phi, const double smin,
-                          const double smax, const std::string& label,
-                          const double gap = -1.);
+  void AddStripOnPlanePhi(const char direction, const double phi,
+                          const double smin, const double smax,
+                          const std::string& label, const double gap = -1.);
   /** Add a pixel on an existing plane at constant x.
-    * \param x coordinate of the plane.
-    * \param ymin lower limit of the pixel cell in y,
-    * \param ymax upper limit of the pixel cell in y.
-    * \param zmin lower limit of the pixel cell in z.
-    * \param zmax upper limit of the pixel cell in z.
-    * \param label weighting field identifier.
-    * \param gap distance to the opposite plane (optional).
-    * \param rot rotation angle (rad) of the pixel (optional).
-    */
+   * \param x coordinate of the plane.
+   * \param ymin lower limit of the pixel cell in y,
+   * \param ymax upper limit of the pixel cell in y.
+   * \param zmin lower limit of the pixel cell in z.
+   * \param zmax upper limit of the pixel cell in z.
+   * \param label weighting field identifier.
+   * \param gap distance to the opposite plane (optional).
+   * \param rot rotation angle (rad) of the pixel (optional).
+   */
   void AddPixelOnPlaneX(const double x, const double ymin, const double ymax,
                         const double zmin, const double zmax,
                         const std::string& label, const double gap = -1.,
@@ -89,15 +90,15 @@ class ComponentAnalyticField : public Component {
                         const std::string& label, const double gap = -1.,
                         const double rot = 0.);
   /// Add a pixel on an existing plane at constant radius.
-  void AddPixelOnPlaneR(const double r, 
-                        const double phimin, const double phimax,
-                        const double zmin, const double zmax,
-                        const std::string& label, const double gap = -1.);
+  void AddPixelOnPlaneR(const double r, const double phimin,
+                        const double phimax, const double zmin,
+                        const double zmax, const std::string& label,
+                        const double gap = -1.);
   /// Add a pixel on an existing plane at constant phi.
-  void AddPixelOnPlanePhi(const double phi, 
-                          const double rmin, const double rmax,
-                          const double zmin, const double zmax,
-                          const std::string& label, const double gap = -1.);
+  void AddPixelOnPlanePhi(const double phi, const double rmin,
+                          const double rmax, const double zmin,
+                          const double zmax, const std::string& label,
+                          const double gap = -1.);
 
   /// Set the periodic length [cm] in the x-direction.
   void SetPeriodicityX(const double s);
@@ -116,7 +117,7 @@ class ComponentAnalyticField : public Component {
   void SetCartesianCoordinates();
   /// Use polar coordinates.
   void SetPolarCoordinates();
-  /// Are polar coordinates being used?  
+  /// Are polar coordinates being used?
   bool IsPolar() const { return m_polar; }
 
   /// Print all available information on the cell.
@@ -158,26 +159,26 @@ class ComponentAnalyticField : public Component {
     return GetCellType(m_cellType);
   }
 
-  /// Request calculation of weighting field and potential 
+  /// Request calculation of weighting field and potential
   /// for a given group of wires or planes.
   void AddReadout(const std::string& label, const bool silent = false);
 
   void SetNumberOfCellCopies(const unsigned int nfourier);
 
   /** Calculate multipole moments for a given wire.
-    * \param iw Index of the wire.
-    * \param order Order of the highest multipole moment.
-    * \param print Print information about the fitting process.
-    * \param plot Plot the potential and multipole fit around the wire. 
-    * \param rmult Distance in multiples of the wire radius
-    *              at which the decomposition is to be carried out.
-    * \param eps Used in the fit for calculating the covariance matrix.
-    * \param nMaxIter Maximum number of iterations in the fit.
-    **/
+   * \param iw Index of the wire.
+   * \param order Order of the highest multipole moment.
+   * \param print Print information about the fitting process.
+   * \param plot Plot the potential and multipole fit around the wire.
+   * \param rmult Distance in multiples of the wire radius
+   *              at which the decomposition is to be carried out.
+   * \param eps Used in the fit for calculating the covariance matrix.
+   * \param nMaxIter Maximum number of iterations in the fit.
+   **/
   bool MultipoleMoments(const unsigned int iw, const unsigned int order = 4,
                         const bool print = false, const bool plot = false,
                         const double rmult = 1., const double eps = 1.e-4,
-                        const unsigned int nMaxIter = 20); 
+                        const unsigned int nMaxIter = 20);
   /// Request dipole terms be included for each of the wires (default: off).
   void EnableDipoleTerms(const bool on = true);
   /// Check the quality of the capacitance matrix inversion (default: off).
@@ -214,49 +215,44 @@ class ComponentAnalyticField : public Component {
   bool GetTube(double& r, double& voltage, int& nEdges,
                std::string& label) const;
 
-  /** Vary the potential of selected electrodes to match (a function of) 
-    * the potential or field along a given line to a target.
-    * \param groups Identifier of the electrodes for which to vary 
-    *               the potential.
-    * \param field_function A function of the coordinates (x, y or r, phi), 
-    *                       the electrostatic field (ex, ey, e) and 
-    *                       potential (v).
-    * \param target Value of the field function to be reproduced.
-    * \param x0,y0 Starting point of the line.
-    * \param x1,y1 End point of the line.
-    * \param nP Number of points on the line.
-    * \param print Flag to print out information during each fit cycle. 
-    **/
+  /** Vary the potential of selected electrodes to match (a function of)
+   * the potential or field along a given line to a target.
+   * \param groups Identifier of the electrodes for which to vary
+   *               the potential.
+   * \param field_function A function of the coordinates (x, y or r, phi),
+   *                       the electrostatic field (ex, ey, e) and
+   *                       potential (v).
+   * \param target Value of the field function to be reproduced.
+   * \param x0,y0 Starting point of the line.
+   * \param x1,y1 End point of the line.
+   * \param nP Number of points on the line.
+   * \param print Flag to print out information during each fit cycle.
+   **/
   bool OptimiseOnTrack(const std::vector<std::string>& groups,
-                       const std::string& field_function, 
-                       const double target,
-                       const double x0, const double y0,
-                       const double x1, const double y1,
-                       const unsigned int nP = 20,
+                       const std::string& field_function, const double target,
+                       const double x0, const double y0, const double x1,
+                       const double y1, const unsigned int nP = 20,
                        const bool print = true);
-  /// Vary the potential of selected electrodes to match (a function of) 
+  /// Vary the potential of selected electrodes to match (a function of)
   /// the potential or field on an x-y (or r-phi) grid of points.
   bool OptimiseOnGrid(const std::vector<std::string>& groups,
-                      const std::string& field_function, 
-                      const double target,
-                      const double x0, const double y0,
-                      const double x1, const double y1,
-                      const unsigned int nX = 10, const unsigned int nY = 10,
-                      const bool print = true);
-  /// Vary the potential of selected electrodes to match (a function of) 
+                      const std::string& field_function, const double target,
+                      const double x0, const double y0, const double x1,
+                      const double y1, const unsigned int nX = 10,
+                      const unsigned int nY = 10, const bool print = true);
+  /// Vary the potential of selected electrodes to match (a function of)
   /// the potential or field on the surfaces of a set of wires.
   bool OptimiseOnWires(const std::vector<std::string>& groups,
-                       const std::string& field_function, 
-                       const double target,
-                       const std::vector<unsigned int>& wires, 
+                       const std::string& field_function, const double target,
+                       const std::vector<unsigned int>& wires,
                        const bool print = true);
 
   /** Set the conditions at which to allow the iteration to stop.
-    * \param dist Maximum deviation among all points 
-    *             between target and field function.
-    * \param eps Relative change between iterations.
-    * \param nMaxIter Maximum number of iterations.
-    **/ 
+   * \param dist Maximum deviation among all points
+   *             between target and field function.
+   * \param eps Relative change between iterations.
+   * \param nMaxIter Maximum number of iterations.
+   **/
   void SetOptimisationParameters(const double dist = 1.,
                                  const double eps = 1.e-4,
                                  const unsigned int nMaxIter = 10);
@@ -278,7 +274,7 @@ class ComponentAnalyticField : public Component {
   /// Set the scanning area based on the zeroth-order estimates of the
   /// wire shift, enlarged by a scaling factor. This is the default behaviour.
   void SetScanningAreaFirstOrder(const double scale = 2.);
-  /// Switch on/off extrapolation of electrostatic forces beyond the 
+  /// Switch on/off extrapolation of electrostatic forces beyond the
   /// scanning area (default: off).
   void EnableExtrapolation(const bool on = true) { m_extrapolateForces = on; }
 
@@ -290,15 +286,15 @@ class ComponentAnalyticField : public Component {
   void EnableGravity(const bool on = true) { m_useGravitationalForce = on; }
   /// Include the electrostatic force in the sag computation or not.
   void EnableElectrostaticForce(const bool on = true) {
-    m_useElectrostaticForce = on; 
-  } 
+    m_useElectrostaticForce = on;
+  }
   /** Calculate a table of the forces acting on a wire.
-    * \param iw index of the wire
-    * \param xMap coordinates of the grid lines in x
-    * \param yMap coordinates of the grid lines in y
-    * \param fxMap x-components of the force at the grid points
-    * \param fyMap y-components of the force at the grid points 
-    **/ 
+   * \param iw index of the wire
+   * \param xMap coordinates of the grid lines in x
+   * \param yMap coordinates of the grid lines in y
+   * \param fxMap x-components of the force at the grid points
+   * \param fyMap y-components of the force at the grid points
+   **/
   bool ForcesOnWire(const unsigned int iw, std::vector<double>& xMap,
                     std::vector<double>& yMap,
                     std::vector<std::vector<double> >& fxMap,
@@ -312,7 +308,7 @@ class ComponentAnalyticField : public Component {
     * \param ysag y components of the sag profile.
     * \param stretch relative elongation.
     * \param print flag to print the calculation results or not.
-    **/ 
+    **/
   bool WireDisplacement(const unsigned int iw, const bool detailed,
                         std::vector<double>& csag, std::vector<double>& xsag,
                         std::vector<double>& ysag, double& stretch,
@@ -437,8 +433,8 @@ class ComponentAnalyticField : public Component {
     int ind;           ///< Readout group.
     /// Trap radius. Particle is "trapped" if within nTrap * radius of wire.
     int nTrap;
-    double tension;    ///< Stretching weight.
-    double density;    ///< Density.
+    double tension;  ///< Stretching weight.
+    double density;  ///< Density.
   };
   std::vector<Wire> m_w;
 
@@ -482,13 +478,13 @@ class ComponentAnalyticField : public Component {
   };
 
   struct Pixel {
-    std::string type;   ///< Label.
-    int ind = 0;        ///< Readout group.
+    std::string type;             ///< Label.
+    int ind = 0;                  ///< Readout group.
     double smin = 0., smax = 0.;  ///< Coordinates in x/y.
     double zmin = 0., zmax = 0.;  ///< Coordinates in z.
-    double gap = -1.;   ///< Distance to the opposite electrode.
-    double cphi = 1.;   ///< Rotation.
-    double sphi = 0.;   ///< Rotation.
+    double gap = -1.;             ///< Distance to the opposite electrode.
+    double cphi = 1.;             ///< Rotation.
+    double sphi = 0.;             ///< Rotation.
   };
 
   struct Plane {
@@ -551,18 +547,18 @@ class ComponentAnalyticField : public Component {
   // Extrapolate beyond the scanning range or not.
   bool m_extrapolateForces = false;
 
-  // Maximum deviation between target and field function at which 
-  // to allow the iteration to stop. 
+  // Maximum deviation between target and field function at which
+  // to allow the iteration to stop.
   double m_optDist = 1.;
-  // Relative change in Euclidean distance between target and 
-  // field function at which to allow the iteration to stop. 
+  // Relative change in Euclidean distance between target and
+  // field function at which to allow the iteration to stop.
   double m_optEps = 1.e-4;
   // Maximum number of iterations in the optimisation fit.
   unsigned int m_optNitmax = 10;
 
   void UpdatePeriodicity() override;
-  void Reset() override { 
-    CellInit(); 
+  void Reset() override {
+    CellInit();
     m_medium = nullptr;
   }
 
@@ -579,8 +575,7 @@ class ComponentAnalyticField : public Component {
 
   // Calculation of charges
   bool Setup();
-  bool Update(const std::vector<double>& vw, 
-              const std::array<double, 5>& vp);
+  bool Update(const std::vector<double>& vw, const std::array<double, 5>& vp);
   bool SetupA00();
   bool SetupB1X();
   bool SetupB1Y();
@@ -649,11 +644,10 @@ class ComponentAnalyticField : public Component {
   void Field3dD10(const double x, const double y, const double z, double& ex,
                   double& ey, double& ez, double& volt) const;
   // Evaluation of the weighting field
-  bool Wfield(const double x, const double y, const double z,
-              double& ex, double& ey, double& ez, 
-              const std::string& label) const;
+  bool Wfield(const double x, const double y, const double z, double& ex,
+              double& ey, double& ez, const std::string& label) const;
   void WfieldWireA00(const double x, const double y, double& ex, double& ey,
-                     const int mx, const int my, 
+                     const int mx, const int my,
                      const std::vector<double>& qw) const;
   void WfieldWireB2X(const double x, const double y, double& ex, double& ey,
                      const int my, const std::vector<double>& qw) const;
@@ -688,59 +682,57 @@ class ComponentAnalyticField : public Component {
                       const std::vector<double>& qp) const;
   void WfieldStripZ(const double x, const double y, double& ex, double& ey,
                     const int ip, const Strip& strip) const;
-  void WfieldStripXy(const double x, const double y, const double z,
-                     double& ex, double& ey, double& ez, 
-                     const int ip, const Strip& strip) const;
-  void WfieldStrip(const double x, const double y, const double g, 
-                   const double w, double& fx, double& fy) const; 
-  void WfieldPixel(const double x, const double y, const double z,
-                   double& ex, double& ey, double& ez,
-                   const int ip, const Pixel& pixel) const;
+  void WfieldStripXy(const double x, const double y, const double z, double& ex,
+                     double& ey, double& ez, const int ip,
+                     const Strip& strip) const;
+  void WfieldStrip(const double x, const double y, const double g,
+                   const double w, double& fx, double& fy) const;
+  void WfieldPixel(const double x, const double y, const double z, double& ex,
+                   double& ey, double& ez, const int ip,
+                   const Pixel& pixel) const;
 
   // Evaluation of the weighting potential.
   double Wpot(const double x, const double y, const double z,
               const std::string& label) const;
-  double WpotWireA00(const double x, const double y, 
-                     const int mx, const int my, 
+  double WpotWireA00(const double x, const double y, const int mx, const int my,
                      const std::vector<double>& qw) const;
-  double WpotWireB2X(const double x, const double y, 
-                     const int my, const std::vector<double>& qw) const;
-  double WpotWireB2Y(const double x, const double y, 
-                     const int mx, const std::vector<double>& qw) const;
-  double WpotWireC2X(const double x, const double y, 
+  double WpotWireB2X(const double x, const double y, const int my,
                      const std::vector<double>& qw) const;
-  double WpotWireC2Y(const double x, const double y, 
+  double WpotWireB2Y(const double x, const double y, const int mx,
                      const std::vector<double>& qw) const;
-  double WpotWireC30(const double x, const double y, 
+  double WpotWireC2X(const double x, const double y,
+                     const std::vector<double>& qw) const;
+  double WpotWireC2Y(const double x, const double y,
+                     const std::vector<double>& qw) const;
+  double WpotWireC30(const double x, const double y,
                      const std::vector<double>& qw) const;
   double WpotWireD10(const double x, const double y,
                      const std::vector<double>& qw) const;
-  double WpotWireD30(const double x, const double y, 
+  double WpotWireD30(const double x, const double y,
                      const std::vector<double>& qw) const;
-  double WpotPlaneA00(const double x, const double y, 
-                      const int mx, const int my, 
-                      const std::vector<double>& qp) const;
-  double WpotPlaneB2X(const double x, const double y, 
+  double WpotPlaneA00(const double x, const double y, const int mx,
                       const int my, const std::vector<double>& qp) const;
-  double WpotPlaneB2Y(const double x, const double y, 
-                      const int mx, const std::vector<double>& qp) const;
-  double WpotPlaneC2X(const double x, const double y, 
+  double WpotPlaneB2X(const double x, const double y, const int my,
                       const std::vector<double>& qp) const;
-  double WpotPlaneC2Y(const double x, const double y, 
+  double WpotPlaneB2Y(const double x, const double y, const int mx,
                       const std::vector<double>& qp) const;
-  double WpotPlaneC30(const double x, const double y, 
+  double WpotPlaneC2X(const double x, const double y,
+                      const std::vector<double>& qp) const;
+  double WpotPlaneC2Y(const double x, const double y,
+                      const std::vector<double>& qp) const;
+  double WpotPlaneC30(const double x, const double y,
                       const std::vector<double>& qp) const;
   double WpotPlaneD10(const double x, const double y,
                       const std::vector<double>& qp) const;
   double WpotPlaneD30(const double x, const double y,
                       const std::vector<double>& qp) const;
-  double WpotStripZ(const double x, const double y,
-                    const int ip, const Strip& strip) const;
+  double WpotStripZ(const double x, const double y, const int ip,
+                    const Strip& strip) const;
   double WpotStripXy(const double x, const double y, const double z,
                      const int ip, const Strip& strip) const;
-  double WpotPixel(const double x, const double y, const double z,
-                   const int ip, const Pixel& pixel) const;
-  
+  double WpotPixel(const double x, const double y, const double z, const int ip,
+                   const Pixel& pixel) const;
+
   // Functions for calculating the electric field at a given wire position,
   // as if the wire itself were not there but with the presence
   // of its mirror images.
@@ -768,17 +760,17 @@ class ComponentAnalyticField : public Component {
                       double& ey, const std::vector<bool>& cnalso) const;
   void FieldAtWireD30(const double xpos, const double ypos, double& ex,
                       double& ey, const std::vector<bool>& cnalso) const;
- 
-  void DipoleFieldA00(const double xpos, const double ypos, double& ex, 
-                      double& ey, double& volt, const bool opt) const; 
-  void DipoleFieldB1X(const double xpos, const double ypos, double& ex, 
-                      double& ey, double& volt, const bool opt) const; 
-  void DipoleFieldB1Y(const double xpos, const double ypos, double& ex, 
-                      double& ey, double& volt, const bool opt) const; 
-  void DipoleFieldB2X(const double xpos, const double ypos, double& ex, 
-                      double& ey, double& volt, const bool opt) const; 
-  void DipoleFieldB2Y(const double xpos, const double ypos, double& ex, 
-                      double& ey, double& volt, const bool opt) const; 
+
+  void DipoleFieldA00(const double xpos, const double ypos, double& ex,
+                      double& ey, double& volt, const bool opt) const;
+  void DipoleFieldB1X(const double xpos, const double ypos, double& ex,
+                      double& ey, double& volt, const bool opt) const;
+  void DipoleFieldB1Y(const double xpos, const double ypos, double& ex,
+                      double& ey, double& volt, const bool opt) const;
+  void DipoleFieldB2X(const double xpos, const double ypos, double& ex,
+                      double& ey, double& volt, const bool opt) const;
+  void DipoleFieldB2Y(const double xpos, const double ypos, double& ex,
+                      double& ey, double& volt, const bool opt) const;
 
   // Auxiliary functions for C type cells
   double Ph2(const double xpos, const double ypos) const;
@@ -825,12 +817,11 @@ class ComponentAnalyticField : public Component {
              const std::vector<std::vector<double> >& fyMap) const;
   size_t SignalLayer(const int mx, const int my) const;
 
-  void InitialiseFitParameters(const std::vector<std::string>& groups,
-      std::vector<double>& vw0, std::array<double, 5>& vp0,
-      std::vector<double>& aFit,
+  void InitialiseFitParameters(
+      const std::vector<std::string>& groups, std::vector<double>& vw0,
+      std::array<double, 5>& vp0, std::vector<double>& aFit,
       std::vector<std::vector<unsigned int> >& wiresInGroup,
-      std::vector<std::vector<unsigned int> >& planesInGroup); 
-
+      std::vector<std::vector<unsigned int> >& planesInGroup);
 };
 }  // namespace Garfield
 

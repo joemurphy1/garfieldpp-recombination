@@ -1,5 +1,6 @@
-#include <iomanip>
 #include "heed++/code/HeedCluster.h"
+
+#include <iomanip>
 
 // 2003, I. Smirnov
 
@@ -16,4 +17,4 @@ void HeedCluster::print(std::ostream& file, int l) const {
     indn.n -= 2;
   }
 }
-}
+}  // namespace Heed

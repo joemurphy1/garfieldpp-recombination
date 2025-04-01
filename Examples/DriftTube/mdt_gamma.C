@@ -1,23 +1,21 @@
-#include <iostream>
-#include <fstream>
-#include <cstdlib>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 
-#include "Garfield/ViewDrift.hh"
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
 
 #include "Garfield/ComponentAnalyticField.hh"
+#include "Garfield/DriftLineRKF.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/DriftLineRKF.hh"
 #include "Garfield/TrackHeed.hh"
+#include "Garfield/ViewDrift.hh"
 
 using namespace Garfield;
 
 bool readTransferFunction(Sensor& sensor) {
-
   std::ifstream infile;
   infile.open("mdt_elx_delta.txt", std::ios::in);
   if (!infile) {
@@ -38,10 +36,9 @@ bool readTransferFunction(Sensor& sensor) {
   return true;
 }
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
- 
+
   // Make a gas medium.
   MediumMagboltz gas;
   gas.LoadGasFile("ar_93_co2_7_3bar.gas");
@@ -80,7 +77,7 @@ int main(int argc, char * argv[]) {
   // RKF integration.
   DriftLineRKF drift(&sensor);
   drift.SetGainFluctuationsPolya(0., 20000.);
- 
+
   TCanvas* cD = nullptr;
   ViewDrift driftView;
   constexpr bool plotDrift = true;
@@ -90,14 +87,15 @@ int main(int argc, char * argv[]) {
     drift.EnablePlotting(&driftView);
     track.EnablePlotting(&driftView);
   }
- 
+
   TCanvas* cS = nullptr;
   constexpr bool plotSignal = true;
   if (plotSignal) cS = new TCanvas("cS", "", 600, 600);
 
   while (true) {
     const double egamma = 100.e3;
-    auto cluster = track.TransportPhoton(0., rTube, 0., 0., egamma, 0., -1., 0.);
+    auto cluster =
+        track.TransportPhoton(0., rTube, 0., 0., egamma, 0., -1., 0.);
     if (cluster.electrons.empty()) continue;
     for (const auto& electron : cluster.electrons) {
       drift.DriftElectron(electron.x, electron.y, electron.z, electron.t);
@@ -116,6 +114,6 @@ int main(int argc, char * argv[]) {
   if (sensor.ComputeThresholdCrossings(-2., "s", nt)) {
     if (plotSignal) sensor.PlotSignal("s", cS);
   }
- 
+
   app.Run();
 }

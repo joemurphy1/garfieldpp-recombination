@@ -1,8 +1,8 @@
 #ifndef HEEDDELTAELECTRON_H
 #define HEEDDELTAELECTRON_H
 
-#include "wcpplib/particle/eparticle.h"
 #include "heed++/code/HeedCondElectron.h"
+#include "wcpplib/particle/eparticle.h"
 
 namespace Heed {
 
@@ -17,8 +17,8 @@ class HeedDeltaElectron : public eparticle {
   HeedDeltaElectron() = default;
   /// Constructor.
   HeedDeltaElectron(manip_absvol* primvol, const point& pt, const vec& vel,
-                    double ftime, long fparent_particle_number,
-                    fieldmap* fm, bool fs_print_listing = false);
+                    double ftime, long fparent_particle_number, fieldmap* fm,
+                    bool fs_print_listing = false);
   /// Destructor
   virtual ~HeedDeltaElectron() {}
 
@@ -48,18 +48,19 @@ class HeedDeltaElectron : public eparticle {
   /// subtraction of energy loss at step from kinetic energy.
   bool m_stop_eloss = false;
 
-  /// Flag that the step is restricted by the condition that the number of 
-  /// elastic scatterings with low angles should be less or equal to 
+  /// Flag that the step is restricted by the condition that the number of
+  /// elastic scatterings with low angles should be less or equal to
   /// hdecs->eesls->get_qscat()
   bool m_mult_low_path_length = false;
 
   /// Number of low angle scatterings
   double m_q_low_path_length = 0.;
-  /// Flag that the range is restricted by path length for large angle scattering
+  /// Flag that the range is restricted by path length for large angle
+  /// scattering
   bool m_path_length = false;
 
   /// Necessary energy (in internal units) at next step to produce a
-  /// conduction electron. 
+  /// conduction electron.
   // It is not identical to the left energy because it is randomly generated.
   // Attention: if 0.0, then the electron is already finished.
   double m_necessary_energy = 0.;
@@ -72,6 +73,6 @@ class HeedDeltaElectron : public eparticle {
 
   void ionisation(const double eloss, const double dedx, PairProd* pairprod);
 };
-}
+}  // namespace Heed
 
 #endif

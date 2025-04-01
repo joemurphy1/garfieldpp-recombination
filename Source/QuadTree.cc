@@ -4,8 +4,8 @@ namespace Garfield {
 
 std::vector<int> QuadTree::emptyBlock = {};
 
-QuadTree::QuadTree(const double x0, const double y0, 
-                   const double hx, const double hy) 
+QuadTree::QuadTree(const double x0, const double y0, const double hx,
+                   const double hy)
     : m_x0(x0), m_y0(y0), m_hx(hx), m_hy(hy) {
   m_xmin = x0 - hx;
   m_ymin = y0 - hy;
@@ -42,18 +42,18 @@ bool QuadTree::IsLeafNode() const {
 void QuadTree::InsertMeshNode(const double x, const double y, const int index) {
   // Check if it is a leaf node.
   if (!IsLeafNode()) {
-    // We are at an interior node. 
+    // We are at an interior node.
     // Insert recursively into appropriate child quadrant.
     int quad = GetQuadrant(x, y);
     children[quad]->InsertMeshNode(x, y, index);
     return;
   }
-  
+
   // Add the new point if the block is not full.
   if (nodes.size() < BlockCapacity) {
     nodes.push_back(std::make_tuple(x, y, index));
     return;
-  } 
+  }
   // Block is full, so we need to partition it.
   // Split the current node and create new empty trees for each child.
   for (int i = 0; i < 4; ++i) {
@@ -82,7 +82,7 @@ void QuadTree::InsertMeshElement(const double bb[4], const int index) {
     // Add the element to the list of this quadrant.
     elements.push_back(index);
     return;
-  } 
+  }
   // Check which children overlap with the element's bounding box.
   for (int i = 0; i < 4; ++i) {
     if (!children[i]->DoesBoxOverlap(bb)) continue;
@@ -90,26 +90,26 @@ void QuadTree::InsertMeshElement(const double bb[4], const int index) {
   }
 }
 
-const std::vector<int>& QuadTree::GetElementsInBlock(const double x, 
+const std::vector<int>& QuadTree::GetElementsInBlock(const double x,
                                                      const double y) const {
   const auto node = GetBlockFromPoint(x, y);
   return node ? node->elements : emptyBlock;
 }
 
-const QuadTree* QuadTree::GetBlockFromPoint(
-    const double x, const double y) const {
+const QuadTree* QuadTree::GetBlockFromPoint(const double x,
+                                            const double y) const {
   if (x < m_xmin || x > m_xmax || y < m_ymin || y > m_ymax) {
     return nullptr;
   }
   return GetBlockFromPointHelper(x, y);
 }
 
-const QuadTree* QuadTree::GetBlockFromPointHelper(
-    const double x, const double y) const {
+const QuadTree* QuadTree::GetBlockFromPointHelper(const double x,
+                                                  const double y) const {
   // If we're at a leaf node, it means, the point is inside this block.
   if (IsLeafNode()) return this;
   // We are at the interior node, so check which child contains the point.
   int quad = GetQuadrant(x, y);
   return children[quad]->GetBlockFromPointHelper(x, y);
 }
-}
+}  // namespace Garfield

@@ -1,19 +1,21 @@
+#include "heed++/code/PhotoAbsCS.h"
+
 #include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include "wcpplib/stream/findmark.h"
-#include "wcpplib/math/tline.h"
-#include "heed++/code/PhotoAbsCS.h"
+
 #include "Garfield/Random.hh"
+#include "wcpplib/math/tline.h"
+#include "wcpplib/stream/findmark.h"
 
 // 2004, I. Smirnov
 
-//#define DEBUG_PRINT_get_escape_particles
-//#define DEBUG_ignore_non_standard_channels
+// #define DEBUG_PRINT_get_escape_particles
+// #define DEBUG_ignore_non_standard_channels
 
-//#define ALWAYS_LINEAR_INTERPOLATION  // how the paper was computed
+// #define ALWAYS_LINEAR_INTERPOLATION  // how the paper was computed
 
 namespace {
 
@@ -72,7 +74,7 @@ double my_val_fun(double xp1, double yp1, double xp2, double yp2, double xmin,
              ? Heed::t_value_power_2point<double>(xp1, yp1, xp2, yp2, x)
              : Heed::t_value_straight_2point<double>(xp1, yp1, xp2, yp2, x, 1);
 }
-}
+}  // namespace
 
 namespace Heed {
 
@@ -82,7 +84,6 @@ PhotoAbsCS::PhotoAbsCS() : name(""), number(-1), Z(0), threshold(0.0) {}
 
 PhotoAbsCS::PhotoAbsCS(const std::string& fname, int fZ, double fthreshold)
     : name(fname), number(-1), Z(fZ), threshold(fthreshold) {
-
   // Try to get the (shell) number from the name.
   std::istringstream ss(name);
   int i = -100;
@@ -100,10 +101,8 @@ void PhotoAbsCS::print(std::ostream& file, int l) const {
 
 AveragePhotoAbsCS::AveragePhotoAbsCS(PhotoAbsCS* apacs, double fwidth,
                                      double fstep, long fmax_q_step)
-//    : real_pacs(apacs, do_clone),
-    : width(fwidth),
-      max_q_step(fmax_q_step),
-      step(fstep) {
+    //    : real_pacs(apacs, do_clone),
+    : width(fwidth), max_q_step(fmax_q_step), step(fstep) {
   mfunname("AveragePhotoAbsCS::AveragePhotoAbsCS(...)");
   check_econd11(apacs, == nullptr, mcerr);
   real_pacs.reset(apacs);
@@ -160,8 +159,7 @@ void AveragePhotoAbsCS::print(std::ostream& file, int l) const {
 
 //---------------------------------------------------------
 
-HydrogenPhotoAbsCS::HydrogenPhotoAbsCS()
-    : PhotoAbsCS("H", 1, 15.43e-6) {
+HydrogenPhotoAbsCS::HydrogenPhotoAbsCS() : PhotoAbsCS("H", 1, 15.43e-6) {
   number = 1;
 }
 
@@ -171,8 +169,7 @@ double HydrogenPhotoAbsCS::get_CS(double energy) const {
   return 0.5 * prefactor * 0.0535 * (pow(100.0e-6 / energy, 3.228));
 }
 
-double HydrogenPhotoAbsCS::get_integral_CS(double e1,
-                                           double e2) const {
+double HydrogenPhotoAbsCS::get_integral_CS(double e1, double e2) const {
   if (e2 < threshold) return 0.;
   if (e1 < threshold) e1 = threshold;
   const double c1 = 0.5 * 0.0535 * pow(100.0e-6, 3.228) / 2.228;
@@ -505,9 +502,9 @@ void AtomicSecondaryProducts::add_channel(
   }
 }
 
-int AtomicSecondaryProducts::get_channel(std::vector<double>& felectron_energy,
-                                         std::vector<double>& fphoton_energy)
-    const {
+int AtomicSecondaryProducts::get_channel(
+    std::vector<double>& felectron_energy,
+    std::vector<double>& fphoton_energy) const {
   mfunname("int AtomicSecondaryProducts::get_channel(...)");
 #ifdef DEBUG_PRINT_get_escape_particles
   mcout << "AtomicSecondaryProducts::get_channel is started\n";
@@ -585,7 +582,7 @@ double AtomPhotoAbsCS::get_TICS(double energy,
                                 double factual_minimal_threshold) const {
   mfunname("double AtomPhotoAbsCS::get_TICS(...) const");
   if (factual_minimal_threshold <= energy) {
-    // Above threshold, the ionization cross-section is assumed to be 
+    // Above threshold, the ionization cross-section is assumed to be
     // idential to the absorption cross-section.
     return get_ACS(energy);
   }
@@ -892,7 +889,8 @@ SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
       file >> fl[nshell];
       findmark(file, "!");
       file >> shell_name;
-      m_acs[nshell].reset(new PhenoPhotoAbsCS(shell_name, Zshell, thr * 1.0e-6));
+      m_acs[nshell].reset(
+          new PhenoPhotoAbsCS(shell_name, Zshell, thr * 1.0e-6));
     }
     check_econd12(sZshell, !=, Z, mcerr);
 
@@ -918,7 +916,8 @@ SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
   spexit(mcerr);
 }
 
-SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ, std::shared_ptr<PhotoAbsCS> facs) {
+SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
+                                           std::shared_ptr<PhotoAbsCS> facs) {
   mfunname("SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(...)");
   check_econd11(facs, == nullptr, mcerr);
   check_econd11(fZ, <= 0, mcerr);
@@ -1230,7 +1229,8 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
   }
   // Initialization of input shells.
   for (int ns = nt2; ns < qshell; ns++) {
-    auto adr = new SimpleTablePhotoAbsCS(shell_name[ns], Zshell[ns], thr[ns], ener, SCS[ns]);
+    auto adr = new SimpleTablePhotoAbsCS(shell_name[ns], Zshell[ns], thr[ns],
+                                         ener, SCS[ns]);
     adr->remove_leading_zeros();
     m_acs[ns].reset(adr);
   }
@@ -1330,7 +1330,8 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
     }
     qshell++;
     m_acs.resize(qshell);
-    m_acs.back().reset(new SimpleTablePhotoAbsCS(shellname, 0, thr, fener, fcs));
+    m_acs.back().reset(
+        new SimpleTablePhotoAbsCS(shellname, 0, thr, fener, fcs));
   }
   if (id == 2) {
     // a copy of similar thing from subroutine above
@@ -1395,8 +1396,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
 #define READ_FILE_WITH_PRINCIPAL_NUMBERS
 
 ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
-                                   const std::string& fFitBT_file_name,
-                                   int id, 
+                                   const std::string& fFitBT_file_name, int id,
                                    int s_no_scale, double fminimal_threshold)
     : threshold_file_name("none"),
       simple_table_file_name("none"),
@@ -1492,8 +1492,8 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
 #else
       std::string shellname("shell number " + std::to_string(nshell));
 #endif
-      m_acs[nshell].reset(new SimpleTablePhotoAbsCS(shellname, 0, threshold, 
-            l, E0, yw, ya, P, sigma));
+      m_acs[nshell].reset(new SimpleTablePhotoAbsCS(shellname, 0, threshold, l,
+                                                    E0, yw, ya, P, sigma));
       // Iprintn(mcout, nshell);
       // Iprint3n(mcout, l, threshold, E0);
       // Iprint4n(mcout, yw, ya, P, sigma);
@@ -1592,7 +1592,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(
   }
   check_econd11(nsmin, < 0, mcerr);
   check_econd11(nsmin, != qshell - 1, mcerr);
-  
+
   PhotoAbsCS* apacs = m_acs[nsmin].get();
   auto first_shell = dynamic_cast<SimpleTablePhotoAbsCS*>(apacs);
   check_econd11(first_shell, == nullptr, mcerr);
@@ -1601,7 +1601,8 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(
   stpacs.remove_leading_tiny(1.0e-10);
 
   // Merging shells:
-  SimpleTablePhotoAbsCS* merged = new SimpleTablePhotoAbsCS(*first_shell, stpacs, emax_repl); 
+  SimpleTablePhotoAbsCS* merged =
+      new SimpleTablePhotoAbsCS(*first_shell, stpacs, emax_repl);
   m_acs[nsmin].reset(merged);
 
   s_ignore_shell.resize(qshell, false);
@@ -1779,7 +1780,7 @@ void ExAtomPhotoAbsCS::print(std::ostream& file, int l) const {
   Ifile << "threshold_file_name=" << threshold_file_name << '\n';
   Ifile << "simple_table_file_name=" << simple_table_file_name << '\n';
   Ifile << "BT_file_name=" << BT_file_name << std::endl;
-  Ifile << "Thomas_sum_rule_const_Mb * Z = " << Thomas_sum_rule_const_Mb* Z
+  Ifile << "Thomas_sum_rule_const_Mb * Z = " << Thomas_sum_rule_const_Mb * Z
         << '\n';
   Ifile << "integ_abs_before_corr        = " << integ_abs_before_corr << '\n';
   Ifile << "integ_abs_after_corr         = " << integ_abs_after_corr << '\n';
@@ -1839,12 +1840,14 @@ MolecPhotoAbsCS::MolecPhotoAbsCS(const AtomPhotoAbsCS* fatom1, int fqatom_ps1,
   atom.push_back(fatom2);
   if (W != 0.0) return;
 #ifdef CALC_W_USING_CHARGES
-  W = coef_I_to_W * (qatom_ps[0] * atom[0]->get_Z() * atom[0]->get_I_min() +
-                     qatom_ps[1] * atom[1]->get_Z() * atom[1]->get_I_min()) /
+  W = coef_I_to_W *
+      (qatom_ps[0] * atom[0]->get_Z() * atom[0]->get_I_min() +
+       qatom_ps[1] * atom[1]->get_Z() * atom[1]->get_I_min()) /
       (qatom_ps[0] * atom[0]->get_Z() + qatom_ps[1] * atom[1]->get_Z());
 #else
-  W = coef_I_to_W * (qatom_ps[0] * atom[0]->get_I_min() +
-                     qatom_ps[1] * atom[1]->get_I_min()) /
+  W = coef_I_to_W *
+      (qatom_ps[0] * atom[0]->get_I_min() +
+       qatom_ps[1] * atom[1]->get_I_min()) /
       qatom;
 #endif
 }
@@ -1862,9 +1865,10 @@ MolecPhotoAbsCS::MolecPhotoAbsCS(const AtomPhotoAbsCS* fatom1, int fqatom_ps1,
   atom.push_back(fatom3);
   if (W != 0.0) return;
 #ifdef CALC_W_USING_CHARGES
-  W = coef_I_to_W * (qatom_ps[0] * atom[0]->get_Z() * atom[0]->get_I_min() +
-                     qatom_ps[1] * atom[1]->get_Z() * atom[1]->get_I_min() +
-                     qatom_ps[2] * atom[2]->get_Z() * atom[2]->get_I_min()) /
+  W = coef_I_to_W *
+      (qatom_ps[0] * atom[0]->get_Z() * atom[0]->get_I_min() +
+       qatom_ps[1] * atom[1]->get_Z() * atom[1]->get_I_min() +
+       qatom_ps[2] * atom[2]->get_Z() * atom[2]->get_I_min()) /
       (qatom_ps[0] * atom[0]->get_Z() + qatom_ps[1] * atom[1]->get_Z() +
        qatom_ps[2] * atom[2]->get_Z());
 #else
@@ -1940,4 +1944,4 @@ std::ostream& operator<<(std::ostream& file, const MolecPhotoAbsCS& f) {
   f.print(file, 1);
   return file;
 }
-}
+}  // namespace Heed

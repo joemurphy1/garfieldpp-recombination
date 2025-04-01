@@ -1,36 +1,38 @@
+#include "Garfield/ViewFEMesh.hh"
+
+#include <TGaxis.h>
+#include <TGeoSphere.h>
+#include <TGeoTessellated.h>
+#include <TGraph.h>
+#include <TH1F.h>
+#include <TPolyLine.h>
+#include <TPolyLine3D.h>
+
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <unordered_set>
-#include<array>
 
-#include <TH1F.h>
-#include <TPolyLine.h>
-#include <TGraph.h>
-#include <TGeoSphere.h>
-#include <TGeoTessellated.h>
-#include <TPolyLine3D.h>
-#include <TGaxis.h>
-
-#include "Garfield/ComponentCST.hh"
 #include "Garfield/Component.hh"
+#include "Garfield/ComponentCST.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/TGeoTet.hh"
-#include "Garfield/ViewFEMesh.hh"
 #include "Garfield/ViewDrift.hh"
 
 namespace {
 
-std::vector<std::vector<size_t> > GetFacets(
-    const std::vector<size_t>& nodes, const bool cst) {
-
+std::vector<std::vector<size_t> > GetFacets(const std::vector<size_t>& nodes,
+                                            const bool cst) {
   std::vector<std::vector<size_t> > facets;
   if (cst) {
-    facets = {{
-      {0, 1, 3, 2}, {0, 1, 5, 4}, {0, 2, 6, 4}, 
-      {1, 3, 7, 5}, {2, 3, 7, 6}, {4, 5, 7, 6}
-    }};
+    facets = {{{0, 1, 3, 2},
+               {0, 1, 5, 4},
+               {0, 2, 6, 4},
+               {1, 3, 7, 5},
+               {2, 3, 7, 6},
+               {4, 5, 7, 6}}};
     for (auto& f : facets) {
       for (size_t j = 0; j < 4; ++j) f[j] = nodes[f[j]];
     }
@@ -62,17 +64,13 @@ std::vector<std::vector<size_t> > GetFacets(
   return facets;
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
-ViewFEMesh::ViewFEMesh(Component* cmp) : 
-    ViewBase("ViewFEMesh"),
-    m_cmp(cmp) {}
+ViewFEMesh::ViewFEMesh(Component* cmp) : ViewBase("ViewFEMesh"), m_cmp(cmp) {}
 
-ViewFEMesh::~ViewFEMesh() {
-  Reset();
-}
+ViewFEMesh::~ViewFEMesh() { Reset(); }
 
 void ViewFEMesh::Reset() {
   for (auto it = m_volumes.begin(), end = m_volumes.end(); it != end; ++it) {
@@ -94,7 +92,7 @@ void ViewFEMesh::Reset() {
 
   m_geoManager.reset(nullptr);
 }
- 
+
 void ViewFEMesh::SetComponent(Component* cmp) {
   if (!cmp) {
     std::cerr << m_className << "::SetComponent: Null pointer.\n";
@@ -145,11 +143,11 @@ bool ViewFEMesh::Plot(const bool twod, const bool outline) {
   if (m_drawAxes) {
     if (!m_xaxis && !m_yaxis) {
       // Draw default axes.
-      auto frame = pad->DrawFrame(m_xMinPlot, m_yMinPlot,
-                                  m_xMaxPlot, m_yMaxPlot);
+      auto frame =
+          pad->DrawFrame(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot);
       if (m_xaxisTitle.empty()) {
         frame->GetXaxis()->SetTitle(LabelX().c_str());
-      } else { 
+      } else {
         frame->GetXaxis()->SetTitle(m_xaxisTitle.c_str());
       }
       if (m_yaxisTitle.empty()) {
@@ -176,9 +174,9 @@ bool ViewFEMesh::Plot(const bool twod, const bool outline) {
       DrawElements2d();
     }
   }
- 
+
   DrawDriftLines2d();
- 
+
   if (m_drawViewRegion && !m_viewRegionX.empty()) {
     TPolyLine poly;
     poly.SetLineColor(kSpring + 4);
@@ -197,7 +195,6 @@ bool ViewFEMesh::Plot(const bool twod, const bool outline) {
 }
 
 bool ViewFEMesh::GetPlotLimits() {
-
   if (m_userPlotLimits) {
     std::vector<double> xp = {m_xMinPlot, m_xMinPlot, m_xMaxPlot, m_xMaxPlot};
     std::vector<double> yp = {m_yMinPlot, m_yMaxPlot, m_yMaxPlot, m_yMinPlot};
@@ -222,14 +219,14 @@ bool ViewFEMesh::GetPlotLimits() {
   if (!m_userBox) {
     // If not set by the user, get the bounding box of the component.
     if (!m_cmp) return false;
-    if (!m_cmp->GetBoundingBox(m_xMinBox, m_yMinBox, m_zMinBox,
-                               m_xMaxBox, m_yMaxBox, m_zMaxBox)) {
+    if (!m_cmp->GetBoundingBox(m_xMinBox, m_yMinBox, m_zMinBox, m_xMaxBox,
+                               m_yMaxBox, m_zMaxBox)) {
       std::cerr << m_className << "::GetPlotLimits:\n"
                 << "    Bounding box of the component is not defined.\n"
                 << "    Please set the limits explicitly (SetArea).\n";
       return false;
     }
-    if (std::isinf(m_xMinBox) || std::isinf(m_xMaxBox) || 
+    if (std::isinf(m_xMinBox) || std::isinf(m_xMaxBox) ||
         std::isinf(m_yMinBox) || std::isinf(m_yMaxBox) ||
         std::isinf(m_zMinBox) || std::isinf(m_zMaxBox)) {
       double x0 = 0., y0 = 0., z0 = 0.;
@@ -297,7 +294,7 @@ void ViewFEMesh::CreateDefaultAxes() {
     std::cerr << m_className << "::CreateDefaultAxes:\n"
               << "    Cannot determine the axis limits.\n";
     return;
-  } 
+  }
   const double dx = std::abs(m_xMaxPlot - m_xMinPlot) * 0.1;
   const double dy = std::abs(m_yMaxPlot - m_yMinPlot) * 0.1;
   const double x0 = m_xMinPlot + dx;
@@ -324,8 +321,8 @@ void ViewFEMesh::DrawElements2d() {
   // Get the map boundaries from the component.
   double mapxmin = 0., mapymin = 0., mapzmin = 0.;
   double mapxmax = 0., mapymax = 0., mapzmax = 0.;
-  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, 
-                                mapxmax, mapymax, mapzmax)) {
+  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, mapxmax, mapymax,
+                                mapzmax)) {
     return;
   }
 
@@ -459,8 +456,8 @@ void ViewFEMesh::DrawElements2d() {
 
           // Value used to determine whether a vertex is in the plane.
           const double pcf = std::max(
-              {std::abs(vx[0]), std::abs(vy[0]), std::abs(vz[0]), 
-               std::abs(fx), std::abs(fy), std::abs(fz), std::abs(dist)});
+              {std::abs(vx[0]), std::abs(vy[0]), std::abs(vz[0]), std::abs(fx),
+               std::abs(fy), std::abs(fz), std::abs(dist)});
           const double tol = 1.e-4 * pcf;
           // First isolate the vertices that are in the viewing plane.
           std::vector<bool> in(nNodes, false);
@@ -478,7 +475,7 @@ void ViewFEMesh::DrawElements2d() {
             } else {
               if (d > 0.) {
                 cnt += 1;
-              } else { 
+              } else {
                 cnt -= 1;
               }
             }
@@ -487,27 +484,30 @@ void ViewFEMesh::DrawElements2d() {
           if (std::abs(cnt) == (int)nNodes) continue;
           // Cut the sides that are not in the plane.
           if (cst) {
-            const std::array<std::array<unsigned int, 3>, 8> neighbours = {{
-              {1, 2, 4}, {0, 3, 5}, {0, 3, 6}, {1, 2, 7},
-              {0, 5, 6}, {1, 4, 7}, {2, 4, 7}, {3, 5, 6}
-            }};
+            const std::array<std::array<unsigned int, 3>, 8> neighbours = {
+                {{1, 2, 4},
+                 {0, 3, 5},
+                 {0, 3, 6},
+                 {1, 2, 7},
+                 {0, 5, 6},
+                 {1, 4, 7},
+                 {2, 4, 7},
+                 {3, 5, 6}}};
             for (size_t j = 0; j < nNodes; ++j) {
               for (unsigned int k : neighbours[j]) {
                 if (in[j] || in[k]) continue;
-                if (PlaneCut(vx[j], vy[j], vz[j], 
-                             vx[k], vy[k], vz[k], xMat)) {
+                if (PlaneCut(vx[j], vy[j], vz[j], vx[k], vy[k], vz[k], xMat)) {
                   vX.push_back(xMat(0, 0));
                   vY.push_back(xMat(1, 0));
                 }
               }
-            } 
-          } else { 
+            }
+          } else {
             // Tetrahedron.
             for (size_t j = 0; j < nNodes; ++j) {
               for (size_t k = j + 1; k < nNodes; ++k) {
                 if (in[j] || in[k]) continue;
-                if (PlaneCut(vx[j], vy[j], vz[j], 
-                             vx[k], vy[k], vz[k], xMat)) {
+                if (PlaneCut(vx[j], vy[j], vz[j], vx[k], vy[k], vz[k], xMat)) {
                   vX.push_back(xMat(0, 0));
                   vY.push_back(xMat(1, 0));
                 }
@@ -531,24 +531,23 @@ void ViewFEMesh::DrawElements2d() {
           if (cX.size() <= 2) continue;
           // Again eliminate crossings of the polygon lines.
           RemoveCrossings(cX, cY);
-  
+
           // Draw the polygon.
           std::vector<float> xgr(cX.begin(), cX.end());
           std::vector<float> ygr(cY.begin(), cY.end());
           gr.DrawGraph(xgr.size(), xgr.data(), ygr.data(), opt.c_str());
         }  // end z-periodicity loop
-      }    // end y-periodicity loop
-    }      // end x-periodicity loop
-  }        // end loop over elements
-
+      }  // end y-periodicity loop
+    }  // end x-periodicity loop
+  }  // end loop over elements
 }
 
 void ViewFEMesh::DrawBorders2d() {
   // Get the map boundaries from the component.
   double mapxmin = 0., mapymin = 0., mapzmin = 0.;
   double mapxmax = 0., mapymax = 0., mapzmax = 0.;
-  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, 
-                                mapxmax, mapymax, mapzmax)) {
+  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, mapxmax, mapymax,
+                                mapzmax)) {
     return;
   }
 
@@ -699,8 +698,8 @@ void ViewFEMesh::DrawBorders2d() {
 
           // Value used to determine whether a vertex is in the plane.
           const double pcf = std::max(
-              {std::abs(vx[0]), std::abs(vy[0]), std::abs(vz[0]), 
-               std::abs(fx), std::abs(fy), std::abs(fz), std::abs(dist)});
+              {std::abs(vx[0]), std::abs(vy[0]), std::abs(vz[0]), std::abs(fx),
+               std::abs(fy), std::abs(fz), std::abs(dist)});
           const double tol = 1.e-4 * pcf;
           // First isolate the vertices that are in the viewing plane.
           std::vector<bool> in(nNodes, false);
@@ -718,7 +717,7 @@ void ViewFEMesh::DrawBorders2d() {
             } else {
               if (d > 0.) {
                 cnt += 1;
-              } else { 
+              } else {
                 cnt -= 1;
               }
             }
@@ -728,8 +727,7 @@ void ViewFEMesh::DrawBorders2d() {
           for (size_t j = 0; j < nNodes; ++j) {
             const size_t k = j < nNodes - 1 ? j + 1 : 0;
             if (in[j] || in[k]) continue;
-            if (PlaneCut(vx[j], vy[j], vz[j], 
-                         vx[k], vy[k], vz[k], xMat)) {
+            if (PlaneCut(vx[j], vy[j], vz[j], vx[k], vy[k], vz[k], xMat)) {
               vX.push_back(xMat(0, 0));
               vY.push_back(xMat(1, 0));
             }
@@ -755,12 +753,11 @@ void ViewFEMesh::DrawBorders2d() {
 }
 
 void ViewFEMesh::DrawElements3d() {
-
   // Get the map boundaries from the component.
   double mapxmin = 0., mapymin = 0., mapzmin = 0.;
   double mapxmax = 0., mapymax = 0., mapzmax = 0.;
-  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, 
-                                mapxmax, mapymax, mapzmax)) {
+  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, mapxmax, mapymax,
+                                mapzmax)) {
     return;
   }
 
@@ -793,7 +790,7 @@ void ViewFEMesh::DrawElements3d() {
     m_xMaxBox = mapxmax;
     m_yMaxBox = mapymax;
     m_zMaxBox = mapzmax;
-  } 
+  }
   // Determine the number of periods present in the cell.
   const int nMinX = perX ? int(m_xMinBox / sx) - 1 : 0;
   const int nMaxX = perX ? int(m_xMaxBox / sx) + 1 : 0;
@@ -892,7 +889,7 @@ void ViewFEMesh::DrawElements3d() {
           }
           auto tet = new TGeoTet("Tet", v);
           std::string vname = "Tet" + std::to_string(m_volumes.size());
-          TGeoVolume* vol = new TGeoVolume(vname.c_str(), tet, medDefault); 
+          TGeoVolume* vol = new TGeoVolume(vname.c_str(), tet, medDefault);
           vol->SetLineColor(col);
           vol->SetTransparency(50.);
           m_volumes.push_back(vol);
@@ -909,12 +906,11 @@ void ViewFEMesh::DrawElements3d() {
 }
 
 void ViewFEMesh::DrawBorders3d() {
-
   // Get the map boundaries from the component.
   double mapxmin = 0., mapymin = 0., mapzmin = 0.;
   double mapxmax = 0., mapymax = 0., mapzmax = 0.;
-  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, 
-                                mapxmax, mapymax, mapzmax)) {
+  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, mapxmax, mapymax,
+                                mapzmax)) {
     return;
   }
 
@@ -947,7 +943,7 @@ void ViewFEMesh::DrawBorders3d() {
     m_xMaxBox = mapxmax;
     m_yMaxBox = mapymax;
     m_zMaxBox = mapzmax;
-  } 
+  }
   // Determine the number of periods present in the cell.
   const int nMinX = perX ? int(m_xMinBox / sx) - 1 : 0;
   const int nMaxX = perX ? int(m_xMaxBox / sx) + 1 : 0;
@@ -1015,8 +1011,8 @@ void ViewFEMesh::DrawBorders3d() {
       continue;
     }
     const short col = m_colorMap.count(mat) != 0 ? m_colorMap[mat] : 1;
-    // Collect recursively the boundary facets of all elements in 
-    // this region. 
+    // Collect recursively the boundary facets of all elements in
+    // this region.
     std::vector<Facet> facets;
     AddFacets(i, elementFacets, facetElements, facets, edone);
     if (facets.empty()) continue;
@@ -1042,7 +1038,7 @@ void ViewFEMesh::DrawBorders3d() {
     solid->CloseShape(true, flip, m_debug);
     if (m_debug) solid->Print();
     std::string vname = "Tessellated" + std::to_string(m_volumes.size());
-    TGeoVolume* vol = new TGeoVolume(vname.c_str(), solid, medDefault); 
+    TGeoVolume* vol = new TGeoVolume(vname.c_str(), solid, medDefault);
     vol->SetLineColor(col);
     vol->SetLineWidth(3);
     vol->SetTransparency(70.);
@@ -1077,11 +1073,10 @@ void ViewFEMesh::DrawBorders3d() {
   m_geoManager->GetTopNode()->Draw("ogle");
 }
 
-void ViewFEMesh::AddFacets(const size_t i,
-  const std::vector<std::vector<Facet> >& elementFacets,
-  const std::map<Facet, std::vector<size_t> >& facetElements,
-  std::vector<Facet>& facets, std::vector<bool>& done) const {
-
+void ViewFEMesh::AddFacets(
+    const size_t i, const std::vector<std::vector<Facet> >& elementFacets,
+    const std::map<Facet, std::vector<size_t> >& facetElements,
+    std::vector<Facet>& facets, std::vector<bool>& done) const {
   if (done[i]) return;
   done[i] = true;
   for (const auto& f : elementFacets[i]) {
@@ -1101,7 +1096,7 @@ void ViewFEMesh::AddFacets(const size_t i,
           // Flip the facet.
           std::reverse(facets.back().begin(), facets.back().end());
         }
-      } 
+      }
       continue;
     }
     size_t mat0 = 0, mat1 = 0;
@@ -1125,7 +1120,7 @@ void ViewFEMesh::AddFacets(const size_t i,
         // Flip the facet.
         std::reverse(facets.back().begin(), facets.back().end());
       }
-    } 
+    }
   }
 }
 
@@ -1165,9 +1160,8 @@ bool ViewFEMesh::FacetSign(const Facet& f, const size_t element) const {
   double s = nx * (x[0] - x[3]) + ny * (y[0] - y[3]) + nz * (z[0] - z[3]);
   return std::signbit(s);
 }
-                              
+
 void ViewFEMesh::DrawDriftLines2d() {
- 
   if (!m_viewDrift) return;
   // Plot a 2D projection of the drift line.
   for (const auto& driftLine : m_viewDrift->m_driftLines) {
@@ -1196,11 +1190,9 @@ void ViewFEMesh::DrawDriftLines2d() {
       gr.DrawGraph(xgr.size(), xgr.data(), ygr.data(), "lsame");
     }
   }
-
 }
 
 void ViewFEMesh::DrawDriftLines3d() {
-
   if (!m_viewDrift) return;
   for (const auto& driftLine : m_viewDrift->m_driftLines) {
     std::vector<float> points;
@@ -1245,8 +1237,8 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
   // Get the map boundaries from the component
   double mapxmin = 0., mapymin = 0., mapzmin = 0.;
   double mapxmax = 0., mapymax = 0., mapzmax = 0.;
-  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, 
-                                mapxmax, mapymax, mapzmax)) {
+  if (!m_cmp->GetElementaryCell(mapxmin, mapymin, mapzmin, mapxmax, mapymax,
+                                mapzmax)) {
     return;
   }
 
@@ -1317,8 +1309,8 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
       for (unsigned int x = 0; x < (n_x - 1); x++) {
         auto elem = cst->Index2Element(x, y, z);
         double e_xmin, e_xmax, e_ymin, e_ymax, e_zmin, e_zmax;
-        cst->GetElementBoundaries(elem, e_xmin, e_xmax, e_ymin, e_ymax,
-                                        e_zmin, e_zmax);
+        cst->GetElementBoundaries(elem, e_xmin, e_xmax, e_ymin, e_ymax, e_zmin,
+                                  e_zmax);
         PolygonInfo tmp_info;
         tmp_info.element = elem;
         tmp_info.p1[0] = e_xmin;
@@ -1365,8 +1357,8 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
       for (unsigned int x = 0; x < (n_x - 1); x++) {
         auto elem = cst->Index2Element(x, y, z);
         double e_xmin, e_xmax, e_ymin, e_ymax, e_zmin, e_zmax;
-        cst->GetElementBoundaries(elem, e_xmin, e_xmax, e_ymin, e_ymax,
-                                        e_zmin, e_zmax);
+        cst->GetElementBoundaries(elem, e_xmin, e_xmax, e_ymin, e_ymax, e_zmin,
+                                  e_zmax);
         PolygonInfo tmp_info;
         tmp_info.element = elem;
         tmp_info.p1[0] = e_xmin;
@@ -1412,8 +1404,8 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
       for (unsigned int y = 0; y < (n_y - 1); y++) {
         auto elem = cst->Index2Element(x, y, z);
         double e_xmin, e_xmax, e_ymin, e_ymax, e_zmin, e_zmax;
-        cst->GetElementBoundaries(elem, e_xmin, e_xmax, e_ymin, e_ymax,
-                                        e_zmin, e_zmax);
+        cst->GetElementBoundaries(elem, e_xmin, e_xmax, e_ymin, e_ymax, e_zmin,
+                                  e_zmax);
         PolygonInfo tmp_info;
         tmp_info.element = elem;
         tmp_info.p1[0] = e_zmin;
@@ -1498,7 +1490,6 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
       }
     }
   }
-
 }
 
 // Removes duplicate points and line crossings by correctly ordering
@@ -1576,7 +1567,7 @@ void ViewFEMesh::RemoveCrossings(std::vector<double>& x,
           crossings = true;
         }
       }  // end loop over j
-    }    // end loop over i
+    }  // end loop over i
 
     // Increment the number of attempts
     attempts++;
@@ -1593,8 +1584,8 @@ void ViewFEMesh::RemoveCrossings(std::vector<double>& x,
 bool ViewFEMesh::InView(const double x, const double y) const {
   // Test whether this vertex is inside the view.
   if (m_userPlotLimits) {
-    return (x >= m_xMinPlot && x <= m_xMaxPlot && 
-            y >= m_yMinPlot && y <= m_yMaxPlot);
+    return (x >= m_xMinPlot && x <= m_xMaxPlot && y >= m_yMinPlot &&
+            y <= m_yMaxPlot);
   }
   bool edge = false;
   return IsInPolygon(x, y, m_viewRegionX, m_viewRegionY, edge);
@@ -1703,7 +1694,7 @@ bool ViewFEMesh::OnLine(double x1, double y1, double x2, double y2, double u,
       xc = x1 + dpar * (x2 - x1);
       yc = y1 + dpar * (y2 - y1);
     }
-  } else { 
+  } else {
     // Choose (x2,y2) as starting point if closer to (u,v)
     // Compute the component of the line from (x2,y2) to (u,v)
     //  along the line from (x2,y2) to (x1,y1)
@@ -1784,8 +1775,8 @@ bool ViewFEMesh::PlaneCut(double x1, double y1, double z1, double x2, double y2,
 
 // Calculates view region and canvas dimensions based on projection plane
 // and view area
-bool ViewFEMesh::IntersectPlaneArea(double& xmin, double& ymin,
-                                    double& xmax, double& ymax) {
+bool ViewFEMesh::IntersectPlaneArea(double& xmin, double& ymin, double& xmax,
+                                    double& ymax) {
   std::vector<TMatrixD> intersect_points;
   m_viewRegionX.clear();
   m_viewRegionY.clear();
@@ -1807,11 +1798,11 @@ bool ViewFEMesh::IntersectPlaneArea(double& xmin, double& ymin,
               if (!PlaneCut(x0, y0, z0, x1, y1, z1, xMat)) continue;
               if (m_debug) {
                 std::cout << m_className << "::IntersectPlaneArea:\n"
-                          << "    Intersection of plane at (" << xMat(0, 0) 
-                          << ", " << xMat(1, 0) << ", " << xMat(2, 0) 
-                          << ") with edge\n    (" 
-                          << x0 << ", " << y0 << ", " << z0 << ")-(" 
-                          << x1 << ", " << y1 << ", " << z1 << ")\n";
+                          << "    Intersection of plane at (" << xMat(0, 0)
+                          << ", " << xMat(1, 0) << ", " << xMat(2, 0)
+                          << ") with edge\n    (" << x0 << ", " << y0 << ", "
+                          << z0 << ")-(" << x1 << ", " << y1 << ", " << z1
+                          << ")\n";
               }
               // Do not add same points (the case when plane contains an edge)
               bool skip = false;
@@ -1864,8 +1855,7 @@ bool ViewFEMesh::IntersectPlaneArea(double& xmin, double& ymin,
 // px: the x-vertices of the polygon
 // py: the y-vertices of the polygon
 // edge: a variable set to true if the point is located on the polygon edge
-bool ViewFEMesh::IsInPolygon(double x, double y, 
-                             const std::vector<double>& px,
+bool ViewFEMesh::IsInPolygon(double x, double y, const std::vector<double>& px,
                              const std::vector<double>& py, bool& edge) const {
   // Get the number and coordinates of the polygon vertices.
   const size_t pN = px.size();

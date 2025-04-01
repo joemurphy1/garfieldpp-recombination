@@ -1,20 +1,19 @@
+#include <TApplication.h>
+#include <TCanvas.h>
+#include <TH1F.h>
+
 #include <iostream>
 
-#include <TApplication.h>
-#include <TH1F.h>
-#include <TCanvas.h>
-
-#include "Garfield/MediumSilicon.hh"
 #include "Garfield/ComponentConstant.hh"
+#include "Garfield/MediumSilicon.hh"
+#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackTrim.hh"
 #include "Garfield/ViewDrift.hh"
-#include "Garfield/Plotting.hh"
 
 using namespace Garfield;
 
-int main(int argc, char *argv[]) {
-
+int main(int argc, char* argv[]) {
   // Application
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
@@ -28,12 +27,12 @@ int main(int argc, char *argv[]) {
   // Thickness of the silicon layer [cm]
   constexpr double d = 100.e-4;
   cmp.SetArea(-d, 0., -d, d, d, d);
-  cmp.SetMedium(&si); 
+  cmp.SetMedium(&si);
   // cmp.SetMagneticField(0., 0., 1.);
 
   // Make a sensor.
   Sensor sensor(&cmp);
-  
+
   // Create a track class and connect it to a sensor.
   TrackTrim tr(&sensor);
   // Read the TRIM output file.
@@ -50,7 +49,7 @@ int main(int argc, char *argv[]) {
   // Plot the tracks.
   ViewDrift driftView;
   tr.EnablePlotting(&driftView);
-  
+
   // Generate tracks.
   for (unsigned int i = 0; i < nIons; ++i) {
     if (!tr.NewTrack(0., 0., 0., 0., 0., 1., 0.)) {
@@ -58,7 +57,7 @@ int main(int argc, char *argv[]) {
       continue;
     }
     // Count the total number of electrons.
-    unsigned int netot = 0; 
+    unsigned int netot = 0;
     for (const auto& cluster : tr.GetClusters()) {
       netot += cluster.n;
     }
@@ -69,4 +68,3 @@ int main(int argc, char *argv[]) {
   app.Run();
   return 0;
 }
-

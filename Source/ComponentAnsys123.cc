@@ -1,18 +1,19 @@
 #ifndef __GPUCOMPILE__
+#include "Garfield/ComponentAnsys123.hh"
+
 #include <math.h>
 #include <stdlib.h>
+
 #include <fstream>
 #include <iostream>
-
-#include "Garfield/ComponentAnsys123.hh"
 
 namespace Garfield {
 
 ComponentAnsys123::ComponentAnsys123() : ComponentFieldMap("Ansys123") {}
 
-bool ComponentAnsys123::Initialise(const std::string& elist, 
+bool ComponentAnsys123::Initialise(const std::string& elist,
                                    const std::string& nlist,
-                                   const std::string& mplist, 
+                                   const std::string& mplist,
                                    const std::string& prnsol,
                                    const std::string& unit) {
   Reset();
@@ -71,7 +72,7 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
         material.medium = nullptr;
       }
       if (m_debug) {
-        std::cout << m_className << "::Initialise: " << nMaterials 
+        std::cout << m_className << "::Initialise: " << nMaterials
                   << " materials.\n";
       }
     } else if (strcmp(token, "MATERIAL") == 0) {
@@ -253,19 +254,19 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
 
     if (inode.size() != 10) {
       std::cerr << m_className << "::Initialise:\n"
-                << "    Error reading file " << elist << " (line " 
-                << il << ").\n"
-                << "    Read " << inode.size() << " node indices for element " 
+                << "    Error reading file " << elist << " (line " << il
+                << ").\n"
+                << "    Read " << inode.size() << " node indices for element "
                 << ielem << " (expected 10).\n";
       ok = false;
       break;
-    } 
+    }
     // Check synchronisation.
     if (ielem - 1 != (int)m_elements.size() + nbackground) {
       std::cerr << m_className << "::Initialise:\n"
                 << "    Synchronisation lost on file " << elist << " (line "
                 << il << ").\n"
-                << "    Element: " << ielem << " (expected " 
+                << "    Element: " << ielem << " (expected "
                 << m_elements.size() << ").\n";
       ok = false;
       break;
@@ -292,11 +293,12 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
     // Check the node numbers.
     bool degenerate = false;
     for (size_t k = 0; k < 10; ++k) {
-      if (inode[k] < 1) { 
+      if (inode[k] < 1) {
         std::cerr << m_className << "::Initialise:\n"
                   << "    Found a node number < 1 in " << elist << " (line "
                   << il << ").\n"
-                  << "    Element: " << ielem << ", material: " << imat << ".\n";
+                  << "    Element: " << ielem << ", material: " << imat
+                  << ".\n";
         ok = false;
       }
       if (inode[k] > highestnode) highestnode = inode[k];
@@ -340,7 +342,7 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
   // Close the file
   felist.close();
   if (!ok) return false;
- 
+
   if (m_elements.empty()) {
     std::cerr << m_className << "::Initialise:\n"
               << "    Found no valid elements in file " << elist << ".\n";
@@ -361,8 +363,8 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
     funit = 1.0;
   }
   if (m_debug) {
-    std::cout << m_className << ":Initialise: Unit scaling factor = " 
-              << funit << ".\n";
+    std::cout << m_className << ":Initialise: Unit scaling factor = " << funit
+              << ".\n";
   }
 
   // Open the node list
@@ -436,13 +438,13 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
   if (!ok) return false;
 
   // Tell how many lines read.
-  std::cout << "    Read " << m_nodes.size() << " nodes from file " 
-            << nlist << ".\n";
+  std::cout << "    Read " << m_nodes.size() << " nodes from file " << nlist
+            << ".\n";
   // Check number of nodes
   if ((int)m_nodes.size() != highestnode) {
     std::cerr << m_className << "::Initialise:\n"
-              << "    Number of nodes read (" << m_nodes.size() << ") on " << nlist
-              << "\n"
+              << "    Number of nodes read (" << m_nodes.size() << ") on "
+              << nlist << "\n"
               << "    does not match element list (" << highestnode << ").\n";
     return false;
   }
@@ -455,7 +457,7 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
 }
 
 bool ComponentAnsys123::LoadPotentials(const std::string prnsol,
-                                       std::vector<double>& pot) { 
+                                       std::vector<double>& pot) {
   // Open the voltage list.
   std::ifstream fprnsol(prnsol);
   if (!fprnsol) {
@@ -529,14 +531,15 @@ bool ComponentAnsys123::LoadPotentials(const std::string prnsol,
   if (!ok) return false;
 
   // Tell how many lines read
-  std::cout << "    Read " << nread << " potentials from file " 
-            << prnsol << ".\n";
+  std::cout << "    Read " << nread << " potentials from file " << prnsol
+            << ".\n";
   // Check number of nodes
   if (nread != m_nodes.size()) {
     std::cerr << m_className << "::LoadPotentials:\n"
               << "    Number of nodes read (" << nread << ") on potential file "
               << prnsol << "\n"
-              << "    does not match the node list (" << m_nodes.size() << ").\n";
+              << "    does not match the node list (" << m_nodes.size()
+              << ").\n";
     return false;
   }
   return true;
@@ -565,10 +568,10 @@ bool ComponentAnsys123::SetWeightingField(const std::string& prnsol,
 }
 
 #ifndef USEGPU
-double ComponentAnsys123::CreateGPUTransferObject(ComponentGPU *&comp_gpu) {
+double ComponentAnsys123::CreateGPUTransferObject(ComponentGPU*& comp_gpu) {
   comp_gpu = nullptr;
   return 0;
 }
 #endif
-}
+}  // namespace Garfield
 #endif

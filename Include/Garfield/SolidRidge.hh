@@ -1,7 +1,8 @@
 #ifndef G_SOLID_RIDGE_H
 #define G_SOLID_RIDGE_H
 
-#include<array>
+#include <array>
+
 #include "Garfield/Solid.hh"
 
 namespace Garfield {
@@ -10,14 +11,12 @@ namespace Garfield {
 
 class SolidRidge : public Solid {
  public:
-  /// Constructor from centre, half-lengths, height and x-offset. 
-  SolidRidge(const double cx, const double cy, const double cz,
-             const double lx, const double ly, const double hz, 
-             const double offsetx);
-  /// Constructor from centre, half-lengths, height, x-offset and orientation. 
-  SolidRidge(const double cx, const double cy, const double cz,
-             const double lx, const double ly, const double hz, 
-             const double offsetx,
+  /// Constructor from centre, half-lengths, height and x-offset.
+  SolidRidge(const double cx, const double cy, const double cz, const double lx,
+             const double ly, const double hz, const double offsetx);
+  /// Constructor from centre, half-lengths, height, x-offset and orientation.
+  SolidRidge(const double cx, const double cy, const double cz, const double lx,
+             const double ly, const double hz, const double offsetx,
              const double dx, const double dy, const double dz);
   /// Destructor
   ~SolidRidge() {}
@@ -43,13 +42,11 @@ class SolidRidge : public Solid {
   double GetRidgeOffset() const override { return m_hx; }
 
   bool SolidPanels(std::vector<Panel>& panels) override;
-  void SetDiscretisationLevel(const double dis) override {
-    m_dis.fill(dis);
-  }
+  void SetDiscretisationLevel(const double dis) override { m_dis.fill(dis); }
   double GetDiscretisationLevel(const Panel& panel) override;
 
-  void Cut(const double x0, const double y0, const double z0,
-           const double xn, const double yn, const double zn,
+  void Cut(const double x0, const double y0, const double z0, const double xn,
+           const double yn, const double zn,
            std::vector<Panel>& panels) override;
 
  private:
@@ -61,10 +58,10 @@ class SolidRidge : public Solid {
   double m_hz;
   /// Offset of the ridge in x.
   double m_hx;
-  
+
   /// Discretisation levels.
-  std::array<double, 5> m_dis{{-1., -1., -1., -1., -1.}}; 
+  std::array<double, 5> m_dis{{-1., -1., -1., -1., -1.}};
 };
-}
+}  // namespace Garfield
 
 #endif

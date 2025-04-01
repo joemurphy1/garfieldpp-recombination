@@ -1,21 +1,20 @@
-#include <iostream>
-#include <fstream>
-#include <cmath>
-
-#include <TCanvas.h>
-#include <TROOT.h>
 #include <TApplication.h>
+#include <TCanvas.h>
 #include <TH1D.h>
+#include <TROOT.h>
 
+#include <cmath>
+#include <fstream>
+#include <iostream>
+
+#include "Garfield/ComponentAnalyticField.hh"
+#include "Garfield/GeometrySimple.hh"
 #include "Garfield/MediumSilicon.hh"
 #include "Garfield/SolidBox.hh"
-#include "Garfield/GeometrySimple.hh"
-#include "Garfield/ComponentAnalyticField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   // Define the medium.
@@ -41,8 +40,8 @@ int main(int argc, char * argv[]) {
   wField.SetGeometry(&geo);
   wField.AddPlaneY(0., -1.);
   wField.AddPlaneY(gap, 0.);
-  wField.AddPixelOnPlaneY(gap, -0.5 * pitch, 0.5 * pitch, 
-                               -0.5 * pitch, 0.5 * pitch, "pixel");
+  wField.AddPixelOnPlaneY(gap, -0.5 * pitch, 0.5 * pitch, -0.5 * pitch,
+                          0.5 * pitch, "pixel");
 
   const double xmin = 0.;
   const double xmax = width;
@@ -70,8 +69,8 @@ int main(int argc, char * argv[]) {
         double wx = 0., wy = 0., wz = 0.;
         wField.WeightingField(x, y, z, wx, wy, wz, "pixel");
         double v = wField.WeightingPotential(x, y, z, "pixel");
-        outfile << i << "  " << j << "  " << k << "  " 
-                << wx << "  " << wy << "  " << wz << "  " << v << "  0\n"; 
+        outfile << i << "  " << j << "  " << k << "  " << wx << "  " << wy
+                << "  " << wz << "  " << v << "  0\n";
       }
     }
   }

@@ -1,10 +1,10 @@
-#include <iostream>
-#include <cmath>
-
-#include <TROOT.h>
 #include <TApplication.h>
-#include <TH1F.h>
 #include <TFile.h>
+#include <TH1F.h>
+#include <TROOT.h>
+
+#include <cmath>
+#include <iostream>
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentConstant.hh"
@@ -14,11 +14,10 @@
 using namespace Garfield;
 
 int main() {
-
   TFile outfile("arco2.root", "RECREATE");
 
   // Electric field [kV / cm].
-  double field = 20.; 
+  double field = 20.;
   for (unsigned int i = 0; i < 8; ++i) {
     // Initial electron energy [eV].
     const double e0 = 1.;
@@ -31,7 +30,7 @@ int main() {
     // constexpr double scale = 1.;
     // gas.SetExcitationScaling(scale, "ar");
     gas.Initialise();
-  
+
     // Adjust the gap size depending on the electric field.
     const double gap = 1. / (3.5 * field - 60.);
     // Make a component with constant drift field.
@@ -42,10 +41,10 @@ int main() {
 
     // Make a sensor.
     Sensor sensor(&cmp);
-  
+
     // Microscopic tracking.
     AvalancheMicroscopic aval(&sensor);
-    
+
     // Histograms
     TH1::StatOverflows(true);
     TH1F hElectrons("hElectrons", "Avalanche Size", 200, 0, 2000);
@@ -72,7 +71,7 @@ int main() {
       // Retrieve the number of collisions of each type.
       unsigned int nColl[6] = {0};
       unsigned int nTotal = gas.GetNumberOfElectronCollisions(
-        nColl[0], nColl[1], nColl[2], nColl[3], nColl[4], nColl[5]);
+          nColl[0], nColl[1], nColl[2], nColl[3], nColl[4], nColl[5]);
       nIon += nColl[1];
       nExc += nColl[4];
     }

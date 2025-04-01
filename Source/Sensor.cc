@@ -1,25 +1,24 @@
 #ifdef __GPUCOMPILE__
-#include "SensorGPU.h"
 #include "GPUFunctions.h"
+#include "SensorGPU.h"
 #else
-#include "Garfield/Sensor.hh"
+#include <TGraph.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include<array>
-
-#include <TGraph.h>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/Shaper.hh"
 #include "Garfield/ViewBase.hh"
 #include "Garfield/ViewSignal.hh"
-#include "Garfield/Shaper.hh"
 #endif
 
 #ifndef __GPUCOMPILE__
@@ -45,10 +44,10 @@ double Trapezoid2(const std::vector<std::pair<double, double>> &f) {
   // Scale the function such that the peak amplitude is unity.
   double ymax = y0;
   for (size_t i = 0; i < n; ++i) {
-    if (f[i].second > ymax) ymax = f[i].second; 
+    if (f[i].second > ymax) ymax = f[i].second;
   }
   if (fabs(ymax) < Garfield::Small) return -1.;
-  const double scale = 1. / (ymax * ymax); 
+  const double scale = 1. / (ymax * ymax);
   if (n == 2) {
     sum = (x1 - x0) * (y0 * y0 + y1 * y1);
   } else if (n == 3) {
@@ -79,9 +78,7 @@ namespace Garfield {
 
 #ifndef __GPUCOMPILE__
 
-Sensor::Sensor(Component* comp) {
-  AddComponent(comp); 
-}
+Sensor::Sensor(Component *comp) { AddComponent(comp); }
 
 void Sensor::ElectricField(const double x, const double y, const double z,
                            double &ex, double &ey, double &ez, double &v,
@@ -111,25 +108,28 @@ void Sensor::ElectricField(const double x, const double y, const double z,
 #endif
 
 __DEVICE__
-void GARFIELD_CLASS_NAME(Sensor)::ElectricField(const double x, const double y, const double z,
-                           double &ex, double &ey, double &ez, GARFIELD_CLASS_NAME(Medium) *&medium,
-                           int &status) __GPUCONST__ {
+void GARFIELD_CLASS_NAME(Sensor)::ElectricField(const double x, const double y,
+                                                const double z, double &ex,
+                                                double &ey, double &ez,
+                                                GARFIELD_CLASS_NAME(Medium) *
+                                                    &medium,
+                                                int &status) __GPUCONST__ {
   ex = ey = ez = 0.;
   status = -10;
   medium = nullptr;
   double fx = 0., fy = 0., fz = 0.;
   GARFIELD_CLASS_NAME(Medium) *med = nullptr;
   int stat = 0;
-  // Add up electric field contributions from all components.
-  #ifdef __GPUCOMPILE__
+// Add up electric field contributions from all components.
+#ifdef __GPUCOMPILE__
   for (int ic = 0; ic < m_numComponents; ic++) {
-    ComponentGPU* component{m_components[ic]};
+    ComponentGPU *component{m_components[ic]};
     component->ElectricField(x, y, z, fx, fy, fz, med, stat);
-  #else
+#else
   for (const auto &cmp : m_components) {
     if (!std::get<1>(cmp)) continue;
     std::get<0>(cmp)->ElectricField(x, y, z, fx, fy, fz, med, stat);
-  #endif
+#endif
     if (status != 0) {
       status = stat;
       medium = med;
@@ -283,8 +283,9 @@ bool Sensor::GetArea(double &xmin, double &ymin, double &zmin, double &xmax,
 #endif
 
 __DEVICE__
-bool GARFIELD_CLASS_NAME(Sensor)::IsInArea(const double x, const double y, const double z) __GPUCONST__ {
-  #ifndef __GPUCOMPILE__
+bool GARFIELD_CLASS_NAME(Sensor)::IsInArea(const double x, const double y,
+                                           const double z) __GPUCONST__ {
+#ifndef __GPUCOMPILE__
   if (!m_hasUserArea) {
     if (!SetArea()) {
       std::cerr << m_className << "::IsInArea: User area could not be set.\n";
@@ -292,20 +293,20 @@ bool GARFIELD_CLASS_NAME(Sensor)::IsInArea(const double x, const double y, const
     }
     m_hasUserArea = true;
   }
-  #endif
+#endif
 
   if (x >= m_xMinUser && x <= m_xMaxUser && y >= m_yMinUser &&
       y <= m_yMaxUser && z >= m_zMinUser && z <= m_zMaxUser) {
     return true;
   }
 
-  #ifndef __GPUCOMPILE__
+#ifndef __GPUCOMPILE__
   if (m_debug) {
     std::cout << m_className << "::IsInArea: (" << x << ", " << y << ", " << z
               << ") "
               << " is outside.\n";
   }
-  #endif
+#endif
   return false;
 }
 
@@ -358,7 +359,6 @@ bool Sensor::CrossedPlane(const double x0, const double y0, const double z0,
 }
 
 double Sensor::StepSizeHint() {
-
   double dmin = std::numeric_limits<double>::max();
   for (const auto &cmp : m_components) {
     if (!std::get<1>(cmp)) continue;
@@ -454,8 +454,7 @@ void Sensor::AddElectrode(Component *cmp, const std::string &label) {
   ClearSignal();
 }
 
-void Sensor::ClearElectrodes()
-{
+void Sensor::ClearElectrodes() {
   std::lock_guard<std::mutex> guard(m_mutex);
   m_electrodes.clear();
 }
@@ -532,18 +531,17 @@ void Sensor::SetDelayedSignalTimes(const std::vector<double> &ts) {
   m_delayedSignalTimes = ts;
 }
 
-void Sensor::AddSignalWeightingPotential(const double q, 
-                       const std::vector<double>& ts,
-                       const std::vector<std::array<double, 3> >& xs) {
+void Sensor::AddSignalWeightingPotential(
+    const double q, const std::vector<double> &ts,
+    const std::vector<std::array<double, 3>> &xs) {
   std::vector<double> qs(ts.size(), 1.);
   AddSignalWeightingPotential(q, ts, xs, qs);
 }
 
-void Sensor::AddSignalWeightingPotential(const double q, 
-                       const std::vector<double>& ts,
-                       const std::vector<std::array<double, 3> >& xs,
-                       const std::vector<double>& qs) {
-
+void Sensor::AddSignalWeightingPotential(
+    const double q, const std::vector<double> &ts,
+    const std::vector<std::array<double, 3>> &xs,
+    const std::vector<double> &qs) {
   const size_t ns = ts.size();
   if (ns < 2) return;
   if (xs.size() != ns || qs.size() != ns) {
@@ -561,11 +559,11 @@ void Sensor::AddSignalWeightingPotential(const double q,
   std::vector<double> qm(ns - 1);
   for (size_t i = 0; i < ns - 1; ++i) {
     qm[i] = q * 0.5 * (qs[i] + qs[i + 1]);
-  } 
+  }
   const bool electron = q < 0;
 
   for (auto &electrode : m_electrodes) {
-    const std::string& lbl = electrode.label;
+    const std::string &lbl = electrode.label;
     const auto cmp = electrode.comp;
     if (m_debug) std::cout << "  Electrode " << electrode.label << ":\n";
     // Compute the prompt weighting potentials at each point on the drift line.
@@ -576,12 +574,12 @@ void Sensor::AddSignalWeightingPotential(const double q,
     // Loop over the drift line segments.
     for (size_t i = 0; i < ns - 1; ++i) {
       // Skip segments outside the time window.
-      if (bins[i] >= (int)m_nTimeBins || bins[i + 1] < 0) continue; 
+      if (bins[i] >= (int)m_nTimeBins || bins[i + 1] < 0) continue;
       if (wp[i] < -0.5 || wp[i + 1] < -0.5) continue;
       // Compute the induced charge.
       const double charge = qm[i] * (wp[i + 1] - wp[i]);
       if (bins[i] == bins[i + 1]) {
-        // Segment is confined within one signal bin. 
+        // Segment is confined within one signal bin.
         FillBin(electrode, bins[i], charge, electron, false);
         continue;
       }
@@ -594,23 +592,23 @@ void Sensor::AddSignalWeightingPotential(const double q,
       for (int j = bins[i]; j <= bins[i + 1]; ++j) {
         const double f = (t1 - t0) * invdt;
         if (j >= 0 && j < (int)m_nTimeBins) {
-          FillBin(electrode, j, f * charge , electron, false);
+          FillBin(electrode, j, f * charge, electron, false);
         }
         t0 = t1;
         t1 = std::min(t0 + m_tStep, ts[i + 1]);
       }
     }
   }
- 
+
   if (m_nEvents <= 0) m_nEvents = 1;
 
   if (!m_delayedSignal) return;
 
   // Calculate the signals for each electrode.
   for (auto &electrode : m_electrodes) {
-    const std::string& lbl = electrode.label;
+    const std::string &lbl = electrode.label;
     const auto cmp = electrode.comp;
-    const auto& dtimes = cmp->DelayedSignalTimes(lbl);
+    const auto &dtimes = cmp->DelayedSignalTimes(lbl);
     if (dtimes.empty()) continue;
     const size_t nt = dtimes.size();
     std::vector<double> dwp0(nt, 0.);
@@ -624,7 +622,7 @@ void Sensor::AddSignalWeightingPotential(const double q,
       double chargePrev = 0.;
       for (size_t j = 0; j < nt; ++j) {
         const double t = ts[i] + dtimes[j];
-     //   if (t < ts[i + 1]) continue;
+        //   if (t < ts[i + 1]) continue;
         const double charge = qm[i] * (dwp1[j] - dwp0[j]);
         const double delta = charge - chargePrev;
         const int bin = int((t - m_tStart) * invBinSize);
@@ -643,18 +641,17 @@ void Sensor::AddSignalWeightingPotential(const double q,
         }
         tPrev = t;
         binPrev = bin;
-        chargePrev = charge; 
-      } 
+        chargePrev = charge;
+      }
       dwp0.swap(dwp1);
     }
   }
-
 }
 
-void Sensor::AddSignalWeightingField(const double q, 
-                       const std::vector<double>& ts,
-                       const std::vector<std::array<double, 3> >& xs,
-                       const bool integrateWeightingField) {
+void Sensor::AddSignalWeightingField(
+    const double q, const std::vector<double> &ts,
+    const std::vector<std::array<double, 3>> &xs,
+    const bool integrateWeightingField) {
   const size_t ns = ts.size();
   if (ns < 2) return;
   if (xs.size() != ns) {
@@ -663,23 +660,23 @@ void Sensor::AddSignalWeightingField(const double q,
     return;
   }
   if (m_debug) std::cout << m_className << "::AddSignalWeightingField: ";
-  
+
   std::vector<int> bins(ns);
   const double invBinSize = 1. / m_tStep;
   for (size_t i = 0; i < ns; ++i) {
     bins[i] = int((ts[i] - m_tStart) * invBinSize);
-  }  
+  }
   const bool electron = q < 0;
 
   // Compute the average velocity over each step.
-  std::vector<std::array<double, 3> > vs(ns - 1);
+  std::vector<std::array<double, 3>> vs(ns - 1);
   for (size_t i = 0; i < ns - 1; ++i) {
     vs[i].fill(0.);
     const double dt = ts[i + 1] - ts[i];
     if (dt < Small) {
       if (m_debug) std::cout << "Time step too small.\n";
       continue;
-    } 
+    }
     const double invdt = 1. / dt;
     vs[i][0] = (xs[i + 1][0] - xs[i][0]) * invdt;
     vs[i][1] = (xs[i + 1][1] - xs[i][1]) * invdt;
@@ -694,7 +691,7 @@ void Sensor::AddSignalWeightingField(const double q,
   for (size_t i = 0; i < nG; ++i) sG[i] = 0.5 * (1. + tG[i]);
 
   for (auto &electrode : m_electrodes) {
-    const std::string& lbl = electrode.label;
+    const std::string &lbl = electrode.label;
     const auto cmp = electrode.comp;
     if (m_debug) std::cout << "  Electrode " << electrode.label << ":\n";
     for (size_t i = 0; i < ns - 1; ++i) {
@@ -723,8 +720,8 @@ void Sensor::AddSignalWeightingField(const double q,
         wy *= 0.5;
         wz *= 0.5;
       } else {
-        cmp->WeightingField(x0 + 0.5 * dx, y0 + 0.5 * dy, 
-                            z0 + 0.5 * dz, wx, wy, wz, lbl);
+        cmp->WeightingField(x0 + 0.5 * dx, y0 + 0.5 * dy, z0 + 0.5 * dz, wx, wy,
+                            wz, lbl);
       }
       if (m_debug) {
         std::cout << "    Weighting field: (" << wx << ", " << wy << ", " << wz
@@ -733,7 +730,7 @@ void Sensor::AddSignalWeightingField(const double q,
       // Calculate the induced current.
       double current = -q * (wx * vs[i][0] + wy * vs[i][1] + wz * vs[i][2]);
       if (bins[i] == bins[i + 1]) {
-        // Segment is confined within one signal bin. 
+        // Segment is confined within one signal bin.
         FillBin(electrode, bins[i], current * dt, electron, false);
         continue;
       }
@@ -755,9 +752,9 @@ void Sensor::AddSignalWeightingField(const double q,
   if (!m_delayedSignal) return;
 
   for (auto &electrode : m_electrodes) {
-    const std::string& lbl = electrode.label;
+    const std::string &lbl = electrode.label;
     const auto cmp = electrode.comp;
-    const auto& dtimes = cmp->DelayedSignalTimes(lbl);
+    const auto &dtimes = cmp->DelayedSignalTimes(lbl);
     if (dtimes.empty()) continue;
     const size_t nt = dtimes.size();
     std::vector<double> td(nt, 0.);
@@ -789,31 +786,30 @@ void Sensor::AddSignalWeightingField(const double q,
       FillSignal(electrode, q, td, id, m_nAvgDelayedSignal, true);
     }
   }
-
 }
 
-void Sensor::AddSignalWeightingField(const double q, 
-    const std::vector<double> &ts,
+void Sensor::AddSignalWeightingField(
+    const double q, const std::vector<double> &ts,
     const std::vector<std::array<double, 3>> &xs,
-    const std::vector<std::array<double, 3>> &vs,
-    const std::vector<double> &ns, const int navg) {
+    const std::vector<std::array<double, 3>> &vs, const std::vector<double> &ns,
+    const int navg) {
   // Don't do anything if there are no points on the signal.
   if (ts.size() < 2) return;
   if (ts.size() != xs.size() || ts.size() != vs.size()) {
-    std::cerr << m_className 
+    std::cerr << m_className
               << "::AddSignalWeightingField: Mismatch in vector size.\n";
     return;
   }
   const bool aval = ns.size() == ts.size();
   const size_t nPoints = ts.size();
   if (m_debug) {
-    std::cout << m_className << "::AddSignalWeightingField: Adding a " 
+    std::cout << m_className << "::AddSignalWeightingField: Adding a "
               << nPoints << "-vector (charge " << q << ").\n";
   }
 
   if (m_nEvents <= 0) m_nEvents = 1;
   for (auto &electrode : m_electrodes) {
-    const std::string& lbl = electrode.label;
+    const std::string &lbl = electrode.label;
     const auto cmp = electrode.comp;
     std::vector<double> signal(nPoints, 0.);
     for (size_t i = 0; i < nPoints; ++i) {
@@ -837,9 +833,9 @@ void Sensor::AddSignalWeightingField(const double q,
 
   // Calculate the delayed signals for each electrode.
   for (auto &electrode : m_electrodes) {
-    const std::string& lbl = electrode.label;
+    const std::string &lbl = electrode.label;
     const auto cmp = electrode.comp;
-    const auto& dtimes = cmp->DelayedSignalTimes(lbl);
+    const auto &dtimes = cmp->DelayedSignalTimes(lbl);
     if (dtimes.empty()) continue;
     const size_t nt = dtimes.size();
     for (size_t k = 0; k < nPoints - 1; ++k) {
@@ -1036,10 +1032,8 @@ void Sensor::SetSignal(const std::string &label, const unsigned int bin,
   }
 }
 
-void Sensor::SetSignal(const std::string& label, 
-                       const std::vector<double>& ts,
-                       const std::vector<double>& is) {
-
+void Sensor::SetSignal(const std::string &label, const std::vector<double> &ts,
+                       const std::vector<double> &is) {
   constexpr double q = -1.;
   constexpr int navg = 0;
   if (m_nEvents == 0) m_nEvents = 1;
@@ -1050,7 +1044,7 @@ void Sensor::SetSignal(const std::string& label,
     }
   }
 }
- 
+
 double Sensor::GetSignal(const std::string &label, const unsigned int bin) {
   if (m_nEvents == 0) return 0.;
   if (bin >= m_nTimeBins) return 0.;
@@ -1161,7 +1155,6 @@ void Sensor::SetTransferFunction(Shaper &shaper) {
 }
 
 void Sensor::PlotTransferFunction() {
-
   const std::string name = ViewBase::FindUnusedCanvasName("cTransferFunction");
   std::vector<double> t;
   std::vector<double> f;
@@ -1180,9 +1173,9 @@ void Sensor::PlotTransferFunction() {
   } else {
     fmax += 0.1 * df;
     if (fmin < 0.) fmin -= 0.1 * df;
-  } 
+  }
 
-  TCanvas* cf = new TCanvas(name.c_str(), "Transfer Function");
+  TCanvas *cf = new TCanvas(name.c_str(), "Transfer Function");
   cf->SetGridx();
   cf->SetGridy();
   cf->DrawFrame(0., fmin, m_nTimeBins * m_tStep, fmax,
@@ -1612,7 +1605,7 @@ double Sensor::TransferFunctionSq() {
         imax = i;
       }
     }
-    double tmax = m_tStep * imax; 
+    double tmax = m_tStep * imax;
     for (unsigned int i = 0; i < 10; ++i) {
       const double y = m_fTransfer(tmax);
       if (y > ymax) ymax = y;
@@ -1855,15 +1848,14 @@ void Sensor::FFT(std::vector<double> &data, const bool inverse, const int nn) {
   }
 }
 
-void Sensor::PlotSignal(const std::string& label, TPad* pad, 
+void Sensor::PlotSignal(const std::string &label, TPad *pad,
                         const std::string optTotal, const std::string optPrompt,
                         const std::string optDelayed) {
-
   ViewSignal view(this);
   if (pad) view.SetCanvas(pad);
-  view.PlotSignal(label, optTotal, optPrompt, optDelayed); 
+  view.PlotSignal(label, optTotal, optPrompt, optDelayed);
 }
- 
+
 void Sensor::ExportSignal(const std::string &label, const std::string &name,
                           const bool chargeCarriers) const {
   const double scale = ElementaryCharge / (m_nEvents * m_tStep);
@@ -1923,7 +1915,9 @@ double Sensor::GetTotalInducedCharge(const std::string &label) {
   return 0.;
 }
 #ifndef USEGPU
-double Sensor::CreateGPUTransferObject(SensorGPU *&/*sensor_gpu*/) { return 0; }
+double Sensor::CreateGPUTransferObject(SensorGPU *& /*sensor_gpu*/) {
+  return 0;
+}
 #endif
 #endif  // __GPUCOMPILE__
 }  // namespace Garfield

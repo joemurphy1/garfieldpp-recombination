@@ -1,7 +1,7 @@
 #ifndef G_SOLID_HOLE_H
 #define G_SOLID_HOLE_H
 
-#include<array>
+#include <array>
 #include <mutex>
 
 #include "Garfield/Solid.hh"
@@ -12,16 +12,15 @@ namespace Garfield {
 
 class SolidHole : public Solid {
  public:
-  /// Constructor from centre, upper/lower radii, half-lengths of the box. 
-  SolidHole(const double cx, const double cy, const double cz,
-            const double rup, const double rlow, 
-            const double lx, const double ly, const double lz);
+  /// Constructor from centre, upper/lower radii, half-lengths of the box.
+  SolidHole(const double cx, const double cy, const double cz, const double rup,
+            const double rlow, const double lx, const double ly,
+            const double lz);
   /// Constructor from centre, upper/lower radii, half-lengths of the box
-  /// and orientation. 
-  SolidHole(const double cx, const double cy, const double cz,
-            const double rup, const double rlow, 
-            const double lx, const double ly, const double lz,
-            const double dx, const double dy, const double dz);
+  /// and orientation.
+  SolidHole(const double cx, const double cy, const double cz, const double rup,
+            const double rlow, const double lx, const double ly,
+            const double lz, const double dx, const double dy, const double dz);
   /// Destructor
   ~SolidHole() {}
 
@@ -58,24 +57,22 @@ class SolidHole : public Solid {
   /// of the specified radius. If the "average-radius" flag is activated,
   /// then the radius will be interpreted as the mean radius of the polygon
   /// that approximates the cylinder.
-  void SetAverageRadius(const bool average) { 
-    m_average = average; 
+  void SetAverageRadius(const bool average) {
+    m_average = average;
     Update();
   }
 
   /// Return the order of the approximating polygon.
   unsigned int GetSectors() const { return m_n; }
-  /// Return the state of the "average-radius" flag. 
+  /// Return the state of the "average-radius" flag.
   bool GetAverage() const { return m_average; }
- 
+
   bool SolidPanels(std::vector<Panel>& panels) override;
-  void SetDiscretisationLevel(const double dis) override {
-    m_dis.fill(dis);
-  }
+  void SetDiscretisationLevel(const double dis) override { m_dis.fill(dis); }
   double GetDiscretisationLevel(const Panel& panel) override;
 
-  void Cut(const double x0, const double y0, const double z0,
-           const double xn, const double yn, const double zn,
+  void Cut(const double x0, const double y0, const double z0, const double xn,
+           const double yn, const double zn,
            std::vector<Panel>& panels) override;
 
  private:
@@ -108,6 +105,6 @@ class SolidHole : public Solid {
 
   void Update();
 };
-}
+}  // namespace Garfield
 
 #endif

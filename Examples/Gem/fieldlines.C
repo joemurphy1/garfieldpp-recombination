@@ -7,8 +7,7 @@
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   // Load the field map.
@@ -21,7 +20,7 @@ int main(int argc, char * argv[]) {
   // Setup the gas.
   MediumMagboltz gas("ar", 80., "co2", 20.);
 
-  // Associate the gas with the corresponding field map material. 
+  // Associate the gas with the corresponding field map material.
   fm.SetGas(&gas);
   fm.PrintMaterials();
 
@@ -32,9 +31,9 @@ int main(int argc, char * argv[]) {
   fieldView.SetPlaneXZ();
   // Set the plot limits in the current viewing plane.
   const double xmin = -0.5 * pitch;
-  const double xmax =  0.5 * pitch;
+  const double xmax = 0.5 * pitch;
   const double zmin = -0.02;
-  const double zmax =  0.02;
+  const double zmax = 0.02;
   fieldView.SetArea(xmin, zmin, xmax, zmax);
   fieldView.SetVoltageRange(-160., 160.);
   fieldView.GetCanvas()->SetLeftMargin(0.16);
@@ -43,8 +42,8 @@ int main(int argc, char * argv[]) {
   std::vector<double> xf;
   std::vector<double> yf;
   std::vector<double> zf;
-  fieldView.EqualFluxIntervals(xmin, 0, 0.99 * zmax, xmax, 0, 0.99 * zmax,
-                               xf, yf, zf, 20);
+  fieldView.EqualFluxIntervals(xmin, 0, 0.99 * zmax, xmax, 0, 0.99 * zmax, xf,
+                               yf, zf, 20);
   fieldView.PlotFieldLines(xf, yf, zf, true, false);
   app.Run(true);
 }

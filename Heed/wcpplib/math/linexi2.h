@@ -67,5 +67,5 @@ class linexi2 : public linexi2_coor {
 };
 std::ostream& operator<<(std::ostream& file, const linexi2& l);
 
-}
+}  // namespace Heed
 #endif

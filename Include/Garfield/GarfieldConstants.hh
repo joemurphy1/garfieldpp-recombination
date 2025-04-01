@@ -47,6 +47,6 @@ static const double BoundaryDistance = 1.e-8;
 // Conversion from Tesla to internal magnetic field units
 // compatible with cm and ns.
 static const double Tesla2Internal = 1.e5;
-}
+}  // namespace Garfield
 
 #endif

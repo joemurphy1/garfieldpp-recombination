@@ -1,27 +1,27 @@
-#include <iostream>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 #include <TSystem.h>
+
+#include <iostream>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-typedef void(*setupFunction)(ComponentAnalyticField*, double& xmin, double& xmax, double& ymin, double& ymax);
+typedef void (*setupFunction)(ComponentAnalyticField*, double& xmin,
+                              double& xmax, double& ymin, double& ymax);
 
 //==================================================
 // Spiral
 //==================================================
-void spiral(ComponentAnalyticField* cmp,
-            double& xmin, double& xmax, double& ymin, double& ymax) {
-
+void spiral(ComponentAnalyticField* cmp, double& xmin, double& xmax,
+            double& ymin, double& ymax) {
   const double d = 0.01;
   const int n = 100;
   for (int i = 0; i < n; ++i) {
@@ -40,44 +40,41 @@ void spiral(ComponentAnalyticField* cmp,
 //==================================================
 // Hexagon
 //==================================================
-void hextube(ComponentAnalyticField* cmp,
-             double& xmin, double& xmax, double& ymin, double& ymax) {
-
+void hextube(ComponentAnalyticField* cmp, double& xmin, double& xmax,
+             double& ymin, double& ymax) {
   cmp->AddTube(2., 0., 6);
   cmp->AddWire(0., 0., 100.e-4, 5000.);
   xmin = ymin = -2.05;
-  xmax = ymax =  2.05;
+  xmax = ymax = 2.05;
 }
 
 //==================================================
 // Two wires, no periodicity
 //==================================================
-void b2x(ComponentAnalyticField* cmp,
-         double& xmin, double& xmax, double& ymin, double& ymax) {
-
-  cmp->AddPlaneX(-1.,    0.);
-  cmp->AddPlaneX( 1., 1000.);
+void b2x(ComponentAnalyticField* cmp, double& xmin, double& xmax, double& ymin,
+         double& ymax) {
+  cmp->AddPlaneX(-1., 0.);
+  cmp->AddPlaneX(1., 1000.);
   const double d = 0.01;
   cmp->AddWire(0.0, 0.0, d, 2000.);
   cmp->AddWire(0.5, 0.5, d, 2000.);
   xmin = -1.05;
-  xmax =  1.05;
+  xmax = 1.05;
   ymin = -0.8;
-  ymax =  1.3;
+  ymax = 1.3;
 }
 
 //==================================================
 // MWPC
 //==================================================
-void mwpc(ComponentAnalyticField* cmp,
-          double& xmin, double& xmax, double& ymin, double& ymax) {
-
+void mwpc(ComponentAnalyticField* cmp, double& xmin, double& xmax, double& ymin,
+          double& ymax) {
   const double gap = 0.5;
   const double pitch = 0.2;
   cmp->SetPeriodicityY(pitch);
 
-  cmp->AddPlaneX( 0.,  0.);
-  cmp->AddPlaneX(gap,  0.);
+  cmp->AddPlaneX(0., 0.);
+  cmp->AddPlaneX(gap, 0.);
 
   const double xw = 0.5 * gap;
   const double dw = 30.e-4;
@@ -89,18 +86,16 @@ void mwpc(ComponentAnalyticField* cmp,
   cmp->AddWire(xw, 0., dw, vw, "s", length, tension, rho);
 
   xmin = -0.01 * gap;
-  xmax =  1.01 * gap;
+  xmax = 1.01 * gap;
   ymin = -5 * pitch;
-  ymax =  5 * pitch;
+  ymax = 5 * pitch;
 }
-
 
 //==================================================
 // ALICE TPC O-ROC
 //==================================================
-void oroc(ComponentAnalyticField* cmp,
-          double& xmin, double& xmax, double& ymin, double& ymax) {
- 
+void oroc(ComponentAnalyticField* cmp, double& xmin, double& xmax, double& ymin,
+          double& ymax) {
   const double gap = 0.3;
   // Periodicity
   const double period = 0.25;
@@ -131,7 +126,7 @@ void oroc(ComponentAnalyticField* cmp,
   cmp->AddPlaneY(yp, vp);
 
   xmin = -5 * period;
-  xmax =  5 * period;
+  xmax = 5 * period;
   ymin = -0.1;
   // ymax = 1.5 * yg;
   ymax = yp + 0.1;
@@ -140,13 +135,12 @@ void oroc(ComponentAnalyticField* cmp,
 //==================================================
 // Circle
 //==================================================
-void circle(ComponentAnalyticField* cmp,
-            double& xmin, double& xmax, double& ymin, double& ymax) {
-
+void circle(ComponentAnalyticField* cmp, double& xmin, double& xmax,
+            double& ymin, double& ymax) {
   cmp->AddPlaneX(-50., 0.);
-  cmp->AddPlaneX( 50., 0.);
+  cmp->AddPlaneX(50., 0.);
   cmp->AddPlaneY(-50., 0.);
-  cmp->AddPlaneY( 50., 0.);
+  cmp->AddPlaneY(50., 0.);
   const double r = 5.;
   const unsigned int n = 16;
   const double d = 0.01;
@@ -155,15 +149,14 @@ void circle(ComponentAnalyticField* cmp,
     const double phi = TwoPi * f;
     const double x = r * cos(phi);
     const double y = r * sin(phi);
-    cmp->AddWire(x, y, d, 1000.); 
+    cmp->AddWire(x, y, d, 1000.);
   }
   cmp->AddWire(0., 0., d, 4500.);
   xmin = ymin = -1.05 * r;
-  xmax = ymax =  1.05 * r;
+  xmax = ymax = 1.05 * r;
 }
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   SetDefaultStyle();
 

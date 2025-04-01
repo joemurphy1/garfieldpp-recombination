@@ -1,24 +1,21 @@
+#include "Garfield/SolidRidge.hh"
+
 #include <cmath>
 #include <iostream>
 
 #include "Garfield/Polygon.hh"
-#include "Garfield/SolidRidge.hh"
 
 namespace Garfield {
 
 SolidRidge::SolidRidge(const double cx, const double cy, const double cz,
-                       const double lx, const double ly, const double hz, 
+                       const double lx, const double ly, const double hz,
                        const double hx)
-    : Solid(cx, cy, cz, "SolidRidge"),
-      m_lX(lx), 
-      m_lY(ly),
-      m_hz(hz),
-      m_hx(hx) {}
+    : Solid(cx, cy, cz, "SolidRidge"), m_lX(lx), m_lY(ly), m_hz(hz), m_hx(hx) {}
 
 SolidRidge::SolidRidge(const double cx, const double cy, const double cz,
                        const double lx, const double ly, const double hz,
-                       const double hx,
-                       const double dx, const double dy, const double dz)
+                       const double hx, const double dx, const double dy,
+                       const double dz)
     : SolidRidge(cx, cy, cz, lx, ly, hz, hx) {
   SetDirection(dx, dy, dz);
 }
@@ -32,16 +29,17 @@ bool SolidRidge::IsInside(const double x, const double y, const double z,
   bool inside = true;
   if (fabs(u) > m_lX || fabs(v) > m_lY || w < 0. || w > m_hz) {
     inside = false;
-  } else if (u >= m_hx &&  m_hz * u + (m_lX - m_hx) * v > m_hz * m_lX) {
+  } else if (u >= m_hx && m_hz * u + (m_lX - m_hx) * v > m_hz * m_lX) {
     inside = false;
   } else if (u <= m_hx && -m_hz * u + (m_lX + m_hx) * v > m_hz * m_lX) {
-    inside = false; 
+    inside = false;
   }
   return inside;
 }
 
 bool SolidRidge::GetBoundingBox(double& xmin, double& ymin, double& zmin,
-                                double& xmax, double& ymax, double& zmax) const {
+                                double& xmax, double& ymax,
+                                double& zmax) const {
   if (m_cTheta == 1. && m_cPhi == 1.) {
     xmin = m_cX - m_lX;
     xmax = m_cX + m_lX;
@@ -146,7 +144,7 @@ bool SolidRidge::SolidPanels(std::vector<Panel>& panels) {
     ToGlobal(x, +m_lY, 0, xv1, yv1, zv1);
     ToGlobal(m_hx, +m_lY, m_hz, xv2, yv2, zv2);
     ToGlobal(m_hx, -m_lY, m_hz, xv3, yv3, zv3);
-    const double dx = i == 0 ? m_lX - m_hx : m_lX + m_hx; 
+    const double dx = i == 0 ? m_lX - m_hx : m_lX + m_hx;
     const double s = sqrt(m_hz * m_hz + dx * dx);
     const double xroof = i == 0 ? m_hz / s : -m_hz / s;
     const double zroof = dx / s;
@@ -168,7 +166,6 @@ bool SolidRidge::SolidPanels(std::vector<Panel>& panels) {
 }
 
 double SolidRidge::GetDiscretisationLevel(const Panel& panel) {
-
   // Transform the normal vector to local coordinates.
   double u = 0., v = 0., w = 0.;
   VectorToLocal(panel.a, panel.b, panel.c, u, v, w);
@@ -194,11 +191,10 @@ double SolidRidge::GetDiscretisationLevel(const Panel& panel) {
 void SolidRidge::Cut(const double x0, const double y0, const double z0,
                      const double xn, const double yn, const double zn,
                      std::vector<Panel>& panels) {
-  
   //-----------------------------------------------------------------------
   //   PLATBC - Cuts ridge with a plane.
   //-----------------------------------------------------------------------
- 
+
   std::vector<double> xv;
   std::vector<double> yv;
   std::vector<double> zv;
@@ -207,7 +203,7 @@ void SolidRidge::Cut(const double x0, const double y0, const double z0,
   double x1, y1, z1;
   ToGlobal(-m_lX, -m_lY, 0., x1, y1, z1);
   double x2, y2, z2;
-  ToGlobal(+m_lX, -m_lY, 0., x2, y2, z2); 
+  ToGlobal(+m_lX, -m_lY, 0., x2, y2, z2);
   double xc, yc, zc;
   if (Intersect(x1, y1, z1, x2, y2, z2, x0, y0, z0, xn, yn, zn, xc, yc, zc)) {
     xv.push_back(xc);
@@ -228,7 +224,7 @@ void SolidRidge::Cut(const double x0, const double y0, const double z0,
     yv.push_back(yc);
     zv.push_back(zc);
   }
-  
+
   // The line (xmax,ymax,0) to (xmin,ymax,0).
   ToGlobal(+m_lX, +m_lY, 0., x1, y1, z1);
   ToGlobal(-m_lX, +m_lY, 0., x2, y2, z2);
@@ -280,7 +276,7 @@ void SolidRidge::Cut(const double x0, const double y0, const double z0,
     yv.push_back(yc);
     zv.push_back(zc);
   }
-  
+
   // Get rid of butterflies.
   Polygon::EliminateButterflies(xv, yv, zv);
   if (xv.size() >= 3) {
@@ -295,7 +291,6 @@ void SolidRidge::Cut(const double x0, const double y0, const double z0,
     panel.volume = GetId();
     panels.push_back(std::move(panel));
   }
-
 }
 
-}
+}  // namespace Garfield

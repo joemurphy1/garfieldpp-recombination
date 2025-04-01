@@ -1,3 +1,5 @@
+#include "Garfield/MediumGas.hh"
+
 #include <algorithm>
 #include <array>
 #include <cstdio>
@@ -14,7 +16,6 @@
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/MediumGas.hh"
 #include "Garfield/OpticalData.hh"
 #include "Garfield/Utilities.hh"
 
@@ -79,9 +80,9 @@ bool Similar(const double v1, const double v2, const double eps) {
   const double dif = v1 - v2;
   const double sum = fabs(v1) + fabs(v2);
   return fabs(dif) < std::max(eps * sum, Garfield::Small);
-} 
+}
 
-int Equal(const std::vector<double>& fields1, 
+int Equal(const std::vector<double>& fields1,
           const std::vector<double>& fields2, const double eps) {
   if (fields1.size() != fields2.size()) return 0;
   const size_t n = fields1.size();
@@ -93,7 +94,6 @@ int Equal(const std::vector<double>& fields1,
 
 int FindIndex(const double field, const std::vector<double>& fields,
               const double eps) {
-
   const int n = fields.size();
   for (int i = 0; i < n; ++i) {
     if (Similar(field, fields[i], eps)) return i;
@@ -101,15 +101,14 @@ int FindIndex(const double field, const std::vector<double>& fields,
   return -1;
 }
 
-void ResizeA(std::vector<std::vector<std::vector<double> > >& tab,
-             const int ne, const int nb, const int na) {
+void ResizeA(std::vector<std::vector<std::vector<double> > >& tab, const int ne,
+             const int nb, const int na) {
   if (tab.empty()) return;
-  tab.resize(na, 
-             std::vector<std::vector<double> >(nb, 
-                                               std::vector<double>(ne, 0.)));
+  tab.resize(
+      na, std::vector<std::vector<double> >(nb, std::vector<double>(ne, 0.)));
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -195,7 +194,7 @@ bool MediumGas::SetComposition(const std::string& gas1, const double f1,
 
   // Set the W value, Fano factor, and the atomic weight and number.
   m_w = 0.;
-  m_fano = 0.; 
+  m_fano = 0.;
   for (unsigned int i = 0; i < m_nComponents; ++i) {
     double w = 0., f = 0.;
     GetGasInfo(m_gas[i], m_atWeight[i], m_atNum[i], w, f);
@@ -213,7 +212,6 @@ bool MediumGas::SetComposition(const std::string& gas1, const double f1,
     std::cout << ")";
   }
   std::cout << "\n";
-
 
   // Copy the previous Penning transfer parameters.
   std::array<double, m_nMaxGases> rPenningGasOld;
@@ -238,10 +236,11 @@ bool MediumGas::SetComposition(const std::string& gas1, const double f1,
   return true;
 }
 
-void MediumGas::GetComposition(
-    std::string& gas1, double& f1, std::string& gas2, double& f2, 
-    std::string& gas3, double& f3, std::string& gas4, double& f4, 
-    std::string& gas5, double& f5, std::string& gas6, double& f6) const {
+void MediumGas::GetComposition(std::string& gas1, double& f1, std::string& gas2,
+                               double& f2, std::string& gas3, double& f3,
+                               std::string& gas4, double& f4, std::string& gas5,
+                               double& f5, std::string& gas6,
+                               double& f6) const {
   gas1 = m_gas[0];
   gas2 = m_gas[1];
   gas3 = m_gas[2];
@@ -321,9 +320,7 @@ double MediumGas::GetAtomicNumber() const {
   return z;
 }
 
-bool MediumGas::LoadGasFile(const std::string& filename, 
-                            const bool quiet) {
-
+bool MediumGas::LoadGasFile(const std::string& filename, const bool quiet) {
   // -----------------------------------------------------------------------
   //    GASGET
   // -----------------------------------------------------------------------
@@ -350,8 +347,8 @@ bool MediumGas::LoadGasFile(const std::string& filename,
   // Gas composition
   constexpr int nMagboltzGases = 60;
   std::vector<double> mixture(nMagboltzGases, 0.);
-  if (!ReadHeader(gasfile, version, gasok, m_tab2d, mixture, 
-                  m_eFields, m_bFields, m_bAngles, m_excLevels, m_ionLevels)) {
+  if (!ReadHeader(gasfile, version, gasok, m_tab2d, mixture, m_eFields,
+                  m_bFields, m_bAngles, m_excLevels, m_ionLevels)) {
     gasfile.close();
     return false;
   }
@@ -478,11 +475,11 @@ bool MediumGas::LoadGasFile(const std::string& filename,
     for (int j = 0; j < nA; j++) {
       for (int k = 0; k < nB; k++) {
         if (m_tab2d) {
-          ReadRecord3D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, 
-                       lor, dis, diff, rexc, rion, gasok);
+          ReadRecord3D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, lor,
+                       dis, diff, rexc, rion, gasok);
         } else {
-          ReadRecord1D(gasfile, ve, vb, vx, wv, wr, dl, dt, alpha, alpha0, eta, riontof, ratttof,
-                       mu, lor, dis, diff, rexc, rion, gasok);
+          ReadRecord1D(gasfile, ve, vb, vx, wv, wr, dl, dt, alpha, alpha0, eta,
+                       riontof, ratttof, mu, lor, dis, diff, rexc, rion, gasok);
         }
         if (!m_eVelE.empty()) m_eVelE[j][k][i] = ve;
         if (!m_eVelB.empty()) m_eVelB[j][k][i] = vb;
@@ -534,8 +531,8 @@ bool MediumGas::LoadGasFile(const std::string& filename,
   // Moving on to the file footer
   gasfile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   if (m_debug) std::cout << "    Reading footer.\n";
-  ReadFooter(gasfile, extrapH, extrapL, interp, 
-             m_eThrAlp, m_eThrAtt, m_iThrDis, ionDiffL, ionDiffT, pgas, tgas);
+  ReadFooter(gasfile, extrapH, extrapL, interp, m_eThrAlp, m_eThrAtt, m_iThrDis,
+             ionDiffL, ionDiffT, pgas, tgas);
   gasfile.close();
 
   // Decrement the threshold indices (compatibility with Fortran).
@@ -611,12 +608,11 @@ bool MediumGas::LoadGasFile(const std::string& filename,
   return true;
 }
 
-bool MediumGas::ReadHeader(std::ifstream& gasfile, int& version,
-  std::bitset<20>& gasok, bool& is3d, std::vector<double>& mixture,
-  std::vector<double>& efields, std::vector<double>& bfields, 
-  std::vector<double>& angles, std::vector<ExcLevel>& excLevels,
-  std::vector<IonLevel>& ionLevels) {
-
+bool MediumGas::ReadHeader(
+    std::ifstream& gasfile, int& version, std::bitset<20>& gasok, bool& is3d,
+    std::vector<double>& mixture, std::vector<double>& efields,
+    std::vector<double>& bfields, std::vector<double>& angles,
+    std::vector<ExcLevel>& excLevels, std::vector<IonLevel>& ionLevels) {
   gasok.reset();
   bool done = false;
   char line[256];
@@ -653,8 +649,8 @@ bool MediumGas::ReadHeader(std::ifstream& gasfile, int& version,
         if (m_debug) std::cout << "    GASOK bits: " << okstr << "\n";
         if (okstr.size() < 20) {
           std::cerr << m_className << "::ReadHeader:\n"
-                    << "    Unexpected size of GASOK string (" 
-                    << okstr.size() << ").\n";
+                    << "    Unexpected size of GASOK string (" << okstr.size()
+                    << ").\n";
           return false;
         }
         for (unsigned int i = 0; i < 20; ++i) {
@@ -699,7 +695,7 @@ bool MediumGas::ReadHeader(std::ifstream& gasfile, int& version,
         }
         efields.resize(nE);
         angles.resize(nA);
-        bfields.resize(nB); 
+        bfields.resize(nB);
         // Fill in the excitation/ionisation structs
         // Excitation
         token = strtok(NULL, " :,%\t");
@@ -792,12 +788,13 @@ bool MediumGas::ReadHeader(std::ifstream& gasfile, int& version,
   return done;
 }
 
-void MediumGas::ReadRecord3D(std::ifstream& gasfile, 
-  double& ve, double& vb, double& vx, double& dl, double& dt, 
-  double& alpha, double& alpha0, double& eta, double& mu, double& lor,
-  double& dis, std::array<double, 6>& dif, std::vector<double>& rexc,
-  std::vector<double>& rion, std::bitset<20> gasok) {
-
+void MediumGas::ReadRecord3D(std::ifstream& gasfile, double& ve, double& vb,
+                             double& vx, double& dl, double& dt, double& alpha,
+                             double& alpha0, double& eta, double& mu,
+                             double& lor, double& dis,
+                             std::array<double, 6>& dif,
+                             std::vector<double>& rexc,
+                             std::vector<double>& rion, std::bitset<20> gasok) {
   // Drift velocity along E, Bt and ExB
   gasfile >> ve >> vb >> vx;
   // Convert from cm / us to cm / ns.
@@ -826,26 +823,28 @@ void MediumGas::ReadRecord3D(std::ifstream& gasfile,
   for (unsigned int l = 0; l < nion; ++l) gasfile >> rion[l];
   // check gasok: necessary to read previous gas files (version < 13)
   double wv = 0., wr = 0., riontof = 0., ratttof = 0.;
-  if(gasok[16]) {
-      gasfile >> wv;
+  if (gasok[16]) {
+    gasfile >> wv;
   }
-  if(gasok[17]) {
-      gasfile >> wr;
+  if (gasok[17]) {
+    gasfile >> wr;
   }
-  if(gasok[18]) {
-      gasfile >> riontof;
+  if (gasok[18]) {
+    gasfile >> riontof;
   }
-  if(gasok[19]) {
-      gasfile >> ratttof;
+  if (gasok[19]) {
+    gasfile >> ratttof;
   }
 }
 
-void MediumGas::ReadRecord1D(std::ifstream& gasfile, 
-  double& ve, double& vb, double& vx, double& wv, double& wr, double& dl, double& dt,
-  double& alpha, double& alpha0, double& eta, double& riontof, double& ratttof,
-  double& mu, double& lor, double& dis, std::array<double, 6>& dif,
-  std::vector<double>& rexc, std::vector<double>& rion, std::bitset<20> gasok) {
-
+void MediumGas::ReadRecord1D(std::ifstream& gasfile, double& ve, double& vb,
+                             double& vx, double& wv, double& wr, double& dl,
+                             double& dt, double& alpha, double& alpha0,
+                             double& eta, double& riontof, double& ratttof,
+                             double& mu, double& lor, double& dis,
+                             std::array<double, 6>& dif,
+                             std::vector<double>& rexc,
+                             std::vector<double>& rion, std::bitset<20> gasok) {
   double waste = 0.;
   gasfile >> ve >> waste >> vb >> waste >> vx >> waste;
   // convert from [cm / us] to Garfield units [cm / ns]
@@ -864,28 +863,27 @@ void MediumGas::ReadRecord1D(std::ifstream& gasfile,
   const unsigned int nion = rion.size();
   for (unsigned int j = 0; j < nion; ++j) gasfile >> rion[j] >> waste;
   // check gasok: necessary to read previous gas files (version < 13)
-  if(gasok[16]) {
-      gasfile >> wv >> waste;
+  if (gasok[16]) {
+    gasfile >> wv >> waste;
   }
-  if(gasok[17]) {
-      gasfile >> wr >> waste;
+  if (gasok[17]) {
+    gasfile >> wr >> waste;
   }
-  if(gasok[18]) {
-      gasfile >> riontof >> waste;
+  if (gasok[18]) {
+    gasfile >> riontof >> waste;
   }
-  if(gasok[19]) {
-      gasfile >> ratttof >> waste;
+  if (gasok[19]) {
+    gasfile >> ratttof >> waste;
   }
 }
 
 void MediumGas::ReadFooter(std::ifstream& gasfile,
-  std::array<unsigned int, 13>& extrapH,
-  std::array<unsigned int, 13>& extrapL,
-  std::array<unsigned int, 13>& interp, 
-  unsigned int& thrAlp, unsigned int& thrAtt, unsigned int& thrDis, 
-  double& ionDiffL, double& ionDiffT,
-  double& pgas, double& tgas) {
-
+                           std::array<unsigned int, 13>& extrapH,
+                           std::array<unsigned int, 13>& extrapL,
+                           std::array<unsigned int, 13>& interp,
+                           unsigned int& thrAlp, unsigned int& thrAtt,
+                           unsigned int& thrDis, double& ionDiffL,
+                           double& ionDiffT, double& pgas, double& tgas) {
   bool done = false;
   while (!done) {
     char line[256];
@@ -961,9 +959,9 @@ void MediumGas::ReadFooter(std::ifstream& gasfile,
 }
 
 bool MediumGas::GetMixture(const std::vector<double>& mixture,
-  const int version, std::vector<std::string>& gasnames,
-  std::vector<double>& percentages) const {
-
+                           const int version,
+                           std::vector<std::string>& gasnames,
+                           std::vector<double>& percentages) const {
   gasnames.clear();
   percentages.clear();
   const unsigned int nMagboltzGases = mixture.size();
@@ -999,7 +997,6 @@ bool MediumGas::GetMixture(const std::vector<double>& mixture,
 
 bool MediumGas::MergeGasFile(const std::string& filename,
                              const bool replaceOld) {
-
   // -----------------------------------------------------------------------
   //    GASMRG - Merges gas data from a file with existing gas tables.
   //    (Last changed on 16/ 2/11.)
@@ -1030,7 +1027,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
     std::cerr << m_className << "::MergeGasFile: Error reading header.\n";
     gasfile.close();
     return false;
-  } 
+  }
   // Check the version.
   if (version != 13) {
     std::cout << m_className << "::MergeGasFile:\n    "
@@ -1083,7 +1080,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
       excMatch = false;
       break;
     }
-  } 
+  }
   bool ionMatch = (m_ionLevels.size() == nion);
   if (ionMatch) {
     for (unsigned int i = 0; i < nion; ++i) {
@@ -1091,7 +1088,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
       ionMatch = false;
       break;
     }
-  } 
+  }
 
   // Drift velocity along E, Bt and ExB
   double ve = 0., vb = 0., vx = 0.;
@@ -1118,11 +1115,11 @@ bool MediumGas::MergeGasFile(const std::string& filename,
     for (unsigned int j = 0; j < nNewA; j++) {
       for (unsigned int k = 0; k < nNewB; k++) {
         if (new3d) {
-          ReadRecord3D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, 
-                       lor, dis, diff, rexc, rion, gasok);
+          ReadRecord3D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, lor,
+                       dis, diff, rexc, rion, gasok);
         } else {
-          ReadRecord1D(gasfile, ve, vb, vx, _, _, dl, dt, alpha, alpha0, eta, _, _,
-                       mu, lor, dis, diff, rexc, rion, gasok);
+          ReadRecord1D(gasfile, ve, vb, vx, _, _, dl, dt, alpha, alpha0, eta, _,
+                       _, mu, lor, dis, diff, rexc, rion, gasok);
         }
       }
     }
@@ -1141,19 +1138,19 @@ bool MediumGas::MergeGasFile(const std::string& filename,
   double pgas = 0., tgas = 0.;
   // Read the footer.
   gasfile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-  ReadFooter(gasfile, extrapH, extrapL, interp, thrAlp, thrAtt, thrDis, 
+  ReadFooter(gasfile, extrapH, extrapL, interp, thrAlp, thrAtt, thrDis,
              ionDiffL, ionDiffT, pgas, tgas);
 
   // Check the pressure and temperature.
   if (!Similar(pgas, m_pressureTable, eps)) {
     std::cerr << m_className << "::MergeGasFile:\n    "
-              << "The gas pressure of the dataset to be read differs\n    " 
+              << "The gas pressure of the dataset to be read differs\n    "
               << "from the current reference pressure; stop.\n";
     gasfile.close();
     return false;
   }
   if (!Similar(tgas, m_temperatureTable, eps)) {
-    std::cerr << m_className << "::MergeGasFile:\n    "     
+    std::cerr << m_className << "::MergeGasFile:\n    "
               << "The gas temperature of the dataset to be read differs\n    "
               << "from the current reference temperature; stop.\n";
     gasfile.close();
@@ -1176,10 +1173,10 @@ bool MediumGas::MergeGasFile(const std::string& filename,
   if (m_debug) {
     std::cout << m_className << "::MergeGasFile:\n    "
               << "Dataset to be merged has the following dimensions:\n    "
-              << "3D = " << new3d << " nE = " << nNewE << ", nB = " << nNewB 
-              << ", nA = " << nNewA << ", nExc = "
-              << excLevels.size() << ", nIon = " << ionLevels.size() << "\n";
-  } 
+              << "3D = " << new3d << " nE = " << nNewE << ", nB = " << nNewB
+              << ", nA = " << nNewA << ", nExc = " << excLevels.size()
+              << ", nIon = " << ionLevels.size() << "\n";
+  }
 
   unsigned int nE = m_eFields.size();
   unsigned int nB = m_bFields.size();
@@ -1192,12 +1189,18 @@ bool MediumGas::MergeGasFile(const std::string& filename,
   const int ibmode = Equal(bfields, m_bFields, eps);
   if (m_debug) {
     std::cout << m_className << "::MergeGasFile:\n";
-    if (iemode == 0) std::cout << "    The E vectors differ.\n";
-    else std::cout << "    The E vectors are identical.\n";
-    if (iamode == 0) std::cout << "    The angle vectors differ.\n";
-    else std::cout << "    The angle vectors are identical.\n";
-    if (ibmode == 0) std::cout << "    The B vectors differ.\n";
-    else std::cout << "    The B vectors are identical.\n";
+    if (iemode == 0)
+      std::cout << "    The E vectors differ.\n";
+    else
+      std::cout << "    The E vectors are identical.\n";
+    if (iamode == 0)
+      std::cout << "    The angle vectors differ.\n";
+    else
+      std::cout << "    The angle vectors are identical.\n";
+    if (ibmode == 0)
+      std::cout << "    The B vectors differ.\n";
+    else
+      std::cout << "    The B vectors are identical.\n";
   }
   // Ensure there is a common mode.
   if (iemode + iamode + ibmode < 2) {
@@ -1212,8 +1215,8 @@ bool MediumGas::MergeGasFile(const std::string& filename,
     if (m_debug) std::cout << "    Expanding existing table to 3D mode.\n";
     m_tab2d = true;
   }
- 
-  // Determine which data are currently present. 
+
+  // Determine which data are currently present.
   std::bitset<20> existing;
   GetGasBits(existing);
   // If the grids don't match, warn for data being lost in the merge.
@@ -1374,7 +1377,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
       gasok.reset(15);
     }
   } else {
-    // If the grids are identical, initialise the tables that are only present 
+    // If the grids are identical, initialise the tables that are only present
     // in the new dataset but not in existing one.
     if (gasok[0] && !existing[0]) Init(nE, nB, nA, m_eVelE, 0.);
     if (gasok[1] && !existing[1]) Init(nE, nB, nA, m_iMob, 0.);
@@ -1414,8 +1417,8 @@ bool MediumGas::MergeGasFile(const std::string& filename,
         // If it overlaps with existing E, either keep old or new data.
         if (Similar(efield, m_eFields[j], eps)) {
           if (replaceOld) {
-            std::cout << "    Replacing existing data for E = " 
-                      << m_eFields[j] << " V/cm by data from file.\n";
+            std::cout << "    Replacing existing data for E = " << m_eFields[j]
+                      << " V/cm by data from file.\n";
             m_eFields[j] = efield;
             newE[j] = true;
             ZeroRowE(j, nB, nA);
@@ -1428,8 +1431,8 @@ bool MediumGas::MergeGasFile(const std::string& filename,
         } else if (efield < m_eFields[j]) {
           // Otherwise shift all data at higher E values.
           if (m_debug) {
-            std::cout << "    Inserting E = " << efield  
-                      << " V/cm at slot " << j << ".\n";
+            std::cout << "    Inserting E = " << efield << " V/cm at slot " << j
+                      << ".\n";
           }
           InsertE(j, nE, nB, nA);
           m_eFields.insert(m_eFields.begin() + j, efield);
@@ -1454,7 +1457,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
   }
   // Insert room in the tables for new columns in B.
   if (ibmode == 0) {
-    // Loop over the new values. 
+    // Loop over the new values.
     for (const auto bfield : bfields) {
       // Loop over the old values.
       bool found = false;
@@ -1462,7 +1465,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
         // If it overlaps with existing B, either keep old or new data.
         if (Similar(bfield, m_bFields[j], eps)) {
           if (replaceOld) {
-            std::cout << "    Replacing old data for B = " << m_bFields[j] 
+            std::cout << "    Replacing old data for B = " << m_bFields[j]
                       << " T by data from file.\n";
             m_bFields[j] = bfield;
             newB[j] = true;
@@ -1476,8 +1479,8 @@ bool MediumGas::MergeGasFile(const std::string& filename,
         } else if (bfield < m_bFields[j]) {
           // Otherwise shift all data at higher B values.
           if (m_debug) {
-              std::cout << "    Inserting B = " << bfield << " T at slot "
-                        << j << ".\n";
+            std::cout << "    Inserting B = " << bfield << " T at slot " << j
+                      << ".\n";
           }
           InsertB(j, nE, nB, nA);
           m_bFields.insert(m_bFields.begin() + j, bfield);
@@ -1510,7 +1513,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
         // If it overlaps with an existing angle, either keep old or new data.
         if (Similar(angle, m_bAngles[j], eps)) {
           if (replaceOld) {
-            std::cout << "    Replacing old data for angle(E,B) = " 
+            std::cout << "    Replacing old data for angle(E,B) = "
                       << m_bAngles[j] * RadToDegree
                       << " degrees by data from the file.\n";
             m_bAngles[j] = angle;
@@ -1519,7 +1522,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
           } else {
             std::cout << "    Keeping old data for angle(E,B) = "
                       << m_bAngles[j] * RadToDegree
-                      << " degrees, not using data from file.\n"; 
+                      << " degrees, not using data from file.\n";
           }
           found = true;
           break;
@@ -1564,11 +1567,11 @@ bool MediumGas::MergeGasFile(const std::string& filename,
       for (const auto bfield : bfields) {
         // Read the record.
         if (new3d) {
-          ReadRecord3D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, 
-                       lor, dis, diff, rexc, rion, gasok);
+          ReadRecord3D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, lor,
+                       dis, diff, rexc, rion, gasok);
         } else {
-            ReadRecord1D(gasfile, ve, vb, vx, _, _, dl, dt, alpha, alpha0, eta, _, _,
-                         mu, lor, dis, diff, rexc, rion, gasok);
+          ReadRecord1D(gasfile, ve, vb, vx, _, _, dl, dt, alpha, alpha0, eta, _,
+                       _, mu, lor, dis, diff, rexc, rion, gasok);
         }
         const int indb = FindIndex(bfield, m_bFields, eps);
         if (inde < 0 || inda < 0 || indb < 0) {
@@ -1579,7 +1582,8 @@ bool MediumGas::MergeGasFile(const std::string& filename,
           gasfile.close();
           return false;
         }
-        const bool update = newE[inde] || newA[inda] || newB[indb] || replaceOld; 
+        const bool update =
+            newE[inde] || newA[inda] || newB[indb] || replaceOld;
         // Store the data.
         if (gasok[0] && (update || !existing[0])) {
           m_eVelE[inda][indb][inde] = ve;
@@ -1598,7 +1602,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
           m_eAtt[inda][indb][inde] = eta + logp;
         }
         if (gasok[6] && (update || !existing[6])) {
-          m_eLor[inda][indb][inde] = lor; 
+          m_eLor[inda][indb][inde] = lor;
         }
         if (gasok[7] && (update || !existing[7])) {
           m_eDifT[inda][indb][inde] = dt / sqrp;
@@ -1647,7 +1651,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
     if (gasok[15]) m_extrIon = {extrapL[12], extrapH[12]};
 
     if (gasok[0]) m_intpVel = interp[0];
-    if (gasok[1]) m_intpMob = interp[6]; 
+    if (gasok[1]) m_intpMob = interp[6];
     if (gasok[2]) m_intpDif = interp[3];
     if (gasok[3]) m_intpAlp = interp[4];
     if (gasok[5]) m_intpAtt = interp[5];
@@ -1669,7 +1673,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
   return true;
 }
 
-void MediumGas::InsertE(const int ie, const int ne, const int nb, 
+void MediumGas::InsertE(const int ie, const int ne, const int nb,
                         const int na) {
   for (int k = 0; k < na; ++k) {
     for (int j = 0; j < nb; ++j) {
@@ -1678,12 +1682,12 @@ void MediumGas::InsertE(const int ie, const int ne, const int nb,
       if (!m_eVelX.empty()) m_eVelX[k][j].resize(ne + 1, 0.);
       if (!m_eDifL.empty()) m_eDifL[k][j].resize(ne + 1, 0.);
       if (!m_eDifT.empty()) m_eDifT[k][j].resize(ne + 1, 0.);
-      if (!m_eAlp.empty())  m_eAlp[k][j].resize(ne + 1, 0.);
+      if (!m_eAlp.empty()) m_eAlp[k][j].resize(ne + 1, 0.);
       if (!m_eAlp0.empty()) m_eAlp0[k][j].resize(ne + 1, 0.);
-      if (!m_eAtt.empty())  m_eAtt[k][j].resize(ne + 1, 0.);
-      if (!m_eLor.empty())  m_eLor[k][j].resize(ne + 1, 0.);
-      if (!m_iMob.empty())  m_iMob[k][j].resize(ne + 1, 0.);
-      if (!m_iDis.empty())  m_iDis[k][j].resize(ne + 1, 0.);
+      if (!m_eAtt.empty()) m_eAtt[k][j].resize(ne + 1, 0.);
+      if (!m_eLor.empty()) m_eLor[k][j].resize(ne + 1, 0.);
+      if (!m_iMob.empty()) m_iMob[k][j].resize(ne + 1, 0.);
+      if (!m_iDis.empty()) m_iDis[k][j].resize(ne + 1, 0.);
       if (!m_iDifL.empty()) m_iDifL[k][j].resize(ne + 1, 0.);
       if (!m_iDifT.empty()) m_iDifT[k][j].resize(ne + 1, 0.);
       for (auto& dif : m_eDifM) dif[k][j].resize(ne + 1, 0.);
@@ -1695,38 +1699,46 @@ void MediumGas::InsertE(const int ie, const int ne, const int nb,
         if (!m_eVelX.empty()) m_eVelX[k][j][i] = m_eVelX[k][j][i - 1];
         if (!m_eDifL.empty()) m_eDifL[k][j][i] = m_eDifL[k][j][i - 1];
         if (!m_eDifT.empty()) m_eDifT[k][j][i] = m_eDifT[k][j][i - 1];
-        if (!m_eAlp.empty())  m_eAlp[k][j][i] = m_eAlp[k][j][i - 1];
+        if (!m_eAlp.empty()) m_eAlp[k][j][i] = m_eAlp[k][j][i - 1];
         if (!m_eAlp0.empty()) m_eAlp0[k][j][i] = m_eAlp0[k][j][i - 1];
-        if (!m_eAtt.empty())  m_eAtt[k][j][i] = m_eAtt[k][j][i - 1];
-        if (!m_eLor.empty())  m_eLor[k][j][i] = m_eLor[k][j][i - 1];
-        if (!m_iMob.empty())  m_iMob[k][j][i] = m_iMob[k][j][i - 1];
-        if (!m_iDis.empty())  m_iDis[k][j][i] = m_iDis[k][j][i - 1];
+        if (!m_eAtt.empty()) m_eAtt[k][j][i] = m_eAtt[k][j][i - 1];
+        if (!m_eLor.empty()) m_eLor[k][j][i] = m_eLor[k][j][i - 1];
+        if (!m_iMob.empty()) m_iMob[k][j][i] = m_iMob[k][j][i - 1];
+        if (!m_iDis.empty()) m_iDis[k][j][i] = m_iDis[k][j][i - 1];
         if (!m_iDifL.empty()) m_iDifL[k][j][i] = m_iDifL[k][j][i - 1];
         if (!m_iDifT.empty()) m_iDifT[k][j][i] = m_iDifT[k][j][i - 1];
         for (auto& dif : m_eDifM) dif[k][j][i] = dif[k][j][i - 1];
         for (auto& exc : m_excRates) exc[k][j][i] = exc[k][j][i - 1];
         for (auto& ion : m_ionRates) ion[k][j][i] = ion[k][j][i - 1];
-       }
+      }
     }
   }
 }
 
-void MediumGas::InsertB(const int ib, const int ne, const int nb, 
+void MediumGas::InsertB(const int ib, const int ne, const int nb,
                         const int na) {
   for (int k = 0; k < na; ++k) {
-    if (!m_eVelE.empty()) m_eVelE[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_eVelB.empty()) m_eVelB[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_eVelX.empty()) m_eVelX[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_eDifL.empty()) m_eDifL[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_eDifT.empty()) m_eDifT[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_eAlp.empty())  m_eAlp[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_eAlp0.empty()) m_eAlp0[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_eAtt.empty())  m_eAtt[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_eLor.empty())  m_eLor[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_iMob.empty())  m_iMob[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_iDis.empty())  m_iDis[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_iDifL.empty()) m_iDifL[k].resize(nb + 1, std::vector<double>(ne, 0.));
-    if (!m_iDifT.empty()) m_iDifT[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_eVelE.empty())
+      m_eVelE[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_eVelB.empty())
+      m_eVelB[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_eVelX.empty())
+      m_eVelX[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_eDifL.empty())
+      m_eDifL[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_eDifT.empty())
+      m_eDifT[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_eAlp.empty()) m_eAlp[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_eAlp0.empty())
+      m_eAlp0[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_eAtt.empty()) m_eAtt[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_eLor.empty()) m_eLor[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_iMob.empty()) m_iMob[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_iDis.empty()) m_iDis[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_iDifL.empty())
+      m_iDifL[k].resize(nb + 1, std::vector<double>(ne, 0.));
+    if (!m_iDifT.empty())
+      m_iDifT[k].resize(nb + 1, std::vector<double>(ne, 0.));
     for (auto& dif : m_eDifM) {
       dif[k].resize(nb + 1, std::vector<double>(ne, 0.));
     }
@@ -1743,12 +1755,12 @@ void MediumGas::InsertB(const int ib, const int ne, const int nb,
         if (!m_eVelX.empty()) m_eVelX[k][j][i] = m_eVelX[k][j - 1][i];
         if (!m_eDifL.empty()) m_eDifL[k][j][i] = m_eDifL[k][j - 1][i];
         if (!m_eDifT.empty()) m_eDifT[k][j][i] = m_eDifT[k][j - 1][i];
-        if (!m_eAlp.empty())  m_eAlp[k][j][i]  = m_eAlp[k][j - 1][i];
+        if (!m_eAlp.empty()) m_eAlp[k][j][i] = m_eAlp[k][j - 1][i];
         if (!m_eAlp0.empty()) m_eAlp0[k][j][i] = m_eAlp0[k][j - 1][i];
-        if (!m_eAtt.empty())  m_eAtt[k][j][i]  = m_eAtt[k][j - 1][i];
-        if (!m_eLor.empty())  m_eLor[k][j][i]  = m_eLor[k][j - 1][i];
-        if (!m_iMob.empty())  m_iMob[k][j][i]  = m_iMob[k][j - 1][i];
-        if (!m_iDis.empty())  m_iDis[k][j][i]  = m_iDis[k][j - 1][i];
+        if (!m_eAtt.empty()) m_eAtt[k][j][i] = m_eAtt[k][j - 1][i];
+        if (!m_eLor.empty()) m_eLor[k][j][i] = m_eLor[k][j - 1][i];
+        if (!m_iMob.empty()) m_iMob[k][j][i] = m_iMob[k][j - 1][i];
+        if (!m_iDis.empty()) m_iDis[k][j][i] = m_iDis[k][j - 1][i];
         if (!m_iDifL.empty()) m_iDifL[k][j][i] = m_iDifL[k][j - 1][i];
         if (!m_iDifT.empty()) m_iDifT[k][j][i] = m_iDifT[k][j - 1][i];
         for (auto& dif : m_eDifM) dif[k][j][i] = dif[k][j - 1][i];
@@ -1756,7 +1768,7 @@ void MediumGas::InsertB(const int ib, const int ne, const int nb,
         for (auto& ion : m_ionRates) ion[k][j][i] = ion[k][j - 1][i];
       }
     }
-  } 
+  }
 }
 
 void MediumGas::InsertA(const int ia, const int ne, const int nb,
@@ -1800,7 +1812,7 @@ void MediumGas::InsertA(const int ia, const int ne, const int nb,
     }
   }
 }
- 
+
 void MediumGas::ZeroRowE(const int ie, const int nb, const int na) {
   for (int k = 0; k < na; ++k) {
     for (int j = 0; j < nb; ++j) {
@@ -1826,7 +1838,6 @@ void MediumGas::ZeroRowA(const int ia, const int ne, const int nb) {
 }
 
 bool MediumGas::WriteGasFile(const std::string& filename) {
-
   // -----------------------------------------------------------------------
   //    GASWRT
   // -----------------------------------------------------------------------
@@ -1908,12 +1919,12 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
   if (m_debug) {
     std::cout << m_className << "::WriteGasFile:\n    "
               << "Dataset has the following dimensions:\n    "
-              << "3D = " << m_tab2d << " nE = " << nE << ", nB = " << nB 
-              << ", nA = " << nA << ", nExc = "
-              << m_excLevels.size() << ", nIon = " << m_ionLevels.size() << "\n";
-  } 
-  outfile << FmtInt(nE, 9) << " " << FmtInt(nA, 9) << " "
-          << FmtInt(nB, 9) << " " << FmtInt(m_excLevels.size(), 9) << " "
+              << "3D = " << m_tab2d << " nE = " << nE << ", nB = " << nB
+              << ", nA = " << nA << ", nExc = " << m_excLevels.size()
+              << ", nIon = " << m_ionLevels.size() << "\n";
+  }
+  outfile << FmtInt(nE, 9) << " " << FmtInt(nA, 9) << " " << FmtInt(nB, 9)
+          << " " << FmtInt(m_excLevels.size(), 9) << " "
           << FmtInt(m_ionLevels.size(), 9) << "\n";
   // Store reduced electric fields (E/p).
   outfile << " E fields   \n";
@@ -1952,7 +1963,7 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
     } else {
       outfile << exc.label;
     }
-    outfile << "  " << FmtFloat(exc.energy) << FmtFloat(exc.prob) 
+    outfile << "  " << FmtFloat(exc.energy) << FmtFloat(exc.prob)
             << FmtFloat(exc.rms) << FmtFloat(exc.dt) << "\n";
   }
   cnt = 0;
@@ -2028,7 +2039,7 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
         }
         // Get the excitation and ionisation rates.
         for (const auto& rexc : m_excRates) {
-          if (rexc[j][k][i] > Small) { 
+          if (rexc[j][k][i] > Small) {
             val.push_back(rexc[j][k][i]);
           } else {
             val.push_back(0.);
@@ -2047,17 +2058,17 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
         double wv = m_eVelWv.empty() ? 0. : m_eVelWv[j][k][i];
         double wr = m_eVelWr.empty() ? 0. : m_eVelWr[j][k][i];
         if (m_tab2d) {
-            val.insert(val.end(), {wv, wr});
+          val.insert(val.end(), {wv, wr});
         } else {
-            val.insert(val.end(), {wv, 0., wr, 0.});
+          val.insert(val.end(), {wv, 0., wr, 0.});
         }
         // TOF rates
         double rion = m_eRIon.empty() ? 0. : m_eRIon[j][k][i];
         double ratt = m_eRAtt.empty() ? 0. : m_eRAtt[j][k][i];
         if (m_tab2d) {
-            val.insert(val.end(), {rion, ratt});
+          val.insert(val.end(), {rion, ratt});
         } else {
-            val.insert(val.end(), {rion, 0., ratt, 0.});
+          val.insert(val.end(), {rion, 0., ratt, 0.});
         }
         PrintArray(val, outfile, cnt, 8);
       }
@@ -2132,20 +2143,19 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
 }
 
 void MediumGas::GetGasBits(std::bitset<20>& gasok) const {
-
   gasok.reset();
   if (!m_eVelE.empty()) gasok.set(0);
-  if (!m_iMob.empty())  gasok.set(1);
+  if (!m_iMob.empty()) gasok.set(1);
   if (!m_eDifL.empty()) gasok.set(2);
-  if (!m_eAlp.empty())  gasok.set(3);
+  if (!m_eAlp.empty()) gasok.set(3);
   // Cluster size distribution; skipped
-  if (!m_eAtt.empty())  gasok.set(5);
-  if (!m_eLor.empty())  gasok.set(6);
+  if (!m_eAtt.empty()) gasok.set(5);
+  if (!m_eLor.empty()) gasok.set(6);
   if (!m_eDifT.empty()) gasok.set(7);
   if (!m_eVelB.empty()) gasok.set(8);
   if (!m_eVelX.empty()) gasok.set(9);
   if (!m_eDifM.empty()) gasok.set(10);
-  if (!m_iDis.empty())  gasok.set(11);
+  if (!m_iDis.empty()) gasok.set(11);
   // SRIM, HEED; skipped
   if (!m_excRates.empty()) gasok.set(14);
   if (!m_ionRates.empty()) gasok.set(15);
@@ -2210,8 +2220,7 @@ void MediumGas::PrintGas() {
   if (!m_eVelX.empty()) {
     std::cout << "      Velocity along ExB\n";
   }
-  if (!(m_eVelE.empty() && m_eVelB.empty() && 
-        m_eVelX.empty())) {
+  if (!(m_eVelE.empty() && m_eVelB.empty() && m_eVelX.empty())) {
     PrintExtrapolation(m_extrVel);
     std::cout << "        Interpolation order: " << m_intpVel << "\n";
   }
@@ -2250,7 +2259,7 @@ void MediumGas::PrintGas() {
       std::cout << "          Energy = " << exc.energy << " eV";
       if (exc.prob > 0.) {
         std::cout << ", Penning transfer probability = " << exc.prob;
-      } 
+      }
       std::cout << "\n";
     }
     PrintExtrapolation(m_extrExc);
@@ -2266,9 +2275,9 @@ void MediumGas::PrintGas() {
     std::cout << "        Interpolation order: " << m_intpIon << "\n";
   }
   if (m_eVelE.empty() && m_eVelB.empty() && m_eVelX.empty() &&
-      m_eDifL.empty() && m_eDifT.empty() && m_eDifM.empty() &&
-      m_eAlp.empty() && m_eAtt.empty() && m_excRates.empty() &&
-      m_ionRates.empty() && m_eLor.empty()) {
+      m_eDifL.empty() && m_eDifT.empty() && m_eDifM.empty() && m_eAlp.empty() &&
+      m_eAtt.empty() && m_excRates.empty() && m_ionRates.empty() &&
+      m_eLor.empty()) {
     std::cout << "      none\n";
   }
 
@@ -2298,8 +2307,7 @@ void MediumGas::PrintGas() {
   }
 }
 
-bool MediumGas::LoadIonMobility(const std::string& filename, 
-                                const bool quiet) {
+bool MediumGas::LoadIonMobility(const std::string& filename, const bool quiet) {
   return LoadMobility(filename, quiet, false);
 }
 
@@ -2308,9 +2316,8 @@ bool MediumGas::LoadNegativeIonMobility(const std::string& filename,
   return LoadMobility(filename, quiet, true);
 }
 
-bool MediumGas::LoadMobility(const std::string& filename, 
-                             const bool quiet, const bool negative) {
-
+bool MediumGas::LoadMobility(const std::string& filename, const bool quiet,
+                             const bool negative) {
   // Open the file.
   std::string path = filename;
   std::ifstream infile(path);
@@ -2343,8 +2350,8 @@ bool MediumGas::LoadMobility(const std::string& filename,
     if (startsWith(line, "//") || startsWith(line, "#")) continue;
     auto words = tokenize(line);
     if (words.size() < 2) {
-      std::cout << m_className << "::LoadMobility: Skipping line " 
-                << i << ".\n";
+      std::cout << m_className << "::LoadMobility: Skipping line " << i
+                << ".\n";
       continue;
     }
     const double field = std::stod(words[0]);
@@ -2394,7 +2401,6 @@ bool MediumGas::LoadMobility(const std::string& filename,
 }
 
 void MediumGas::ResetTables() {
-
   Medium::ResetTables();
   m_eAlp0.clear();
   m_excLevels.clear();
@@ -2405,8 +2411,8 @@ void MediumGas::ResetTables() {
 
 bool MediumGas::EnablePenningTransfer() {
   DisablePenningTransfer();
- 
-  if (m_nComponents != 2) { 
+
+  if (m_nComponents != 2) {
     std::cerr << m_className << "::EnablePenningTransfer:\n"
               << "    Penning transfer probability for " << m_name
               << " is not implemented.\n";
@@ -2435,7 +2441,7 @@ bool MediumGas::EnablePenningTransfer() {
   if (itAr != m_gas.cend() && itCO2 != m_gas.cend()) {
     gas = "Ar";
     const int iCO2 = std::distance(m_gas.cbegin(), itCO2);
-    const double cCO2 = m_fraction[iCO2]; 
+    const double cCO2 = m_fraction[iCO2];
     if (fabs(p - 1.) < 1.e-3) {
       // 2014 paper with p = 1 atm
       // http://dx.doi.org/10.1016/j.nima.2014.09.061
@@ -2458,19 +2464,19 @@ bool MediumGas::EnablePenningTransfer() {
     }
   } else if (itAr != m_gas.cend() && itCH4 != m_gas.cend()) {
     // http://dx.doi.org/10.1088/1748-0221/5/05/P05002
-    constexpr double b1 =  0.1956;
+    constexpr double b1 = 0.1956;
     constexpr double b2 = 16.38;
     constexpr double b3 = 22.12;
-    constexpr double b4 =  3.842;
-    constexpr double b5 =  2.992;
+    constexpr double b4 = 3.842;
+    constexpr double b5 = 2.992;
     constexpr double b6 = b4;
     const int iCH4 = std::distance(m_gas.cbegin(), itCH4);
     const double cCH4 = m_fraction[iCH4];
     const double pcAr = p * (1. - cCH4);
-    rP = (b4 * p * cCH4 + b1 * pcAr + b2 * cCH4 + b5) / 
+    rP = (b4 * p * cCH4 + b1 * pcAr + b2 * cCH4 + b5) /
          (b6 * p * cCH4 + pcAr + b3);
     gas = "Ar";
-  } else if (itAr != m_gas.cend() && itC2H6 != m_gas.cend()) { 
+  } else if (itAr != m_gas.cend() && itC2H6 != m_gas.cend()) {
     // http://dx.doi.org/10.1088/1748-0221/5/05/P05002
     // There is only one value for this mixture: c = 0.1, p = 1 atm.
     rP = 0.31;
@@ -2511,7 +2517,7 @@ bool MediumGas::EnablePenningTransfer() {
     gas = "Ar";
   } else if (itAr != m_gas.cend() && itC2H2 != m_gas.cend()) {
     // http://dx.doi.org/10.1088/1748-0221/5/05/P05002
-    // For this mixture r_p is constant but it has different values for 
+    // For this mixture r_p is constant but it has different values for
     // cylindrical and parallel plate chambers.
     // I have used the case of cylindrical chamber here.
     rP = 0.72;
@@ -2528,7 +2534,7 @@ bool MediumGas::EnablePenningTransfer() {
     constexpr double a4 = 0;
     const int iXe = std::distance(m_gas.cbegin(), itXe);
     const double cXe = m_fraction[iXe];
-    const double cAr = 1. - cXe; 
+    const double cAr = 1. - cXe;
     rP = (a1 * cXe + a3) / (a4 * cAr * cAr + cXe + a2);
     if (fabs(p - 1.) > 1.e-3) {
       std::cout << m_className << "::EnablePenningTransfer:\n"
@@ -2547,8 +2553,8 @@ bool MediumGas::EnablePenningTransfer() {
     const int iCO2 = std::distance(m_gas.cbegin(), itCO2);
     const double cCO2 = m_fraction[iCO2];
     const double pcCO2 = p * cCO2;
-    const double pcNe = p * (1.- cCO2); 
-    rP = (a5 * pcNe * pcNe + a7 * cCO2 * cCO2 + a1 * pcCO2 + a3) / 
+    const double pcNe = p * (1. - cCO2);
+    rP = (a5 * pcNe * pcNe + a7 * cCO2 * cCO2 + a1 * pcCO2 + a3) /
          (a6 * pcNe * pcNe + a4 * cCO2 * cCO2 + pcCO2 + a2);
     gas = "Ne";
   } else if (itNe != m_gas.cend() && itN2 != m_gas.cend()) {
@@ -2563,7 +2569,7 @@ bool MediumGas::EnablePenningTransfer() {
     const int iN2 = std::distance(m_gas.cbegin(), itN2);
     const double cN2 = m_fraction[iN2];
     const double pcNe = p * (1. - cN2);
-    rP = (a5 * pcNe * pcNe + a7 * cN2 * cN2 + a1 * p * cN2 + a3) / 
+    rP = (a5 * pcNe * pcNe + a7 * cN2 * cN2 + a1 * p * cN2 + a3) /
          (a6 * pcNe * pcNe + a4 * cN2 * cN2 + p * cN2 + a2);
     gas = "Ne";
   } else if (itXe != m_gas.cend() && itTMA != m_gas.cend()) {
@@ -2591,10 +2597,8 @@ bool MediumGas::EnablePenningTransfer() {
   return EnablePenningTransfer(rP, 0., gas);
 }
 
-bool MediumGas::EnablePenningTransfer(const double r,
-                                      const double lambda) {
-
-  if (r < 0. ) {
+bool MediumGas::EnablePenningTransfer(const double r, const double lambda) {
+  if (r < 0.) {
     std::cerr << m_className << "::EnablePenningTransfer:\n"
               << "    Transfer probability must be >= 0.\n";
     return false;
@@ -2630,11 +2634,11 @@ bool MediumGas::EnablePenningTransfer(const double r,
     if (exc.energy < minIonPot) continue;
     exc.prob = m_rPenningGlobal;
     exc.rms = m_lambdaPenningGlobal;
-    ++nLevelsFound; 
+    ++nLevelsFound;
   }
   if (nLevelsFound > 0) {
     std::cout << m_className << "::EnablePenningTransfer:\n"
-              << "    Updated transfer probabilities for " << nLevelsFound 
+              << "    Updated transfer probabilities for " << nLevelsFound
               << " excitation rates.\n";
     AdjustTownsendCoefficient();
   } else {
@@ -2647,7 +2651,6 @@ bool MediumGas::EnablePenningTransfer(const double r,
 
 bool MediumGas::EnablePenningTransfer(const double r, const double lambda,
                                       std::string gasname) {
-
   if (r < 0.) {
     std::cerr << m_className << "::EnablePenningTransfer:\n"
               << "    Transfer probability must be >= 0.\n";
@@ -2702,11 +2705,11 @@ bool MediumGas::EnablePenningTransfer(const double r, const double lambda,
     if (exc.label.find(gasname) != 0) continue;
     exc.prob = r;
     exc.rms = lambda;
-    ++nLevelsFound; 
+    ++nLevelsFound;
   }
   if (nLevelsFound > 0) {
     std::cout << m_className << "::EnablePenningTransfer:\n"
-              << "    Updated transfer probabilities for " << nLevelsFound 
+              << "    Updated transfer probabilities for " << nLevelsFound
               << " " << gasname << " excitation rates.\n";
     AdjustTownsendCoefficient();
   } else {
@@ -2718,7 +2721,6 @@ bool MediumGas::EnablePenningTransfer(const double r, const double lambda,
 }
 
 void MediumGas::DisablePenningTransfer() {
-
   m_rPenningGlobal = 0.;
   m_lambdaPenningGlobal = 0.;
 
@@ -2727,14 +2729,13 @@ void MediumGas::DisablePenningTransfer() {
 
   if (m_excLevels.empty()) return;
   for (auto& exc : m_excLevels) {
-    exc.prob = 0.; 
+    exc.prob = 0.;
   }
   AdjustTownsendCoefficient();
 }
 
-bool MediumGas::GetPenningTransfer(const std::string& gasname,
-                                   double& r, double& lambda) {
-
+bool MediumGas::GetPenningTransfer(const std::string& gasname, double& r,
+                                   double& lambda) {
   r = 0.;
   lambda = 0.;
   // Get the "standard" name of this gas.
@@ -2755,7 +2756,7 @@ bool MediumGas::GetPenningTransfer(const std::string& gasname,
   return false;
 }
 
-void MediumGas::GetIonisationLevel(const size_t level, std::string& label, 
+void MediumGas::GetIonisationLevel(const size_t level, std::string& label,
                                    double& energy) const {
   if (level >= m_ionLevels.size()) {
     std::cerr << m_className << "::GetIonisationLevel: Index out of range.\n";
@@ -2763,10 +2764,10 @@ void MediumGas::GetIonisationLevel(const size_t level, std::string& label,
   }
   label = m_ionLevels[level].label;
   energy = m_ionLevels[level].energy;
-} 
+}
 
-void MediumGas::GetExcitationLevel(const size_t level, std::string& label, 
-                                   double& energy) const { 
+void MediumGas::GetExcitationLevel(const size_t level, std::string& label,
+                                   double& energy) const {
   if (level >= m_excLevels.size()) {
     std::cerr << m_className << "::GetExcitationLevel: Index out of range.\n";
     return;
@@ -2775,9 +2776,9 @@ void MediumGas::GetExcitationLevel(const size_t level, std::string& label,
   energy = m_excLevels[level].energy;
 }
 
-bool MediumGas::GetElectronIonisationRate(const size_t level, 
-                                          const size_t ie, const size_t ib,
-                                          const size_t ia, double& f) const {
+bool MediumGas::GetElectronIonisationRate(const size_t level, const size_t ie,
+                                          const size_t ib, const size_t ia,
+                                          double& f) const {
   if (level >= m_ionLevels.size()) {
     std::cerr << m_className << "::GetElectronIonisationRate:\n"
               << "    Level index out of range.\n";
@@ -2786,9 +2787,9 @@ bool MediumGas::GetElectronIonisationRate(const size_t level,
   return GetEntry(ie, ib, ia, "ElectronIonisationRate", m_ionRates[level], f);
 }
 
-bool MediumGas::GetElectronExcitationRate(const size_t level, 
-                                          const size_t ie, const size_t ib,
-                                          const size_t ia, double& f) const {
+bool MediumGas::GetElectronExcitationRate(const size_t level, const size_t ie,
+                                          const size_t ib, const size_t ia,
+                                          double& f) const {
   if (level >= m_excLevels.size()) {
     std::cerr << m_className << "::GetElectronExcitationRate:\n"
               << "    Level index out of range.\n";
@@ -2798,7 +2799,6 @@ bool MediumGas::GetElectronExcitationRate(const size_t level,
 }
 
 bool MediumGas::DisablePenningTransfer(std::string gasname) {
-
   // Get the "standard" name of this gas.
   gasname = GetGasName(gasname);
   if (gasname.empty()) {
@@ -2826,19 +2826,17 @@ bool MediumGas::DisablePenningTransfer(std::string gasname) {
 
   if (m_excLevels.empty()) return true;
   for (auto& exc : m_excLevels) {
-    // Try to extract the gas name from the label. 
+    // Try to extract the gas name from the label.
     const auto pos = exc.label.find('-');
     if (pos == std::string::npos) continue;
     if (GetGasName(exc.label.substr(0, pos)) != gasname) continue;
-    exc.prob = 0.; 
+    exc.prob = 0.;
   }
   AdjustTownsendCoefficient();
   return true;
 }
 
-
 bool MediumGas::AdjustTownsendCoefficient() {
-
   // -----------------------------------------------------------------------
   //    GASSPT
   // -----------------------------------------------------------------------
@@ -2866,7 +2864,7 @@ bool MediumGas::AdjustTownsendCoefficient() {
   if (m_debug) {
     std::cout << m_className << "::AdjustTownsendCoefficient:\n"
               << "   Entry         Exc.      Ion.\n";
-  } 
+  }
   for (unsigned int i = 0; i < nE; ++i) {
     for (unsigned int j = 0; j < nA; ++j) {
       for (unsigned int k = 0; k < nB; ++k) {
@@ -2879,11 +2877,11 @@ bool MediumGas::AdjustTownsendCoefficient() {
         double rexc = 0.;
         const unsigned int nexc = m_excLevels.size();
         for (unsigned int ie = 0; ie < nexc; ++ie) {
-          rexc += m_excLevels[ie].prob * m_excRates[ie][j][k][i]; 
+          rexc += m_excLevels[ie].prob * m_excRates[ie][j][k][i];
         }
         if (m_debug) {
-          std::cout << FmtInt(i, 4) << FmtInt(j, 4) << FmtInt(k, 4) 
-                    << FmtFloat(rexc, 12, 5) << FmtFloat(rion, 12, 5) << "\n"; 
+          std::cout << FmtInt(i, 4) << FmtInt(j, 4) << FmtInt(k, 4)
+                    << FmtFloat(rexc, 12, 5) << FmtFloat(rion, 12, 5) << "\n";
         }
         // Adjust the Townsend coefficient.
         double alpha0 = m_eAlp0[j][k][i];
@@ -2905,17 +2903,17 @@ bool MediumGas::AdjustTownsendCoefficient() {
 
 bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
                            double& w, double& f) {
-  // Unless indicated otherwise, the W values are taken from 
-  // ICRU report 31 (Table 5-IX), and the Fano factors are taken 
+  // Unless indicated otherwise, the W values are taken from
+  // ICRU report 31 (Table 5-IX), and the Fano factors are taken
   // from IAEA TECDOC 799.
-  // For gases for which no experimental data on the Fano factor 
-  // are available, the Fano factor is calculated using the 
-  // Krajcar-Bronic relation, F = 0.188 * W / I - 0.15 
+  // For gases for which no experimental data on the Fano factor
+  // are available, the Fano factor is calculated using the
+  // Krajcar-Bronic relation, F = 0.188 * W / I - 0.15
   if (gasname == "CF4") {
     a = 12.0107 + 4 * 18.9984032;
     z = 6 + 4 * 9;
-    w = 34.3; // DOI: 10.1063/1.337792
-    f = 0.26; // Krajcar-Bronic relation
+    w = 34.3;  // DOI: 10.1063/1.337792
+    f = 0.26;  // Krajcar-Bronic relation
     return true;
   } else if (gasname == "Ar") {
     a = 39.948;
@@ -2926,7 +2924,7 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
     a = 4.002602;
     z = 2;
     w = 41.3;
-    f = 0.17; 
+    f = 0.17;
   } else if (gasname == "He-3") {
     a = 3.01602931914;
     z = 2;
@@ -2955,8 +2953,8 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
   } else if (gasname == "C2H6") {
     a = 2 * 12.0107 + 6 * 1.00794;
     z = 2 * 6 + 6;
-    w = 25.0; 
-    f = 0.28; // DOI 10.1088/0022-3700/20/17/025
+    w = 25.0;
+    f = 0.28;  // DOI 10.1088/0022-3700/20/17/025
   } else if (gasname == "C3H8") {
     a = 3 * 12.0107 + 8 * 1.00794;
     z = 3 * 6 + 8;
@@ -2966,7 +2964,7 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
     a = 4 * 12.0107 + 10 * 1.00794;
     z = 4 * 6 + 10;
     w = 23.4;
-    f = 0.26; // DOI 10.1088/0022-3700/20/17/025 
+    f = 0.26;  // DOI 10.1088/0022-3700/20/17/025
   } else if (gasname == "CO2") {
     a = 12.0107 + 2 * 15.9994;
     z = 6 + 2 * 8;
@@ -2976,7 +2974,7 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
     a = 5 * 12.0107 + 12 * 1.00794;
     z = 5 * 6 + 12;
     w = 23.2;
-    f = 0.27; // DOI 10.1088/0022-3700/20/17/025 
+    f = 0.27;  // DOI 10.1088/0022-3700/20/17/025
   } else if (gasname == "H2O") {
     a = 2 * 1.00794 + 15.9994;
     z = 2 + 8;
@@ -2995,18 +2993,18 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
   } else if (gasname == "NO") {
     a = 14.0067 + 15.9994;
     z = 7 + 8;
-    w = 28.9; // ICRU 31, Table 5-V
-    f = 0.44; // Krajcar-Bronic relation
+    w = 28.9;  // ICRU 31, Table 5-V
+    f = 0.44;  // Krajcar-Bronic relation
   } else if (gasname == "N2O") {
     a = 2 * 14.0067 + 15.9994;
     z = 2 * 7 + 8;
     w = 32.6;
-    f = 0.33; // Krajcar-Bronic relation
+    f = 0.33;  // Krajcar-Bronic relation
   } else if (gasname == "C2H4") {
     a = 2 * 12.0107 + 4 * 1.00794;
     z = 2 * 6 + 4;
     w = 25.8;
-    f = 0.31; // DOI 10.1088/0022-3700/20/17/025 
+    f = 0.31;  // DOI 10.1088/0022-3700/20/17/025
   } else if (gasname == "C2H2") {
     a = 2 * 12.0107 + 2 * 1.00794;
     z = 2 * 6 + 2;
@@ -3025,13 +3023,13 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
   } else if (gasname == "CO") {
     a = 12.0107 + 15.9994;
     z = 6 + 8;
-    w = 34.5; // ICRU 31, Table 5-V
-    f = 0.31; // Krajcar-Bronic relation
+    w = 34.5;  // ICRU 31, Table 5-V
+    f = 0.31;  // Krajcar-Bronic relation
   } else if (gasname == "Methylal") {
     a = 3 * 12.0107 + 8 * 1.00794 + 2 * 15.9994;
     z = 3 * 6 + 8 + 2 * 8;
-    w = 20.0; // rough estimate (twice the ionisation potential)
-    f = 0.23; // Krajcar-Bronic relation 
+    w = 20.0;  // rough estimate (twice the ionisation potential)
+    f = 0.23;  // Krajcar-Bronic relation
   } else if (gasname == "DME") {
     a = 2 * 12.0107 + 6 * 1.00794 + 15.9994;
     z = 2 * 6 + 6 + 8;
@@ -3047,48 +3045,48 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
   } else if (gasname == "C2F6") {
     a = 2 * 12.0107 + 6 * 18.9984032;
     z = 2 * 6 + 6 * 9;
-    w = 34.5; // DOI: 10.1063/1.337792
-    f = 0.30; // Krajcar-Bronic relation
+    w = 34.5;  // DOI: 10.1063/1.337792
+    f = 0.30;  // Krajcar-Bronic relation
   } else if (gasname == "SF6") {
     a = 32.065 + 6 * 18.9984032;
     z = 16 + 6 * 9;
-    w = 35.8; // ICRU 31, Table 5-V
-    f = 0.28; // Krajcar-Bronic relation
+    w = 35.8;  // ICRU 31, Table 5-V
+    f = 0.28;  // Krajcar-Bronic relation
   } else if (gasname == "NH3") {
     a = 14.0067 + 3 * 1.00794;
     z = 7 + 3;
     w = 26.6;
-    f = 0.34; // Krajcar-Bronic relation
+    f = 0.34;  // Krajcar-Bronic relation
   } else if (gasname == "C3H6") {
     a = 3 * 12.0107 + 6 * 1.00794;
     z = 3 * 6 + 6;
-    w = 27.1; // ICRU 31, Table 5-V
-    f = 0.37; // Krajcar-Bronic relation
+    w = 27.1;  // ICRU 31, Table 5-V
+    f = 0.37;  // Krajcar-Bronic relation
   } else if (gasname == "cC3H6") {
     a = 3 * 12.0107 + 6 * 1.00794;
     z = 3 * 6 + 6;
-    w = 25.9; // ICRU 31, Table 5-V
-    f = 0.34; // Krajcar-Bronic relation
+    w = 25.9;  // ICRU 31, Table 5-V
+    f = 0.34;  // Krajcar-Bronic relation
   } else if (gasname == "CH3OH") {
     a = 12.0107 + 4 * 1.00794 + 15.9994;
     z = 6 + 4 + 8;
     w = 24.7;
-    f = 0.37; // DOI 10.1088/0022-3700/20/17/025 
+    f = 0.37;  // DOI 10.1088/0022-3700/20/17/025
   } else if (gasname == "C2H5OH") {
     a = 2 * 12.0107 + 6 * 1.00794 + 15.9994;
     z = 2 * 6 + 6 + 8;
     w = 24.8;
-    f = 0.37; // DOI 10.1088/0022-3700/20/17/025 
+    f = 0.37;  // DOI 10.1088/0022-3700/20/17/025
   } else if (gasname == "C3H7OH" || gasname == "nC3H7OH") {
     a = 3 * 12.0107 + 8 * 1.00794 + 15.9994;
     z = 3 * 6 + 8 * 8;
-    w = 21.;  // Magboltz
-    f = 0.37; // same value as for methanol and ethanol
+    w = 21.;   // Magboltz
+    f = 0.37;  // same value as for methanol and ethanol
   } else if (gasname == "Cs") {
     a = 132.9054519;
     z = 55;
-    w = 16.; // Dugan and Sovie (1964)
-    f = 0.6; // Krajcar-Bronic relation. Seems high.
+    w = 16.;  // Dugan and Sovie (1964)
+    f = 0.6;  // Krajcar-Bronic relation. Seems high.
   } else if (gasname == "F2") {
     a = 2 * 18.9984032;
     z = 2 * 9;
@@ -3098,8 +3096,8 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
   } else if (gasname == "CS2") {
     a = 12.0107 + 2 * 32.065;
     z = 6 + 2 * 16;
-    w = 26.0; // Myers
-    f = 0.34; // Krajcar-Bronic relation
+    w = 26.0;  // Myers
+    f = 0.34;  // Krajcar-Bronic relation
   } else if (gasname == "COS") {
     a = 12.0107 + 15.9994 + 32.065;
     z = 6 + 8 + 16;
@@ -3114,8 +3112,8 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
   } else if (gasname == "BF3") {
     a = 10.811 + 3 * 18.9984032;
     z = 5 + 3 * 9;
-    w = 35.7; // ICRU 31, Table 5-V
-    f = 0.28; // Krajcar-Bronic relation
+    w = 35.7;  // ICRU 31, Table 5-V
+    f = 0.28;  // Krajcar-Bronic relation
   } else if (gasname == "C2H2F4") {
     a = 2 * 12.0107 + 2 * 1.00794 + 4 * 18.9984032;
     z = 2 * 6 + 2 + 4 * 9;
@@ -3137,8 +3135,8 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
   } else if (gasname == "C3F8") {
     a = 3 * 12.0107 + 8 * 18.9984032;
     z = 3 * 6 + 8 * 9;
-    w = 34.4; // DOI: 10.1063/1.337792
-    f = 0.33; // Krajcar-Bronic relation
+    w = 34.4;  // DOI: 10.1063/1.337792
+    f = 0.33;  // Krajcar-Bronic relation
   } else if (gasname == "O3") {
     a = 3 * 15.9994;
     z = 3 * 8;
@@ -3149,22 +3147,22 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
     a = 2 * 200.59;
     z = 80;
     w = 23.6;
-    f = 0.28; // Krajcar-Bronic relation
+    f = 0.28;  // Krajcar-Bronic relation
   } else if (gasname == "H2S") {
     a = 2 * 1.00794 + 32.065;
     z = 2 + 16;
-    w = 23.3; // ICRU 31, Table 5-V
-    f = 0.27; // Krajcar-Bronic relation
+    w = 23.3;  // ICRU 31, Table 5-V
+    f = 0.27;  // Krajcar-Bronic relation
   } else if (gasname == "nC4H10") {
     a = 4 * 12.0107 + 10 * 1.00794;
     z = 4 * 6 + 10;
     w = 23.4;
-    f = 0.26; // DOI 10.1088/0022-3700/20/17/025 
+    f = 0.26;  // DOI 10.1088/0022-3700/20/17/025
   } else if (gasname == "nC5H12") {
     a = 5 * 12.0107 + 12 * 1.00794;
     z = 5 * 6 + 12;
     w = 23.2;
-    f = 0.27; // DOI 10.1088/0022-3700/20/17/025 
+    f = 0.27;  // DOI 10.1088/0022-3700/20/17/025
   } else if (gasname == "GeH4") {
     a = 72.64 + 4 * 1.00794;
     z = 32 + 4;
@@ -3180,8 +3178,8 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
   } else if (gasname == "CCl4") {
     a = 12.0107 + 4 * 35.45;
     z = 6 + 4 * 17;
-    w = 25.8; // ICRU 31, Table 5-V
-    f = 0.21; // Krajcar-Bronic relation 
+    w = 25.8;  // ICRU 31, Table 5-V
+    f = 0.21;  // Krajcar-Bronic relation
   } else {
     a = 0.;
     z = 0.;
@@ -3193,7 +3191,6 @@ bool MediumGas::GetGasInfo(const std::string& gasname, double& a, double& z,
 }
 
 std::string MediumGas::GetGasName(const int gasnumber, const int version) {
-
   switch (gasnumber) {
     case 1:
       return "CF4";
@@ -3324,17 +3321,16 @@ std::string MediumGas::GetGasName(const int gasnumber, const int version) {
 }
 
 const std::vector<std::string> MediumGas::GetAliases(const std::string& gas) {
-
   if (gas == "CF4") {
     return {"tetrafluoromethane", "Freon", "Freon-14"};
   } else if (gas == "Ar") {
     return {"argon"};
   } else if (gas == "He") {
-    return {"helium", "He-4", "He 4", "He4", "4-He", "4 He", "4He", 
-            "helium-4", "helium 4", "helium4"};
+    return {"helium", "He-4", "He 4",     "He4",      "4-He",
+            "4 He",   "4He",  "helium-4", "helium 4", "helium4"};
   } else if (gas == "He-3") {
-    return {"He3", "He 3", "3-He", "3 He", "3He",
-            "helium-3", "helium 3", "helium3"};
+    return {"He3", "He 3",     "3-He",     "3 He",
+            "3He", "helium-3", "helium 3", "helium3"};
   } else if (gas == "Ne") {
     return {"neon"};
   } else if (gas == "Kr") {
@@ -3347,13 +3343,13 @@ const std::vector<std::string> MediumGas::GetAliases(const std::string& gas) {
     return {"ethane"};
   } else if (gas == "C3H8") {
     return {"propane"};
-  } else  if (gas == "iC4H10") {
+  } else if (gas == "iC4H10") {
     return {"isobutane", "iso-C4H10", "isoC4H10", "C4H10"};
   } else if (gas == "CO2") {
     return {"carbon-dioxide", "carbon dioxide", "carbondioxide"};
   } else if (gas == "neoC5H12") {
-    return {"neopentane", "neo-pentane", "neo-C5H12", "C5H12", 
-            "dimethylpropane", "tetramethylmethane"};
+    return {"neopentane", "neo-pentane",     "neo-C5H12",
+            "C5H12",      "dimethylpropane", "tetramethylmethane"};
   } else if (gas == "H2O") {
     return {"water", "water-vapour", "water vapour"};
   } else if (gas == "O2") {
@@ -3361,11 +3357,11 @@ const std::vector<std::string> MediumGas::GetAliases(const std::string& gas) {
   } else if (gas == "N2") {
     return {"nitrogen"};
   } else if (gas == "NO") {
-    return {"nitric-oxide", "nitric oxide",
-            "nitrogen-monoxide", "nitrogen monoxide"};
+    return {"nitric-oxide", "nitric oxide", "nitrogen-monoxide",
+            "nitrogen monoxide"};
   } else if (gas == "N2O") {
-    return {"nitrous-oxide", "nitrous oxide", "laughing-gas", "laughing gas",
-            "dinitrogen-monoxide", "dinitrogen monoxide",
+    return {"nitrous-oxide",    "nitrous oxide",       "laughing-gas",
+            "laughing gas",     "dinitrogen-monoxide", "dinitrogen monoxide",
             "dinitrogen-oxide", "dinitrogen oxide"};
   } else if (gas == "C2H4") {
     return {"ethene", "ethylene"};
@@ -3374,21 +3370,21 @@ const std::vector<std::string> MediumGas::GetAliases(const std::string& gas) {
   } else if (gas == "H2") {
     return {"hydrogen"};
   } else if (gas == "paraH2") {
-    return {"para H2", "para-H2", "para hydrogen",
-            "para-hydrogen", "parahydrogen"};
+    return {"para H2", "para-H2", "para hydrogen", "para-hydrogen",
+            "parahydrogen"};
   } else if (gas == "D2") {
     return {"deuterium"};
   } else if (gas == "orthoD2") {
-    return {"ortho D2", "ortho-D2", "ortho deuterium",
-            "ortho-deuterium", "orthodeuterium"};
+    return {"ortho D2", "ortho-D2", "ortho deuterium", "ortho-deuterium",
+            "orthodeuterium"};
   } else if (gas == "CO") {
     return {"carbon-monoxide", "carbon monoxide"};
   } else if (gas == "Methylal") {
     return {"methylal-hot", "DMM", "dimethoxymethane", "Formal", "C3H8O2"};
   } else if (gas == "DME") {
-    return {"dimethyl-ether", "dimethylether", "dimethyl ether", 
-            "methyl-ether", "methylether", "methyl ether", 
-            "wood-ether", "woodether", "wood ether",
+    return {"dimethyl-ether", "dimethylether",  "dimethyl ether",
+            "methyl-ether",   "methylether",    "methyl ether",
+            "wood-ether",     "woodether",      "wood ether",
             "dimethyl oxide", "dimethyl-oxide", "Demeon",
             "methoxymethane"};
   } else if (gas == "Reid-Step") {
@@ -3407,8 +3403,8 @@ const std::vector<std::string> MediumGas::GetAliases(const std::string& gas) {
   } else if (gas == "C3H6") {
     return {"propene", "propylene"};
   } else if (gas == "cC3H6") {
-    return {"c-propane", "cyclo-propane", "cyclo propane", "cyclopropane",
-            "c-C3H6", "cyclo-C3H6"};
+    return {"c-propane",    "cyclo-propane", "cyclo propane",
+            "cyclopropane", "c-C3H6",        "cyclo-C3H6"};
   } else if (gas == "CH3OH") {
     return {"methanol", "methyl-alcohol", "methyl alcohol", "wood alcohol",
             "wood-alcohol"};
@@ -3416,18 +3412,20 @@ const std::vector<std::string> MediumGas::GetAliases(const std::string& gas) {
     return {"ethanol", "ethyl-alcohol", "ethyl alcohol", "grain alcohol",
             "grain-alcohol"};
   } else if (gas == "C3H7OH") {
-    return {"propanol", "2-propanol", "isopropyl", "iso-propanol",
-            "isopropanol", "isopropyl alcohol", "isopropyl-alcohol"};
+    return {"propanol",         "2-propanol",  "isopropyl",
+            "iso-propanol",     "isopropanol", "isopropyl alcohol",
+            "isopropyl-alcohol"};
   } else if (gas == "nC3H7OH") {
-    return {"npropanol", "n-propanol", "1-propanol", "propyl alcohol",
-            "propyl-alcohol", "n-propyl alcohol", "nC3H7OH", "n-C3H7OH"};
+    return {"npropanol",      "n-propanol",     "1-propanol",
+            "propyl alcohol", "propyl-alcohol", "n-propyl alcohol",
+            "nC3H7OH",        "n-C3H7OH"};
   } else if (gas == "Cs") {
     return {"cesium", "caesium"};
   } else if (gas == "F2") {
     return {"fluor", "fluorine"};
   } else if (gas == "CS2") {
-    return {"carbon-disulphide", "carbon-disulfide", 
-            "carbon disulphide", "carbon disulfide"};
+    return {"carbon-disulphide", "carbon-disulfide", "carbon disulphide",
+            "carbon disulfide"};
   } else if (gas == "COS") {
     return {"carbonyl-sulphide", "carbonyl-sulfide", "carbonyl sulfide"};
   } else if (gas == "CD4") {
@@ -3436,34 +3434,64 @@ const std::vector<std::string> MediumGas::GetAliases(const std::string& gas) {
   } else if (gas == "BF3") {
     return {"boron-trifluoride", "boron trifluoride"};
   } else if (gas == "C2H2F4") {
-    return {"C2HF5", "C2F5H", "C2F4H2", "Freon 134", "Freon 134A",
-            "Freon-134", "Freon-134-A", "R-134a", "R134a", 
-            "Freon 125", "Freon-125", "Zyron 125", "Zyron-125", 
-            "tetrafluoroethane", "pentafluoroethane", "norflurane"};
+    return {"C2HF5",
+            "C2F5H",
+            "C2F4H2",
+            "Freon 134",
+            "Freon 134A",
+            "Freon-134",
+            "Freon-134-A",
+            "R-134a",
+            "R134a",
+            "Freon 125",
+            "Freon-125",
+            "Zyron 125",
+            "Zyron-125",
+            "tetrafluoroethane",
+            "pentafluoroethane",
+            "norflurane"};
   } else if (gas == "TMA") {
     return {"trimethylamine", "N(CH3)3", "N-(CH3)3"};
   } else if (gas == "CHF3") {
     return {"Freon-23", "trifluoromethane", "Fluoroform"};
   } else if (gas == "CF3Br") {
-    return {"CBrF3", "trifluorobromomethane", "bromotrifluoromethane",
-            "Halon-1301", "Halon 1301", "Freon-13B1", "Freon 13BI"};
+    return {"CBrF3",
+            "trifluorobromomethane",
+            "bromotrifluoromethane",
+            "Halon-1301",
+            "Halon 1301",
+            "Freon-13B1",
+            "Freon 13BI"};
   } else if (gas == "C3F8") {
-    return {"octafluoropropane", "R218", "R-218", "Freon 218", "Freon-218",
-            "perfluoropropane", "RC 218", "PFC 218",
-            "RC-218", "PFC-218", "Flutec PP30", "Genetron 218"};
+    return {
+        "octafluoropropane", "R218",        "R-218",   "Freon 218", "Freon-218",
+        "perfluoropropane",  "RC 218",      "PFC 218", "RC-218",    "PFC-218",
+        "Flutec PP30",       "Genetron 218"};
   } else if (gas == "O3") {
     return {"ozone"};
   } else if (gas == "Hg") {
     return {"mercury", "Hg2"};
   } else if (gas == "H2S") {
-    return {"hydrogen sulphide", "hydrogen-sulphide", 
-            "hydrogen sulfide", "hydrogen-sulfide", 
-            "sewer gas", "sewer-gas", "hepatic acid", "hepatic-acid",
-            "sulfur hydride", "sulfur-hydride",
-            "dihydrogen monosulfide", "dihydrogen-monosulfide", 
-            "dihydrogen monosulphide", "dihydrogen-monosulphide",
-            "sulphur hydride", "sulphur-hydride", "stink damp", "stink-damp", 
-            "sulfurated hydrogen", "sulfurated-hydrogen"};
+    return {"hydrogen sulphide",
+            "hydrogen-sulphide",
+            "hydrogen sulfide",
+            "hydrogen-sulfide",
+            "sewer gas",
+            "sewer-gas",
+            "hepatic acid",
+            "hepatic-acid",
+            "sulfur hydride",
+            "sulfur-hydride",
+            "dihydrogen monosulfide",
+            "dihydrogen-monosulfide",
+            "dihydrogen monosulphide",
+            "dihydrogen-monosulphide",
+            "sulphur hydride",
+            "sulphur-hydride",
+            "stink damp",
+            "stink-damp",
+            "sulfurated hydrogen",
+            "sulfurated-hydrogen"};
   } else if (gas == "nC4H10") {
     return {"n-butane", "n-C4H10", "nbutane"};
   } else if (gas == "nC5H12") {
@@ -3471,25 +3499,36 @@ const std::vector<std::string> MediumGas::GetAliases(const std::string& gas) {
   } else if (gas == "N2 (Phelps)") {
     return {"nitrogen-Phelps", "nitrogen Phelps", "N2-Phelps", "N2 Phelps"};
   } else if (gas == "GeH4") {
-    return {"germane", "germanium-hydride", "germanium hydride",
-            "germanium tetrahydride", "germanium-tetrahydride",
-            "germanomethane", "monogermane"};
+    return {"germane",
+            "germanium-hydride",
+            "germanium hydride",
+            "germanium tetrahydride",
+            "germanium-tetrahydride",
+            "germanomethane",
+            "monogermane"};
   } else if (gas == "SiH4") {
-    return {"silane", "silicon-hydride", "silicon hydride",
-            "silicon-tetrahydride", "silicane", "monosilane"};
+    return {"silane",          "silicon-hydride",
+            "silicon hydride", "silicon-tetrahydride",
+            "silicane",        "monosilane"};
   } else if (gas == "CCl4") {
-    return {"carbon tetrachloride", "carbon-tetrachloride",
-            "Benziform", "tetrachloromethane", "carbon tet",
-            "Halon 104", "Halon-104", "Freon 10", "Freon-10"};
+    return {"carbon tetrachloride",
+            "carbon-tetrachloride",
+            "Benziform",
+            "tetrachloromethane",
+            "carbon tet",
+            "Halon 104",
+            "Halon-104",
+            "Freon 10",
+            "Freon-10"};
   }
   return {};
 }
 
 void MediumGas::PrintGases() {
-
   constexpr int version = 13;
   std::cout << "MediumGas::PrintGases:\n"
-            << "Gas            Aliases\n" << std::string(80, '-') << "\n";
+            << "Gas            Aliases\n"
+            << std::string(80, '-') << "\n";
   for (int i = 1; i <= 61; ++i) {
     if (i == 47) continue;
     const std::string gas = i == 58 ? "N2 (Phelps)" : GetGasName(i, version);
@@ -3513,7 +3552,7 @@ void MediumGas::PrintGases() {
     std::cout << "\n";
   }
 }
- 
+
 std::string MediumGas::GetGasName(std::string input) {
   // Convert to upper-case.
   std::transform(input.begin(), input.end(), input.begin(), toupper);
@@ -3538,7 +3577,6 @@ std::string MediumGas::GetGasName(std::string input) {
 }
 
 int MediumGas::GetGasNumberGasFile(const std::string& input) {
-
   if (input.empty()) return 0;
 
   if (input == "CF4") {
@@ -3689,7 +3727,7 @@ int MediumGas::GetGasNumberGasFile(const std::string& input) {
 bool MediumGas::GetPhotoAbsorptionCrossSection(const double e, double& sigma,
                                                const unsigned int i) {
   if (i >= m_nMaxGases) {
-    std::cerr << m_className 
+    std::cerr << m_className
               << "::GetPhotoAbsorptionCrossSection: Index out of range.\n";
     return false;
   }
@@ -3699,6 +3737,6 @@ bool MediumGas::GetPhotoAbsorptionCrossSection(const double e, double& sigma,
   return OpticalData::PhotoabsorptionCrossSection(m_gas[i], e, sigma, eta);
 }
 #ifndef USEGPU
-double MediumGas::CreateGPUTransferObject(MediumGPU *&/*med_gpu*/) { return 0; }
+double MediumGas::CreateGPUTransferObject(MediumGPU*& /*med_gpu*/) { return 0; }
 #endif
-}
+}  // namespace Garfield

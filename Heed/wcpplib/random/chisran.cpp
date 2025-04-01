@@ -1,4 +1,5 @@
 #include "wcpplib/random/chisran.h"
+
 #include "wcpplib/util/FunNameStack.h"
 
 // I. B. Smirnov, 2003.
@@ -46,7 +47,7 @@ double chisran(double flat_random_number, const std::vector<double> &f) {
     } else {
       if (flat_random_number <= f[0]) {
         return flat_random_number / f[0];
-      } 
+      }
       long nl = 0;
       long nr = q - 1;
       long nc;
@@ -76,4 +77,4 @@ double chisran(double flat_random_number, const std::vector<double> &f) {
   spexit(mcerr);
   return 0.0;
 }
-}
+}  // namespace Heed

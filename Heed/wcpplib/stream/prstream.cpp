@@ -24,4 +24,4 @@ std::ostream& yesindent(std::ostream& f) {
 }
 int s_short_output = 0;
 
-}
+}  // namespace Heed

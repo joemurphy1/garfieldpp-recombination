@@ -1,15 +1,14 @@
 #include <TApplication.h>
 
-#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ComponentConstant.hh"
-#include "Garfield/TrackHeed.hh"
+#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"
+#include "Garfield/TrackHeed.hh"
 #include "Garfield/ViewDrift.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   MediumMagboltz gas("ar", 90., "co2", 10.);

@@ -1,7 +1,8 @@
 #ifndef G_SOLID_BOX_H
 #define G_SOLID_BOX_H
 
-#include<array>
+#include <array>
+
 #include "Garfield/Solid.hh"
 
 namespace Garfield {
@@ -35,13 +36,11 @@ class SolidBox : public Solid {
   void SetHalfLengthZ(const double lz);
 
   bool SolidPanels(std::vector<Panel>& panels) override;
-  void SetDiscretisationLevel(const double dis) override {
-    m_dis.fill(dis);
-  } 
+  void SetDiscretisationLevel(const double dis) override { m_dis.fill(dis); }
   double GetDiscretisationLevel(const Panel& panel) override;
 
-  void Cut(const double x0, const double y0, const double z0,
-           const double xn, const double yn, const double zn,
+  void Cut(const double x0, const double y0, const double z0, const double xn,
+           const double yn, const double zn,
            std::vector<Panel>& panels) override;
 
  private:
@@ -50,6 +49,6 @@ class SolidBox : public Solid {
   /// Discretisation levels.
   std::array<double, 6> m_dis{{-1, -1, -1, -1, -1, -1}};
 };
-}
+}  // namespace Garfield
 
 #endif

@@ -1,13 +1,12 @@
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
-#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/MediumMagboltz.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   MediumMagboltz gas;
   gas.LoadGasFile("ar_80_co2_20_2T.gas");
 
@@ -21,8 +20,8 @@ int main(int argc, char * argv[]) {
 
   for (size_t j = 0; j < nB; ++j) {
     for (size_t k = 0; k < nA; ++k) {
-      std::cout << "B = " << bfields[j] << " T, theta = "
-                << angles[k] * RadToDegree << " degree\n";
+      std::cout << "B = " << bfields[j]
+                << " T, theta = " << angles[k] * RadToDegree << " degree\n";
       std::cout << "   E [V/cm]     vE [cm/us]    alpha [1/cm]\n";
       for (size_t i = 0; i < nE; ++i) {
         double ve = 0.;
@@ -35,6 +34,5 @@ int main(int argc, char * argv[]) {
         std::printf("%10.3f    %10.3f    %10.3f\n", efields[i], ve, alpha);
       }
     }
-  } 
-  
+  }
 }

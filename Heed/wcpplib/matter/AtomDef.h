@@ -2,8 +2,8 @@
 #define ATOM_DEF_H
 
 #include <iostream>
-#include <vector>
 #include <list>
+#include <vector>
 
 namespace Heed {
 
@@ -44,7 +44,6 @@ std::ostream& operator<<(std::ostream& file, const AtomDef& f);
 /// Library of atoms.
 
 class AtomDefs {
-
  public:
   static void addAtom(const std::string& name, const std::string& notation,
                       const int z, const double a);
@@ -62,6 +61,7 @@ class AtomDefs {
 
   /// Print all registered atoms.
   static void printAtoms(std::ostream& file);
+
  private:
   static std::list<AtomDef> atoms;
 };
@@ -108,11 +108,9 @@ class AtomMixDef {
   double A_mean() const { return A_meanh; }
   double inv_A_mean() const { return inv_A_meanh; }
   double mean_ratio_Z_to_A() const { return mean_ratio_Z_to_Ah; }
-  double NumberOfElectronsInGram() const {
-    return NumberOfElectronsInGramh;
-  }
+  double NumberOfElectronsInGram() const { return NumberOfElectronsInGramh; }
 };
 std::ostream& operator<<(std::ostream& file, const AtomMixDef& f);
-}
+}  // namespace Heed
 
 #endif

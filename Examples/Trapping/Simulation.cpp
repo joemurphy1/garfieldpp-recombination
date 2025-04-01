@@ -1,12 +1,12 @@
-#include <cmath>
-#include <fstream>
-#include <iostream>
-
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TH1D.h>
 #include <TROOT.h>
 #include <TSystem.h>
+
+#include <cmath>
+#include <fstream>
+#include <iostream>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentGrid.hh"

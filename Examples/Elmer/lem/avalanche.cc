@@ -3,59 +3,58 @@
  * General program flow based on example code from the Garfield++ website.
  *
  * Demonstrates electron avalanche and induced signal readout with
- * 2D finite-element visualization in Garfield++ with a LEM. 
+ * 2D finite-element visualization in Garfield++ with a LEM.
  * LEM parameters are from:
  * C. Shalem et. al. Nucl. Instr. Meth. A, 558, 475 (2006).
  *
-*/
-#include <iostream>
-#include <cmath>
-
-#include <TCanvas.h>
+ */
 #include <TApplication.h>
+#include <TCanvas.h>
 #include <TFile.h>
 #include <TH1D.h>
 
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/ComponentElmer.hh"
-#include "Garfield/Sensor.hh"
-#include "Garfield/ViewField.hh"
-#include "Garfield/ViewFEMesh.hh"
-#include "Garfield/ViewSignal.hh"
-#include "Garfield/Random.hh"
+#include <cmath>
+#include <iostream>
+
 #include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/ComponentElmer.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
 #include "Garfield/ViewDrift.hh"
+#include "Garfield/ViewFEMesh.hh"
+#include "Garfield/ViewField.hh"
+#include "Garfield/ViewSignal.hh"
 
 using namespace Garfield;
 
 int main(int argc, char* argv[]) {
-
   TApplication app("app", &argc, argv);
 
   // Set relevant LEM parameters.
   // LEM thickness in cm
-  const double lem_th = 0.04;      
+  const double lem_th = 0.04;
   // Copper thickness
-  const double lem_cpth = 0.0035;  
+  const double lem_cpth = 0.0035;
   // LEM pitch in cm
-  const double lem_pitch = 0.07;   
+  const double lem_pitch = 0.07;
   // X-width of drift simulation will cover between +/- axis_x
-  const double axis_x = 0.1;  
+  const double axis_x = 0.1;
   // Y-width of drift simulation will cover between +/- axis_y
-  const double axis_y = 0.1;  
+  const double axis_y = 0.1;
   const double axis_z = 0.25 + lem_th / 2 + lem_cpth;
 
   // Define the medium (Ar/CO2 70:30).
   MediumMagboltz gas("ar", 70., "co2", 30.);
   // Set the temperature (K)
-  gas.SetTemperature(293.15);  
+  gas.SetTemperature(293.15);
   // Set the pressure (Torr)
-  gas.SetPressure(740.);       
+  gas.SetPressure(740.);
 
   // Import an Elmer-created field map.
-  ComponentElmer elm(
-      "gemcell/mesh.header", "gemcell/mesh.elements", "gemcell/mesh.nodes",
-      "gemcell/dielectrics.dat", "gemcell/gemcell.result", "cm");
+  ComponentElmer elm("gemcell/mesh.header", "gemcell/mesh.elements",
+                     "gemcell/mesh.nodes", "gemcell/dielectrics.dat",
+                     "gemcell/gemcell.result", "cm");
   elm.EnablePeriodicityX();
   elm.EnableMirrorPeriodicityY();
   elm.SetGas(&gas);
@@ -81,15 +80,15 @@ int main(int argc, char* argv[]) {
 
   // Set the electron start parameters.
   // Starting z position for electron drift
-  const double zi = 0.5 * lem_th + lem_cpth + 0.1;  
+  const double zi = 0.5 * lem_th + lem_cpth + 0.1;
   double ri = (lem_pitch / 2) * RndmUniform();
   double thetai = RndmUniform() * TwoPi;
   double xi = ri * cos(thetai);
   double yi = ri * sin(thetai);
   // Calculate the avalanche.
   aval.AvalancheElectron(xi, yi, zi, 0., 0., 0., 0., 0.);
-  std::cout << "... avalanche complete with "
-            << aval.GetElectrons().size() << " electron tracks.\n";
+  std::cout << "... avalanche complete with " << aval.GetElectrons().size()
+            << " electron tracks.\n";
 
   // Extract the calculated signal.
   double bscale = tEnd / nsBins;  // time per bin

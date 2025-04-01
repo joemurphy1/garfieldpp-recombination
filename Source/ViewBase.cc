@@ -1,22 +1,22 @@
-#include <iostream>
-#include <cstdio>
-#include <cmath>
-#include <limits>
-#include<array>
-
-#include <TROOT.h>
-#include <TGraph.h>
-
-#include "Garfield/Sensor.hh"
-#include "Garfield/Component.hh"
-#include "Garfield/Plotting.hh"
-#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/ViewBase.hh"
+
+#include <TGraph.h>
+#include <TROOT.h>
+
+#include <array>
+#include <cmath>
+#include <cstdio>
+#include <iostream>
+#include <limits>
+
+#include "Garfield/Component.hh"
+#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Plotting.hh"
+#include "Garfield/Sensor.hh"
 
 namespace {
 
 bool Invert(std::array<std::array<double, 3>, 3>& a) {
-
   // Compute cofactors.
   const double c11 = a[1][1] * a[2][2] - a[1][2] * a[2][1];
   const double c12 = a[1][2] * a[2][0] - a[1][0] * a[2][2];
@@ -62,13 +62,11 @@ std::string Fmt(const double x) {
   return std::string(buf);
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
-ViewBase::ViewBase(const std::string& name) :
-    m_className(name) { 
-
+ViewBase::ViewBase(const std::string& name) : m_className(name) {
   plottingEngine.SetDefaultStyle();
 }
 
@@ -83,9 +81,8 @@ TPad* ViewBase::GetCanvas() {
 
 bool ViewBase::RangeSet(TVirtualPad* pad) {
   if (!pad) return false;
-  if (pad->GetListOfPrimitives()->GetSize() == 0 && 
-      pad->GetX1() == 0 && pad->GetX2() == 1 && 
-      pad->GetY1() == 0 && pad->GetY2() == 1) {
+  if (pad->GetListOfPrimitives()->GetSize() == 0 && pad->GetX1() == 0 &&
+      pad->GetX2() == 1 && pad->GetY1() == 0 && pad->GetY2() == 1) {
     return false;
   }
   return true;
@@ -100,15 +97,12 @@ void ViewBase::SetRange(TVirtualPad* pad, const double x0, const double y0,
   const double tm = pad->GetTopMargin();
   const double dx = x1 - x0;
   const double dy = y1 - y0;
-  pad->Range(x0 - dx * (lm / (1. - rm - lm)),
-             y0 - dy * (bm / (1. - tm - lm)),
-             x1 + dx * (rm / (1. - rm - lm)),
-             y1 + dy * (tm / (1. - tm - lm)));
-
+  pad->Range(x0 - dx * (lm / (1. - rm - lm)), y0 - dy * (bm / (1. - tm - lm)),
+             x1 + dx * (rm / (1. - rm - lm)), y1 + dy * (tm / (1. - tm - lm)));
 }
 
-void ViewBase::SetArea(const double xmin, const double ymin, 
-                       const double xmax, const double ymax) {
+void ViewBase::SetArea(const double xmin, const double ymin, const double xmax,
+                       const double ymax) {
   // Check range, assign if non-null.
   if (xmin == xmax || ymin == ymax) {
     std::cerr << m_className << "::SetArea: Null area is not permitted.\n"
@@ -183,7 +177,6 @@ void ViewBase::SetPlane(const double fx, const double fy, const double fz,
 void ViewBase::SetPlane(const double fx, const double fy, const double fz,
                         const double x0, const double y0, const double z0,
                         const double hx, const double hy, const double hz) {
-
   const double fnorm = sqrt(fx * fx + fy * fy + fz * fz);
   if (fnorm < Small) {
     std::cout << m_className << "::SetPlane:\n"
@@ -205,18 +198,18 @@ void ViewBase::SetPlane(const double fx, const double fy, const double fz,
   double uy = hy - d * wy;
   double uz = hz - d * wz;
   double unorm = std::sqrt(ux * ux + uy * uy + uz * uz);
-  if (unorm < 1.e-10) {  
+  if (unorm < 1.e-10) {
     // Wrong in-plane x hint (close to norm).
     if (fy * fy + fz * fz > 0) {
       // Taking global x as in-plane x hint.
       ux = 1;
       uy = 0;
-      uz = 0;  
+      uz = 0;
     } else {
       // Taking global y as in-plane x hint.
       ux = 0;
       uy = 1;
-      uz = 0;  
+      uz = 0;
     }
     d = ux * wx + uy * wy + uz * wz;
     ux -= d * wx;
@@ -254,18 +247,18 @@ void ViewBase::SetPlane(const double fx, const double fy, const double fz,
   if (m_debug) {
     std::cout << m_className << "::SetPlane:\n    PRMAT:\n";
     for (size_t i = 0; i < 3; ++i) {
-      std::printf("  %10.5f  %10.5f  %10.5f\n", 
-                  m_prmat[i][0], m_prmat[i][1], m_prmat[i][2]);
+      std::printf("  %10.5f  %10.5f  %10.5f\n", m_prmat[i][0], m_prmat[i][1],
+                  m_prmat[i][2]);
     }
     std::cout << "    PROJ:\n";
     for (size_t i = 0; i < 3; ++i) {
-      std::printf("  %10.5f  %10.5f  %10.5f\n", 
-                  m_proj[i][0], m_proj[i][1], m_proj[i][2]);
+      std::printf("  %10.5f  %10.5f  %10.5f\n", m_proj[i][0], m_proj[i][1],
+                  m_proj[i][2]);
     }
     std::cout << "   PLANE:\n";
-    std::printf("  %10.5f  %10.5f  %10.5f  %10.5f\n", 
-                m_plane[0], m_plane[1], m_plane[2], m_plane[3]);
-  }       
+    std::printf("  %10.5f  %10.5f  %10.5f  %10.5f\n", m_plane[0], m_plane[1],
+                m_plane[2], m_plane[3]);
+  }
 }
 
 void ViewBase::Rotate(const double theta) {
@@ -346,15 +339,13 @@ std::string ViewBase::FindUnusedCanvasName(const std::string& s) {
 }
 
 void ViewBase::UpdateProjectionMatrix() {
-
   m_prmat[0][0] = m_proj[0][0];
   m_prmat[1][0] = m_proj[0][1];
   m_prmat[2][0] = m_proj[0][2];
   m_prmat[0][1] = m_proj[1][0];
   m_prmat[1][1] = m_proj[1][1];
   m_prmat[2][1] = m_proj[1][2];
-  const double vnorm = sqrt(m_plane[0] * m_plane[0] +
-                            m_plane[1] * m_plane[1] +
+  const double vnorm = sqrt(m_plane[0] * m_plane[0] + m_plane[1] * m_plane[1] +
                             m_plane[2] * m_plane[2]);
   if (vnorm <= 0.) {
     std::cerr << m_className << "::UpdateProjectionMatrix:\n"
@@ -372,17 +363,15 @@ void ViewBase::UpdateProjectionMatrix() {
   }
 }
 
-void ViewBase::Clip(const std::array<float, 3>& x0, 
+void ViewBase::Clip(const std::array<float, 3>& x0,
                     const std::array<float, 3>& x1,
                     std::array<float, 3>& xc) const {
-
   xc.fill(0.);
   const bool in0 = InBox(x0);
   const bool in1 = InBox(x1);
   if (in0 == in1) return;
   xc = in0 ? x1 : x0;
-  const std::array<float, 3> dx = {x1[0] - x0[0], x1[1] - x0[1], 
-                                   x1[2] - x0[2]};
+  const std::array<float, 3> dx = {x1[0] - x0[0], x1[1] - x0[1], x1[2] - x0[2]};
   std::array<double, 3> bmin = {m_xMinBox, m_yMinBox, m_zMinBox};
   std::array<double, 3> bmax = {m_xMaxBox, m_yMaxBox, m_zMaxBox};
   for (size_t i = 0; i < 3; ++i) {
@@ -398,14 +387,13 @@ void ViewBase::Clip(const std::array<float, 3>& x0,
 
 void ViewBase::DrawLine(const std::vector<std::array<float, 3> >& xl,
                         const short col, const short lw) {
-
   const size_t nP = xl.size();
   if (nP < 2) return;
 
   TGraph gr;
   gr.SetLineColor(col);
   gr.SetLineWidth(lw);
- 
+
   std::vector<float> xgr;
   std::vector<float> ygr;
   auto x0 = xl[0];
@@ -426,7 +414,7 @@ void ViewBase::DrawLine(const std::vector<std::array<float, 3> >& xl,
       ToPlane(xc[0], xc[1], xc[2], xp, yp);
       xgr.push_back(xp);
       ygr.push_back(yp);
-    } 
+    }
     if (in1) {
       float xp = 0., yp = 0.;
       ToPlane(x1[0], x1[1], x1[2], xp, yp);
@@ -446,7 +434,6 @@ void ViewBase::DrawLine(const std::vector<std::array<float, 3> >& xl,
 }
 
 std::string ViewBase::LabelX() {
-
   std::string xLabel = "";
   constexpr double tol = 1.e-4;
   // x portion
@@ -505,11 +492,9 @@ std::string ViewBase::LabelX() {
   // Unit
   xLabel += " [cm]";
   return xLabel;
-
 }
 
 std::string ViewBase::LabelY() {
-
   std::string yLabel = "";
   constexpr double tol = 1.e-4;
   // x portion
@@ -571,7 +556,6 @@ std::string ViewBase::LabelY() {
 }
 
 std::string ViewBase::PlaneDescription() {
-
   std::string description;
 
   constexpr double tol = 1.e-4;
@@ -633,16 +617,14 @@ std::string ViewBase::PlaneDescription() {
   return description;
 }
 
-bool ViewBase::PlotLimits(Sensor* sensor, 
-                          double& xmin, double& ymin, 
+bool ViewBase::PlotLimits(Sensor* sensor, double& xmin, double& ymin,
                           double& xmax, double& ymax) const {
-
   if (!sensor) return false;
   // Try to get the area/bounding box from the sensor/component.
   std::array<double, 3> bbmin;
   std::array<double, 3> bbmax;
-  if (!sensor->GetArea(bbmin[0], bbmin[1], bbmin[2], 
-                       bbmax[0], bbmax[1], bbmax[2])) {
+  if (!sensor->GetArea(bbmin[0], bbmin[1], bbmin[2], bbmax[0], bbmax[1],
+                       bbmax[2])) {
     std::cerr << m_className << "::PlotLimits:\n"
               << "    Sensor area is not defined.\n"
               << "    Please set the plot limits explicitly (SetArea).\n";
@@ -651,28 +633,25 @@ bool ViewBase::PlotLimits(Sensor* sensor,
   return PlotLimits(bbmin, bbmax, xmin, ymin, xmax, ymax);
 }
 
-bool ViewBase::PlotLimits(Component* cmp, 
-                          double& xmin, double& ymin, 
+bool ViewBase::PlotLimits(Component* cmp, double& xmin, double& ymin,
                           double& xmax, double& ymax) const {
-
   if (!cmp) return false;
   // Try to get the area/bounding box from the sensor/component.
   std::array<double, 3> bbmin;
   std::array<double, 3> bbmax;
-  if (!cmp->GetBoundingBox(bbmin[0], bbmin[1], bbmin[2], 
-                           bbmax[0], bbmax[1], bbmax[2])) {
+  if (!cmp->GetBoundingBox(bbmin[0], bbmin[1], bbmin[2], bbmax[0], bbmax[1],
+                           bbmax[2])) {
     std::cerr << m_className << "::PlotLimits:\n"
               << "    Bounding box of the component is not defined.\n"
               << "    Please set the plot limits explicitly (SetArea).\n";
     return false;
   }
-  if (std::isinf(bbmin[0]) || std::isinf(bbmax[0]) ||
-      std::isinf(bbmin[1]) || std::isinf(bbmax[1]) ||
-      std::isinf(bbmin[2]) || std::isinf(bbmax[2])) {
+  if (std::isinf(bbmin[0]) || std::isinf(bbmax[0]) || std::isinf(bbmin[1]) ||
+      std::isinf(bbmax[1]) || std::isinf(bbmin[2]) || std::isinf(bbmax[2])) {
     std::array<double, 3> cellmin = {0., 0., 0.};
     std::array<double, 3> cellmax = {0., 0., 0.};
-    if (!cmp->GetElementaryCell(cellmin[0], cellmin[1], cellmin[2],
-                                cellmax[0], cellmax[1], cellmax[2])) {
+    if (!cmp->GetElementaryCell(cellmin[0], cellmin[1], cellmin[2], cellmax[0],
+                                cellmax[1], cellmax[2])) {
       std::cerr << m_className << "::PlotLimits:\n"
                 << "    Cell boundaries are not defined.\n"
                 << "    Please set the plot limits explicitly (SetArea).\n";
@@ -688,18 +667,16 @@ bool ViewBase::PlotLimits(Component* cmp,
   return PlotLimits(bbmin, bbmax, xmin, ymin, xmax, ymax);
 }
 
-bool ViewBase::PlotLimitsFromUserBox(double& xmin, double& ymin,
-                                     double& xmax, double& ymax) const {
-
+bool ViewBase::PlotLimitsFromUserBox(double& xmin, double& ymin, double& xmax,
+                                     double& ymax) const {
   std::array<double, 3> bbmin = {m_xMinBox, m_yMinBox, m_zMinBox};
   std::array<double, 3> bbmax = {m_xMaxBox, m_yMaxBox, m_zMaxBox};
   return PlotLimits(bbmin, bbmax, xmin, ymin, xmax, ymax);
 }
 
 bool ViewBase::PlotLimits(std::array<double, 3>& bbmin,
-                          std::array<double, 3>& bbmax,
-                          double& xmin, double& ymin,
-                          double& xmax, double& ymax) const {
+                          std::array<double, 3>& bbmax, double& xmin,
+                          double& ymin, double& xmax, double& ymax) const {
   constexpr double tol = 1.e-4;
   double umin[2] = {-std::numeric_limits<double>::max(),
                     -std::numeric_limits<double>::max()};
@@ -725,4 +702,4 @@ bool ViewBase::PlotLimits(std::array<double, 3>& bbmin,
   return true;
 }
 
-}
+}  // namespace Garfield

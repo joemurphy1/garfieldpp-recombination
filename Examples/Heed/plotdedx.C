@@ -1,17 +1,16 @@
-#include <TCanvas.h>
-#include <TROOT.h>
 #include <TApplication.h>
-#include <TGraph.h>
 #include <TAxis.h>
+#include <TCanvas.h>
+#include <TGraph.h>
+#include <TROOT.h>
 
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/TrackHeed.hh"
 #include "Garfield/Plotting.hh"
+#include "Garfield/TrackHeed.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
 
@@ -22,8 +21,8 @@ int main(int argc, char * argv[]) {
   TrackHeed track;
   track.SetParticle("pi");
 
-  std::vector<double> bg = {0.5, 0.8, 1., 2., 3., 4., 5., 8., 10.,
-    12., 15., 20., 50., 100., 200., 500.}; 
+  std::vector<double> bg = {0.5, 0.8, 1.,  2.,  3.,  4.,   5.,   8.,
+                            10., 12., 15., 20., 50., 100., 200., 500.};
 
   const unsigned int nPoints = bg.size();
   TGraph gStoppingPower(nPoints);
@@ -34,7 +33,7 @@ int main(int argc, char * argv[]) {
     const double dedx = track.GetStoppingPower();
     const double imfp = track.GetClusterDensity();
     gStoppingPower.SetPoint(i, bg[i], 1.e-3 * dedx);
-    gClusterDensity.SetPoint(i, bg[i], imfp); 
+    gClusterDensity.SetPoint(i, bg[i], imfp);
   }
 
   TCanvas cStoppingPower("cStoppingPower", "", 600, 600);
@@ -57,5 +56,4 @@ int main(int argc, char * argv[]) {
   cClusterDensity.SetLogx();
   cClusterDensity.Update();
   app.Run(true);
-
 }

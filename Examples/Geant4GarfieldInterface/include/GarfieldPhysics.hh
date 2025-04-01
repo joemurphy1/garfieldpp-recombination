@@ -101,8 +101,8 @@ class GarfieldPhysics {
   void EnableCreateSecondariesInGeant4(bool flag) {
     createSecondariesInGeant4 = flag;
   }
-  bool GetCreateSecondariesInGeant4() const { 
-    return createSecondariesInGeant4; 
+  bool GetCreateSecondariesInGeant4() const {
+    return createSecondariesInGeant4;
   }
   double GetEnergyDeposit_MeV() const { return fEnergyDeposit / 1000000; }
   double GetAvalancheSize() const { return fAvalancheSize; }

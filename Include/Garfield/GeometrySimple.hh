@@ -70,6 +70,6 @@ class GeometrySimple : public Geometry {
   /// Switch on/off debugging messages.
   bool m_debug = false;
 };
-}
+}  // namespace Garfield
 
 #endif

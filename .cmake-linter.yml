@@ -20,6 +20,6 @@
     max_branches: 50,
     max_arguments: 5,
     max_localvars: 15,
-    max_statements: 100
+    max_statements: 200
   }
 }

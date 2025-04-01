@@ -12,11 +12,11 @@ class Shaper {
   /// Default constructor.
   Shaper() = delete;
   /// Constructor.
-  Shaper(const unsigned int n, const double tau, const double g, 
+  Shaper(const unsigned int n, const double tau, const double g,
          std::string shaperType);
   /// Destructor.
   ~Shaper() {}
-  
+
   /// Evaluate the transfer function.
   double Shape(const double t) const;
   /// Transfer function for a unipolar shaper.
@@ -30,7 +30,7 @@ class Shaper {
   double TransferFuncSq() const { return m_transfer_func_sq; }
 
   /// Is it a unipolar shaper?
-  bool IsUnipolar() const { return (m_type == ShaperType::Unipolar); } 
+  bool IsUnipolar() const { return (m_type == ShaperType::Unipolar); }
   /// Is it a bipolar shaper?
   bool IsBipolar() const { return (m_type == ShaperType::Bipolar); }
   /// Retrieve the parameters.
@@ -38,7 +38,7 @@ class Shaper {
     n = m_n;
     tp = m_tp;
   }
- 
+
  private:
   std::string m_className = "Shaper";
 
@@ -58,6 +58,6 @@ class Shaper {
   // Integral of the transfer function squared.
   double m_transfer_func_sq = -1.;
 };
-}
+}  // namespace Garfield
 
 #endif

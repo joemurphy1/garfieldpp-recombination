@@ -1,8 +1,8 @@
 #ifndef G_SOLID_H
 #define G_SOLID_H
 
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace Garfield {
 
@@ -39,7 +39,7 @@ class Solid {
   /// Destructor
   virtual ~Solid() {}
 
-  /// Check whether a given point is inside the solid. If requested, 
+  /// Check whether a given point is inside the solid. If requested,
   /// use the tesselated approximation of the solid (if applicable).
   virtual bool IsInside(const double x, const double y, const double z,
                         const bool tesselated = false) const = 0;
@@ -61,12 +61,12 @@ class Solid {
   virtual bool IsExtrusion() const { return false; }
   /// Return true if the solid is a wire.
   virtual bool IsWire() const { return false; }
- 
+
   /// Set a label.
   void SetLabel(const std::string& label) { m_label = label; }
   /// Return the label.
   std::string GetLabel() const { return m_label; }
- 
+
   /// Retrieve the centre point of the solid.
   bool GetCentre(double& x, double& y, double& z) const {
     x = m_cX;
@@ -114,13 +114,13 @@ class Solid {
   /// Return the radius.
   virtual double GetRadius() const { return NotImplemented("GetRadius"); }
   /// Return the lower radius (of a hole).
-  virtual double GetLowerRadius() const { 
+  virtual double GetLowerRadius() const {
     return NotImplemented("GetLowerRadius");
-  } 
+  }
   /// Return the upper radius (of a hole).
-  virtual double GetUpperRadius() const { 
+  virtual double GetUpperRadius() const {
     return NotImplemented("GetUpperRadius");
-  } 
+  }
   /// Return the x-offset of a ridge.
   virtual double GetRidgeOffset() const {
     return NotImplemented("GetRidgeOffset");
@@ -130,7 +130,7 @@ class Solid {
     return NotImplemented("GetRidgeHeight");
   }
   /// Get the vertices defining an extrusion.
-  virtual bool GetProfile(std::vector<double>& xv, 
+  virtual bool GetProfile(std::vector<double>& xv,
                           std::vector<double>& yv) const;
 
   /// Get the ID of the solid.
@@ -190,7 +190,7 @@ class Solid {
   void SetColour(const int col) { m_colour = col; }
   /// Get the colour of the solid.
   int GetColour() const { return m_colour; }
- 
+
   static bool Intersect(const double x1, const double y1, const double z1,
                         const double x2, const double y2, const double z2,
                         const double x0, const double y0, const double z0,
@@ -210,7 +210,7 @@ class Solid {
 
   /// Class name.
   std::string m_className = "Solid";
- 
+
   /// Label.
   std::string m_label = "";
 
@@ -229,7 +229,7 @@ class Solid {
   /// Colour.
   int m_colour = -1;
 
-  /// Transform a point from global coordinates (x, y, z) 
+  /// Transform a point from global coordinates (x, y, z)
   /// to local coordinates (u, v, w).
   void ToLocal(const double x, const double y, const double z, double& u,
                double& v, double& w) const {
@@ -241,7 +241,7 @@ class Solid {
     v = -m_sPhi * dx + m_cPhi * dy;
     w = m_cPhi * m_sTheta * dx + m_sPhi * m_sTheta * dy + m_cTheta * dz;
   }
-  /// Transform a point from local coordinates (u, v, w) 
+  /// Transform a point from local coordinates (u, v, w)
   /// to global coordinates (x, y, z).
   void ToGlobal(const double u, const double v, const double w, double& x,
                 double& y, double& z) const {
@@ -250,8 +250,8 @@ class Solid {
     z = m_cZ - m_sTheta * u + m_cTheta * w;
   }
   /// Transform a vector from global to local coordinates.
-  void VectorToLocal(const double x, const double y, const double z,
-                     double& u, double& v, double& w) {
+  void VectorToLocal(const double x, const double y, const double z, double& u,
+                     double& v, double& w) {
     u = m_cPhi * m_cTheta * x + m_sPhi * m_cTheta * y - m_sTheta * z;
     v = -m_sPhi * x + m_cPhi * y;
     w = m_cPhi * m_sTheta * x + m_sPhi * m_sTheta * y + m_cTheta * z;
@@ -265,8 +265,7 @@ class Solid {
   static unsigned int s_id;
   /// ID of the solid.
   unsigned int m_id;
-
 };
-}
+}  // namespace Garfield
 
 #endif

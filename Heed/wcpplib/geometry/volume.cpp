@@ -1,5 +1,6 @@
-#include <cstddef>
 #include "wcpplib/geometry/volume.h"
+
+#include <cstddef>
 
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -30,12 +31,14 @@ void manip_absvol_treeid::up_absref(absref* f) {
 }
 
 int manip_absvol_treeid::check_manip_absvol_registered(manip_absvol* amvol) {
-  for (auto vol : eid) if (vol == amvol) return 1;
+  for (auto vol : eid)
+    if (vol == amvol) return 1;
   return 0;
 }
 
 int manip_absvol_treeid::check_absvol_registered(absvol* avol) {
-  for (auto vol : eid) if (vol->Gavol() == avol) return 1;
+  for (auto vol : eid)
+    if (vol->Gavol() == avol) return 1;
   return 0;
 }
 
@@ -282,4 +285,4 @@ void sh_manip_absvol::m_print(std::ostream& file, int l) const {
   }
   file.flush();
 }
-}
+}  // namespace Heed

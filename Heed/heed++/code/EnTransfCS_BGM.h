@@ -12,9 +12,8 @@ class EnTransfCS_BGM {
   /// Default constructor
   EnTransfCS_BGM() = default;
   /// Constructor
-  EnTransfCS_BGM(double fparticle_mass, BGMesh* fmesh,
-                 int fs_primary_electron, HeedMatterDef* fhmd,
-                 long fparticle_charge = 1);
+  EnTransfCS_BGM(double fparticle_mass, BGMesh* fmesh, int fs_primary_electron,
+                 HeedMatterDef* fhmd, long fparticle_charge = 1);
 
   // All data from EnTransfCS that do not depend on speed.
   // Particle mass [MeV]
@@ -31,6 +30,6 @@ class EnTransfCS_BGM {
 
   void print(std::ostream& file, int l) const;
 };
-}
+}  // namespace Heed
 
 #endif

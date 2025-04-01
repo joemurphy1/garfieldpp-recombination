@@ -1,23 +1,22 @@
+#include "Garfield/TrackTrim.hh"
+
+#include <algorithm>
+#include <array>
 #include <fstream>
 #include <iostream>
-#include <algorithm>
 #include <numeric>
-#include<array>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/Utilities.hh"
-#include "Garfield/TrackTrim.hh"
-#include "Garfield/Medium.hh"
 
 namespace {
 
-void Rotate(const std::array<double, 3>& f, 
-            const std::array<double, 3>& t,
+void Rotate(const std::array<double, 3>& f, const std::array<double, 3>& t,
             std::array<double, 3>& a) {
-
   // T. Moller and J. F. Hughes,
   // Efficiently Building a Matrix to Rotate One Vector to Another, 1999
 
@@ -74,7 +73,7 @@ void Rotate(const std::array<double, 3>& f,
       b[i] += r[i][j] * a[j];
     }
   }
-  std::swap(a, b); 
+  std::swap(a, b);
 }
 
 double Speed(const double ekin, const double mass) {
@@ -84,12 +83,12 @@ double Speed(const double ekin, const double mass) {
   return sqrt(beta2) * Garfield::SpeedOfLight;
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
 TrackTrim::TrackTrim(Sensor* sensor) : Track("Trim") {
-  m_sensor = sensor; 
+  m_sensor = sensor;
   m_q = 1.;
 }
 
@@ -97,9 +96,8 @@ void TrackTrim::SetParticle(const std::string& /*particle*/) {
   std::cerr << m_className << "::SetParticle: Not applicable.\n";
 }
 
-bool TrackTrim::ReadFile(const std::string& filename, 
-                         const unsigned int nIons, const unsigned int nSkip) {
-
+bool TrackTrim::ReadFile(const std::string& filename, const unsigned int nIons,
+                         const unsigned int nSkip) {
   // TRMREE - Reads the TRIM EXYZ file.
 
   // Reset.
@@ -143,11 +141,11 @@ bool TrackTrim::ReadFile(const std::string& filename,
           if (pos != std::string::npos) {
             m_ekin = 1.e3 * std::stod(words[2].substr(0, pos));
           }
-        } 
-      } 
+        }
+      }
       // Otherwise, skip the header.
       continue;
-    } 
+    }
     auto words = tokenize(line);
     if (words.size() < 6) {
       std::cerr << m_className << "::ReadFile: Unexpected line:\n"
@@ -161,7 +159,7 @@ bool TrackTrim::ReadFile(const std::string& filename,
         x.clear();
         y.clear();
         z.clear();
-        dedx.clear(); 
+        dedx.clear();
         ekin.clear();
         ++nRead;
         // Stop if we are done reading the requested number of ions.
@@ -181,23 +179,21 @@ bool TrackTrim::ReadFile(const std::string& filename,
   }
   infile.close();
   AddIon(x, y, z, dedx, ekin);
-  std::cout << m_className << "::ReadFile: Read energy vs position for " 
+  std::cout << m_className << "::ReadFile: Read energy vs position for "
             << m_ions.size() << " ions.\n";
   if (m_ekin > 0. && mass > 0.) {
-    std::cout << "    Initial kinetic energy set to " 
-              << m_ekin * 1.e-3 << " keV. Mass number: " << mass << ".\n";
+    std::cout << "    Initial kinetic energy set to " << m_ekin * 1.e-3
+              << " keV. Mass number: " << mass << ".\n";
     m_mass = AtomicMassUnitElectronVolt * mass;
     SetKineticEnergy(m_ekin);
   }
   return true;
 }
 
-void TrackTrim::AddIon(const std::vector<float>& x,
-                       const std::vector<float>& y,
+void TrackTrim::AddIon(const std::vector<float>& x, const std::vector<float>& y,
                        const std::vector<float>& z,
-                       const std::vector<float>& dedx, 
+                       const std::vector<float>& dedx,
                        const std::vector<float>& ekin) {
-
   const size_t nPoints = x.size();
   if (nPoints < 2) return;
   std::vector<std::array<float, 6> > path;
@@ -210,11 +206,11 @@ void TrackTrim::AddIon(const std::vector<float>& x,
     float eloss = 0.;
     if (i == 0 && dedx[i] > 10. * dedx[i + 1]) {
       eloss = dmag * dedx[i + 1];
-    } else { 
+    } else {
       eloss = dmag * dedx[i];
     }
     const float dekin = ekin[i] - ekin[i + 1];
-    if (dekin > 0.) eloss = std::min(eloss, dekin); 
+    if (dekin > 0.) eloss = std::min(eloss, dekin);
     path.push_back({dx * scale, dy * scale, dz * scale, dmag, eloss, ekin[i]});
   }
   m_ions.push_back(std::move(path));
@@ -226,8 +222,8 @@ void TrackTrim::Print() {
     std::cerr << "    No TRIM data present.\n";
     return;
   }
-  std::cout << "    Projectile: " << m_particleName << ", "
-            << m_ekin * 1.e-3 << " keV\n"
+  std::cout << "    Projectile: " << m_particleName << ", " << m_ekin * 1.e-3
+            << " keV\n"
             << "    Number of tracks: " << m_ions.size() << "\n";
   if (m_work > 0.) {
     std::cout << "    Work function: " << m_work << " eV\n";
@@ -242,8 +238,8 @@ void TrackTrim::Print() {
 }
 
 bool TrackTrim::NewTrack(const double x0, const double y0, const double z0,
-    const double t0, const double dx0, const double dy0, const double dz0) {
-
+                         const double t0, const double dx0, const double dy0,
+                         const double dz0) {
   // TRMGEN - Generates TRIM clusters
 
   if (m_ions.empty()) {
@@ -296,7 +292,7 @@ bool TrackTrim::NewTrack(const double x0, const double y0, const double z0,
 
   // Plot.
   if (m_viewer) PlotNewTrack(x0, y0, z0);
- 
+
   // Reset the cluster count.
   m_cluster = 0;
   m_clusters.clear();
@@ -384,7 +380,7 @@ bool TrackTrim::NewTrack(const double x0, const double y0, const double z0,
       if (cluster.n == 0) continue;
       m_clusters.push_back(std::move(cluster));
       if (m_viewer) PlotCluster(cluster.x, cluster.y, cluster.z);
-    } 
+    }
   }
   // Move to the next ion in the list.
   ++m_ion;
@@ -394,8 +390,8 @@ bool TrackTrim::NewTrack(const double x0, const double y0, const double z0,
 bool TrackTrim::GetCluster(double& xcls, double& ycls, double& zcls,
                            double& tcls, int& n, double& e, double& extra) {
   if (m_debug) {
-    std::cout << m_className << "::GetCluster: Cluster " << m_cluster
-              << " of " << m_clusters.size() << "\n";
+    std::cout << m_className << "::GetCluster: Cluster " << m_cluster << " of "
+              << m_clusters.size() << "\n";
   }
   // Stop if we have exhausted the list of clusters.
   if (m_cluster >= m_clusters.size()) return false;
@@ -413,4 +409,4 @@ bool TrackTrim::GetCluster(double& xcls, double& ycls, double& zcls,
   ++m_cluster;
   return true;
 }
-}
+}  // namespace Garfield

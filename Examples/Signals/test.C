@@ -1,26 +1,25 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 #include <TSystem.h>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentAnalyticField.hh"
+#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/MediumSilicon.hh"
+#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/Utilities.hh"
-#include "Garfield/FundamentalConstants.hh"
-#include "Garfield/Plotting.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-    
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
 
@@ -31,13 +30,13 @@ int main(int argc, char * argv[]) {
   constexpr double gap = 100.e-4;
   constexpr double field = 1.e3;
   cmp.AddPlaneY(0., 0., "pad");
-  cmp.AddPlaneY(gap, -field * gap); 
-    
+  cmp.AddPlaneY(gap, -field * gap);
+
   // Create a sensor.
   Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "pad");
   const unsigned int nBins = 100;
-  sensor.SetTimeWindow(0, 0.1, nBins); 
+  sensor.SetTimeWindow(0, 0.1, nBins);
   AvalancheMicroscopic aval(&sensor);
   aval.UseWeightingPotential(true);
   // sensor.EnableDebugging();
@@ -50,7 +49,7 @@ int main(int argc, char * argv[]) {
     const auto& p1 = aval.GetElectrons().front().path.back();
     // Skip electrons that backscattered.
     if (p1.y > gap - 1.e-4) continue;
-    break; 
+    break;
   }
   TCanvas c1("c", "", 600, 600);
   sensor.PlotSignal("pad", &c1);
@@ -73,4 +72,3 @@ int main(int argc, char * argv[]) {
 
   app.Run(true);
 }
-

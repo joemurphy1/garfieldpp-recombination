@@ -12,15 +12,15 @@ namespace Heed {
 /// 2004, I. Smirnov
 
 class PhotoAbsCSLib {
-
  public:
-  static AtomPhotoAbsCS* getAPACS(const std::string& name); 
+  static AtomPhotoAbsCS* getAPACS(const std::string& name);
+
  private:
   static std::map<std::string, ExAtomPhotoAbsCS> apacs;
   static std::map<std::string, SimpleAtomPhotoAbsCS> hpacs;
   static void initialise();
 };
 
-}
+}  // namespace Heed
 
 #endif

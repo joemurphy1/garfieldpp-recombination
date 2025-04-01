@@ -24,6 +24,6 @@ constexpr double C1_MEV2_BN = C1_MEV_CM * C1_MEV_CM / 1.0e24;
 constexpr double C1_MEV2_MBN = C1_MEV_CM * C1_MEV_CM / 1.0e18;
 // coefficient for passing from x(mbn) to x(1/MeV^2) =
 // (5.07E10)^2/(1.0e18)
-}
+}  // namespace Heed
 
 #endif

@@ -1,9 +1,10 @@
+#include "Garfield/ComponentElmer2d.hh"
+
 #include <math.h>
 #include <stdlib.h>
+
 #include <fstream>
 #include <iostream>
-
-#include "Garfield/ComponentElmer2d.hh"
 
 namespace {
 
@@ -13,7 +14,7 @@ void PrintErrorReadingFile(const std::string& hdr, const std::string& file,
             << ").\n";
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -30,19 +31,18 @@ ComponentElmer2d::ComponentElmer2d(const std::string& header,
                                    const std::string& elist,
                                    const std::string& nlist,
                                    const std::string& mplist,
-                                   const std::string& volt, 
+                                   const std::string& volt,
                                    const std::string& unit)
     : ComponentElmer2d() {
-
   Initialise(header, elist, nlist, mplist, volt, unit);
 }
 
 bool ComponentElmer2d::Initialise(const std::string& header,
-                                const std::string& elist,
-                                const std::string& nlist,
-                                const std::string& mplist,
-                                const std::string& volt,
-                                const std::string& unit) {
+                                  const std::string& elist,
+                                  const std::string& nlist,
+                                  const std::string& mplist,
+                                  const std::string& volt,
+                                  const std::string& unit) {
   const std::string hdr = m_className + "::Initialise:";
   ComponentFieldMap::Reset();
 
@@ -164,8 +164,8 @@ bool ComponentElmer2d::Initialise(const std::string& header,
       return false;
     }
     m_materials[il - 2].eps = dc;
-    std::cout << "    Set material " << il - 2 << " of "
-              << nMaterials << " to eps " << dc << ".\n";
+    std::cout << "    Set material " << il - 2 << " of " << nMaterials
+              << " to eps " << dc << ".\n";
   }
 
   // Close the materials file.
@@ -202,7 +202,7 @@ bool ComponentElmer2d::Initialise(const std::string& header,
     if (inode.size() != 8) {
       PrintErrorReadingFile(hdr, elist, il);
       std::cerr << "    Read " << inode.size() << " node indices for element"
-                 << il << " (expected 8).\n";
+                << il << " (expected 8).\n";
       felems.close();
       return false;
     }
@@ -213,8 +213,8 @@ bool ComponentElmer2d::Initialise(const std::string& header,
         std::cout << inode[k];
         if (k < 7) std::cout << ", ";
       }
-      std::cout << "\n    from element " << il + 1 << " of "
-                << nElements << " with material " << imat << ".\n";
+      std::cout << "\n    from element " << il + 1 << " of " << nElements
+                << " with material " << imat << ".\n";
     }
 
     // Check the material number and ensure that epsilon is non-negative.
@@ -241,7 +241,7 @@ bool ComponentElmer2d::Initialise(const std::string& header,
                   << " (line " << il << ").\n    Element: " << il
                   << ", material: " << imat << ".\n";
         ok = false;
-      } 
+      }
       // These elements must not be degenerate.
       for (size_t kk = k + 1; kk < 8; ++kk) {
         if (inode[k] == inode[kk]) degenerate = true;
@@ -267,7 +267,7 @@ bool ComponentElmer2d::Initialise(const std::string& header,
     // ElmerSolver manual (appendix D. at the time of this comment).
     // In order to work properly with Coordinates4 and Coordinates5, the
     // Elmer ordering 0,1,2,3,4,5,6,7 (counter-clockwise about the element)
-    // will need to be changed to 3,2,1,0,6,5,4,7 (clockwise about the element)   
+    // will need to be changed to 3,2,1,0,6,5,4,7 (clockwise about the element)
     // if the normal of the defined element points in the -Z direction.
 
     // Check the direction of the element normal, +Z or -Z.
@@ -311,7 +311,7 @@ bool ComponentElmer2d::Initialise(const std::string& header,
   return true;
 }
 
-bool ComponentElmer2d::SetWeightingField(const std::string& wvolt, 
+bool ComponentElmer2d::SetWeightingField(const std::string& wvolt,
                                          const std::string& label) {
   const std::string hdr = m_className + "::SetWeightingField:";
   if (!m_ready) {
@@ -332,9 +332,8 @@ bool ComponentElmer2d::SetWeightingField(const std::string& wvolt,
   return true;
 }
 
-bool ComponentElmer2d::LoadPotentials(const std::string& volt, 
+bool ComponentElmer2d::LoadPotentials(const std::string& volt,
                                       std::vector<double>& pot) {
-
   // Open the voltage list.
   std::ifstream fvolt(volt);
   if (!fvolt) {
@@ -358,8 +357,8 @@ bool ComponentElmer2d::LoadPotentials(const std::string& volt,
   // Should have stopped: if not, print error message.
   if (!readstop) {
     std::cerr << m_className << "::LoadPotentials:\n"
-              << "    Error reading past header of potentials file "
-              << volt << ".\n";
+              << "    Error reading past header of potentials file " << volt
+              << ".\n";
     fvolt.close();
     return false;
   }

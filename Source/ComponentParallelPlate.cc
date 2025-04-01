@@ -18,7 +18,6 @@ ComponentParallelPlate::ComponentParallelPlate() : Component("ParallelPlate") {}
 void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
                                    std::vector<double> d, const double V,
                                    std::vector<int> sigmaIndex) {
-
   // Here I switch conventions with the z-axis the direction of drift.
 
   if (N != eps.size() || N != d.size()) {
@@ -235,7 +234,6 @@ double ComponentParallelPlate::WeightingPotential(const double x,
                                                   const double y,
                                                   const double z,
                                                   const std::string &label) {
-
   // Here I switch conventions back with the y-axis the direction of drift.
 
   double ret = 0.;
@@ -283,7 +281,6 @@ void ComponentParallelPlate::UpdatePeriodicity() {
 void ComponentParallelPlate::AddPixel(double x, double z, double lx_input,
                                       double lz_input, const std::string &label,
                                       bool anode) {
-
   // Here I switch conventions back with the y-axis the direction of drift.
 
   const auto it = std::find(m_readout.cbegin(), m_readout.cend(), label);
@@ -345,9 +342,9 @@ void ComponentParallelPlate::AddPlane(const std::string &label, bool anode) {
   std::cout << m_className << "::AddPlane: Added plane electrode.\n";
 }
 
-Medium* ComponentParallelPlate::GetMedium(const double x, const double y,
+Medium *ComponentParallelPlate::GetMedium(const double x, const double y,
                                           const double z) {
-  Medium* medium = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
+  Medium *medium = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
   int i = -1;
   double eps = 0.;
   if (!getLayer(y, i, eps)) return nullptr;
@@ -392,7 +389,6 @@ bool ComponentParallelPlate::Ntheta(
 }
 
 void ComponentParallelPlate::constructGeometryMatrices(const int N) {
-
   int nRow = N;
 
   std::vector<std::vector<int>> sigmaMatrix;
@@ -411,9 +407,8 @@ void ComponentParallelPlate::constructGeometryMatrices(const int N) {
   }
 }
 
-void ComponentParallelPlate::constructGeometryFunction(const int N,
-    const std::vector<double>& d) {
-
+void ComponentParallelPlate::constructGeometryFunction(
+    const int N, const std::vector<double> &d) {
   int nRow = N;
   int nCol = pow(2, N - 1);
   // reset
@@ -472,8 +467,8 @@ void ComponentParallelPlate::constructGeometryFunction(const int N,
 }
 
 void ComponentParallelPlate::setHIntegrand() {
-#if __cplusplus > 201703L // C++20 or newer
-  auto hFunction = [=,this](double *k, double * /*p*/) {
+#if __cplusplus > 201703L  // C++20 or newer
+  auto hFunction = [=, this](double *k, double * /*p*/) {
 #else
   auto hFunction = [=](double *k, double * /*p*/) {
 #endif
@@ -506,9 +501,8 @@ void ComponentParallelPlate::setHIntegrand() {
 }
 
 void ComponentParallelPlate::setwpPixelIntegrand() {
-
-#if __cplusplus > 201703L // C++20 or newer
-  auto intFunction = [=,this](double *k, double *p) {
+#if __cplusplus > 201703L  // C++20 or newer
+  auto intFunction = [=, this](double *k, double *p) {
 #else
   auto intFunction = [=](double *k, double *p) {
 #endif
@@ -525,9 +519,8 @@ void ComponentParallelPlate::setwpPixelIntegrand() {
     double wy = p[5];
     double z = p[6];
 
-    double sol = cos(kx * (x - x0)) * sin(0.5 * kx * wx) * 
-                 cos(ky * (y - y0)) * sin(0.5 * ky * wy) * 
-                 m_hIntegrand.Eval(K, z) / (kx * ky);
+    double sol = cos(kx * (x - x0)) * sin(0.5 * kx * wx) * cos(ky * (y - y0)) *
+                 sin(0.5 * ky * wy) * m_hIntegrand.Eval(K, z) / (kx * ky);
 
     return 4 * sol / (Pi * Pi);
   };
@@ -544,9 +537,8 @@ void ComponentParallelPlate::setwpPixelIntegrand() {
 }
 
 void ComponentParallelPlate::setwpStripIntegrand() {
-
-#if __cplusplus > 201703L // C++20 or newer
-  auto intFunction = [=,this](double *k, double *p) {
+#if __cplusplus > 201703L  // C++20 or newer
+  auto intFunction = [=, this](double *k, double *p) {
 #else
   auto intFunction = [=](double *k, double *p) {
 #endif
@@ -561,7 +553,7 @@ void ComponentParallelPlate::setwpStripIntegrand() {
   };
   TF1 *wpStripIntegrand =
       new TF1("wpStripIntegrand", intFunction, 0, m_upperBoundIntegration, 4);
-  wpStripIntegrand->SetNpx(1000);  
+  wpStripIntegrand->SetNpx(1000);
   wpStripIntegrand->Copy(m_wpStripIntegral);
 
   delete wpStripIntegrand;
@@ -590,7 +582,6 @@ void ComponentParallelPlate::SetWeightingPotentialGrid(
     const double ymin, const double ymax, const double ysteps,
     const double zmin, const double zmax, const double zsteps,
     const std::string &label) {
-
   for (auto &electrode : m_readout_p) {
     if (electrode.label == label) {
       if (electrode.m_usegrid) {
@@ -601,7 +592,7 @@ void ComponentParallelPlate::SetWeightingPotentialGrid(
       if (electrode.grid.SetMesh(xsteps, ysteps, zsteps, xmin, xmax, ymin, ymax,
                                  zmin, zmax)) {
         std::cerr << m_className << "::SetWeightingPotentialGrid: Mesh set for "
-                  << label << " (for " << xsteps *ysteps *zsteps
+                  << label << " (for " << xsteps * ysteps * zsteps
                   << " points).\n";
       }
 
@@ -616,7 +607,6 @@ void ComponentParallelPlate::SetWeightingPotentialGrids(
     const double xmin, const double xmax, const double xsteps,
     const double ymin, const double ymax, const double ysteps,
     const double zmin, const double zmax, const double zsteps) {
-
   for (auto &electrode : m_readout_p) {
     SetWeightingPotentialGrid(xmin, xmax, xsteps, ymin, ymax, ysteps, zmin,
                               zmax, zsteps, electrode.label);

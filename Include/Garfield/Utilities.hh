@@ -2,23 +2,23 @@
 #define G_UTILITIES_H
 
 #include <algorithm>
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace Garfield {
 
 inline void ltrim(std::string& line) {
-  line.erase(line.begin(), 
-    std::find_if(line.begin(), line.end(),
-                 [](int ch) {return !std::isspace(ch);}));
+  line.erase(line.begin(), std::find_if(line.begin(), line.end(), [](int ch) {
+               return !std::isspace(ch);
+             }));
 }
 
 inline void rtrim(std::string& line) {
-  line.erase(
-    std::find_if(line.rbegin(), line.rend(), 
-                 [](int ch) {return !std::isspace(ch);}).base(), 
-    line.end());
+  line.erase(std::find_if(line.rbegin(), line.rend(),
+                          [](int ch) { return !std::isspace(ch); })
+                 .base(),
+             line.end());
 }
 
 inline std::vector<std::string> tokenize(const std::string& line) {
@@ -30,11 +30,10 @@ inline std::vector<std::string> tokenize(const std::string& line) {
   return words;
 }
 
-inline bool startsWith(const std::string& line, 
-                       const std::string& s) {
+inline bool startsWith(const std::string& line, const std::string& s) {
   return (line.rfind(s, 0) == 0);
 }
 
-}
+}  // namespace Garfield
 
 #endif

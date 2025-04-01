@@ -10,16 +10,17 @@
 
 namespace Garfield {
 
-  class Sensor;
-  class ViewDrift;
-  class Medium;
-/// Calculate drift lines and avalanches based on macroscopic transport coefficients, using Monte Carlo integration.
+class Sensor;
+class ViewDrift;
+class Medium;
+/// Calculate drift lines and avalanches based on macroscopic transport
+/// coefficients, using Monte Carlo integration.
 class AvalancheMC {
  public:
   /// Default constructor
   AvalancheMC() : AvalancheMC(nullptr) {}
   /// Constructor
-  AvalancheMC(Sensor* sensor); 
+  AvalancheMC(Sensor* sensor);
   /// Destructor
   ~AvalancheMC() {}
 
@@ -33,8 +34,7 @@ class AvalancheMC {
   bool DriftHole(const double x, const double y, const double z,
                  const double t);
   /// Simulate the drift line of an ion from a given starting point.
-  bool DriftIon(const double x, const double y, const double z,
-                const double t);
+  bool DriftIon(const double x, const double y, const double z, const double t);
   /// Simulate the drift line of a negative ion from a given starting point.
   bool DriftNegativeIon(const double x, const double y, const double z,
                         const double t);
@@ -59,7 +59,8 @@ class AvalancheMC {
   /// Add an ion to the list of particles to be transported.
   void AddIon(const double x, const double y, const double z, const double t);
   /// Add an negative ion to the list of particles to be transported.
-  void AddNegativeIon(const double x, const double y, const double z, const double t);
+  void AddNegativeIon(const double x, const double y, const double z,
+                      const double t);
   /// Resume the simulation from the current set of charge carriers.
   bool ResumeAvalanche(const bool electron = true, const bool hole = true);
 
@@ -69,15 +70,15 @@ class AvalancheMC {
   };
 
   struct EndPoint {
-    int status;                ///< Status flag.
-    std::vector<Point> path;   ///< Drift line.
+    int status;               ///< Status flag.
+    std::vector<Point> path;  ///< Drift line.
   };
 
   const std::vector<EndPoint>& GetElectrons() const { return m_electrons; }
   const std::vector<EndPoint>& GetHoles() const { return m_holes; }
   const std::vector<EndPoint>& GetIons() const { return m_ions; }
-  const std::vector<EndPoint>& GetNegativeIons() const { 
-    return m_negativeIons; 
+  const std::vector<EndPoint>& GetNegativeIons() const {
+    return m_negativeIons;
   }
 
   /** Return the number of electron trajectories in the last
@@ -93,15 +94,15 @@ class AvalancheMC {
    * \param x1,y1,z1,t1 coordinates and time of the end point
    * \param status status code (see GarfieldConstants.hh)
    */
-  void GetElectronEndpoint(const size_t i, double& x0, double& y0,
-                           double& z0, double& t0, double& x1, double& y1,
-                           double& z1, double& t1, int& status) const;
+  void GetElectronEndpoint(const size_t i, double& x0, double& y0, double& z0,
+                           double& t0, double& x1, double& y1, double& z1,
+                           double& t1, int& status) const;
   void GetIonEndpoint(const size_t i, double& x0, double& y0, double& z0,
                       double& t0, double& x1, double& y1, double& z1,
                       double& t1, int& status) const;
-  void GetNegativeIonEndpoint(const size_t i, double& x0, double& y0, double& z0,
-                              double& t0, double& x1, double& y1, double& z1,
-                              double& t1, int& status) const;
+  void GetNegativeIonEndpoint(const size_t i, double& x0, double& y0,
+                              double& z0, double& t0, double& x1, double& y1,
+                              double& z1, double& t1, int& status) const;
 
   /// Switch on drift line plotting.
   void EnablePlotting(ViewDrift* view);
@@ -244,10 +245,10 @@ class AvalancheMC {
   /// Number of negative ions produced
   unsigned int m_nNegativeIons = 0;
 
-  /// Start/end points of all electrons in the avalanche 
+  /// Start/end points of all electrons in the avalanche
   /// (including captured ones).
   std::vector<EndPoint> m_electrons;
-  /// Start/end points of all holes in the avalanche 
+  /// Start/end points of all holes in the avalanche
   /// (including captured ones).
   std::vector<EndPoint> m_holes;
   /// Start/end points of all positive ions in the avalanche.
@@ -299,7 +300,8 @@ class AvalancheMC {
   int GetField(const std::array<double, 3>& x, std::array<double, 3>& e,
                std::array<double, 3>& b, Medium*& medium) const;
   /// Retrieve the low-field mobility.
-  double GetMobility(const Particle particle, Medium* medium, const std::array<double, 3>& x) const;
+  double GetMobility(const Particle particle, Medium* medium,
+                     const std::array<double, 3>& x) const;
   /// Compute the drift velocity.
   bool GetVelocity(const Particle particle, Medium* medium,
                    const std::array<double, 3>& x,
@@ -334,19 +336,17 @@ class AvalancheMC {
   void Terminate(const std::array<double, 3>& x0, const double t0,
                  std::array<double, 3>& x, double& t) const;
   /// Compute multiplication and losses along the current drift line.
-  bool ComputeGainLoss(const Particle particle,
-                       std::vector<Point>& path, int& status,
-                       std::vector<std::pair<Point, Particle> > & secondaries,
+  bool ComputeGainLoss(const Particle particle, std::vector<Point>& path,
+                       int& status,
+                       std::vector<std::pair<Point, Particle> >& secondaries,
                        const bool semiconductor = false);
   /// Compute Townsend and attachment coefficients along the current drift line.
-  bool ComputeAlphaEta(const Particle particle,
-                       std::vector<Point>& path,
+  bool ComputeAlphaEta(const Particle particle, std::vector<Point>& path,
                        std::vector<double>& alphas,
                        std::vector<double>& etas) const;
   bool Equilibrate(std::vector<double>& alphas) const;
   /// Compute the induced signal for the current drift line.
-  void ComputeSignal(const double q,
-                     const std::vector<Point>& path) const;
+  void ComputeSignal(const double q, const std::vector<Point>& path) const;
   /// Compute the induced charge for the current drift line.
   void ComputeInducedCharge(const double q,
                             const std::vector<Point>& path) const;

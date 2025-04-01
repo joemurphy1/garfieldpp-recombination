@@ -1,13 +1,15 @@
+#include "heed++/code/HeedParticle_BGM.h"
+
 #include <iomanip>
 #include <numeric>
+
+#include "Garfield/Random.hh"
+#include "heed++/code/EnTransfCS_BGM.h"
+#include "heed++/code/HeedCluster.h"
+#include "heed++/code/HeedPhoton.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/math/kinem.h"
 #include "wcpplib/math/tline.h"
-#include "heed++/code/HeedParticle_BGM.h"
-#include "heed++/code/HeedCluster.h"
-#include "heed++/code/HeedPhoton.h"
-#include "heed++/code/EnTransfCS_BGM.h"
-#include "Garfield/Random.hh"
 
 // 2003-2008, I. Smirnov
 
@@ -16,12 +18,12 @@ namespace Heed {
 using CLHEP::c_light;
 using CLHEP::c_squared;
 using CLHEP::cm;
-using CLHEP::MeV;
 using CLHEP::electron_mass_c2;
+using CLHEP::MeV;
 
 HeedParticle_BGM::HeedParticle_BGM(manip_absvol* primvol, const point& pt,
                                    const vec& vel, double ftime,
-                                   particle_def* fpardef, fieldmap* fm, 
+                                   particle_def* fpardef, fieldmap* fm,
                                    const bool floss_only,
                                    const bool fprint_listing)
     : eparticle(primvol, pt, vel, ftime, fpardef, fm),
@@ -87,8 +89,9 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
   if (m_print_listing) Iprintn(mcout, qa);
   basis tempbas(m_currpos.dir, "tempbas");
   // Shorthand.
-  const auto sampleTransfer = t_hisran_step_ar<double, std::vector<double>,
-                                               PointCoorMesh<double, const double*> >;
+  const auto sampleTransfer =
+      t_hisran_step_ar<double, std::vector<double>,
+                       PointCoorMesh<double, const double*> >;
   for (long na = 0; na < qa; ++na) {
     if (m_print_listing) Iprintn(mcout, na);
     long qs = hmd->apacs[na]->get_qshell();
@@ -104,8 +107,10 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
       for (long nt = 0; nt < qt; nt++) {
         // Sample the energy transfer in this collision.
         const double rn = Garfield::RndmUniform();
-        const double r1 = sampleTransfer(pcm_e, etcs->etcs_bgm[n1].fadda[na][ns], rn);
-        const double r2 = sampleTransfer(pcm_e, etcs->etcs_bgm[n2].fadda[na][ns], rn);
+        const double r1 =
+            sampleTransfer(pcm_e, etcs->etcs_bgm[n1].fadda[na][ns], rn);
+        const double r2 =
+            sampleTransfer(pcm_e, etcs->etcs_bgm[n2].fadda[na][ns], rn);
         const double r = f1 * r1 + f2 * r2;
         if (m_print_listing) {
           Iprintn(mcout, rn);
@@ -169,4 +174,4 @@ void HeedParticle_BGM::print(std::ostream& file, int l) const {
   mparticle::print(file, l - 1);
   Iprintn(mcout, m_edep);
 }
-}
+}  // namespace Heed

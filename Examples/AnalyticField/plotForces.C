@@ -1,8 +1,8 @@
-#include <vector>
-
 #include <TApplication.h>
-#include <TH2D.h>
 #include <TCanvas.h>
+#include <TH2D.h>
+
+#include <vector>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
@@ -10,11 +10,10 @@
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
- 
+
   // Make a gas medium.
   MediumMagboltz gas;
 
@@ -22,12 +21,12 @@ int main(int argc, char * argv[]) {
   ComponentAnalyticField cmp;
   cmp.SetMedium(&gas);
   cmp.AddPlaneY(-0.2, 0.);
-  cmp.AddPlaneY( 4.0, 0.);
+  cmp.AddPlaneY(4.0, 0.);
   constexpr double d = 0.01;
   cmp.AddWire(0.0, 0.0, d, 2000., "s");
-  cmp.AddWire(0.0, 0.2, d,   0.);
-  cmp.AddWire(0.2, 0.2, d,   0.);
-  
+  cmp.AddWire(0.0, 0.2, d, 0.);
+  cmp.AddWire(0.2, 0.2, d, 0.);
+
   cmp.SetPeriodicityX(0.4);
   cmp.PrintCell();
 
@@ -41,10 +40,10 @@ int main(int argc, char * argv[]) {
   std::vector<std::vector<double> > fy;
   cmp.ForcesOnWire(0, x, y, fx, fy);
 
-  TH2D hFY("hFY", "y-component;x [mm];y [mm];F_{y} [N]", 
-           nX, -1.5, 1.5, nY, -1.5, 1.5);
+  TH2D hFY("hFY", "y-component;x [mm];y [mm];F_{y} [N]", nX, -1.5, 1.5, nY,
+           -1.5, 1.5);
   for (unsigned int i = 0; i < nX; ++i) {
-    for (unsigned int j = 0; j < nY; ++j) {  
+    for (unsigned int j = 0; j < nY; ++j) {
       hFY.SetBinContent(i, j, fy[i][j]);
     }
   }

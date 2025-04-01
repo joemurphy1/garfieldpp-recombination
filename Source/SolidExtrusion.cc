@@ -1,25 +1,23 @@
-#include <cmath>
+#include "Garfield/SolidExtrusion.hh"
+
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include "Garfield/Polygon.hh"
-#include "Garfield/SolidExtrusion.hh"
 
 namespace Garfield {
 
-SolidExtrusion::SolidExtrusion(const double lz,
-                               const std::vector<double>& xp,
+SolidExtrusion::SolidExtrusion(const double lz, const std::vector<double>& xp,
                                const std::vector<double>& yp)
     : Solid(0, 0, 0, "SolidExtrusion"), m_lZ(lz) {
   SetProfile(xp, yp);
 }
 
-SolidExtrusion::SolidExtrusion(const double lz,
-                               const std::vector<double>& xp,
-                               const std::vector<double>& yp,
-                               const double cx, const double cy,  
-                               const double cz,
-                               const double dx, const double dy, 
+SolidExtrusion::SolidExtrusion(const double lz, const std::vector<double>& xp,
+                               const std::vector<double>& yp, const double cx,
+                               const double cy, const double cz,
+                               const double dx, const double dy,
                                const double dz)
     : SolidExtrusion(lz, xp, yp) {
   m_cX = cx;
@@ -30,7 +28,6 @@ SolidExtrusion::SolidExtrusion(const double lz,
 
 bool SolidExtrusion::IsInside(const double x, const double y, const double z,
                               const bool /*tesselated*/) const {
-
   if (m_xp.empty()) return false;
   // Transform the point to local coordinates.
   double u = x, v = y, w = z;
@@ -42,8 +39,8 @@ bool SolidExtrusion::IsInside(const double x, const double y, const double z,
 }
 
 bool SolidExtrusion::GetBoundingBox(double& xmin, double& ymin, double& zmin,
-                              double& xmax, double& ymax, double& zmax) const {
-
+                                    double& xmax, double& ymax,
+                                    double& zmax) const {
   if (m_xp.empty()) return false;
   const double x0 = *std::min_element(m_xp.begin(), m_xp.end());
   const double x1 = *std::max_element(m_xp.begin(), m_xp.end());
@@ -51,7 +48,7 @@ bool SolidExtrusion::GetBoundingBox(double& xmin, double& ymin, double& zmin,
   const double y1 = *std::max_element(m_yp.begin(), m_yp.end());
   // Take the margins wide.
   const double r = std::max({fabs(x0), fabs(y0), fabs(x1), fabs(y1)});
-  const double d = sqrt(r * r + m_lZ * m_lZ); 
+  const double d = sqrt(r * r + m_lZ * m_lZ);
   xmin = m_cX - d;
   xmax = m_cX + d;
   ymin = m_cY - d;
@@ -71,7 +68,6 @@ void SolidExtrusion::SetHalfLengthZ(const double lz) {
 
 void SolidExtrusion::SetProfile(const std::vector<double>& xp,
                                 const std::vector<double>& yp) {
-
   if (xp.size() != yp.size()) {
     std::cerr << "SolidExtrusion::SetProfile:\n"
               << "    Mismatch between number of x and y coordinates.\n";
@@ -89,7 +85,7 @@ void SolidExtrusion::SetProfile(const std::vector<double>& xp,
   const auto it = std::max_element(xp.begin(), xp.end());
   const unsigned int i0 = std::distance(xp.begin(), it);
   const unsigned int i1 = i0 < np - 1 ? i0 + 1 : 0;
-  const unsigned int i2 = i1 < np - 1 ? i1 + 1 : 0; 
+  const unsigned int i2 = i1 < np - 1 ? i1 + 1 : 0;
   const double det = (xp[i1] - xp[i0]) * (yp[i2] - yp[i0]) -
                      (xp[i2] - xp[i0]) * (yp[i1] - yp[i0]);
   if (det < 0.) {
@@ -98,7 +94,7 @@ void SolidExtrusion::SetProfile(const std::vector<double>& xp,
     m_clockwise = false;
   } else {
     std::cerr << "SolidExtrusion::SetProfile:\n"
-              << "    Unable to determine profile orientation;" 
+              << "    Unable to determine profile orientation;"
               << "    assuming it is clockwise.\n";
     m_clockwise = true;
   }
@@ -219,7 +215,6 @@ bool SolidExtrusion::SolidPanels(std::vector<Panel>& panels) {
 }
 
 double SolidExtrusion::GetDiscretisationLevel(const Panel& panel) {
-
   // Transform the normal vector to local coordinates.
   double u = 0., v = 0., w = 0.;
   VectorToLocal(panel.a, panel.b, panel.c, u, v, w);
@@ -235,7 +230,6 @@ double SolidExtrusion::GetDiscretisationLevel(const Panel& panel) {
 void SolidExtrusion::Cut(const double x0, const double y0, const double z0,
                          const double xn, const double yn, const double zn,
                          std::vector<Panel>& panels) {
-
   //-----------------------------------------------------------------------
   //   PLAEXC - Cuts extrusion with a plane.
   //-----------------------------------------------------------------------
@@ -243,18 +237,17 @@ void SolidExtrusion::Cut(const double x0, const double y0, const double z0,
   std::vector<double> xv;
   std::vector<double> yv;
   std::vector<double> zv;
-  const unsigned int np = m_xp.size(); 
+  const unsigned int np = m_xp.size();
   // Go through the lines of the top lid, first point.
   double x1, y1, z1;
   ToGlobal(m_xp.back(), m_yp.back(), m_lZ, x1, y1, z1);
   // Loop over the points.
-  for (unsigned int i = 0; i < np; ++i) { 
+  for (unsigned int i = 0; i < np; ++i) {
     double x2, y2, z2;
     ToGlobal(m_xp[i], m_yp[i], m_lZ, x2, y2, z2);
     // Cut with the plane.
     double xc, yc, zc;
-    if (Intersect(x1, y1, z1, x2, y2, z2, 
-                  x0, y0, z0, xn, yn, zn, xc, yc, zc)) {
+    if (Intersect(x1, y1, z1, x2, y2, z2, x0, y0, z0, xn, yn, zn, xc, yc, zc)) {
       xv.push_back(xc);
       yv.push_back(yc);
       zv.push_back(zc);
@@ -273,8 +266,8 @@ void SolidExtrusion::Cut(const double x0, const double y0, const double z0,
       double x2, y2, z2;
       ToGlobal(m_xp[i], m_yp[i], -m_lZ, x2, y2, z2);
       double xc, yc, zc;
-      if (Intersect(x1, y1, z1, x2, y2, z2,
-                    x0, y0, z0, xn, yn, zn, xc, yc, zc)) {
+      if (Intersect(x1, y1, z1, x2, y2, z2, x0, y0, z0, xn, yn, zn, xc, yc,
+                    zc)) {
         xv.push_back(xc);
         yv.push_back(yc);
         zv.push_back(zc);
@@ -291,8 +284,8 @@ void SolidExtrusion::Cut(const double x0, const double y0, const double z0,
       double x2, y2, z2;
       ToGlobal(m_xp[i], m_yp[i], -m_lZ, x2, y2, z2);
       double xc, yc, zc;
-      if (Intersect(x1, y1, z1, x2, y2, z2, 
-                    x0, y0, z0, xn, yn, zn, xc, yc, zc)) {
+      if (Intersect(x1, y1, z1, x2, y2, z2, x0, y0, z0, xn, yn, zn, xc, yc,
+                    zc)) {
         xv.push_back(xc);
         yv.push_back(yc);
         zv.push_back(zc);
@@ -314,5 +307,5 @@ void SolidExtrusion::Cut(const double x0, const double y0, const double z0,
     panels.push_back(std::move(panel));
   }
 }
- 
-}
+
+}  // namespace Garfield

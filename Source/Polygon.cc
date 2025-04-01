@@ -1,9 +1,10 @@
-#include <array>
+#include "Garfield/Polygon.hh"
+
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <iostream>
 
-#include "Garfield/Polygon.hh"
 #include "Garfield/Random.hh"
 
 namespace {
@@ -126,11 +127,9 @@ bool Crossing(const double x1, const double y1, const double x2,
 
 /// Determines whether the 2 straight lines (x1, y1) to (x2, y2)
 /// and (u1, u2) to (v1, v2) cross at an intermediate point for both lines.
-bool Crossing(const double x1, const double y1, 
-              const double x2, const double y2,
-              const double u1, const double v1,
+bool Crossing(const double x1, const double y1, const double x2,
+              const double y2, const double u1, const double v1,
               const double u2, const double v2) {
-
   std::array<std::array<double, 2>, 2> a;
   // Matrix to compute the crossing point.
   a[0][0] = y2 - y1;
@@ -146,7 +145,7 @@ bool Crossing(const double x1, const double y1,
                                                   std::abs(v1), std::abs(v2)}),
                                1.e-10);
   // Check for a point of one line located on the other line.
-  if (OnLine(x1, y1, x2, y2, u1, v1) || OnLine(x1, y1, x2, y2, u2, v2) || 
+  if (OnLine(x1, y1, x2, y2, u1, v1) || OnLine(x1, y1, x2, y2, u2, v2) ||
       OnLine(u1, v1, u2, v2, x1, y1) || OnLine(u1, v1, u2, v2, x2, y2)) {
     // Point on other line.
     return true;
@@ -163,10 +162,10 @@ bool Crossing(const double x1, const double y1,
   a[0][1] = -a[0][1] * invdet;
   a[1][0] = -a[1][0] * invdet;
   // Compute crossing point.
-  const double xc = a[0][0] * (x1 * y2 - x2 * y1) + 
-                    a[0][1] * (u1 * v2 - u2 * v1);
-  const double yc = a[1][0] * (x1 * y2 - x2 * y1) +
-                    a[1][1] * (u1 * v2 - u2 * v1);
+  const double xc =
+      a[0][0] * (x1 * y2 - x2 * y1) + a[0][1] * (u1 * v2 - u2 * v1);
+  const double yc =
+      a[1][0] * (x1 * y2 - x2 * y1) + a[1][1] * (u1 * v2 - u2 * v1);
   // See whether the crossing point is on both lines.
   if (OnLine(x1, y1, x2, y2, xc, yc) && OnLine(u1, v1, u2, v2, xc, yc)) {
     return true;
@@ -175,7 +174,7 @@ bool Crossing(const double x1, const double y1,
   return false;
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -269,21 +268,18 @@ void Inside(const std::vector<double>& xpl, const std::vector<double>& ypl,
 }
 
 double Area(const std::vector<double>& xp, const std::vector<double>& yp) {
-
   double f = 0.;
   const unsigned int n = xp.size();
   for (unsigned int i = 0; i < n; ++i) {
     const unsigned int ii = i < n - 1 ? i + 1 : 0;
-    f += xp[i] * yp[ii] - xp[ii] * yp[i];  
+    f += xp[i] * yp[ii] - xp[ii] * yp[i];
   }
-  return 0.5 * f; 
+  return 0.5 * f;
 }
 
-bool NonTrivial(const std::vector<double>& xp, 
-                const std::vector<double>& yp) {
-
+bool NonTrivial(const std::vector<double>& xp, const std::vector<double>& yp) {
   // -----------------------------------------------------------------------
-  // PLACHK - Checks whether a set of points builds a non-trivial 
+  // PLACHK - Checks whether a set of points builds a non-trivial
   //           polygon in the (x,y) plane.
   // -----------------------------------------------------------------------
 
@@ -329,7 +325,7 @@ bool NonTrivial(const std::vector<double>& xp,
   if (d1 <= epsx * epsx + epsy * epsy || i1 == 0) return false;
 
   // Find a third point maximising the external product.
-  double d2 = 0.; 
+  double d2 = 0.;
   unsigned int i2 = 0;
   for (unsigned int i = 1; i < np; ++i) {
     if (i == i1) continue;
@@ -400,7 +396,7 @@ void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
     zp[nNew] = zp[i];
     ++nNew;
   }
-  // std::cout << "ElminateButterflies: old/new number of points: " << np 
+  // std::cout << "ElminateButterflies: old/new number of points: " << np
   //           << "/" << nNew << "\n";
   // Update the number of points.
   np = nNew;
@@ -414,7 +410,7 @@ void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
   if (xsurf > ysurf && xsurf > zsurf) {
     iaxis = 1;
   } else if (ysurf > zsurf) {
-    iaxis = 2; 
+    iaxis = 2;
   } else {
     iaxis = 3;
   }
@@ -431,14 +427,14 @@ void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
         const unsigned int jj = (j + 1) % np;
         if (j + 1 >= np && jj >= i) continue;
         // Check for a crossing.
-        if (iaxis == 1 && !Crossing(yp[i], zp[i], yp[ii], zp[ii],
-                                    yp[j], zp[j], yp[jj], zp[jj])) {
+        if (iaxis == 1 && !Crossing(yp[i], zp[i], yp[ii], zp[ii], yp[j], zp[j],
+                                    yp[jj], zp[jj])) {
           continue;
-        } else if (iaxis == 2 && !Crossing(xp[i], zp[i], xp[ii], zp[ii],
-                                           xp[j], zp[j], xp[jj], zp[jj])) {
+        } else if (iaxis == 2 && !Crossing(xp[i], zp[i], xp[ii], zp[ii], xp[j],
+                                           zp[j], xp[jj], zp[jj])) {
           continue;
-        } else if (iaxis == 3 && !Crossing(xp[i], yp[i], xp[ii], yp[ii],
-                                           xp[j], yp[j], xp[jj], yp[jj])) {
+        } else if (iaxis == 3 && !Crossing(xp[i], yp[i], xp[ii], yp[ii], xp[j],
+                                           yp[j], xp[jj], yp[jj])) {
           continue;
         }
         // If there is a crossing, exchange the portion in between.
@@ -462,6 +458,6 @@ void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
   }
 }
 
-}
+}  // namespace Polygon
 
-}
+}  // namespace Garfield

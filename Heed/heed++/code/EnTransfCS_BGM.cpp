@@ -1,7 +1,8 @@
+#include "heed++/code/EnTransfCS_BGM.h"
+
 #include <iomanip>
 
 #include "wcpplib/util/FunNameStack.h"
-#include "heed++/code/EnTransfCS_BGM.h"
 
 namespace Heed {
 
@@ -54,4 +55,4 @@ void EnTransfCS_BGM::print(std::ostream& file, int l) const {
   }
   indn.n -= 2;
 }
-}
+}  // namespace Heed

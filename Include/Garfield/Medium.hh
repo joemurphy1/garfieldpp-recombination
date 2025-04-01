@@ -1,4 +1,5 @@
-// Include this header if we're compiling with the GPU or this is the first time without
+// Include this header if we're compiling with the GPU or this is the first time
+// without
 #if defined(__GPUCOMPILE__) || !defined(G_MEDIUM_H)
 
 #if !defined(__GPUCOMPILE__) && !defined(G_MEDIUM_H)
@@ -22,24 +23,23 @@ class TPad;
 
 namespace Garfield {
 
-
-// setup class names depending on if this is compiling the GPU static version or not
+// setup class names depending on if this is compiling the GPU static version or
+// not
 #ifdef __GPUCOMPILE__
 #else
-  class MediumGPU;
+class MediumGPU;
 #endif
 
 /// Abstract base class for components.
 
 class GARFIELD_CLASS_NAME(Medium) {
  public:
-
- #ifdef __GPUCOMPILE__
+#ifdef __GPUCOMPILE__
   /// Constructor
   GARFIELD_CLASS_NAME(Medium)() = default;
   /// Destructor
   ~GARFIELD_CLASS_NAME(Medium)() {};
- #else
+#else
   /// Constructor
   GARFIELD_CLASS_NAME(Medium)();
   /// Destructor
@@ -97,8 +97,8 @@ class GARFIELD_CLASS_NAME(Medium) {
   /// Switch electron/ion/hole transport on/off.
   virtual void EnableDrift(const bool on = true) { m_driftable = on; }
   /// Make the medium ionisable or non-ionisable.
-  virtual void EnablePrimaryIonisation(const bool on = true) { 
-    m_ionisable = on; 
+  virtual void EnablePrimaryIonisation(const bool on = true) {
+    m_ionisable = on;
   }
 #endif
 
@@ -137,7 +137,8 @@ class GARFIELD_CLASS_NAME(Medium) {
                                 const double ez, const double bx,
                                 const double by, const double bz, double& vx,
                                 double& vy, double& vz);
-  /// Flux (mean velocity; shorthand: wv) and bulk (center of mass velocity; shorthand: wr) drift velocity [cm / ns]
+  /// Flux (mean velocity; shorthand: wv) and bulk (center of mass velocity;
+  /// shorthand: wr) drift velocity [cm / ns]
   virtual bool ElectronVelocityFluxBulk(const double ex, const double ey,
                                         const double ez, const double bx,
                                         const double by, const double bz,
@@ -171,9 +172,9 @@ class GARFIELD_CLASS_NAME(Medium) {
                                      double& riontof);
   /// TOF Attachment Rate [ns-1]
   virtual bool ElectronTOFAttachment(const double ex, const double ey,
-                                         const double ez, const double bx,
-                                         const double by, const double bz,
-                                         double& ratttof);
+                                     const double ez, const double bx,
+                                     const double by, const double bz,
+                                     double& ratttof);
   /// Lorentz angle
   virtual bool ElectronLorentzAngle(const double ex, const double ey,
                                     const double ez, const double bx,
@@ -187,7 +188,7 @@ class GARFIELD_CLASS_NAME(Medium) {
   virtual double GetElectronEnergy(const double px, const double py,
                                    const double pz, double& vx, double& vy,
                                    double& vz, const int band = 0);
-  /// Sample the momentum vector for a given energy 
+  /// Sample the momentum vector for a given energy
   /// (only meaningful in semiconductors).
   virtual void GetElectronMomentum(const double e, double& px, double& py,
                                    double& pz, int& band);
@@ -200,11 +201,11 @@ class GARFIELD_CLASS_NAME(Medium) {
 
   __device__ cuda_t GetElectronCollisionRate(const cuda_t e, const int band);
 
-  __device__ bool ElectronCollision(
-      const cuda_t e, int& type, int& level, cuda_t& e1,
-      cuda_t& dx, cuda_t& dy, cuda_t& dz,
-      Particle *secondaries_type, cuda_t *secondaries_energy, int &num_secondaries, int& ndxc,
-      int& band);
+  __device__ bool ElectronCollision(const cuda_t e, int& type, int& level,
+                                    cuda_t& e1, cuda_t& dx, cuda_t& dy,
+                                    cuda_t& dz, Particle* secondaries_type,
+                                    cuda_t* secondaries_energy,
+                                    int& num_secondaries, int& ndxc, int& band);
 #else
   /// Collision rate [ns-1] for given electron energy
   virtual double GetElectronCollisionRate(const double e, const int band = 0);
@@ -212,14 +213,13 @@ class GARFIELD_CLASS_NAME(Medium) {
     Particle type = Particle::Electron;
     double energy = 0.;
     double time = 0.;
-    double distance = 0.; 
+    double distance = 0.;
   };
   /// Sample the collision type. Update energy and direction vector.
-  virtual bool ElectronCollision(
-      const double e, int& type, int& level, double& e1, 
-      double& dx, double& dy, double& dz, 
-      std::vector<Secondary>& secondaries, 
-      int& band);
+  virtual bool ElectronCollision(const double e, int& type, int& level,
+                                 double& e1, double& dx, double& dy, double& dz,
+                                 std::vector<Secondary>& secondaries,
+                                 int& band);
 #endif
 
 #ifndef __GPUCOMPILE__
@@ -265,17 +265,17 @@ class GARFIELD_CLASS_NAME(Medium) {
   virtual double IonMobility();
 
   /// Negative ion drift velocity [cm / ns]
-  virtual bool NegativeIonVelocity(
-    const double ex, const double ey, const double ez,
-    const double bx, const double by, const double bz,
-    double& vx, double& vy, double& vz);
+  virtual bool NegativeIonVelocity(const double ex, const double ey,
+                                   const double ez, const double bx,
+                                   const double by, const double bz, double& vx,
+                                   double& vy, double& vz);
   /// Low-field negative ion mobility [cm2 V-1 ns-1]
   virtual double NegativeIonMobility();
 
   /// Set the range of fields to be covered by the transport tables.
   void SetFieldGrid(double emin, double emax, const size_t ne, bool logE,
                     double bmin = 0., double bmax = 0., const size_t nb = 1,
-                    double amin = HalfPi, double amax = HalfPi, 
+                    double amin = HalfPi, double amax = HalfPi,
                     const size_t na = 1);
   /// Set the fields and E-B angles to be used in the transport tables.
   void SetFieldGrid(const std::vector<double>& efields,
@@ -286,54 +286,54 @@ class GARFIELD_CLASS_NAME(Medium) {
                     std::vector<double>& angles);
 
   /// Set an entry in the table of drift speeds along E.
-  bool SetElectronVelocityE(const size_t ie, const size_t ib,
-                            const size_t ia, const double v) {
+  bool SetElectronVelocityE(const size_t ie, const size_t ib, const size_t ia,
+                            const double v) {
     return SetEntry(ie, ib, ia, "ElectronVelocityE", m_eVelE, v);
   }
   /// Get an entry in the table of drift speeds along E.
-  bool GetElectronVelocityE(const size_t ie, const size_t ib,
-                            const size_t ia, double& v) {
+  bool GetElectronVelocityE(const size_t ie, const size_t ib, const size_t ia,
+                            double& v) {
     return GetEntry(ie, ib, ia, "ElectronVelocityE", m_eVelE, v);
   }
   /// Set an entry in the table of drift speeds along ExB.
-  bool SetElectronVelocityExB(const size_t ie, const size_t ib,
-                              const size_t ia, const double v) {
+  bool SetElectronVelocityExB(const size_t ie, const size_t ib, const size_t ia,
+                              const double v) {
     return SetEntry(ie, ib, ia, "ElectronVelocityExB", m_eVelX, v);
   }
   /// Get an entry in the table of drift speeds along ExB.
-  bool GetElectronVelocityExB(const size_t ie, const size_t ib,
-                              const size_t ia, double& v) {
+  bool GetElectronVelocityExB(const size_t ie, const size_t ib, const size_t ia,
+                              double& v) {
     return GetEntry(ie, ib, ia, "ElectronVelocityExB", m_eVelX, v);
   }
   /// Set an entry in the table of drift speeds along Btrans.
-  bool SetElectronVelocityB(const size_t ie, const size_t ib,
-                            const size_t ia, const double v) {
+  bool SetElectronVelocityB(const size_t ie, const size_t ib, const size_t ia,
+                            const double v) {
     return SetEntry(ie, ib, ia, "ElectronVelocityB", m_eVelB, v);
   }
   /// Get an entry in the table of drift speeds along Btrans.
-  bool GetElectronVelocityB(const size_t ie, const size_t ib,
-                            const size_t ia, double& v) {
+  bool GetElectronVelocityB(const size_t ie, const size_t ib, const size_t ia,
+                            double& v) {
     return GetEntry(ie, ib, ia, "ElectronVelocityB", m_eVelB, v);
   }
   /// Set an entry in the table of flux drift speeds.
   bool SetElectronFluxVelocity(const size_t ie, const size_t ib,
-                             const size_t ia, const double v) {
-      return SetEntry(ie, ib, ia, "ElectronFluxVelocity", m_eVelWv, v);
+                               const size_t ia, const double v) {
+    return SetEntry(ie, ib, ia, "ElectronFluxVelocity", m_eVelWv, v);
   }
   /// Get an entry in the table of flux drift speeds.
   bool GetElectronFluxVelocity(const size_t ie, const size_t ib,
-                             const size_t ia, double& v) {
-      return GetEntry(ie, ib, ia, "ElectronFluxVelocity", m_eVelWv, v);
+                               const size_t ia, double& v) {
+    return GetEntry(ie, ib, ia, "ElectronFluxVelocity", m_eVelWv, v);
   }
   /// Set an entry in the table of bulk drift speeds.
   bool SetElectronBulkVelocity(const size_t ie, const size_t ib,
-                             const size_t ia, const double v) {
-      return SetEntry(ie, ib, ia, "ElectronBulkVelocity", m_eVelWr, v);
+                               const size_t ia, const double v) {
+    return SetEntry(ie, ib, ia, "ElectronBulkVelocity", m_eVelWr, v);
   }
   /// Get an entry in the table of bulk drift speeds.
   bool GetElectronBulkVelocity(const size_t ie, const size_t ib,
-                             const size_t ia, double& v) {
-      return GetEntry(ie, ib, ia, "ElectronBulkVelocity", m_eVelWr, v);
+                               const size_t ia, double& v) {
+    return GetEntry(ie, ib, ia, "ElectronBulkVelocity", m_eVelWr, v);
   }
   /// Set an entry in the table of longitudinal diffusion coefficients.
   bool SetElectronLongitudinalDiffusion(const size_t ie, const size_t ib,
@@ -356,44 +356,44 @@ class GARFIELD_CLASS_NAME(Medium) {
     return GetEntry(ie, ib, ia, "ElectronTransverseDiffusion", m_eDifT, dt);
   }
   /// Set an entry in the table of Townsend coefficients.
-  bool SetElectronTownsend(const size_t ie, const size_t ib,
-                           const size_t ia, const double alpha) {
+  bool SetElectronTownsend(const size_t ie, const size_t ib, const size_t ia,
+                           const double alpha) {
     return SetEntry(ie, ib, ia, "ElectronTownsend", m_eAlp, alpha);
   }
   /// Get an entry in the table of Townsend coefficients.
-  bool GetElectronTownsend(const size_t ie, const size_t ib,
-                           const size_t ia, double& alpha) {
+  bool GetElectronTownsend(const size_t ie, const size_t ib, const size_t ia,
+                           double& alpha) {
     return GetEntry(ie, ib, ia, "ElectronTownsend", m_eAlp, alpha);
   }
   /// Set an entry in the table of attachment coefficients.
-  bool SetElectronAttachment(const size_t ie, const size_t ib,
-                             const size_t ia, const double eta) {
+  bool SetElectronAttachment(const size_t ie, const size_t ib, const size_t ia,
+                             const double eta) {
     return SetEntry(ie, ib, ia, "ElectronAttachment", m_eAtt, eta);
   }
   /// Get an entry in the table of attachment coefficients.
-  bool GetElectronAttachment(const size_t ie, const size_t ib,
-                             const size_t ia, double& eta) {
+  bool GetElectronAttachment(const size_t ie, const size_t ib, const size_t ia,
+                             double& eta) {
     return GetEntry(ie, ib, ia, "ElectronAttachment", m_eAtt, eta);
   }
   /// Set an entry in the table of ionization rate of TOF.
   bool SetElectronTOFIonisation(const size_t ie, const size_t ib,
-                          const size_t ia, const double v) {
-      return SetEntry(ie, ib, ia, "ElectronTOFIonisation", m_eRIon, v);
+                                const size_t ia, const double v) {
+    return SetEntry(ie, ib, ia, "ElectronTOFIonisation", m_eRIon, v);
   }
   /// Get an entry in the table of ionization rate of TOF.
   bool GetElectronTOFIonisation(const size_t ie, const size_t ib,
-                          const size_t ia, double& v) {
-      return GetEntry(ie, ib, ia, "ElectronTOFIonisation", m_eRIon, v);
+                                const size_t ia, double& v) {
+    return GetEntry(ie, ib, ia, "ElectronTOFIonisation", m_eRIon, v);
   }
   /// Set an entry in the table of attachment rate of TOF.
   bool SetElectronTOFAttachment(const size_t ie, const size_t ib,
-                          const size_t ia, const double v) {
-      return SetEntry(ie, ib, ia, "ElectronTOFAttachment", m_eRAtt, v);
+                                const size_t ia, const double v) {
+    return SetEntry(ie, ib, ia, "ElectronTOFAttachment", m_eRAtt, v);
   }
   /// Get an entry in the table of attachment rate of TOF.
   bool GetElectronTOFAttachment(const size_t ie, const size_t ib,
-                          const size_t ia, double& v) {
-      return GetEntry(ie, ib, ia, "ElectronTOFAttachment", m_eRAtt, v);
+                                const size_t ia, double& v) {
+    return GetEntry(ie, ib, ia, "ElectronTOFAttachment", m_eRAtt, v);
   }
 
   /// Set an entry in the table of Lorentz angles.
@@ -408,33 +408,33 @@ class GARFIELD_CLASS_NAME(Medium) {
   }
 
   /// Set an entry in the table of drift speeds along E.
-  bool SetHoleVelocityE(const size_t ie, const size_t ib,
-                        const size_t ia, const double v) {
+  bool SetHoleVelocityE(const size_t ie, const size_t ib, const size_t ia,
+                        const double v) {
     return SetEntry(ie, ib, ia, "HoleVelocityE", m_hVelE, v);
   }
   /// Get an entry in the table of drift speeds along E.
-  bool GetHoleVelocityE(const size_t ie, const size_t ib,
-                        const size_t ia, double& v) {
+  bool GetHoleVelocityE(const size_t ie, const size_t ib, const size_t ia,
+                        double& v) {
     return GetEntry(ie, ib, ia, "HoleVelocityE", m_hVelE, v);
   }
   /// Set an entry in the table of drift speeds along ExB.
-  bool SetHoleVelocityExB(const size_t ie, const size_t ib,
-                          const size_t ia, const double v) {
+  bool SetHoleVelocityExB(const size_t ie, const size_t ib, const size_t ia,
+                          const double v) {
     return SetEntry(ie, ib, ia, "HoleVelocityExB", m_hVelX, v);
   }
   /// Get an entry in the table of drift speeds along ExB.
-  bool GetHoleVelocityExB(const size_t ie, const size_t ib,
-                          const size_t ia, double& v) {
+  bool GetHoleVelocityExB(const size_t ie, const size_t ib, const size_t ia,
+                          double& v) {
     return GetEntry(ie, ib, ia, "HoleVelocityExB", m_hVelX, v);
   }
   /// Set an entry in the table of drift speeds along Btrans.
-  bool SetHoleVelocityB(const size_t ie, const size_t ib,
-                        const size_t ia, const double v) {
+  bool SetHoleVelocityB(const size_t ie, const size_t ib, const size_t ia,
+                        const double v) {
     return SetEntry(ie, ib, ia, "HoleVelocityB", m_hVelB, v);
   }
   /// Get an entry in the table of drift speeds along Btrans.
-  bool GetHoleVelocityB(const size_t ie, const size_t ib,
-                        const size_t ia, double& v) {
+  bool GetHoleVelocityB(const size_t ie, const size_t ib, const size_t ia,
+                        double& v) {
     return GetEntry(ie, ib, ia, "HoleVelocityB", m_hVelB, v);
   }
 
@@ -459,39 +459,39 @@ class GARFIELD_CLASS_NAME(Medium) {
     return GetEntry(ie, ib, ia, "HoleTransverseDiffusion", m_hDifT, dt);
   }
   /// Set an entry in the table of Townsend coefficients.
-  bool SetHoleTownsend(const size_t ie, const size_t ib,
-                       const size_t ia, const double alpha) {
+  bool SetHoleTownsend(const size_t ie, const size_t ib, const size_t ia,
+                       const double alpha) {
     return SetEntry(ie, ib, ia, "HoleTownsend", m_hAlp, alpha);
   }
   /// Get an entry in the table of Townsend coefficients.
-  bool GetHoleTownsend(const size_t ie, const size_t ib,
-                       const size_t ia, double& alpha) {
+  bool GetHoleTownsend(const size_t ie, const size_t ib, const size_t ia,
+                       double& alpha) {
     return GetEntry(ie, ib, ia, "HoleTownsend", m_hAlp, alpha);
   }
   /// Set an entry in the table of attachment coefficients.
-  bool SetHoleAttachment(const size_t ie, const size_t ib,
-                         const size_t ia, const double eta) {
+  bool SetHoleAttachment(const size_t ie, const size_t ib, const size_t ia,
+                         const double eta) {
     return SetEntry(ie, ib, ia, "HoleAttachment", m_hAtt, eta);
   }
   /// Get an entry in the table of attachment coefficients.
-  bool GetHoleAttachment(const size_t ie, const size_t ib,
-                         const size_t ia, double& eta) {
+  bool GetHoleAttachment(const size_t ie, const size_t ib, const size_t ia,
+                         double& eta) {
     return GetEntry(ie, ib, ia, "HoleAttachment", m_hAtt, eta);
   }
 
-  /// Initialise the table of ion mobilities from a list of 
+  /// Initialise the table of ion mobilities from a list of
   /// electric fields and corresponding mobilities.
-  /// The mobilities will be interpolated at the electric fields 
+  /// The mobilities will be interpolated at the electric fields
   /// of the currently set grid.
   bool SetIonMobility(const std::vector<double>& fields,
                       const std::vector<double>& mobilities,
                       const bool negativeIons = false);
   /// Set an entry in the table of ion mobilities.
-  bool SetIonMobility(const size_t ie, const size_t ib, 
-                      const size_t ia, const double mu);
+  bool SetIonMobility(const size_t ie, const size_t ib, const size_t ia,
+                      const double mu);
   /// Get an entry in the table of ion mobilities.
-  bool GetIonMobility(const size_t ie, const size_t ib, 
-                      const size_t ia, double& mu) {
+  bool GetIonMobility(const size_t ie, const size_t ib, const size_t ia,
+                      double& mu) {
     return GetEntry(ie, ib, ia, "IonMobility", m_iMob, mu);
   }
 
@@ -499,39 +499,39 @@ class GARFIELD_CLASS_NAME(Medium) {
   bool SetIonLongitudinalDiffusion(const size_t ie, const size_t ib,
                                    const size_t ia, const double dl) {
     return SetEntry(ie, ib, ia, "IonLongitudinalDiffusion", m_iDifL, dl);
-  } 
+  }
   /// Get an entry in the table of longitudinal diffusion coefficients.
   bool GetIonLongitudinalDiffusion(const size_t ie, const size_t ib,
                                    const size_t ia, double& dl) {
     return GetEntry(ie, ib, ia, "IonLongitudinalDiffusion", m_iDifL, dl);
-  } 
+  }
   /// Set an entry in the table of transverse diffusion coefficients.
   bool SetIonTransverseDiffusion(const size_t ie, const size_t ib,
                                  const size_t ia, const double dt) {
     return SetEntry(ie, ib, ia, "IonTransverseDiffusion", m_iDifT, dt);
-  } 
+  }
   /// Get an entry in the table of transverse diffusion coefficients.
   bool GetIonTransverseDiffusion(const size_t ie, const size_t ib,
                                  const size_t ia, double& dt) {
     return GetEntry(ie, ib, ia, "IonTransverseDiffusion", m_iDifT, dt);
   }
   /// Set an entry in the table of dissociation coefficients.
-  bool SetIonDissociation(const size_t ie, const size_t ib,
-                          const size_t ia, const double diss) {
+  bool SetIonDissociation(const size_t ie, const size_t ib, const size_t ia,
+                          const double diss) {
     return SetEntry(ie, ib, ia, "IonDissociation", m_iDis, diss);
   }
   /// Get an entry in the table of dissociation coefficients.
-  bool GetIonDissociation(const size_t ie, const size_t ib,
-                          const size_t ia, double& diss) {
+  bool GetIonDissociation(const size_t ie, const size_t ib, const size_t ia,
+                          double& diss) {
     return GetEntry(ie, ib, ia, "IonDissociation", m_iDis, diss);
   }
 
   /// Set an entry in the table of negative ion mobilities.
-  bool SetNegativeIonMobility(const size_t ie, const size_t ib, 
-                              const size_t ia, const double mu);
+  bool SetNegativeIonMobility(const size_t ie, const size_t ib, const size_t ia,
+                              const double mu);
   /// Get an entry in the table of negative ion mobilities.
-  bool GetNegativeIonMobility(const size_t ie, const size_t ib, 
-                              const size_t ia, double& mu) {
+  bool GetNegativeIonMobility(const size_t ie, const size_t ib, const size_t ia,
+                              double& mu) {
     return GetEntry(ie, ib, ia, "NegativeIonMobility", m_nMob, mu);
   }
 
@@ -553,8 +553,8 @@ class GARFIELD_CLASS_NAME(Medium) {
   void ResetElectronTownsend() { m_eAlp.clear(); }
   void ResetElectronAttachment() { m_eAtt.clear(); }
   void ResetElectronTOFRates() {
-      m_eRIon.clear();
-      m_eRAtt.clear();
+    m_eRIon.clear();
+    m_eRAtt.clear();
   }
   void ResetElectronLorentzAngle() { m_eLor.clear(); }
 
@@ -571,8 +571,8 @@ class GARFIELD_CLASS_NAME(Medium) {
   void ResetHoleTownsend() { m_hAlp.clear(); }
   void ResetHoleAttachment() { m_hAtt.clear(); }
 
-  void ResetIonMobility() { 
-    m_iMob.clear(); 
+  void ResetIonMobility() {
+    m_iMob.clear();
     m_iVel.clear();
   }
   void ResetIonDiffusion() {
@@ -580,8 +580,8 @@ class GARFIELD_CLASS_NAME(Medium) {
     m_iDifT.clear();
   }
   void ResetIonDissociation() { m_iDis.clear(); }
-  void ResetNegativeIonMobility() { 
-    m_nMob.clear(); 
+  void ResetNegativeIonMobility() {
+    m_nMob.clear();
     m_nVel.clear();
   }
 
@@ -635,7 +635,7 @@ class GARFIELD_CLASS_NAME(Medium) {
                                               const unsigned int i = 0);
   virtual double GetPhotonCollisionRate(const double e);
   virtual bool PhotonCollision(const double e, int& type, int& level,
-                               double& e1, double& ctheta, 
+                               double& e1, double& ctheta,
                                std::vector<Secondary>& secondaries);
 
   /// Switch on/off debugging  messages
@@ -643,7 +643,7 @@ class GARFIELD_CLASS_NAME(Medium) {
   void DisableDebugging() { m_debug = false; }
 
   /// Create and initialise GPU Transfer class
-  virtual double CreateGPUTransferObject(MediumGPU *&med_gpu);
+  virtual double CreateGPUTransferObject(MediumGPU*& med_gpu);
 
  protected:
   std::string m_className = "Medium";
@@ -765,33 +765,34 @@ class GARFIELD_CLASS_NAME(Medium) {
                 const std::vector<std::vector<std::vector<double> > >& velB,
                 const std::vector<std::vector<std::vector<double> > >& velX,
                 const double q, double& vx, double& vy, double& vz) const;
-  bool VelocityFluxBulk(const double ex, const double ey, const double ez,
-                const double bx, const double by, const double bz,
-                const std::vector<std::vector<std::vector<double> > >& velWv,
-                const std::vector<std::vector<std::vector<double> > >& velWr,
-                const double q, double& wv, double& wr) const;
+  bool VelocityFluxBulk(
+      const double ex, const double ey, const double ez, const double bx,
+      const double by, const double bz,
+      const std::vector<std::vector<std::vector<double> > >& velWv,
+      const std::vector<std::vector<std::vector<double> > >& velWr,
+      const double q, double& wv, double& wr) const;
   static void Langevin(const double ex, const double ey, const double ez,
-                       double bx, double by, double bz, const double mu, 
+                       double bx, double by, double bz, const double mu,
                        double& vx, double& vy, double& vz);
   static void Langevin(const double ex, const double ey, const double ez,
-                       double bx, double by, double bz, 
-                       const double mu, const double muH,
-                       double& vx, double& vy, double& vz);
+                       double bx, double by, double bz, const double mu,
+                       const double muH, double& vx, double& vy, double& vz);
   bool Diffusion(const double ex, const double ey, const double ez,
                  const double bx, const double by, const double bz,
                  const std::vector<std::vector<std::vector<double> > >& difL,
                  const std::vector<std::vector<std::vector<double> > >& difT,
                  double& dl, double& dt) const;
-  bool Diffusion(const double ex, const double ey, const double ez,
-    const double bx, const double by, const double bz,
-    const std::vector<std::vector<std::vector<std::vector<double> > > >& diff,
-    double cov[3][3]) const;
-  bool Alpha(const double ex, const double ey, const double ez,
-             const double bx, const double by, const double bz,
+  bool Diffusion(
+      const double ex, const double ey, const double ez, const double bx,
+      const double by, const double bz,
+      const std::vector<std::vector<std::vector<std::vector<double> > > >& diff,
+      double cov[3][3]) const;
+  bool Alpha(const double ex, const double ey, const double ez, const double bx,
+             const double by, const double bz,
              const std::vector<std::vector<std::vector<double> > >& tab,
-             unsigned int intp, const unsigned int thr, 
-             const std::pair<unsigned int, unsigned int>& extr, 
-             double& alpha) const; 
+             unsigned int intp, const unsigned int thr,
+             const std::pair<unsigned int, unsigned int>& extr,
+             double& alpha) const;
   double GetAngle(const double ex, const double ey, const double ez,
                   const double bx, const double by, const double bz,
                   const double e, const double b) const;
@@ -807,12 +808,12 @@ class GARFIELD_CLASS_NAME(Medium) {
                        const std::pair<unsigned int, unsigned int>& extr,
                        const bool logval = false) const;
 
-  bool SetEntry(const size_t i, const size_t j, const size_t k, 
-                const std::string& fcn, 
+  bool SetEntry(const size_t i, const size_t j, const size_t k,
+                const std::string& fcn,
                 std::vector<std::vector<std::vector<double> > >& tab,
                 const double val);
-  bool GetEntry(const size_t i, const size_t j, const size_t k, 
-                const std::string& fcn, 
+  bool GetEntry(const size_t i, const size_t j, const size_t k,
+                const std::string& fcn,
                 const std::vector<std::vector<std::vector<double> > >& tab,
                 double& val) const;
 
@@ -829,41 +830,34 @@ class GARFIELD_CLASS_NAME(Medium) {
              const std::vector<double>& angles, const unsigned int intp,
              const std::pair<unsigned int, unsigned int>& extr,
              const double init, const std::string& label);
-  void Clone(
-      std::vector<std::vector<std::vector<std::vector<double> > > >& tab,
-      const size_t n, const std::vector<double>& efields,
-      const std::vector<double>& bfields, const std::vector<double>& angles,
-      const unsigned int intp,
-      const std::pair<unsigned int, unsigned int>& extr, const double init,
-      const std::string& label);
+  void Clone(std::vector<std::vector<std::vector<std::vector<double> > > >& tab,
+             const size_t n, const std::vector<double>& efields,
+             const std::vector<double>& bfields,
+             const std::vector<double>& angles, const unsigned int intp,
+             const std::pair<unsigned int, unsigned int>& extr,
+             const double init, const std::string& label);
 
   void Init(const size_t nE, const size_t nB, const size_t nA,
             std::vector<std::vector<std::vector<double> > >& tab,
             const double val);
-  void Init(
-      const size_t nE, const size_t nB, const size_t nA, const size_t nT,
-      std::vector<std::vector<std::vector<std::vector<double> > > >& tab,
-      const double val);
+  void Init(const size_t nE, const size_t nB, const size_t nA, const size_t nT,
+            std::vector<std::vector<std::vector<std::vector<double> > > >& tab,
+            const double val);
 
 #else
 
 #include "MediumMagboltz.hh"
 
-friend class MediumGas;
-friend class MediumMagboltz;
+  friend class MediumGas;
+  friend class MediumMagboltz;
 
   // enum to mimic polymorphism
-enum class MediumType
-{
-  Medium = 0,
-  MediumGas,
-  MediumMagboltz
-};
+  enum class MediumType { Medium = 0, MediumGas, MediumMagboltz };
 
-MediumType m_MediumType{MediumType::Medium};
+  MediumType m_MediumType{MediumType::Medium};
 
 #endif
 };
-}
+}  // namespace Garfield
 
 #endif

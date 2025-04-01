@@ -19,6 +19,6 @@ class BGMesh {
   void print(std::ostream& file, int l) const;
 };
 std::ostream& operator<<(std::ostream& file, const BGMesh& bgm);
-}
+}  // namespace Heed
 
 #endif

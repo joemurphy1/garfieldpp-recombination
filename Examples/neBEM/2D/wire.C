@@ -1,31 +1,30 @@
-#include <iostream>
-#include <cmath>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/ViewField.hh"
-#include "Garfield/ViewCell.hh"
+#include <cmath>
+#include <iostream>
+
 #include "Garfield/ComponentNeBem2d.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/ViewCell.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   MediumMagboltz gas;
   gas.SetComposition("ar", 100.);
-  
+
   ComponentNeBem2d cmp;
   constexpr double r = 2.;
   constexpr unsigned int n = 6;
   std::vector<double> xv(n, 0.);
   std::vector<double> yv(n, 0.);
   for (unsigned int i = 0; i < n; ++i) {
-    const double phi = i * TwoPi / n; 
+    const double phi = i * TwoPi / n;
     xv[i] = r * cos(phi);
     yv[i] = r * sin(phi);
   }

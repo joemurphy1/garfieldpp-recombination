@@ -1,11 +1,11 @@
+#include "Garfield/ComponentTcad3d.hh"
+
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <limits>
 #include <string>
-#include<array>
-
-#include "Garfield/ComponentTcad3d.hh"
 
 namespace Garfield {
 
@@ -66,10 +66,11 @@ void ComponentTcad3d::ElectricField(const double x, const double y,
   ElectricField(x, y, z, ex, ey, ez, v, m, status);
 }
 
-void ComponentTcad3d::DelayedWeightingPotentials(
-    const double xin, const double yin, const double zin,
-    const std::string& label, std::vector<double>& dwp) {
-
+void ComponentTcad3d::DelayedWeightingPotentials(const double xin,
+                                                 const double yin,
+                                                 const double zin,
+                                                 const std::string& label,
+                                                 std::vector<double>& dwp) {
   if (m_dwtp[label].empty() || m_dwp[label].empty()) {
     dwp.clear();
     return;
@@ -106,7 +107,6 @@ bool ComponentTcad3d::Interpolate(
     const double xin, const double yin, const double zin,
     const std::vector<std::array<double, 3> >& field, double& fx, double& fy,
     double& fz) {
-
   if (field.empty()) return false;
   std::array<double, 3> x = {xin, yin, zin};
   std::array<bool, 3> mirr = {false, false, false};
@@ -137,7 +137,6 @@ bool ComponentTcad3d::Interpolate(
 bool ComponentTcad3d::Interpolate(const double xin, const double yin,
                                   const double zin,
                                   const std::vector<double>& field, double& f) {
-
   f = 0.;
   if (field.empty()) return false;
   std::array<double, 3> x = {xin, yin, zin};
@@ -186,7 +185,6 @@ Medium* ComponentTcad3d::GetMedium(const double xin, const double yin,
 }
 
 void ComponentTcad3d::FillTree() {
-
   // Set up the octree.
   const float hx = 0.5 * (m_bbMax[0] - m_bbMin[0]);
   const float hy = 0.5 * (m_bbMax[1] - m_bbMin[1]);
@@ -252,7 +250,6 @@ bool ComponentTcad3d::GetElementaryCell(double& xmin, double& ymin,
 size_t ComponentTcad3d::FindElement(const double x, const double y,
                                     const double z,
                                     std::array<double, nMaxVertices>& w) const {
-
   w.fill(0.);
   if (m_tree) {
     const auto& elements = m_tree->GetElementsInBlock(Vec3(x, y, z));
@@ -339,8 +336,8 @@ bool ComponentTcad3d::GetElement(const size_t i, double& vol, double& dmin,
   return true;
 }
 
-bool ComponentTcad3d::GetNode(const size_t i, 
-                              double& x, double& y, double& z) const {
+bool ComponentTcad3d::GetNode(const size_t i, double& x, double& y,
+                              double& z) const {
   if (i >= m_vertices.size()) {
     std::cerr << m_className << "::GetNode: Index out of range.\n";
     return false;
@@ -470,4 +467,4 @@ bool ComponentTcad3d::InTriangle(const double x, const double y, const double z,
 
   return true;
 }
-}
+}  // namespace Garfield

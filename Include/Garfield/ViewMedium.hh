@@ -1,12 +1,12 @@
 #ifndef G_VIEW_MEDIUM
 #define G_VIEW_MEDIUM
 
+#include <array>
 #include <string>
 #include <vector>
-#include <array>
 
-#include "Garfield/ViewBase.hh"
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/ViewBase.hh"
 
 namespace Garfield {
 
@@ -26,8 +26,8 @@ class ViewMedium : public ViewBase {
   /// Set the medium from which to retrieve the transport coefficients.
   void SetMedium(Medium* m);
 
-  /// Try to choose the x-axis range based on the field grid. 
-  void EnableAutoRangeX(const bool on = true) { m_autoRangeX = on; } 
+  /// Try to choose the x-axis range based on the field grid.
+  void EnableAutoRangeX(const bool on = true) { m_autoRangeX = on; }
   /// Set the limits of the electric field.
   void SetRangeE(const double emin, const double emax, const bool logscale);
   /// Set the limits of the magnetic field.
@@ -41,7 +41,7 @@ class ViewMedium : public ViewBase {
   /// Choose the y-axis range based on the function's minima/maxima.
   void EnableAutoRangeY(const bool on = true) { m_autoRangeY = on; }
   /// Set the range of the function (velocity etc.) to be plotted.
-  void SetRangeY(const double ymin, const double ymax, 
+  void SetRangeY(const double ymin, const double ymax,
                  const bool logscale = false);
 
   /// Set the electric field to use when plotting as function of B or angle.
@@ -55,44 +55,45 @@ class ViewMedium : public ViewBase {
   void DisableExport() { m_outfile = ""; }
 
   /** Plot the drift velocity components.
-    * \param carriers string indicating the carriers for which to plot 
-    *        the drift velocity
-    *   - "e": electrons,
-    *   - "h": holes,
-    *   - "i": ions 
-    *         Options can be concatenated (e. g. "ei", "eh"). 
-    * \param xaxis abscissa.
-    *   - 'e': electric field, 
-    *   - 'b': magnetic field, 
-    *   - 'a': angle between E and B,
-    *   - 'r': reduced electric field (E/N),
-    *   - 'p': reduced electric field (E/p)
-    */
+   * \param carriers string indicating the carriers for which to plot
+   *        the drift velocity
+   *   - "e": electrons,
+   *   - "h": holes,
+   *   - "i": ions
+   *         Options can be concatenated (e. g. "ei", "eh").
+   * \param xaxis abscissa.
+   *   - 'e': electric field,
+   *   - 'b': magnetic field,
+   *   - 'a': angle between E and B,
+   *   - 'r': reduced electric field (E/N),
+   *   - 'p': reduced electric field (E/p)
+   */
   void PlotVelocity(const std::string& carriers, const char xaxis);
   /// Plot the transverse and longitudinal diffusion coefficients.
   void PlotDiffusion(const std::string& carriers, const char xaxis);
-  /// Plot the Townsend coefficient. 
+  /// Plot the Townsend coefficient.
   void PlotTownsend(const std::string& carriers, const char xaxis);
-  /// Plot the attachment coefficient. 
+  /// Plot the attachment coefficient.
   void PlotAttachment(const std::string& carriers, const char xaxis);
   /// Plot Townsend and attachment coefficients.
   void PlotAlphaEta(const std::string& carriers, const char xaxis);
 
   /** Plot the drift velocity components of electrons in the medium.
-    * \param xaxis abscissa.
-    *   - 'e': electric field, 
-    *   - 'b': magnetic field, 
-    *   - 'a': angle between E and B,
-    *   - 'r': reduced electric field (E/N),
-    *   - 'p': reduced electric field (E/p).
-    * \param same flag to keep existing plots (true) or not.
-    */
+   * \param xaxis abscissa.
+   *   - 'e': electric field,
+   *   - 'b': magnetic field,
+   *   - 'a': angle between E and B,
+   *   - 'r': reduced electric field (E/N),
+   *   - 'p': reduced electric field (E/p).
+   * \param same flag to keep existing plots (true) or not.
+   */
   void PlotElectronVelocity(const char xaxis = 'e', const bool same = false) {
     PlotVelocity(GetAxis(xaxis), Charge::Electron, same);
   }
   /// Plot Flux and Bulk drift velocity.
-  void PlotElectronVelocityFluxBulk(const char xaxis = 'e', const bool same = false) {
-      PlotVelocityFluxBulk(GetAxis(xaxis), Charge::Electron, same);
+  void PlotElectronVelocityFluxBulk(const char xaxis = 'e',
+                                    const bool same = false) {
+    PlotVelocityFluxBulk(GetAxis(xaxis), Charge::Electron, same);
   }
   /// Plot the drift velocity components of holes in the medium.
   void PlotHoleVelocity(const char xaxis = 'e', const bool same = false) {
@@ -119,16 +120,19 @@ class ViewMedium : public ViewBase {
     Plot(GetAxis(xaxis), Charge::Electron, Parameter::Townsend, same);
   }
   /// Plot the Townsend coefficient for electrons.
-  void PlotElectronReducedTownsendN(const char xaxis = 'r', const bool same = false) {
+  void PlotElectronReducedTownsendN(const char xaxis = 'r',
+                                    const bool same = false) {
     Plot(GetAxis(xaxis), Charge::Electron, Parameter::AlphaN, same);
   }
   /// Plot the Townsend coefficient for electrons.
-  void PlotElectronReducedTownsendP(const char xaxis = 'p', const bool same = false) {
+  void PlotElectronReducedTownsendP(const char xaxis = 'p',
+                                    const bool same = false) {
     Plot(GetAxis(xaxis), Charge::Electron, Parameter::AlphaP, same);
   }
   /// Plot the TOF ionization rate.
-  void PlotElectronTOFIonization(const char xaxis = 'e', const bool same = false) {
-      Plot(GetAxis(xaxis), Charge::Electron, Parameter::RIonTof, same);
+  void PlotElectronTOFIonization(const char xaxis = 'e',
+                                 const bool same = false) {
+    Plot(GetAxis(xaxis), Charge::Electron, Parameter::RIonTof, same);
   }
   /// Plot the Townsend coefficient for holes.
   void PlotHoleTownsend(const char xaxis = 'e', const bool same = false) {
@@ -139,16 +143,18 @@ class ViewMedium : public ViewBase {
     Plot(GetAxis(xaxis), Charge::Electron, Parameter::Attachment, same);
   }
   /// Plot the TOF attachment rate.
-  void PlotElectronTOFAttachment(const char xaxis = 'e', const bool same = false) {
-      Plot(GetAxis(xaxis), Charge::Electron, Parameter::RAttTof, same);
+  void PlotElectronTOFAttachment(const char xaxis = 'e',
+                                 const bool same = false) {
+    Plot(GetAxis(xaxis), Charge::Electron, Parameter::RAttTof, same);
   }
   /// Plot the attachment coefficient for holes.
   void PlotHoleAttachment(const char xaxis = 'e', const bool same = false) {
     Plot(GetAxis(xaxis), Charge::Hole, Parameter::Attachment, same);
   }
-  
+
   /// Plot the angle between drift velocity and field.
-  void PlotElectronLorentzAngle(const char xaxis = 'e', const bool same = false) {
+  void PlotElectronLorentzAngle(const char xaxis = 'e',
+                                const bool same = false) {
     PlotLorentzAngle(GetAxis(xaxis), Charge::Electron, same);
   }
 
@@ -158,7 +164,6 @@ class ViewMedium : public ViewBase {
   void SetLabels(const std::vector<std::string>& labels) { m_labels = labels; }
 
  private:
-
   enum class Parameter {
     VelocityE,
     VelocityB,
@@ -175,21 +180,10 @@ class ViewMedium : public ViewBase {
     AlphaN,
     AlphaP
   };
- 
-  enum class Charge {
-    Electron,
-    Hole,
-    Ion
-  };
 
-  enum class Axis {
-    E,
-    B,
-    Angle,
-    EoverN,
-    EoverP,
-    None
-  };
+  enum class Charge { Electron, Hole, Ion };
+
+  enum class Axis { E, B, Angle, EoverN, EoverP, None };
 
   Medium* m_medium = nullptr;
 
@@ -233,14 +227,12 @@ class ViewMedium : public ViewBase {
 
   std::string m_outfile;
 
-  void PlotVelocity(const Axis xaxis, const Charge particle,
-                    const bool same);
+  void PlotVelocity(const Axis xaxis, const Charge particle, const bool same);
   void PlotVelocityFluxBulk(const Axis xaxis, const Charge particle,
                             const bool same);
-  void PlotDiffusion(const Axis xaxis, const Charge particle,
-                     const bool same);
-  void Plot(const Axis xaxis, const Charge particle,
-            const Parameter par, const bool same);
+  void PlotDiffusion(const Axis xaxis, const Charge particle, const bool same);
+  void Plot(const Axis xaxis, const Charge particle, const Parameter par,
+            const bool same);
   void PlotLorentzAngle(const Axis xaxis, const Charge particle,
                         const bool same);
 
@@ -250,14 +242,13 @@ class ViewMedium : public ViewBase {
   void Export();
 
   Axis GetAxis(const char xaxis) const;
-  bool GetGrid(std::array<std::vector<double>, 3>& grid,
-               int& ie, int& ib, int& ia, const Axis xaxis) const;
+  bool GetGrid(std::array<std::vector<double>, 3>& grid, int& ie, int& ib,
+               int& ia, const Axis xaxis) const;
 
   double ConvertToEN(const double e0Vcm);
   double UnConvertFromEN(const double e0Td);
   double ConvertToEP(const double e0Vcm);
   double UnConvertFromEP(const double e0VcmTorr);
-
 };
-}
+}  // namespace Garfield
 #endif

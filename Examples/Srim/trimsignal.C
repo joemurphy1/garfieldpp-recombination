@@ -1,21 +1,20 @@
+#include <TApplication.h>
+#include <TCanvas.h>
+#include <TH1F.h>
+
 #include <iostream>
 
-#include <TApplication.h>
-#include <TH1F.h>
-#include <TCanvas.h>
-
-#include "Garfield/MediumSilicon.hh"
 #include "Garfield/ComponentConstant.hh"
+#include "Garfield/DriftLineRKF.hh"
+#include "Garfield/MediumSilicon.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackTrim.hh"
-#include "Garfield/DriftLineRKF.hh"
 #include "Garfield/ViewDrift.hh"
 #include "Garfield/ViewSignal.hh"
 
 using namespace Garfield;
 
-int main(int argc, char *argv[]) {
-
+int main(int argc, char* argv[]) {
   // Application
   TApplication app("app", &argc, argv);
 
@@ -28,7 +27,7 @@ int main(int argc, char *argv[]) {
   // Thickness of the silicon layer [cm]
   constexpr double d = 100.e-4;
   cmp.SetArea(-d, 0., -d, d, d, d);
-  cmp.SetMedium(&si); 
+  cmp.SetMedium(&si);
   // Define the weighting field and weighting potential
   // (parallel-plate electrode at y = 0).
   cmp.SetWeightingField(0, 1. / d, 0., "readout");
@@ -38,12 +37,12 @@ int main(int argc, char *argv[]) {
   sensor.AddElectrode(&cmp, "readout");
   // Set the time bins for the induced current.
   const unsigned int nTimeBins = 1000;
-  const double tmin =  0.;
+  const double tmin = 0.;
   const double tmax = 10.;
   const double tstep = (tmax - tmin) / nTimeBins;
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
- 
-  // Read the TRIM output file. 
+
+  // Read the TRIM output file.
   TrackTrim tr(&sensor);
   const std::string filename = "EXYZ.txt";
   // Import the first 100 ions.
@@ -59,14 +58,14 @@ int main(int argc, char *argv[]) {
   ViewDrift driftView;
   tr.EnablePlotting(&driftView);
   drift.EnablePlotting(&driftView);
-  
+
   // Simulate an ion track.
   tr.NewTrack(0., 0., 0., 0., 0., 1., 0.);
   // Loop over the clusters.
   for (const auto& cluster : tr.GetClusters()) {
-    // Simulate electron and ion drift lines starting 
-    // from the cluster position. 
-    // Scale the induced current by the number of electron/ion pairs 
+    // Simulate electron and ion drift lines starting
+    // from the cluster position.
+    // Scale the induced current by the number of electron/ion pairs
     // in the cluster.
     drift.SetElectronSignalScalingFactor(cluster.n);
     drift.DriftElectron(cluster.x, cluster.y, cluster.z, cluster.t);
@@ -82,4 +81,3 @@ int main(int argc, char *argv[]) {
   app.Run();
   return 0;
 }
-

@@ -1,17 +1,15 @@
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 
-#include "Garfield/MediumSilicon.hh"
 #include "Garfield/ComponentGrid.hh"
+#include "Garfield/MediumSilicon.hh"
 #include "Garfield/Sensor.hh"
-
 #include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
 int main(int argc, char *argv[]) {
-
   TApplication app("app", &argc, argv);
 
   // Define the medium.

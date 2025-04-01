@@ -1,32 +1,31 @@
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <cmath>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/ViewField.hh"
-#include "Garfield/ViewCell.hh"
+#include <cmath>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+
 #include "Garfield/ComponentNeBem2d.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/ViewCell.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   MediumMagboltz gas;
   gas.SetComposition("ar", 100.);
-  
+
   ComponentNeBem2d cmp;
   cmp.SetMedium(&gas);
   constexpr unsigned int nDiv = 200;
   cmp.SetNumberOfDivisions(nDiv);
   cmp.AddSegment(-1., 0., 0., 1., 1.);
-  cmp.AddSegment( 1., 0., 0., 1., 1.);
+  cmp.AddSegment(1., 0., 0., 1., 1.);
   cmp.AddSegment(-1., 0., 1., 0., 0.);
   cmp.Initialise();
 

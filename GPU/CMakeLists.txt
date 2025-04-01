@@ -6,7 +6,7 @@ add_library(GarfieldGPU STATIC AvalancheMicroscopicGPU.cu
                                MediumGPU.cu
                                SensorGPU.cu
                                ComponentGPU.cu)
-set_target_properties(GarfieldGPU PROPERTIES 
+set_target_properties(GarfieldGPU PROPERTIES
                                   POSITION_INDEPENDENT_CODE ON
                                   CXX_STANDARD 17
                                   CXX_STANDARD_REQUIRED ON

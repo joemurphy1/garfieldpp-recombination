@@ -1,7 +1,8 @@
+#include "Garfield/MediumDiamond.hh"
+
 #include <cmath>
 #include <iostream>
 
-#include "Garfield/MediumDiamond.hh"
 #include "Garfield/GarfieldConstants.hh"
 
 namespace Garfield {
@@ -35,10 +36,10 @@ void MediumDiamond::GetComponent(const unsigned int i, std::string& label,
   }
 }
 
-bool MediumDiamond::ElectronVelocity(
-    const double ex, const double ey, const double ez, 
-    const double bx, const double by, const double bz, 
-    double& vx, double& vy, double& vz) {
+bool MediumDiamond::ElectronVelocity(const double ex, const double ey,
+                                     const double ez, const double bx,
+                                     const double by, const double bz,
+                                     double& vx, double& vy, double& vz) {
   vx = vy = vz = 0.;
   if (m_isChanged) {
     UpdateTransportParameters();
@@ -57,14 +58,15 @@ bool MediumDiamond::ElectronVelocity(
     vy = mu * ey;
     vz = mu * ez;
   } else {
-    Langevin(ex, ey, ez, bx, by, bz, mu, m_eHallFactor * mu, vx, vy, vz); 
+    Langevin(ex, ey, ez, bx, by, bz, mu, m_eHallFactor * mu, vx, vy, vz);
   }
   return true;
 }
 
-bool MediumDiamond::ElectronTownsend(
-    const double ex, const double ey, const double ez, 
-    const double bx, const double by, const double bz, double& alpha) {
+bool MediumDiamond::ElectronTownsend(const double ex, const double ey,
+                                     const double ez, const double bx,
+                                     const double by, const double bz,
+                                     double& alpha) {
   alpha = 0.;
   if (!m_eAlp.empty()) {
     // Interpolation in user table.
@@ -73,9 +75,10 @@ bool MediumDiamond::ElectronTownsend(
   return false;
 }
 
-bool MediumDiamond::ElectronAttachment(
-    const double ex, const double ey, const double ez, 
-    const double bx, const double by, const double bz, double& eta) {
+bool MediumDiamond::ElectronAttachment(const double ex, const double ey,
+                                       const double ez, const double bx,
+                                       const double by, const double bz,
+                                       double& eta) {
   eta = 0.;
   if (!m_eAtt.empty()) {
     // Interpolation in user table.
@@ -84,10 +87,10 @@ bool MediumDiamond::ElectronAttachment(
   return true;
 }
 
-bool MediumDiamond::HoleVelocity(
-    const double ex, const double ey, const double ez,
-    const double bx, const double by, const double bz,
-    double& vx, double& vy, double& vz) {
+bool MediumDiamond::HoleVelocity(const double ex, const double ey,
+                                 const double ez, const double bx,
+                                 const double by, const double bz, double& vx,
+                                 double& vy, double& vz) {
   vx = vy = vz = 0.;
   if (m_isChanged) {
     UpdateTransportParameters();
@@ -111,9 +114,10 @@ bool MediumDiamond::HoleVelocity(
   return true;
 }
 
-bool MediumDiamond::HoleTownsend(
-    const double ex, const double ey, const double ez,
-    const double bx, const double by, const double bz, double& alpha) {
+bool MediumDiamond::HoleTownsend(const double ex, const double ey,
+                                 const double ez, const double bx,
+                                 const double by, const double bz,
+                                 double& alpha) {
   alpha = 0.;
   if (!m_hAlp.empty()) {
     // Interpolation in user table.
@@ -122,9 +126,10 @@ bool MediumDiamond::HoleTownsend(
   return false;
 }
 
-bool MediumDiamond::HoleAttachment(
-    const double ex, const double ey, const double ez, 
-    const double bx, const double by, const double bz, double& eta) {
+bool MediumDiamond::HoleAttachment(const double ex, const double ey,
+                                   const double ez, const double bx,
+                                   const double by, const double bz,
+                                   double& eta) {
   eta = 0.;
   if (!m_hAtt.empty()) {
     // Interpolation in user table.
@@ -150,7 +155,7 @@ void MediumDiamond::UnsetLowFieldMobility() {
   m_isChanged = true;
 }
 
-void MediumDiamond::SetSaturationVelocity(const double vsate, 
+void MediumDiamond::SetSaturationVelocity(const double vsate,
                                           const double vsath) {
   std::lock_guard<std::mutex> guard(m_mutex);
   if (vsate <= 0. || vsath <= 0.) {
@@ -167,14 +172,14 @@ void MediumDiamond::UnsetSaturationVelocity() {
   m_eSatVel = 2.6e-2;
   m_hSatVel = 1.6e-2;
 }
- 
+
 void MediumDiamond::UpdateTransportParameters() {
   std::lock_guard<std::mutex> guard(m_mutex);
 
-  // M. Pomorski, Electronic Properties of Single Crystal CVD Diamond and  
-  // Its Suitability for Particle Detection in Hadron Physics Experiments. 
+  // M. Pomorski, Electronic Properties of Single Crystal CVD Diamond and
+  // Its Suitability for Particle Detection in Hadron Physics Experiments.
   // Wolfgang von Goethe University, Frankfurt am Main
-  // E. Bossini, N. Miafra, Front. Phys. 8 (2020), 
+  // E. Bossini, N. Miafra, Front. Phys. 8 (2020),
   // https://doi.org/10.3389/fphy.2020.00248
   if (!m_userMobility) {
     const double t = m_temperature / 300.;
@@ -183,4 +188,4 @@ void MediumDiamond::UpdateTransportParameters() {
   }
 }
 
-}
+}  // namespace Garfield

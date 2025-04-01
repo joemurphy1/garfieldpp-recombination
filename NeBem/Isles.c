@@ -7,11 +7,10 @@
 #include "Isles.h"
 
 #include <complex.h>
+#include <gsl/gsl_sf.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <gsl/gsl_sf.h>
 
 #define SHIFT 2.0
 #define ARMAX 10000.0  // Maximum aspect ratio for an element
@@ -756,9 +755,9 @@ int ApproxRecSurf(double X, double Y, double Z, double xlo, double zlo,
                    f * Y, f * (Z - zk));
           }
         }  // else dist >= diag
-      }    // zseg
-    }      // xseg
-  }        // if area > MINDIST2
+      }  // zseg
+    }  // xseg
+  }  // if area > MINDIST2
 
   *Potential = Pot;
   Flux->X = XFlux;
@@ -1761,7 +1760,7 @@ int ApproxTriSurf(double zMax, double X, double Y, double Z, int nbxseg,
         }
       }
     }  // nbzseg
-  }    // nbxseg
+  }  // nbxseg
 
   *Potential = Pot;
   Flux->X = XFlux;
@@ -2231,11 +2230,11 @@ ISLESGLOBAL int ExactRingPF(double a, Point3D localPt, double *potential,
   double Vring = (a / ST_PI) * K1 / r1dot;
   // field in the radial direction
   double Eringroe = (a / ST_PI) * ((1.0 / (2.0 * r1dot * roe)) *
-                (K1 - (((a * a - roe * roe + z * z) * K2) /
-                       (r1dot * r1dot * (1.0 - u * u)))));
+                                   (K1 - (((a * a - roe * roe + z * z) * K2) /
+                                          (r1dot * r1dot * (1.0 - u * u)))));
   // field in the z direction
-  double Eringz = (a / ST_PI) * 
-                  ((z * K2) / ((r1dot * r1dot * r1dot) * (1.0 - u * u)));
+  double Eringz =
+      (a / ST_PI) * ((z * K2) / ((r1dot * r1dot * r1dot) * (1.0 - u * u)));
 
   *potential = Vring;
   Flux->X = Eringroe * localPt.X / roe;
@@ -2352,7 +2351,7 @@ double LineKnChPF(Point3D LineStart, Point3D LineStop, Point3D FieldPt,
         XUnit.Z = (ZUnit.X + ZUnit.Y) / ZUnit.Z;
         break;
       default:;
-    }                              // switch ends
+    }  // switch ends
     XUnit = UnitVector3D(&XUnit);  // direction cosines for X is created
 
     // y-Axis: vectorial product of axes 1 and 2.
@@ -2374,9 +2373,8 @@ double LineKnChPF(Point3D LineStart, Point3D LineStop, Point3D FieldPt,
   // system, yields FinalVector[].
   {  // Rotate point3D from global to local system to get localPt.
     double InitialVector[3] = {xfld - xorigin, yfld - yorigin, zfld - zorigin};
-    double TransformationMatrix[3][3] = {{0.0, 0.0, 0.0},
-                                         {0.0, 0.0, 0.0},
-                                         {0.0, 0.0, 0.0}};
+    double TransformationMatrix[3][3] = {
+        {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
     TransformationMatrix[0][0] = DirCos.XUnit.X;
     TransformationMatrix[0][1] = DirCos.XUnit.Y;
     TransformationMatrix[0][2] = DirCos.XUnit.Z;
@@ -2433,18 +2431,18 @@ double LineKnChPF(Point3D LineStart, Point3D LineStop, Point3D FieldPt,
   // The following expressions need to be rewritten after consulting the Maple
   // print-out.
   localF.X = xpt *((zptplus*sqrt(xpt*xpt + ypt*ypt + zptminus*zptminus) -
-                    zptminus*sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus)) / 
-                   (sqrt(xpt*xpt + ypt*ypt + zptminus*zptminus) * 
-                    sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus)) * 
+                    zptminus*sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus)) /
+                   (sqrt(xpt*xpt + ypt*ypt + zptminus*zptminus) *
+                    sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus)) *
                    (1.0/sqrt(xpt*xpt + ypt*ypt));
   localF.Y = ypt *((zptplus*sqrt(xpt*xpt + ypt*ypt + zptminus*zptminus) -
-                    zptminus*sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus)) / 
-                   (sqrt(xpt*xpt + ypt*ypt + zptminus*zptminus) * 
-                    sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus) * 
+                    zptminus*sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus)) /
+                   (sqrt(xpt*xpt + ypt*ypt + zptminus*zptminus) *
+                    sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus) *
                     sqrt(xpt*xpt + ypt*ypt));
-  localF.Z = (sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus) - 
-              sqrt(xpt*xpt + ypt*ypt + zptminus*zptminus)) / 
-             (sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus) * 
+  localF.Z = (sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus) -
+              sqrt(xpt*xpt + ypt*ypt + zptminus*zptminus)) /
+             (sqrt(xpt*xpt + ypt*ypt + zptplus*zptplus) *
               sqrt(xpt*xpt + ypt*ypt + zptminus*zptminus));
 
   if (debugFn) {
@@ -2460,12 +2458,11 @@ double LineKnChPF(Point3D LineStart, Point3D LineStop, Point3D FieldPt,
   double tmpxy = xpt * xpt + ypt * ypt;
   double tmpzplus = sqrt(zptplus * zptplus + xpt * xpt + ypt * ypt);
   double tmpzminus = sqrt(xpt * xpt + ypt * ypt + zptminus * zptminus);
-  Pot =
-      log(zptplus + tmpzplus) - log(zptminus + tmpzminus);
-  localF.X = xpt * ((zptplus / tmpxy / tmpzplus) -
-                    (zptminus / tmpxy / tmpzminus));
-  localF.Y = ypt * ((zptplus / tmpxy / tmpzplus) -
-                    (zptminus / tmpxy / tmpzminus));
+  Pot = log(zptplus + tmpzplus) - log(zptminus + tmpzminus);
+  localF.X =
+      xpt * ((zptplus / tmpxy / tmpzplus) - (zptminus / tmpxy / tmpzminus));
+  localF.Y =
+      ypt * ((zptplus / tmpxy / tmpzplus) - (zptminus / tmpxy / tmpzminus));
   localF.Z = (1.0 / tmpzminus) - (1.0 / tmpzplus);
   if (debugFn) {
     printf("Using MatLab expressions =>\n");
@@ -2479,15 +2476,15 @@ double LineKnChPF(Point3D LineStart, Point3D LineStop, Point3D FieldPt,
   Pot = 0.0;	// Tanay does not have an expression for the potential.
   // borrow from Matlab
   // Pot =  log(zptplus + sqrt(zptplus*zptplus+xpt*xpt+ypt*ypt)) -
-  //        log(zptminus + sqrt(xpt*xpt+ypt*ypt+zptminus*zptminus)); 
-  localF.X = (xpt / (xpt*xpt + ypt*ypt)) * 
-             ((zptplus / sqrt(zptplus*zptplus + xpt*xpt + ypt*ypt)) - 
-              (zptminus / sqrt(zptminus*zptminus + xpt*xpt + ypt*ypt))); 
-  localF.Y = (ypt / (xpt*xpt + ypt*ypt)) * 
+  //        log(zptminus + sqrt(xpt*xpt+ypt*ypt+zptminus*zptminus));
+  localF.X = (xpt / (xpt*xpt + ypt*ypt)) *
              ((zptplus / sqrt(zptplus*zptplus + xpt*xpt + ypt*ypt)) -
-              (zptminus / sqrt(zptminus*zptminus + xpt*xpt + ypt*ypt))); 
+              (zptminus / sqrt(zptminus*zptminus + xpt*xpt + ypt*ypt)));
+  localF.Y = (ypt / (xpt*xpt + ypt*ypt)) *
+             ((zptplus / sqrt(zptplus*zptplus + xpt*xpt + ypt*ypt)) -
+              (zptminus / sqrt(zptminus*zptminus + xpt*xpt + ypt*ypt)));
   localF.Z = - ((1.0 / sqrt(zptplus*zptplus + xpt*xpt + ypt*ypt))	-
-                (1.0 / sqrt(zptminus*zptminus + xpt*xpt + ypt*ypt))); 
+                (1.0 / sqrt(zptminus*zptminus + xpt*xpt + ypt*ypt)));
   if (debugFn) {
     printf("Using Tanay expressions =>\n");
     printf("Pot: %lg\n", Pot);
@@ -2604,9 +2601,8 @@ double WireKnChPF(Point3D WireStart, Point3D WireStop, double radius,
   // system, yields FinalVector[].
   {  // Rotate point3D from global to local system to get localPt.
     double InitialVector[3] = {xfld - xorigin, yfld - yorigin, zfld - zorigin};
-    double TransformationMatrix[3][3] = {{0.0, 0.0, 0.0},
-                                         {0.0, 0.0, 0.0},
-                                         {0.0, 0.0, 0.0}};
+    double TransformationMatrix[3][3] = {
+        {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
     TransformationMatrix[0][0] = DirCos.XUnit.X;
     TransformationMatrix[0][1] = DirCos.XUnit.Y;
     TransformationMatrix[0][2] = DirCos.XUnit.Z;
@@ -2757,9 +2753,8 @@ double AreaKnChPF(int NbVertices, Point3D *Vertex, Point3D FieldPt,
   // system, yields FinalVector[].
   {  // Rotate point3D from global to local system to get localPt.
     double InitialVector[3] = {xfld - xorigin, yfld - yorigin, zfld - zorigin};
-    double TransformationMatrix[3][3] = {{0.0, 0.0, 0.0},
-                                         {0.0, 0.0, 0.0},
-                                         {0.0, 0.0, 0.0}};
+    double TransformationMatrix[3][3] = {
+        {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
     TransformationMatrix[0][0] = DirCos.XUnit.X;
     TransformationMatrix[0][1] = DirCos.XUnit.Y;
     TransformationMatrix[0][2] = DirCos.XUnit.Z;
@@ -2824,9 +2819,8 @@ double AreaKnChPF(int NbVertices, Point3D *Vertex, Point3D FieldPt,
 
 // Pass vertices of the volume and get back approx potential and GCS flux
 // at field point assuming unit charge density.
-double ApproxVolumeKnChPF(int /*NbPts*/, Point3D* /*SourcePt*/, 
-                          Point3D /*FieldPt*/,
-                          Vector3D *globalF) {
+double ApproxVolumeKnChPF(int /*NbPts*/, Point3D * /*SourcePt*/,
+                          Point3D /*FieldPt*/, Vector3D *globalF) {
   printf("ApproxVolumeKnChPF not implemented yet ... returning zero flux\n");
   globalF->X = 0.0;
   globalF->Y = 0.0;
@@ -2838,7 +2832,7 @@ double ApproxVolumeKnChPF(int /*NbPts*/, Point3D* /*SourcePt*/,
 
 // Pass vertices of the volume and get back potential and GCS flux
 // at field point assuming unit charge density.
-double VolumeKnChPF(int /*NbPts*/, Point3D* /*SourcePt*/, Point3D /*FieldPt*/,
+double VolumeKnChPF(int /*NbPts*/, Point3D * /*SourcePt*/, Point3D /*FieldPt*/,
                     Vector3D *globalF) {
   printf("VolumeKnChPF not implemented yet ... returning zero flux\n");
   globalF->X = 0.0;

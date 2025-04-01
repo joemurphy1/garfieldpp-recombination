@@ -1,4 +1,5 @@
 #include <stdlib.h>
+
 #include <iomanip>
 #ifdef VISUAL_STUDIO
 #define _USE_MATH_DEFINES
@@ -9,8 +10,9 @@
  */
 #endif
 #include <cmath>
-#include "wcpplib/geometry/vec.h"
+
 #include "Garfield/Random.hh"
+#include "wcpplib/geometry/vec.h"
 
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -58,9 +60,7 @@ void absref::shift(const vec& dir) {
   ApplyAnyFunctionToVecElements(shift(dir));
 }
 
-absref_transmit absref::get_components() {
-  return absref_transmit();
-}
+absref_transmit absref::get_components() { return absref_transmit(); }
 
 // **** vector ****
 double cos2vec(const vec& r1, const vec& r2) {
@@ -269,18 +269,14 @@ absref absref::* basis::aref[3] = {
     reinterpret_cast<absref absref::*>(static_cast<vec absref::*>(&basis::ey)),
     reinterpret_cast<absref absref::*>(static_cast<vec absref::*>(&basis::ez))};
 
-absref_transmit basis::get_components() {
-  return absref_transmit(3, aref);
-}
+absref_transmit basis::get_components() { return absref_transmit(3, aref); }
 
 basis basis::switch_xyz() const {
   pvecerror("basis basis::switch_xyz(void)");
   return basis(ez, ex, ey, name);
 }
 
-basis::basis() : ex(1, 0, 0), ey(0, 1, 0), ez(0, 0, 1) {
-  name = "primary_bas";
-}
+basis::basis() : ex(1, 0, 0), ey(0, 1, 0), ez(0, 0, 1) { name = "primary_bas"; }
 
 basis::basis(const std::string& pname) : ex(1, 0, 0), ey(0, 1, 0), ez(0, 0, 1) {
   name = pname;
@@ -360,8 +356,7 @@ basis::basis(const vec& pex, const vec& pey, const vec& pez,
     mcerr << "name=" << pname << '\n';
     spexit(mcerr);
   }
-  if (!apeq(pex.length(), double(1.0)) ||
-      !apeq(pey.length(), double(1.0)) ||
+  if (!apeq(pex.length(), double(1.0)) || !apeq(pey.length(), double(1.0)) ||
       !apeq(pez.length(), double(1.0))) {
     mcerr << "ERROR in basis::basis(vec &pex, vec &pey, vec &pez) : \n"
           << "the vectors are not of unit length\n";
@@ -411,9 +406,7 @@ std::ostream& operator<<(std::ostream& file, const basis& b) {
 absref absref::* point::aref =
     reinterpret_cast<absref absref::*>(static_cast<vec absref::*>(&point::v));
 
-absref_transmit point::get_components() {
-  return absref_transmit(1, &aref);
-}
+absref_transmit point::get_components() { return absref_transmit(1, &aref); }
 
 void point::down(const abssyscoor* fasc) {
   v.down(fasc);
@@ -493,4 +486,4 @@ std::ostream& operator<<(std::ostream& file, const fixsyscoor& f) {
   return file;
 }
 
-}
+}  // namespace Heed

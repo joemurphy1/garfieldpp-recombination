@@ -1,6 +1,4 @@
-#include <cmath>
-#include <iostream>
-#include<array>
+#include "Garfield/ViewCell.hh"
 
 #include <TEllipse.h>
 #include <TGeoBBox.h>
@@ -9,22 +7,23 @@
 #include <TMarker.h>
 #include <TPolyLine.h>
 
+#include <array>
+#include <cmath>
+#include <iostream>
+
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/ComponentNeBem2d.hh"
 #include "Garfield/FundamentalConstants.hh"
-#include "Garfield/ViewCell.hh"
 
 namespace Garfield {
 
 ViewCell::ViewCell() : ViewBase("ViewCell") {}
 
-ViewCell::ViewCell(ComponentAnalyticField* cmp) : 
-    ViewBase("ViewCell"),
-    m_component(cmp) {}
+ViewCell::ViewCell(ComponentAnalyticField* cmp)
+    : ViewBase("ViewCell"), m_component(cmp) {}
 
-ViewCell::ViewCell(ComponentNeBem2d* cmp) : 
-    ViewBase("ViewCell"),
-    m_nebem(cmp) {}
+ViewCell::ViewCell(ComponentNeBem2d* cmp)
+    : ViewBase("ViewCell"), m_nebem(cmp) {}
 
 void ViewCell::SetComponent(ComponentAnalyticField* cmp) {
   if (!cmp) {
@@ -143,7 +142,7 @@ bool ViewCell::Plot(const bool twod) {
   double sphi = 0.;
   const bool perPhi = m_component->GetPeriodicityPhi(sphi);
   const int nPhi = perPhi ? int(360. / sphi) : 0;
-  sphi *= DegreeToRad; 
+  sphi *= DegreeToRad;
   if (!twod) SetupGeo(dx, dy, dz);
   const bool polar = m_component->IsPolar();
 
@@ -158,7 +157,7 @@ bool ViewCell::Plot(const bool twod) {
     m_component->GetWire(i, xw, yw, dw, vw, lbl, lw, qw, nTrap);
     auto it = std::find(wireTypes.begin(), wireTypes.end(), lbl);
     const int type = std::distance(wireTypes.begin(), it);
-    if (it == wireTypes.end()) wireTypes.push_back(lbl); 
+    if (it == wireTypes.end()) wireTypes.push_back(lbl);
     if (polar) {
       const double r = xw;
       for (int j = 0; j <= nPhi; ++j) {
@@ -256,8 +255,8 @@ bool ViewCell::Plot(const bool twod) {
         continue;
       }
       const auto med = m_geo->GetMedium("Metal");
-      const auto tubs = m_geo->MakeTubs("Plane", med, r[i] - w, r[i] + w,
-                                        dz, phi[0], phi[1]);
+      const auto tubs =
+          m_geo->MakeTubs("Plane", med, r[i] - w, r[i] + w, dz, phi[0], phi[1]);
       tubs->SetLineColor(kGreen - 5);
       tubs->SetTransparency(75);
       m_geo->GetTopVolume()->AddNode(tubs, 1);
@@ -265,7 +264,7 @@ bool ViewCell::Plot(const bool twod) {
     if (nPlanesR == 1) {
       std::swap(r[0], r[1]);
     } else if (nPlanesR == 0) {
-      r[1] = std::max(dx, dy); 
+      r[1] = std::max(dx, dy);
     }
     for (unsigned int i = 0; i < nPlanesPhi; ++i) {
       const double cp = cos(phi[i] * DegreeToRad);
@@ -273,17 +272,17 @@ bool ViewCell::Plot(const bool twod) {
       if (twod) {
         PlotPlane(r[0] * cp, r[0] * sp, r[1] * cp, r[1] * sp);
         continue;
-      } 
+      }
       const auto med = m_geo->GetMedium("Metal");
       const double dr = 0.5 * (r[1] - r[0]);
       TGeoVolume* plane = m_geo->MakeBox("Plane", med, dr, w, dz);
       plane->SetLineColor(kGreen - 5);
       plane->SetTransparency(75);
       TGeoRotation* rot = new TGeoRotation("", phi[i], 0, 0);
-      const double rm = 0.5 * (r[0] + r[1]); 
+      const double rm = 0.5 * (r[0] + r[1]);
       TGeoCombiTrans* tr = new TGeoCombiTrans(cp * rm, sp * rm, 0, rot);
       m_geo->GetTopVolume()->AddNode(plane, 1, tr);
-    } 
+    }
   }
   double rt = 0., vt = 0.;
   int nt = 0;
@@ -307,7 +306,6 @@ bool ViewCell::Plot(const bool twod) {
 }
 
 bool ViewCell::PlotNeBem(const bool twod) {
-
   if (!twod) {
     std::cerr << m_className << "::PlotNeBem: 3D plot not implemented yet.\n";
     return false;
@@ -358,7 +356,6 @@ bool ViewCell::PlotNeBem(const bool twod) {
 }
 
 void ViewCell::SetupGeo(const double dx, const double dy, const double dz) {
-
   if (!m_geo) {
     gGeoManager = nullptr;
     m_geo.reset(new TGeoManager("ViewCellGeoManager", "Cell layout"));
@@ -409,7 +406,6 @@ void ViewCell::PlotWire(const double x, const double y, const double d,
 
 void ViewCell::PlotWire(const double x, const double y, const double d,
                         const int type, const double lz) {
-
   const auto medium = m_geo->GetMedium("Metal");
   TGeoVolume* wire = m_geo->MakeTube("Wire", medium, 0., 0.5 * d, lz);
   switch (type) {
@@ -454,10 +450,8 @@ void ViewCell::PlotTube(const double x0, const double y0, const double r,
   pline.DrawPolyLine(n + 1, x.data(), y.data());
 }
 
-void ViewCell::PlotTube(const double x0, const double y0, 
-                        const double r1, const double r2, const int n,
-                        const double lz) {
-
+void ViewCell::PlotTube(const double x0, const double y0, const double r1,
+                        const double r2, const int n, const double lz) {
   TGeoVolume* tube = nullptr;
   if (n <= 0) {
     // Round tube.
@@ -475,9 +469,8 @@ void ViewCell::PlotTube(const double x0, const double y0,
   m_geo->GetTopVolume()->AddNode(tube, 1, new TGeoTranslation(x0, y0, 0));
 }
 
-void ViewCell::PlotPlane(const double x0, const double y0, 
-                         const double x1, const double y1) {
-
+void ViewCell::PlotPlane(const double x0, const double y0, const double x1,
+                         const double y1) {
   TLine line;
   line.SetDrawOption("same");
   line.DrawLine(x0, y0, x1, y1);
@@ -485,7 +478,6 @@ void ViewCell::PlotPlane(const double x0, const double y0,
 
 void ViewCell::PlotPlane(const double dx, const double dy, const double dz,
                          const double x0, const double y0) {
-
   const auto medium = m_geo->GetMedium("Metal");
   TGeoVolume* plane = m_geo->MakeBox("Plane", medium, dx, dy, dz);
   plane->SetLineColor(kGreen - 5);
@@ -493,4 +485,4 @@ void ViewCell::PlotPlane(const double dx, const double dy, const double dz,
   m_geo->GetTopVolume()->AddNode(plane, 1, new TGeoTranslation(x0, y0, 0));
 }
 
-}
+}  // namespace Garfield

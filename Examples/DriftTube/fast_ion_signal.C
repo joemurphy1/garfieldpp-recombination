@@ -1,5 +1,5 @@
-#include <TROOT.h>
 #include <TApplication.h>
+#include <TROOT.h>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentAnalyticField.hh"
@@ -13,26 +13,24 @@ using namespace Garfield;
 
 // Contributed by Terry Buck.
 
-// Finds ion creation time based on distance from the electron cluster 
+// Finds ion creation time based on distance from the electron cluster
 // to the wire (found by fitting the ion creation time of many avalanches)
 double IonTiming(const double dist) {
-
-  constexpr double p0 =  1.49880e-13;   
-  constexpr double p1 =  2.09250e+02;
-  constexpr double p2 =  2.61998e+02;
+  constexpr double p0 = 1.49880e-13;
+  constexpr double p1 = 2.09250e+02;
+  constexpr double p2 = 2.61998e+02;
   constexpr double p3 = -1.24766e+02;
-  
+
   return p0 + p1 * dist + p2 * dist * dist + p3 * dist * dist * dist;
 }
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  
+
   // Make a gas medium
   MediumMagboltz gas;
   gas.LoadIonMobility("IonMobility_Ar+_Ar.txt");
- 
+
   ComponentAnalyticField cmp;
   cmp.SetMedium(&gas);
 
@@ -46,12 +44,12 @@ int main(int argc, char * argv[]) {
   sensor.AddElectrode(&cmp, "s");
   const double tmin = 0.;
   const double tstep = 1.;
-  const int nTimeBins = 1000; 
+  const int nTimeBins = 1000;
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
- 
+
   AvalancheMC drift(&sensor);
   drift.SetDistanceSteps(2.e-4);
- 
+
   TrackHeed track(&sensor);
   track.SetParticle("muon");
   track.SetEnergy(170.e9);
@@ -66,7 +64,7 @@ int main(int argc, char * argv[]) {
   for (const auto& cluster : track.GetClusters()) {
     // Compute the radial location of the cluster.
     const double r = sqrt(cluster.x * cluster.x + cluster.y * cluster.y);
-    // Find the creation time of the ions produced in the 
+    // Find the creation time of the ions produced in the
     // avalanches of the electrons in the cluster.
     const double time = IonTiming(r);
     const size_t nc = cluster.electrons.size();
@@ -87,5 +85,3 @@ int main(int argc, char * argv[]) {
   signalView.PlotSignal("s");
   app.Run();
 }
-
-  

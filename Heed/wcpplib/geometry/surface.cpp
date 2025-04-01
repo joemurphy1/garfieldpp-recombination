@@ -1,5 +1,6 @@
-#include "wcpplib/geometry/circumf.h"
 #include "wcpplib/geometry/surface.h"
+
+#include "wcpplib/geometry/circumf.h"
 /*
 Copyright (c) 2000 Igor B. Smirnov
 
@@ -23,7 +24,7 @@ absref_transmit splane::get_components() {
 }
 
 int splane::check_point_inside(const point& fpt, const vec& dir,
-  double fprec) const {
+                               double fprec) const {
   mfunname("int splane::check_point_inside(const point&, const vec&, double)");
   if (dir == dv0) {
     // this is not useful
@@ -43,7 +44,7 @@ int splane::check_point_inside(const point& fpt, const vec& dir,
 }
 
 int splane::check_point_inside1(const point& fpt, int s_ext,
-  double fprec) const {
+                                double fprec) const {
   if (pn.check_point_in(fpt, fprec) == 1) {
     if (s_ext == 1) return 0;
     return 1;
@@ -331,8 +332,9 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
 //proportional  number_of_surf**2
 */
 
-void ulsvolume::ulsvolume_init(const std::vector<std::shared_ptr<surface> >& fsurf,
-                               const std::string& fname, double fprec) {
+void ulsvolume::ulsvolume_init(
+    const std::vector<std::shared_ptr<surface> >& fsurf,
+    const std::string& fname, double fprec) {
   prec = fprec;
   name = fname;
   if (qsurf > 0) {
@@ -407,4 +409,4 @@ void manip_ulsvolume::print(std::ostream& file, int l) const {
     indn.n -= 2;
   }
 }
-}
+}  // namespace Heed

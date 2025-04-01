@@ -6,6 +6,7 @@
    smaller, then 'a' should be fitted upto square with zero rows */
 
 #include <math.h>
+
 #include "NR.h"
 
 #ifdef __cplusplus
@@ -311,5 +312,5 @@ void svdcmp(double **a, int m, int n, double *w, double **v) {
 }
 
 #ifdef __cplusplus
-} // namespace
+}  // namespace
 #endif

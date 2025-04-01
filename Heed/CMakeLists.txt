@@ -1,6 +1,6 @@
 set(libname "Heed")
 
-add_library(Heed SHARED 
+add_library(Heed SHARED
             heed++/code/BGMesh.cpp
             heed++/code/ElElasticScat.cpp
             heed++/code/EnTransfCS.cpp
@@ -54,11 +54,11 @@ target_include_directories(Heed PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTE
 target_compile_definitions(Heed PRIVATE FUNNAMESTACK)
 add_library(Garfield::Heed ALIAS Heed)
 
-install( 
-  TARGETS ${libname} 
-  EXPORT "${PROJECT_NAME}Targets" 
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} 
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} 
+install(
+  TARGETS ${libname}
+  EXPORT "${PROJECT_NAME}Targets"
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Install the Heed database

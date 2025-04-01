@@ -1,6 +1,7 @@
 #include "Garfield/ComponentNeBem3d.hh"
-#include<array>
+
 #include <algorithm>
+#include <array>
 #include <cfloat>
 #include <cmath>
 #include <iostream>
@@ -10,12 +11,12 @@
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Geometry.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/Polygon.hh"
 #include "NR.h"
 #include "neBEM.h"
 #include "neBEMInterface.h"
-#include "Garfield/Medium.hh"
-#include "Garfield/Geometry.hh"
 
 namespace {
 
@@ -379,9 +380,7 @@ namespace Garfield {
 
 ComponentNeBem3d* gComponentNeBem3d = nullptr;
 
-ComponentNeBem3d::ComponentNeBem3d() : Component("NeBem3d") {
-  InitValues();
-}
+ComponentNeBem3d::ComponentNeBem3d() : Component("NeBem3d") { InitValues(); }
 
 Medium* ComponentNeBem3d::GetMedium(const double x, const double y,
                                     const double z) {
@@ -390,10 +389,9 @@ Medium* ComponentNeBem3d::GetMedium(const double x, const double y,
 }
 
 void ComponentNeBem3d::InitValues() {
-
   // Set initial values of weighting field fast volume related parameters
   // Since MAXWtFld is not a variable, we do not need neBEM::
-  for(int id = 1; id < MAXWtFld; ++id) {
+  for (int id = 1; id < MAXWtFld; ++id) {
     neBEM::OptFixedWtField[id] = 0;
     neBEM::OptWtFldFastVol[id] = 0;
     m_optWtFldFastVol[id] = 0;

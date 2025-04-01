@@ -2,7 +2,7 @@
 #define G_COMPONENT_CST_H
 
 #include <map>
-#include<vector>
+#include <vector>
 
 #include "Garfield/ComponentFieldMap.hh"
 
@@ -26,11 +26,12 @@ class ComponentCST : public ComponentFieldMap {
   void GetNumberOfMeshLines(unsigned int& nx, unsigned int& ny,
                             unsigned int& nz) const;
   size_t GetNumberOfElements() const override { return m_nElements; }
-  bool GetElementNodes(const size_t i, 
+  bool GetElementNodes(const size_t i,
                        std::vector<size_t>& nodes) const override;
-  bool GetElementRegion(const size_t i, size_t& mat, bool& drift) const override;
+  bool GetElementRegion(const size_t i, size_t& mat,
+                        bool& drift) const override;
   size_t GetNumberOfNodes() const override { return m_nNodes; }
-  bool GetNode(const size_t i, double& x, double& y, double& z) const override; 
+  bool GetNode(const size_t i, double& x, double& y, double& z) const override;
 
   void GetElementBoundaries(unsigned int element, double& xmin, double& xmax,
                             double& ymin, double& ymax, double& zmin,
@@ -49,8 +50,10 @@ class ComponentCST : public ComponentFieldMap {
   double WeightingPotential(const double x, const double y, const double z,
                             const std::string& label) override;
   /* FIX DOXYGEN ERROR ON PDF GENERATION
-   * Deprecated version of the interface based on text file import of field data.
-   * \param elist Information about the element material of mesh cells. Each line contains the element number and the material index:
+   * Deprecated version of the interface based on text file import of field
+   * data.
+   * \param elist Information about the element material of mesh cells. Each
+   * line contains the element number and the material index:
    * \code
    * 0  3
    * ...
@@ -84,7 +87,8 @@ class ComponentCST : public ComponentFieldMap {
    *  Material 4 PERX 4 . 8 0 0 0 0 0
    *  \endcode
    *
-   * \param prnsol Information about the node potentials. Each line contains the node number and the potential:
+   * \param prnsol Information about the node potentials. Each line contains the
+   * node number and the potential:
    *  \code
    *  0 1000.00
    *  ...
@@ -97,8 +101,10 @@ class ComponentCST : public ComponentFieldMap {
    * Import of field data based on binary files.
    * See http://www.desy.de/~zenker/garfieldpp.html to get information about the
    * binary files export from CST.
-   * \param dataFile The binary file containing the field data exported from CST.
-   * \param unit The units used in the binary file. They are not necessarily equal to CST units.
+   * \param dataFile The binary file containing the field data exported from
+   * CST.
+   * \param unit The units used in the binary file. They are not necessarily
+   * equal to CST units.
    */
 
   bool Initialise(std::string dataFile, std::string unit = "cm");
@@ -109,7 +115,8 @@ class ComponentCST : public ComponentFieldMap {
    * the expected file format, which is similar to prnsol.
    * It also also handles binary files including the weighting field.
    * \param prnsol The input file (binary/text file)
-   * \param label The name of the weighting field to be added. If a weighting field with same name already exist it is replaced by the new one.
+   * \param label The name of the weighting field to be added. If a weighting
+   * field with same name already exist it is replaced by the new one.
    * \param isBinary Depending on the file type you use, adapt this switch.
    *
    */
@@ -192,14 +199,15 @@ class ComponentCST : public ComponentFieldMap {
    * returned for a point inside the mesh.
    */
   bool Coordinate2Index(const double x, const double y, const double z,
-                        unsigned int& i, unsigned int& j, unsigned int& k) const;
+                        unsigned int& i, unsigned int& j,
+                        unsigned int& k) const;
 
  protected:
   void SetRange() override;
 
   double GetElementVolume(const size_t i) const override;
-  void GetAspectRatio(const size_t i, 
-                      double& dmin, double& dmax) const override;
+  void GetAspectRatio(const size_t i, double& dmin,
+                      double& dmax) const override;
 
   /**
    * Calculate the index in the vectors m_xlines, m_ylines, m_zlines, which is
@@ -227,17 +235,17 @@ class ComponentCST : public ComponentFieldMap {
   std::vector<double> m_ylines;  ///< y positions used in the CST mesh
   std::vector<double> m_zlines;  ///< z positions used in the CST mesh
   /// Potentials resulting from the CST simulation.
-  std::vector<float> m_potential;  
+  std::vector<float> m_potential;
   /// Map of weighting field potentials
-  std::map<std::string, std::vector<float> > m_weightingFields;  
+  std::map<std::string, std::vector<float> > m_weightingFields;
   /// Material id for each element (unsigned char since it uses only 1 byte)
-  std::vector<unsigned char> m_elementMaterial;  
+  std::vector<unsigned char> m_elementMaterial;
 
-  unsigned int m_nx = 0;  ///< Number of mesh lines in x direction
-  unsigned int m_ny = 0;  ///< Number of mesh lines in y direction
-  unsigned int m_nz = 0;  ///< Number of mesh lines in z direction
-  size_t m_nElements = 0; ///< Number of elements
-  size_t m_nNodes = 0;    ///< Number of nodes
+  unsigned int m_nx = 0;   ///< Number of mesh lines in x direction
+  unsigned int m_ny = 0;   ///< Number of mesh lines in y direction
+  unsigned int m_nz = 0;   ///< Number of mesh lines in z direction
+  size_t m_nElements = 0;  ///< Number of elements
+  size_t m_nNodes = 0;     ///< Number of nodes
   // If true x,y,z fields of this component are disabled (e=0 V/cm).
   bool disableFieldComponent[3] = {false, false, false};
   bool doShaping = false;
@@ -253,8 +261,8 @@ class ComponentCST : public ComponentFieldMap {
                           const std::vector<float>& potentials) const;
 
   float GetPotential(const unsigned int i, const unsigned int j,
-                     const unsigned int k, 
-                     const double rx, const double ry, const double rz, 
+                     const unsigned int k, const double rx, const double ry,
+                     const double rz,
                      const std::vector<float>& potentials) const;
 
   void ShapeField(float& ex, float& ey, float& ez, const double rx,
@@ -276,6 +284,6 @@ class ComponentCST : public ComponentFieldMap {
                   unsigned int& k) const;
 };
 
-}
+}  // namespace Garfield
 
 #endif

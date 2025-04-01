@@ -1,9 +1,10 @@
+#include "Garfield/MediumGaAs.hh"
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
 
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/MediumGaAs.hh"
 
 namespace Garfield {
 
@@ -50,7 +51,7 @@ bool MediumGaAs::ElectronVelocity(const double ex, const double ey,
     return Medium::ElectronVelocity(ex, ey, ez, bx, by, bz, vx, vy, vz);
   }
   // Calculate the mobility.
-  // - J. J. Barnes, R. J. Lomax, G. I. Haddad, 
+  // - J. J. Barnes, R. J. Lomax, G. I. Haddad,
   //   IEEE Trans. Electron Devices ED-23 (1976), 1042.
   const double e2 = ex * ex + ey * ey + ez * ez;
   // Inverse of the critical field.
@@ -85,7 +86,7 @@ bool MediumGaAs::ElectronTownsend(const double ex, const double ey,
   const double emag = sqrt(ex * ex + ey * ey + ez * ez);
   if (emag > Small) {
     alpha = m_eImpactA * exp(-pow(m_eImpactB / emag, 1.82));
-  } 
+  }
   return true;
 }
 
@@ -114,7 +115,7 @@ bool MediumGaAs::HoleVelocity(const double ex, const double ey, const double ez,
     return Medium::HoleVelocity(ex, ey, ez, bx, by, bz, vx, vy, vz);
   }
   // Calculate the mobility.
-  // - J. J. Barnes, R. J. Lomax, G. I. Haddad, 
+  // - J. J. Barnes, R. J. Lomax, G. I. Haddad,
   //   IEEE Trans. Electron Devices ED-23 (1976), 1042–1048.
   const double emag = sqrt(ex * ex + ey * ey + ez * ez);
   // Inverse of the critical field.
@@ -126,7 +127,7 @@ bool MediumGaAs::HoleVelocity(const double ex, const double ey, const double ez,
     vy = mu * ey;
     vz = mu * ez;
   } else {
-    Langevin(ex, ey, ez, bx, by, bz, mu, m_hHallFactor * mu, vx, vy, vz); 
+    Langevin(ex, ey, ez, bx, by, bz, mu, m_hHallFactor * mu, vx, vy, vz);
   }
   return true;
 }
@@ -147,7 +148,7 @@ bool MediumGaAs::HoleTownsend(const double ex, const double ey, const double ez,
   if (emag > Small) {
     // alpha = m_hImpactA * exp(-m_hImpactB / emag);
     alpha = m_hImpactA * exp(-pow(m_hImpactB / emag, 1.75));
-  } 
+  }
   return true;
 }
 
@@ -163,7 +164,6 @@ bool MediumGaAs::HoleAttachment(const double ex, const double ey,
 }
 
 void MediumGaAs::SetLowFieldMobility(const double mue, const double muh) {
-
   if (mue <= 0. || muh <= 0.) {
     std::cerr << m_className << "::SetLowFieldMobility:\n"
               << "    Mobility must be greater than zero.\n";
@@ -181,7 +181,6 @@ void MediumGaAs::UnsetLowFieldMobility() {
 }
 
 void MediumGaAs::UpdateTransportParameters() {
-
   const double t = m_temperature / 300.;
   // Update the low field lattice mobility.
   if (!m_userMobility) {
@@ -196,15 +195,15 @@ void MediumGaAs::UpdateTransportParameters() {
   // m_eMobility = 8.0e-6 * pow(t, -2.3);
 
   // Update the saturation velocity.
-  //  - M. J. Littlejohn, J. R. Hauser, T. H. Glisson, 
+  //  - M. J. Littlejohn, J. R. Hauser, T. H. Glisson,
   //    J. Appl. Phys. 48 (1977), 4587
   m_eSatVel = m_hSatVel = std::max(1.13e-2 - 3.6e-3 * t, 5.e-4);
 
   // Update the impact ionization parameters.
   // Selberherr model parameters from Silvaco Atlas.
-  m_eImpactA = 1.889e5 * (1. + 0.588 * (t  - 1));
-  m_hImpactA = 2.215e5 * (1. + 0.588 * (t  - 1));
-  m_eImpactB = 5.75e5 * (1. + 0.248 * (t  - 1));
-  m_hImpactB = 6.57e5 * (1. + 0.248 * (t  - 1));
+  m_eImpactA = 1.889e5 * (1. + 0.588 * (t - 1));
+  m_hImpactA = 2.215e5 * (1. + 0.588 * (t - 1));
+  m_eImpactB = 5.75e5 * (1. + 0.248 * (t - 1));
+  m_hImpactB = 6.57e5 * (1. + 0.248 * (t - 1));
 }
-}
+}  // namespace Garfield

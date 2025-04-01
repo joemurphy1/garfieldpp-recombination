@@ -49,6 +49,6 @@ double Bethe_Bloch_restricted_energy_loss_gamma_1(
 // Therefore the number of particles is Avogadro / mean(Ai)
 // and the number of electrons is Avogadro * mean(Zi) / mean(Ai)
 // Interesting relations!
-}
+}  // namespace Heed
 
 #endif

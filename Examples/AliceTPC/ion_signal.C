@@ -1,8 +1,8 @@
-#include <cstdlib>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
+
+#include <cstdlib>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/DriftLineRKF.hh"
@@ -20,19 +20,18 @@ using namespace Garfield;
 double transfer(double t) {
   constexpr double tau = 160;
   constexpr double fC_to_mV = 12.7;
-  return fC_to_mV * exp(4) * pow((t / tau), 4) * exp(-4 * t / tau);  
+  return fC_to_mV * exp(4) * pow((t / tau), 4) * exp(-4 * t / tau);
 }
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  
+
   // Switch between IROC and OROC.
   constexpr bool iroc = false;
 
   // Distance between rows of wires [cm].
   constexpr double gap = iroc ? 0.2 : 0.3;
-  
+
   // Periodicity (wire spacing) [cm].
   constexpr double period = 0.25;
 
@@ -49,12 +48,12 @@ int main(int argc, char * argv[]) {
   constexpr double vs = iroc ? 1460. : 1570.;
   // Gate wires.
   constexpr double vg = -70.;
-  constexpr double deltav = 90.; // for closed gate mode
- 
+  constexpr double deltav = 90.;  // for closed gate mode
+
   // HV plane (drift field).
   constexpr double yHV = 249.7;
   constexpr double vHV = -100000;
- 
+
   // Setup the gas.
   MediumMagboltz gas("ne", 85.72, "co2", 9.52, "n2", 4.76);
   // Set the temperature [K] and pressure [Torr].
@@ -88,8 +87,8 @@ int main(int argc, char * argv[]) {
     cmp.AddWire(xg1, yg, dg, vg + deltav, "g+", 100., 50., 19.3, 1);
     cmp.AddWire(xg2, yg, dg, vg - deltav, "g-", 100., 50., 19.3, 1);
   } else {
-    cmp.AddWire(xg1, yg, dg, vg, "g", 100., 50., 19.3, 1);  
-    cmp.AddWire(xg2, yg, dg, vg, "g", 100., 50., 19.3, 1);  
+    cmp.AddWire(xg1, yg, dg, vg, "g", 100., 50., 19.3, 1);
+    cmp.AddWire(xg2, yg, dg, vg, "g", 100., 50., 19.3, 1);
   }
 
   // Add the planes.
@@ -102,11 +101,11 @@ int main(int argc, char * argv[]) {
   // Make a sensor.
   Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "pad_plane");
-  // Change the time window for less/better resolution in time 
+  // Change the time window for less/better resolution in time
   // (effect on convolution can be important).
-  sensor.SetTimeWindow(0., 1, 50000); 
+  sensor.SetTimeWindow(0., 1, 50000);
   constexpr double xmin = -3 * period;
-  constexpr double xmax =  3 * period;
+  constexpr double xmax = 3 * period;
   sensor.SetArea(xmin, 0., -1., xmax, yHV, 1.);
 
   // Plot isopotential contours.
@@ -122,12 +121,12 @@ int main(int argc, char * argv[]) {
   ViewDrift driftView;
   // Comment this out when calculating many drift lines.
   driftline.EnablePlotting(&driftView);
- 
+
   // const int nIons = 10000;
   const int nIons = 10;
-  // Count the number of ions that drift to 
+  // Count the number of ions that drift to
   // plane, cathode, gate or drift volume, respectively.
-  int plane = 0, cathode = 0, gate = 0, escape = 0; 
+  int plane = 0, cathode = 0, gate = 0, escape = 0;
   for (int i = 0; i < nIons; i++) {
     // Sample the starting point of the ion around the sense wire.
     constexpr double r = 0.003;
@@ -157,7 +156,7 @@ int main(int argc, char * argv[]) {
   cellView.Plot2d();
   driftView.SetArea(xmin, 0., xmax, 5 * gap);
   driftView.SetCanvas(cellView.GetCanvas());
-  driftView.Plot(true, false); 
+  driftView.Plot(true, false);
 
   // Plot the induced current.
   ViewSignal signalView(&sensor);
@@ -173,6 +172,4 @@ int main(int argc, char * argv[]) {
   signalView.SetLabelY("signal [mV]");
   signalView.PlotSignal("pad_plane");
   app.Run(true);
-
 }
-

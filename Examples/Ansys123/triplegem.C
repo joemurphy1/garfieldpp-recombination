@@ -1,22 +1,21 @@
-#include <iostream>
-#include <cmath>
+#include <TApplication.h>
+#include <TCanvas.h>
+#include <TFile.h>
+#include <TH1F.h>
+#include <TROOT.h>
 #include <time.h>
 
-#include <TCanvas.h>
-#include <TROOT.h>
-#include <TApplication.h>
-#include <TH1F.h>
-#include <TFile.h>
+#include <cmath>
+#include <iostream>
 
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/ComponentAnsys123.hh"
-#include "Garfield/Sensor.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/ComponentAnsys123.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Sensor.hh"
 
 using namespace Garfield;
 
 int main() {
-
   // Set up the gas.
   MediumMagboltz gas("ar", 45., "co2", 15., "cf4", 40.);
   gas.SetTemperature(293.15);
@@ -54,8 +53,8 @@ int main() {
     aval.AvalancheElectron(x0, y0, z0, 0, e0, 0, 0, 0);
     int ne, ni;
     aval.GetAvalancheSize(ne, ni);
-    std::cout << "Avalanche " << i << ": " << ne << " electrons, " 
-              << ni << " ions.\n";
+    std::cout << "Avalanche " << i << ": " << ne << " electrons, " << ni
+              << " ions.\n";
     hNelec.Fill(ne);
   }
   std::cout << "End of loop reached.\n";

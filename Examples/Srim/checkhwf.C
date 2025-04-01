@@ -1,16 +1,15 @@
+#include <TApplication.h>
+#include <TCanvas.h>
+#include <TH1F.h>
+
 #include <iostream>
 
-#include <TApplication.h>
-#include <TH1F.h>
-#include <TCanvas.h>
-
-#include "Garfield/Random.hh"
 #include "Garfield/Plotting.hh"
+#include "Garfield/Random.hh"
 
 using namespace Garfield;
 
 int main(int argc, char *argv[]) {
-
   // Application
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();

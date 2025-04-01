@@ -2,11 +2,12 @@
 #define HEEDPHOTON_H
 
 #include <vector>
+
 #include "heed++/code/HeedMatterDef.h"
 #include "wcpplib/geometry/gparticle.h"
 #include "wcpplib/particle/fieldmap.h"
 
-//#define SFER_PHOTOEL  // make direction of photoelectron absolutely random
+// #define SFER_PHOTOEL  // make direction of photoelectron absolutely random
 
 namespace Heed {
 
@@ -58,6 +59,6 @@ class HeedPhoton : public gparticle {
 
   fieldmap* m_fm = nullptr;
 };
-}
+}  // namespace Heed
 
 #endif

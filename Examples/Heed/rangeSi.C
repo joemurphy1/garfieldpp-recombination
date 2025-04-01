@@ -1,39 +1,38 @@
-#include <iostream>
-#include <fstream>
-#include <cmath>
-
-#include <TCanvas.h>
-#include <TROOT.h>
 #include <TApplication.h>
-#include <TSystem.h>
-#include <TH1F.h>
+#include <TCanvas.h>
 #include <TGraph.h>
+#include <TH1F.h>
+#include <TROOT.h>
+#include <TSystem.h>
 
-#include "Garfield/MediumSilicon.hh"
-#include "Garfield/SolidBox.hh"
-#include "Garfield/GeometrySimple.hh"
+#include <cmath>
+#include <fstream>
+#include <iostream>
+
 #include "Garfield/ComponentConstant.hh"
-#include "Garfield/Sensor.hh"
-#include "Garfield/TrackHeed.hh"
+#include "Garfield/GeometrySimple.hh"
+#include "Garfield/MediumSilicon.hh"
 #include "Garfield/Plotting.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/SolidBox.hh"
+#include "Garfield/TrackHeed.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
 
   // Make a medium
   MediumSilicon si;
   const double rho = si.GetMassDensity();
-  std::cout << "Density: " << rho << std::endl; 
+  std::cout << "Density: " << rho << std::endl;
   // Make a drift volume
   constexpr double length = 100.;
   GeometrySimple geo;
   SolidBox box(0, 0, length, length, length, length);
   geo.AddSolid(&box, &si);
-  
+
   // Make a component with constant drift field.
   ComponentConstant cmp;
   cmp.SetGeometry(&geo);
@@ -41,10 +40,10 @@ int main(int argc, char * argv[]) {
   cmp.SetElectricField(0., 0., field);
 
   Sensor sensor(&cmp);
-  
+
   // Heed
   TrackHeed track(&sensor);
-  
+
   // Histograms
   TH1::StatOverflows();
   constexpr int nBins = 1000;
@@ -58,7 +57,7 @@ int main(int argc, char * argv[]) {
   gRange95.SetMarkerSize(1);
   gRange95.SetMarkerColor(kBlue + 2);
   TCanvas c1;
-  
+
   const unsigned int nEvents = 1e6;
   double de = 1000.;
   constexpr double emin = 1000.;
@@ -83,7 +82,7 @@ int main(int argc, char * argv[]) {
       for (const auto& electron : cluster.electrons) {
         if (fabs(electron.z) < 1.e-8) continue;
         hLong.Fill(electron.z * 1.e4);
-        nEntries += 1.; 
+        nEntries += 1.;
       }
     }
     constexpr double fraction = 0.95;
@@ -93,7 +92,7 @@ int main(int argc, char * argv[]) {
     for (int j = 1; j <= nBins; ++j) {
       sum += hLong.GetBinContent(j);
       if (sum >= fraction * nEntries) {
-        iUp = j; 
+        iUp = j;
         break;
       }
     }
@@ -110,12 +109,12 @@ int main(int argc, char * argv[]) {
         break;
       }
     }
-    const double r95 = 0.5 * (hLong.GetBinCenter(iUp) +
-                              hLong.GetBinCenter(iLow));
+    const double r95 =
+        0.5 * (hLong.GetBinCenter(iUp) + hLong.GetBinCenter(iLow));
     const double r95rho = r95 * rho * 1.e2;
     std::cout << "    Range: " << r95rho << " ug/cm2\n";
-    const double y95 = 0.5 * (hLong.GetBinContent(iUp) +
-                              hLong.GetBinContent(iLow));
+    const double y95 =
+        0.5 * (hLong.GetBinContent(iUp) + hLong.GetBinContent(iLow));
     c1.cd();
     c1.Clear();
     hLong.Draw();
@@ -123,7 +122,7 @@ int main(int argc, char * argv[]) {
     c1.Update();
     gSystem->ProcessEvents();
 
-    std::ofstream outfile;  
+    std::ofstream outfile;
     outfile.open("r95_Heed_Si.txt", std::ios::out | std::ios::app);
     outfile << e0 << "  " << r95 << "  " << r95rho << "\n";
     outfile.close();
@@ -132,5 +131,4 @@ int main(int argc, char * argv[]) {
   }
 
   app.Run(true);
-
 }

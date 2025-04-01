@@ -48,9 +48,7 @@ class Cubic {
   Cubic(double fa, double fb, double fc, double fd)
       : da(fa), db(fb), dc(fc), dd(fd), s_dxzero(0) {}
 
-  double y(double x) const {
-    return da * x * x * x + db * x * x + dc * x + dd;
-  }
+  double y(double x) const { return da * x * x * x + db * x * x + dc * x + dd; }
 
   void find_zero(double_complex& z1, double_complex& z2,
                  double_complex& z3) const;
@@ -68,6 +66,6 @@ class Cubic {
   mutable double_complex dz3;
 };
 
-}
+}  // namespace Heed
 
 #endif

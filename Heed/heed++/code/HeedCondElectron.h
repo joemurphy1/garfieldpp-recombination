@@ -2,6 +2,7 @@
 #define HEEDCONDELECTRON
 
 #include <vector>
+
 #include "wcpplib/geometry/vec.h"
 
 namespace Heed {
@@ -25,7 +26,7 @@ class HeedCondElectron {
   double z = 0.;
   /// Time.
   double time = 0.;
-  
+
   /// Default constructor
   HeedCondElectron() = default;
   /// Constructor
@@ -33,10 +34,10 @@ class HeedCondElectron {
       : x(fpt.v.x), y(fpt.v.y), z(fpt.v.z), time(ftime) {}
   /// Constructor
   HeedCondElectron(const double fx, const double fy, const double fz,
-                   const double ftime) 
+                   const double ftime)
       : x(fx), y(fy), z(fz), time(ftime) {}
   void print(std::ostream& file, int l) const;
 };
-}
+}  // namespace Heed
 
 #endif

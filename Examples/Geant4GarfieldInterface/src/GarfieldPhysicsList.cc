@@ -68,7 +68,8 @@ void GarfieldPhysicsList::AddParameterisation() {
 
   std::string ionizationModel = garfieldPhysics->GetIonizationModel();
 
-  auto fastSimProcess_garfield = new G4FastSimulationManagerProcess("G4FSMP_garfield");
+  auto fastSimProcess_garfield =
+      new G4FastSimulationManagerProcess("G4FSMP_garfield");
 
   auto theParticleIterator = GetParticleIterator();
   theParticleIterator->reset();
@@ -84,22 +85,22 @@ void GarfieldPhysicsList::AddParameterisation() {
     }
 
     if (garfieldPhysics->FindParticleName(particleName, "geant4")) {
-      double eMin = MeV * garfieldPhysics->GetMinEnergyMeVParticle(
-          particleName, "geant4");
-      double eMax = MeV * garfieldPhysics->GetMaxEnergyMeVParticle(
-          particleName, "geant4");
+      double eMin = MeV * garfieldPhysics->GetMinEnergyMeVParticle(particleName,
+                                                                   "geant4");
+      double eMax = MeV * garfieldPhysics->GetMaxEnergyMeVParticle(particleName,
+                                                                   "geant4");
       if (ionizationModel == "PAI") {
         G4PAIModel* pai = new G4PAIModel(particle, "G4PAIModel");
         if (particleName == "e-" || particleName == "e+") {
-          config->SetExtraEmModel(particleName, "eIoni", pai,
-                                  "RegionGarfield", eMin, eMax, pai);
+          config->SetExtraEmModel(particleName, "eIoni", pai, "RegionGarfield",
+                                  eMin, eMax, pai);
         } else if (particleName == "mu-" || particleName == "mu+") {
-          config->SetExtraEmModel(particleName, "muIoni", pai,
-                                  "RegionGarfield", eMin, eMax, pai);
-        } else if (particleName == "proton" ||
-                   particleName == "pi+" || particleName == "pi-") {
-          config->SetExtraEmModel(particleName, "hIoni", pai,
-                                  "RegionGarfield", eMin, eMax, pai);
+          config->SetExtraEmModel(particleName, "muIoni", pai, "RegionGarfield",
+                                  eMin, eMax, pai);
+        } else if (particleName == "proton" || particleName == "pi+" ||
+                   particleName == "pi-") {
+          config->SetExtraEmModel(particleName, "hIoni", pai, "RegionGarfield",
+                                  eMin, eMax, pai);
         } else if (particleName == "alpha" || particleName == "He3" ||
                    particleName == "GenericIon") {
           config->SetExtraEmModel(particleName, "ionIoni", pai,
@@ -111,15 +112,15 @@ void GarfieldPhysicsList::AddParameterisation() {
           config->SetExtraEmModel(particleName, "eIoni", paiPhot,
                                   "RegionGarfield", eMin, eMax, paiPhot);
         } else if (particleName == "mu-" || particleName == "mu+") {
-          config->SetExtraEmModel(particleName, "muIoni", paiPhot, 
+          config->SetExtraEmModel(particleName, "muIoni", paiPhot,
                                   "RegionGarfield", eMin, eMax, paiPhot);
-        } else if (particleName == "proton" ||
-                   particleName == "pi+" || particleName == "pi-") {
+        } else if (particleName == "proton" || particleName == "pi+" ||
+                   particleName == "pi-") {
           config->SetExtraEmModel(particleName, "hIoni", paiPhot,
                                   "RegionGarfield", eMin, eMax, paiPhot);
         } else if (particleName == "alpha" || particleName == "He3" ||
                    particleName == "GenericIon") {
-          config->SetExtraEmModel(particleName, "ionIoni", paiPhot, 
+          config->SetExtraEmModel(particleName, "ionIoni", paiPhot,
                                   "RegionGarfield", eMin, eMax, paiPhot);
         }
       }

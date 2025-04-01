@@ -14,40 +14,41 @@ The file is provided "as is" without express or implied warranty.
 */
 
 #include <vector>
-#include "wcpplib/util/FunNameStack.h"
+
 #include "wcpplib/math/minmax.h"
+#include "wcpplib/util/FunNameStack.h"
 
-//#define TLINE_REDUCE_TO_RAW_ARR  // useful for acceleration of PointCoorMesh
-// if the type D keeps elements in consecutive array
-// whose address can be obtained as address of the first element.
-// In PointCoorMesh this all is switched by the following way:
-//#ifndef TLINE_REDUCE_TO_RAW_ARR
-//  D* amesh;
-//#else
-//  T* amesh;
-//#endif
-// In constructors the assignment is switched by the following way:
-//#ifndef TLINE_REDUCE_TO_RAW_ARR
-//  amesh = famesh;
-//  xmin = (*amesh)[0];
-//  xmax = (*amesh)[q-1];
-//#else
-//  amesh = &((*famesh)[0]);
-//  xmin = amesh[0];
-//  xmax = amesh[q-1];
-//#endif
-// Note that in both cases only the address is kept in this class and the
-// corresponding object is not copied.
-// If Copying is necessary, one can use CopiedPointCoorMesh.
-// Note that class CopiedPointCoorMesh, based on DynLinArr,
-// also provides acceleration based on the use of raw array
-// address and switched on by TLINE_REDUCE_TO_RAW_ARR.
-// Note that this class does not use .acu() functions of DynLinArr,
-// allowing for the use of unchecked fast access
-// (since these functions were written after tline was done).
+// #define TLINE_REDUCE_TO_RAW_ARR  // useful for acceleration of PointCoorMesh
+//  if the type D keeps elements in consecutive array
+//  whose address can be obtained as address of the first element.
+//  In PointCoorMesh this all is switched by the following way:
+// #ifndef TLINE_REDUCE_TO_RAW_ARR
+//   D* amesh;
+// #else
+//   T* amesh;
+// #endif
+//  In constructors the assignment is switched by the following way:
+// #ifndef TLINE_REDUCE_TO_RAW_ARR
+//   amesh = famesh;
+//   xmin = (*amesh)[0];
+//   xmax = (*amesh)[q-1];
+// #else
+//   amesh = &((*famesh)[0]);
+//   xmin = amesh[0];
+//   xmax = amesh[q-1];
+// #endif
+//  Note that in both cases only the address is kept in this class and the
+//  corresponding object is not copied.
+//  If Copying is necessary, one can use CopiedPointCoorMesh.
+//  Note that class CopiedPointCoorMesh, based on DynLinArr,
+//  also provides acceleration based on the use of raw array
+//  address and switched on by TLINE_REDUCE_TO_RAW_ARR.
+//  Note that this class does not use .acu() functions of DynLinArr,
+//  allowing for the use of unchecked fast access
+//  (since these functions were written after tline was done).
 
-//#define CHECK_POINT_MESH  //verifies that the points are in increasing order.
-// It is indeed long and may be inacceptable for some applications.
+// #define CHECK_POINT_MESH  //verifies that the points are in increasing order.
+//  It is indeed long and may be inacceptable for some applications.
 
 namespace Heed {
 
@@ -80,9 +81,9 @@ class EqualStepCoorMesh {
   }
 
   /** Get interval.
-    * \param x coordinate
-    * \param n1 bin number
-    */
+   * \param x coordinate
+   * \param n1 bin number
+   */
   virtual int get_interval(T x, long& n1) const;
 
   // The same as above, but returns more information:
@@ -111,7 +112,7 @@ class EqualStepCoorMesh {
   // Number of steps or intervals.
   /// Attention: if you count the number of points with the
   /// last point of the last step there will be q+1 points.
-  long q;  
+  long q;
   T xmin;
   T xmax;
   T step;
@@ -412,10 +413,10 @@ class PointCoorMesh {
       : q(0), xmin(0), xmax(0), x_old(0), n_old(-1), amesh(NULL) {
     ;
   }
-  PointCoorMesh(long fq,  // number of points, number of intervals
-                      // is fq - 1.
-                      D* famesh);  // dimension is fq and the last index is fq-1
-                                   // This is the end point of the last interval
+  PointCoorMesh(long fq,     // number of points, number of intervals
+                             // is fq - 1.
+                D* famesh);  // dimension is fq and the last index is fq-1
+                             // This is the end point of the last interval
   virtual ~PointCoorMesh() {}
   void check(void);  // check that the points are sequencial.
                      // This is also done in constructor above provided that
@@ -1126,7 +1127,7 @@ long t_find_entire_x_for_already_integ_step_ar(
 template <class T, class D, class M>
 T t_hispre_step_ar(const M& mesh, const D& y,  // array of function values
                    D& integ_y                  // return integrated array
-                   ) {
+) {
   mfunname("double t_hispre_step_ar(...)");
 
   // check_econd11(xpower , != 0 , mcerr);
@@ -1238,9 +1239,10 @@ long t_entire_hisran_step_ar(const M& mesh, const D& integ_y, T rannum) {
       t_find_entire_x_for_already_integ_step_ar(mesh,     // dimension q
                                                 integ_y,  // dimension q-1
                                                 rannum, &s_err);
-  check_econd11a(s_err, != 0, "mesh=" << mesh << " integ_y=" << integ_y
-                                      << " rannum=" << rannum << '\n',
-                 mcerr);
+  check_econd11a(
+      s_err, != 0,
+      "mesh=" << mesh << " integ_y=" << integ_y << " rannum=" << rannum << '\n',
+      mcerr);
   return ret;
   // return  t_find_entire_x_for_already_integ_step_ar
   //   (mesh,               // dimension q
@@ -1304,7 +1306,7 @@ template <class T>
 T t_integ_straight_2point(T x1, T y1, T x2, T y2, T xl, T xr,
                           int xpower,  // currently 0 or 1
                           int s_ban_neg)
-    // 0 - not include, 1 - include
+// 0 - not include, 1 - include
 {
   mfunname("double t_integ_straight_2point(...)");
   check_econd12(x1, ==, x2, mcerr);
@@ -1436,7 +1438,7 @@ T t_value_exp_2point(T x1, T y1, T x2, T y2, T x) {
 
 template <class T>
 T t_integ_power_2point(T x1, T y1, T x2, T y2, T xl, T xr)
-    // 0 - not include, 1 - include
+// 0 - not include, 1 - include
 {
   mfunname("double t_integ_power_2point(...)");
 
@@ -1639,6 +1641,6 @@ T t_integ_generic_point_ar(
   return res;
 }
 
-}
+}  // namespace Heed
 
 #endif

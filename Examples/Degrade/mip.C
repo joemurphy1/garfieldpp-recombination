@@ -1,31 +1,30 @@
+#include <TApplication.h>
+#include <TCanvas.h>
+#include <TH1F.h>
+#include <TROOT.h>
+
 #include <iostream>
 
-#include <TCanvas.h>
-#include <TROOT.h>
-#include <TApplication.h>
-#include <TH1F.h>
-
-#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ComponentConstant.hh"
-#include "Garfield/Sensor.hh"
-#include "Garfield/TrackDegrade.hh"
+#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/RandomEngineRoot.hh"
+#include "Garfield/Sensor.hh"
+#include "Garfield/TrackDegrade.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   Garfield::RandomEngineRoot randomEngine(123456);
   Garfield::Random::SetEngine(randomEngine);
   TApplication app("app", &argc, argv);
   SetDefaultStyle();
 
-  TH1F hElectrons("hElectrons", "Number of electrons;number of electrons", 
-                  200, 0, 200);
-  TH1F hClusterSize("hClusterSize", "Cluster size;electrons / cluster", 
-                    100, 0.5, 100.5);
+  TH1F hElectrons("hElectrons", "Number of electrons;number of electrons", 200,
+                  0, 200);
+  TH1F hClusterSize("hClusterSize", "Cluster size;electrons / cluster", 100,
+                    0.5, 100.5);
 
   MediumMagboltz gas("ar", 90., "co2", 10.);
 
@@ -44,13 +43,13 @@ int main(int argc, char * argv[]) {
   for (unsigned int i = 0; i < 1000; ++i) {
     if (i % 10 == 0) std::cout << "Track " << i << "...\n";
     track.NewTrack(0., 0., 0., 0., 1., 0., 0.);
-    unsigned int nsum = 0; 
+    unsigned int nsum = 0;
     for (const auto& cluster : track.GetClusters()) {
       nsum += cluster.electrons.size();
       hClusterSize.Fill(cluster.electrons.size());
     }
-    hElectrons.Fill(nsum); 
-  } 
+    hElectrons.Fill(nsum);
+  }
 
   TCanvas c1;
   hElectrons.Draw();
@@ -61,6 +60,5 @@ int main(int argc, char * argv[]) {
   c2.SetLogy();
   c2.Update();
 
-  app.Run(true); 
-
+  app.Run(true);
 }

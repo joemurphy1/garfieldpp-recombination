@@ -28,6 +28,6 @@ double chispre(std::vector<double> &f, int s_allow_zero_f = 0);
 // (this have sence only for debug.)
 
 double chisran(double flat_random_number, const std::vector<double> &f);
-}
+}  // namespace Heed
 
 #endif

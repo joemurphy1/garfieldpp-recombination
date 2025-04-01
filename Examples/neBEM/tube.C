@@ -1,19 +1,18 @@
-#include <iostream>
-
 #include <TApplication.h>
 
-#include "Garfield/SolidTube.hh" 
-#include "Garfield/SolidWire.hh" 
-#include "Garfield/GeometrySimple.hh"
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/MediumConductor.hh"
+#include <iostream>
+
 #include "Garfield/ComponentNeBem3d.hh"
+#include "Garfield/GeometrySimple.hh"
+#include "Garfield/MediumConductor.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/SolidTube.hh"
+#include "Garfield/SolidWire.hh"
 #include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   MediumMagboltz gas("ar");
@@ -41,13 +40,12 @@ int main(int argc, char * argv[]) {
   nebem.SetTargetElementSize(0.1);
   nebem.UseSVDInversion();
   nebem.Initialise();
- 
+
   ViewField fieldView(&nebem);
-  fieldView.SetArea(-1.1 * rTube, -0.6 * lTube, -1.1 * rTube,
-                     1.1 * rTube,  0.6 * lTube,  1.1 * rTube);
+  fieldView.SetArea(-1.1 * rTube, -0.6 * lTube, -1.1 * rTube, 1.1 * rTube,
+                    0.6 * lTube, 1.1 * rTube);
   fieldView.SetPlaneXY();
   fieldView.Plot("v", "colz");
 
   app.Run(true);
 }
-

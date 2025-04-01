@@ -1,14 +1,12 @@
 #ifndef G_HEED_FIELDMAP_H
 #define G_HEED_FIELDMAP_H
 
+#include "Garfield/Medium.hh"
+#include "Garfield/Sensor.hh"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/particle/fieldmap.h"
 
-#include "Garfield/Sensor.hh"
-#include "Garfield/Medium.hh"
-
 namespace Garfield {
-
 
 /// Retrieve electric and magnetic field from Sensor.
 
@@ -25,7 +23,8 @@ class HeedFieldMap : public Heed::fieldmap {
   void UseEfield(const bool flag) { m_useEfield = flag; }
   void UseBfield(const bool flag) { m_useBfield = flag; }
 
-  void evaluate(const Heed::point& pt, Heed::vec& efield, Heed::vec& bfield, double& mrange) const override {
+  void evaluate(const Heed::point& pt, Heed::vec& efield, Heed::vec& bfield,
+                double& mrange) const override {
     const double x = pt.v.x * conv + m_x;
     const double y = pt.v.y * conv + m_y;
     const double z = pt.v.z * conv + m_z;
@@ -85,6 +84,6 @@ class HeedFieldMap : public Heed::fieldmap {
   bool m_useEfield = false;
   bool m_useBfield = false;
 };
-}
+}  // namespace Garfield
 
 #endif

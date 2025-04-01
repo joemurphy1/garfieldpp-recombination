@@ -1,18 +1,17 @@
+#include "Garfield/SolidSphere.hh"
+
 #include <cmath>
 #include <iostream>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Polygon.hh"
-#include "Garfield/SolidSphere.hh"
 
 namespace {
 
-bool InPolyhedron(const std::vector<Garfield::Panel>& panels,
-                  const double x, const double y, const double z,
-                  const bool inv = false) {
-
+bool InPolyhedron(const std::vector<Garfield::Panel>& panels, const double x,
+                  const double y, const double z, const bool inv = false) {
   for (const auto& panel : panels) {
-    double d = panel.a * (panel.xv[0] - x) + panel.b * (panel.yv[0] - y) + 
+    double d = panel.a * (panel.xv[0] - x) + panel.b * (panel.yv[0] - y) +
                panel.c * (panel.zv[0] - z);
     if (inv) d *= -1;
     if (d < 0.) return false;
@@ -20,7 +19,7 @@ bool InPolyhedron(const std::vector<Garfield::Panel>& panels,
   return true;
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -104,7 +103,6 @@ void SolidSphere::SetMeridians(const unsigned int n) {
 }
 
 bool SolidSphere::SolidPanels(std::vector<Panel>& panels) {
-
   const auto nPanels = panels.size();
   panels.insert(panels.begin(), m_panelsO.begin(), m_panelsO.end());
   panels.insert(panels.begin(), m_panelsI.begin(), m_panelsI.end());
@@ -121,12 +119,11 @@ void SolidSphere::UpdatePanels() {
   MakePanels(id, m_rMax, true, m_panelsO);
   if (m_rMin > 0.) {
     MakePanels(id, m_rMin, false, m_panelsI);
-  } 
+  }
 }
 
 void SolidSphere::MakePanels(const int vol, const double r, const bool out,
                              std::vector<Panel>& panels) const {
-
   const double dphi = TwoPi / m_n;
   const double dtheta = Pi / m_n;
   // Loop over the sphere.
@@ -206,7 +203,7 @@ void SolidSphere::MakePanels(const int vol, const double r, const bool out,
         panel.b = -sin(0.5 * (phi0 + phi1)) * calpha;
         panel.c = -salpha;
       }
-      panel.volume = vol; 
+      panel.volume = vol;
       panels.push_back(std::move(panel));
     }
   }
@@ -219,7 +216,6 @@ double SolidSphere::GetDiscretisationLevel(const Panel& /*panel*/) {
 void SolidSphere::Cut(const double x0, const double y0, const double z0,
                       const double xn, const double yn, const double zn,
                       std::vector<Panel>& panels) {
-
   //-----------------------------------------------------------------------
   //    PLASPC - Cuts sphere IVOL with a plane.
   //-----------------------------------------------------------------------
@@ -247,8 +243,8 @@ void SolidSphere::Cut(const double x0, const double y0, const double z0,
         const double z2 = z0 + r * sin(theta0);
         // Cut with the plane.
         double xc, yc, zc;
-        if (Intersect(x1, y1, z1, x2, y2, z2, 
-                      x0, y0, z0, xn, yn, zn, xc, yc, zc)) {
+        if (Intersect(x1, y1, z1, x2, y2, z2, x0, y0, z0, xn, yn, zn, xc, yc,
+                      zc)) {
           xv.push_back(xc);
           yv.push_back(yc);
           zv.push_back(zc);
@@ -260,8 +256,8 @@ void SolidSphere::Cut(const double x0, const double y0, const double z0,
       const double z2 = z0 + r * sin(theta1);
       // Cut with the plane.
       double xc, yc, zc;
-      if (Intersect(x1, y1, z1, x2, y2, z2, 
-                    x0, y0, z0, xn, yn, zn, xc, yc, zc)) {
+      if (Intersect(x1, y1, z1, x2, y2, z2, x0, y0, z0, xn, yn, zn, xc, yc,
+                    zc)) {
         xv.push_back(xc);
         yv.push_back(yc);
         zv.push_back(zc);
@@ -285,4 +281,4 @@ void SolidSphere::Cut(const double x0, const double y0, const double z0,
   }
 }
 
-}
+}  // namespace Garfield

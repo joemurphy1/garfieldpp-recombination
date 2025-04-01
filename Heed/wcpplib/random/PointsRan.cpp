@@ -1,6 +1,8 @@
-#include <iomanip>
-#include <cmath>
 #include "wcpplib/random/PointsRan.h"
+
+#include <cmath>
+#include <iomanip>
+
 #include "wcpplib/util/FunNameStack.h"
 
 /*
@@ -137,4 +139,4 @@ void PointsRan::print(std::ostream& file) const {
   }
   indn.n -= 2;
 }
-}
+}  // namespace Heed

@@ -1,15 +1,15 @@
 //
 // Created by Dario Stocco (stoccod@ethz.ch) on 02.08.2023.
 //
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <numeric>
-
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TH1F.h>
 #include <TSystem.h>
+
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <numeric>
 
 #include "Garfield/AvalancheGridSpaceCharge.hh"
 #include "Garfield/ComponentParallelPlate.hh"
@@ -36,24 +36,16 @@ int main(int argc, char *argv[]) {
   gas.Initialise(true);
 
   // Dimensions of RPC
-  double d_bakelite = 0.2; // (cm)
+  double d_bakelite = 0.2;  // (cm)
   double d_pet = 0.02;
   double d_gas = 0.2;
-  std::vector<double> layers = {d_pet,
-                                d_bakelite,
-                                d_gas,
-                                d_bakelite,
-                                d_pet};
+  std::vector<double> layers = {d_pet, d_bakelite, d_gas, d_bakelite, d_pet};
   double y_mid = d_pet + d_bakelite + d_gas / 2;
 
   double e_bakelite = 8.;
   double e_pet = 3.5;
   double e_gas = 1.;
-  std::vector<double> eps = {e_pet,
-                             e_bakelite,
-                             e_gas,
-                             e_bakelite,
-                             e_pet};
+  std::vector<double> eps = {e_pet, e_bakelite, e_gas, e_bakelite, e_pet};
   // ComponentParallelPlate
   ComponentParallelPlate cmp;
   cmp.Setup(int(layers.size()), eps, layers, voltage, {});
@@ -78,8 +70,8 @@ int main(int argc, char *argv[]) {
   avalsc.EnableSpaceChargeEffect(false);
   // set sensor and grid
   avalsc.SetSensor(&sens);
-  avalsc.Set2dGrid(y_mid - 0.5 * d_gas + 1.e-8, 
-                   y_mid + 0.5 * d_gas - 1.e-8, 400, 0.05, 100);
+  avalsc.Set2dGrid(y_mid - 0.5 * d_gas + 1.e-8, y_mid + 0.5 * d_gas - 1.e-8,
+                   400, 0.05, 100);
 
   // Place 1000 electrons in the middle of the gas gap
   avalsc.AddElectron(0., y_mid, 0., 0., 1000.);

@@ -5,7 +5,7 @@
 
 namespace Heed {
 
-#define EXCLUDE_A_VALUES   // exclude absorption values
+#define EXCLUDE_A_VALUES  // exclude absorption values
 
 /// The PAI cross section of energy transfers from charged particle to media.
 /// The particle has fixed parameters (energy, speed, etc.), which
@@ -78,8 +78,8 @@ class EnTransfCS {
   std::vector<double> length_y0;
 
   // Prefactor (without thickness dependence) of the Highland formula.
-  double sigma_ms = 0.; 
+  double sigma_ms = 0.;
 };
-}
+}  // namespace Heed
 
 #endif

@@ -12,21 +12,16 @@ install(
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Garfield")
 
 # Creates the versioning file
-set(VersionFilePath "${CMAKE_CURRENT_BINARY_DIR}/GarfieldConfigVersion.cmake")
-write_basic_package_version_file(
-  ${VersionFilePath}
-  VERSION ${PROJECT_VERSION}
-  COMPATIBILITY SameMajorVersion)
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/GarfieldConfigVersion.cmake"
+                                 VERSION ${PROJECT_VERSION}
+                                 COMPATIBILITY SameMajorVersion)
 
 # Prepares the configuration file
-set(ConfigFileName "GarfieldConfig.cmake")
-set(ConfigFileTemplate ${CMAKE_CURRENT_LIST_DIR}/${ConfigFileName}.in)
-configure_package_config_file(
-  "${ConfigFileTemplate}" "${CMAKE_CURRENT_BINARY_DIR}/${ConfigFileName}"
-  INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Garfield")
+configure_package_config_file("${CMAKE_CURRENT_LIST_DIR}/GarfieldConfig.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/GarfieldConfig.cmake"
+                              INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Garfield")
 
 # Installs the configuration file
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${ConfigFileName}" "${VersionFilePath}"
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/GarfieldConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/GarfieldConfigVersion.cmake"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Garfield")
 
 find_package(Python)
@@ -37,7 +32,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/setup.sh.in
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/setup.csh.in
                ${PROJECT_BINARY_DIR}/setupGarfield.csh @ONLY)
 
-install(FILES ${PROJECT_BINARY_DIR}/setupGarfield.sh 
+install(FILES ${PROJECT_BINARY_DIR}/setupGarfield.sh
               ${PROJECT_BINARY_DIR}/setupGarfield.csh
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Garfield)
 

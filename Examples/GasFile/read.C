@@ -1,18 +1,17 @@
-#include <cstdlib>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
+
+#include <cstdlib>
 
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ViewMedium.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
- 
+
   // Setup the gas.
   MediumMagboltz gas;
   gas.LoadGasFile("ar_80_co2_20_2T.gas");
@@ -21,7 +20,7 @@ int main(int argc, char * argv[]) {
 
   ViewMedium view(&gas);
   view.SetMagneticField(2.);
-  
+
   TCanvas cV("cV", "", 600, 600);
   view.SetCanvas(&cV);
   view.PlotElectronVelocity();
@@ -43,5 +42,4 @@ int main(int argc, char * argv[]) {
   view.PlotIonVelocity();
 
   app.Run(true);
-
 }

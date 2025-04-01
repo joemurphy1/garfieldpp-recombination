@@ -13,17 +13,14 @@ The file is provided "as is" without express or implied warranty.
 
 namespace Heed {
 
-absref absref::* trajestep::aref[4] = {(absref absref::*)&trajestep::currpos,
-                                       (absref absref::*)&trajestep::dir,
-                                       (absref absref::*)&trajestep::relcen,
-                                       (absref absref::*)&trajestep::mpoint};
+absref absref::* trajestep::aref[4] = {
+    (absref absref::*)&trajestep::currpos, (absref absref::*)&trajestep::dir,
+    (absref absref::*)&trajestep::relcen, (absref absref::*)&trajestep::mpoint};
 
-absref_transmit trajestep::get_components() {
-  return absref_transmit(4, aref);
-}
+absref_transmit trajestep::get_components() { return absref_transmit(4, aref); }
 
 trajestep::trajestep(const double fmax_range, const double frad_for_straight,
-                     const double fmax_straight_arange, 
+                     const double fmax_straight_arange,
                      const double fmax_circ_arange, const point& fcurrpos,
                      const vec& fdir, const bool fcurved, const vec& frelcen,
                      double fmrange, double prec)
@@ -71,10 +68,9 @@ trajestep::trajestep(const trajestep& fts, double fmrange) {
   vec frelcen;
   fts.Gnextpoint1(fts.mrange, fpos, fdir, frelcen);
   double prec = 0.1;  // not important here
-  *this =
-      trajestep(fts.max_range, fts.rad_for_straight,
-                fts.max_straight_arange, fts.max_circ_arange,
-                fpos, fdir, fts.curved, frelcen, fmrange, prec);
+  *this = trajestep(fts.max_range, fts.rad_for_straight,
+                    fts.max_straight_arange, fts.max_circ_arange, fpos, fdir,
+                    fts.curved, frelcen, fmrange, prec);
 }
 
 void trajestep::Gnextpoint(double frange, point& fpos, vec& fdir) const {
@@ -136,9 +132,9 @@ std::ostream& operator<<(std::ostream& file, const trajestep& f) {
   indn.n += 2;
   Ifile << "currpos:" << f.currpos << indn << "dir=" << f.dir << indn
         << "relcen=" << f.relcen << indn << "s_range_cf=" << f.s_range_cf
-        << " s_prec=" << f.s_prec << " mrange=" << f.mrange << '\n' << indn
-        << "mpoint=" << f.mpoint;
+        << " s_prec=" << f.s_prec << " mrange=" << f.mrange << '\n'
+        << indn << "mpoint=" << f.mpoint;
   indn.n -= 2;
   return file;
 }
-}
+}  // namespace Heed

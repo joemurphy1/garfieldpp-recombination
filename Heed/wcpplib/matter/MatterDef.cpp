@@ -1,7 +1,9 @@
-#include <iomanip>
 #include "wcpplib/matter/MatterDef.h"
-#include "wcpplib/util/FunNameStack.h"
+
+#include <iomanip>
+
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include "wcpplib/util/FunNameStack.h"
 
 // 1998-2004 I. Smirnov
 
@@ -24,30 +26,25 @@ MatterDef::MatterDef(const std::string& fname, const std::string& fnotation,
 
 MatterDef::MatterDef(const std::string& fname, const std::string& fnotation,
                      const std::string& fatom_not, double fdensity,
-                     double ftemperature) :
-    MatterDef(fname, fnotation, 1, {fatom_not}, {1.}, fdensity, ftemperature) {
-
-}
+                     double ftemperature)
+    : MatterDef(fname, fnotation, 1, {fatom_not}, {1.}, fdensity,
+                ftemperature) {}
 
 MatterDef::MatterDef(const std::string& fname, const std::string& fnotation,
                      const std::string& fatom_not1, double fweight_quan1,
                      const std::string& fatom_not2, double fweight_quan2,
-                     double fdensity, double ftemperature) :
-    MatterDef(fname, fnotation, 2, {fatom_not1, fatom_not2},
-              {fweight_quan1, fweight_quan2}, fdensity, ftemperature) {
-
-}
+                     double fdensity, double ftemperature)
+    : MatterDef(fname, fnotation, 2, {fatom_not1, fatom_not2},
+                {fweight_quan1, fweight_quan2}, fdensity, ftemperature) {}
 
 MatterDef::MatterDef(const std::string& fname, const std::string& fnotation,
                      const std::string& fatom_not1, double fweight_quan1,
                      const std::string& fatom_not2, double fweight_quan2,
                      const std::string& fatom_not3, double fweight_quan3,
-                     double fdensity, double ftemperature) :
-    MatterDef(fname, fnotation, 3, {fatom_not1, fatom_not2, fatom_not3},
-              {fweight_quan1, fweight_quan2, fweight_quan3}, 
-              fdensity, ftemperature) {
-
-}
+                     double fdensity, double ftemperature)
+    : MatterDef(fname, fnotation, 3, {fatom_not1, fatom_not2, fatom_not3},
+                {fweight_quan1, fweight_quan2, fweight_quan3}, fdensity,
+                ftemperature) {}
 
 void MatterDef::print(std::ostream& file, int l) const {
   if (l > 0) file << (*this);
@@ -66,4 +63,4 @@ std::ostream& operator<<(std::ostream& file, const MatterDef& f) {
   return file;
 }
 
-}
+}  // namespace Heed

@@ -1,19 +1,18 @@
 #ifndef G_COMPONENT_PP_H
 #define G_COMPONENT_PP_H
 
+#include <TF1.h>
+#include <TF2.h>
+
 #include <string>
 
 #include "Garfield/Component.hh"
 #include "Garfield/ComponentGrid.hh"
 
-#include <TF1.h>
-#include <TF2.h>
-
-
 namespace Garfield {
 
-  class Medium;
-  class ComponentGrid;
+class Medium;
+class ComponentGrid;
 
 /// Component for parallel-plate geometries.
 
@@ -26,13 +25,13 @@ class ComponentParallelPlate : public Component {
 
   /** Define the geometry.
    * \param N amount of layers in the geometry, this includes the gas gaps
-   *        \f$y\f$. 
+   *        \f$y\f$.
    * \param d thickness of the layers starting from the bottom to the
-   *        top layer along \f$y\f$. 
+   *        top layer along \f$y\f$.
    * \param eps relative permittivities of the layers
-   *        starting from the bottom to the top layer along \f$y\f$ . 
-   *        Here, the gas gaps having a value of 1. 
-   * \param sigmaIndex Indices of the resistive layers (optional). 
+   *        starting from the bottom to the top layer along \f$y\f$ .
+   *        Here, the gas gaps having a value of 1.
+   * \param sigmaIndex Indices of the resistive layers (optional).
    * \param V applied potential difference between the
    *        parallel plates.
    */
@@ -117,7 +116,6 @@ class ComponentParallelPlate : public Component {
   // Obtain the index and permitivity of the layer at height z.
   // TODO: getLayer -> GetLayer
   bool getLayer(const double y, int &m, double &epsM) {
-
     m = -1;
     if (y < m_z[0]) return false;
     for (int i = 1; i < m_N; i++) {
@@ -131,18 +129,18 @@ class ComponentParallelPlate : public Component {
     return true;
   }
   // Obtain the relative permittivity from layer at index m
-  void getPermittivityFromLayer(int m, double& eps) {
+  void getPermittivityFromLayer(int m, double &eps) {
     eps = m_epsHolder.at(m - 1);
   }
   // Obtain the z-coordinate bounds of layer m
-  void getZBoundFromLayer(int m, double& zbottom, double& ztop) {
+  void getZBoundFromLayer(int m, double &zbottom, double &ztop) {
     ztop = m_z.at(m);
     zbottom = m_z.at(m - 1);
   }
   // Obtain number of layers
   int NumberOfLayers() { return m_N - 1; }
   // Get the indices of the gas gaps
-  void IndexOfGasGaps(std::vector<int>& indexGasGap) {
+  void IndexOfGasGaps(std::vector<int> &indexGasGap) {
     indexGasGap = {};
     for (int i = 1; i < m_N; i++) {
       if (!m_conductive[i]) indexGasGap.push_back(i);
@@ -171,11 +169,11 @@ class ComponentParallelPlate : public Component {
 
   std::vector<double> m_eps;  ///< relative permittivity of each layer
   std::vector<double> m_epsHolder;
-  std::vector<double> m_d; ///< thickness of each layer
+  std::vector<double> m_d;  ///< thickness of each layer
   std::vector<double> m_z;
 
   /// Flag whether a layer is conductive.
-  std::vector<bool> m_conductive; 
+  std::vector<bool> m_conductive;
 
   TF2 m_hIntegrand;
 
@@ -205,19 +203,14 @@ class ComponentParallelPlate : public Component {
     int ind = structureelectrode::NotSet;  ///< Readout group.
     double xpos, ypos;                     ///< Coordinates in x/y.
     double lx, ly;                         ///< Dimensions in the x-y plane.
-    bool formAnode = true;                 
+    bool formAnode = true;
 
     bool m_usegrid = false;  ///< Enabling grid based calculations.
     ComponentGrid grid;      ///< grid object.
   };
 
   /// Possible readout groups
-  enum structureelectrode {
-    NotSet = -1,
-    Plane,
-    Strip,
-    Pixel
-  };
+  enum structureelectrode { NotSet = -1, Plane, Strip, Pixel };
 
   // Vectors storing the readout electrodes.
   std::vector<std::string> m_readout;
@@ -246,7 +239,7 @@ class ComponentParallelPlate : public Component {
 
   // Construct the w, v, c and g matrices needed for constructing
   // the weighting potentials equations.
-  void constructGeometryFunction(const int N, const std::vector<double>& d);
+  void constructGeometryFunction(const int N, const std::vector<double> &d);
 
   // Build function h needed for the integrand of the weighting potential of a
   // strip and pixel
@@ -297,7 +290,6 @@ class ComponentParallelPlate : public Component {
 
   // Rebuilds c, v, g and w matrix.
   void LayerUpdate(const double z, const int im, const double epsM) {
-
     if (z == m_currentPosition) return;
 
     m_currentPosition = z;

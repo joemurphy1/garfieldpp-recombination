@@ -1,4 +1,5 @@
-// Include this header if we're compiling with the GPU or this is the first time without
+// Include this header if we're compiling with the GPU or this is the first time
+// without
 #if defined(__GPUCOMPILE__) || !defined(G_COMPONENT_H)
 
 #if !defined(__GPUCOMPILE__) && !defined(G_COMPONENT_H)
@@ -12,31 +13,31 @@
 
 #include <array>
 #include <string>
-#include<vector>
+#include <vector>
 
 #endif
 
 namespace Garfield {
 
-// setup class names depending on if this is compiling the GPU static version or not
+// setup class names depending on if this is compiling the GPU static version or
+// not
 #if !defined(__GPUCOMPILE__)
-  class ComponentGPU;
-  class Geometry;
-  class Medium;
+class ComponentGPU;
+class Geometry;
+class Medium;
 #endif
 
 /// Abstract base class for components.
 class GARFIELD_CLASS_NAME(Component) {
  public:
-
-  #ifdef __GPUCOMPILE__
+#ifdef __GPUCOMPILE__
   GARFIELD_CLASS_NAME(Component)() = default;
-  #else
+#else
   /// Default constructor.
   GARFIELD_CLASS_NAME(Component)() = delete;
   /// Constructor
   GARFIELD_CLASS_NAME(Component)(const std::string& name);
-  #endif
+#endif
   /// Destructor
   virtual ~GARFIELD_CLASS_NAME(Component)() {};
 
@@ -49,30 +50,30 @@ class GARFIELD_CLASS_NAME(Component) {
   /// Get the medium at a given location (x, y, z).
   virtual Medium* GetMedium(const double x, const double y, const double z);
 
-  /** Calculate the drift field at given point.
-   *
-   * \param x,y,z coordinates [cm].
-   * \param ex,ey,ez components of the electric field [V/cm].
-   * \param m pointer to the medium at this location.
-   * \param status status flag
-   *
-   * Status flags:
-   *
-   *             0: Inside an active medium
-   *           > 0: Inside a wire of type X
-   *     -4 ... -1: On the side of a plane where no wires are
-   *            -5: Inside the mesh but not in an active medium
-   *            -6: Outside the mesh
-   *           -10: Unknown potential type (should not occur)
-   *         other: Other cases (should not occur)
-   */
-  #endif
+/** Calculate the drift field at given point.
+ *
+ * \param x,y,z coordinates [cm].
+ * \param ex,ey,ez components of the electric field [V/cm].
+ * \param m pointer to the medium at this location.
+ * \param status status flag
+ *
+ * Status flags:
+ *
+ *             0: Inside an active medium
+ *           > 0: Inside a wire of type X
+ *     -4 ... -1: On the side of a plane where no wires are
+ *            -5: Inside the mesh but not in an active medium
+ *            -6: Outside the mesh
+ *           -10: Unknown potential type (should not occur)
+ *         other: Other cases (should not occur)
+ */
+#endif
 
-  #ifdef __GPUCOMPILE__
+#ifdef __GPUCOMPILE__
   __device__ void ElectricField(const cuda_t xin, const cuda_t yin,
                                 const cuda_t zin, cuda_t& ex, cuda_t& ey,
                                 cuda_t& ez, MediumGPU*& m, int& status);
-  #else
+#else
   virtual void ElectricField(const double x, const double y, const double z,
                              double& ex, double& ey, double& ez, Medium*& m,
                              int& status) = 0;
@@ -80,12 +81,12 @@ class GARFIELD_CLASS_NAME(Component) {
   virtual void ElectricField(const double x, const double y, const double z,
                              double& ex, double& ey, double& ez, double& v,
                              Medium*& m, int& status) = 0;
-  #endif
+#endif
 
 #ifndef __GPUCOMPILE__
   /// Calculate the drift field [V/cm] at (x, y, z).
   std::array<double, 3> ElectricField(const double x, const double y,
-                                      const double z); 
+                                      const double z);
   /// Calculate the (drift) electrostatic potential [V] at (x, y, z).
   virtual double ElectricPotential(const double x, const double y,
                                    const double z);
@@ -108,9 +109,9 @@ class GARFIELD_CLASS_NAME(Component) {
   virtual double WeightingPotential(const double x, const double y,
                                     const double z, const std::string& label);
 
-  /** Return the time steps at which the delayed weighting potential/field 
-    * are stored/evaluated.
-    */
+  /** Return the time steps at which the delayed weighting potential/field
+   * are stored/evaluated.
+   */
   virtual const std::vector<double>& DelayedSignalTimes(
       const std::string& /*label*/) {
     return m_wdtimes;
@@ -158,7 +159,7 @@ class GARFIELD_CLASS_NAME(Component) {
   /// Ready for use?
   virtual bool IsReady() { return m_ready; }
   /// Does the component have a 3D field (map)?
-  virtual bool Is3d() { return true; } 
+  virtual bool Is3d() { return true; }
 
   /// Get the bounding box coordinates.
   virtual bool GetBoundingBox(double& xmin, double& ymin, double& zmin,
@@ -176,14 +177,14 @@ class GARFIELD_CLASS_NAME(Component) {
 
   /// Return the number of mesh elements.
   virtual size_t GetNumberOfElements() const { return 0; }
-  /// Get the indices of the nodes constituting a given element. 
-  virtual bool GetElementNodes(const size_t /*i*/, 
+  /// Get the indices of the nodes constituting a given element.
+  virtual bool GetElementNodes(const size_t /*i*/,
                                std::vector<size_t>& /*nodes*/) const {
     return false;
   }
-  /// Get the region/material of a mesh element and a flag whether it is 
+  /// Get the region/material of a mesh element and a flag whether it is
   /// associated to an active medium.
-  virtual bool GetElementRegion(const size_t /*i*/, size_t& /*mat*/, 
+  virtual bool GetElementRegion(const size_t /*i*/, size_t& /*mat*/,
                                 bool& /*drift*/) const {
     return false;
   }
@@ -224,12 +225,13 @@ class GARFIELD_CLASS_NAME(Component) {
       const double dy1, const double dz1, const double dx2, const double dy2,
       const double dz2, const unsigned int nU = 20, const unsigned int nV = 20);
 
-  /// Integrate the normal component of the weighting field 
+  /// Integrate the normal component of the weighting field
   /// over a parallelogram.
-  double IntegrateWeightingFluxParallelogram(const std::string& label,
-      const double x0, const double y0, const double z0, const double dx1,
-      const double dy1, const double dz1, const double dx2, const double dy2,
-      const double dz2, const unsigned int nU = 20, const unsigned int nV = 20);
+  double IntegrateWeightingFluxParallelogram(
+      const std::string& label, const double x0, const double y0,
+      const double z0, const double dx1, const double dy1, const double dz1,
+      const double dx2, const double dy2, const double dz2,
+      const unsigned int nU = 20, const unsigned int nV = 20);
 
   /** Integrate the electric field flux through a line from
     * (x0,y0,z0) to (x1,y1,z1) along a direction (xp,yp,zp).
@@ -268,7 +270,7 @@ class GARFIELD_CLASS_NAME(Component) {
                             const double z0, double& xw, double& yw,
                             double& rw);
   /** Determine whether the line between two points crosses a plane.
-    */
+   */
   virtual bool CrossedPlane(const double x0, const double y0, const double z0,
                             const double x1, const double y1, const double z1,
                             double& xc, double& yc, double& zc);
@@ -393,13 +395,13 @@ class GARFIELD_CLASS_NAME(Component) {
 
   // Get the electron mobility coefficient.
   virtual bool ElectronMobility(const double /*x*/, const double /*y*/,
-                                  const double /*z*/, double& mu) {
+                                const double /*z*/, double& mu) {
     mu = 0;
     return false;
   }
   /// Get the hole Mobility coefficient.
   virtual bool HoleMobility(const double /*x*/, const double /*y*/,
-                              const double /*z*/, double& mu) {
+                            const double /*z*/, double& mu) {
     mu = 0;
     return false;
   }
@@ -434,7 +436,7 @@ class GARFIELD_CLASS_NAME(Component) {
   virtual double StepSizeHint() { return -1.; }
 
   /// Create and initialise GPU Transfer class
-  virtual double CreateGPUTransferObject(ComponentGPU *&comp_gpu);
+  virtual double CreateGPUTransferObject(ComponentGPU*& comp_gpu);
 
  protected:
   /// Class name.
@@ -448,7 +450,6 @@ class GARFIELD_CLASS_NAME(Component) {
 #endif
   /// Ready for use?
   bool m_ready = false;
-
 
 #ifdef __GPUCOMPILE__
   /// Simple periodicity in x, y, z.
@@ -474,49 +475,50 @@ class GARFIELD_CLASS_NAME(Component) {
 #endif
 
 #ifndef __GPUCOMPILE__
- /// Time steps at which the delayed weighting potentials/fields are stored.
+  /// Time steps at which the delayed weighting potentials/fields are stored.
   std::vector<double> m_wdtimes;
 
   /// Reset the component.
   virtual void Reset() = 0;
   /// Verify periodicities.
   virtual void UpdatePeriodicity() = 0;
- private:
 
-  double IntegrateFluxParallelogram(
-      const double x0, const double y0, const double z0, const double dx1,
-      const double dy1, const double dz1, const double dx2, const double dy2,
-      const double dz2, const unsigned int nU, const unsigned int nV,
-      const bool wfield, const std::string& label);
+ private:
+  double IntegrateFluxParallelogram(const double x0, const double y0,
+                                    const double z0, const double dx1,
+                                    const double dy1, const double dz1,
+                                    const double dx2, const double dy2,
+                                    const double dz2, const unsigned int nU,
+                                    const unsigned int nV, const bool wfield,
+                                    const std::string& label);
 #else
 
-// include parts from derived class due to big performance hit from using virtual methods
+// include parts from derived class due to big performance hit from using
+// virtual methods
 // TODO GPU TN: It isn't clear to me that we actually need (at least) the Ansys
 // include - all the code is protected by an ifndef __GPUCOMPILE__, whereas it
 // will be defined when these includes are made
-#include "ComponentFieldMap.hh"
 #include "ComponentAnsys123.hh"
+#include "ComponentFieldMap.hh"
 
-friend class ComponentAnsys123;
-friend class ComponentComsol;
-friend class ComponentElmer;
-friend class ComponentFieldMap;
-friend class Component;
+  friend class ComponentAnsys123;
+  friend class ComponentComsol;
+  friend class ComponentElmer;
+  friend class ComponentFieldMap;
+  friend class Component;
 
-// enum to mimic polymorphism
-enum class ComponentType
-{
-  Component = 0,
-  ComponentFieldMap,
-  ComponentAnsys123,
-  ComponentComsol,
-  ComponentElmer
-};
+  // enum to mimic polymorphism
+  enum class ComponentType {
+    Component = 0,
+    ComponentFieldMap,
+    ComponentAnsys123,
+    ComponentComsol,
+    ComponentElmer
+  };
 
-ComponentType m_ComponentType{ComponentType::Component};
+  ComponentType m_ComponentType{ComponentType::Component};
 
 #endif
-
 };
 }  // namespace Garfield
 

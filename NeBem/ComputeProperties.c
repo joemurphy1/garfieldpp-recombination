@@ -48,7 +48,7 @@ double GetPotential(int ele, Point3D *localP) {
       printf("Geometrical type out of range! ... exiting ...\n");
       exit(-1);
       break;  // never comes here
-  }           // switch over gtsrc ends
+  }  // switch over gtsrc ends
 
   return (value);
 }  // end of GetPotential
@@ -79,7 +79,7 @@ double RecPot(int ele, Point3D *localP) {
     // normalize distances by `a' while sending - likely to improve accuracy
     int fstatus = ExactRecSurf(xpt / a, ypt / a, zpt / a, -0.5, -(b / a) / 2.0,
                                0.5, (b / a) / 2.0, &Pot, &Field);
-    if (fstatus) { // non-zero
+    if (fstatus) {  // non-zero
       printf("problem in computing Potential of rectangular element ... \n");
       printf("a: %lg, b: %lg, X: %lg, Y: %lg, Z: %lg\n", a, b, xpt, ypt, zpt);
       // printf("returning ...\n");
@@ -195,7 +195,7 @@ void GetFluxGCS(int ele, Point3D *localP, Vector3D *globalF) {
       printf("Geometrical type out of range! ... exiting ...\n");
       exit(-1);
       break;  // never comes here
-  }           // switch over gtsrc ends
+  }  // switch over gtsrc ends
   const int prim = (EleArr + ele - 1)->PrimitiveNb;
   (*globalF) = RotateVector3D(&localF, &PrimDC[prim], local2global);
 }  // end of GetFluxGCS
@@ -217,7 +217,7 @@ void GetFlux(int ele, Point3D *localP, Vector3D *localF) {
       printf("Geometrical type out of range! ... exiting ...\n");
       exit(-1);
       break;  // never comes here
-  }           // switch over gtsrc ends
+  }  // switch over gtsrc ends
 }  // end of GetFlux
 
 // local coord flux localF per unit charge density on one rectangular element
@@ -503,7 +503,7 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
       int PrimOK = 0;
       // consider primitive representation accurate enough if it is
       // repeated and beyond PrimAfter repetitions.
-      if (PrimAfter < 0) { // If PrimAfter < 0, PrimOK is zero
+      if (PrimAfter < 0) {  // If PrimAfter < 0, PrimOK is zero
         PrimOK = 0;
       } else if (PrimAfter == 0) {  // only this is necessary
         PrimOK = 1;
@@ -554,12 +554,11 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
         eF.X = 0.0;
         eF.Y = 0.0;
         eF.Z = 0.0;
-        const Element* eleBgn = EleArr + ElementBgn[primsrc] - 1;
-        const Element* eleEnd = EleArr + ElementEnd[primsrc] - 1;
-        for (const Element* ele = eleBgn; ele <= eleEnd; ++ele) {
+        const Element *eleBgn = EleArr + ElementBgn[primsrc] - 1;
+        const Element *eleEnd = EleArr + ElementEnd[primsrc] - 1;
+        for (const Element *ele = eleBgn; ele <= eleEnd; ++ele) {
           // Rotate from global to local system; matrix as for primitive
-          double vG[3] = {xfld - ele->Origin.X, 
-                          yfld - ele->Origin.Y, 
+          double vG[3] = {xfld - ele->Origin.X, yfld - ele->Origin.Y,
                           zfld - ele->Origin.Z};
           double vL[3] = {0., 0., 0.};
           for (int i = 0; i < 3; ++i) {
@@ -580,13 +579,13 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
           // if(DebugLevel == 301)
           if (dbgFn) {
             printf("PFAtPoint base primitive:%d\n", primsrc);
-            printf("Element: %ld, xlocal: %lg, ylocal: %lg, zlocal %lg\n", 
+            printf("Element: %ld, xlocal: %lg, ylocal: %lg, zlocal %lg\n",
                    ele - EleArr + 1, vL[0], vL[1], vL[2]);
             printf("    Solution: %g\n", qel);
-            printf("    tPot: %lg, tFx: %lg, tFy: %lg, tFz: %lg\n",
-                   tPot, tF.X, tF.Y, tF.Z);
-            printf("    ePot: %lg, eFx: %lg, eFy: %lg, eFz: %lg\n", 
-                   ePot, eF.X, eF.Y, eF.Z);
+            printf("    tPot: %lg, tFx: %lg, tFy: %lg, tFz: %lg\n", tPot, tF.X,
+                   tF.Y, tF.Z);
+            printf("    ePot: %lg, eFx: %lg, eFy: %lg, eFz: %lg\n", ePot, eF.X,
+                   eF.Y, eF.Z);
             fflush(stdout);
           }
         }  // for all the elements on this primsrc primitive
@@ -635,10 +634,10 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                 int repPrimOK = 0;
                 // consider primitive representation accurate enough if it is
                 // repeated and beyond PrimAfter repetitions.
-                if (PrimAfter < 0) { // If PrimAfter <0, repPrimOK is zero
+                if (PrimAfter < 0) {  // If PrimAfter <0, repPrimOK is zero
                   repPrimOK = 0;
-                } else if ((abs(xrpt) >= PrimAfter)
-                            && (abs(yrpt) >= PrimAfter)) {
+                } else if ((abs(xrpt) >= PrimAfter) &&
+                           (abs(yrpt) >= PrimAfter)) {
                   repPrimOK = 1;
                 }
                 if (repPrimOK) {
@@ -691,9 +690,9 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                   erF.X = 0.0;
                   erF.Y = 0.0;
                   erF.Z = 0.0;
-                  const Element* eleBgn = EleArr + ElementBgn[primsrc] - 1;
-                  const Element* eleEnd = EleArr + ElementEnd[primsrc] - 1;
-                  for (const Element* ele = eleBgn; ele <= eleEnd; ++ele) {
+                  const Element *eleBgn = EleArr + ElementBgn[primsrc] - 1;
+                  const Element *eleEnd = EleArr + ElementEnd[primsrc] - 1;
+                  for (const Element *ele = eleBgn; ele <= eleEnd; ++ele) {
                     const double XEOfRpt = ele->Origin.X + xShift;
                     const double YEOfRpt = ele->Origin.Y + yShift;
                     const double ZEOfRpt = ele->Origin.Z + zShift;
@@ -721,8 +720,10 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                     // if(DebugLevel == 301)
                     if (dbgFn) {
                       printf("PFAtPoint base primitive:%d\n", primsrc);
-                      printf("Element: %ld, xlocal: %lg, ylocal: %lg, zlocal %lg\n",
-                             ele - EleArr + 1, vL[0], vL[1], vL[2]);
+                      printf(
+                          "Element: %ld, xlocal: %lg, ylocal: %lg, zlocal "
+                          "%lg\n",
+                          ele - EleArr + 1, vL[0], vL[1], vL[2]);
                       printf("    Solution: %g\n", qel);
                       printf("    tPot: %lg, tFx: %lg, tFy: %lg, tFz: %lg\n",
                              tPot, tF.X, tF.Y, tF.Z);
@@ -750,10 +751,10 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
                 }
 
               }  // for zrpt
-            }    // for yrpt
-          }      // for xrpt
-        }        // PeriodicInX || PeriodicInY || PeriodicInZ
-      }          // PeriodicType == 1
+            }  // for yrpt
+          }  // for xrpt
+        }  // PeriodicInX || PeriodicInY || PeriodicInZ
+      }  // PeriodicType == 1
       Vector3D localF;
       localF.X = lFx;
       localF.Y = lFy;
@@ -763,7 +764,7 @@ int ElePFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
       plFy[primsrc] = tmpF.Y;
       plFz[primsrc] = tmpF.Z;
     }  // for all primitives: basic device, mirror reflections and repetitions
-  }    // pragma omp parallel
+  }  // pragma omp parallel
 
   double totPot = 0.0;
   Vector3D totF;
@@ -879,24 +880,24 @@ int ElePFAtPoint1(Point3D *globalP, double *Potential, Vector3D *globalF) {
       const double sx = perx > 0 ? XPeriod[primsrc] : 0.;
       const double sy = pery > 0 ? YPeriod[primsrc] : 0.;
       const double sz = perz > 0 ? ZPeriod[primsrc] : 0.;
-      const Element* eleBgn = EleArr + ElementBgn[primsrc] - 1;
-      const Element* eleEnd = EleArr + ElementEnd[primsrc] - 1;
-      for (const Element* ele = eleBgn; ele <= eleEnd; ++ele) {
-	const double xO = ele->Origin.X;
-	const double yO = ele->Origin.Y;
-	const double zO = ele->Origin.Z;
+      const Element *eleBgn = EleArr + ElementBgn[primsrc] - 1;
+      const Element *eleEnd = EleArr + ElementEnd[primsrc] - 1;
+      for (const Element *ele = eleBgn; ele <= eleEnd; ++ele) {
+        const double xO = ele->Origin.X;
+        const double yO = ele->Origin.Y;
+        const double zO = ele->Origin.Z;
         const int type = ele->GType;
         assert(type == 2 || type == 3 || type == 4);
         const double a = ele->LX;
         const double b = ele->LZ;
-        const double far2 = type == 2 ? FarField2 * b * b : 
-                                        FarField2 * (a * a + b * b);
+        const double far2 =
+            type == 2 ? FarField2 * b * b : FarField2 * (a * a + b * b);
         double area = a * b;
         if (type == 2) {
           area *= 2. * ST_PI;
         } else if (type == 3) {
           area *= 0.5;
-        } 
+        }
         double ePot = 0.;
         double eFx = 0.;
         double eFy = 0.;
@@ -909,13 +910,13 @@ int ElePFAtPoint1(Point3D *globalP, double *Potential, Vector3D *globalF) {
               const double zsrc = zO + sz * kz;
               // Rotate from global to local system.
               const double xG = xfld - xsrc;
-	      const double yG = yfld - ysrc;
-	      const double zG = zfld - zsrc;
+              const double yG = yfld - ysrc;
+              const double zG = zfld - zsrc;
               const double x = rot[0][0] * xG + rot[0][1] * yG + rot[0][2] * zG;
               const double y = rot[1][0] * xG + rot[1][1] * yG + rot[1][2] * zG;
               const double z = rot[2][0] * xG + rot[2][1] * yG + rot[2][2] * zG;
               const double xm = type == 3 ? x - a / 3. : x;
-	      const double zm = type == 3 ? z - b / 3. : z;
+              const double zm = type == 3 ? z - b / 3. : z;
               const double r2 = xm * xm + y * y + zm * zm;
               if (r2 >= far2) {
                 const double v = area / sqrt(r2);
@@ -925,15 +926,14 @@ int ElePFAtPoint1(Point3D *globalP, double *Potential, Vector3D *globalF) {
                 eFy += y * f;
                 eFz += z * f;
                 continue;
-              } 
+              }
               double tPot = 0.;
               Vector3D tF;
               tF.X = tF.Y = tF.Z = 0.;
               switch (type) {
                 case 4:
-                  if (ExactRecSurf(x / a, y / a, z / a, 
-                                   -0.5, -(b / a) / 2.0, 0.5, (b / a) / 2.0, 
-				   &tPot, &tF)) {
+                  if (ExactRecSurf(x / a, y / a, z / a, -0.5, -(b / a) / 2.0,
+                                   0.5, (b / a) / 2.0, &tPot, &tF)) {
                     printf("Problem with ExactRecSurf.\n");
                   }
                   // Rescale.
@@ -966,9 +966,9 @@ int ElePFAtPoint1(Point3D *globalP, double *Potential, Vector3D *globalF) {
               eFx += tF.X;
               eFy += tF.Y;
               eFz += tF.Z;
-            } // z
-          } // y
-        } // x
+            }  // z
+          }  // y
+        }  // x
         const double q = ele->Solution + ele->Assigned;
         pPot[primsrc] += q * ePot;
         lFx += q * eFx;
@@ -984,7 +984,7 @@ int ElePFAtPoint1(Point3D *globalP, double *Potential, Vector3D *globalF) {
       plFy[primsrc] = tmpF.Y;
       plFz[primsrc] = tmpF.Z;
     }  // for all primitives: basic device, mirror reflections and repetitions
-  }    // pragma omp parallel
+  }  // pragma omp parallel
 
   double totPot = 0.0;
   Vector3D totF;
@@ -1246,7 +1246,7 @@ int VoxelFPR(void) {
           VoxelFZ[k] = field.Z;
           VoxelP[k] = potential;
         }  // loop k
-      }    // pragma omp parallel
+      }  // pragma omp parallel
 
       for (int k = 1; k <= nbZCells + 1; ++k) {  // file output
         point.X = startX + (i - 1) * delX;
@@ -1259,12 +1259,12 @@ int VoxelFPR(void) {
         neBEMVolumeDescription(ivol, &vshp, &vmat, &veps, &vpot, &vq, &vtype);
         if (dbgFn) {
           printf("volref: %d\n", ivol);
-          printf("shape: %d,  material: %d\n", volShape[ivol], volMaterial[ivol]);
-          printf("eps: %d,  pot: %d\n", volEpsilon[ivol], volPotential[ivol]);
-          printf("q: %d,  type: %d\n", volCharge[ivol], volBoundaryType[ivol]);
-          printf("shape: %d,  material: %d\n", vshp, vmat);
-          printf("eps: %d,  pot: %d\n", veps, vpot);
-          printf("q: %d,  type: %d\n", vq, vtype);
+          printf("shape: %d,  material: %d\n", volShape[ivol],
+        volMaterial[ivol]); printf("eps: %d,  pot: %d\n", volEpsilon[ivol],
+        volPotential[ivol]); printf("q: %d,  type: %d\n", volCharge[ivol],
+        volBoundaryType[ivol]); printf("shape: %d,  material: %d\n", vshp,
+        vmat); printf("eps: %d,  pot: %d\n", veps, vpot); printf("q: %d,  type:
+        %d\n", vq, vtype);
         }
         */
 
@@ -1279,7 +1279,7 @@ int VoxelFPR(void) {
 
       // printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
     }  // loop j
-  }    // loop i
+  }  // loop i
 
   fclose(fVoxel);
 
@@ -1444,7 +1444,7 @@ int MapFPR(void) {
           MapFZ[k] = field.Z;
           MapP[k] = potential;
         }  // loop k
-      }    // pragma omp parallel
+      }  // pragma omp parallel
 
       for (int k = 1; k <= nbZCells + 1; ++k) {
         // file output
@@ -1474,8 +1474,8 @@ int MapFPR(void) {
                 ivol + 1);
       }
       fflush(fMap);  // file output over
-    }                // loop j
-  }                  // loop i
+    }  // loop j
+  }  // loop i
 
   fclose(fMap);
 
@@ -1605,7 +1605,7 @@ int MapFPR(void) {
             MapFZ[k] = field.Z;
             MapP[k] = potential;
           }  // loop k
-        }    // pragma omp parallel
+        }  // pragma omp parallel
 
         for (int k = 1; k <= nbZCells + 1; ++k) {
           // file output
@@ -1619,12 +1619,12 @@ int MapFPR(void) {
           neBEMVolumeDescription(ivol, &vshp, &vmat, &veps, &vpot, &vq, &vtype);
           if (dbgFn) {
             printf("volref: %d\n", ivol);
-            printf("shape: %d,  material: %d\n", volShape[ivol], volMaterial[ivol]); 
-            printf("eps: %d,  pot: %d\n", volEpsilon[ivol], volPotential[ivol]); 
-            printf("q: %d,  type: %d\n", volCharge[ivol], volBoundaryType[ivol]); 
-            printf("shape: %d,  material: %d\n", vshp, vmat); 
-            printf("eps: %d,  pot: %d\n", veps, vpot); 
-            printf("q: %d, type: %d\n", vq, vtype);
+            printf("shape: %d,  material: %d\n", volShape[ivol],
+          volMaterial[ivol]); printf("eps: %d,  pot: %d\n", volEpsilon[ivol],
+          volPotential[ivol]); printf("q: %d,  type: %d\n", volCharge[ivol],
+          volBoundaryType[ivol]); printf("shape: %d,  material: %d\n", vshp,
+          vmat); printf("eps: %d,  pot: %d\n", veps, vpot); printf("q: %d, type:
+          %d\n", vq, vtype);
           }
           */
 
@@ -1633,11 +1633,11 @@ int MapFPR(void) {
               100.0 * point.X / LengthScale, 100.0 * point.Y / LengthScale,
               100.0 * point.Z / LengthScale, MapFX[k] / 100.0, MapFY[k] / 100.0,
               MapFZ[k] / 100.0, MapP[k] / LengthScale, ivol + 1);
-        }              // for k <= nbZCells
+        }  // for k <= nbZCells
         fflush(fMap);  // file output over
 
       }  // loop j
-    }    // loop i
+    }  // loop i
 
     fclose(fMap);
 
@@ -1865,7 +1865,7 @@ int CreateFastVolElePF(void) {
             FastFY[block][i][j][k] = field.Y;
             FastFZ[block][i][j][k] = field.Z;
           }  // loop k
-        }    // pragma omp parallel
+        }  // pragma omp parallel
 
         for (int k = 1 + kskip; k <= nbZCells + 1; ++k)  // file output
         {
@@ -1886,8 +1886,8 @@ int CreateFastVolElePF(void) {
             "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
             "\b\b\b\b\b\b\b\b\b\b");
       }  // loop j
-    }    // loop i
-  }      // loop block
+    }  // loop i
+  }  // loop block
 
   fclose(fFastVolPF);
 
@@ -2048,7 +2048,7 @@ int CreateFastVolElePF(void) {
                       "wrong PFAtPoint return value in FastVolElePF.\n");
                   // return -1;
                 }
-              } // else omitFlag
+              }  // else omitFlag
               if (dbgFn) {
                 printf("%.8lg\t%.8lg\t%.8lg\t%.8lg\t%.8lg\t%.8lg\t%.8lg\n",
                        point.X / LengthScale, point.Y / LengthScale,
@@ -2062,7 +2062,7 @@ int CreateFastVolElePF(void) {
               StgFastFY[block][i][j][k] = field.Y;
               StgFastFZ[block][i][j][k] = field.Z;
             }  // loop k
-          }    // pragma omp
+          }  // pragma omp
 
           for (int k = 1 + kskip; k <= nbZCells + 1; ++k)  // file output
           {
@@ -2083,8 +2083,8 @@ int CreateFastVolElePF(void) {
               "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
               "\b\b\b\b\b\b\b\b\b\b\b");
         }  // loop j
-      }    // loop i
-    }      // loop block
+      }  // loop i
+    }  // loop block
 
     fclose(fStgFastVolPF);
   }  // if OptStaggerFastVol
@@ -2300,18 +2300,20 @@ int FastPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
     printf("equivalent dist adjusted for staggered: %g, %g, %g\n", dx, dy, dz);
 
   // Check whether the point falls within a volume that is omitted
-  for(int omit = 1; omit <= FastVol.NbOmitVols; ++omit) {
-    if ((dx >= (OmitVolCrnrX[omit]-FastVol.CrnrX)) && 
-        (dx <= (OmitVolCrnrX[omit]+OmitVolLX[omit]-FastVol.CrnrX)) && 
-        (dy >= (OmitVolCrnrY[omit]-FastVol.CrnrY)) && 
-        (dy <= (OmitVolCrnrY[omit]+OmitVolLY[omit]-FastVol.CrnrY)) && 
-        (dz >= (OmitVolCrnrZ[omit]-FastVol.CrnrZ)) && 
-        (dz <= (OmitVolCrnrZ[omit]+OmitVolLZ[omit]-FastVol.CrnrZ))) {
-      neBEMMessage("In FastPFAtPoint: point in an omitted volume!\n"); 
-      *Potential = 0.0; 
-      globalF->X = 0.0; globalF->Y = 0.0; globalF->Z = 0.0;
+  for (int omit = 1; omit <= FastVol.NbOmitVols; ++omit) {
+    if ((dx >= (OmitVolCrnrX[omit] - FastVol.CrnrX)) &&
+        (dx <= (OmitVolCrnrX[omit] + OmitVolLX[omit] - FastVol.CrnrX)) &&
+        (dy >= (OmitVolCrnrY[omit] - FastVol.CrnrY)) &&
+        (dy <= (OmitVolCrnrY[omit] + OmitVolLY[omit] - FastVol.CrnrY)) &&
+        (dz >= (OmitVolCrnrZ[omit] - FastVol.CrnrZ)) &&
+        (dz <= (OmitVolCrnrZ[omit] + OmitVolLZ[omit] - FastVol.CrnrZ))) {
+      neBEMMessage("In FastPFAtPoint: point in an omitted volume!\n");
+      *Potential = 0.0;
+      globalF->X = 0.0;
+      globalF->Y = 0.0;
+      globalF->Z = 0.0;
     }
-  }	// loop over omitted volumes
+  }  // loop over omitted volumes
 
   // Find the block in which the point lies
   int thisBlock = 0;
@@ -2775,18 +2777,20 @@ int FastKnChPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF) {
     printf("equivalent dist adjusted for staggered: %g, %g, %g\n", dx, dy, dz);
 
   // Check whether the point falls within a volume that is omitted
-  for(int omit = 1; omit <= FastVol.NbOmitVols; ++omit) {
-    if((dx >= (OmitVolCrnrX[omit]-FastVol.CrnrX)) && 
-       (dx <= (OmitVolCrnrX[omit]+OmitVolLX[omit]-FastVol.CrnrX)) && 
-       (dy >= (OmitVolCrnrY[omit]-FastVol.CrnrY)) && 
-       (dy <= (OmitVolCrnrY[omit]+OmitVolLY[omit]-FastVol.CrnrY)) && 
-       (dz >= (OmitVolCrnrZ[omit]-FastVol.CrnrZ)) && 
-       (dz <= (OmitVolCrnrZ[omit]+OmitVolLZ[omit]-FastVol.CrnrZ))) {
+  for (int omit = 1; omit <= FastVol.NbOmitVols; ++omit) {
+    if ((dx >= (OmitVolCrnrX[omit] - FastVol.CrnrX)) &&
+        (dx <= (OmitVolCrnrX[omit] + OmitVolLX[omit] - FastVol.CrnrX)) &&
+        (dy >= (OmitVolCrnrY[omit] - FastVol.CrnrY)) &&
+        (dy <= (OmitVolCrnrY[omit] + OmitVolLY[omit] - FastVol.CrnrY)) &&
+        (dz >= (OmitVolCrnrZ[omit] - FastVol.CrnrZ)) &&
+        (dz <= (OmitVolCrnrZ[omit] + OmitVolLZ[omit] - FastVol.CrnrZ))) {
       neBEMMessage("In FastKnChPFAtPoint: point in an omitted volume!\n");
-      *Potential = 0.0; 
-      globalF->X = 0.0; globalF->Y = 0.0; globalF->Z = 0.0;
+      *Potential = 0.0;
+      globalF->X = 0.0;
+      globalF->Y = 0.0;
+      globalF->Z = 0.0;
     }
-  }	// loop over omitted volumes
+  }  // loop over omitted volumes
 
   int thisBlock = 0;
   for (int block = 1; block <= FastVol.NbBlocks; ++block) {
@@ -3160,7 +3164,7 @@ int WtFldPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF,
         int PrimOK = 0;
         // consider primitive representation accurate enough if it is
         // repeated and beyond WtFldPrimAfter repetitions.
-        if (WtFldPrimAfter < 0) { // If WtFldPrimAfter <0, PrimOK is zero
+        if (WtFldPrimAfter < 0) {  // If WtFldPrimAfter <0, PrimOK is zero
           PrimOK = 0;
         } else if (WtFldPrimAfter == 0) {  // only this is necessary
           PrimOK = 1;
@@ -3300,7 +3304,8 @@ int WtFldPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF,
 
                   // consider primitive representation accurate enough if it is
                   // repeated and beyond WtFldPrimAfter repetitions.
-                  if (WtFldPrimAfter < 0) {//WtFldPrimAfter <0 => repPrimOK = 0
+                  if (WtFldPrimAfter <
+                      0) {  // WtFldPrimAfter <0 => repPrimOK = 0
                     repPrimOK = 0;
                   } else if ((abs(xrpt) >= WtFldPrimAfter) &&
                              (abs(yrpt) >= WtFldPrimAfter)) {
@@ -3416,10 +3421,10 @@ int WtFldPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF,
                 }  // repetition of basic primitive
 
               }  // for zrpt
-            }    // for yrpt
-          }      // for xrpt
-        }        // PeriodicInX || PeriodicInY || PeriodicInZ
-      }          // PeriodicType == 1
+            }  // for yrpt
+          }  // for xrpt
+        }  // PeriodicInX || PeriodicInY || PeriodicInZ
+      }  // PeriodicType == 1
       Vector3D localF;
       localF.X = lFx;
       localF.Y = lFy;
@@ -3429,7 +3434,7 @@ int WtFldPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF,
       plFy[primsrc] = tmpF.Y;
       plFz[primsrc] = tmpF.Z;
     }  // for all primitives: basic device, mirror reflections and repetitions
-  }    // pragma omp parallel
+  }  // pragma omp parallel
 
   double totPot = 0.0;
   Vector3D totF;
@@ -3457,7 +3462,7 @@ int WtFldPFAtPoint(Point3D *globalP, double *Potential, Vector3D *globalF,
   if (OptSystemChargeZero) {
     // Respect total system charge constraint.
     (*Potential) += WtFieldChDen[IdWtField][NbSystemChargeZero];
-  } 
+  }
 
   /*
   For weighting field, effect of KnCh is possibly zero.
@@ -3665,7 +3670,7 @@ int CreateWtFldFastVolPF(int IdWtField) {
                 neBEMMessage("wrong return from WtFldPFAtPoint.\n");
                 // return -1;
               }
-            } // else omitFlag
+            }  // else omitFlag
             if (dbgFn) {
               printf("%.8lg\t%.8lg\t%.8lg\t%.8lg\t%.8lg\t%.8lg\t%.8lg\n",
                      point.X / LengthScale, point.Y / LengthScale,
@@ -3679,7 +3684,7 @@ int CreateWtFldFastVolPF(int IdWtField) {
             WtFldFastFY[IdWtField][block][i][j][k] = field.Y;
             WtFldFastFZ[IdWtField][block][i][j][k] = field.Z;
           }  // loop k
-        }    // pragma omp parallel
+        }  // pragma omp parallel
 
         for (int k = 1 + kskip; k <= nbZCells + 1; ++k)  // file output
         {
@@ -3702,8 +3707,8 @@ int CreateWtFldFastVolPF(int IdWtField) {
             "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
             "\b\b\b\b\b\b\b\b\b\b");
       }  // loop j
-    }    // loop i
-  }      // loop block
+    }  // loop i
+  }  // loop block
 
   fclose(fWtFldFastVolPF);
 
@@ -3875,7 +3880,7 @@ int CreateWtFldFastVolPF(int IdWtField) {
                       "CreateWtFldFastVolElePF.\n");
                   // return -1;
                 }
-              } // else omitFlag
+              }  // else omitFlag
               if (dbgFn) {
                 printf("%.8lg\t%.8lg\t%.8lg\t%.8lg\t%.8lg\t%.8lg\t%.8lg\n",
                        point.X / LengthScale, point.Y / LengthScale,
@@ -3889,7 +3894,7 @@ int CreateWtFldFastVolPF(int IdWtField) {
               StgWtFldFastFY[IdWtField][block][i][j][k] = field.Y;
               StgWtFldFastFZ[IdWtField][block][i][j][k] = field.Z;
             }  // loop k
-          }    // pragma omp
+          }  // pragma omp
 
           for (int k = 1 + kskip; k <= nbZCells + 1; ++k) {
             // file output
@@ -3912,8 +3917,8 @@ int CreateWtFldFastVolPF(int IdWtField) {
               "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
               "\b\b\b\b\b\b\b\b\b\b\b");
         }  // loop j
-      }    // loop i
-    }      // loop block
+      }  // loop i
+    }  // loop block
 
     fclose(fStgWtFldFastVolPF);
   }  // if OptStaggerWtFldFastVol
@@ -4441,7 +4446,7 @@ void GetPFGCS(int type, double a, double b, Point3D *localP, double *Potential,
       printf("Geometrical type out of range! ... exiting ...\n");
       exit(-1);
       break;  // never comes here
-  }           // switch over gtsrc ends
+  }  // switch over gtsrc ends
 
   (*globalF) = RotateVector3D(&localF, DirCos, local2global);
 }  // end of GetPFGCS
@@ -4464,7 +4469,7 @@ void GetPF(int type, double a, double b, double x, double y, double z,
       printf("Geometrical type out of range! ... exiting ...\n");
       exit(-1);
       break;  // never comes here
-  }           // switch over gtsrc ends
+  }  // switch over gtsrc ends
 }  // end of GetPF
 
 // Flux per unit charge density on a rectangular element
@@ -4565,7 +4570,7 @@ void GetPrimPFGCS(int prim, Point3D *localP, double *Potential,
       printf("Geometrical type out of range! ... exiting ...\n");
       exit(-1);
       break;  // never comes here
-  }           // switch over gtsrc ends
+  }  // switch over gtsrc ends
 
   (*globalF) = RotateVector3D(&localF, DirCos, local2global);
 }  // end of GetPrimPFGCS
@@ -4587,7 +4592,7 @@ void GetPrimPF(int prim, Point3D *localP, double *Potential, Vector3D *localF) {
       printf("Geometrical type out of range! ... exiting ...\n");
       exit(-1);
       break;  // never comes here
-  }           // switch over gtsrc ends
+  }  // switch over gtsrc ends
 }  // end of GetPrimPF
 
 // Flux per unit charge density on a rectangular primitive
@@ -4645,7 +4650,7 @@ void TriPrimPF(int prim, Point3D *localP, double *Potential, Vector3D *localF) {
   } else {
     int fstatus =
         ExactTriSurf(b / a, xpt / a, ypt / a, zpt / a, Potential, localF);
-    if (fstatus) { // non-zero
+    if (fstatus) {  // non-zero
       printf("problem in TriPrimPF ... \n");
     }
     (*Potential) *= a;  // rescale - cannot be done outside because of the `if'
@@ -4662,7 +4667,7 @@ void WirePrimPF(int prim, Point3D *localP, double *Potential,
   double zpt = localP->Z;
   double rW = Radius[prim];
   double lW = PrimLZ[prim];
-  double dist = sqrt(xpt * xpt + ypt * ypt + zpt * zpt);  
+  double dist = sqrt(xpt * xpt + ypt * ypt + zpt * zpt);
 
   if (dist >= FarField * lW) {
     double dA = 2.0 * ST_PI * rW * lW;

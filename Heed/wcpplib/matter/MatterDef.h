@@ -51,5 +51,5 @@ class MatterDef : public AtomMixDef {
 };
 std::ostream& operator<<(std::ostream& file, const MatterDef& f);
 
-}
+}  // namespace Heed
 #endif

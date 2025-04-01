@@ -1,7 +1,7 @@
 #ifndef G_TRACK_H
 #define G_TRACK_H
 
-#include<array>
+#include <array>
 #include <cmath>
 #include <string>
 
@@ -116,10 +116,10 @@ class Track {
   void PlotCluster(const double x0, const double y0, const double z0);
 
   static std::array<double, 3> StepBfield(const double dt, const double qoverm,
-      const double vmag, double bx, double by, double bz,
-      std::array<double, 3>& dir);
-
+                                          const double vmag, double bx,
+                                          double by, double bz,
+                                          std::array<double, 3>& dir);
 };
-}
+}  // namespace Garfield
 
 #endif

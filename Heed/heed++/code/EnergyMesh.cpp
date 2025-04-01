@@ -1,7 +1,9 @@
+#include "heed++/code/EnergyMesh.h"
+
 #include <cmath>
 #include <iomanip>
+
 #include "wcpplib/util/FunNameStack.h"
-#include "heed++/code/EnergyMesh.h"
 
 namespace Heed {
 
@@ -97,7 +99,8 @@ void EnergyMesh::print(std::ostream& file, int l) const {
   Ifile << "EnergyMesh (l=" << l << "): \n";
   indn.n += 2;
   Ifile << "emin=" << emin << " emax=" << emax << " quantity of intervals=" << q
-        << '\n' << " maximal possible quantity of intervals=" << pqener << '\n';
+        << '\n'
+        << " maximal possible quantity of intervals=" << pqener << '\n';
   if (l > 1) {
     Ifile << " number  left side        center       right side       widht\n";
     for (int n = 0; n < q; n++) {
@@ -108,4 +111,4 @@ void EnergyMesh::print(std::ostream& file, int l) const {
   }
   indn.n -= 2;
 }
-}
+}  // namespace Heed

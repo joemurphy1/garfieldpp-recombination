@@ -2,6 +2,7 @@
 #define HEEDPARTICLE_BGM_H
 
 #include <vector>
+
 #include "HeedCluster.h"
 #include "wcpplib/particle/eparticle.h"
 
@@ -40,6 +41,6 @@ class HeedParticle_BGM : public eparticle {
 
   std::vector<HeedCluster> m_clusterBank;
 };
-}
+}  // namespace Heed
 
 #endif

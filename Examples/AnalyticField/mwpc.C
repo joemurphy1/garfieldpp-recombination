@@ -1,23 +1,22 @@
-#include <vector>
-
 #include <TApplication.h>
+#include <TAxis.h>
 #include <TCanvas.h>
 #include <TGraph.h>
-#include <TAxis.h>
+
+#include <vector>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
- 
+
   MediumMagboltz gas("ar", 90., "ch4", 10.);
 
   // Setup the cell.
@@ -25,8 +24,8 @@ int main(int argc, char * argv[]) {
   cmp.SetMedium(&gas);
 
   const double gap = 0.5;
-  cmp.AddPlaneY( 0.,  0.);
-  cmp.AddPlaneY(gap,  0.);
+  cmp.AddPlaneY(0., 0.);
+  cmp.AddPlaneY(gap, 0.);
 
   const double yw = 0.5 * gap;
   // Wire diameter [cm].
@@ -42,7 +41,7 @@ int main(int argc, char * argv[]) {
   // Plot the potential.
   ViewField fieldView(&cmp);
   const double xmin = -2.5 * pitch;
-  const double xmax =  2.5 * pitch;
+  const double xmax = 2.5 * pitch;
   fieldView.SetArea(xmin, 0., xmax, gap);
 
   TCanvas c1("c1", "", 600, 600);
@@ -61,15 +60,14 @@ int main(int argc, char * argv[]) {
   std::vector<double> yf;
   std::vector<double> zf;
   const double dx = 0.01 * (xmax - xmin);
-  fieldView.EqualFluxIntervals(xmin + dx, gap, 0., 
-                               xmax - dx, gap, 0., xf, yf, zf, 50);
-  fieldView.PlotFieldLines(xf, yf, zf, true, false); 
-  fieldView.EqualFluxIntervals(xmin + dx, 0., 0., 
-                               xmax - dx, 0., 0., xf, yf, zf, 50);
-  fieldView.PlotFieldLines(xf, yf, zf, true, false); 
+  fieldView.EqualFluxIntervals(xmin + dx, gap, 0., xmax - dx, gap, 0., xf, yf,
+                               zf, 50);
+  fieldView.PlotFieldLines(xf, yf, zf, true, false);
+  fieldView.EqualFluxIntervals(xmin + dx, 0., 0., xmax - dx, 0., 0., xf, yf, zf,
+                               50);
+  fieldView.PlotFieldLines(xf, yf, zf, true, false);
   cellView.SetCanvas(fieldView.GetCanvas());
   cellView.Plot2d();
 
   app.Run(true);
 }
-

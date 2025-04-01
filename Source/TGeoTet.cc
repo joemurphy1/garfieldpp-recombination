@@ -1,12 +1,12 @@
-#include <iostream>
-#include<array>
-
 #include "Garfield/TGeoTet.hh"
 
-#include "TGeoManager.h"
-#include "TVirtualGeoPainter.h"
+#include <array>
+#include <iostream>
+
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TGeoManager.h"
+#include "TVirtualGeoPainter.h"
 
 // ClassImp(TGeoTet)
 
@@ -21,9 +21,7 @@ Vec Dir(const Vec& a, const Vec& b) {
 }
 
 Vec Cross(const Vec& a, const Vec& b) {
-
-  Vec c = {a[1] * b[2] - a[2] * b[1],
-           a[2] * b[0] - a[0] * b[2],
+  Vec c = {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
            a[0] * b[1] - a[1] - b[0]};
   return c;
 }
@@ -32,10 +30,9 @@ double Dot(const Vec& a, const Vec& b) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-}
+}  // namespace
 
-TGeoTet::TGeoTet(const char *name,
-                 const std::array<Vec, 4>& vertices) 
+TGeoTet::TGeoTet(const char* name, const std::array<Vec, 4>& vertices)
     : TGeoBBox(name, 0, 0, 0) {
   fVertices = vertices;
 
@@ -65,12 +62,12 @@ void TGeoTet::ComputeBBox() {
   fDX = 0.5 * (vmax[0] - vmin[0]);
   fDY = 0.5 * (vmax[1] - vmin[1]);
   fDZ = 0.5 * (vmax[2] - vmin[2]);
-  for (size_t i = 0; i < 3; ++i) { 
+  for (size_t i = 0; i < 3; ++i) {
     fOrigin[i] = 0.5 * (vmax[i] + vmin[i]);
   }
 }
 
-TBuffer3D *TGeoTet::MakeBuffer3D() const {
+TBuffer3D* TGeoTet::MakeBuffer3D() const {
   // Number of vertices.
   constexpr int nv = 4;
   // Number of segments.
@@ -78,17 +75,18 @@ TBuffer3D *TGeoTet::MakeBuffer3D() const {
   constexpr int ns = 12;
   // Number of polygons.
   constexpr int np = 4;
-  auto buff = new TBuffer3D(TBuffer3DTypes::kGeneric, nv, 3 * nv, ns, 3 * ns, np, 5 * np);
+  auto buff = new TBuffer3D(TBuffer3DTypes::kGeneric, nv, 3 * nv, ns, 3 * ns,
+                            np, 5 * np);
   SetPoints(buff->fPnts);
   SetSegsAndPols(*buff);
   return buff;
 }
 
-void TGeoTet::Print(Option_t *) const {
+void TGeoTet::Print(Option_t*) const {
   std::cout << "=== Tetrahedron " << GetName() << "\n";
 }
 
-void TGeoTet::SetSegsAndPols(TBuffer3D &buff) const {
+void TGeoTet::SetSegsAndPols(TBuffer3D& buff) const {
   const int c = GetBasicColor();
 
   auto v01 = Dir(fVertices[0], fVertices[1]);
@@ -97,7 +95,7 @@ void TGeoTet::SetSegsAndPols(TBuffer3D &buff) const {
 
   auto v12 = Dir(fVertices[1], fVertices[2]);
   auto v13 = Dir(fVertices[1], fVertices[3]);
-  auto v10 = Dir(fVertices[1], fVertices[0]); 
+  auto v10 = Dir(fVertices[1], fVertices[0]);
 
   auto v23 = Dir(fVertices[2], fVertices[3]);
   auto v20 = Dir(fVertices[2], fVertices[0]);
@@ -134,13 +132,13 @@ void TGeoTet::SetSegsAndPols(TBuffer3D &buff) const {
 
   size_t ind = 0;
   for (const auto& face : faces) {
-    buff.fSegs[ind++] = c; 
+    buff.fSegs[ind++] = c;
     buff.fSegs[ind++] = face[0];
     buff.fSegs[ind++] = face[1];
-    buff.fSegs[ind++] = c; 
+    buff.fSegs[ind++] = c;
     buff.fSegs[ind++] = face[1];
     buff.fSegs[ind++] = face[2];
-    buff.fSegs[ind++] = c; 
+    buff.fSegs[ind++] = c;
     buff.fSegs[ind++] = face[2];
     buff.fSegs[ind++] = face[0];
   }
@@ -155,7 +153,7 @@ void TGeoTet::SetSegsAndPols(TBuffer3D &buff) const {
   }
 }
 
-void TGeoTet::SetPoints(double *points) const {
+void TGeoTet::SetPoints(double* points) const {
   size_t ind = 0;
   for (const auto& vertex : fVertices) {
     points[ind++] = vertex[0];
@@ -164,7 +162,7 @@ void TGeoTet::SetPoints(double *points) const {
   }
 }
 
-void TGeoTet::SetPoints(float *points) const {
+void TGeoTet::SetPoints(float* points) const {
   size_t ind = 0;
   for (const auto& vertex : fVertices) {
     points[ind++] = vertex[0];
@@ -188,7 +186,8 @@ const TBuffer3D& TGeoTet::GetBuffer3D(int reqSections, bool localFrame) const {
       buffer.SetSectionsValid(TBuffer3D::kRawSizes);
     }
   }
-  if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+  if ((reqSections & TBuffer3D::kRaw) &&
+      buffer.SectionsValid(TBuffer3D::kRawSizes)) {
     SetPoints(buffer.fPnts);
     if (!buffer.fLocalFrame) {
       TransformPoints(buffer.fPnts, buffer.NbPnts());
@@ -198,4 +197,3 @@ const TBuffer3D& TGeoTet::GetBuffer3D(int reqSections, bool localFrame) const {
   }
   return buffer;
 }
-

@@ -12,8 +12,8 @@ appear in all copies and in supporting documentation.
 The file is provided "as is" without express or implied warranty.
 */
 
-#include "wcpplib/geometry/vec.h"
 #include "wcpplib/geometry/straight.h"
+#include "wcpplib/geometry/vec.h"
 
 namespace Heed {
 
@@ -24,9 +24,9 @@ class polyline;
 class plane : public absref {
  protected:
   /// Origin point, pivot.
-  point piv;  
+  point piv;
   /// Direction of normal, unit vector.
-  vec dir;    
+  vec dir;
 
  public:
   point Gpiv() const { return piv; }
@@ -63,7 +63,7 @@ class plane : public absref {
   /// Return 1 if a point is in the plane (within precision prec).
   int check_point_in(const point& fp, double prec) const;
 
-  /// Figure out whether a straight line crosses the plane 
+  /// Figure out whether a straight line crosses the plane
   /// and return the intersection point if it does.
   /// vecerror = 2: line is parallel to the plane.
   /// vecerror = 3: line is in the plane.
@@ -81,6 +81,6 @@ class plane : public absref {
 };
 
 std::ostream& operator<<(std::ostream& file, const plane& s);
-}
+}  // namespace Heed
 
 #endif

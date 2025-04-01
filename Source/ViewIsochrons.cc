@@ -1,25 +1,25 @@
+#include "Garfield/ViewIsochrons.hh"
+
+#include <TAxis.h>
+#include <TGraph.h>
+#include <TH1F.h>
+#include <TROOT.h>
 #include <TStyle.h>
+
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <set>
-#include<array>
 
-#include <TAxis.h>
-#include <TROOT.h>
-#include <TGraph.h>
-#include <TH1F.h>
-
-#include "Garfield/Sensor.hh"
 #include "Garfield/Component.hh"
 #include "Garfield/DriftLineRKF.hh"
-#include "Garfield/ViewIsochrons.hh"
+#include "Garfield/Sensor.hh"
 
 namespace {
 
-double Interpolate(const std::vector<double>& y,
-                   const std::vector<double>& x, const double xx) {
-
+double Interpolate(const std::vector<double>& y, const std::vector<double>& x,
+                   const double xx) {
   const double tol = 1.e-6 * fabs(x.back() - x.front());
   if (xx < x.front()) return y.front();
   const auto it1 = std::upper_bound(x.cbegin(), x.cend(), xx);
@@ -89,7 +89,6 @@ bool OnLine(const double x1, const double y1, const double x2, const double y2,
 bool Crossing(const double x1, const double y1, const double x2,
               const double y2, const double u1, const double v1,
               const double u2, const double v2) {
-
   // Check for a point of one line located on the other line.
   if (OnLine(x1, y1, x2, y2, u1, v1) || OnLine(x1, y1, x2, y2, u2, v2) ||
       OnLine(u1, v1, u2, v2, x1, y1) || OnLine(u1, v1, u2, v2, x2, y2)) {
@@ -118,8 +117,10 @@ bool Crossing(const double x1, const double y1, const double x2,
   a[1][0] = -a[1][0] / det;
   a[0][1] = -a[0][1] / det;
   // Compute crossing point.
-  const double xc = a[0][0] * (x1 * y2 - x2 * y1) + a[1][0] * (u1 * v2 - u2 * v1);
-  const double yc = a[0][1] * (x1 * y2 - x2 * y1) + a[1][1] * (u1 * v2 - u2 * v1);
+  const double xc =
+      a[0][0] * (x1 * y2 - x2 * y1) + a[1][0] * (u1 * v2 - u2 * v1);
+  const double yc =
+      a[0][1] * (x1 * y2 - x2 * y1) + a[1][1] * (u1 * v2 - u2 * v1);
   // See whether the crossing point is on both lines.
   if (OnLine(x1, y1, x2, y2, xc, yc) && OnLine(u1, v1, u2, v2, xc, yc)) {
     // Intersecting lines.
@@ -129,11 +130,11 @@ bool Crossing(const double x1, const double y1, const double x2,
   return false;
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
-ViewIsochrons::ViewIsochrons() : ViewBase("ViewIsochrons") { }
+ViewIsochrons::ViewIsochrons() : ViewBase("ViewIsochrons") {}
 
 void ViewIsochrons::SetSensor(Sensor* s) {
   if (!s) {
@@ -156,7 +157,6 @@ void ViewIsochrons::SetComponent(Component* c) {
 }
 
 void ViewIsochrons::SetAspectRatioSwitch(const double ar) {
-
   if (ar < 0.) {
     std::cerr << m_className << "::SetAspectRatioSwitch: Value must be > 0.\n";
     return;
@@ -165,7 +165,6 @@ void ViewIsochrons::SetAspectRatioSwitch(const double ar) {
 }
 
 void ViewIsochrons::SetLoopThreshold(const double thr) {
-
   if (thr < 0. || thr > 1.) {
     std::cerr << m_className << "::SetLoopThreshold:\n"
               << "    Value must be between 0 and 1.\n";
@@ -175,7 +174,6 @@ void ViewIsochrons::SetLoopThreshold(const double thr) {
 }
 
 void ViewIsochrons::SetConnectionThreshold(const double thr) {
-
   if (thr < 0. || thr > 1.) {
     std::cerr << m_className << "::SetConnectionThreshold:\n"
               << "    Value must be between 0 and 1.\n";
@@ -184,10 +182,10 @@ void ViewIsochrons::SetConnectionThreshold(const double thr) {
   m_connectionThreshold = thr;
 }
 
-void ViewIsochrons::PlotIsochrons(const double tstep,
-    const std::vector<std::array<double, 3> >& points, const bool rev, 
-    const bool colour, const bool markers, const bool plotDriftLines) {
-
+void ViewIsochrons::PlotIsochrons(
+    const double tstep, const std::vector<std::array<double, 3> >& points,
+    const bool rev, const bool colour, const bool markers,
+    const bool plotDriftLines) {
   if (!m_sensor && !m_component) {
     std::cerr << m_className << "::PlotIsochrons:\n"
               << "    Neither sensor nor component are defined.\n";
@@ -206,8 +204,8 @@ void ViewIsochrons::PlotIsochrons(const double tstep,
   auto canvas = GetCanvas();
   canvas->cd();
   canvas->SetTitle("Isochrons");
-  auto frame = canvas->DrawFrame(m_xMinPlot, m_yMinPlot, 
-                                 m_xMaxPlot, m_yMaxPlot);
+  auto frame =
+      canvas->DrawFrame(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot);
   frame->GetXaxis()->SetTitle(LabelX().c_str());
   frame->GetYaxis()->SetTitle(LabelY().c_str());
   canvas->Update();
@@ -217,11 +215,11 @@ void ViewIsochrons::PlotIsochrons(const double tstep,
   //   DRFEQP   which is plotted as a set of contours in the entry DRFEQP.
   //-----------------------------------------------------------------------
   std::vector<std::vector<std::array<double, 3> > > driftLines;
-  std::vector<std::array<double, 3> > startPoints;  
-  std::vector<std::array<double, 3> > endPoints;  
+  std::vector<std::array<double, 3> > startPoints;
+  std::vector<std::array<double, 3> > endPoints;
   std::vector<int> statusCodes;
   // Accumulate drift lines.
-  ComputeDriftLines(tstep, points, driftLines, startPoints, endPoints, 
+  ComputeDriftLines(tstep, points, driftLines, startPoints, endPoints,
                     statusCodes, rev);
   const unsigned int nDriftLines = driftLines.size();
   if (nDriftLines < 2) {
@@ -244,8 +242,8 @@ void ViewIsochrons::PlotIsochrons(const double tstep,
   // DRFEQP
   if (m_debug) {
     std::cout << m_className << "::PlotIsochrons:\n"
-              << "    Drawing " << nContours << " contours, "
-              << nDriftLines << " drift lines.\n";
+              << "    Drawing " << nContours << " contours, " << nDriftLines
+              << " drift lines.\n";
     std::printf("    Connection threshold:   %10.3f\n", m_connectionThreshold);
     std::printf("    Aspect ratio threshold: %10.3f\n", m_aspectRatio);
     std::printf("    Loop closing threshold: %10.3f\n", m_loopThreshold);
@@ -283,12 +281,12 @@ void ViewIsochrons::PlotIsochrons(const double tstep,
       std::vector<std::pair<std::array<double, 4>, unsigned int> > contour;
       // Loop over the drift lines, picking up the points when OK.
       for (unsigned int k = 0; k < nDriftLines; ++k) {
-        const auto& dl = driftLines[k]; 
+        const auto& dl = driftLines[k];
         // Reject any undesirable combinations.
         if (statusCodes[k] != stat || ic >= dl.size()) continue;
         // Add the point to the contour line.
         std::array<double, 4> point = {dl[ic][0], dl[ic][1], dl[ic][2], 0.};
-        contour.push_back(std::make_pair(point, k)); 
+        contour.push_back(std::make_pair(point, k));
       }
       // Skip the plot of this contour if there are no points.
       if (contour.empty()) continue;
@@ -323,7 +321,7 @@ void ViewIsochrons::PlotIsochrons(const double tstep,
       std::vector<double> yp;
       std::vector<double> zp;
       const unsigned int nP = contour.size();
-      for (unsigned int i = 0; i < nP; ++i) { 
+      for (unsigned int i = 0; i < nP; ++i) {
         gap = false;
         const auto x0 = contour[i].first[0];
         const auto y0 = contour[i].first[1];
@@ -331,15 +329,15 @@ void ViewIsochrons::PlotIsochrons(const double tstep,
         xp.push_back(m_proj[0][0] * x0 + m_proj[1][0] * y0 + z0 * m_plane[0]);
         yp.push_back(m_proj[0][1] * x0 + m_proj[1][1] * y0 + z0 * m_plane[1]);
         zp.push_back(m_proj[0][2] * x0 + m_proj[1][2] * y0 + z0 * m_plane[2]);
-        if (i == nP - 1) break; 
+        if (i == nP - 1) break;
         const auto x1 = contour[i + 1].first[0];
         const auto y1 = contour[i + 1].first[1];
         // Reject contour segments which are long compared with AREA.
         if (fabs(x1 - x0) > tolx || fabs(y1 - y0) > toly) gap = true;
-        // Get the indices of the drift lines corresponding 
+        // Get the indices of the drift lines corresponding
         // to these two points on the contour line.
         const auto i0 = contour[i].second;
-        const auto i1 = contour[i + 1].second; 
+        const auto i1 = contour[i + 1].second;
         // Set the BREAK flag if it crosses some stored drift line segment.
         if (m_checkCrossings && !gap) {
           for (unsigned int k = 0; k < nDriftLines; ++k) {
@@ -358,8 +356,7 @@ void ViewIsochrons::PlotIsochrons(const double tstep,
             if (gap) break;
             if ((i0 == k || i1 == k) && ic == 0) continue;
             const auto& p0 = startPoints[k];
-            if (Crossing(p0[0], p0[1], dl[0][0], dl[0][1], 
-                         x0, y0, x1, y1)) {
+            if (Crossing(p0[0], p0[1], dl[0][0], dl[0][1], x0, y0, x1, y1)) {
               gap = true;
               break;
             }
@@ -421,13 +418,12 @@ void ViewIsochrons::PlotIsochrons(const double tstep,
   }
 }
 
-void ViewIsochrons::ComputeDriftLines(const double tstep,
-  const std::vector<std::array<double, 3> >& points,
-  std::vector<std::vector<std::array<double, 3> > >& driftLines,
-  std::vector<std::array<double, 3> >& startPoints,
-  std::vector<std::array<double, 3> >& endPoints,
-  std::vector<int>& statusCodes, const bool rev) {
-
+void ViewIsochrons::ComputeDriftLines(
+    const double tstep, const std::vector<std::array<double, 3> >& points,
+    std::vector<std::vector<std::array<double, 3> > >& driftLines,
+    std::vector<std::array<double, 3> >& startPoints,
+    std::vector<std::array<double, 3> >& endPoints,
+    std::vector<int>& statusCodes, const bool rev) {
   DriftLineRKF drift;
   Sensor sensor;
   if (m_sensor) {
@@ -435,8 +431,8 @@ void ViewIsochrons::ComputeDriftLines(const double tstep,
   } else {
     sensor.AddComponent(m_component);
     if (m_userBox) {
-      sensor.SetArea(m_xMinBox, m_yMinBox, m_zMinBox,
-                     m_xMaxBox, m_yMaxBox, m_zMaxBox);
+      sensor.SetArea(m_xMinBox, m_yMinBox, m_zMinBox, m_xMaxBox, m_yMaxBox,
+                     m_zMaxBox);
     }
     drift.SetSensor(&sensor);
   }
@@ -476,10 +472,10 @@ void ViewIsochrons::ComputeDriftLines(const double tstep,
     }
     if (rev) {
       for (auto& t : tu) t = tf - t;
-      std::reverse(std::begin(xu), std::end(xu)); 
-      std::reverse(std::begin(yu), std::end(yu)); 
-      std::reverse(std::begin(zu), std::end(zu)); 
-      std::reverse(std::begin(tu), std::end(tu)); 
+      std::reverse(std::begin(xu), std::end(xu));
+      std::reverse(std::begin(yu), std::end(yu));
+      std::reverse(std::begin(zu), std::end(zu));
+      std::reverse(std::begin(tu), std::end(tu));
     }
     std::vector<std::array<double, 3> > tab;
     // Interpolate at regular time intervals.
@@ -508,7 +504,6 @@ void ViewIsochrons::ComputeDriftLines(const double tstep,
 }
 
 bool ViewIsochrons::SetPlotLimits() {
-
   if (m_userPlotLimits) return true;
   double xmin = 0., ymin = 0., xmax = 0., ymax = 0.;
   if (m_userBox) {
@@ -518,7 +513,7 @@ bool ViewIsochrons::SetPlotLimits() {
       m_yMinPlot = ymin;
       m_yMaxPlot = ymax;
       return true;
-    } 
+    }
   }
   // Try to get the area/bounding box from the sensor/component.
   bool ok = false;
@@ -526,7 +521,7 @@ bool ViewIsochrons::SetPlotLimits() {
     ok = PlotLimits(m_sensor, xmin, ymin, xmax, ymax);
   } else {
     ok = PlotLimits(m_component, xmin, ymin, xmax, ymax);
-  } 
+  }
   if (ok) {
     m_xMinPlot = xmin;
     m_xMaxPlot = xmax;
@@ -539,7 +534,6 @@ bool ViewIsochrons::SetPlotLimits() {
 void ViewIsochrons::SortContour(
     std::vector<std::pair<std::array<double, 4>, unsigned int> >& contour,
     bool& circle) {
-
   if (contour.size() < 2) return;
   // First compute the centre of gravity.
   double xcog = 0.;
@@ -575,7 +569,7 @@ void ViewIsochrons::SortContour(
     syy += fabs(-st * dx + ct * dy);
   }
   // Decide whether this is more linear or more circular.
-  if (fabs(sxx) > m_aspectRatio * fabs(syy) || 
+  if (fabs(sxx) > m_aspectRatio * fabs(syy) ||
       fabs(syy) > m_aspectRatio * fabs(sxx)) {
     circle = false;
   } else {
@@ -588,11 +582,11 @@ void ViewIsochrons::SortContour(
     point.first[3] = circle ? atan2(dy, dx) : ct * dx + st * dy;
   }
   // Sort the points.
-  std::sort(contour.begin(), contour.end(), 
-            [](const std::pair<std::array<double, 4>, int>& p1, 
+  std::sort(contour.begin(), contour.end(),
+            [](const std::pair<std::array<double, 4>, int>& p1,
                const std::pair<std::array<double, 4>, int>& p2) {
-                 return p1.first[3] < p2.first[3]; }
-           );
+              return p1.first[3] < p2.first[3];
+            });
   if (!circle) return;
   // For circles, perhaps add the first point to the end of the list.
   // Compute breakpoint, total distance and maximum distance.
@@ -624,4 +618,4 @@ void ViewIsochrons::SortContour(
   }
 }
 
-}
+}  // namespace Garfield

@@ -1,16 +1,17 @@
+#include "Garfield/AvalancheMicroscopic.hh"
+
 #include <algorithm>
+#include <array>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <string>
-#include <chrono>
-#include<array>
 
-#include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewDrift.hh"
-#include "Garfield/Medium.hh"
 
 #if defined(USEGPU)
 #define __GPUCOMPILE__
@@ -107,10 +108,9 @@ void RotationMatrix(double bx, double by, double bz, const double bmag,
 }
 
 Garfield::AvalancheMicroscopic::Point MakePoint(
-    const double x, const double y, const double z,  const double t, 
+    const double x, const double y, const double z, const double t,
     const double energy, const double dx, const double dy, const double dz,
     const int band) {
-
   Garfield::AvalancheMicroscopic::Point p;
   p.x = x;
   p.y = y;
@@ -124,9 +124,9 @@ Garfield::AvalancheMicroscopic::Point MakePoint(
   return p;
 }
 
-Garfield::AvalancheMicroscopic::Point MakePoint(
-    const double x, const double y, const double z,  const double t, 
-    const double energy) {
+Garfield::AvalancheMicroscopic::Point MakePoint(const double x, const double y,
+                                                const double z, const double t,
+                                                const double energy) {
   // Randomise the direction.
   double dx = 0., dy = 0., dz = 1.;
   Garfield::RndmDirection(dx, dy, dz);
@@ -145,8 +145,7 @@ void PrintStatus(const std::string& hdr, const std::string& status,
 
 namespace Garfield {
 
-AvalancheMicroscopic::AvalancheMicroscopic(Sensor* sensor) :
-    m_sensor(sensor) {
+AvalancheMicroscopic::AvalancheMicroscopic(Sensor* sensor) : m_sensor(sensor) {
   m_electrons.reserve(10000);
   m_holes.reserve(10000);
   m_photons.reserve(1000);
@@ -160,8 +159,7 @@ void AvalancheMicroscopic::SetSensor(Sensor* s) {
   m_sensor = s;
 }
 
-void AvalancheMicroscopic::EnablePlotting(ViewDrift* view,
-                                          const size_t nColl) {
+void AvalancheMicroscopic::EnablePlotting(ViewDrift* view, const size_t nColl) {
   if (!view) {
     std::cerr << m_className << "::EnablePlotting: Null pointer.\n";
     return;
@@ -277,10 +275,12 @@ void AvalancheMicroscopic::SetTimeWindow(const double t0, const double t1) {
   m_hasTimeWindow = true;
 }
 
-void AvalancheMicroscopic::GetElectronEndpoint(const size_t i, 
-    double& x0, double& y0, double& z0, double& t0, double& e0,
-    double& x1, double& y1, double& z1, double& t1, double& e1, 
-    int& status) const {
+void AvalancheMicroscopic::GetElectronEndpoint(const size_t i, double& x0,
+                                               double& y0, double& z0,
+                                               double& t0, double& e0,
+                                               double& x1, double& y1,
+                                               double& z1, double& t1,
+                                               double& e1, int& status) const {
   if (i >= m_electrons.size()) {
     std::cerr << m_className << "::GetElectronEndpoint: Index out of range.\n";
     status = -3;
@@ -304,12 +304,10 @@ void AvalancheMicroscopic::GetElectronEndpoint(const size_t i,
   status = m_electrons[i].status;
 }
 
-void AvalancheMicroscopic::GetElectronEndpointGPU(const size_t i, double& x0,
-                                               double& y0, double& z0,
-                                               double& t0, double& e0,
-                                               double& x1, double& y1,
-                                               double& z1, double& t1,
-                                               double& e1, int& status) const {
+void AvalancheMicroscopic::GetElectronEndpointGPU(
+    const size_t i, double& x0, double& y0, double& z0, double& t0, double& e0,
+    double& x1, double& y1, double& z1, double& t1, double& e1,
+    int& status) const {
   if (i >= m_electrons_gpu.size()) {
     std::cerr << m_className << "::GetElectronEndpoint: Index out of range.\n";
     status = -3;
@@ -344,9 +342,10 @@ size_t AvalancheMicroscopic::GetNumberOfElectronDriftLinePoints(
   return m_electrons[i].path.size();
 }
 
-void AvalancheMicroscopic::GetElectronDriftLinePoint(
-    double& x, double& y, double& z, double& t, const size_t ip,
-    const size_t ie) const {
+void AvalancheMicroscopic::GetElectronDriftLinePoint(double& x, double& y,
+                                                     double& z, double& t,
+                                                     const size_t ip,
+                                                     const size_t ie) const {
   if (ie >= m_electrons.size()) {
     std::cerr << m_className << "::GetElectronDriftLinePoint:\n"
               << "    Endpoint index (" << ie << ") out of range.\n";
@@ -363,9 +362,10 @@ void AvalancheMicroscopic::GetElectronDriftLinePoint(
   t = m_electrons[ie].path[ip].t;
 }
 
-void AvalancheMicroscopic::GetPhoton(const size_t i, double& e,
-    double& x0, double& y0, double& z0, double& t0, 
-    double& x1, double& y1, double& z1, double& t1, int& status) const {
+void AvalancheMicroscopic::GetPhoton(const size_t i, double& e, double& x0,
+                                     double& y0, double& z0, double& t0,
+                                     double& x1, double& y1, double& z1,
+                                     double& t1, int& status) const {
   if (i >= m_photons.size()) {
     std::cerr << m_className << "::GetPhoton: Index out of range.\n";
     return;
@@ -415,29 +415,30 @@ void AvalancheMicroscopic::SetUserHandleIonisation(void (*f)(
   m_userHandleIonisation = f;
 }
 
-bool AvalancheMicroscopic::DriftElectron(
-    const double x, const double y, const double z, const double t,
-    const double e, const double dx, const double dy, const double dz) {
+bool AvalancheMicroscopic::DriftElectron(const double x, const double y,
+                                         const double z, const double t,
+                                         const double e, const double dx,
+                                         const double dy, const double dz) {
   std::vector<std::pair<Point, Particle> > particles;
   Point p = MakePoint(x, y, z, t, e, dx, dy, dz, 0);
   particles.emplace_back(std::make_pair(std::move(p), Particle::Electron));
   return TransportElectrons(particles, false);
 }
 
-bool AvalancheMicroscopic::AvalancheElectron(
-    const double x, const double y, const double z, const double t,
-    const double e, const double dx, const double dy, const double dz) {
-
+bool AvalancheMicroscopic::AvalancheElectron(const double x, const double y,
+                                             const double z, const double t,
+                                             const double e, const double dx,
+                                             const double dy, const double dz) {
   std::vector<std::pair<Point, Particle> > particles;
   Point p = MakePoint(x, y, z, t, e, dx, dy, dz, 0);
   particles.emplace_back(std::make_pair(std::move(p), Particle::Electron));
   return TransportElectrons(particles, true);
 }
 
-void AvalancheMicroscopic::AddElectron(
-    const double x, const double y, const double z, const double t,
-    const double e, const double dx, const double dy, const double dz) {
-
+void AvalancheMicroscopic::AddElectron(const double x, const double y,
+                                       const double z, const double t,
+                                       const double e, const double dx,
+                                       const double dy, const double dz) {
   Electron electron;
   electron.status = StatusAlive;
   electron.path.emplace_back(MakePoint(x, y, z, t, e, dx, dy, dz, 0));
@@ -447,12 +448,12 @@ void AvalancheMicroscopic::AddElectron(
 bool AvalancheMicroscopic::ResumeAvalanche() {
   std::vector<std::pair<Point, Particle> > particles;
   for (const auto& p : m_electrons) {
-    if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) { 
+    if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) {
       particles.emplace_back(std::make_pair(p.path.back(), Particle::Electron));
     }
   }
   for (const auto& p : m_holes) {
-    if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) { 
+    if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) {
       particles.emplace_back(std::make_pair(p.path.back(), Particle::Hole));
     }
   }
@@ -461,7 +462,6 @@ bool AvalancheMicroscopic::ResumeAvalanche() {
 
 bool AvalancheMicroscopic::TransportElectrons(
     std::vector<std::pair<Point, Particle> >& particles, const bool aval) {
-
   // Clear the list of electrons, holes and photons.
   m_electrons.clear();
   m_holes.clear();
@@ -472,14 +472,14 @@ bool AvalancheMicroscopic::TransportElectrons(
 
   // Make sure that the sensor is defined.
   if (!m_sensor) {
-    std::cerr << m_className 
+    std::cerr << m_className
               << "::TransportElectrons: Sensor is not defined.\n";
     return false;
   }
 
   // Do we need to consider the magnetic field?
-  const bool useBfield = m_useBfieldAuto ? m_sensor->HasMagneticField() : 
-                         m_useBfield;
+  const bool useBfield =
+      m_useBfieldAuto ? m_sensor->HasMagneticField() : m_useBfield;
 
   // Do we need to compute the induced signal?
   const bool signal = m_doSignal && (m_sensor->GetNumberOfElectrodes() > 0);
@@ -495,14 +495,14 @@ bool AvalancheMicroscopic::TransportElectrons(
                 << "Starting point is outside the active area.\n";
       return false;
     }
-    // Make sure that the starting point is inside a "driftable" 
+    // Make sure that the starting point is inside a "driftable"
     // microscopic medium.
     Medium* medium = m_sensor->GetMedium(x0, y0, z0);
     if (!medium || !medium->IsDriftable() || !medium->IsMicroscopic()) {
       std::cerr << m_className << "::TransportElectrons: "
                 << "Starting point is not in a valid medium.\n";
       return false;
-    } 
+    }
     // Make sure the initial energy is positive.
     const double e0 = std::max(p.first.energy, Small);
 
@@ -536,8 +536,10 @@ bool AvalancheMicroscopic::TransportElectrons(
   m_stats.stack_old_size.clear();
   m_stats.stack_new_size.clear();
 
-  // GPUREMOVE: Note that the change below means that the transferred variables (medium, id, etc.) are not updated within the transport
-  // loops so will have to be recalculated more than normal. This will affect both CPU and GPU versions.
+  // GPUREMOVE: Note that the change below means that the transferred variables
+  // (medium, id, etc.) are not updated within the transport loops so will have
+  // to be recalculated more than normal. This will affect both CPU and GPU
+  // versions.
   int loop_count = 0;
 
   if (m_runMode == MPRunMode::GPUExclusive) {
@@ -549,12 +551,14 @@ bool AvalancheMicroscopic::TransportElectrons(
     }
     m_gpuInterface->TransferStackFromCPUToGPU(particles);
 #else
-    std::cout << "ERROR: GPU use requested but Garfield has not been built with GPU support" << std::endl;
+    std::cout << "ERROR: GPU use requested but Garfield has not been built "
+                 "with GPU support"
+              << std::endl;
     return false;
 #endif
   }
 
-  std::chrono::time_point< highres_clock_t > start;
+  std::chrono::time_point<highres_clock_t> start;
   double process_time_cpu{0};
   double stack_time_cpu{0};
   double process_time_gpu{0};
@@ -566,8 +570,11 @@ bool AvalancheMicroscopic::TransportElectrons(
 
   while ((m_maxNumShowerLoops == -1) || (loop_count < m_maxNumShowerLoops)) {
     if (m_showProgress) {
-      std::cout << "--------------------------------------------------------------" << std::endl;
-      std::cout << "Starting Shower iteration:         " << loop_count << std::endl;
+      std::cout
+          << "--------------------------------------------------------------"
+          << std::endl;
+      std::cout << "Starting Shower iteration:         " << loop_count
+                << std::endl;
     }
 
     // --------------------------------------------
@@ -582,56 +589,73 @@ bool AvalancheMicroscopic::TransportElectrons(
         particles.swap(newParticles);
       }
 
-      if (particles.size() == 0)
-        break;
+      if (particles.size() == 0) break;
 
-      process_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+      process_time_cpu =
+          std::chrono::duration_cast<second_t>(highres_clock_t::now() - start)
+              .count();
       start = highres_clock_t::now();
 
       num_curr_particles = particles.size();
 
-      if (!transportParticleStack(aval, particles, newParticles, signal, useBfield, sc))
+      if (!transportParticleStack(aval, particles, newParticles, signal,
+                                  useBfield, sc))
         return false;
 
-      stack_time_cpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
-    } 
-    else if (m_runMode == MPRunMode::GPUExclusive) {
+      stack_time_cpu =
+          std::chrono::duration_cast<second_t>(highres_clock_t::now() - start)
+              .count();
+    } else if (m_runMode == MPRunMode::GPUExclusive) {
 #ifdef USEGPU
       start = highres_clock_t::now();
 
-      if (m_gpuInterface->processParticleStack(num_curr_particles_gpu, num_new_particles_gpu) == 0) {
+      if (m_gpuInterface->processParticleStack(num_curr_particles_gpu,
+                                               num_new_particles_gpu) == 0) {
         break;
       }
 
-      process_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+      process_time_gpu =
+          std::chrono::duration_cast<second_t>(highres_clock_t::now() - start)
+              .count();
       start = highres_clock_t::now();
 
-      // TODO: TN GPU: Fix arguments (medium, ID, useBandStructure, Flim, Finv all set
-      // to constant values)
-      if (!m_gpuInterface->transportParticleStack(aval, this, 0, false, 0, 0, 0, 0, useBfield, sc))
+      // TODO: TN GPU: Fix arguments (medium, ID, useBandStructure, Flim, Finv
+      // all set to constant values)
+      if (!m_gpuInterface->transportParticleStack(aval, this, 0, false, 0, 0, 0,
+                                                  0, useBfield, sc))
         return false;
 
-      stack_time_gpu = std::chrono::duration_cast<second_t>(highres_clock_t::now() - start).count();
+      stack_time_gpu =
+          std::chrono::duration_cast<second_t>(highres_clock_t::now() - start)
+              .count();
 #endif
     }
 
-    loop_count++;    
+    loop_count++;
 
     if (m_showProgress) {
       if (m_runMode == MPRunMode::Normal)
-        std::cout << "    - Current particle stack size (CPU): " << num_curr_particles << std::endl;
+        std::cout << "    - Current particle stack size (CPU): "
+                  << num_curr_particles << std::endl;
       if (m_runMode == MPRunMode::GPUExclusive)
-        std::cout << "    - Current particle stack size (GPU): " << num_curr_particles_gpu << std::endl;
+        std::cout << "    - Current particle stack size (GPU): "
+                  << num_curr_particles_gpu << std::endl;
 
       if (m_stats.cpu_stack_transport_time.size() > 0) {
-        std::cout << "CPU Stats: Stk (" << *(m_stats.cpu_stack_process_time.end()-1) << 
-                  "),  Tpt (" << *(m_stats.cpu_stack_transport_time.end()-1) << ")" << std::endl;
+        std::cout << "CPU Stats: Stk ("
+                  << *(m_stats.cpu_stack_process_time.end() - 1) << "),  Tpt ("
+                  << *(m_stats.cpu_stack_transport_time.end() - 1) << ")"
+                  << std::endl;
       }
       if (m_stats.gpu_stack_transport_time.size() > 0) {
-        std::cout << "GPU Stats: Stk (" << *(m_stats.gpu_stack_process_time.end()-1) << 
-                  "),  Tpt (" << *(m_stats.gpu_stack_transport_time.end()-1) << ")" << std::endl;
+        std::cout << "GPU Stats: Stk ("
+                  << *(m_stats.gpu_stack_process_time.end() - 1) << "),  Tpt ("
+                  << *(m_stats.gpu_stack_transport_time.end() - 1) << ")"
+                  << std::endl;
       }
-      std::cout << "--------------------------------------------------------------" << std::endl;
+      std::cout
+          << "--------------------------------------------------------------"
+          << std::endl;
     }
 
     // add to stats
@@ -642,7 +666,7 @@ bool AvalancheMicroscopic::TransportElectrons(
       m_stats.stack_old_size.push_back(num_curr_particles);
       m_stats.stack_new_size.push_back(num_new_particles_gpu);
     }
-    
+
     if (stack_time_cpu > 0) {
       m_stats.cpu_stack_transport_time.push_back(stack_time_cpu);
       m_stats.cpu_stack_process_time.push_back(process_time_cpu);
@@ -656,40 +680,39 @@ bool AvalancheMicroscopic::TransportElectrons(
 
   // Multiprocessor clean up
   if (m_runMode == MPRunMode::GPUExclusive) {
-    #ifdef USEGPU
+#ifdef USEGPU
     // copy over stack if there's any to compare
     if (m_maxNumShowerLoops > -1) {
-      m_gpuInterface->TransferStackFromGPUToCPU(m_stackStoreGPU, false);  
+      m_gpuInterface->TransferStackFromGPUToCPU(m_stackStoreGPU, false);
       m_stackStoreCPU = particles;
     }
 
     // Copy endpoints over
     m_gpuInterface->TransferStackFromGPUToCPU(m_electrons_gpu, true);
     m_sensor->TransferGPUElectrodeSignals(m_gpuInterface->m_sensor);
-    #endif
+#endif
   }
 
   // Calculate the induced charge.
   if (m_doInducedCharge) {
     for (const auto& p : m_electrons) {
-      m_sensor->AddInducedCharge(-1, p.path[0].x, p.path[0].y, p.path[0].z, 
-                                 p.path.back().x, p.path.back().y, p.path.back().z);
+      m_sensor->AddInducedCharge(-1, p.path[0].x, p.path[0].y, p.path[0].z,
+                                 p.path.back().x, p.path.back().y,
+                                 p.path.back().z);
     }
     for (const auto& p : m_holes) {
-      m_sensor->AddInducedCharge(+1, p.path[0].x, p.path[0].y, p.path[0].z, 
-                                 p.path.back().x, p.path.back().y, p.path.back().z);
+      m_sensor->AddInducedCharge(+1, p.path[0].x, p.path[0].y, p.path[0].z,
+                                 p.path.back().x, p.path.back().y,
+                                 p.path.back().z);
     }
   }
   return true;
 }
 
 bool AvalancheMicroscopic::transportParticleStack(
-  const bool aval,
-  std::vector<std::pair<Point, Particle> > &particles,
-  std::vector<std::pair<Point, Particle> > &newParticles,
-  const bool signal,
-  const bool useBfield,
-  const bool sc) {
+    const bool aval, std::vector<std::pair<Point, Particle> >& particles,
+    std::vector<std::pair<Point, Particle> >& newParticles, const bool signal,
+    const bool useBfield, const bool sc) {
   newParticles.clear();
   // Loop over the particles in the avalanche.
   for (const auto& particle : particles) {
@@ -697,9 +720,9 @@ bool AvalancheMicroscopic::transportParticleStack(
       ++m_nIons;
       continue;
     }
-    if (aval && m_sizeCut > 0 && m_nElectrons >= (int)m_sizeCut) { 
-        newParticles.clear();
-        break;
+    if (aval && m_sizeCut > 0 && m_nElectrons >= (int)m_sizeCut) {
+      newParticles.clear();
+      break;
     }
     const bool isHole = (particle.second == Particle::Hole);
     std::vector<Point> path;
@@ -707,23 +730,20 @@ bool AvalancheMicroscopic::transportParticleStack(
     std::vector<std::array<double, 3> > xs;
     int status = 0;
     if (sc) {
-      status = TransportElectronSc(particle.first, isHole, aval, 
-                                    signal, ts, xs, path, 
-                                    newParticles);
+      status = TransportElectronSc(particle.first, isHole, aval, signal, ts, xs,
+                                   path, newParticles);
     } else if (useBfield) {
-      status = TransportElectronBfield(particle.first, isHole, aval, 
-                                        signal, ts, xs, path, 
-                                        newParticles);
+      status = TransportElectronBfield(particle.first, isHole, aval, signal, ts,
+                                       xs, path, newParticles);
     } else {
-      status = TransportElectron(particle.first, isHole, aval, signal, 
-                                  ts, xs, path, newParticles);
+      status = TransportElectron(particle.first, isHole, aval, signal, ts, xs,
+                                 path, newParticles);
     }
     double pathLength = 0.;
     if (m_computePathLength && xs.size() > 1) {
       const size_t ns = xs.size();
       for (size_t i = 0; i < ns - 1; ++i) {
-        pathLength += Mag(xs[i + 1][0] - xs[i][0], 
-                          xs[i + 1][1] - xs[i][1],
+        pathLength += Mag(xs[i + 1][0] - xs[i][0], xs[i + 1][1] - xs[i][1],
                           xs[i + 1][2] - xs[i][2]);
       }
     }
@@ -747,20 +767,18 @@ bool AvalancheMicroscopic::transportParticleStack(
       if (m_useWeightingPotential) {
         m_sensor->AddSignalWeightingPotential(q, ts, xs);
       } else {
-        m_sensor->AddSignalWeightingField(q, ts, xs, 
-                                          m_integrateWeightingField);
+        m_sensor->AddSignalWeightingField(q, ts, xs, m_integrateWeightingField);
       }
     }
   }
   return true;
 }
 
-int AvalancheMicroscopic::TransportElectron(const Point& p0,
-  const bool hole, const bool aval, const bool signal,
-  std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-  std::vector<Point>& path, 
-  std::vector<std::pair<Point, Particle> >& newParticles) {
-
+int AvalancheMicroscopic::TransportElectron(
+    const Point& p0, const bool hole, const bool aval, const bool signal,
+    std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
+    std::vector<Point>& path,
+    std::vector<std::pair<Point, Particle> >& newParticles) {
   double x = p0.x;
   double y = p0.y;
   double z = p0.z;
@@ -776,8 +794,8 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
   size_t did = 0;
   if (m_viewer) {
     if (hole) {
-      did = m_viewer->NewDriftLine(Particle::Hole, 1, x, y, z); 
-    } else { 
+      did = m_viewer->NewDriftLine(Particle::Hole, 1, x, y, z);
+    } else {
       did = m_viewer->NewDriftLine(Particle::Electron, 1, x, y, z);
     }
   }
@@ -798,13 +816,13 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
     ez = -ez;
   }
   if (m_debug) {
-    std::cout << "    Drift line starts at (" 
-              << x << ", " << y << ", " << z << ").\n"
+    std::cout << "    Drift line starts at (" << x << ", " << y << ", " << z
+              << ").\n"
               << "    Status: " << status << "\n";
     if (medium) std::cout << "    Medium: " << medium->GetName() << "\n";
   }
 
-  if (status != 0 || !medium || !medium->IsDriftable() || 
+  if (status != 0 || !medium || !medium->IsDriftable() ||
       !medium->IsMicroscopic()) {
     if (m_debug) std::cout << "    Not in a valid medium.\n";
     return StatusLeftDriftMedium;
@@ -814,7 +832,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
   // Get the null-collision rate.
   double fLim = medium->GetElectronNullCollisionRate(band);
   if (fLim <= 0.) {
-    std::cerr << m_className 
+    std::cerr << m_className
               << "::TransportElectron: Got null-collision rate <= 0.\n";
     return StatusCalculationAbandoned;
   }
@@ -860,7 +878,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
       // Update the null-collision rate.
       fLim = medium->GetElectronNullCollisionRate(band);
       if (fLim <= 0.) {
-        std::cerr << m_className 
+        std::cerr << m_className
                   << "::TransportElectron: Got null-collision rate <= 0.\n";
         status = StatusCalculationAbandoned;
         break;
@@ -885,7 +903,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
     double r0[3], vr[3];
     std::vector<std::array<double, 3> > rknIntPoints = {};
     int nsteps = 2;
-    
+
     // Energy after the step.
     double en1 = en;
     // Determine the timestep.
@@ -900,9 +918,10 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
       if (m_rknSteps) {
         if (m_debug) {
           std::cout << "\n=============================\n\n"
-                    << "RKN: (x,y,z) = (" << x << ", " << y << ", " << z << ")\n";
+                    << "RKN: (x,y,z) = (" << x << ", " << y << ", " << z
+                    << ")\n";
         }
-      
+
         double h = dt / nsteps;
         nsteps = 0;
         double timeholder = 0.;
@@ -922,13 +941,13 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
           if (0 > dt - timeholder - h) {
             loopholder = false;
             h = dt - timeholder;
-            if (m_debug) std::cout  << "\n";
+            if (m_debug) std::cout << "\n";
           }
-          
+
           timeholder += h;
           if (m_debug) {
-            std::cout << "RKN: Time keeper = " << timeholder
-                      << " of the " << dt << " ns.\n";
+            std::cout << "RKN: Time keeper = " << timeholder << " of the " << dt
+                      << " ns.\n";
           }
           const double h2 = h * h;
           Medium* med0 = nullptr;
@@ -937,38 +956,38 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
                                   r0[1] + h * vr[1] * 0.5 + 0.125 * h2 * k1[1],
                                   r0[2] + h * vr[2] * 0.5 + 0.125 * h2 * k1[2],
                                   ex0, ey0, ez0, med0, stat0);
-          
-          std::array<double, 3> k2 = {c3 * ex0, c3 * ey0, c3 * ez0}; // k3 = k2
+
+          std::array<double, 3> k2 = {c3 * ex0, c3 * ey0, c3 * ez0};  // k3 = k2
           m_sensor->ElectricField(r0[0] + h * vr[0] + h2 * k2[0] * 0.5,
                                   r0[1] + h * vr[1] + h2 * k2[1] * 0.5,
-                                  r0[2] + h * vr[2] + h2 * k2[2] * 0.5,
-                                  ex0, ey0, ez0, med0, stat0);
+                                  r0[2] + h * vr[2] + h2 * k2[2] * 0.5, ex0,
+                                  ey0, ez0, med0, stat0);
           std::array<double, 3> k4 = {c3 * ex0, c3 * ey0, c3 * ez0};
-          
+
           // Check error tolerance
-          const double steperror = h2 * (
-            Mag(k1[0], k1[1], k1[2]) - 2 * Mag(k2[0], k2[1], k2[2]) + 
-            Mag(k4[0], k4[1], k4[2]));
-          
+          const double steperror =
+              h2 * (Mag(k1[0], k1[1], k1[2]) - 2 * Mag(k2[0], k2[1], k2[2]) +
+                    Mag(k4[0], k4[1], k4[2]));
+
           if (m_debug) std::cout << "RKN: steperror = " << steperror << ".\n";
-          
+
           if (std::abs(steperror) < 4 * m_rknsteperrortol) {
             for (int j = 0; j <= 2; j++) {
               r0[j] += h * vr[j] + (k1[j] + k2[j] + k2[j]) * h2 / 6.;
               vr[j] += (k1[j] + 4 * k2[j] + k4[j]) * h / 6.;
             }
-            
+
             const double hholder = h;
             h *= pow((m_rknsteperrortol / std::abs(steperror)), 0.25);
-            
+
             if ((0.25 * hholder <= h && 4 * hholder >= h) ||
                 steperror < m_rknsteperrortol * 1.e-10 || h < m_rknMinh) {
               h = hholder;
             }
-            
+
             // Final point of current stage is first point of the next
             k1.swap(k4);
-            
+
             if (stat0 != 0) {
               if (m_debug) {
                 std::cout << "RKN: Outside drift medium! Breaking loop.\n";
@@ -976,11 +995,11 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
               dt = timeholder + h;
               break;
             }
-            
+
             // Plot intermediate points
             if (m_viewer) rknIntPoints.push_back({r0[0], r0[1], r0[2]});
             nsteps++;
-            
+
           } else {
             timeholder -= h;
             // Adjust step size
@@ -988,14 +1007,13 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
           }
           if (m_debug) std::cout << "RKN: h = " << h << "\n";
         }
-        
+
         en1 = std::max(
-                       (vr[0] * vr[0] + vr[1] * vr[1] + vr[2] * vr[2]) / (c1 * c1),
-                       Small);
+            (vr[0] * vr[0] + vr[1] * vr[1] + vr[2] * vr[2]) / (c1 * c1), Small);
       } else {
         en1 = std::max(en + (a1 + a2 * dt) * dt, Small);
       }
-      
+
       if (m_debug) {
         std::cout << "RKN: en1 = " << en1 << ","
                   << std::max(en + (a1 + a2 * dt) * dt, Small) << " eV.\n";
@@ -1004,8 +1022,8 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
       const double fReal = medium->GetElectronCollisionRate(en1, band);
       if (fReal <= 0.) {
         std::cerr << m_className << "::TransportElectron:\n"
-                  << "    Got collision rate <= 0 at " << en1
-                  << " eV (band " << band << ").\n";
+                  << "    Got collision rate <= 0 at " << en1 << " eV (band "
+                  << band << ").\n";
         path.emplace_back(MakePoint(x, y, z, t, en1, kx, ky, kz, band));
         return StatusCalculationAbandoned;
       }
@@ -1032,16 +1050,16 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
     double kx1, ky1, kz1;
     if (m_rknSteps) {
       // Update the direction.
-      const double a1 = 1/ (c1 * sqrt(en1));
-      
+      const double a1 = 1 / (c1 * sqrt(en1));
+
       kx1 = vr[0] * a1;
       ky1 = vr[1] * a1;
       kz1 = vr[2] * a1;
-      
+
       vx = vr[0];
       vy = vr[1];
       vz = vr[2];
-      
+
       // Update the step in coordinate space.
       x1 = r0[0];
       y1 = r0[1];
@@ -1053,7 +1071,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
       kx1 = kx * b1 + ex * b2;
       ky1 = ky * b1 + ey * b2;
       kz1 = kz * b1 + ez * b2;
-      
+
       // Calculate the step in coordinate space.
       const double b3 = dt * dt * c2;
       x1 = x + vx * dt + ex * b3;
@@ -1061,10 +1079,10 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
       z1 = z + vz * dt + ez * b3;
     }
     double t1 = t + dt;
-    
+
     // Get the electric field and medium at the proposed new position.
     m_sensor->ElectricField(x1, y1, z1, ex, ey, ez, medium, status);
-    
+
     if (!hole) {
       ex = -ex;
       ey = -ey;
@@ -1083,18 +1101,16 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
       Terminate(x, y, z, t, x1, y1, z1, t1);
       if (m_debug) std::cout << "    Left the drift area.\n";
       status = StatusLeftDriftArea;
-    } else if (m_sensor->CrossedWire(x, y, z, x1, y1, z1, 
-                                     xc, yc, zc, false, rc)) {
-      t1 = t + dt * Mag(xc - x, yc - y, zc - z) /
-                    Mag(x1 - x, y1 - y, z1 - z);
+    } else if (m_sensor->CrossedWire(x, y, z, x1, y1, z1, xc, yc, zc, false,
+                                     rc)) {
+      t1 = t + dt * Mag(xc - x, yc - y, zc - z) / Mag(x1 - x, y1 - y, z1 - z);
       x1 = xc;
       y1 = yc;
       z1 = zc;
       if (m_debug) std::cout << "    Hit a wire.\n";
       status = StatusLeftDriftMedium;
     } else if (m_sensor->CrossedPlane(x, y, z, x1, y1, z1, xc, yc, zc)) {
-      t1 = t + dt * Mag(xc - x, yc - y, zc - z) /
-                    Mag(x1 - x, y1 - y, z1 - z);
+      t1 = t + dt * Mag(xc - x, yc - y, zc - z) / Mag(x1 - x, y1 - y, z1 - z);
       x1 = xc;
       y1 = yc;
       z1 = zc;
@@ -1142,8 +1158,8 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
     }
 
     if (m_userHandleCollision) {
-      m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx,
-                            ky, kz, kx1, ky1, kz1);
+      m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx, ky,
+                            kz, kx1, ky1, kz1);
     }
     switch (cstype) {
       // Elastic collision
@@ -1160,15 +1176,15 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
             if (m_histSecondary) m_histSecondary->Fill(esec);
             // Add the secondary electron to the stack.
             newParticles.emplace_back(std::make_pair(
-              MakePoint(x, y, z, t, esec), Particle::Electron));
+                MakePoint(x, y, z, t, esec), Particle::Electron));
           } else if (secondary.type == Particle::Hole) {
             const double esec = std::max(secondary.energy, Small);
             // Add the secondary hole to the stack.
-            newParticles.emplace_back(std::make_pair(
-              MakePoint(x, y, z, t, esec), Particle::Hole));
+            newParticles.emplace_back(
+                std::make_pair(MakePoint(x, y, z, t, esec), Particle::Hole));
           } else if (secondary.type == Particle::Ion) {
-            newParticles.emplace_back(std::make_pair(
-              MakePoint(x, y, z, t, 0.), Particle::Ion));
+            newParticles.emplace_back(
+                std::make_pair(MakePoint(x, y, z, t, 0.), Particle::Ion));
           }
         }
         break;
@@ -1211,8 +1227,8 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
             // Check if this location is inside a drift medium/area.
             if (status != 0 || !m_sensor->IsInArea(xp, yp, zp)) continue;
             // Make sure we haven't jumped across a wire.
-            if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc,
-                                      false, rc)) {
+            if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc, false,
+                                      rc)) {
               continue;
             }
             if (m_userHandleIonisation) {
@@ -1222,14 +1238,15 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
             const double tp = t + secondary.time;
             const double ep = std::max(secondary.energy, Small);
             newParticles.emplace_back(std::make_pair(
-              MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
-            newParticles.emplace_back(std::make_pair(
-              MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
+                MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
+            newParticles.emplace_back(
+                std::make_pair(MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
           } else if (secondary.type == Particle::Photon && m_usePhotons &&
                      secondary.energy > m_gammaCut) {
             // Radiative de-excitation
-            if (aval) TransportPhoton(x, y, z, t + secondary.time, 
-                                      secondary.energy, newParticles);
+            if (aval)
+              TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
+                              newParticles);
           }
         }
         break;
@@ -1251,7 +1268,7 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
       case ElectronCollisionTypeImpurity:
         break;
       default:
-        std::cerr << m_className 
+        std::cerr << m_className
                   << "::TransportElectron: Unknown collision type.\n";
         break;
     }
@@ -1291,18 +1308,17 @@ int AvalancheMicroscopic::TransportElectron(const Point& p0,
     m_viewer->AddDriftLinePoint(did, x, y, z);
   }
   if (m_debug) {
-    std::cout << "    Drift line stops at (" 
-              << x << ", " << y << ", " << z << ").\n";
-  } 
+    std::cout << "    Drift line stops at (" << x << ", " << y << ", " << z
+              << ").\n";
+  }
   return status;
 }
 
-int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
-  const bool hole, const bool aval, const bool signal,
-  std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-  std::vector<Point>& path, 
-  std::vector<std::pair<Point, Particle> >& newParticles) {
-
+int AvalancheMicroscopic::TransportElectronBfield(
+    const Point& p0, const bool hole, const bool aval, const bool signal,
+    std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
+    std::vector<Point>& path,
+    std::vector<std::pair<Point, Particle> >& newParticles) {
   double x = p0.x;
   double y = p0.y;
   double z = p0.z;
@@ -1318,8 +1334,8 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
   size_t did = 0;
   if (m_viewer) {
     if (hole) {
-      did = m_viewer->NewDriftLine(Particle::Hole, 1, x, y, z); 
-    } else { 
+      did = m_viewer->NewDriftLine(Particle::Hole, 1, x, y, z);
+    } else {
       did = m_viewer->NewDriftLine(Particle::Electron, 1, x, y, z);
     }
   }
@@ -1340,13 +1356,13 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
     ez = -ez;
   }
   if (m_debug) {
-    std::cout << "    Drift line starts at (" 
-              << x << ", " << y << ", " << z << ").\n"
+    std::cout << "    Drift line starts at (" << x << ", " << y << ", " << z
+              << ").\n"
               << "    Status: " << status << "\n";
     if (medium) std::cout << "    Medium: " << medium->GetName() << "\n";
   }
 
-  if (status != 0 || !medium || !medium->IsDriftable() || 
+  if (status != 0 || !medium || !medium->IsDriftable() ||
       !medium->IsMicroscopic()) {
     if (m_debug) std::cout << "    Not in a valid medium.\n";
     return StatusLeftDriftMedium;
@@ -1356,7 +1372,7 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
   // Get the null-collision rate.
   double fLim = medium->GetElectronNullCollisionRate(band);
   if (fLim <= 0.) {
-    std::cerr << m_className 
+    std::cerr << m_className
               << "::TransportElectron: Got null-collision rate <= 0.\n";
     return StatusCalculationAbandoned;
   }
@@ -1421,7 +1437,7 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
       // Update the null-collision rate.
       fLim = medium->GetElectronNullCollisionRate(band);
       if (fLim <= 0.) {
-        std::cerr << m_className 
+        std::cerr << m_className
                   << "::TransportElectron: Got null-collision rate <= 0.\n";
         status = StatusCalculationAbandoned;
         break;
@@ -1473,8 +1489,8 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
       const double fReal = medium->GetElectronCollisionRate(en1, band);
       if (fReal <= 0.) {
         std::cerr << m_className << "::TransportElectron:\n"
-                  << "    Got collision rate <= 0 at " << en1
-                  << " eV (band " << band << ").\n";
+                  << "    Got collision rate <= 0 at " << en1 << " eV (band "
+                  << band << ").\n";
         path.emplace_back(MakePoint(x, y, z, t, en1, kx, ky, kz, band));
         return StatusCalculationAbandoned;
       }
@@ -1545,8 +1561,8 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
       Terminate(x, y, z, t, x1, y1, z1, t1);
       if (m_debug) std::cout << "    Left the drift area.\n";
       status = StatusLeftDriftArea;
-    } else if (m_sensor->CrossedWire(x, y, z, x1, y1, z1, 
-                                     xc, yc, zc, false, rc)) {
+    } else if (m_sensor->CrossedWire(x, y, z, x1, y1, z1, xc, yc, zc, false,
+                                     rc)) {
       t1 = t + dt * Mag(xc - x, yc - y, zc - z) / Mag(dx, dy, dz);
       x1 = xc;
       y1 = yc;
@@ -1616,8 +1632,8 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
     }
 
     if (m_userHandleCollision) {
-      m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx,
-                            ky, kz, kx1, ky1, kz1);
+      m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx, ky,
+                            kz, kx1, ky1, kz1);
     }
     switch (cstype) {
       // Elastic collision
@@ -1634,15 +1650,15 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
             if (m_histSecondary) m_histSecondary->Fill(esec);
             // Add the secondary electron to the stack.
             newParticles.emplace_back(std::make_pair(
-              MakePoint(x, y, z, t, esec), Particle::Electron));
+                MakePoint(x, y, z, t, esec), Particle::Electron));
           } else if (secondary.type == Particle::Hole) {
             const double esec = std::max(secondary.energy, Small);
             // Add the secondary hole to the stack.
-            newParticles.emplace_back(std::make_pair(
-              MakePoint(x, y, z, t, esec), Particle::Hole));
+            newParticles.emplace_back(
+                std::make_pair(MakePoint(x, y, z, t, esec), Particle::Hole));
           } else if (secondary.type == Particle::Ion) {
-            newParticles.emplace_back(std::make_pair(
-              MakePoint(x, y, z, t, 0.), Particle::Ion));
+            newParticles.emplace_back(
+                std::make_pair(MakePoint(x, y, z, t, 0.), Particle::Ion));
           }
         }
         break;
@@ -1685,8 +1701,8 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
             // Check if this location is inside a drift medium/area.
             if (status != 0 || !m_sensor->IsInArea(xp, yp, zp)) continue;
             // Make sure we haven't jumped across a wire.
-            if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc,
-                                      false, rc)) {
+            if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc, false,
+                                      rc)) {
               continue;
             }
             if (m_userHandleIonisation) {
@@ -1696,14 +1712,15 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
             const double tp = t + secondary.time;
             const double ep = std::max(secondary.energy, Small);
             newParticles.emplace_back(std::make_pair(
-              MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
-            newParticles.emplace_back(std::make_pair(
-              MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
+                MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
+            newParticles.emplace_back(
+                std::make_pair(MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
           } else if (secondary.type == Particle::Photon && m_usePhotons &&
                      secondary.energy > m_gammaCut) {
             // Radiative de-excitation
-            if (aval) TransportPhoton(x, y, z, t + secondary.time, 
-                                      secondary.energy, newParticles);
+            if (aval)
+              TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
+                              newParticles);
           }
         }
         break;
@@ -1725,7 +1742,7 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
       case ElectronCollisionTypeImpurity:
         break;
       default:
-        std::cerr << m_className 
+        std::cerr << m_className
                   << "::TransportElectron: Unknown collision type.\n";
         break;
     }
@@ -1757,18 +1774,17 @@ int AvalancheMicroscopic::TransportElectronBfield(const Point& p0,
     m_viewer->AddDriftLinePoint(did, x, y, z);
   }
   if (m_debug) {
-    std::cout << "    Drift line stops at (" 
-              << x << ", " << y << ", " << z << ").\n";
-  } 
+    std::cout << "    Drift line stops at (" << x << ", " << y << ", " << z
+              << ").\n";
+  }
   return status;
 }
 
-int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
-  const bool hole, const bool aval, const bool signal,
-  std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-  std::vector<Point>& path, 
-  std::vector<std::pair<Point, Particle> >& newParticles) {
-
+int AvalancheMicroscopic::TransportElectronSc(
+    const Point& p0, const bool hole, const bool aval, const bool signal,
+    std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
+    std::vector<Point>& path,
+    std::vector<std::pair<Point, Particle> >& newParticles) {
   double x = p0.x;
   double y = p0.y;
   double z = p0.z;
@@ -1784,8 +1800,8 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
   size_t did = 0;
   if (m_viewer) {
     if (hole) {
-      did = m_viewer->NewDriftLine(Particle::Hole, 1, x, y, z); 
-    } else { 
+      did = m_viewer->NewDriftLine(Particle::Hole, 1, x, y, z);
+    } else {
       did = m_viewer->NewDriftLine(Particle::Electron, 1, x, y, z);
     }
   }
@@ -1802,13 +1818,13 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
     ez = -ez;
   }
   if (m_debug) {
-    std::cout << "    Drift line starts at (" 
-              << x << ", " << y << ", " << z << ").\n"
+    std::cout << "    Drift line starts at (" << x << ", " << y << ", " << z
+              << ").\n"
               << "    Status: " << status << "\n";
     if (medium) std::cout << "    Medium: " << medium->GetName() << "\n";
   }
 
-  if (status != 0 || !medium || !medium->IsDriftable() || 
+  if (status != 0 || !medium || !medium->IsDriftable() ||
       !medium->IsMicroscopic()) {
     if (m_debug) std::cout << "    Not in a valid medium.\n";
     return StatusLeftDriftMedium;
@@ -1818,7 +1834,7 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
   // Get the null-collision rate.
   double fLim = medium->GetElectronNullCollisionRate(band);
   if (fLim <= 0.) {
-    std::cerr << m_className 
+    std::cerr << m_className
               << "::TransportElectron: Got null-collision rate <= 0.\n";
     return StatusCalculationAbandoned;
   }
@@ -1865,7 +1881,7 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
       // Update the null-collision rate.
       fLim = medium->GetElectronNullCollisionRate(band);
       if (fLim <= 0.) {
-        std::cerr << m_className 
+        std::cerr << m_className
                   << "::TransportElectron: Got null-collision rate <= 0.\n";
         status = StatusCalculationAbandoned;
         break;
@@ -1902,8 +1918,8 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
       const double fReal = medium->GetElectronCollisionRate(en1, band);
       if (fReal <= 0.) {
         std::cerr << m_className << "::TransportElectron:\n"
-                  << "    Got collision rate <= 0 at " << en1
-                  << " eV (band " << band << ").\n";
+                  << "    Got collision rate <= 0 at " << en1 << " eV (band "
+                  << band << ").\n";
         path.emplace_back(MakePoint(x, y, z, t, en1, kx, ky, kz, band));
         return StatusCalculationAbandoned;
       }
@@ -1912,8 +1928,8 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
         dt += log(r) * tLim;
         // Increase the null collision rate and try again.
         std::cerr << m_className << "::TransportElectron: "
-                  << "Increasing null-collision rate by 5% (band "
-                  << band << ").\n";
+                  << "Increasing null-collision rate by 5% (band " << band
+                  << ").\n";
         fLim *= 1.05;
         tLim = 1. / fLim;
         continue;
@@ -1966,8 +1982,8 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
       Terminate(x, y, z, t, x1, y1, z1, t1);
       if (m_debug) std::cout << "    Left the drift area.\n";
       status = StatusLeftDriftArea;
-    } else if (m_sensor->CrossedWire(x, y, z, x1, y1, z1, 
-                                     xc, yc, zc, false, rc)) {
+    } else if (m_sensor->CrossedWire(x, y, z, x1, y1, z1, xc, yc, zc, false,
+                                     rc)) {
       t1 = t + dt * Mag(xc - x, yc - y, zc - z) / Mag(dx, dy, dz);
       x1 = xc;
       y1 = yc;
@@ -2024,8 +2040,8 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
     }
 
     if (m_userHandleCollision) {
-      m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx,
-                            ky, kz, kx1, ky1, kz1);
+      m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx, ky,
+                            kz, kx1, ky1, kz1);
     }
     switch (cstype) {
       // Elastic collision
@@ -2044,19 +2060,21 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
             double kxs = 0., kys = 0., kzs = 0.;
             int bs = -1;
             medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
-            newParticles.emplace_back(std::make_pair(
-              MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs), Particle::Electron));
+            newParticles.emplace_back(
+                std::make_pair(MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs),
+                               Particle::Electron));
           } else if (secondary.type == Particle::Hole) {
             const double esec = std::max(secondary.energy, Small);
             // Add the secondary hole to the stack.
             double kxs = 0., kys = 0., kzs = 0.;
             int bs = -1;
             medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
-            newParticles.emplace_back(std::make_pair(
-              MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs), Particle::Hole));
+            newParticles.emplace_back(
+                std::make_pair(MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs),
+                               Particle::Hole));
           } else if (secondary.type == Particle::Ion) {
-            newParticles.emplace_back(std::make_pair(
-              MakePoint(x, y, z, t, 0.), Particle::Ion));
+            newParticles.emplace_back(
+                std::make_pair(MakePoint(x, y, z, t, 0.), Particle::Ion));
           }
         }
         break;
@@ -2104,8 +2122,8 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
             // Check if this location is inside a drift medium/area.
             if (status != 0 || !m_sensor->IsInArea(xp, yp, zp)) continue;
             // Make sure we haven't jumped across a wire.
-            if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc,
-                                      false, rc)) {
+            if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc, false,
+                                      rc)) {
               continue;
             }
             if (m_userHandleIonisation) {
@@ -2115,14 +2133,15 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
             const double tp = t + secondary.time;
             const double ep = std::max(secondary.energy, Small);
             newParticles.emplace_back(std::make_pair(
-              MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
-            newParticles.emplace_back(std::make_pair(
-              MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
+                MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
+            newParticles.emplace_back(
+                std::make_pair(MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
           } else if (secondary.type == Particle::Photon && m_usePhotons &&
                      secondary.energy > m_gammaCut) {
             // Radiative de-excitation
-            if (aval) TransportPhoton(x, y, z, t + secondary.time, 
-                                      secondary.energy, newParticles);
+            if (aval)
+              TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
+                              newParticles);
           }
         }
         break;
@@ -2144,7 +2163,7 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
       case ElectronCollisionTypeImpurity:
         break;
       default:
-        std::cerr << m_className 
+        std::cerr << m_className
                   << "::TransportElectron: Unknown collision type.\n";
         break;
     }
@@ -2173,15 +2192,16 @@ int AvalancheMicroscopic::TransportElectronSc(const Point& p0,
     m_viewer->AddDriftLinePoint(did, x, y, z);
   }
   if (m_debug) {
-    std::cout << "    Drift line stops at (" 
-              << x << ", " << y << ", " << z << ").\n";
-  } 
+    std::cout << "    Drift line stops at (" << x << ", " << y << ", " << z
+              << ").\n";
+  }
   return status;
 }
 
 void AvalancheMicroscopic::PlotCollision(const int cstype, const size_t did,
-    const double x, const double y, const double z,
-    size_t& nCollPlot) const {
+                                         const double x, const double y,
+                                         const double z,
+                                         size_t& nCollPlot) const {
   if (!m_viewer) return;
   if (cstype == ElectronCollisionTypeIonisation) {
     if (m_plotIonisations) {
@@ -2204,9 +2224,10 @@ void AvalancheMicroscopic::PlotCollision(const int cstype, const size_t did,
 }
 
 void AvalancheMicroscopic::FillDistanceHistogram(const int cstype,
-    const double x, const double y, const double z,
-    double& xLast, double& yLast, double& zLast) const {
- 
+                                                 const double x, const double y,
+                                                 const double z, double& xLast,
+                                                 double& yLast,
+                                                 double& zLast) const {
   for (const auto& htype : m_distanceHistogramType) {
     if (htype != cstype) continue;
     if (m_debug) std::cout << "    Filling distance histogram.\n";
@@ -2233,8 +2254,7 @@ void AvalancheMicroscopic::FillDistanceHistogram(const int cstype,
 
 void AvalancheMicroscopic::TransportPhoton(
     const double x0, const double y0, const double z0, const double t0,
-    const double e0, 
-    std::vector<std::pair<Point, Particle> > & newParticles) {
+    const double e0, std::vector<std::pair<Point, Particle> >& newParticles) {
   // Make sure that the sensor is defined.
   if (!m_sensor) {
     std::cerr << m_className << "::TransportPhoton: Sensor is not defined.\n";
@@ -2347,11 +2367,11 @@ void AvalancheMicroscopic::TransportPhoton(
       if (secondary.type == Particle::Electron) {
         // Add the secondary electron (random direction).
         newParticles.emplace_back(std::make_pair(
-          MakePoint(x, y, z, t, std::max(secondary.energy, Small)), 
-          Particle::Electron));
+            MakePoint(x, y, z, t, std::max(secondary.energy, Small)),
+            Particle::Electron));
       } else if (secondary.type == Particle::Ion) {
-        newParticles.emplace_back(std::make_pair(
-          MakePoint(x, y, z, t, 0.), Particle::Ion));
+        newParticles.emplace_back(
+            std::make_pair(MakePoint(x, y, z, t, 0.), Particle::Ion));
       }
     }
   } else if (type == PhotonCollisionTypeExcitation) {
@@ -2362,8 +2382,7 @@ void AvalancheMicroscopic::TransportPhoton(
         // Ionisation.
         const double esec = std::max(secondary.energy, Small);
         newParticles.emplace_back(std::make_pair(
-          MakePoint(x, y, z, t + secondary.time, esec), 
-          Particle::Electron));
+            MakePoint(x, y, z, t + secondary.time, esec), Particle::Electron));
       } else if (secondary.type == Particle::Photon && m_usePhotons) {
         // Radiative de-excitation
         if (secondary.energy > m_gammaCut) {

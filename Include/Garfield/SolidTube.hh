@@ -1,7 +1,7 @@
 #ifndef G_SOLID_TUBE_H
 #define G_SOLID_TUBE_H
 
-#include<array>
+#include <array>
 #include <mutex>
 
 #include "Garfield/Solid.hh"
@@ -19,13 +19,13 @@ class SolidTube : public Solid {
   SolidTube(const double cx, const double cy, const double cz, const double r,
             const double lz, const double dx, const double dy, const double dz);
   /// Constructor from centre, inner radius, outer radius, and half-length.
-  SolidTube(const double cx, const double cy, const double cz, 
-            const double ri, const double ro, const double lz);
-  /// Constructor from centre, inner radius, outer radius, half-length 
+  SolidTube(const double cx, const double cy, const double cz, const double ri,
+            const double ro, const double lz);
+  /// Constructor from centre, inner radius, outer radius, half-length
   /// and orientation.
-  SolidTube(const double cx, const double cy, const double cz, 
-            const double ri, const double ro, const double lz, 
-            const double dx, const double dy, const double dz);
+  SolidTube(const double cx, const double cy, const double cz, const double ri,
+            const double ro, const double lz, const double dx, const double dy,
+            const double dz);
   /// Destructor
   ~SolidTube() {}
 
@@ -35,7 +35,7 @@ class SolidTube : public Solid {
                       double& ymax, double& zmax) const override;
   bool IsTube() const override { return true; }
 
-  /// Set the half-length of the tube. 
+  /// Set the half-length of the tube.
   void SetHalfLength(const double lz);
   /// Set the outer radius.
   void SetRadius(const double r);
@@ -79,8 +79,8 @@ class SolidTube : public Solid {
   void SetDiscretisationLevel(const double dis) override { m_dis.fill(dis); }
   double GetDiscretisationLevel(const Panel& panel) override;
 
-  void Cut(const double x0, const double y0, const double z0,
-           const double xn, const double yn, const double zn,
+  void Cut(const double x0, const double y0, const double z0, const double xn,
+           const double yn, const double zn,
            std::vector<Panel>& panels) override;
 
  private:
@@ -123,10 +123,10 @@ class SolidTube : public Solid {
   bool m_botlid = true;
 
   /// Discretisation levels.
-  std::array<double, 3> m_dis{{-1.,-1.,-1.}};
+  std::array<double, 3> m_dis{{-1., -1., -1.}};
 
   void UpdatePolygon();
 };
-}
+}  // namespace Garfield
 
 #endif

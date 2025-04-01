@@ -1,10 +1,10 @@
-#include <iostream>
-#include <vector>
-
 #include <TApplication.h>
+#include <TAxis.h>
 #include <TCanvas.h>
 #include <TGraph.h>
-#include <TAxis.h>
+
+#include <iostream>
+#include <vector>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
@@ -13,24 +13,23 @@
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
- 
+
   MediumMagboltz gas;
 
   // Setup the cell.
   ComponentAnalyticField cmp;
   cmp.SetMedium(&gas);
-  cmp.AddPlaneY(0.,    0., "p");
+  cmp.AddPlaneY(0., 0., "p");
   cmp.AddPlaneY(2., -250., "q");
-  const double ds =  20.e-4;
+  const double ds = 20.e-4;
   const double df = 125.e-4;
-  const double dc =  67.e-4;
-  const double dg =  67.e-4;
+  const double dc = 67.e-4;
+  const double dg = 67.e-4;
   cmp.AddWire(0.0, 0.4, 0.5 * ds, 1400., "s");
-  cmp.AddWire(0.2, 0.4, 0.5 * df,    0., "f");
+  cmp.AddWire(0.2, 0.4, 0.5 * df, 0., "f");
   for (int i = 0; i < 4; ++i) {
     cmp.AddWire(0.1 * i, 0.8, 0.5 * dc, 0., "c");
   }
@@ -50,4 +49,3 @@ int main(int argc, char * argv[]) {
   view.PlotProfile(0.05, 0., 0., 0.05, 2., 0., "e", false);
   app.Run();
 }
-

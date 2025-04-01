@@ -1,31 +1,30 @@
-#include <cstdlib>
-#include <iostream>
-
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TH1F.h>
 
-#include "Garfield/AvalancheMicroscopic.hh"
+#include <cstdlib>
+#include <iostream>
+
 #include "Garfield/AvalancheMC.hh"
+#include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentAnsys123.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/ViewField.hh"
-#include "Garfield/ViewFEMesh.hh"
 #include "Garfield/ViewDrift.hh"
+#include "Garfield/ViewFEMesh.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   // Setup the gas.
   MediumMagboltz gas("ar", 80., "co2", 20.);
   gas.SetTemperature(293.15);
   gas.SetPressure(760.);
-  gas.Initialise(true);  
+  gas.Initialise(true);
   // Set the Penning transfer efficiency.
   constexpr double rPenning = 0.51;
   constexpr double lambdaPenning = 0.;
@@ -41,7 +40,7 @@ int main(int argc, char * argv[]) {
   fm.PrintRange();
 
   // Associate the gas with the corresponding field map material.
-  fm.SetGas(&gas); 
+  fm.SetGas(&gas);
   fm.PrintMaterials();
   // fm.Check();
 
@@ -62,7 +61,7 @@ int main(int argc, char * argv[]) {
     fieldView.SetCanvas(cf);
     fieldView.PlotContour();
 
-    meshView.SetArea(-0.5 * pitch, -0.02, 0.5 * pitch, 0.02); 
+    meshView.SetArea(-0.5 * pitch, -0.02, 0.5 * pitch, 0.02);
     meshView.SetCanvas(cf);
     meshView.SetPlane(0, -1, 0, 0, 0, 0);
     meshView.SetFillMesh(true);
@@ -72,8 +71,7 @@ int main(int argc, char * argv[]) {
 
   // Create the sensor.
   Sensor sensor(&fm);
-  sensor.SetArea(-5 * pitch, -5 * pitch, -0.01,
-                  5 * pitch,  5 * pitch,  0.025);
+  sensor.SetArea(-5 * pitch, -5 * pitch, -0.01, 5 * pitch, 5 * pitch, 0.025);
 
   AvalancheMicroscopic aval(&sensor);
 
@@ -92,12 +90,12 @@ int main(int argc, char * argv[]) {
   unsigned int nTotal = 0;
   unsigned int nBF = 0;
   constexpr unsigned int nEvents = 10;
-  for (unsigned int i = 0; i < nEvents; ++i) { 
+  for (unsigned int i = 0; i < nEvents; ++i) {
     std::cout << i << "/" << nEvents << "\n";
-    // Randomize the initial position. 
+    // Randomize the initial position.
     const double x0 = -0.5 * pitch + RndmUniform() * pitch;
     const double y0 = -0.5 * pitch + RndmUniform() * pitch;
-    const double z0 = 0.02; 
+    const double z0 = 0.02;
     const double t0 = 0.;
     const double e0 = 0.1;
     aval.AvalancheElectron(x0, y0, z0, t0, e0, 0., 0., 0.);
@@ -111,8 +109,8 @@ int main(int argc, char * argv[]) {
       if (endpoint.z > 0.005) ++nBF;
     }
   }
-  std::cout << "Fraction of back-flowing ions: " 
-            << double(nBF) / double(nTotal) << "\n";
+  std::cout << "Fraction of back-flowing ions: " << double(nBF) / double(nTotal)
+            << "\n";
   if (plotDrift) {
     TCanvas* cd = new TCanvas();
     constexpr bool plotMesh = true;
@@ -125,7 +123,8 @@ int main(int argc, char * argv[]) {
       if (twod) {
         meshView.SetArea(-2 * pitch, -0.02, 2 * pitch, 0.02);
       } else {
-        meshView.SetArea(-0.5 * pitch, -0.5 * pitch, -0.02, 0.5 * pitch, 0.5 * pitch, 0.02);
+        meshView.SetArea(-0.5 * pitch, -0.5 * pitch, -0.02, 0.5 * pitch,
+                         0.5 * pitch, 0.02);
       }
       meshView.SetFillMesh(true);
       meshView.SetColor(0, kGray);

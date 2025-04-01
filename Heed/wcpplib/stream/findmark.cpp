@@ -1,7 +1,8 @@
-#include <iostream>
-#include <cstdio>
-
 #include "wcpplib/stream/findmark.h"
+
+#include <cstdio>
+#include <iostream>
+
 #include "wcpplib/stream/prstream.h"
 
 /*
@@ -41,4 +42,4 @@ int findmark(std::istream &file, const char *s) {
   return 1;
 }
 
-}
+}  // namespace Heed
