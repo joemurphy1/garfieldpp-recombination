@@ -117,7 +117,7 @@ docs:
     - pacman-key --init
     - pacman -Syu --noconfirm
     - pacman -S --noconfirm doxygen texlive-bin texlive-basic texlive-latex texlive-latexextra texlive-luatex texlive-fontutils texlive-latexrecommended texlive-bibtexextra texlive-plaingeneric otf-latinmodern-math otf-latin-modern cmake gcc-fortran root cern-vdt biber
-    - ln -s usr/bin/vendor_perl/biber usr/bin/biber
+    - ln usr/bin/vendor_perl/biber usr/bin/
   script:
     - cmake -E rm -rf ./build
     - cmake -E make_directory ./build
