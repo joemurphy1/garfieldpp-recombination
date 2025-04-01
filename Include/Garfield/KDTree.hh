@@ -12,6 +12,7 @@
 #include <array>
 #include <queue>
 #include <vector>
+#include <cstddef>
 
 namespace Garfield {
 
@@ -23,7 +24,7 @@ class KDTreeNode;
 
 struct KDTreeResult {
   double dis;  //< square Euclidean distance
-  size_t idx;  //< index
+  std::size_t idx;  //< index
 };
 
 /// Main k-d tree class.
@@ -34,7 +35,7 @@ class KDTree {
   // Reference to the underlying data to be included in the tree.
   const KDTreeArray& m_data;
 
-  size_t m_dim = 3;
+  std::size_t m_dim = 3;
   bool sort_results = false;
 
  public:
@@ -85,7 +86,7 @@ class KDTree {
 
   // Index for the tree leaves. Data in a leaf with bounds [l,u] are
   // in 'data[ind[l],*] to data[ind[u],*]
-  std::vector<size_t> m_ind;
+  std::vector<std::size_t> m_ind;
 
   static constexpr int bucketsize = 12;  // global constant.
 
@@ -109,7 +110,7 @@ class KDTreeNode {
   friend class KDTree;
 
   // Dimension to cut.
-  size_t cut_dim = 0;
+  std::size_t cut_dim = 0;
   // Cut value.
   double cut_val = 0.;
   double cut_val_left = 0.;
