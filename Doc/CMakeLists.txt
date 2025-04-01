@@ -81,7 +81,7 @@ if(LATEX_LUALATEX_FOUND)
   )
   add_custom_target(doc-user-guide SOURCES ${USERGUIDE_SOURCE}
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/
-                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/UserGuide.bib ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/UserGuide.bib
+                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/UserGuide/UserGuide.bib ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/UserGuide.bib
                     COMMAND "${LUALATEX_COMPILER}" -shell-escape -draftmode --output-directory=${CMAKE_CURRENT_BINARY_DIR}/UserGuide/ ${CMAKE_CURRENT_SOURCE_DIR}/UserGuide/UserGuide.tex
                     COMMAND "${BIBER_COMPILER}" --output-directory=${CMAKE_CURRENT_BINARY_DIR}/UserGuide/ ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/UserGuide.bcf
                     COMMAND "${LUALATEX_COMPILER}" -shell-escape --output-directory=${CMAKE_CURRENT_BINARY_DIR}/UserGuide/ ${CMAKE_CURRENT_SOURCE_DIR}/UserGuide/UserGuide.tex
