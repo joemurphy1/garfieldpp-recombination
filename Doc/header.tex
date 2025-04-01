@@ -26,11 +26,7 @@
 
   %% moved from doxygen.sty due to workaround for LaTex 2019 version and unmaintained tabu package
   \usepackage{ifthen}
-  \ifx\requestedLaTeXdate\undefined
-    \usepackage{array}
-  \else
-    \usepackage{array}[=2016-10-06]
-  \fi
+  \usepackage{array}
   %%
 
   % Packages required by doxygen
@@ -54,28 +50,21 @@
   \usepackage{graphicx}
   \iftutex
     \usepackage{fontspec}
+    \setmainfont{Latin Modern Roman}
+    \setsansfont{Latin Modern Sans}
+    \setmonofont{Latin Modern Mono}
     \defaultfontfeatures{Ligatures={TeX}}
     \usepackage{unicode-math}
+    \setmathfont{LatinModernMath-Regular}
   \else
     \usepackage[utf8]{inputenc}
   \fi
   \usepackage{makeidx}
-  \PassOptionsToPackage{warn}{textcomp}
-  \usepackage{textcomp}
-  \usepackage[nointegrals]{wasysym}
-  \usepackage{ifxetex}
+  \usepackage{microtype}
+  %\usepackage{ifxetex}
 
   % NLS support packages
   $languagesupport
-
-  % Define default fonts
-  % Font selection
-%%BEGIN LATEX_FONTENC
-  \iftutex
-  \else
-    \usepackage[$latexfontenc]{fontenc}
-  \fi
-%%END LATEX_FONTENC
 
   % set main and monospaced font
   $latexfont
@@ -259,7 +248,7 @@
   \begin{titlepage}
   \vspace*{7cm}
   \begin{center}%
-    \includegraphics[width=0.8\textwidth]{logo.png}\\
+    \includegraphics[width=0.3\textwidth]{logo.png}\\
   {\Large $title}\\
 %%BEGIN PROJECT_NUMBER
   [1ex]\large $projectnumber \\
