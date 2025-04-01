@@ -248,8 +248,7 @@ target_sources(Garfield PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/GarfieldDict.cxx)
 if(ROOT_VERSION VERSION_GREATER 6.06)
   install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/libGarfieldDict_rdict.pcm
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    COMPONENT dict)
+    DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
 endif()
 
 #--- If you cannot create symbolic links turn FALSE the library version -------

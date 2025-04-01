@@ -6,6 +6,9 @@ cmake_policy(SET CMP0057 NEW) # if IN_LIST
 
 find_package(Doxygen QUIET OPTIONAL_COMPONENTS mscgen dia dot)
 
+# find biber
+find_program(BIBER_COMPILER NAMES biber PATHS "${MIKTEX_BINARY_PATH}" /usr/bin /usr/bin/vendor_perl/)
+
 # Run doxygen
 function(doxyfile_docs)
   cmake_parse_arguments(ARGS "ALL;USE_STAMP_FILE;LUALATEX" "WORKING_DIRECTORY;COMMENT;CONFIG_FILE" "" "${ARGN}")
@@ -365,7 +368,7 @@ function(doxyfile_docs)
     else()
       add_custom_target(doc-html ${ALL_STRING} DEPENDS generate-doxygen SOURCES ${_sources} COMMENT "Generating html documentation.")
     endif()
-    install(DIRECTORY "${ORIGINAL_DOXYGEN_OUTPUT_DIR}/html" DESTINATION "${CMAKE_INSTALL_DOCDIR}" OPTIONAL)
+    install(DIRECTORY "${ORIGINAL_DOXYGEN_OUTPUT_DIR}/html" DESTINATION "${CMAKE_INSTALL_DOCDIR}" COMPONENT docs)
   else()
     add_custom_target(doc-html "${CMAKE_COMMAND}" -E true COMMENT "${Yellow}HTML format not activated for doxygen !${Reset}")
   endif()
@@ -388,7 +391,7 @@ function(doxyfile_docs)
                         BYPRODUCTS "${DOXYGEN_OUTPUT_LATEX}"
                         COMMENT "Generating LaTeX documentation.")
     endif()
-    install(FILES "${DOXYGEN_OUTPUT_LATEX}" DESTINATION "${CMAKE_INSTALL_DOCDIR}/pdf" RENAME "${PROJECT_NAME}_Manual.pdf" OPTIONAL)
+    install(FILES "${DOXYGEN_OUTPUT_LATEX}" DESTINATION "${CMAKE_INSTALL_DOCDIR}/pdf" RENAME "${PROJECT_NAME}_Manual.pdf" COMPONENT docs)
   else()
     add_custom_target(doc-latex "${CMAKE_COMMAND}" -E true COMMENT "${Yellow}LaTeX format not activated for doxygen !${Reset}")
   endif()
