@@ -110,7 +110,7 @@ build-fedora33:
 #    - ./runmytests.sh
 
 docs:
-  stage: deploy
+  stage: build
   needs: []
   image: archlinux/archlinux:base-devel
   before_script:
@@ -120,10 +120,6 @@ docs:
   script:
     - cmake -E rm -rf ./build
     - cmake -E make_directory ./build
-    - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D GARFIELD_WITH_DOC:BOOL=TRUE
-    - cmake --build ./build --config Debug --parallel 5 --target all docs
+    - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D GARFIELD_WITH_DOC:BOOL=TRUE -D GARFIELD_WITH_EXAMPLES:BOOL=FALSE -D GARFIELD_WITH_TESTS:BOOL=FALSE
+    - cmake --build ./build --config Debug --parallel 5 --target docs
     - cmake --install ./build --config Debug --parallel 5
-    - cmake -E copy_directory ./install/share/doc/Garfield/pdf ./install/share/doc/Garfield/html
-    - cmake -E copy_directory ./install/share/doc/Garfield/html ./public
-  only:
-    - master
