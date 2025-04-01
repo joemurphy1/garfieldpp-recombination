@@ -6,6 +6,9 @@ cmake_policy(SET CMP0057 NEW) # if IN_LIST
 
 find_package(Doxygen QUIET OPTIONAL_COMPONENTS mscgen dia dot)
 
+# find biber
+find_program(BIBER_COMPILER NAMES biber PATHS "${MIKTEX_BINARY_PATH}" /usr/bin /usr/bin/vendor_perl/)
+
 # Run doxygen
 function(doxyfile_docs)
   cmake_parse_arguments(ARGS "ALL;USE_STAMP_FILE;LUALATEX" "WORKING_DIRECTORY;COMMENT;CONFIG_FILE" "" "${ARGN}")
