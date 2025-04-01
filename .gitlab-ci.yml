@@ -120,6 +120,6 @@ docs:
   script:
     - cmake -E rm -rf ./build
     - cmake -E make_directory ./build
-    - cmake -S . -B ./build -D CMAKE_INSTALL_PREFIX:PATH=./install -D GARFIELD_WITH_DOC:BOOL=TRUE -D GARFIELD_WITH_EXAMPLES:BOOL=FALSE -D GARFIELD_WITH_TESTS:BOOL=FALSE
+    - cmake -S . -B ./build -Dbiber_ROOT=usr/bin/vendor_perl/ -D CMAKE_INSTALL_PREFIX:PATH=./install -D GARFIELD_WITH_DOC:BOOL=TRUE -D GARFIELD_WITH_EXAMPLES:BOOL=FALSE -D GARFIELD_WITH_TESTS:BOOL=FALSE
     - cmake --build ./build --config Debug --parallel 5 --target docs
     - cmake --install ./build --config Debug --parallel 5
