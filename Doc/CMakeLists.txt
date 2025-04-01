@@ -88,7 +88,7 @@ if(LATEX_LUALATEX_FOUND)
                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/UserGuide/
                     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/UserGuide.pdf
                     COMMENT "Generating User Guide.")
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/UserGuide.pdf DESTINATION "${CMAKE_INSTALL_DOCDIR}/pdf")
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/UserGuide/UserGuide.pdf DESTINATION "${CMAKE_INSTALL_DOCDIR}/pdf" COMPONENT docs)
 else()
   add_custom_target(doc-user-guide "${CMAKE_COMMAND}" -E true COMMENT "${Yellow}LuaLaTeX not found ! Can compile UserGuide.pdf${Reset}")
 endif()
