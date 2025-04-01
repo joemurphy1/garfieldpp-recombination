@@ -1,6 +1,7 @@
 #ifndef ENERGYMESH_H
 #define ENERGYMESH_H
 
+#include <ostream>
 #include <vector>
 
 namespace Heed {

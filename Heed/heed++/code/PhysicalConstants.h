@@ -1,7 +1,7 @@
 #ifndef MYPHYSICALCONSTANTS_H
 #define MYPHYSICALCONSTANTS_H
 
-#include "wcpplib/clhep_units/WSystemOfUnits.h"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 
 /*
 Here I gathered constants appropriate for internal simulations of heed++.

@@ -1,6 +1,7 @@
 #ifndef BGMESH_H
 #define BGMESH_H
 
+#include <ostream>
 #include <vector>
 
 namespace Heed {

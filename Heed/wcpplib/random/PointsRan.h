@@ -1,6 +1,7 @@
 #ifndef POINTSRAN_H
 #define POINTSRAN_H
 
+#include <ostream>
 #include <vector>
 
 /*

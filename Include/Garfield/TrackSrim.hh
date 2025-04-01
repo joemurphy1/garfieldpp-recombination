@@ -7,7 +7,7 @@
 #include "Garfield/Track.hh"
 
 namespace Garfield {
-
+class Medium;
 /// Generate tracks based on SRIM energy loss, range and straggling tables.
 ///  - http://www.srim.org
 

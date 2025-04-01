@@ -13,11 +13,11 @@
 class TGaxis;
 class TGeoVolume;
 class TGeoMedium;
-class ComponentCST;
 
 namespace Garfield {
 
 class Component;
+class ComponentCST;
 class ViewDrift;
 
 /// Draw the mesh of a field-map component.

@@ -10,7 +10,7 @@
 namespace Garfield {
 
 /// Energy loss calculation using the Photoabsorption-Ionisation Model.
-
+class Medium;
 class TrackPAI : public Track {
  public:
   struct Cluster {

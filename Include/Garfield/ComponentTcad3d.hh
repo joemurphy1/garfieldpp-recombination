@@ -2,6 +2,7 @@
 #define G_COMPONENT_TCAD_3D_H
 
 #include <array>
+#include <iostream>
 #include <memory>
 
 #include "Garfield/ComponentTcadBase.hh"

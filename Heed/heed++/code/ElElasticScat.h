@@ -1,6 +1,7 @@
 #ifndef EL_ELASTIC_SCAT_H
 #define EL_ELASTIC_SCAT_H
 
+#include <string>
 #include <vector>
 
 namespace Heed {
