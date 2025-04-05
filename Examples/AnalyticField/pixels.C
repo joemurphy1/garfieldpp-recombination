@@ -1,6 +1,6 @@
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 #include <TSystem.h>
 
 #include "Garfield/ComponentAnalyticField.hh"
@@ -10,8 +10,7 @@
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
 
@@ -26,7 +25,7 @@ int main(int argc, char * argv[]) {
   // Pixel on the left-side plane.
   cmp.AddPixelOnPlaneX(0., -0.1, 0.1, -0.2, 0.2, "p1");
   // Pixel on the left-side plane, rotated by 45 degrees.
-  cmp.AddPixelOnPlaneX(0., -0.1, 0.1, -0.2, 0.2, "p2", -1, 0.5 * HalfPi); 
+  cmp.AddPixelOnPlaneX(0., -0.1, 0.1, -0.2, 0.2, "p2", -1, 0.5 * HalfPi);
 
   // Plot the weighting potential.
   TCanvas canvas("canvas", "", 1000, 500);

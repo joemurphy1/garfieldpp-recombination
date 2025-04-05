@@ -1,4 +1,5 @@
 #include "wcpplib/particle/particle_def.h"
+
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/util/FunNameStack.h"
 
@@ -6,14 +7,14 @@
 
 namespace Heed {
 
-using CLHEP::electron_mass_c2;
-using CLHEP::proton_mass_c2;
-using CLHEP::neutron_mass_c2;
 using CLHEP::c_squared;
 using CLHEP::electron_charge;
+using CLHEP::electron_mass_c2;
 using CLHEP::eplus;
-using CLHEP::MeV;
 using CLHEP::GeV;
+using CLHEP::MeV;
+using CLHEP::neutron_mass_c2;
+using CLHEP::proton_mass_c2;
 
 particle_def electron_def("electron", "e-", electron_mass_c2 / c_squared,
                           electron_charge, 0.5);
@@ -27,12 +28,12 @@ particle_def proton_def("proton", "p+", proton_mass_c2 / c_squared, eplus, 0.5);
 particle_def anti_proton_def("", "p-", proton_def);
 
 // light unflavored mesons
-particle_def pi_plus_meson_def("pi_plus", "pi+",
-                               139.56755 * MeV / c_squared, eplus, 0.0);
-particle_def pi_minus_meson_def("pi_minus", "pi-",
-                                139.56755 * MeV / c_squared, -eplus, 0.0);
-particle_def K_plus_meson_def("K_plus", "K+",
-                              493.677 * MeV / c_squared, 1, 0.0);
+particle_def pi_plus_meson_def("pi_plus", "pi+", 139.56755 * MeV / c_squared,
+                               eplus, 0.0);
+particle_def pi_minus_meson_def("pi_minus", "pi-", 139.56755 * MeV / c_squared,
+                                -eplus, 0.0);
+particle_def K_plus_meson_def("K_plus", "K+", 493.677 * MeV / c_squared, 1,
+                              0.0);
 particle_def K_minus_meson_def("K_minus", "K-", K_plus_meson_def);
 
 particle_def deuteron_def("deuteron", "d", 1875.613 * MeV / c_squared, eplus,
@@ -42,10 +43,12 @@ particle_def alpha_particle_def("alpha_particle", "alpha",
 
 particle_def::particle_def(const std::string& fname,
                            const std::string& fnotation, double fmass,
-                           double fcharge, float fspin) : 
-    name(fname), notation(fnotation), mass(fmass), 
-    charge(fcharge), spin(fspin) {
-}
+                           double fcharge, float fspin)
+    : name(fname),
+      notation(fnotation),
+      mass(fmass),
+      charge(fcharge),
+      spin(fspin) {}
 
 particle_def::particle_def(const std::string& fname,
                            const std::string& fnotation, particle_def& p) {
@@ -80,4 +83,4 @@ std::ostream& operator<<(std::ostream& file, const particle_def& f) {
   return file;
 }
 
-}
+}  // namespace Heed

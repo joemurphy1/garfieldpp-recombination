@@ -90,8 +90,8 @@ static constexpr double electron_Compton_length = hbarc / electron_mass_c2;
 
 static constexpr double k_Boltzmann = 8.617385e-11 * MeV / kelvin;
 
-}
+}  // namespace CLHEP
 
-}
+}  // namespace Heed
 
 #endif /* HEED_PHYSICAL_CONSTANTS_H */

@@ -1,10 +1,11 @@
 #ifndef BOX_H
 #define BOX_H
 #include <iostream>
-#include "wcpplib/geometry/straight.h"
+
 #include "wcpplib/geometry/plane.h"
-#include "wcpplib/geometry/volume.h"
+#include "wcpplib/geometry/straight.h"
 #include "wcpplib/geometry/surface.h"
+#include "wcpplib/geometry/volume.h"
 /*
 Copyright (c) 2000 Igor B. Smirnov
 
@@ -91,6 +92,6 @@ class sh_manip_box : public sh_manip_absvol, public box {
  protected:
   absref_transmit get_components() override;
 };
-}
+}  // namespace Heed
 
 #endif

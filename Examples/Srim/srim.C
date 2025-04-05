@@ -1,19 +1,18 @@
+#include <TApplication.h>
+#include <TCanvas.h>
+#include <TH1F.h>
+
 #include <iostream>
 
-#include <TApplication.h>
-#include <TH1F.h>
-#include <TCanvas.h>
-
-#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ComponentConstant.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackSrim.hh"
-#include "Garfield/Plotting.hh"
 
 using namespace Garfield;
 
-int main(int argc, char *argv[]) {
-
+int main(int argc, char* argv[]) {
   // Application
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
@@ -32,10 +31,10 @@ int main(int argc, char *argv[]) {
   cmp.SetArea(0., -hw, -hw, length, hw, hw);
   cmp.SetMedium(&gas);
   cmp.SetElectricField(1000., 0., 0.);
-  
+
   // Make a sensor.
   Sensor sensor(&cmp);
-  
+
   // Create a track class and connect it to a sensor.
   TrackSrim tr(&sensor);
   // Read SRIM output from file.
@@ -86,10 +85,14 @@ int main(int argc, char *argv[]) {
   // Plot the histograms.
   TCanvas* c = new TCanvas("c", "SRIM", 100, 100, 800, 800);
   c->Divide(2, 2);
-  c->cd(1); hX->Draw();
-  c->cd(2); hY->Draw();
-  c->cd(3); hZ->Draw();
-  c->cd(4); hNe->Draw();
+  c->cd(1);
+  hX->Draw();
+  c->cd(2);
+  hY->Draw();
+  c->cd(3);
+  hZ->Draw();
+  c->cd(4);
+  hNe->Draw();
   c->Update();
   std::cout << "Done.\n";
 

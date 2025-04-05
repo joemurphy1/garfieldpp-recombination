@@ -1,10 +1,10 @@
-#include <TROOT.h>
-#include <TF1.h>
+#include "Garfield/PlottingEngine.hh"
+
 #include <TAxis.h>
 #include <TCanvas.h>
+#include <TF1.h>
+#include <TROOT.h>
 #include <TStyle.h>
-
-#include "Garfield/PlottingEngine.hh"
 
 namespace Garfield {
 
@@ -94,4 +94,4 @@ void PlottingEngine::SetDefaultStyle() {
   m_garfieldStyle.cd();
 }
 
-}
+}  // namespace Garfield

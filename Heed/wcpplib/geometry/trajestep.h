@@ -1,7 +1,7 @@
 #ifndef TRAJESTEP_H
 #define TRAJESTEP_H
-#include "wcpplib/geometry/vec.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include "wcpplib/geometry/vec.h"
 
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -32,25 +32,25 @@ namespace Heed {
 class trajestep : public absref {
  public:
   /** Constructor.
-    * \param fmax_range maximum step length
-    * \param frad_for_straight radius beyond which to use straight-line steps.
-    * \param fmax_straight_arange angular step for straight-line approximation.
-    * \param fmax_circ_arange angular step for curved steps.
-    * \param fcurrpos initial coordinates.
-    * \param fdir initial direction.
-    * \param fcurved flag whether the trajectory is curved or straight.
-    * \param frelcen centre of rotation (only used for curved lines).
-    * \param fmrange can be used for reducing/limiting the step length.
-    * \param prec tolerance for checking if frelcen is perpendicular to dir.
-    */
+   * \param fmax_range maximum step length
+   * \param frad_for_straight radius beyond which to use straight-line steps.
+   * \param fmax_straight_arange angular step for straight-line approximation.
+   * \param fmax_circ_arange angular step for curved steps.
+   * \param fcurrpos initial coordinates.
+   * \param fdir initial direction.
+   * \param fcurved flag whether the trajectory is curved or straight.
+   * \param frelcen centre of rotation (only used for curved lines).
+   * \param fmrange can be used for reducing/limiting the step length.
+   * \param prec tolerance for checking if frelcen is perpendicular to dir.
+   */
   trajestep(const double fmax_range, const double frad_for_straight,
             const double fmax_straight_arange, const double fmax_circ_arange,
-            const point& fcurrpos, const vec& fdir, const bool fcurved, 
+            const point& fcurrpos, const vec& fdir, const bool fcurved,
             const vec& frelcen, double fmrange, double prec);
   /** Constructor to continue propagation from the end point of another step.
-    * \param fts old step to continue
-    * \param fmrange new range to travel
-    */ 
+   * \param fts old step to continue
+   * \param fmrange new range to travel
+   */
   trajestep(const trajestep& fts, double fmrange);
   /// Default constructor.
   trajestep() = default;
@@ -73,21 +73,21 @@ class trajestep : public absref {
   /// Current position.
   point currpos;
   /// Unit vector.
-  vec dir;     
+  vec dir;
   /// Type of trajectory (curved or straight).
-  bool curved = false; 
+  bool curved = false;
 
   /// Centre of rotation relative to currpos.
-  /// Used only for curved trajectories. 
+  /// Used only for curved trajectories.
   /// If used, should be perpendicular to dir.
-  vec relcen;  
+  vec relcen;
 
   // 0 - range have been calculated via straight line
   // 1 - via circle
-  int s_range_cf = 0; 
+  int s_range_cf = 0;
 
   // 1 - range is limited by precision
-  int s_prec = 0; 
+  int s_prec = 0;
 
   /// Maximal possible range
   double mrange = 0.;
@@ -95,7 +95,7 @@ class trajestep : public absref {
   // Finishing point
   // It looks like that at s_prec=1 mpoint is not initiated
   // At s_prec=0 the point is initiated
-  point mpoint;    
+  point mpoint;
 
  protected:
   virtual absref_transmit get_components() override;
@@ -105,6 +105,6 @@ class trajestep : public absref {
   void Gnextpoint1(double frange, point& fpos, vec& fdir, vec& frelcen) const;
 };
 std::ostream& operator<<(std::ostream& file, const trajestep& f);
-}
+}  // namespace Heed
 
 #endif

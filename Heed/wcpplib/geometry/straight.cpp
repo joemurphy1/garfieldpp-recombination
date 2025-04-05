@@ -1,7 +1,9 @@
 #include "wcpplib/geometry/straight.h"
+
+#include <limits>
+
 #include "wcpplib/geometry/plane.h"
 #include "wcpplib/math/linexi2.h"
-#include <limits>
 /*
 Copyright (c) 2000 Igor B. Smirnov
 
@@ -21,9 +23,7 @@ namespace Heed {
 absref absref::* straight::aref[2] = {(absref absref::*)&straight::piv,
                                       (absref absref::*)&straight::dir};
 
-absref_transmit straight::get_components() {
-  return absref_transmit(2, aref);
-}
+absref_transmit straight::get_components() { return absref_transmit(2, aref); }
 
 straight::straight(const plane pl1, const plane pl2) {
   pvecerror("straight::straight(const plane pl1, const plane pl2)");
@@ -81,7 +81,7 @@ double straight::vecdistance(const straight& sl, int& type_of_cross,
   straight s1, s2;
   s1 = *this;
   s2 = sl;  // s2 may be changed
-  if (s1.piv == s2.piv) {                     
+  if (s1.piv == s2.piv) {
     // the same origin point
     if (check_par(s1.dir, s2.dir, 0.0) != 0) {
       // parallel or anti-parallel
@@ -93,7 +93,7 @@ double straight::vecdistance(const straight& sl, int& type_of_cross,
   }
   if (check_par(s1.dir, s2.dir, 0.0) != 0) {
     // parallel or anti-parallel
-    if (s1.check_point_in(s2.piv, 0.0) == 1) {  
+    if (s1.check_point_in(s2.piv, 0.0) == 1) {
       // point in => the same line
       type_of_cross = 3;
       return 0.0;
@@ -140,7 +140,7 @@ double straight::distance(const straight& sl, int& type_of_cross,
 }
 
 straight::straight(straight* sl, int qsl, const straight& sl_start, int anum,
-  double precision, double* dist,  // may be negative
+                   double precision, double* dist,  // may be negative
                    point (*pt)[2], double& mean2dist) {
   pvecerror("void straight::straight(straight* sl, int qsl,...");
   check_econd11(qsl, < 4, mcerr);
@@ -307,4 +307,4 @@ std::ostream& operator<<(std::ostream& file, const straight& s) {
   indn.n -= 2;
   return file;
 }
-}
+}  // namespace Heed

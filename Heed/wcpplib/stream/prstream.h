@@ -104,9 +104,9 @@ It is provided "as is" without express or implied warranty.
 
 #include <iostream>
 
-//#ifndef mcout
+// #ifndef mcout
 #define mcout std::cout /* change to ordinary default C++ stream */
-//#endif
+// #endif
 #define mcerr std::cerr
 
 namespace Heed {
@@ -156,11 +156,13 @@ std::ostream& yesindent(std::ostream& f);
        << noindent << name2 << yesindent;
 #define Iprint2n(file, name1, name2)                                          \
   file << indn << #name1 << "=" << noindent << name1 << ", " << #name2 << "=" \
-       << noindent << name2 << '\n' << yesindent;
+       << noindent << name2 << '\n'                                           \
+       << yesindent;
 #define Iprint2nf(file, name1, name2)                                    \
   {                                                                      \
     file << indn << #name1 << "=" << noindent << name1 << ", " << #name2 \
-         << "=" << noindent << name2 << '\n' << yesindent;               \
+         << "=" << noindent << name2 << '\n'                             \
+         << yesindent;                                                   \
     file.flush();                                                        \
   }
 #define Iprint3(file, name1, name2, name3)                                    \
@@ -170,18 +172,21 @@ std::ostream& yesindent(std::ostream& f);
 #define Iprint3n(file, name1, name2, name3)                                   \
   file << indn << #name1 << "=" << noindent << name1 << ", " << #name2 << "=" \
        << noindent << name2 << ", " << #name3 << "=" << noindent << name3     \
-       << '\n' << yesindent;
+       << '\n'                                                                \
+       << yesindent;
 #define Iprint3nf(file, name1, name2, name3)                              \
   {                                                                       \
     file << indn << #name1 << "=" << noindent << name1 << ", " << #name2  \
          << "=" << noindent << name2 << ", " << #name3 << "=" << noindent \
-         << name3 << '\n' << yesindent;                                   \
+         << name3 << '\n'                                                 \
+         << yesindent;                                                    \
     file.flush();                                                         \
   }
 #define Iprint4n(file, name1, name2, name3, name4)                            \
   file << indn << #name1 << "=" << noindent << name1 << ", " << #name2 << "=" \
        << noindent << name2 << ", " << #name3 << "=" << noindent << name3     \
-       << ", " << #name4 << "=" << noindent << name4 << '\n' << yesindent;
+       << ", " << #name4 << "=" << noindent << name4 << '\n'                  \
+       << yesindent;
 
 extern int s_short_output;  // sign which allows to make output shorter
 // simultaneously for all classes. Useful for writing "persistence classes"
@@ -189,6 +194,6 @@ extern int s_short_output;  // sign which allows to make output shorter
 // If instead of this one tries to use special functions like
 // class_name::short_write,
 // he finds an obstacle that such functions are absent for inbuilt types.
-}
+}  // namespace Heed
 
 #endif

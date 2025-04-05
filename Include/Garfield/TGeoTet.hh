@@ -6,8 +6,7 @@
 #include "TGeoBBox.h"
 
 class TGeoTet : public TGeoBBox {
-
-public:
+ public:
   TGeoTet() {}
   /// Constructor
   TGeoTet(const char* name,
@@ -17,20 +16,20 @@ public:
 
   void ComputeBBox() override;
   int DistancetoPrimitive(int, int) override { return 99999; }
-  const TBuffer3D &GetBuffer3D(int reqSections, bool localFrame) const override;
+  const TBuffer3D& GetBuffer3D(int reqSections, bool localFrame) const override;
   void GetMeshNumbers(int& nvert, int& nsegs, int& npols) const override {
-    nvert =  4;
+    nvert = 4;
     nsegs = 12;
-    npols =  4;
+    npols = 4;
   }
   int GetNmeshVertices() const override { return 4; }
   void InspectShape() const override {}
   TBuffer3D* MakeBuffer3D() const override;
-  void Print(Option_t *option = "") const override;
-  void SavePrimitive(std::ostream &, Option_t *) override {}
+  void Print(Option_t* option = "") const override;
+  void SavePrimitive(std::ostream&, Option_t*) override {}
   void SetPoints(double* points) const override;
   void SetPoints(float* points) const override;
-  void SetSegsAndPols(TBuffer3D &buff) const override;
+  void SetSegsAndPols(TBuffer3D& buff) const override;
   void Sizeof3D() const override {}
 
   // ClassDef(TGeoTet, 1)
@@ -40,7 +39,6 @@ public:
 
   TGeoTet(const TGeoTet&) = delete;
   TGeoTet& operator=(const TGeoTet&) = delete;
-
 };
 
 #endif

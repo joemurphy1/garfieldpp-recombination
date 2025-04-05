@@ -1,19 +1,19 @@
 //
 // Created by Dario Stocco (stoccod@ethz.ch) on 02.08.2023.
 //
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <numeric>
-
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TH1F.h>
 #include <TSystem.h>
 
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <numeric>
+
 #include "Garfield/AvalancheGridSpaceCharge.hh"
-#include "Garfield/ComponentParallelPlate.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/ComponentParallelPlate.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
@@ -40,29 +40,19 @@ int main(int argc, char *argv[]) {
   gas.Initialise(true);
 
   // MRPC dimensions (double gap)
-  double d_bakelite = 0.2; // (cm)
+  double d_bakelite = 0.2;  // (cm)
   double d_pet = 0.02;
   double d_gas = 0.2;
   double y_mid = 0.5 * (2 * d_pet + 3 * d_bakelite + 2 * d_gas);
 
-  std::vector<double> layers = {d_pet,
-                                d_bakelite,
-                                d_gas,
-                                d_bakelite,
-                                d_gas,
-                                d_bakelite,
-                                d_pet};
+  std::vector<double> layers = {d_pet, d_bakelite, d_gas, d_bakelite,
+                                d_gas, d_bakelite, d_pet};
 
   double e_bakelite = 8.;
   double e_pet = 3.5;
   double e_gas = 1.;
-  std::vector<double> eps = {e_pet,
-                             e_bakelite,
-                             e_gas,
-                             e_bakelite,
-                             e_gas,
-                             e_bakelite,
-                             e_pet};
+  std::vector<double> eps = {e_pet, e_bakelite, e_gas, e_bakelite,
+                             e_gas, e_bakelite, e_pet};
   // ComponentParallelPlate
   ComponentParallelPlate cmp;
   cmp.Setup(int(layers.size()), eps, layers, voltage, {});
@@ -85,7 +75,7 @@ int main(int argc, char *argv[]) {
   avalsc.SetStopAtK(true);
   avalsc.EnableSpaceChargeEffect(true);
 
-  avalsc.Set2dGrid(y_mid - (d_bakelite / 2 + d_gas) + 1.e-8, 
+  avalsc.Set2dGrid(y_mid - (d_bakelite / 2 + d_gas) + 1.e-8,
                    y_mid + (d_bakelite / 2 + d_gas) - 1.e-8, 3 * 400, 0.05,
                    100);
 
@@ -98,16 +88,18 @@ int main(int argc, char *argv[]) {
   // TrackHeed for primary ionization
   TrackHeed track(&sens);
   track.SetParticle("muon");
-  track.SetMomentum(1.e11); // 100GeV
+  track.SetMomentum(1.e11);  // 100GeV
   track.CrossInactiveMedia(true);
-  track.NewTrack(0, y_mid + (d_bakelite / 2 + d_gas) - 1.e-6, 0, 0., 0., -1., 0.);
+  track.NewTrack(0, y_mid + (d_bakelite / 2 + d_gas) - 1.e-6, 0, 0., 0., -1.,
+                 0.);
 
   // Retrieve the clusters along the track.
-  for (const auto &cluster: track.GetClusters()) {
+  for (const auto &cluster : track.GetClusters()) {
     // Loop over the electrons in the cluster.
-    for (const auto &electron: cluster.electrons) {
+    for (const auto &electron : cluster.electrons) {
       // Propagate electrons microscopically
-      avalmicro.AvalancheElectron(electron.x, electron.y, electron.z, electron.t, 0.1, 0., 0., 0.);
+      avalmicro.AvalancheElectron(electron.x, electron.y, electron.z,
+                                  electron.t, 0.1, 0., 0., 0.);
       // Add electrons to the grid.
       avalsc.AddElectrons(&avalmicro);
     }

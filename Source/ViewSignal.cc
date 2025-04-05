@@ -2,9 +2,10 @@
 
 #include <TAxis.h>
 #include <TGraph.h>
+#include <TH1D.h>
 #include <TLegend.h>
 #include <TPaveLabel.h>
-#include <TH1D.h>
+
 #include <iostream>
 
 #include "Garfield/GarfieldConstants.hh"
@@ -12,9 +13,8 @@
 
 namespace Garfield {
 
-ViewSignal::ViewSignal(Sensor* sensor) : 
-    ViewBase("ViewSignal"),
-    m_sensor(sensor) {}
+ViewSignal::ViewSignal(Sensor* sensor)
+    : ViewBase("ViewSignal"), m_sensor(sensor) {}
 
 void ViewSignal::SetSensor(Sensor* s) {
   if (!s) {
@@ -45,7 +45,7 @@ void ViewSignal::SetRangeY(const double ymin, const double ymax) {
 }
 
 TH1* ViewSignal::DrawHistogram(TH1D& h, const std::string& opt,
-                                const std::string& ylabel) {
+                               const std::string& ylabel) {
   h.SetDirectory(nullptr);
   h.SetStats(0);
   h.GetXaxis()->SetTitle("time [ns]");
@@ -60,10 +60,8 @@ TH1* ViewSignal::DrawHistogram(TH1D& h, const std::string& opt,
   return hCopy;
 }
 
-void ViewSignal::PlotSignal(const std::string& label,
-                            const std::string& optT,
-                            const std::string& optP,
-                            const std::string& optD, 
+void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
+                            const std::string& optP, const std::string& optD,
                             const bool same) {
   const bool totT = true;
   const bool totP = optP.find("t") != std::string::npos ? true : false;

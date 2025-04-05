@@ -1,7 +1,8 @@
 #ifndef G_COMPONENT_TCAD_3D_H
 #define G_COMPONENT_TCAD_3D_H
 
-#include<array>
+#include <array>
+#include <iostream>
 #include <memory>
 
 #include "Garfield/ComponentTcadBase.hh"
@@ -19,12 +20,12 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
   ~ComponentTcad3d() {}
 
   /** Retrieve the properties of an element.
-    * \param i index of the element
-    * \param vol volume
-    * \param dmin smallest length in the element
-    * \param dmax largest length in the element
-    * \param type element type
-    */
+   * \param i index of the element
+   * \param vol volume
+   * \param dmin smallest length in the element
+   * \param dmax largest length in the element
+   * \param type element type
+   */
   bool GetElement(const size_t i, double& vol, double& dmin, double& dmax,
                   int& type) const;
   /// Get the coordinates of a mesh node.
@@ -38,8 +39,7 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
   using Component::ElectricField;
   Medium* GetMedium(const double x, const double y, const double z) override;
   void DelayedWeightingPotentials(const double x, const double y,
-                                  const double z,
-                                  const std::string& label,
+                                  const double z, const std::string& label,
                                   std::vector<double>& dwp) override;
 
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
@@ -94,5 +94,5 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
                    double& fy, double& fz) override;
   void FillTree() override;
 };
-}
+}  // namespace Garfield
 #endif

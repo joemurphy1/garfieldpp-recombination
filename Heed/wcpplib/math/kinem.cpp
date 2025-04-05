@@ -6,9 +6,11 @@
  * since these commonly-defined names are not part of the C/C++ standards.
  */
 #endif
-#include <cmath>
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/math/kinem.h"
+
+#include <cmath>
+
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/util/FunNameStack.h"
 
 namespace Heed {
@@ -59,4 +61,4 @@ void theta_two_part(const double Ep0, const double Ep1, const double Mp,
   if (stheta_t > 1.0) stheta_t = 1.0;
   theta_t = asin(stheta_t);
 }
-}
+}  // namespace Heed

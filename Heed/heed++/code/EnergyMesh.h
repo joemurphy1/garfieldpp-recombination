@@ -1,6 +1,7 @@
 #ifndef ENERGYMESH_H
 #define ENERGYMESH_H
 
+#include <ostream>
 #include <vector>
 
 namespace Heed {
@@ -73,6 +74,6 @@ class EnergyMesh {
   /// Center of interval, q numbers
   double ec[pqener - 1];
 };
-}
+}  // namespace Heed
 
 #endif

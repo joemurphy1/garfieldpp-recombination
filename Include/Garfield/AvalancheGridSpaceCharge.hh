@@ -1,15 +1,15 @@
 #ifndef GARFIELD_AVALANCHEGRIDSPACECHARGE_HH
 #define GARFIELD_AVALANCHEGRIDSPACECHARGE_HH
 
-#include <utility>
-#include <string>
-#include <vector>
 #include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Garfield {
-  class Sensor;
-  class AvalancheMicroscopic;
-  class ComponentParallelPlate;
+class Sensor;
+class AvalancheMicroscopic;
+class ComponentParallelPlate;
 
 /// Propagates avalanches with the 2d (axi-symmetric) space-charge routine from
 /// Lippmann, Riegler (2004) in uniform background fields. Different options to
@@ -19,7 +19,7 @@ class AvalancheGridSpaceCharge {
   /// Default constructor
   AvalancheGridSpaceCharge() : AvalancheGridSpaceCharge(nullptr) {}
   /// Constructor
-  AvalancheGridSpaceCharge(Sensor* sensor);
+  AvalancheGridSpaceCharge(Sensor *sensor);
   /// Destructor
   ~AvalancheGridSpaceCharge() = default;
 
@@ -145,28 +145,28 @@ class AvalancheGridSpaceCharge {
     /// Magnitude of velocity of the node (not negative) cm/ns
     double velocity = 0.;
     /// Diffusion along E.
-    double dSigmaL = 0;  
+    double dSigmaL = 0;
     /// Diffusion transverse to E (radial, phi dir is net 0).
-    double dSigmaT = 0;          
-   
+    double dSigmaT = 0;
+
     double Wv = 0;  ///< flux drift cm/ns
     double Wr = 0;  ///< bulk drift cm/ns
     /// Ionization rate from TOF experiment 1/ns -> 1/cm
-    double townsendPT = 0;  
+    double townsendPT = 0;
     /// Attachment rate from TOF experiment 1/ns -> 1/cm
-    double attachmentPT = 0;  
+    double attachmentPT = 0;
     /// Space-charge electric field in R direction (can be negative)
-    double eFieldR = 0;  
+    double eFieldR = 0;
     /// Space-charge electric field in Z direction (can be negative)
-    double eFieldZ = 0;  
+    double eFieldZ = 0;
 
     double time = 0.;  ///< Node clock.
 
     bool anode = false;  ///< init the anode
     /// LayerIndex in ParallelPlate convention != gas gap index
-    int layerIndex = 0;  
+    int layerIndex = 0;
     /// Gas gap index: -1 if not gas gap; starts with 0, 1, ...
-    int gasGapIndex = 0;  
+    int gasGapIndex = 0;
     bool isGasGap = true;
   };
 
@@ -272,11 +272,11 @@ class AvalancheGridSpaceCharge {
   bool m_bImportElliptic = false;
   /// Flag if TOF parameters should be used, else Magboltz
   /// drift and SST spatial coefficients
-  bool m_bUseTOF = true;  
+  bool m_bUseTOF = true;
   /// Flag if bulk drift velocity is available to the simulation
-  bool m_bWrAvailable = true;  
+  bool m_bWrAvailable = true;
   /// Flag if temporal rates are available to the simulation
-  bool m_bRatesAvailable = true;  
+  bool m_bRatesAvailable = true;
 
   bool m_bMC = true;
 
@@ -304,29 +304,30 @@ class AvalancheGridSpaceCharge {
   /// Tracking if the charges are still in the drift gap.
   bool m_run = true;
 
-  std::vector<std::vector<int>> m_zGasGapBoundaries;  ///< [k] -> {izLeft, ..., izRight}
+  std::vector<std::vector<int>>
+      m_zGasGapBoundaries;  ///< [k] -> {izLeft, ..., izRight}
 
   std::vector<std::vector<GridNode>> m_grid;  ///< grid with nodes on it
   /// Electrons to transfer onto grid
-  std::vector<std::vector<Point>> m_vElectrons;  
+  std::vector<std::vector<Point>> m_vElectrons;
 
   std::vector<std::pair<double, long>> m_vNElectronEvolution;
   std::vector<long> m_vGroupSizes = {
       1500, 800, 400, 200, 100,
       50,   20,  10,  5,   2};  ///< same values as Lippmann & Riegler
   /// Which layer indices are gas layers
-  std::vector<int> m_vIndexGasGaps = {0};  
+  std::vector<int> m_vIndexGasGaps = {0};
 
   /// Coordinates of center of electron number.
   /// Required: y in [zmin, zmax]
-  std::vector<std::vector<double>> m_vCoNGasLayer{};  
+  std::vector<std::vector<double>> m_vCoNGasLayer{};
   /// Example point (y-coord) in each gas gap
-  std::vector<double> m_vYPointInGasGap{};  
+  std::vector<double> m_vYPointInGasGap{};
 
   /// Uniform background field in z direction, can be negative.
   std::vector<double> m_ezBkg = {0};
   /// Which gas gaps are saturated if saturation is on
-  std::vector<int> m_vSaturatedGaps{};  
+  std::vector<int> m_vSaturatedGaps{};
 
   std::string m_sFieldOption = "coulomb";
   std::vector<double> m_vXElliptic;

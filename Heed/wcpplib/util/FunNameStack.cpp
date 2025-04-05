@@ -8,11 +8,11 @@ text appear in all copies and in supporting documentation.
 The file is provided "as is" without express or implied warranty.
 */
 
-#include <iostream>
-#include <iomanip>
-#include <cstring>
 #include "wcpplib/util/FunNameStack.h"
 
+#include <cstring>
+#include <iomanip>
+#include <iostream>
 
 #ifdef USE_BOOST_MULTITHREADING
 NameStack& NameStack::operator=(const NameStack& f) {
@@ -266,7 +266,7 @@ void FunNameStack::remove_thread_stack(void) {
 #if defined(MAINTAIN_KEYNUMBER_LIST) && defined(USE_BOOST_MULTITHREADING)
   MemoriseIgnore::instance().ignore();
 #else
-  s_ignore_keynumberlist = 1;    // to avoid report from delete at deletion
+  s_ignore_keynumberlist = 1;  // to avoid report from delete at deletion
 #endif
 #endif
   namestack->remove(an);
@@ -274,7 +274,7 @@ void FunNameStack::remove_thread_stack(void) {
 #if defined(MAINTAIN_KEYNUMBER_LIST) && defined(USE_BOOST_MULTITHREADING)
   MemoriseIgnore::instance().not_ignore();
 #else
-  s_ignore_keynumberlist = 0;    // to avoid report from delete at deletion
+  s_ignore_keynumberlist = 0;  // to avoid report from delete at deletion
 #endif
 #endif
 }
@@ -480,4 +480,4 @@ std::ostream& operator<<(std::ostream& file, const FunNameWatch& f) {
   return file;
 }
 
-}
+}  // namespace Heed

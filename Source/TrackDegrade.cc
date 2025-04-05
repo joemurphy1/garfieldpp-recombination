@@ -1,22 +1,25 @@
-#include <iostream>
-#include <cstdio>
+#include "Garfield/TrackDegrade.hh"
+
 #include <algorithm>
-#include<array>
+#include <array>
+#include <cstdio>
+#include <iostream>
+
+#include "Garfield/DegradeInterface.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/MediumGas.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/TrackDegrade.hh"
-#include "Garfield/DegradeInterface.hh"
 
 namespace {
 
-Garfield::TrackDegrade::Electron MakeElectron(
-    const double energy, const double x, const double y, const double z, 
-    const double t, const double dx, const double dy, const double dz) {
-
+Garfield::TrackDegrade::Electron MakeElectron(const double energy,
+                                              const double x, const double y,
+                                              const double z, const double t,
+                                              const double dx, const double dy,
+                                              const double dz) {
   Garfield::TrackDegrade::Electron electron;
   electron.energy = energy;
   electron.x = x;
@@ -29,10 +32,11 @@ Garfield::TrackDegrade::Electron MakeElectron(
   return electron;
 }
 
-Garfield::TrackDegrade::Excitation MakeExcitation(
-    const double energy, const double x, const double y, const double z, 
-    const double t) {
-
+Garfield::TrackDegrade::Excitation MakeExcitation(const double energy,
+                                                  const double x,
+                                                  const double y,
+                                                  const double z,
+                                                  const double t) {
   Garfield::TrackDegrade::Excitation exc;
   exc.energy = energy;
   exc.x = x;
@@ -42,7 +46,7 @@ Garfield::TrackDegrade::Excitation MakeExcitation(
   return exc;
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -57,7 +61,6 @@ TrackDegrade::TrackDegrade(Sensor* sensor) : Track("Degrade") {
 }
 
 void TrackDegrade::SetThresholdEnergy(const double ethr) {
-
   if (ethr < Small) {
     std::cerr << m_className << "::SetThresholdEnergy: Energy must be > 0.\n";
   } else {
@@ -68,7 +71,6 @@ void TrackDegrade::SetThresholdEnergy(const double ethr) {
 bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
                             const double t0, const double dx0, const double dy0,
                             const double dz0) {
-
   m_clusters.clear();
   // Make sure the sensor is defined.
   if (!m_sensor) {
@@ -96,7 +98,7 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
   const double eMinIon = Degrade::ionpot();
   if (m_debug) {
     std::cout << "    Ionisation potential: " << eMinIon << " eV.\n";
-  } 
+  }
   double xp = x0;
   double yp = y0;
   double zp = z0;
@@ -128,8 +130,7 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
     std::cout << m_className << "::NewTrack:\n"
               << "    Particle energy: " << ep << " eV\n"
               << "    Collision rate: " << tcf << " / ns\n"
-              << "    Collisions / cm: " 
-              << tcf / (SpeedOfLight * beta) << "\n";
+              << "    Collisions / cm: " << tcf / (SpeedOfLight * beta) << "\n";
   }
   bool ok = true;
   while (ok) {
@@ -168,13 +169,13 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
     int64_t igshel = 0;
     int64_t ionmodel = 0;
     int64_t ilvl = 0;
-    Degrade::getlevel(&ie, &r1, &izbr, &rgas, &ein, &ia, &wpl, &index, 
-                      &an, &ps, &wklm, &nc0, &ec0, &ng1, &eg1, &ng2, &eg2, 
-                      &dstfl, &ipn, &kg1, &lg1, &igshel, &ionmodel, &ilvl);
+    Degrade::getlevel(&ie, &r1, &izbr, &rgas, &ein, &ia, &wpl, &index, &an, &ps,
+                      &wklm, &nc0, &ec0, &ng1, &eg1, &ng2, &eg2, &dstfl, &ipn,
+                      &kg1, &lg1, &igshel, &ionmodel, &ilvl);
     // Bremsstrahlung?
     if (izbr != 0 && m_bremsStrahlung) {
       double eout = 0., egamma = 0.;
-      double dxe = 0., dye = 0., dze = 0.; 
+      double dxe = 0., dye = 0., dze = 0.;
       double dxg = 0., dyg = 0., dzg = 0.;
       Degrade::brems(&izbr, &ep, &dxp, &dyp, &dzp, &eout, &dxe, &dye, &dze,
                      &egamma, &dxg, &dyg, &dzg);
@@ -185,8 +186,7 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
       dzp = dze;
       continue;
     }
-    if (ia ==  2 || ia ==  7 || ia == 12 || ia == 17 || 
-        ia == 22 || ia == 27) {
+    if (ia == 2 || ia == 7 || ia == 12 || ia == 17 || ia == 22 || ia == 27) {
       Cluster cluster;
       cluster.x = xp;
       cluster.y = yp;
@@ -203,23 +203,23 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
       } else if (index == 2) {
         const double ctheta0 = 1. - 2 * RndmUniform();
         cthetap = (ctheta0 + ps) / (1. + ps * ctheta0);
-      } else { 
+      } else {
         cthetap = 1. - 2. * RndmUniform();
       }
       sthetap = sin(acos(cthetap));
       const double gammas = (ElectronMass + esec) / ElectronMass;
       // Calculate secondary recoil angle from free kinematics.
-      const double sthetas = std::min(sthetap * sqrt(ep / esec) * 
-                                      gamma / gammas, 1.);
+      const double sthetas =
+          std::min(sthetap * sqrt(ep / esec) * gamma / gammas, 1.);
       double thetas = asin(sthetas);
       double phis = TwoPi * RndmUniform();
-      // Calculate new direction cosines from initial values and 
+      // Calculate new direction cosines from initial values and
       // scattering angles.
       double dxs = 0., dys = 0., dzs = 0.;
       Degrade::drcos(&dxp, &dyp, &dzp, &thetas, &phis, &dxs, &dys, &dzs);
       // Add the secondary to the list.
       cluster.deltaElectrons.emplace_back(
-        MakeElectron(esec, xp, yp, zp, tp, dxs, dys, dzs)); 
+          MakeElectron(esec, xp, yp, zp, tp, dxs, dys, dzs));
       // Calculate possible shell emissions (Auger or fluorescence).
       if (wklm > 0.0 && RndmUniform() < wklm) {
         // Auger emission and fluorescence.
@@ -234,7 +234,7 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
             const double dy = sin(phi) * stheta;
             const double dz = ctheta;
             cluster.deltaElectrons.emplace_back(
-              MakeElectron(eavg, xp, yp, zp, tp, dx, dy, dz)); 
+                MakeElectron(eavg, xp, yp, zp, tp, dx, dy, dz));
           }
         }
         if (ng1 > 0) {
@@ -254,10 +254,10 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
             const double phifl = TwoPi * RndmUniform();
             const double xs = dfl * sthetafl * cos(phifl);
             const double ys = dfl * sthetafl * sin(phifl);
-            const double zs = dfl * cthetafl; 
+            const double zs = dfl * cthetafl;
             const double ts = dfl / SpeedOfLight;
             cluster.deltaElectrons.emplace_back(
-              MakeElectron(eavg, xs, ys, zs, ts, dx, dy, dz)); 
+                MakeElectron(eavg, xs, ys, zs, ts, dx, dy, dz));
           }
         }
       } else {
@@ -272,18 +272,18 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
           const double dy = sin(phi) * stheta;
           const double dz = ctheta;
           cluster.deltaElectrons.emplace_back(
-            MakeElectron(eavg, xp, yp, zp, tp, dx, dy, dz)); 
+              MakeElectron(eavg, xp, yp, zp, tp, dx, dy, dz));
         }
       }
       m_clusters.push_back(std::move(cluster));
-    } else if (ia ==  4 || ia ==  9 || ia == 14 || ia == 19 || 
-               ia == 24 || ia == 29) {
+    } else if (ia == 4 || ia == 9 || ia == 14 || ia == 19 || ia == 24 ||
+               ia == 29) {
       // Excitation.
       const double eExc = rgas * ein;
       // Find the gas in which the excitation occured.
       int64_t igas = Degrade::getgas(&ilvl);
       if (igas <= 0 || igas >= 6) {
-        std::cerr << m_className << "::NewTrack: " 
+        std::cerr << m_className << "::NewTrack: "
                   << "Could not retrieve gas index.\n";
         igas = 0;
       } else {
@@ -292,8 +292,8 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
       const double penfra1 = m_rPenning[igas];
       const double penfra2 = m_dPenning[igas];
       constexpr double penfra3 = 0.;
-      const bool penning = m_penning && eExc > eMinIon && 
-                           penfra1 > 0. && m_nGas > 1;
+      const bool penning =
+          m_penning && eExc > eMinIon && penfra1 > 0. && m_nGas > 1;
       if (penning && RndmUniform() < penfra1) {
         // Penning transfer
         Cluster cluster;
@@ -319,33 +319,33 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
         const double ts = tp - log(RndmUniformPos()) * penfra3;
         // Fix Penning electron energy to 4 eV.
         cluster.deltaElectrons.emplace_back(
-          MakeElectron(4., xs, ys, zs, ts, dx, dy, dz));
-        m_clusters.push_back(std::move(cluster)); 
+            MakeElectron(4., xs, ys, zs, ts, dx, dy, dz));
+        m_clusters.push_back(std::move(cluster));
       } else {
         if (m_storeExcitations && eExc > m_ethrExc) {
           Cluster cluster;
           cluster.x = xp;
           cluster.y = yp;
           cluster.z = zp;
-	  cluster.t = tp;
+          cluster.t = tp;
           cluster.excitations.emplace_back(
-            MakeExcitation(eExc, xp, yp, zp, tp));
-          m_clusters.push_back(std::move(cluster)); 
+              MakeExcitation(eExc, xp, yp, zp, tp));
+          m_clusters.push_back(std::move(cluster));
         }
       }
     }
     double s1 = 1. + gamma * (rgas - 1.);
-    double s2 = (s1 * s1) / (s1 - 1.); 
+    double s2 = (s1 * s1) / (s1 - 1.);
     if (cthetap < -1.) {
       if (index == 1) {
         // Anisotropic scattering
-        cthetap = 1. - RndmUniform() * an;          
+        cthetap = 1. - RndmUniform() * an;
         if (RndmUniform() > ps) cthetap = -cthetap;
       } else if (index == 2) {
         // Anisotropic scattering
         const double ctheta0 = 1. - 2 * RndmUniform();
         cthetap = (ctheta0 + ps) / (1. + ps * ctheta0);
-      } else { 
+      } else {
         // Isotropic scattering
         cthetap = 1. - 2. * RndmUniform();
       }
@@ -358,7 +358,7 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
     double arg1 = std::max(1. - s1 * ein / ep, 1.e-20);
     const double d = 1. - cthetap * sqrt(arg1);
     double e1 = std::max(ep * (1. - ein / (s1 * ep) - 2. * d / s2), 1.e-20);
-    const double q = std::min(sqrt((ep / e1) * arg1) / s1, 1.); 
+    const double q = std::min(sqrt((ep / e1) * arg1) / s1, 1.);
     const double theta = asin(q * sthetap);
     double ctheta = cos(theta);
     if (cthetap < 0.) {
@@ -385,14 +385,14 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
   if (m_debug) std::cout << "    " << m_clusters.size() << " clusters.\n";
   for (auto& cluster : m_clusters) {
     for (const auto& delta : cluster.deltaElectrons) {
-      auto secondaries = TransportDeltaElectron(delta.x, delta.y, delta.z,
-                                                delta.t, delta.energy,
-                                                delta.dx, delta.dy, delta.dz);
+      auto secondaries =
+          TransportDeltaElectron(delta.x, delta.y, delta.z, delta.t,
+                                 delta.energy, delta.dx, delta.dy, delta.dz);
       cluster.electrons.insert(cluster.electrons.end(),
-                               secondaries.first.begin(), 
+                               secondaries.first.begin(),
                                secondaries.first.end());
       cluster.excitations.insert(cluster.excitations.end(),
-                                 secondaries.second.begin(), 
+                                 secondaries.second.begin(),
                                  secondaries.second.end());
     }
   }
@@ -400,14 +400,13 @@ bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
 }
 
 bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
-
   if (!medium) {
     std::cerr << m_className << "::Initialise: Null pointer.\n";
     return false;
   }
   if (!medium->IsGas()) {
-    std::cerr << m_className << "::Initialise: Medium " 
-              << medium->GetName() << " is not a gas.\n";
+    std::cerr << m_className << "::Initialise: Medium " << medium->GetName()
+              << " is not a gas.\n";
     return false;
   }
 
@@ -422,9 +421,9 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
     std::cerr << m_className << "::Initialise: Invalid gas mixture.\n";
     return false;
   }
-  std::vector<unsigned int> notdone = {
-    13, 17, 20, 22, 24, 26, 27, 28, 32, 33, 37, 38, 39, 40, 41, 42, 43,
-    50, 51, 53, 54, 55, 56, 57}; 
+  std::vector<unsigned int> notdone = {13, 17, 20, 22, 24, 26, 27, 28,
+                                       32, 33, 37, 38, 39, 40, 41, 42,
+                                       43, 50, 51, 53, 54, 55, 56, 57};
   for (unsigned int i = 0; i < nComponents; ++i) {
     std::string name;
     double f;
@@ -432,7 +431,7 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
     ngas[i] = MediumMagboltz::GetGasNumberMagboltz(name);
     if (std::find(notdone.begin(), notdone.end(), ngas[i]) != notdone.end()) {
       std::cerr << m_className << "::Initialise:\n"
-                << "    Cross-sections for " << name 
+                << "    Cross-sections for " << name
                 << " are not yet implemented.\n";
       return false;
     }
@@ -456,11 +455,11 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
   int64_t jbrm = m_bremsStrahlung ? 1 : 0;
   int64_t jecasc = m_fullCascade ? 1 : 0;
   int64_t iverb = verbose ? 1 : 0;
-  Degrade::deginit(&ng, &ne, &mip, &idvec, &iseed, &e0, &et, &ec,
-                   &ngas[0], &ngas[1], &ngas[2], &ngas[3], &ngas[4], &ngas[5],
-                   &frac[0], &frac[1], &frac[2], &frac[3], &frac[4], &frac[5],
-                   &temperature, &pressure, &etot, &btot, &bang,
-                   &jcmp, &jray, &jpap, &jbrm, &jecasc, &iverb);
+  Degrade::deginit(&ng, &ne, &mip, &idvec, &iseed, &e0, &et, &ec, &ngas[0],
+                   &ngas[1], &ngas[2], &ngas[3], &ngas[4], &ngas[5], &frac[0],
+                   &frac[1], &frac[2], &frac[3], &frac[4], &frac[5],
+                   &temperature, &pressure, &etot, &btot, &bang, &jcmp, &jray,
+                   &jpap, &jbrm, &jecasc, &iverb);
 
   m_mediumName = medium->GetName();
   m_pressure = medium->GetPressure();
@@ -481,7 +480,7 @@ double TrackDegrade::GetClusterDensity() {
   return m_clusterDensity;
 }
 
-double TrackDegrade::GetStoppingPower() { 
+double TrackDegrade::GetStoppingPower() {
   if (m_isChanged) return 0.;
   if (m_dedx < 0.) {
     // Compute dE/dx and cluster density.
@@ -497,11 +496,11 @@ void TrackDegrade::SetParticle(const std::string& particle) {
 }
 
 std::pair<std::vector<TrackDegrade::Electron>,
-          std::vector<TrackDegrade::Excitation> > 
-TrackDegrade::TransportDeltaElectron(
-    const double x0, const double y0, const double z0, const double t0,
-    const double e0, const double dx0, const double dy0, const double dz0) {
-
+          std::vector<TrackDegrade::Excitation> >
+TrackDegrade::TransportDeltaElectron(const double x0, const double y0,
+                                     const double z0, const double t0,
+                                     const double e0, const double dx0,
+                                     const double dy0, const double dz0) {
   // Based on MONTEFE subroutine.
   std::vector<Electron> thermalisedElectrons;
   std::vector<Excitation> excitations;
@@ -515,11 +514,11 @@ TrackDegrade::TransportDeltaElectron(
   const double eMinIon = Degrade::ionpot();
   if (m_debug) {
     std::cout << "    Ionisation potential: " << eMinIon << " eV.\n";
-  } 
+  }
 
   // Calculate maximum collision frequency.
   double flim = 0.;
-  for (int64_t j = 1; j <= 20000; ++j) { 
+  for (int64_t j = 1; j <= 20000; ++j) {
     double tcf = Degrade::gettcf(&j);
     double tcfn = Degrade::gettcfn(&j);
     flim = std::max(flim, tcf + tcfn);
@@ -548,7 +547,7 @@ TrackDegrade::TransportDeltaElectron(
         bool ionised = false;
         size_t jsec = 0;
         double esec = 0.;
-        const double dt = tdash -log(RndmUniformPos()) / flim;
+        const double dt = tdash - log(RndmUniformPos()) / flim;
         tdash = dt;
         const double gamma1 = (ElectronMass + e1) / ElectronMass;
         const double beta1 = sqrt(1. - 1. / (gamma1 * gamma1));
@@ -566,7 +565,7 @@ TrackDegrade::TransportDeltaElectron(
           // Null collision
           // TODO: molecular light emission from null excitations.
           continue;
-        } 
+        }
         tdash = 0.;
         // Compute direction and position at the instant before the collision.
         // TODO: electric and magnetic field.
@@ -591,7 +590,7 @@ TrackDegrade::TransportDeltaElectron(
         y1 = y2;
         z1 = z2;
         t1 = t2;
- 
+
         // Determine the real collision type.
         double r2 = RndmUniform();
         int64_t izbr = 0;
@@ -616,10 +615,9 @@ TrackDegrade::TransportDeltaElectron(
         int64_t igshel = 0;
         int64_t ionmodel = 0;
         int64_t ilvl = 0;
-        Degrade::getlevel(&ie, &r2, &izbr, &rgas, &ein, &ia, &wpl, &index, 
-                          &an, &ps, &wklm, &nc0, &ec0, &ng1, &eg1, &ng2, &eg2, 
-                          &dstfl, &ipn, &kg1, &lg1, &igshel, &ionmodel, 
-                          &ilvl);
+        Degrade::getlevel(&ie, &r2, &izbr, &rgas, &ein, &ia, &wpl, &index, &an,
+                          &ps, &wklm, &nc0, &ec0, &ng1, &eg1, &ng2, &eg2,
+                          &dstfl, &ipn, &kg1, &lg1, &igshel, &ionmodel, &ilvl);
         // Bremsstrahlung?
         if (izbr != 0 && m_bremsStrahlung) {
           int64_t kg = 0;
@@ -630,8 +628,8 @@ TrackDegrade::TransportDeltaElectron(
           double dxe = 0., dye = 0., dze = 0.;
           double dxg = 0., dyg = 0., dzg = 0.;
           double eout = 0., egamma = 0.;
-          Degrade::brems(&izbr, &e2, &dx2, &dy2, &dz2, &eout, 
-                         &dxe, &dye, &dze, &egamma, &dxg, &dyg, &dzg);
+          Degrade::brems(&izbr, &e2, &dx2, &dy2, &dz2, &eout, &dxe, &dye, &dze,
+                         &egamma, &dxg, &dyg, &dzg);
           // TODO: counters.
           // NBREM[kg] += 1;
           // EBRTOT[kg] += egamma;
@@ -643,19 +641,19 @@ TrackDegrade::TransportDeltaElectron(
           // Run bremsstrahlung gamma through cascade.
           int64_t j11 = 1;
           int64_t ilow = 0;
-          Degrade::bremscasc(&j11, &egamma, &x1, &y1, &z1, &t1, 
-                             &dxg, &dyg, &dzg, &ilow);
+          Degrade::bremscasc(&j11, &egamma, &x1, &y1, &z1, &t1, &dxg, &dyg,
+                             &dzg, &ilow);
           // If bremsstrahlung energy is not too low to ionise,
           // retrieve the secondary electrons.
           if (ilow != 0) {
-            for (int64_t k = 0; k <= 400; ++k) { 
+            for (int64_t k = 0; k <= 400; ++k) {
               int64_t iok = 0;
               double ee = 0., xe = 0., ye = 0., ze = 0., te = 0.;
-              Degrade::getebrem(&k, &ee, &xe, &ye, &ze, &te, 
-                                &dxe, &dye, &dze, &iok);
+              Degrade::getebrem(&k, &ee, &xe, &ye, &ze, &te, &dxe, &dye, &dze,
+                                &iok);
               if (iok != 1) break;
               newDeltas.emplace_back(
-                MakeElectron(ee, xe, ye, ze, te, dxe, dye, dze));
+                  MakeElectron(ee, xe, ye, ze, te, dxe, dye, dze));
             }
           }
           continue;
@@ -680,8 +678,8 @@ TrackDegrade::TransportDeltaElectron(
           const double penfra1 = m_rPenning[igas];
           const double penfra2 = m_dPenning[igas];
           constexpr double penfra3 = 0.;
-          const bool penning = m_penning && eExc > eMinIon && 
-                               penfra1 > 0. && m_nGas > 1;
+          const bool penning =
+              m_penning && eExc > eMinIon && penfra1 > 0. && m_nGas > 1;
           if (penning && RndmUniform() < penfra1) {
             // Penning transfer.
             double xs = x2;
@@ -699,20 +697,19 @@ TrackDegrade::TransportDeltaElectron(
             double ts = t2 - log(RndmUniformPos()) * penfra3;
             // Assign excess energy of 1 eV to Penning electron.
             newDeltas.emplace_back(
-              MakeElectron(1., xs, ys, zs, ts, dx1, dy1, dz1));
-         } else {
+                MakeElectron(1., xs, ys, zs, ts, dx1, dy1, dz1));
+          } else {
             if (eExc > m_ethrExc) {
               // Store excitation.
               if (m_storeExcitations) {
-                excitations.emplace_back(
-                  MakeExcitation(eExc, x2, y2, z2, t2));
+                excitations.emplace_back(MakeExcitation(eExc, x2, y2, z2, t2));
               }
             }
-          } 
+          }
         } else if (ipn == 1) {
           const double eistr = ein;
-          if (ionmodel > 0) { 
-            // Calculate secondary energy in ionising collision using 
+          if (ionmodel > 0) {
+            // Calculate secondary energy in ionising collision using
             // five different models.
             Degrade::ionsplit(&ilvl, &e2, &ein, &esec);
           } else {
@@ -723,24 +720,24 @@ TrackDegrade::TransportDeltaElectron(
           ein += esec;
           // Store secondary ionisation electron.
           newDeltas.emplace_back(
-            MakeElectron(esec, x2, y2, z2, t2, dx2, dy2, dz2));
+              MakeElectron(esec, x2, y2, z2, t2, dx2, dy2, dz2));
           ionised = true;
           jsec = newDeltas.size() - 1;
           if (m_fullCascade && lg1 != 0) {
             // Use complete cascade for electron ionisation.
             int64_t j11 = 1;
-            Degrade::cascadee(&j11, &kg1, &lg1, &x2, &y2, &z2, &t2, &esec, 
+            Degrade::cascadee(&j11, &kg1, &lg1, &x2, &y2, &z2, &t2, &esec,
                               &igshel);
             // Retrieve electrons.
             for (int64_t k = 1; k <= 400; ++k) {
               int64_t iok = 0;
               double ee = 0., xe = 0., ye = 0., ze = 0., te = 0.;
               double dxe = 0., dye = 0., dze = 0.;
-              Degrade::getecasc(&k, &ee, &xe, &ye, &ze, &te, 
-                                &dxe, &dye, &dze, &iok);
+              Degrade::getecasc(&k, &ee, &xe, &ye, &ze, &te, &dxe, &dye, &dze,
+                                &iok);
               if (iok != 1) break;
               newDeltas.emplace_back(
-                MakeElectron(ee, xe, ye, ze, te, dxe, dye, dze));
+                  MakeElectron(ee, xe, ye, ze, te, dxe, dye, dze));
             }
           } else {
             // Store possible shell emissions.
@@ -758,7 +755,7 @@ TrackDegrade::TransportDeltaElectron(
                     const double dy = sin(phi) * stheta;
                     const double dz = ctheta;
                     newDeltas.emplace_back(
-                      MakeElectron(eav, x2, y2, z2, t2, dx, dy, dz));
+                        MakeElectron(eav, x2, y2, z2, t2, dx, dy, dz));
                   }
                 }
                 if (ng1 > 0) {
@@ -779,7 +776,7 @@ TrackDegrade::TransportDeltaElectron(
                     const double dy = sin(phi) * stheta;
                     const double dz = ctheta;
                     newDeltas.emplace_back(
-                      MakeElectron(eav, xs, ys, zs, ts, dx, dy, dz));
+                        MakeElectron(eav, xs, ys, zs, ts, dx, dy, dz));
                   }
                 }
               } else {
@@ -793,7 +790,7 @@ TrackDegrade::TransportDeltaElectron(
                   const double dy = sin(phi) * stheta;
                   const double dz = ctheta;
                   newDeltas.emplace_back(
-                    MakeElectron(eav, x2, y2, z2, t2, dx, dy, dz));
+                      MakeElectron(eav, x2, y2, z2, t2, dx, dy, dz));
                 }
               }
             }
@@ -801,7 +798,7 @@ TrackDegrade::TransportDeltaElectron(
         }
         // Generate scattering angles and update direction after collision.
         const double s1 = 1. + gamma2 * (rgas - 1.);
-        const double s2 = (s1 * s1) / (s1 - 1.); 
+        const double s2 = (s1 * s1) / (s1 - 1.);
         double ctheta0 = 0.;
         if (index == 1) {
           // Anisotropic scattering
@@ -811,7 +808,7 @@ TrackDegrade::TransportDeltaElectron(
           // Anisotropic scattering
           ctheta0 = 1. - 2 * RndmUniform();
           ctheta0 = (ctheta0 + ps) / (1. + ps * ctheta0);
-        } else { 
+        } else {
           // Isotropic scattering
           ctheta0 = 1. - 2. * RndmUniform();
         }
@@ -824,7 +821,7 @@ TrackDegrade::TransportDeltaElectron(
         const double d = 1. - ctheta0 * sqrt(arg1);
         // Update electron energy.
         e1 = std::max(e2 * (1. - ein / (s1 * e2) - 2. * d / s2), 1.e-20);
-        const double q = std::min(sqrt((e2/ e1) * arg1) / s1, 1.);
+        const double q = std::min(sqrt((e2 / e1) * arg1) / s1, 1.);
         const double theta = asin(q * sin(theta0));
         double ctheta = cos(theta);
         if (ctheta0 < 0.) {
@@ -836,8 +833,10 @@ TrackDegrade::TransportDeltaElectron(
         const double argz = sqrt(dx2 * dx2 + dy2 * dy2);
         if (argz > 0.) {
           dz1 = dz2 * ctheta + argz * stheta * sphi0;
-          dy1 = dy2 * ctheta + (stheta / argz) * (dx2 * cphi0 - dy2 * dz2 * sphi0);
-          dx1 = dx2 * ctheta - (stheta / argz) * (dy2 * cphi0 + dx2 * dz2 * sphi0);
+          dy1 = dy2 * ctheta +
+                (stheta / argz) * (dx2 * cphi0 - dy2 * dz2 * sphi0);
+          dx1 = dx2 * ctheta -
+                (stheta / argz) * (dy2 * cphi0 + dx2 * dz2 * sphi0);
           if (ionised) {
             // Use free kinematics for ionisation secondary angles.
             double sthetas = std::min(stheta * sqrt(e1 / esec), 1.);
@@ -848,9 +847,11 @@ TrackDegrade::TransportDeltaElectron(
             const double sphis = sin(phis);
             const double cphis = cos(phis);
             newDeltas[jsec].dz = dz2 * cthetas + argz * sthetas * sphis;
-            newDeltas[jsec].dy = dy2 * cthetas + 
+            newDeltas[jsec].dy =
+                dy2 * cthetas +
                 (sthetas / argz) * (dx2 * cphis - dy2 * dz2 * sphis);
-            newDeltas[jsec].dx = dx2 * cthetas - 
+            newDeltas[jsec].dx =
+                dx2 * cthetas -
                 (sthetas / argz) * (dy2 * cphis + dx2 * dz2 * sphis);
           }
         } else {
@@ -872,7 +873,7 @@ TrackDegrade::TransportDeltaElectron(
       }
       if (attached) continue;
       thermalisedElectrons.emplace_back(
-        MakeElectron(e1, x1, y1, z1, t1, dx1, dy1, dz1));
+          MakeElectron(e1, x1, y1, z1, t1, dx1, dy1, dz1));
     }
     deltas.swap(newDeltas);
     newDeltas.clear();
@@ -880,11 +881,10 @@ TrackDegrade::TransportDeltaElectron(
   return std::make_pair(thermalisedElectrons, excitations);
 }
 
-void TrackDegrade::SetupPenning(Medium* medium,
-                                std::array<double, 6>& rP,
+void TrackDegrade::SetupPenning(Medium* medium, std::array<double, 6>& rP,
                                 std::array<double, 6>& dP) {
   rP.fill(0.);
-  dP.fill(0.); 
+  dP.fill(0.);
   auto gas = dynamic_cast<MediumGas*>(medium);
   if (!gas) return;
   const unsigned int nComponents = medium->GetNumberOfComponents();
@@ -914,4 +914,4 @@ bool TrackDegrade::IsInside(const double x, const double y, const double z) {
   return true;
 }
 
-}
+}  // namespace Garfield

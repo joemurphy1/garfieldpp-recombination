@@ -1,6 +1,7 @@
+#include "wcpplib/geometry/box.h"
+
 #include <array>
 #include <cmath>
-#include "wcpplib/geometry/box.h"
 
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -47,7 +48,9 @@ box::box(double fdx, double fdy, double fdz, const std::string& fname) {
 
 box::box(double fdx, double fdy, double fdz, double fprec,
          const std::string& fname) {
-  pvecerror("box(double fdx, double fdy, double fdz, double fprec, const string &fname)");
+  pvecerror(
+      "box(double fdx, double fdy, double fdz, double fprec, const string "
+      "&fname)");
   m_dx = fabs(fdx);
   m_dy = fabs(fdy);
   m_dz = fabs(fdz);
@@ -109,18 +112,18 @@ void box::init_prec() {
 void box::init_planes() {
   mfunname("void box::init_planes()");
   std::vector<std::shared_ptr<surface> > fsurf(6);
-  fsurf[0] = std::make_shared<splane>(
-      plane(point(m_dxh, 0, 0), vec(-1, 0, 0)), vec(-1, 0, 0));
-  fsurf[1] = std::make_shared<splane>(
-      plane(point(-m_dxh, 0, 0), vec(+1, 0, 0)), vec(+1, 0, 0));
-  fsurf[2] = std::make_shared<splane>(
-      plane(point(0, m_dyh, 0), vec(0, -1, 0)), vec(0, -1, 0));
-  fsurf[3] = std::make_shared<splane>(
-    plane(point(0, -m_dyh, 0), vec(0, +1, 0)), vec(0, +1, 0));
-  fsurf[4] = std::make_shared<splane>(
-    plane(point(0, 0, m_dzh), vec(0, 0, -1)), vec(0, 0, -1));
-  fsurf[5] = std::make_shared<splane>(
-    plane(point(0, 0, -m_dzh), vec(0, 0, +1)), vec(0, 0, +1));
+  fsurf[0] = std::make_shared<splane>(plane(point(m_dxh, 0, 0), vec(-1, 0, 0)),
+                                      vec(-1, 0, 0));
+  fsurf[1] = std::make_shared<splane>(plane(point(-m_dxh, 0, 0), vec(+1, 0, 0)),
+                                      vec(+1, 0, 0));
+  fsurf[2] = std::make_shared<splane>(plane(point(0, m_dyh, 0), vec(0, -1, 0)),
+                                      vec(0, -1, 0));
+  fsurf[3] = std::make_shared<splane>(plane(point(0, -m_dyh, 0), vec(0, +1, 0)),
+                                      vec(0, +1, 0));
+  fsurf[4] = std::make_shared<splane>(plane(point(0, 0, m_dzh), vec(0, 0, -1)),
+                                      vec(0, 0, -1));
+  fsurf[5] = std::make_shared<splane>(plane(point(0, 0, -m_dzh), vec(0, 0, +1)),
+                                      vec(0, 0, +1));
   m_ulsv.ulsvolume_init(fsurf, "ulsv of box", prec);
 }
 
@@ -264,8 +267,8 @@ void manip_box::print(std::ostream& file, int l) const {
 // *****   sh_manip_box  ********
 
 // absvol* sh_manip_box::Gavol() const { return (box*)this; }
-absvol* sh_manip_box::Gavol() const { 
-  return dynamic_cast<box*>(const_cast<sh_manip_box*>(this)); 
+absvol* sh_manip_box::Gavol() const {
+  return dynamic_cast<box*>(const_cast<sh_manip_box*>(this));
 }
 
 absref_transmit sh_manip_box::get_components() {
@@ -291,4 +294,4 @@ void sh_manip_box::print(std::ostream& file, int l) const {
   }
   file.flush();
 }
-}
+}  // namespace Heed

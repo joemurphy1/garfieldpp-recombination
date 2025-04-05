@@ -1,22 +1,21 @@
+#include "Garfield/ComponentTcadBase.hh"
+
+#include <array>
 #include <cmath>
 #include <fstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <map>
 #include <sstream>
 #include <string>
-#include <map>
-#include<array>
 
-#include "Garfield/ComponentTcadBase.hh"
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/Utilities.hh"
 #include "Garfield/Medium.hh"
+#include "Garfield/Utilities.hh"
 
 namespace {
 
 bool ExtractFromSquareBrackets(std::string& line) {
-
   const auto bra = line.find('[');
   const auto ket = line.find(']');
   if (ket < bra || bra == std::string::npos || ket == std::string::npos) {
@@ -27,7 +26,6 @@ bool ExtractFromSquareBrackets(std::string& line) {
 }
 
 bool ExtractFromBrackets(std::string& line) {
-
   const auto bra = line.find('(');
   const auto ket = line.find(')');
   if (ket < bra || bra == std::string::npos || ket == std::string::npos) {
@@ -43,7 +41,7 @@ void PrintError(const std::string& fcn, const std::string& filename,
             << "    Error reading file " << filename << " (line " << line
             << ").\n";
 }
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -67,7 +65,6 @@ template <size_t N>
 double ComponentTcadBase<N>::WeightingPotential(const double x, const double y,
                                                 const double z,
                                                 const std::string& label) {
-
   if (m_wpot[label].empty()) {
     std::cerr << m_className << "::WeightingPotential: No fieldmap for "
               << label << " available.\n";
@@ -127,7 +124,6 @@ template <size_t N>
 double ComponentTcadBase<N>::DelayedWeightingPotential(
     const double x, const double y, const double z, const double t,
     const std::string& label) {
-
   if (m_dwp[label].empty()) {
     std::cerr << m_className << "::DelayedWeightingPotential: No fieldmap for "
               << label << " available.\n";
@@ -159,21 +155,19 @@ double ComponentTcadBase<N>::DelayedWeightingPotential(
 
 template <size_t N>
 bool ComponentTcadBase<N>::GetOffset(const std::string& label, double& dx,
-                                     double& dy, double& dz) const{
-
+                                     double& dy, double& dz) const {
   if (m_wshift.count(label) == 0 || m_wshift.at(label).empty()) return false;
 
   dx = m_wshift.at(label)[0];
   dy = m_wshift.at(label)[1];
   dz = m_wshift.at(label)[2];
-    
+
   return true;
 }
 
 template <size_t N>
 bool ComponentTcadBase<N>::Initialise(const std::string& gridfilename,
                                       const std::string& datafilename) {
-
   m_ready = false;
   Cleanup();
   // Import mesh data from .grd file.
@@ -367,7 +361,6 @@ bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
                                              const std::string& datfile2,
                                              const double dv,
                                              const std::string& label) {
-
   if (!m_ready) {
     std::cerr << m_className << "::SetWeightingField:\n"
               << "    Mesh is not available. Call Initialise first.\n";
@@ -448,13 +441,10 @@ bool ComponentTcadBase<N>::SetWeightingField(const std::string& datfile1,
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::SetDynamicWeightingPotential(const std::string& datfile1,
-                                                 const std::string& datfile2,
-                                                 const double dv,
-                                                 const double t,
-                                                 const std::string& label) {
-  
-  if(t < Small) {
+bool ComponentTcadBase<N>::SetDynamicWeightingPotential(
+    const std::string& datfile1, const std::string& datfile2, const double dv,
+    const double t, const std::string& label) {
+  if (t < Small) {
     return SetWeightingField(datfile1, datfile2, dv, label);
   }
 
@@ -526,11 +516,11 @@ bool ComponentTcadBase<N>::SetDynamicWeightingPotential(const std::string& datfi
 
 template <size_t N>
 bool ComponentTcadBase<N>::SetDynamicWeightingField(const std::string& datfile1,
-                                             const std::string& datfile2,
-                                             const double dv, const double t,
-                                             const std::string& label) {
-
-  if(t < Small) {
+                                                    const std::string& datfile2,
+                                                    const double dv,
+                                                    const double t,
+                                                    const std::string& label) {
+  if (t < Small) {
     return SetWeightingField(datfile1, datfile2, dv, label);
   }
   if (!m_ready) {
@@ -605,7 +595,6 @@ bool ComponentTcadBase<N>::SetWeightingFieldShift(const std::string& label,
                                                   const double x,
                                                   const double y,
                                                   const double z) {
-
   if ((m_wfield.count(label) == 0 || m_wfield[label].empty()) &&
       (m_wpot.count(label) == 0 || m_wpot[label].empty())) {
     std::cerr << m_className << "::SetWeightingFieldShift:\n"
@@ -638,9 +627,8 @@ void ComponentTcadBase<N>::EnableVelocityMap(const bool on) {
 }
 
 template <size_t N>
-void ComponentTcadBase<N>::EnableTrapOccupationMap(const bool on) { 
-
-  m_useTrapOccMap = on; 
+void ComponentTcadBase<N>::EnableTrapOccupationMap(const bool on) {
+  m_useTrapOccMap = on;
   if (on && m_ready && (m_acceptorOcc.empty() && m_donorOcc.empty())) {
     std::cout << m_className << "::EnableTrapOccupationMap:\n"
               << "    Warning: current map does not have "
@@ -650,9 +638,8 @@ void ComponentTcadBase<N>::EnableTrapOccupationMap(const bool on) {
 }
 
 template <size_t N>
-void ComponentTcadBase<N>::EnableLifetimeMap(const bool on) { 
-
-  m_useLifetimeMap = on; 
+void ComponentTcadBase<N>::EnableLifetimeMap(const bool on) {
+  m_useLifetimeMap = on;
   if (on && m_ready && (m_eLifetime.empty() && m_hLifetime.empty())) {
     std::cout << m_className << "::EnableLifetimeMap:\n"
               << "    Warning: current map does not have lifetime data.\n";
@@ -661,7 +648,7 @@ void ComponentTcadBase<N>::EnableLifetimeMap(const bool on) {
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::GetElementNodes(const size_t i, 
+bool ComponentTcadBase<N>::GetElementNodes(const size_t i,
                                            std::vector<size_t>& nodes) const {
   nodes.clear();
   if (i >= m_elements.size()) {
@@ -678,8 +665,8 @@ bool ComponentTcadBase<N>::GetElementNodes(const size_t i,
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::GetElementRegion(const size_t i, 
-                                            size_t& region, bool& drift) const {
+bool ComponentTcadBase<N>::GetElementRegion(const size_t i, size_t& region,
+                                            bool& drift) const {
   if (i >= m_elements.size()) {
     std::cerr << m_className << "::GetElementRegion: Index out of range.\n";
     return false;
@@ -1031,9 +1018,9 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
           }
           // Rearrange vertices such that point 0 is on the left.
           while (m_vertices[m_elements[j].vertex[0]][0] >
-                 m_vertices[m_elements[j].vertex[1]][0] ||
+                     m_vertices[m_elements[j].vertex[1]][0] ||
                  m_vertices[m_elements[j].vertex[0]][0] >
-                 m_vertices[m_elements[j].vertex[2]][0]) {
+                     m_vertices[m_elements[j].vertex[2]][0]) {
             const int tmp = m_elements[j].vertex[0];
             m_elements[j].vertex[0] = m_elements[j].vertex[1];
             m_elements[j].vertex[1] = m_elements[j].vertex[2];
@@ -1058,11 +1045,11 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
           }
           // Rearrange vertices such that point 0 is on the left.
           while (m_vertices[m_elements[j].vertex[0]][0] >
-                 m_vertices[m_elements[j].vertex[1]][0] ||
+                     m_vertices[m_elements[j].vertex[1]][0] ||
                  m_vertices[m_elements[j].vertex[0]][0] >
-                 m_vertices[m_elements[j].vertex[2]][0] ||
+                     m_vertices[m_elements[j].vertex[2]][0] ||
                  m_vertices[m_elements[j].vertex[0]][0] >
-                 m_vertices[m_elements[j].vertex[3]][0]) {
+                     m_vertices[m_elements[j].vertex[3]][0]) {
             const int tmp = m_elements[j].vertex[0];
             m_elements[j].vertex[0] = m_elements[j].vertex[1];
             m_elements[j].vertex[1] = m_elements[j].vertex[2];
@@ -1273,7 +1260,6 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
 
 template <size_t N>
 bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
-
   std::ifstream datafile(filename);
   if (!datafile) {
     std::cerr << m_className << "::LoadData:\n"
@@ -1323,12 +1309,13 @@ bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
     data.clear();
     data >> dstype;
     if (m_debug && dataset != "[") {
-      std::cout << m_className << "::LoadData: Found " << dstype 
-                << " dataset " << dataset << ".\n";
+      std::cout << m_className << "::LoadData: Found " << dstype << " dataset "
+                << dataset << ".\n";
     }
-    if (dstype == "scalar" && (dataset == "ElectricField" || 
-        dataset == "eDriftVelocity" || dataset == "hDriftVelocity")) {
-      if (m_debug) std::cout << "    Skipping this dataset.\n"; 
+    if (dstype == "scalar" &&
+        (dataset == "ElectricField" || dataset == "eDriftVelocity" ||
+         dataset == "hDriftVelocity")) {
+      if (m_debug) std::cout << "    Skipping this dataset.\n";
       continue;
     }
     if (dataset == "ElectrostaticPotential") {
@@ -1421,7 +1408,6 @@ bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
 template <size_t N>
 bool ComponentTcadBase<N>::ReadDataset(std::ifstream& datafile,
                                        const std::string& dataset) {
-
   if (!datafile.is_open()) return false;
   enum DataSet {
     ElectrostaticPotential,
@@ -1618,7 +1604,6 @@ template <size_t N>
 bool ComponentTcadBase<N>::LoadWeightingField(
     const std::string& filename, std::vector<std::array<double, N> >& wf,
     std::vector<double>& wp) {
-
   std::ifstream datafile(filename, std::ios::in);
   if (!datafile) {
     std::cerr << m_className << "::LoadWeightingField:\n"
@@ -1771,7 +1756,6 @@ bool ComponentTcadBase<N>::LoadWeightingField(
 
 template <size_t N>
 void ComponentTcadBase<N>::PrintRegions() const {
-
   if (m_regions.empty()) {
     std::cerr << m_className << "::PrintRegions:\n"
               << "    No regions are currently defined.\n";
@@ -1864,9 +1848,8 @@ void ComponentTcadBase<N>::SetMedium(const std::string& material,
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::SetDonor(const size_t i,
-                                    const double eXsec, const double hXsec,
-                                    const double conc) {
+bool ComponentTcadBase<N>::SetDonor(const size_t i, const double eXsec,
+                                    const double hXsec, const double conc) {
   if (i >= m_donors.size()) {
     std::cerr << m_className << "::SetDonor: Index out of range.\n";
     return false;
@@ -1880,9 +1863,8 @@ bool ComponentTcadBase<N>::SetDonor(const size_t i,
 }
 
 template <size_t N>
-bool ComponentTcadBase<N>::SetAcceptor(const size_t i,
-                                       const double eXsec, const double hXsec,
-                                       const double conc) {
+bool ComponentTcadBase<N>::SetAcceptor(const size_t i, const double eXsec,
+                                       const double hXsec, const double conc) {
   if (i >= m_acceptors.size()) {
     std::cerr << m_className << "::SetAcceptor: Index out of range.\n";
     return false;
@@ -2064,7 +2046,6 @@ size_t ComponentTcadBase<N>::FindRegion(const std::string& name) const {
 
 template <size_t N>
 void ComponentTcadBase<N>::UpdateAttachment() {
-
   if (!m_useLifetimeMap && !m_useTrapOccMap) {
     m_eEta.clear();
     m_hEta.clear();
@@ -2079,7 +2060,6 @@ void ComponentTcadBase<N>::UpdateAttachment() {
 
 template <size_t N>
 void ComponentTcadBase<N>::ComputeEtaFromLifetime() {
-
   if (m_vertices.empty()) return;
   const size_t nVertices = m_vertices.size();
   if (!m_eLifetime.empty()) {
@@ -2100,7 +2080,6 @@ void ComponentTcadBase<N>::ComputeEtaFromLifetime() {
 
 template <size_t N>
 void ComponentTcadBase<N>::ComputeEtaFromTraps() {
-
   if (m_vertices.empty()) return;
   const size_t nVertices = m_vertices.size();
 
@@ -2137,4 +2116,4 @@ void ComponentTcadBase<N>::ComputeEtaFromTraps() {
 
 template class ComponentTcadBase<2>;
 template class ComponentTcadBase<3>;
-}
+}  // namespace Garfield

@@ -1,3 +1,5 @@
+#include "Garfield/ComponentNeBem3dMap.hh"
+
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -5,9 +7,8 @@
 #include <sstream>
 #include <string>
 
-#include "Garfield/ComponentNeBem3dMap.hh"
-#include "Garfield/Utilities.hh"
 #include "Garfield/Medium.hh"
+#include "Garfield/Utilities.hh"
 
 namespace Garfield {
 
@@ -1304,4 +1305,4 @@ double ComponentNeBem3dMap::TriLinInt(const double xd, const double yd,
   double c1 = c01 * (1.0 - yd) + c11 * yd;
   return (c0 * (1.0 - zd) + c1 * zd);
 }
-}
+}  // namespace Garfield

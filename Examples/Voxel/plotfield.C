@@ -1,6 +1,6 @@
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 
 #include "Garfield/ComponentVoxel.hh"
 #include "Garfield/MediumSilicon.hh"
@@ -11,7 +11,6 @@
 using namespace Garfield;
 
 int main(int argc, char *argv[]) {
-
   plottingEngine.SetDefaultStyle();
   TApplication app("app", &argc, argv);
 
@@ -21,12 +20,12 @@ int main(int argc, char *argv[]) {
   // Setup the mesh.
   const unsigned int nX = 2 * 110 + 1;
   const unsigned int nY = 2 * 200 + 1;
-  const double xMin =   -0.5e-4;
-  const double xMax =  110.5e-4;
-  const double yMin =   -0.5e-4;
-  const double yMax =  200.5e-4;
+  const double xMin = -0.5e-4;
+  const double xMax = 110.5e-4;
+  const double yMin = -0.5e-4;
+  const double yMax = 200.5e-4;
   const double zMin = -100.e-4;
-  const double zMax =  100.e-4;
+  const double zMax = 100.e-4;
 
   ComponentVoxel efield;
   efield.SetMesh(nX, nY, 1, xMin, xMax, yMin, yMax, zMin, zMax);
@@ -45,5 +44,4 @@ int main(int argc, char *argv[]) {
   view.SetElectricFieldRange(0.0, 200000.0);
   view.PlotContour("e");
   app.Run();
-
 }

@@ -4,27 +4,26 @@
  * Demonstrates importing of a 2D Elmer finite element
  * field map.
  *
-*/
-#include <iostream>
-#include <cmath>
-
-#include <TCanvas.h>
+ */
 #include <TApplication.h>
+#include <TCanvas.h>
 #include <TFile.h>
 
-#include "Garfield/MediumMagboltz.hh"
-#include "Garfield/ComponentElmer2d.hh"
-#include "Garfield/Sensor.hh"
-#include "Garfield/ViewField.hh"
-#include "Garfield/ViewFEMesh.hh"
-#include "Garfield/Random.hh"
+#include <cmath>
+#include <iostream>
+
 #include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/ComponentElmer2d.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
 #include "Garfield/ViewDrift.hh"
+#include "Garfield/ViewFEMesh.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
 int main(int argc, char* argv[]) {
-
   TApplication app("app", &argc, argv);
 
   // Set relevant parameters.
@@ -44,11 +43,11 @@ int main(int argc, char* argv[]) {
   gas.SetPressure(740.);
 
   // Import an Elmer-created field map.
-  ComponentElmer2d elm(
-      "wire2d/mesh.header", "wire2d/mesh.elements", "wire2d/mesh.nodes",
-      "wire2d/dielectrics.dat", "wire2d/wire2d.result", "cm");
+  ComponentElmer2d elm("wire2d/mesh.header", "wire2d/mesh.elements",
+                       "wire2d/mesh.nodes", "wire2d/dielectrics.dat",
+                       "wire2d/wire2d.result", "cm");
   elm.SetGas(&gas);
-  elm.SetRangeZ(-5.,5.);
+  elm.SetRangeZ(-5., 5.);
 
   // Set up a sensor object.
   Sensor sensor(&elm);
@@ -69,12 +68,12 @@ int main(int argc, char* argv[]) {
   double xi = ri * cos(thetai);
   double yi = ri * sin(thetai);
   // Calculate the avalanche.
-  std::cout << "Avalanche of a single electron starting from (" 
-            << xi << ", " << yi << ", " << zi << ")..." << std::endl;
+  std::cout << "Avalanche of a single electron starting from (" << xi << ", "
+            << yi << ", " << zi << ")..." << std::endl;
   aval.AvalancheElectron(xi, yi, zi, 0., 0., 0., 0., 0.);
 
-  std::cout << "... avalanche complete with "
-            << aval.GetElectrons().size() << " electron tracks.\n";
+  std::cout << "... avalanche complete with " << aval.GetElectrons().size()
+            << " electron tracks.\n";
 
   // Plot the geometry, field and drift lines.
   TCanvas* cGeom = new TCanvas("geom", "Geometry/Avalanche/Fields");

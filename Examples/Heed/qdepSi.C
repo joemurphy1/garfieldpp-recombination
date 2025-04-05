@@ -1,23 +1,22 @@
-#include <iostream>
-#include <cmath>
-
-#include <TCanvas.h>
-#include <TROOT.h>
 #include <TApplication.h>
+#include <TAxis.h>
+#include <TCanvas.h>
 #include <TGraph.h>
 #include <TH1F.h>
-#include <TAxis.h>
+#include <TROOT.h>
 
-#include "Garfield/MediumSilicon.hh"
+#include <cmath>
+#include <iostream>
+
 #include "Garfield/ComponentConstant.hh"
+#include "Garfield/MediumSilicon.hh"
+#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
-#include "Garfield/Plotting.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
 
@@ -62,5 +61,4 @@ int main(int argc, char * argv[]) {
   hNc.Draw();
   cNc.Update();
   app.Run(true);
-
 }

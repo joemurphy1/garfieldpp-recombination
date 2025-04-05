@@ -1,16 +1,17 @@
+#include "Garfield/TrackBichsel.hh"
+
 #include <algorithm>
+#include <array>
 #include <cstdlib>
-#include<array>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
-#include "Garfield/Utilities.hh"
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/Random.hh"
 #include "Garfield/MediumSilicon.hh"
+#include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/TrackBichsel.hh"
+#include "Garfield/Utilities.hh"
 
 namespace {
 bool IsComment(const std::string& line) {
@@ -20,7 +21,7 @@ bool IsComment(const std::string& line) {
   return false;
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -30,7 +31,6 @@ TrackBichsel::TrackBichsel(Sensor* sensor) : Track("Bichsel") {
 }
 
 bool TrackBichsel::Initialise() {
-
   std::cout << m_className << "::Initialize:\n";
   // Reset the tables.
   m_E.fill(0.);
@@ -43,11 +43,12 @@ bool TrackBichsel::Initialise() {
   MediumSilicon si;
   m_density = si.GetNumberDensity();
   // Conversion from loss function to oscillator strength density.
-  m_conv = ElectronMass / (2 * Pi2 * FineStructureConstant * pow(HbarC, 3) * m_density);
+  m_conv = ElectronMass /
+           (2 * Pi2 * FineStructureConstant * pow(HbarC, 3) * m_density);
   // Number of bins for each factor of 2 in energy
   constexpr unsigned int n2 = 64;
   const double u = log(2.) / n2;
-  const double um  = exp(u);
+  const double um = exp(u);
   constexpr double kEdge = 1839.;
   const double ken = log(kEdge / 1.5) / u;
   m_E[0] = kEdge / pow(2, ken / n2);
@@ -58,7 +59,7 @@ bool TrackBichsel::Initialise() {
     if ((j + 1) % 50 == 0) std::printf(" %4zu %16.8f\n", j + 1, m_E[j]);
   }
 
-  // Read in the complex dielectric function (epsilon). This is used 
+  // Read in the complex dielectric function (epsilon). This is used
   // for the cross section of small momentum transfer excitations.
   std::string path = "";
   auto installdir = std::getenv("GARFIELD_INSTALL");
@@ -99,11 +100,11 @@ bool TrackBichsel::Initialise() {
     return false;
   }
 
-  // Read in a table of the generalized oscillator strength density 
-  // integrated over the momentum transfer K, corresponding to the 
+  // Read in a table of the generalized oscillator strength density
+  // integrated over the momentum transfer K, corresponding to the
   // function A(E) in Equation (2.11) in (Bichsel, 1988).
-  // These values are used for calculating the cross section for 
-  // longitudinal excitations of K and L shell electrons 
+  // These values are used for calculating the cross section for
+  // longitudinal excitations of K and L shell electrons
   // with large momentum transfer.
   std::cout << "    Reading K and L shell calculations.\n";
   infile.open(path + "macom.tab", std::ios::in);
@@ -132,9 +133,9 @@ bool TrackBichsel::Initialise() {
     return false;
   }
 
-  // Read in a table of the generalized oscillator strength density 
+  // Read in a table of the generalized oscillator strength density
   // for M shell electrons integrated over the momentum transfer K.
-  // Based on equations in the appendix in Emerson et al., 
+  // Based on equations in the appendix in Emerson et al.,
   // Phys. Rev. B 7 (1973), 1798 (DOI 10.1103/PhysRevB.7.1798)
   std::cout << "    Reading M shell calculations.\n";
   infile.open(path + "emerc.tab", std::ios::in);
@@ -159,8 +160,8 @@ bool TrackBichsel::Initialise() {
     m_k1[j] = k1;
     if (!m_debug) continue;
     if (j < 19 || j > 30) continue;
-    std::printf(" %4zu %11.2f %11.2f %12.6f %12.6f\n", 
-                j + 1, m_E[j], energy, m_int[j], m_k1[j]); 
+    std::printf(" %4zu %11.2f %11.2f %12.6f %12.6f\n", j + 1, m_E[j], energy,
+                m_int[j], m_k1[j]);
   }
   infile.close();
   if (!ok) {
@@ -188,7 +189,6 @@ bool TrackBichsel::Initialise() {
 }
 
 bool TrackBichsel::ComputeCrossSection() {
-
   if (!m_initialised) {
     std::cerr << m_className << "::ComputeCrossSection: Not initialised.\n";
     return false;
@@ -197,13 +197,13 @@ bool TrackBichsel::ComputeCrossSection() {
   const double bg = GetBetaGamma();
   if (m_debug) {
     std::cerr << m_className << "::ComputeCrossSection:\n"
-              << "    Calculating differential cross-section for bg = "
-              << bg << ".\n";
+              << "    Calculating differential cross-section for bg = " << bg
+              << ".\n";
   }
   const double gamma = sqrt(bg * bg + 1.);
   // Prefactors in Bhabha formula.
   const double g1 = (gamma - 1.) * (gamma - 1.) / (gamma * gamma);
-  const double g2 = (2. * gamma  - 1.) / (gamma * gamma);
+  const double g2 = (2. * gamma - 1.) / (gamma * gamma);
 
   const double ek = GetKineticEnergy();
   const double rm = ElectronMass / m_mass;
@@ -220,7 +220,7 @@ bool TrackBichsel::ComputeCrossSection() {
   constexpr size_t nTerms = 3;
   std::array<double, nTerms + 1> m0;
   std::array<double, nTerms + 1> m1;
-  std::array<double, nTerms + 1> m2; 
+  std::array<double, nTerms + 1> m2;
   m0.fill(0.);
   m1.fill(0.);
   m2.fill(0.);
@@ -231,7 +231,7 @@ bool TrackBichsel::ComputeCrossSection() {
   const auto betaSqOverEmax = betaSq / emax;
   const auto twoMeBetaSq = 2 * ElectronMass * betaSq;
 
-  size_t jmax = 0; 
+  size_t jmax = 0;
   for (size_t j = 0; j < NEnergyBins; ++j) {
     ++jmax;
     if (m_E[j] > emax) break;
@@ -270,7 +270,7 @@ bool TrackBichsel::ComputeCrossSection() {
     } else {
       // Uehling Eq. (2).
       cs[2][j] *= (1. - m_E[j] * betaSqOverEmax);
-    } 
+    }
     cs[3][j] = 0.;
     cs[nTerms][j] = 0.;
     const double dE = m_E[j + 1] - m_E[j];
@@ -279,15 +279,15 @@ bool TrackBichsel::ComputeCrossSection() {
       m1[k] += cs[k][j] * dE / m_E[j];
       m2[k] += cs[k][j] * dE;
       cs[nTerms][j] += cs[k][j];
-    } 
+    }
     m0[nTerms] += cs[nTerms][j] * dE / e2;
-    m1[nTerms] += cs[nTerms][j] * dE / m_E[j]; 
+    m1[nTerms] += cs[nTerms][j] * dE / m_E[j];
     m2[nTerms] += cs[nTerms][j] * dE;
     cs[nTerms][j] /= e2;
     if (!m_debug) continue;
     if ((j + 1) % 10 != 0) continue;
-    std::printf(" %4zu %9.1f %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n", 
-                j + 1, m_E[j], m_dfdE[j], g, h, cs[0][j], cs[1][j], cs[2][j]);
+    std::printf(" %4zu %9.1f %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n", j + 1,
+                m_E[j], m_dfdE[j], g, h, cs[0][j], cs[1][j], cs[2][j]);
   }
   if (jmax < NEnergyBins) cdf.resize(jmax);
   if (m_debug) {
@@ -308,7 +308,7 @@ bool TrackBichsel::ComputeCrossSection() {
   m_imfp = m0.back() * dec;
   m_dEdx = m1.back() * dec;
   if (m_debug) {
-    std::printf("    M0 = %12.4f cm-1      ... inverse mean free path\n", 
+    std::printf("    M0 = %12.4f cm-1      ... inverse mean free path\n",
                 m_imfp);
     std::printf("    M1 = %12.4f keV/cm    ... dE/dx\n", m_dEdx * 1.e-3);
     std::printf("    M2 = %12.4f keV2/cm\n", m2.back() * dec * 1.e-6);
@@ -317,10 +317,10 @@ bool TrackBichsel::ComputeCrossSection() {
   double integral = cdf.back();
   if (emax > m_E.back()) {
     const double e1 = m_E.back();
-    const double rm0 = (1. - 720. * betaSqOverEmax) * (
-      (1. / e1 - 1. / emax) + 
-      2 * (1. / (e1 * e1) - 1. / (emax * emax))) -
-      betaSqOverEmax * log(emax / e1);
+    const double rm0 = (1. - 720. * betaSqOverEmax) *
+                           ((1. / e1 - 1. / emax) +
+                            2 * (1. / (e1 * e1) - 1. / (emax * emax))) -
+                       betaSqOverEmax * log(emax / e1);
     if (m_debug) std::printf("    Residual M0 = %15.5f\n", rm0 * 14. * dec);
     m_imfp += rm0 * 14. * dec;
     m0.back() += rm0;
@@ -331,8 +331,8 @@ bool TrackBichsel::ComputeCrossSection() {
     cdf[j] *= scale;
     if (!m_debug) continue;
     if ((j + 1) % 20 != 0) continue;
-    std::printf(" %4zu %9.1f %15.6f\n", j + 1, m_E[j], cdf[j]); 
-  } 
+    std::printf(" %4zu %9.1f %15.6f\n", j + 1, m_E[j], cdf[j]);
+  }
   m_tab.fill(0.);
   for (size_t i = 0; i < NCdfBins; ++i) {
     constexpr double step = 1. / NCdfBins;
@@ -352,14 +352,13 @@ bool TrackBichsel::ComputeCrossSection() {
     const double f0 = (x - x0) / (x1 - x0);
     const double f1 = 1. - f0;
     m_tab[i] = f0 * y0 + f1 * y1;
-  } 
+  }
   return true;
 }
 
 bool TrackBichsel::NewTrack(const double x0, const double y0, const double z0,
                             const double t0, const double dx0, const double dy0,
                             const double dz0) {
-
   // Reset the list of clusters.
   m_clusters.clear();
 
@@ -448,7 +447,6 @@ bool TrackBichsel::NewTrack(const double x0, const double y0, const double z0,
 }
 
 double TrackBichsel::GetClusterDensity() {
-
   if (m_isChanged) {
     if (!ComputeCrossSection()) return 0.;
     m_isChanged = false;
@@ -457,7 +455,6 @@ double TrackBichsel::GetClusterDensity() {
 }
 
 double TrackBichsel::GetStoppingPower() {
-
   if (m_isChanged) {
     if (!ComputeCrossSection()) return 0.;
     m_isChanged = false;
@@ -465,4 +462,4 @@ double TrackBichsel::GetStoppingPower() {
   return m_dEdx;
 }
 
-}
+}  // namespace Garfield

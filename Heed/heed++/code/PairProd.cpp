@@ -1,15 +1,16 @@
-#include <fstream>
-#include <cmath>
+#include "heed++/code/PairProd.h"
+
 #include <cfloat>
 #include <climits>
+#include <cmath>
+#include <fstream>
 
-#include "wcpplib/util/FunNameStack.h"
-#include "heed++/code/PairProd.h"
 #include "Garfield/Random.hh"
+#include "wcpplib/util/FunNameStack.h"
 
 // 2003, I. Smirnov
 
-//#define USE_GET_ELOSS_CUT
+// #define USE_GET_ELOSS_CUT
 
 namespace Heed {
 
@@ -60,7 +61,7 @@ double PairProd::get_eloss(const double e_cur) const {
   mfunname("double PairProd::get_eloss(const double ecur) const");
   const double e_loss = m_k * pran.ran(Garfield::RndmUniform()) + m_s;
   constexpr double V_ratio = 0.5;
-  const double v = V_ratio * m_w / e_cur; 
+  const double v = V_ratio * m_w / e_cur;
   // const double c = 1. / (1. - v);
   const double c = v < 1. ? 1. / (1. - v * v) : DBL_MAX;
   return e_loss * c;
@@ -78,4 +79,4 @@ void PairProd::print(std::ostream& file, int l) const {
   pran.print(file);
   indn.n -= 2;
 }
-}
+}  // namespace Heed

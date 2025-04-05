@@ -1,13 +1,15 @@
+#include "heed++/code/HeedParticle.h"
+
 #include <iomanip>
 #include <numeric>
+
+#include "Garfield/Random.hh"
+#include "heed++/code/EnTransfCS.h"
+#include "heed++/code/HeedCluster.h"
+#include "heed++/code/HeedPhoton.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/math/kinem.h"
 #include "wcpplib/math/tline.h"
-#include "heed++/code/HeedParticle.h"
-#include "heed++/code/HeedCluster.h"
-#include "heed++/code/HeedPhoton.h"
-#include "heed++/code/EnTransfCS.h"
-#include "Garfield/Random.hh"
 
 // 2003-2008, I. Smirnov
 
@@ -16,14 +18,13 @@ namespace Heed {
 using CLHEP::c_light;
 using CLHEP::c_squared;
 using CLHEP::cm;
-using CLHEP::MeV;
 using CLHEP::electron_mass_c2;
+using CLHEP::MeV;
 
 HeedParticle::HeedParticle(manip_absvol* primvol, const point& pt,
                            const vec& vel, double ftime, particle_def* fpardef,
                            fieldmap* fm, const bool fcoulomb_scattering,
-                           const bool floss_only,
-                           const bool fprint_listing)
+                           const bool floss_only, const bool fprint_listing)
     : eparticle(primvol, pt, vel, ftime, fpardef, fm),
       m_coulomb_scattering(fcoulomb_scattering),
       m_loss_only(floss_only),
@@ -60,8 +61,9 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
   // Particle velocity.
   const double invSpeed = 1. / m_prevpos.speed;
   // Shorthand.
-  const auto sampleTransfer = t_hisran_step_ar<double, std::vector<double>,
-                                               PointCoorMesh<double, const double*> >;
+  const auto sampleTransfer =
+      t_hisran_step_ar<double, std::vector<double>,
+                       PointCoorMesh<double, const double*> >;
   const long qa = matter->qatom();
   if (m_print_listing) Iprintn(mcout, qa);
   for (long na = 0; na < qa; ++na) {
@@ -76,7 +78,8 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
       if (qt <= 0) continue;
       for (long nt = 0; nt < qt; ++nt) {
         // Sample the energy transfer in this collision.
-        const double r = sampleTransfer(pcm, etcs->fadda[na][ns], Garfield::RndmUniform());
+        const double r =
+            sampleTransfer(pcm, etcs->fadda[na][ns], Garfield::RndmUniform());
         // Convert to internal units.
         const double et = r * MeV;
         m_edep += et;
@@ -116,7 +119,7 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
   if (m_edep >= m_curr_ekin) {
     // Accumulated energy loss exceeds the particle's kinetic energy.
     m_alive = false;
-  } 
+  }
 
   if (m_coulomb_scattering) {
     if (hmd->radiation_length > 0.) {
@@ -139,11 +142,11 @@ void HeedParticle::physics_mrange(double& fmrange) {
   auto etcs = dynamic_cast<const EnTransfCS*>(av);
   if (!etcs) return;
   if (etcs->quanC > 0.) {
-    // Make sure the step is smaller than the mean free path between 
+    // Make sure the step is smaller than the mean free path between
     // ionising collisions.
     fmrange = std::min(fmrange, 0.1 / etcs->quanC);
   }
-} 
+}
 
 void HeedParticle::print(std::ostream& file, int l) const {
   if (l < 0) return;
@@ -157,4 +160,4 @@ void HeedParticle::print(std::ostream& file, int l) const {
   if (l <= 1) return;
   mparticle::print(file, l - 1);
 }
-}
+}  // namespace Heed

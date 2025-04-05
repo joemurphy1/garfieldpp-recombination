@@ -1,9 +1,9 @@
-#include <cmath>
-
-#include <TROOT.h>
 #include <TApplication.h>
-#include <TH1F.h>
 #include <TFile.h>
+#include <TH1F.h>
+#include <TROOT.h>
+
+#include <cmath>
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentConstant.hh"
@@ -13,9 +13,8 @@
 using namespace Garfield;
 
 int main() {
-
   // Electric field [kV / cm].
-  constexpr double field = 20.; 
+  constexpr double field = 20.;
   // Gas gap [cm]
   constexpr double gap = 0.1;
 
@@ -25,7 +24,7 @@ int main() {
   gas.SetPressure(760.);
   gas.SetMaxElectronEnergy(150.);
   gas.Initialise();
-  
+
   // Make a component with constant drift field.
   ComponentConstant cmp;
   cmp.SetArea(-2., -2., 0., 2., 2., 2 * gap);

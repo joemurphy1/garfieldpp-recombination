@@ -6,27 +6,27 @@
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentParallelPlate.hh"
-#include "Garfield/Sensor.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
 
 namespace {
 
-int AvalancheSize(const double dx, const int ni,
-                  const double alpha, const double eta) {
-  // Algorithm to get the size of the avalanche after it has propagated 
+int AvalancheSize(const double dx, const int ni, const double alpha,
+                  const double eta) {
+  // Algorithm to get the size of the avalanche after it has propagated
   // over a distance dx.
 
   // Final size.
   int nf = 0;
   const double k = eta / alpha;
-  const double ndx = exp((alpha - eta) * dx);  
-  // If the size is higher than 1000 the central limit theorem will be used 
+  const double ndx = exp((alpha - eta) * dx);
+  // If the size is higher than 1000 the central limit theorem will be used
   // to describe the growth of the Townsend avalanche.
   if (ni < 1000) {
-    // Condition to which the random number will be compared. 
-    // If the number is smaller than the condition, nothing happens. 
-    // Otherwise, the single electron will be attached or retrieve 
+    // Condition to which the random number will be compared.
+    // If the number is smaller than the condition, nothing happens.
+    // Otherwise, the single electron will be attached or retrieve
     // additional electrons from the gas.
     const double prob = k * (ndx - 1) / (ndx - k);
     // Running over all electrons in the avalanche.
@@ -35,7 +35,7 @@ int AvalancheSize(const double dx, const int ni,
       double s = Garfield::RndmUniformPos();
       if (s >= prob) {
         nf += (int)(1 + log((ndx - k) * (1 - s) / (ndx * (1 - k))) /
-                        log(1 - (1 - k) / (ndx - k)));
+                            log(1 - (1 - k) / (ndx - k)));
       }
     }
   } else {
@@ -46,11 +46,11 @@ int AvalancheSize(const double dx, const int ni,
   return nf;
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
-AvalancheGrid::AvalancheGrid(Sensor* sensor) : m_sensor(sensor) { }
+AvalancheGrid::AvalancheGrid(Sensor *sensor) : m_sensor(sensor) {}
 
 void AvalancheGrid::SetGrid(const double xmin, const double xmax,
                             const int xsteps, const double ymin,
@@ -95,9 +95,8 @@ void AvalancheGrid::SetGrid(const double xmin, const double xmax,
   }
 }
 
-bool AvalancheGrid::SnapToGrid(const double x, const double y,
-                               const double z, const double /*v*/,
-                               const int n) {
+bool AvalancheGrid::SnapToGrid(const double x, const double y, const double z,
+                               const double /*v*/, const int n) {
   // Snap electron from AvalancheMicroscopic to the predefined grid.
   if (!m_gridset) {
     std::cerr << m_className << "::SnapToGrid: Error. Grid is not defined.\n";
@@ -110,8 +109,8 @@ bool AvalancheGrid::SnapToGrid(const double x, const double y,
   int iZ = round((z - m_zgrid.front()) / m_zStepSize);
 
   if (m_debug) {
-    std::cout << m_className << "::SnapToGrid: ix = " << iX
-              << ", iy = " << iY << ", iz = " << iZ << ".\n\n";
+    std::cout << m_className << "::SnapToGrid: ix = " << iX << ", iy = " << iY
+              << ", iz = " << iZ << ".\n\n";
   }
   if (iX < 0 || iX >= m_xgrid.size() || iY < 0 || iY >= m_ygrid.size() ||
       iZ < 0 || iZ >= m_zgrid.size()) {
@@ -166,10 +165,9 @@ bool AvalancheGrid::SnapToGrid(const double x, const double y,
 
   if (m_debug) {
     std::cout << m_className << "::SnapToGrid: n from 1 to " << nn << ".\n"
-              << "    Snapped to (x,y,z) = (" 
-              << x << " -> " << m_xgrid[iX] << ", " 
-              << y << " -> " << m_ygrid[iY] << ", " 
-              << z << " -> " << m_zgrid[iZ] << ").\n";
+              << "    Snapped to (x,y,z) = (" << x << " -> " << m_xgrid[iX]
+              << ", " << y << " -> " << m_ygrid[iY] << ", " << z << " -> "
+              << m_zgrid[iZ] << ").\n";
   }
   return true;
 }
@@ -184,28 +182,26 @@ void AvalancheGrid::NextAvalancheGridPoint() {
     m_run = true;
 
     if (m_debug) {
-      std::cout << "  Node (" << node.ix << "," << node.iy << "," 
-                << node.iz << ").\n";
+      std::cout << "  Node (" << node.ix << "," << node.iy << "," << node.iz
+                << ").\n";
     }
     // Get the initial avalanche size.
     const int ni = node.n;
     if (node.path.xs.empty()) {
-      node.path.xs.push_back({m_xgrid[node.ix],
-                              m_ygrid[node.iy],
-                              m_zgrid[node.iz]});
+      node.path.xs.push_back(
+          {m_xgrid[node.ix], m_ygrid[node.iy], m_zgrid[node.iz]});
       node.path.ts.push_back(node.time + node.dt);
       node.path.qs.push_back(0.5 * ni);
     }
     // If empty go to next point.
-    if (ni == 0) continue;  
+    if (ni == 0) continue;
     // If the total avalanche size is smaller than the set saturation
     // limit the AvalancheSize function is utilized to obtain the size
     // after its propagation to the next z-coordinate grid point. Else,
     // the size will be kept constant under the propagation.
     const int nTot = m_nLayer.empty() ? m_nTotal : m_nLayer[node.layer - 1];
     if (nTot < m_MaxSize) {
-      int nf = AvalancheSize(node.stepSize, ni, node.townsend,
-                             node.attachment);
+      int nf = AvalancheSize(node.stepSize, ni, node.townsend, node.attachment);
       if (m_MaxSize - nTot < nf - ni) nf = m_MaxSize - nTot + ni;
       node.n = nf;
     } else {
@@ -218,7 +214,7 @@ void AvalancheGrid::NextAvalancheGridPoint() {
                             m_zgrid[node.iz + node.velNormal[2]]});
     node.path.ts.push_back(node.time + node.dt);
     node.path.qs.push_back(0.5 * (ni + node.n));
-      
+
     // Update total number of electrons.
     if (!m_nLayer.empty()) m_nLayer[node.layer - 1] += node.n - ni;
     m_nTotal += node.n - ni;
@@ -241,7 +237,6 @@ void AvalancheGrid::NextAvalancheGridPoint() {
 }
 
 void AvalancheGrid::DeactivateNode(AvalancheNode &node) {
-
   if (node.n == 0) node.active = false;
 
   if (node.velNormal[2] != 0) {
@@ -261,15 +256,14 @@ void AvalancheGrid::DeactivateNode(AvalancheNode &node) {
   double e[3], v;
   int status;
   Medium *m = nullptr;
-  m_sensor->ElectricField(m_xgrid[node.ix], m_ygrid[node.iy],
-                          m_zgrid[node.iz], e[0], e[1], e[2], v, m,
-                          status);
+  m_sensor->ElectricField(m_xgrid[node.ix], m_ygrid[node.iy], m_zgrid[node.iz],
+                          e[0], e[1], e[2], v, m, status);
 
   if (status == -5 || status == -6) {
     // If not inside a gas gap return false to terminate
-    node.active = false;  
+    node.active = false;
   }
-        
+
   if (!node.active) {
     // If node has terminated then the signal from the avalanche is calculated
     m_sensor->AddSignalWeightingPotential(-1, node.path.ts, node.path.xs,
@@ -292,15 +286,15 @@ void AvalancheGrid::StartGridAvalanche() {
     return;
   }
 
-  // If the sensor contains a parallel plate component, assign the nodes 
+  // If the sensor contains a parallel plate component, assign the nodes
   // to a layer and initialize the per-layer avalanche size counters.
   const auto nComponents = m_sensor->GetNumberOfComponents();
   for (size_t i = 0; i < nComponents; ++i) {
     auto cmp = m_sensor->GetComponent(i);
-    auto pp = dynamic_cast<ComponentParallelPlate*>(cmp);
-    if (!pp) continue;  
+    auto pp = dynamic_cast<ComponentParallelPlate *>(cmp);
+    if (!pp) continue;
     m_nLayer.assign(pp->NumberOfLayers(), 0);
-    for (auto& node : m_activeNodes) {
+    for (auto &node : m_activeNodes) {
       const double y = m_ygrid[node.iy];
       int im = 0;
       double epsM = 0;
@@ -317,7 +311,8 @@ void AvalancheGrid::StartGridAvalanche() {
   while (m_run == true) {
     if (m_debug)
       std::cout
-          << "============ \n" << m_className
+          << "============ \n"
+          << m_className
           << "::StartGridAvalanche: Looping over nodes.\n ============ \n";
     NextAvalancheGridPoint();
   }
@@ -340,20 +335,19 @@ void AvalancheGrid::StartGridAvalanche() {
   return;
 }
 
-void AvalancheGrid::AddElectron(const double x, const double y,
-                                const double z, const double t,
-                                const int n) {
-
+void AvalancheGrid::AddElectron(const double x, const double y, const double z,
+                                const double t, const int n) {
   if (m_time == 0 && m_time != t && m_debug)
     std::cerr << m_className
               << "::AddElectron: Overwriting start time of avalanche for t "
-                 "= 0 to " << t << ".\n";
+                 "= 0 to "
+              << t << ".\n";
   m_time = t;
   const bool ok = SnapToGrid(x, y, z, 0, n);
   if (ok && m_debug) {
     std::cout << m_className
-              << "::AddElectron: Electron added at (t,x,y,z) =  (" << t
-              << "," << x << "," << y << "," << z << ").\n";
+              << "::AddElectron: Electron added at (t,x,y,z) =  (" << t << ","
+              << x << "," << y << "," << z << ").\n";
   }
 }
 
@@ -362,12 +356,12 @@ void AvalancheGrid::AddElectrons(AvalancheMicroscopic *avmc) {
   if (!avmc) return;
 
   // Get initial positions of electrons
-  for (const auto& electron : avmc->GetElectrons()) {
+  for (const auto &electron : avmc->GetElectrons()) {
     // Skip electrons that are not stopped due to
     // the upper bound of the time range.
     if (electron.status != -17) continue;
-    const auto& p1 = electron.path.at(0);
-    const auto& p2 = electron.path.back();
+    const auto &p1 = electron.path.at(0);
+    const auto &p2 = electron.path.back();
     // HS: why use only the z component?
     const double vel = (p2.z - p1.z) / (p2.t - p1.t);
     m_time = p2.t;
@@ -375,7 +369,8 @@ void AvalancheGrid::AddElectrons(AvalancheMicroscopic *avmc) {
     if (ok && m_debug) {
       std::cout << m_className
                 << "::AddElectrons: Electron added at "
-                   "(x,y,z) =  (" << p2.x << "," << p2.y << "," << p2.z << ").\n";
+                   "(x,y,z) =  ("
+                << p2.x << "," << p2.y << "," << p2.z << ").\n";
     }
   }
 }
@@ -390,7 +385,8 @@ bool AvalancheGrid::GetParameters(AvalancheNode &node) {
   if (m_debug) {
     std::cout << m_className
               << "::GetParameters: Getting parameters at "
-                 "(x,y,z) =  (" << x << "," << y << "," << z << ").\n";
+                 "(x,y,z) =  ("
+              << x << "," << y << "," << z << ").\n";
   }
   double e[3], v;
   int status;
@@ -399,23 +395,23 @@ bool AvalancheGrid::GetParameters(AvalancheNode &node) {
 
   if (m_debug) std::cout << "    Status = " << status << ".\n";
   // If not inside a gas gap return false to terminate
-  if (status == -5 || status == -6) return false;  
+  if (status == -5 || status == -6) return false;
 
-  if (m_Townsend >= 0) {  
+  if (m_Townsend >= 0) {
     node.townsend = m_Townsend;
   } else {
     // If Townsend coef. is not set by user, take it from the sensor.
     m->ElectronTownsend(e[0], e[1], e[2], 0., 0., 0., node.townsend);
   }
 
-  if (m_Attachment >= 0) {  
+  if (m_Attachment >= 0) {
     node.attachment = m_Attachment;
   } else {
     // If attachment coef. is not set by user, take it from the sensor.
     m->ElectronAttachment(e[0], e[1], e[2], 0., 0., 0., node.attachment);
   }
 
-  if (m_Velocity > 0) {  
+  if (m_Velocity > 0) {
     node.velocity = m_Velocity;
     node.velNormal = m_velNormal;
   } else {
@@ -460,14 +456,12 @@ bool AvalancheGrid::GetParameters(AvalancheNode &node) {
               << " [1/cm], Attachment = " << node.attachment
               << " [1/cm], Velocity = " << node.velocity << " [cm/ns].\n";
   }
-  if (m_debug)
-    std::cout << "    Time steps per loop " << node.dt << " ns.\n";
+  if (m_debug) std::cout << "    Time steps per loop " << node.dt << " ns.\n";
   m_printPar = true;
   return true;
 }
 
 void AvalancheGrid::Reset() {
-
   std::cout << m_className << "::Reset: Resetting AvalancheGrid.\n";
   m_time = 0.;
   m_nTotal = 0;

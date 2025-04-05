@@ -30,11 +30,11 @@ class ComponentConstant : public Component {
   void SetWeightingPotential(const double x, const double y, const double z,
                              const double v = 0.);
 
-  /// Set the limits of the active area explicitly 
+  /// Set the limits of the active area explicitly
   /// (instead of using a Geometry object).
   void SetArea(const double xmin, const double ymin, const double zmin,
                const double xmax, const double ymax, const double zmax);
-  /// Remove the explicit limits of the active area. 
+  /// Remove the explicit limits of the active area.
   void UnsetArea();
   /// Set the medium in the active area.
   void SetMedium(Medium* medium) { m_medium = medium; }
@@ -53,8 +53,8 @@ class ComponentConstant : public Component {
   double WeightingPotential(const double x, const double y, const double z,
                             const std::string& label) override;
 
-  bool GetBoundingBox(double& xmin, double& ymin, double& zmin,
-                      double& xmax, double& ymax, double& zmax) override;
+  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
+                      double& ymax, double& zmax) override;
 
  private:
   // Electric field.
@@ -92,13 +92,12 @@ class ComponentConstant : public Component {
   void UpdatePeriodicity() override;
 
   bool InArea(const double x, const double y, const double z) {
-    if (x < m_xmin[0] || x > m_xmax[0] ||
-        y < m_xmin[1] || y > m_xmax[1] ||
+    if (x < m_xmin[0] || x > m_xmax[0] || y < m_xmin[1] || y > m_xmax[1] ||
         z < m_xmin[2] || z > m_xmax[2]) {
       return false;
     }
-    return true; 
+    return true;
   }
 };
-}
+}  // namespace Garfield
 #endif

@@ -21,7 +21,7 @@ class ElElasticScatLowSigma;
 class PairProd;
 class HeedDeltaElectronCS;
 class HeedPhoton;
-}
+}  // namespace Heed
 
 namespace Garfield {
 
@@ -74,40 +74,38 @@ class TrackHeed : public Track {
   bool NewTrack(const double x0, const double y0, const double z0,
                 const double t0, const double dx0, const double dy0,
                 const double dz0) override;
-  const std::vector<Cluster>& GetClusters() const {
-    return m_clusters;
-  }
+  const std::vector<Cluster>& GetClusters() const { return m_clusters; }
 
   bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc,
                   double& ec, double& extra);
-  bool GetCluster(double& xc, double& yc, double& zc, double& tc,
-                  int& ne, int& ni, double& ec, double& extra);
+  bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& ne,
+                  int& ni, double& ec, double& extra);
   /** Get the next "cluster" (ionising collision of the charged particle).
-    * \param xc,yc,zc coordinates of the collision
-    * \param tc time of the collision
-    * \param ne number of electrons
-    * \param ni number of ions
-    * \param np number of fluorescence photons
-    * \param ec deposited energy
-    * \param extra additional information (not always implemented)
-    */
-  bool GetCluster(double& xc, double& yc, double& zc, double& tc,
-                  int& ne, int& ni, int& np, double& ec, double& extra);
+   * \param xc,yc,zc coordinates of the collision
+   * \param tc time of the collision
+   * \param ne number of electrons
+   * \param ni number of ions
+   * \param np number of fluorescence photons
+   * \param ec deposited energy
+   * \param extra additional information (not always implemented)
+   */
+  bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& ne,
+                  int& ni, int& np, double& ec, double& extra);
   /** Retrieve the properties of a conduction or delta electron
-    * in the current cluster.
-    * \param i index of the electron
-    * \param x,y,z coordinates of the electron
-    * \param t time
-    * \param e kinetic energy (only meaningful for delta-electrons)
-    * \param dx,dy,dz direction vector (only meaningful for delta-electrons)
-    **/
+   * in the current cluster.
+   * \param i index of the electron
+   * \param x,y,z coordinates of the electron
+   * \param t time
+   * \param e kinetic energy (only meaningful for delta-electrons)
+   * \param dx,dy,dz direction vector (only meaningful for delta-electrons)
+   **/
   bool GetElectron(const unsigned int i, double& x, double& y, double& z,
                    double& t, double& e, double& dx, double& dy, double& dz);
   /** Retrieve the properties of an ion in the current cluster.
-    * \param i index of the ion
-    * \param x,y,z coordinates of the ion
-    * \param t time
-    **/
+   * \param i index of the ion
+   * \param x,y,z coordinates of the ion
+   * \param t time
+   **/
   bool GetIon(const unsigned int i, double& x, double& y, double& z,
               double& t) const;
 
@@ -135,82 +133,81 @@ class TrackHeed : public Track {
   bool Initialise(Medium* medium, const bool verbose = false);
 
   /** Simulate a delta electron.
-    * \param x0,y0,z0 initial position of the delta electron
-    * \param t0 initial time
-    * \param e0 initial kinetic energy of the delta electron
-    * \param dx0,dy0,dz0 initial direction of the delta electron
-    **/
-  Cluster TransportDeltaElectron(const double x0, const double y0, 
-                                 const double z0, const double t0, 
-                                 const double e0, const double dx0, 
+   * \param x0,y0,z0 initial position of the delta electron
+   * \param t0 initial time
+   * \param e0 initial kinetic energy of the delta electron
+   * \param dx0,dy0,dz0 initial direction of the delta electron
+   **/
+  Cluster TransportDeltaElectron(const double x0, const double y0,
+                                 const double z0, const double t0,
+                                 const double e0, const double dx0,
                                  const double dy0, const double dz0);
 
   /** Simulate a delta electron.
-    * \param x0,y0,z0 initial position of the delta electron
-    * \param t0 initial time
-    * \param e0 initial kinetic energy of the delta electron
-    * \param dx0,dy0,dz0 initial direction of the delta electron
-    * \param ne,ni number of electrons/ions produced by the delta electron
-    **/
+   * \param x0,y0,z0 initial position of the delta electron
+   * \param t0 initial time
+   * \param e0 initial kinetic energy of the delta electron
+   * \param dx0,dy0,dz0 initial direction of the delta electron
+   * \param ne,ni number of electrons/ions produced by the delta electron
+   **/
   void TransportDeltaElectron(const double x0, const double y0, const double z0,
                               const double t0, const double e0,
                               const double dx0, const double dy0,
                               const double dz0, int& ne, int& ni);
   /** Simulate a delta electron.
-    * \param x0,y0,z0 initial position of the delta electron
-    * \param t0 initial time
-    * \param e0 initial kinetic energy of the delta electron
-    * \param dx0,dy0,dz0 initial direction of the delta electron
-    * \param ne number of electrons produced by the delta electron
-    **/
+   * \param x0,y0,z0 initial position of the delta electron
+   * \param t0 initial time
+   * \param e0 initial kinetic energy of the delta electron
+   * \param dx0,dy0,dz0 initial direction of the delta electron
+   * \param ne number of electrons produced by the delta electron
+   **/
   void TransportDeltaElectron(const double x0, const double y0, const double z0,
                               const double t0, const double e0,
                               const double dx0, const double dy0,
                               const double dz0, int& ne);
 
   /** Simulate a photon.
-    * \param x0,y0,z0 initial position of the photon
-    * \param t0 initial time
-    * \param e0 initial energy of the photon
-    * \param dx0,dy0,dz0 initial direction of the photon
-    **/
+   * \param x0,y0,z0 initial position of the photon
+   * \param t0 initial time
+   * \param e0 initial energy of the photon
+   * \param dx0,dy0,dz0 initial direction of the photon
+   **/
   Cluster TransportPhoton(const double x0, const double y0, const double z0,
                           const double t0, const double e0, const double dx0,
-                          const double dy0, const double dz0); 
-
+                          const double dy0, const double dz0);
 
   /** Simulate a photon.
-    * \param x0,y0,z0 initial position of the photon
-    * \param t0 initial time
-    * \param e0 initial energy of the photon
-    * \param dx0,dy0,dz0 initial direction of the photon
-    * \param ne number of electrons produced by the photon
-    * \param ni number of ions produced by the photon
-    * \param np number of fluorescence photons
-    **/
+   * \param x0,y0,z0 initial position of the photon
+   * \param t0 initial time
+   * \param e0 initial energy of the photon
+   * \param dx0,dy0,dz0 initial direction of the photon
+   * \param ne number of electrons produced by the photon
+   * \param ni number of ions produced by the photon
+   * \param np number of fluorescence photons
+   **/
   void TransportPhoton(const double x0, const double y0, const double z0,
                        const double t0, const double e0, const double dx0,
-                       const double dy0, const double dz0, 
-                       int& ne, int& ni, int& np);
+                       const double dy0, const double dz0, int& ne, int& ni,
+                       int& np);
 
   /** Simulate a photon.
-    * \param x0,y0,z0 initial position of the photon
-    * \param t0 initial time
-    * \param e0 initial energy of the photon
-    * \param dx0,dy0,dz0 initial direction of the photon
-    * \param ne number of electrons produced by the photon
-    * \param ni number of ions produced by the photon
-    **/
+   * \param x0,y0,z0 initial position of the photon
+   * \param t0 initial time
+   * \param e0 initial energy of the photon
+   * \param dx0,dy0,dz0 initial direction of the photon
+   * \param ne number of electrons produced by the photon
+   * \param ni number of ions produced by the photon
+   **/
   void TransportPhoton(const double x0, const double y0, const double z0,
                        const double t0, const double e0, const double dx0,
                        const double dy0, const double dz0, int& ne, int& ni);
   /** Simulate a photon.
-    * \param x0,y0,z0 initial position of the photon
-    * \param t0 initial time
-    * \param e0 initial energy of the photon
-    * \param dx0,dy0,dz0 initial direction of the photon
-    * \param ne number of electrons produced by the photon
-    **/
+   * \param x0,y0,z0 initial position of the photon
+   * \param t0 initial time
+   * \param e0 initial energy of the photon
+   * \param dx0,dy0,dz0 initial direction of the photon
+   * \param ne number of electrons produced by the photon
+   **/
   void TransportPhoton(const double x0, const double y0, const double z0,
                        const double t0, const double e0, const double dx0,
                        const double dy0, const double dz0, int& ne);
@@ -225,15 +222,15 @@ class TrackHeed : public Track {
   void DisableMagneticField();
 
   /** Set parameters for calculating the particle trajectory.
-    * \param maxStep
-    *        maximum step length
-    * \param radStraight
-    *        radius beyond which to approximate circles by polylines.
-    * \param stepAngleStraight
-    *        max. angular step (in radian) when using polyline steps.
-    * \param stepAngleCurved
-    *        max. angular step (in radian) when using circular steps.
-    **/
+   * \param maxStep
+   *        maximum step length
+   * \param radStraight
+   *        radius beyond which to approximate circles by polylines.
+   * \param stepAngleStraight
+   *        max. angular step (in radian) when using polyline steps.
+   * \param stepAngleCurved
+   *        max. angular step (in radian) when using circular steps.
+   **/
   void SetSteppingLimits(const double maxStep, const double radStraight,
                          const double stepAngleStraight,
                          const double stepAngleCurved) {
@@ -250,12 +247,10 @@ class TrackHeed : public Track {
     stepAngleCurved = m_stepAngleCurved;
   }
 
-  void CrossInactiveMedia(const bool on = true) {
-    m_crossInactiveMedia = on;
-  }
-  void EnableCoulombScattering(const bool on = true) { 
+  void CrossInactiveMedia(const bool on = true) { m_crossInactiveMedia = on; }
+  void EnableCoulombScattering(const bool on = true) {
     m_coulombScattering = on;
-  } 
+  }
   /// Switch simulation of delta electrons on.
   void EnableDeltaElectronTransport() { m_doDeltaTransport = true; }
   /// Switch simulation of delta electrons off.
@@ -271,9 +266,9 @@ class TrackHeed : public Track {
     m_usePacsOutput = on;
   }
   /** Specify the energy mesh to be used.
-    * \param e0,e1 lower/higher limit of the energy range [eV]
-    * \param nsteps number of intervals
-    **/
+   * \param e0,e1 lower/higher limit of the energy range [eV]
+   * \param nsteps number of intervals
+   **/
   void SetEnergyMesh(const double e0, const double e1, const int nsteps);
 
   /// Define particle mass and charge (for exotic particles).
@@ -281,6 +276,7 @@ class TrackHeed : public Track {
   void SetParticleUser(const double m, const double z);
 
   void EnableOneStepFly(const bool on) { m_oneStepFly = on; }
+
  private:
   // Prevent usage of copy constructor and assignment operator
   TrackHeed(const TrackHeed& heed);
@@ -306,7 +302,7 @@ class TrackHeed : public Track {
   size_t m_cluster = 0;
 
   // Particle properties
-  std::unique_ptr<Heed::particle_def> m_particle_def; 
+  std::unique_ptr<Heed::particle_def> m_particle_def;
   // Material properties
   std::unique_ptr<Heed::HeedMatterDef> m_matter;
   std::unique_ptr<Heed::GasDef> m_gas;
@@ -349,11 +345,11 @@ class TrackHeed : public Track {
   bool AddCluster(Heed::HeedPhoton* virtualPhoton,
                   std::vector<Cluster>& clusters);
   void AddElectrons(
-    const std::vector<Heed::HeedCondElectron>& conductionElectrons,
-    std::vector<Electron>& electrons); 
+      const std::vector<Heed::HeedCondElectron>& conductionElectrons,
+      std::vector<Electron>& electrons);
   bool IsInside(const double x, const double y, const double z);
   bool UpdateBoundingBox(bool& update);
 };
-}
+}  // namespace Garfield
 
 #endif

@@ -9,9 +9,9 @@
 #else
 
 #include <array>
+#include <bitset>
 #include <cmath>
 #include <vector>
-#include <bitset>
 
 #include "Garfield/Medium.hh"
 
@@ -37,12 +37,10 @@ class MediumGas : public Medium {
                       const std::string& gas5 = "", const double f5 = 0.,
                       const std::string& gas6 = "", const double f6 = 0.);
   /// Retrieve the gas mixture.
-  void GetComposition(std::string& gas1, double& f1, 
-                      std::string& gas2, double& f2, 
-                      std::string& gas3, double& f3,
-                      std::string& gas4, double& f4, 
-                      std::string& gas5, double& f5, 
-                      std::string& gas6, double& f6) const;
+  void GetComposition(std::string& gas1, double& f1, std::string& gas2,
+                      double& f2, std::string& gas3, double& f3,
+                      std::string& gas4, double& f4, std::string& gas5,
+                      double& f5, std::string& gas6, double& f6) const;
 
   /// Read table of gas properties (transport parameters) from file.
   bool LoadGasFile(const std::string& filename, const bool quiet = false);
@@ -51,7 +49,7 @@ class MediumGas : public Medium {
   /// Read table of gas properties from and merge with the existing dataset.
   bool MergeGasFile(const std::string& filename, const bool replaceOld);
 
-  /// Switch on simulation of Penning transfers, using pre-implemented 
+  /// Switch on simulation of Penning transfers, using pre-implemented
   /// parameterisations of the transfer probability (if available).
   virtual bool EnablePenningTransfer();
   /** Switch on simulation of Penning transfers by means of
@@ -70,10 +68,10 @@ class MediumGas : public Medium {
   /// Switch the simulation of Penning transfers off for a given component.
   virtual bool DisablePenningTransfer(std::string gasname);
 
-  /// Retrieve the Penning transfer probability and distance for a 
+  /// Retrieve the Penning transfer probability and distance for a
   /// specific component.
-  bool GetPenningTransfer(const std::string& gasname, 
-                          double& r, double& lambda);
+  bool GetPenningTransfer(const std::string& gasname, double& r,
+                          double& lambda);
 
   /// Print information about the present gas mixture and available data.
   virtual void PrintGas();
@@ -83,10 +81,10 @@ class MediumGas : public Medium {
   /// Read a table of (positive) ion mobilities vs. electric field from file.
   bool LoadIonMobility(const std::string& filename, const bool quiet = false);
   /// Read a table of negative ion mobilities vs. electric field from file.
-  bool LoadNegativeIonMobility(const std::string& filename, 
+  bool LoadNegativeIonMobility(const std::string& filename,
                                const bool quiet = false);
 
-  /// Adjust the Townsend coefficient using the excitation and ionisation 
+  /// Adjust the Townsend coefficient using the excitation and ionisation
   /// rates stored in the gas table and the Penning transfer probabilities.
   bool AdjustTownsendCoefficient();
 
@@ -95,19 +93,19 @@ class MediumGas : public Medium {
   /// Return the number of excitation levels in the table.
   size_t GetNumberOfExcitationLevels() const { return m_excLevels.size(); }
   /// Return the identifier and threshold of an ionisation level.
-  void GetIonisationLevel(const size_t level, std::string& label, 
-                          double& energy) const; 
+  void GetIonisationLevel(const size_t level, std::string& label,
+                          double& energy) const;
   /// Return the identifier and energy of an excitation level.
-  void GetExcitationLevel(const size_t level, std::string& label, 
-                          double& energy) const; 
+  void GetExcitationLevel(const size_t level, std::string& label,
+                          double& energy) const;
   /// Get an entry in the table of ionisation rates.
-  bool GetElectronIonisationRate(const size_t level,
-                                 const size_t ie, const size_t ib,
-                                 const size_t ia, double& f) const;
+  bool GetElectronIonisationRate(const size_t level, const size_t ie,
+                                 const size_t ib, const size_t ia,
+                                 double& f) const;
   /// Get an entry in the table of excitation rates.
-  bool GetElectronExcitationRate(const size_t level,
-                                 const size_t ie, const size_t ib,
-                                 const size_t ia, double& f) const;
+  bool GetElectronExcitationRate(const size_t level, const size_t ie,
+                                 const size_t ib, const size_t ia,
+                                 double& f) const;
 
   bool IsGas() const override { return true; }
 
@@ -168,10 +166,10 @@ class MediumGas : public Medium {
                                       const unsigned int i) override;
 
   /// Create and initialise GPU Transfer class
-  virtual double CreateGPUTransferObject(MediumGPU *&med_gpu) override;
+  virtual double CreateGPUTransferObject(MediumGPU*& med_gpu) override;
 
  protected:
- #endif
+#endif
 
   static constexpr unsigned int m_nMaxGases = 6;
 
@@ -230,29 +228,24 @@ class MediumGas : public Medium {
 
   bool LoadMobility(const std::string& filename, const bool quiet,
                     const bool negative);
-  bool ReadHeader(std::ifstream& gasfile, int& version,
-                  std::bitset<20>& gasok, bool& is3d, 
-                  std::vector<double>& mixture,
+  bool ReadHeader(std::ifstream& gasfile, int& version, std::bitset<20>& gasok,
+                  bool& is3d, std::vector<double>& mixture,
                   std::vector<double>& efields, std::vector<double>& bfields,
                   std::vector<double>& angles, std::vector<ExcLevel>& excLevels,
                   std::vector<IonLevel>& ionLevels);
-  void ReadFooter(std::ifstream& gasfile,
-                  std::array<unsigned int, 13>& extrapH,
+  void ReadFooter(std::ifstream& gasfile, std::array<unsigned int, 13>& extrapH,
                   std::array<unsigned int, 13>& extrapL,
-                  std::array<unsigned int, 13>& interp, 
-                  unsigned int& thrAlp, unsigned int& thrAtt, 
-                  unsigned int& thrDis, 
-                  double& ionDiffL, double& ionDiffT,
-                  double& pgas, double& tgas);
+                  std::array<unsigned int, 13>& interp, unsigned int& thrAlp,
+                  unsigned int& thrAtt, unsigned int& thrDis, double& ionDiffL,
+                  double& ionDiffT, double& pgas, double& tgas);
   void ReadRecord3D(std::ifstream& gasfile, double& ve, double& vb, double& vx,
-                    double& dl, double& dt, double& alpha, double& alpha0, 
-                    double& eta, double& mu, double& lor,
-                    double& dis, std::array<double, 6>& dif, 
-                    std::vector<double>& rexc, std::vector<double>& rion,
-                    std::bitset<20> gasok);
+                    double& dl, double& dt, double& alpha, double& alpha0,
+                    double& eta, double& mu, double& lor, double& dis,
+                    std::array<double, 6>& dif, std::vector<double>& rexc,
+                    std::vector<double>& rion, std::bitset<20> gasok);
   void ReadRecord1D(std::ifstream& gasfile, double& ve, double& vb, double& vx,
                     double& wv, double& wr, double& dl, double& dt,
-                    double& alpha, double& alpha0, double& eta, double&riontof,
+                    double& alpha, double& alpha0, double& eta, double& riontof,
                     double& ratttof, double& mu, double& lor, double& dis,
                     std::array<double, 6>& dif, std::vector<double>& rexc,
                     std::vector<double>& rion, std::bitset<20> gasok);
@@ -266,14 +259,13 @@ class MediumGas : public Medium {
                   std::vector<std::string>& gasnames,
                   std::vector<double>& percentages) const;
   void GetGasBits(std::bitset<20>& gasok) const;
- 
-  static bool GetGasInfo(const std::string& gasname, 
-                         double& a, double& z, double& w, double& f);
+
+  static bool GetGasInfo(const std::string& gasname, double& a, double& z,
+                         double& w, double& f);
   static std::string GetGasName(const int gasnumber, const int version);
   static std::string GetGasName(std::string input);
   static int GetGasNumberGasFile(const std::string& input);
   static const std::vector<std::string> GetAliases(const std::string& gas);
-
 };
 }
 

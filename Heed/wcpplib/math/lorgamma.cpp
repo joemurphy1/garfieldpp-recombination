@@ -1,6 +1,8 @@
-#include <cmath>
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/math/lorgamma.h"
+
+#include <cmath>
+
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/util/FunNameStack.h"
 
 namespace Heed {
@@ -34,4 +36,4 @@ double lorbeta(const double momentum, const double mass) {
   x = x + 1.0;
   return sqrt(1. / x);
 }
-}
+}  // namespace Heed

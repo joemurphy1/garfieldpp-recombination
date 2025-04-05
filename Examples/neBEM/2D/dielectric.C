@@ -1,29 +1,29 @@
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <cmath>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 
+#include <cmath>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+
+#include "Garfield/ComponentNeBem2d.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/MediumPlastic.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
-#include "Garfield/ComponentNeBem2d.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
-  MediumMagboltz gas("ar");;
+  MediumMagboltz gas("ar");
+  ;
 
   MediumPlastic plastic;
   plastic.SetDielectricConstant(5.);
- 
+
   ComponentNeBem2d cmp;
   cmp.SetMedium(&gas);
   cmp.SetNumberOfDivisions(10);
@@ -32,20 +32,20 @@ int main(int argc, char * argv[]) {
   // Left conducting plate.
   const double xMin = -1.5 * delta;
   const double yMin = -10 * delta;
-  const double yMax =  10 * delta;
-  cmp.AddSegment(xMin,   yMin, xMin, -delta, v);
-  cmp.AddSegment(xMin, -delta, xMin,  delta, v);
-  cmp.AddSegment(xMin,  delta, xMin,   yMax, v);
+  const double yMax = 10 * delta;
+  cmp.AddSegment(xMin, yMin, xMin, -delta, v);
+  cmp.AddSegment(xMin, -delta, xMin, delta, v);
+  cmp.AddSegment(xMin, delta, xMin, yMax, v);
 
   // Right conducting plate.
   const double xMax = 1.5 * delta;
-  cmp.AddSegment(xMax,   yMin, xMax, -delta, -v);
-  cmp.AddSegment(xMax, -delta, xMax,  delta, -v);
-  cmp.AddSegment(xMax,  delta, xMax,   yMax, -v);
+  cmp.AddSegment(xMax, yMin, xMax, -delta, -v);
+  cmp.AddSegment(xMax, -delta, xMax, delta, -v);
+  cmp.AddSegment(xMax, delta, xMax, yMax, -v);
 
   // Dielectric.
   const double xD = 0.5 * delta;
-  std::vector<double> xv = {-xD, -xD, xD, xD}; 
+  std::vector<double> xv = {-xD, -xD, xD, xD};
   std::vector<double> yv = {yMin, yMax, yMax, yMin};
   cmp.AddRegion(xv, yv, &plastic);
 
@@ -65,9 +65,9 @@ int main(int argc, char * argv[]) {
     const double epot = cmp.ElectricPotential(x, 0., 0.);
     const std::array<double, 3> efld = cmp.ElectricField(x, 0., 0.);
     const double exact = x <= -xD ? f1 : x < xD ? f2 : f1;
-    outfile << x << "  " << epot << "  " 
-            << std::setprecision(10) << efld[0] << "  " << efld[1] << "  " 
-            << std::setprecision(10) << exact << std::endl;
+    outfile << x << "  " << epot << "  " << std::setprecision(10) << efld[0]
+            << "  " << efld[1] << "  " << std::setprecision(10) << exact
+            << std::endl;
   }
   outfile.close();
 

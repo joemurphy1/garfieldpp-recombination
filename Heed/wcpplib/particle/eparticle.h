@@ -1,8 +1,8 @@
 #ifndef EPARTICLE_H
 #define EPARTICLE_H
 #include "wcpplib/geometry/mparticle.h"
-#include "wcpplib/particle/particle_def.h"
 #include "wcpplib/particle/fieldmap.h"
+#include "wcpplib/particle/particle_def.h"
 
 // 1998 - 2004, I. Smirnov.
 
@@ -31,6 +31,6 @@ class eparticle : public mparticle /*, public particle_type*/ {
   /// Pointer to field map.
   fieldmap* m_fm = nullptr;
 };
-}
+}  // namespace Heed
 
 #endif

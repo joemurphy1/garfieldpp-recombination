@@ -24,7 +24,7 @@
 // as it is needed for conversion factor : positron charge = e_SI (coulomb)
 //
 // The others physical constants are defined in the header file :
-//PhysicalConstants.h
+// PhysicalConstants.h
 //
 // Authors: M.Maire, S.Giani
 //
@@ -68,7 +68,6 @@ static constexpr double meter = 1000. * millimeter;
 static constexpr double meter2 = meter * meter;
 static constexpr double meter3 = meter * meter * meter;
 
-
 // symbols
 
 static constexpr double cm = centimeter;
@@ -94,7 +93,6 @@ static constexpr double rad = radian;
 static constexpr double nanosecond = 1.;
 static constexpr double second = 1.e+9 * nanosecond;
 
-
 // symbols
 static constexpr double ns = nanosecond;
 static constexpr double s = second;
@@ -102,9 +100,10 @@ static constexpr double s = second;
 //
 // Electric charge [Q]
 //
-static constexpr double eplus = 1.;              // positron charge
-static constexpr double e_SI = 1.60217733e-19;   // positron charge in coulomb
-static constexpr double coulomb = eplus / e_SI;  // coulomb = 6.24150 e+18 * eplus
+static constexpr double eplus = 1.;             // positron charge
+static constexpr double e_SI = 1.60217733e-19;  // positron charge in coulomb
+static constexpr double coulomb =
+    eplus / e_SI;  // coulomb = 6.24150 e+18 * eplus
 
 //
 // Energy [E]
@@ -114,7 +113,8 @@ static constexpr double electronvolt = 1.e-6 * megaelectronvolt;
 static constexpr double kiloelectronvolt = 1.e-3 * megaelectronvolt;
 static constexpr double gigaelectronvolt = 1.e+3 * megaelectronvolt;
 
-static constexpr double joule = electronvolt / e_SI;  // joule = 6.24150 e+12 * MeV
+static constexpr double joule =
+    electronvolt / e_SI;  // joule = 6.24150 e+12 * MeV
 
 // symbols
 static constexpr double MeV = megaelectronvolt;
@@ -137,21 +137,24 @@ static constexpr double mg = milligram;
 //
 // Force [E][L^-1]
 //
-static constexpr double newton = joule / meter;  // newton = 6.24150 e+9 * MeV/mm
+static constexpr double newton =
+    joule / meter;  // newton = 6.24150 e+9 * MeV/mm
 
 //
 // Pressure [E][L^-3]
 //
 #define pascal hep_pascal                      // a trick to avoid warnings
 static constexpr double pascal = newton / m2;  // pascal = 6.24150 e+3 * MeV/mm3
-static constexpr double bar = 100000 * pascal;     // bar    = 6.24150 e+8 * MeV/mm3
-static constexpr double atmosphere = 101325 * pascal;  // atm    = 6.32420 e+8 * MeV/mm3
+static constexpr double bar =
+    100000 * pascal;  // bar    = 6.24150 e+8 * MeV/mm3
+static constexpr double atmosphere =
+    101325 * pascal;  // atm    = 6.32420 e+8 * MeV/mm3
 
 //
 // Electric current [Q][T^-1]
 //
-static constexpr double ampere = coulomb / second;  // ampere = 6.24150 e+9 * eplus/ns
-
+static constexpr double ampere =
+    coulomb / second;  // ampere = 6.24150 e+9 * eplus/ns
 
 //
 // Electric potential [E][Q^-1]
@@ -165,7 +168,6 @@ static constexpr double volt = 1.e-6 * megavolt;
 //
 static constexpr double ohm =
     volt / ampere;  // ohm = 1.60217e-16*(MeV/eplus)/(eplus/ns)
-
 
 //
 // Magnetic Flux [T][E][Q^-1]
@@ -197,9 +199,8 @@ static constexpr double kelvin = 1.;
 //
 static constexpr double mole = 1.;
 
+}  // namespace CLHEP
 
-}
-
-}
+}  // namespace Heed
 
 #endif /* HEED_SYSTEM_OF_UNITS_H */

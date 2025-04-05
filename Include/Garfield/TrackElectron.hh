@@ -6,10 +6,10 @@
 
 #include "Garfield/Track.hh"
 
-namespace Garfield{
-  class Medium;
+namespace Garfield {
+class Medium;
 
-/// [WIP] Ionization calculation based on MIP program (S. Biagi). 
+/// [WIP] Ionization calculation based on MIP program (S. Biagi).
 
 class TrackElectron : public Track {
  public:
@@ -35,7 +35,6 @@ class TrackElectron : public Track {
   double GetStoppingPower() override;
 
  private:
-
   struct Parameters {
     // Dipole moment
     double m2;
@@ -64,11 +63,11 @@ class TrackElectron : public Track {
                     std::vector<double>& frac);
   static bool Update(const double density, const double beta2,
                      const std::vector<Parameters>& par,
-                     const std::vector<double>& frac, 
-                     std::vector<double>& prob, double& mfp, double& dedx);
+                     const std::vector<double>& frac, std::vector<double>& prob,
+                     double& mfp, double& dedx);
   static double Delta(const double x, const Parameters& par);
   static double Esec(const double e0, const Parameters& par);
 };
-}
+}  // namespace Garfield
 
 #endif

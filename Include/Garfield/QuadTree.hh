@@ -24,7 +24,8 @@ class QuadTree {
   void InsertMeshElement(const double bb[4], const int index);
 
   /// Get all elements linked to a block corresponding to the given point.
-  const std::vector<int>& GetElementsInBlock(const double x, const double y) const;
+  const std::vector<int>& GetElementsInBlock(const double x,
+                                             const double y) const;
 
  private:
   static std::vector<int> emptyBlock;
@@ -37,11 +38,11 @@ class QuadTree {
   double m_xmin, m_ymin, m_xmax, m_ymax;
 
   // Pointers to child quadrants.
-  QuadTree* children[4];  
+  QuadTree* children[4];
 
   // Children follow a predictable pattern to make accesses simple.
   // Here, - means less than 'origin' in that dimension, + means greater than.
-  // child:	0 1 2 3 
+  // child:	0 1 2 3
   // x:     - - + +
   // y:     - + - +
 
@@ -65,6 +66,6 @@ class QuadTree {
   // Called recursively on the child nodes.
   const QuadTree* GetBlockFromPointHelper(const double x, const double y) const;
 };
-}
+}  // namespace Garfield
 
 #endif

@@ -1,12 +1,12 @@
-#include <iostream>
-#include <fstream>
-#include <cmath>
-
+#include <TApplication.h>
 #include <TCanvas.h>
+#include <TH1D.h>
 #include <TROOT.h>
 #include <TSystem.h>
-#include <TApplication.h>
-#include <TH1D.h>
+
+#include <cmath>
+#include <fstream>
+#include <iostream>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentAnalyticField.hh"
@@ -22,8 +22,7 @@
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   // Define the medium.
@@ -36,7 +35,7 @@ int main(int argc, char * argv[]) {
   if (plotVelocity) {
     si.PlotVelocity("eh", new TCanvas("cM", "", 600, 600));
   }
- 
+
   // Sensor thickness [cm]
   constexpr double d = 100.e-4;
 
@@ -52,17 +51,17 @@ int main(int argc, char * argv[]) {
   // Depletion voltage [V]
   constexpr double vdep = -20.;
   // Make a component with linear drift field.
-  auto eLinear = [d,vbias,vdep](const double /*x*/, const double y, 
-                                const double /*z*/,
-                                double& ex, double& ey, double& ez) {
+  auto eLinear = [d, vbias, vdep](const double /*x*/, const double y,
+                                  const double /*z*/, double& ex, double& ey,
+                                  double& ez) {
     ex = ez = 0.;
-    ey = (vbias - vdep) / d + 2 * y * vdep / (d * d);  
+    ey = (vbias - vdep) / d + 2 * y * vdep / (d * d);
   };
   ComponentUser linearField;
   linearField.SetArea(-2 * d, 0., -2 * d, 2 * d, d, 2 * d);
   linearField.SetMedium(&si);
   linearField.SetElectricField(eLinear);
-  // std::string efield = "ey = " + std::to_string((vbias - vdep) / d) + 
+  // std::string efield = "ey = " + std::to_string((vbias - vdep) / d) +
   //                      " + 2 * y * " + std::to_string(vdep / (d * d));
   // linearField.SetElectricField(efield);
 
@@ -74,32 +73,32 @@ int main(int argc, char * argv[]) {
   wField.AddPlaneY(0, vbias, "back");
   wField.AddPlaneY(d, 0, "front");
   wField.AddStripOnPlaneY('z', d, -halfpitch, halfpitch, "strip");
-  wField.AddPixelOnPlaneY(d, -halfpitch, halfpitch, 
-                             -halfpitch, halfpitch, "pixel");
+  wField.AddPixelOnPlaneY(d, -halfpitch, halfpitch, -halfpitch, halfpitch,
+                          "pixel");
 
-  // Create a sensor. 
-  Sensor sensor(&linearField); 
+  // Create a sensor.
+  Sensor sensor(&linearField);
   const std::string label = "strip";
   sensor.AddElectrode(&wField, label);
 
   // Plot the drift field if requested.
   constexpr bool plotField = true;
   if (plotField) {
-    ViewField* fieldView = new ViewField(&sensor); 
+    ViewField* fieldView = new ViewField(&sensor);
     fieldView->SetArea(-0.5 * d, 0, 0.5 * d, d);
     fieldView->PlotContour("ey");
   }
   // Plot the weighting potential if requested.
   constexpr bool plotWeightingField = true;
   if (plotWeightingField) {
-    ViewField* wfieldView = new ViewField(&wField); 
+    ViewField* wfieldView = new ViewField(&wField);
     wfieldView->SetArea(-0.5 * d, 0, 0.5 * d, d);
     wfieldView->PlotContourWeightingField("strip", "v");
   }
 
   // Set the time bins.
   const unsigned int nTimeBins = 1000;
-  const double tmin =  0.;
+  const double tmin = 0.;
   const double tmax = 10.;
   const double tstep = (tmax - tmin) / nTimeBins;
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
@@ -114,11 +113,11 @@ int main(int argc, char * argv[]) {
   AvalancheMC drift(&sensor);
   // Use steps of 1 micron.
   drift.SetDistanceSteps(1.e-4);
- 
+
   // Plot the signal if requested.
   constexpr bool plotSignal = true;
   TCanvas* cSignal = nullptr;
-  if (plotSignal) { 
+  if (plotSignal) {
     cSignal = new TCanvas("cSignal", "", 600, 600);
   }
 
@@ -132,8 +131,8 @@ int main(int argc, char * argv[]) {
     driftView->SetCanvas(cDrift);
     track.EnablePlotting(driftView);
   }
-  // Flag to randomise the position of the track.  
-  constexpr bool smearx = true; 
+  // Flag to randomise the position of the track.
+  constexpr bool smearx = true;
   constexpr unsigned int nEvents = 10;
   // Flag to save the signal to a file.
   constexpr bool writeSignal = true;
@@ -141,7 +140,7 @@ int main(int argc, char * argv[]) {
     if (plotDrift) driftView->Clear();
     // Reset the signal.
     sensor.ClearSignal();
-    if (i % 10 == 0) std::cout << i << "/" << nEvents << "\n"; 
+    if (i % 10 == 0) std::cout << i << "/" << nEvents << "\n";
     // Simulate a charged-particle track.
     double xt = 0.;
     if (smearx) xt = -0.5 * pitch + RndmUniform() * pitch;
@@ -153,7 +152,7 @@ int main(int argc, char * argv[]) {
         // Simulate the electron and hole drift lines.
         if (plotDrift) {
           drift.DisablePlotting();
-          if (RndmUniform() < 0.01) drift.EnablePlotting(driftView); 
+          if (RndmUniform() < 0.01) drift.EnablePlotting(driftView);
         }
         drift.DriftElectron(electron.x, electron.y, electron.z, electron.t);
         drift.DriftHole(electron.x, electron.y, electron.z, electron.t);
@@ -187,8 +186,8 @@ int main(int argc, char * argv[]) {
     }
   }
 
-  if (plotVelocity || plotSignal || plotDrift || 
-      plotField || plotWeightingField) {
+  if (plotVelocity || plotSignal || plotDrift || plotField ||
+      plotWeightingField) {
     app.Run();
   }
 }

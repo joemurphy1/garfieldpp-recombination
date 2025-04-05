@@ -1,10 +1,10 @@
 #ifndef G_GEOMETRY_ROOT_H
 #define G_GEOMETRY_ROOT_H
 
-#include <map>
-
 #include <TGeoManager.h>
 #include <TGeoMaterial.h>
+
+#include <map>
 
 #include "Garfield/Geometry.hh"
 
@@ -55,6 +55,6 @@ class GeometryRoot : public Geometry {
   bool m_debug = false;
   void PrintGeoNotDefined(const std::string& fcn) const;
 };
-}
+}  // namespace Garfield
 
 #endif

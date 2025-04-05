@@ -18,12 +18,12 @@ double Area(const std::vector<double>& xp, const std::vector<double>& yp);
 /// Check whether a set of points builds a non-trivial polygon.
 bool NonTrivial(const std::vector<double>& xp, const std::vector<double>& yp);
 
-/// Try to eliminate "butterflies" (crossing of two adjacent segments  
+/// Try to eliminate "butterflies" (crossing of two adjacent segments
 /// of a polygon), by point exchanges.
 void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
                           std::vector<double>& zp);
-}
+}  // namespace Polygon
 
-}
+}  // namespace Garfield
 
 #endif

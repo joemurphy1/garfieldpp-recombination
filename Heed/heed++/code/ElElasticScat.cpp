@@ -1,17 +1,17 @@
+#include "heed++/code/ElElasticScat.h"
+
+#include <cmath>
 #include <fstream>
 #include <iomanip>
-#include <cmath>
-
-#include "wcpplib/stream/findmark.h"
-#include "wcpplib/math/PolLeg.h"
-#include "wcpplib/math/lorgamma.h"
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
-#include "wcpplib/random/PointsRan.h"
-#include "wcpplib/geometry/vec.h"
-#include "wcpplib/matter/AtomDef.h"  // to find atomic weights for histogramms
 
 #include "heed++/code/PhysicalConstants.h"
-#include "heed++/code/ElElasticScat.h"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include "wcpplib/geometry/vec.h"
+#include "wcpplib/math/PolLeg.h"
+#include "wcpplib/math/lorgamma.h"
+#include "wcpplib/matter/AtomDef.h"  // to find atomic weights for histogramms
+#include "wcpplib/random/PointsRan.h"
+#include "wcpplib/stream/findmark.h"
 
 // 2003, I. Smirnov
 
@@ -296,4 +296,4 @@ ElElasticScatLowSigma::ElElasticScatLowSigma(ElElasticScat* fees,
     }
   }
 }
-}
+}  // namespace Heed

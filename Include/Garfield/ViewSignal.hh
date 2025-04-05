@@ -1,8 +1,9 @@
 #ifndef G_VIEW_SIGNAL
 #define G_VIEW_SIGNAL
 
-#include<array>
 #include <Rtypes.h>
+
+#include <array>
 #include <string>
 
 #include "Garfield/ViewBase.hh"
@@ -31,25 +32,23 @@ class ViewSignal : public ViewBase {
   /** Plot the signal.
    * \param label Identifier (weighting field) of the signal to be plotted.
    * \param optTotal String containing information about the total signals
-   *                 you want to plot. The syntax is the first letter of 
-   *                 the charge carrier signal component you want to plot: 
+   *                 you want to plot. The syntax is the first letter of
+   *                 the charge carrier signal component you want to plot:
    *                 "t" for total, "e" for electron and "i" for ion/hole.
-   *                 "tei" enables all three components. 
+   *                 "tei" enables all three components.
    *                 The total signal is always plotted.
    * \param optPrompt String containing information about the
-   *                  prompt signal components you want to plot. 
+   *                  prompt signal components you want to plot.
    *                  The syntax is identical to the one described above.
    * \param optDelayed String containing information about the delayed
-   *                   signal components you want to plot. 
+   *                   signal components you want to plot.
    *                   The syntax is identical to the one described above.
    * \param same Flag to keep existing plots on the canvas or not.
    */
 
-  void PlotSignal(const std::string& label, 
-                  const std::string& optTotal = "t",
+  void PlotSignal(const std::string& label, const std::string& optTotal = "t",
                   const std::string& optPrompt = "",
-                  const std::string& optDelayed = "",
-                  const bool same = false);
+                  const std::string& optDelayed = "", const bool same = false);
 
   /// Set the x-axis limits explicitly.
   void SetRangeX(const double xmin, const double xmax);
@@ -64,7 +63,7 @@ class ViewSignal : public ViewBase {
   /// Override the default y-axis label.
   void SetLabelY(const std::string& label) { m_labelY = label; }
 
-  /// Draw a legend on the plot or not. 
+  /// Draw a legend on the plot or not.
   void EnableLegend(const bool on = true) { m_legend = on; }
 
   /// Set the (ROOT) colour with which to draw the total signal.
@@ -109,9 +108,8 @@ class ViewSignal : public ViewBase {
 
   std::array<short, 3> m_colPrompt{{kAzure + 10, kRed - 4, kMagenta + 2}};
 
-  TH1* DrawHistogram(TH1D& h, const std::string& opt, 
+  TH1* DrawHistogram(TH1D& h, const std::string& opt,
                      const std::string& ylabel);
-
 };
 }  // namespace Garfield
 #endif

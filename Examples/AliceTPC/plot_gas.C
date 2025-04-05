@@ -1,9 +1,9 @@
-#include <cstdlib>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
 #include <TStyle.h>
-#include <TApplication.h>
+
+#include <cstdlib>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/MediumMagboltz.hh"
@@ -11,10 +11,9 @@
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
- 
+
   // Setup the gas.
   MediumMagboltz gas;
   gas.LoadGasFile("Ne_90_CO2_10_N2_5_with_mg.gas");
@@ -26,9 +25,9 @@ int main(int argc, char * argv[]) {
 
   ViewMedium view(&gas);
   view.SetMagneticField(0.5);
- 
-  // Plot the velocity as function of electric field 
-  // at the first non-zero angle in the table. 
+
+  // Plot the velocity as function of electric field
+  // at the first non-zero angle in the table.
   TCanvas c1("c1", "", 800, 600);
   view.SetCanvas(&c1);
   if (!angles.empty()) view.SetAngle(angles[1]);

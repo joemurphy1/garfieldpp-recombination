@@ -3,10 +3,10 @@
 
 #include <vector>
 
-#include "wcpplib/matter/MatterDef.h"
-#include "wcpplib/matter/GasDef.h"
 #include "heed++/code/EnergyMesh.h"
 #include "heed++/code/PhotoAbsCS.h"
+#include "wcpplib/matter/GasDef.h"
+#include "wcpplib/matter/MatterDef.h"
 
 namespace Heed {
 
@@ -28,14 +28,15 @@ class HeedMatterDef {
   MatterDef* matter = nullptr;
   std::vector<const AtomPhotoAbsCS*> apacs;
   // Each element of this array corresponds to component of matter
-  double eldens_cm_3 = 0.; ///< Electron density cm**-3
-  double eldens = 0.;      ///< Electron density MeV**3
-  double xeldens = 0.;     ///< Long. electron density MeV**2/cm (for x=1 cm).
-  double wpla = 0.;        ///< Squared plasma energy;
+  double eldens_cm_3 = 0.;  ///< Electron density cm**-3
+  double eldens = 0.;       ///< Electron density MeV**3
+  double xeldens = 0.;      ///< Long. electron density MeV**2/cm (for x=1 cm).
+  double wpla = 0.;         ///< Squared plasma energy;
   double radiation_length = 0.;  ///< Radiation Length.
-  double Rutherford_const = 0.;  ///< Const for Rutherford cross section (1/cm3).
-  double W = 0.;           ///< Mean work per pair production, MeV
-  double F = 0.;           ///< Fano factor
+  double Rutherford_const =
+      0.;         ///< Const for Rutherford cross section (1/cm3).
+  double W = 0.;  ///< Mean work per pair production, MeV
+  double F = 0.;  ///< Fano factor
   EnergyMesh* energy_mesh = nullptr;
 
   // The physical definition of two previous arrays of values:
@@ -62,16 +63,16 @@ class HeedMatterDef {
   /// If fF is input as 0.0, it is assigned to be mean for gas.
   /// For matters this is the terminating error.
   HeedMatterDef(EnergyMesh* fenergy_mesh, MatterDef* amatter,
-                const std::vector<AtomPhotoAbsCS*>& faapacs,
-                double fW = 0.0, double fF = standard_factor_Fano);
+                const std::vector<AtomPhotoAbsCS*>& faapacs, double fW = 0.0,
+                double fF = standard_factor_Fano);
   // Gas consists of molecules, molecules of atoms
   // The order in which molecules appear in fampacs should correspond
   // to that of agas.
   // The order in which atoms appear in fampacs[n] should correspond to that
   // of molecules in gas.
   HeedMatterDef(EnergyMesh* fenergy_mesh, GasDef* agas,
-                std::vector<MolecPhotoAbsCS>& fampacs,
-                double fW = 0.0, double fF = standard_factor_Fano);
+                std::vector<MolecPhotoAbsCS>& fampacs, double fW = 0.0,
+                double fF = standard_factor_Fano);
   // Replace permeability (epsi1 and epsi2) by the numbers
   // calculated by another program and written to a file (only for debug)
   void replace_epsi12(const std::string& file_name);
@@ -89,6 +90,6 @@ class HeedMatterDef {
   // Initialization after assignment of matter and apacs
   void initialize();
 };
-}
+}  // namespace Heed
 
 #endif

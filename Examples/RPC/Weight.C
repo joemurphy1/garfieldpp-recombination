@@ -1,7 +1,7 @@
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TH1D.h>
 #include <TH1.h>
+#include <TH1D.h>
 #include <TROOT.h>
 #include <TSystem.h>
 
@@ -149,8 +149,8 @@ int main(int argc, char *argv[]) {
   // Stop timer.
   double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 
-  LOG("Script: "
-      << "Electrons have drifted. It took " << duration << "s to run.");
+  LOG("Script: " << "Electrons have drifted. It took " << duration
+                 << "s to run.");
 
   if (plotSignal) {
     // Plot signals

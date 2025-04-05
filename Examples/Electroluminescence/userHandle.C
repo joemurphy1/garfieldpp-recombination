@@ -1,10 +1,10 @@
-#include <iostream>
-
-#include <TCanvas.h>
-#include <TROOT.h>
 #include <TApplication.h>
-#include <TH1F.h>
+#include <TCanvas.h>
 #include <TFile.h>
+#include <TH1F.h>
+#include <TROOT.h>
+
+#include <iostream>
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentConstant.hh"
@@ -13,9 +13,8 @@
 
 TH1F* hZ = nullptr;
 
-void userHandle(double x, double y, double z, double /*t*/,
-                int type, int level, Garfield::Medium* /*m*/) {
-
+void userHandle(double x, double y, double z, double /*t*/, int type, int level,
+                Garfield::Medium* /*m*/) {
   // Skip inelastic collisions that are not excitations.
   if (type != 4) return;
 
@@ -26,8 +25,7 @@ void userHandle(double x, double y, double z, double /*t*/,
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   // Make a gas medium.
@@ -49,10 +47,10 @@ int main(int argc, char * argv[]) {
   // Microscopic tracking.
   AvalancheMicroscopic aval(&sensor);
   aval.SetUserHandleInelastic(userHandle);
-  
-  // Histogram of the z coordinates of the excitations. 
+
+  // Histogram of the z coordinates of the excitations.
   hZ = new TH1F("hZ", "", 50, 0., gap);
- 
+
   const unsigned int nEvents = 10;
   for (unsigned int i = 0; i < nEvents; ++i) {
     constexpr double e0 = 1.;

@@ -6,9 +6,8 @@
 
 #include "Garfield/Track.hh"
 
-namespace Garfield
-{
-  class Medium;
+namespace Garfield {
+class Medium;
 
 /// Interface to Degrade.
 
@@ -48,8 +47,8 @@ class TrackDegrade : public Track {
   virtual ~TrackDegrade() {}
 
   bool NewTrack(const double x0, const double y0, const double z0,
-                        const double t0, const double dx0, const double dy0,
-                        const double dz0) override;
+                const double t0, const double dx0, const double dy0,
+                const double dz0) override;
   const std::vector<Cluster>& GetClusters() const { return m_clusters; }
   double GetClusterDensity() override;
   double GetStoppingPower() override;
@@ -58,9 +57,9 @@ class TrackDegrade : public Track {
 
   /// Set the energy down to which electrons are tracked (default: 2 eV).
   void SetThresholdEnergy(const double eth);
-  /// Store excitations in the cluster or not (off by default). 
-  void StoreExcitations(const bool on = true, const double thr = 4.) { 
-    m_storeExcitations = on; 
+  /// Store excitations in the cluster or not (off by default).
+  void StoreExcitations(const bool on = true, const double thr = 4.) {
+    m_storeExcitations = on;
     m_ethrExc = std::max(thr, 1.e-3);
   }
   /// Enable or disable bremsstrahlung.
@@ -89,19 +88,19 @@ class TrackDegrade : public Track {
 
   double m_dedx = -1.;
   double m_clusterDensity = -1.;
- 
+
   std::array<double, 6> m_rPenning;
   std::array<double, 6> m_dPenning;
 
-  std::pair<std::vector<Electron>, 
-            std::vector<Excitation> > TransportDeltaElectron(
-      const double x0, const double y0, const double z0, const double t0,
-      const double e0, const double dx, const double dy, const double dz);
+  std::pair<std::vector<Electron>, std::vector<Excitation> >
+  TransportDeltaElectron(const double x0, const double y0, const double z0,
+                         const double t0, const double e0, const double dx,
+                         const double dy, const double dz);
 
   void SetupPenning(Medium* medium, std::array<double, 6>& rP,
                     std::array<double, 6>& dP);
-  bool IsInside(const double x, const double y, const double z); 
+  bool IsInside(const double x, const double y, const double z);
 };
-}
+}  // namespace Garfield
 
 #endif

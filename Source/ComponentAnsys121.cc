@@ -1,9 +1,10 @@
+#include "Garfield/ComponentAnsys121.hh"
+
 #include <math.h>
 #include <stdlib.h>
+
 #include <fstream>
 #include <iostream>
-
-#include "Garfield/ComponentAnsys121.hh"
 
 namespace Garfield {
 
@@ -15,9 +16,9 @@ ComponentAnsys121::ComponentAnsys121() : ComponentFieldMap("Ansys121") {
   m_maxBoundingBox[2] = 50;
 }
 
-bool ComponentAnsys121::Initialise(const std::string& elist, 
+bool ComponentAnsys121::Initialise(const std::string& elist,
                                    const std::string& nlist,
-                                   const std::string& mplist, 
+                                   const std::string& mplist,
                                    const std::string& prnsol,
                                    const std::string& unit) {
   Reset();
@@ -257,7 +258,7 @@ bool ComponentAnsys121::Initialise(const std::string& elist,
       std::cerr << m_className << "::Initialise:\n"
                 << "    Synchronisation lost on file " << elist << " (line "
                 << il << ").\n"
-                << "    Element: " << ielem << " (expected " 
+                << "    Element: " << ielem << " (expected "
                 << m_elements.size() << ").\n";
       ok = false;
       break;
@@ -274,7 +275,7 @@ bool ComponentAnsys121::Initialise(const std::string& elist,
     if (m_materials[imat - 1].eps < 0) {
       std::cerr << m_className << "::Initialise:\n"
                 << "    Element " << ielem << " in " << elist << "\n"
-                << "    uses material " << imat << " which does not have\n" 
+                << "    uses material " << imat << " which does not have\n"
                 << "    a positive permittivity in " << mplist << ".\n";
       ok = false;
       break;
@@ -302,7 +303,7 @@ bool ComponentAnsys121::Initialise(const std::string& elist,
     if (inode[2] == inode[3] && inode[3] == inode[6]) {
       ndegenerate++;
       degenerate = true;
-    } 
+    }
     // Store the material reference
     element.matmap = imat - 1;
     // Node references
@@ -329,7 +330,7 @@ bool ComponentAnsys121::Initialise(const std::string& elist,
     std::cerr << m_className << "::Initialise:\n"
               << "    Found no valid elements in file " << elist << ".\n";
     return false;
-  } 
+  }
 
   // Tell how many lines read
   std::cout << "    Read " << m_elements.size() << " elements from file "
@@ -345,8 +346,8 @@ bool ComponentAnsys121::Initialise(const std::string& elist,
     funit = 1.0;
   }
   if (m_debug) {
-    std::cout << m_className << "::Initialise: Unit scaling factor = "
-              << funit << ".\n";
+    std::cout << m_className << "::Initialise: Unit scaling factor = " << funit
+              << ".\n";
   }
 
   // Open the node list.
@@ -365,7 +366,7 @@ bool ComponentAnsys121::Initialise(const std::string& elist,
       il += 2;
       continue;
     }
-     // Split the line in tokens.
+    // Split the line in tokens.
     char* token = strtok(line, " ");
     // Skip blank lines and headers.
     if (!token || strcmp(token, " ") == 0 || strcmp(token, "\n") == 0 ||
@@ -415,13 +416,13 @@ bool ComponentAnsys121::Initialise(const std::string& elist,
   if (!ok) return false;
 
   // Tell how many lines read
-  std::cout << "    Read " << m_nodes.size() << " nodes from file "
-            << nlist << ".\n";
+  std::cout << "    Read " << m_nodes.size() << " nodes from file " << nlist
+            << ".\n";
   // Check number of nodes
   if ((int)m_nodes.size() != highestnode) {
     std::cerr << m_className << "::Initialise:\n"
-              << "    Number of nodes read (" << m_nodes.size() 
-              << ") on " << nlist << "\n"
+              << "    Number of nodes read (" << m_nodes.size() << ") on "
+              << nlist << "\n"
               << "    does not match element list (" << highestnode << ").\n";
     return false;
   }
@@ -465,8 +466,8 @@ bool ComponentAnsys121::LoadPotentials(const std::string& prnsol,
     // Skip blank lines and headers.
     if (!token || strcmp(token, " ") == 0 || strcmp(token, "\n") == 0 ||
         int(token[0]) == 10 || int(token[0]) == 13 ||
-        strcmp(token, "PRINT") == 0 || strcmp(token, "ANSYS") == 0 || 
-        strcmp(token, "VERSION") == 0 || strcmp(token, "NODAL") == 0 || 
+        strcmp(token, "PRINT") == 0 || strcmp(token, "ANSYS") == 0 ||
+        strcmp(token, "VERSION") == 0 || strcmp(token, "NODAL") == 0 ||
         strcmp(token, "FILE") == 0 || strcmp(token, "*****") == 0 ||
         strcmp(token, "***") == 0 || strcmp(token, "LOAD") == 0 ||
         strcmp(token, "TIME=") == 0 || strcmp(token, "MAXIMUM") == 0 ||
@@ -547,4 +548,4 @@ void ComponentAnsys121::SetRangeZ(const double zmin, const double zmax) {
   m_maxBoundingBox[2] = m_mapmax[2] = std::max(zmin, zmax);
 }
 
-}
+}  // namespace Garfield

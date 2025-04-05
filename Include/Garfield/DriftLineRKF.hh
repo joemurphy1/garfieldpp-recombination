@@ -1,19 +1,20 @@
 #ifndef G_DRIFTLINE_RKF_H
 #define G_DRIFTLINE_RKF_H
 
+#include <array>
 #include <string>
 #include <utility>
 #include <vector>
-#include <array>
 
 #include "Garfield/GarfieldConstants.hh"
 
 namespace Garfield {
 
-  class Sensor;
-  class ViewDrift;
-  class Medium;
-/// Calculation of drift lines based on macroscopic transport coefficients using Runge-Kutta-Fehlberg integration.
+class Sensor;
+class ViewDrift;
+class Medium;
+/// Calculation of drift lines based on macroscopic transport coefficients using
+/// Runge-Kutta-Fehlberg integration.
 class DriftLineRKF {
  public:
   /// Default constructor
@@ -33,10 +34,10 @@ class DriftLineRKF {
 
   /// Switch calculation of induced currents on or off (default: enabled).
   void EnableSignalCalculation(const bool on = true) { m_doSignal = on; }
-  /// Set the number of points to be used when averaging the delayed 
+  /// Set the number of points to be used when averaging the delayed
   /// signal vector over a time bin in the Sensor class.
-  /// The averaging is done with a \f$2\times navg + 1\f$ point 
-  /// Newton-Raphson integration. Default: 2. 
+  /// The averaging is done with a \f$2\times navg + 1\f$ point
+  /// Newton-Raphson integration. Default: 2.
   void SetSignalAveragingOrder(const unsigned int navg) { m_navg = navg; }
   /// Use the weighting potential (as opposed to the weighting field)
   /// for calculating the induced signal.
@@ -46,14 +47,14 @@ class DriftLineRKF {
 
   /// Set the accuracy of the Runge Kutta Fehlberg drift line integration.
   void SetIntegrationAccuracy(const double eps);
-  /// Set (explicitly) the maximum step size that is allowed. 
+  /// Set (explicitly) the maximum step size that is allowed.
   void SetMaximumStepSize(const double ms);
-  /// Try to set an upper limit to the allowable step size based 
+  /// Try to set an upper limit to the allowable step size based
   /// on the feature size of the sensor.
-  void SetMaximumStepSize(); 
+  void SetMaximumStepSize();
   /// Do not apply an upper limit to the step size that is allowed.
   void UnsetMaximumStepSize() { m_useStepSizeLimit = false; }
-  /// Request (or not) the drift line calculation to be aborted if the 
+  /// Request (or not) the drift line calculation to be aborted if the
   /// drift line makes a bend sharper than 90 degrees.
   void RejectKinks(const bool on = true) { m_rejectKinks = on; }
 
@@ -67,15 +68,15 @@ class DriftLineRKF {
   /// Enable/disable simulation electron multiplication (default: on).
   void EnableAvalanche(const bool on = true) { m_doAvalanche = on; }
   /// Enable/disable simulation of the ion tail (default: on).
-  void EnableIonTail(const bool on = true) { 
-     m_doIonTail = on; 
-     m_doIonTailAuto = false;
+  void EnableIonTail(const bool on = true) {
+    m_doIonTail = on;
+    m_doIonTailAuto = false;
   }
   /// Enable/disable simulation of the negative ion tail (default: off).
   void EnableNegativeIonTail(const bool on = true) { m_doNegativeIonTail = on; }
   /// Do not randomize the avalanche size.
   void SetGainFluctuationsFixed(const double gain = -1.);
-  /// Sample the avalanche size from a Polya distribution with 
+  /// Sample the avalanche size from a Polya distribution with
   /// shape parameter theta.
   void SetGainFluctuationsPolya(const double theta, const double mean = -1.,
                                 const bool quiet = false);
@@ -113,32 +114,35 @@ class DriftLineRKF {
   void GetDriftLinePoint(const size_t i, double& x, double& y, double& z,
                          double& t) const;
 
-  /// Compute the sigma of the arrival time distribution for the current 
+  /// Compute the sigma of the arrival time distribution for the current
   /// drift line by integrating the longitudinal diffusion coefficient.
   double GetArrivalTimeSpread(const double eps = 1.e-4) const;
   /// Compute the multiplication factor for the current drift line.
-  double GetGain(const double eps = 1.e-4) const ;
+  double GetGain(const double eps = 1.e-4) const;
   /// Compute the attachment loss factor for the current drift line.
   double GetLoss(const double eps = 1.e-4) const;
   /// Get the cumulative drift time.
-  double GetDriftTime() const { 
-    return m_t.empty() ? 0. : m_t.back() - m_t.front(); 
+  double GetDriftTime() const {
+    return m_t.empty() ? 0. : m_t.back() - m_t.front();
   }
   /// Get the cumulative path length.
   double GetPathLength() const;
 
   /// Return the number of electrons and ions in the avalanche.
-  void GetAvalancheSize(double& ne, double& ni) const { ne = m_nE; ni = m_nI; }
+  void GetAvalancheSize(double& ne, double& ni) const {
+    ne = m_nE;
+    ni = m_nI;
+  }
   /// Return the number of electrons and ions in the avalanche.
   std::pair<double, double> GetAvalancheSize() const {
     return std::make_pair(m_nE, m_nI);
   }
 
   /** Compute an electric field line.
-    * \param xi,yi,zi starting point
-    * \param xl points along the field line
-    * \param electron flag to set the direction in which to follow the field
-    */ 
+   * \param xi,yi,zi starting point
+   * \param xl points along the field line
+   * \param electron flag to set the direction in which to follow the field
+   */
   bool FieldLine(const double xi, const double yi, const double zi,
                  std::vector<std::array<float, 3> >& xl,
                  const bool electron = true) const;
@@ -197,7 +201,7 @@ class DriftLineRKF {
   bool m_doAvalanche = true;
   enum class GainFluctuations { None = 0, Polya };
   // Model to be used for randomizing the avalanche size.
-  GainFluctuations m_gainFluctuations = GainFluctuations::None; 
+  GainFluctuations m_gainFluctuations = GainFluctuations::None;
   // Polya shape parameter.
   double m_theta = 0.;
   // Mean avalanche size (only used if > 1).
@@ -216,12 +220,12 @@ class DriftLineRKF {
   bool m_debug = false;
 
   // Calculate a drift line starting at a given position.
-  bool DriftLine(const std::array<double, 3>& x0, const double t0, 
-                 const Particle particle, std::vector<double>& ts, 
+  bool DriftLine(const std::array<double, 3>& x0, const double t0,
+                 const Particle particle, std::vector<double>& ts,
                  std::vector<std::array<double, 3> >& xs, int& status) const;
-  // Calculate the number of electrons and ions at each point along a 
+  // Calculate the number of electrons and ions at each point along a
   // drift line.
-  bool Avalanche(const Particle particle, 
+  bool Avalanche(const Particle particle,
                  const std::vector<std::array<double, 3> >& xs,
                  std::vector<double>& ne, std::vector<double>& ni,
                  std::vector<double>& nn, double& scale) const;
@@ -234,30 +238,26 @@ class DriftLineRKF {
   // produced by electron attachment.
   bool AddNegativeIonTail(const std::vector<double>& te,
                           const std::vector<std::array<double, 3> >& xe,
-                          const std::vector<double>& nn, 
+                          const std::vector<double>& nn,
                           const double scale) const;
   // Compute electric and magnetic field at a given position.
-  int GetField(const std::array<double, 3>& x,
-               double& ex, double& ey, double& ez,
-               double& bx, double& by, double& bz,
+  int GetField(const std::array<double, 3>& x, double& ex, double& ey,
+               double& ez, double& bx, double& by, double& bz,
                Medium*& medium) const;
   // Calculate transport parameters for a given point and particle type.
-  std::array<double, 3> GetVelocity(const std::array<double, 3>& x, 
-                                    const Particle particle,
-                                    int& status) const;
+  std::array<double, 3> GetVelocity(const std::array<double, 3>& x,
+                                    const Particle particle, int& status) const;
   bool GetDiffusion(const std::array<double, 3>& x, const Particle particle,
                     double& dl, double& dt) const;
-  double GetVar(const std::array<double, 3>& x,
-                const Particle particle) const;
+  double GetVar(const std::array<double, 3>& x, const Particle particle) const;
   double GetAlpha(const std::array<double, 3>& x,
                   const Particle particle) const;
-  double GetEta(const std::array<double, 3>& x,
-                const Particle particle) const;
+  double GetEta(const std::array<double, 3>& x, const Particle particle) const;
 
   // Terminate a drift line at the edge of a boundary.
   bool Terminate(const std::array<double, 3>& xx0,
-                 const std::array<double, 3>& xx1,
-                 const Particle particle, std::vector<double>& ts, 
+                 const std::array<double, 3>& xx1, const Particle particle,
+                 std::vector<double>& ts,
                  std::vector<std::array<double, 3> >& xs) const;
 
   // Drift a particle to a wire
@@ -279,12 +279,12 @@ class DriftLineRKF {
                             const Particle particle, const double tol) const;
   // Integrate the Townsend coefficient over a step.
   double IntegrateAlpha(const std::array<double, 3>& xi,
-                        const std::array<double, 3>& xe, 
+                        const std::array<double, 3>& xe,
                         const Particle particle, const double tol) const;
   // Integrate the attachment coefficient over a step.
   double IntegrateEta(const std::array<double, 3>& xi,
-                      const std::array<double, 3>& xe, 
-                      const Particle particle, const double tol) const;
+                      const std::array<double, 3>& xe, const Particle particle,
+                      const double tol) const;
 
   // Calculate the signal for a given drift line.
   void ComputeSignal(const Particle particle, const double scale,
@@ -298,13 +298,12 @@ class DriftLineRKF {
                  std::vector<std::array<float, 3> >& xs) const;
 
   static double Charge(const Particle particle) {
-    if (particle == Particle::Electron || 
-        particle == Particle::NegativeIon) {
+    if (particle == Particle::Electron || particle == Particle::NegativeIon) {
       return -1.;
     }
     return 1.;
   }
 };
-}
+}  // namespace Garfield
 
 #endif

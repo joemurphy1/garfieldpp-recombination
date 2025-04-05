@@ -1,6 +1,7 @@
 #ifndef GPARTICLE_H
 #define GPARTICLE_H
 #include <atomic>
+
 #include "wcpplib/geometry/volume.h"
 
 /*
@@ -36,11 +37,11 @@ class stvpoint {
   /// 0 - inside volume, or unknown
   /// 1 - on the border of the volume
   /// 2 - on the border of an embraced volume
-  int sb = 0; 
+  int sb = 0;
   /// "Entering flag".
-  /// 1 - entering new volume, 0 otherwise. 
+  /// 1 - entering new volume, 0 otherwise.
   /// Embraced volume is also considered new.
-  int s_ent = 0;  
+  int s_ent = 0;
 
   manip_absvol* next_eid = nullptr;  // if nextpos.sb==2
   /// Range from previous point.
@@ -68,15 +69,15 @@ class stvpoint {
     tid.up_absref(&dirloc);
   }
   /** Constructor.
-    * \param pstv previous point
-    * \param ts trajectory step (in the local system)
-    * \param mrange step length (may be less than the one in ts)
-    * \param fsb position flag 
-    * \param fs_ent "entering" flag
-    * \param faeid next volume
-    **/
-  stvpoint(const stvpoint& pstv, const trajestep& ts, double mrange,
-           int fsb, int fs_ent, manip_absvol* faeid)
+   * \param pstv previous point
+   * \param ts trajectory step (in the local system)
+   * \param mrange step length (may be less than the one in ts)
+   * \param fsb position flag
+   * \param fs_ent "entering" flag
+   * \param faeid next volume
+   **/
+  stvpoint(const stvpoint& pstv, const trajestep& ts, double mrange, int fsb,
+           int fs_ent, manip_absvol* faeid)
       : pt(),
         dir(),
         ptloc(),
@@ -100,14 +101,14 @@ class stvpoint {
     tid.down_absref(&dir);
   }
   /** Constructor.
-    * \param pstv previous point
-    * \param ts trajectory step (in the local system)
-    * \param fsb position flag 
-    * \param fs_ent "entering" flag
-    * \param faeid next volume
-    **/
-  stvpoint(const stvpoint& pstv, const trajestep& ts,
-           int fsb, int fs_ent, manip_absvol* faeid)
+   * \param pstv previous point
+   * \param ts trajectory step (in the local system)
+   * \param fsb position flag
+   * \param fs_ent "entering" flag
+   * \param faeid next volume
+   **/
+  stvpoint(const stvpoint& pstv, const trajestep& ts, int fsb, int fs_ent,
+           manip_absvol* faeid)
       : pt(),
         dir(),
         ptloc(),
@@ -150,7 +151,7 @@ class gparticle {
   gparticle() = default;
   /// Constructor.
   gparticle(manip_absvol* primvol, const point& pt, const vec& vel,
-    double time);
+            double time);
   /// Destructor.
   virtual ~gparticle() {}
 
@@ -162,7 +163,7 @@ class gparticle {
       physics(secondaries);
     }
   }
-  
+
   virtual void fly(std::vector<gparticle*>& secondaries, const bool one_step) {
     mfunname("virtual void gparticle::fly()");
     int nstep = 0;
@@ -175,8 +176,7 @@ class gparticle {
   }
 
   /// Set limits/parameters for trajectory steps.
-  void set_step_limits(const double fmax_range, 
-                       const double frad_for_straight,
+  void set_step_limits(const double fmax_range, const double frad_for_straight,
                        const double fmax_straight_arange,
                        const double fmax_circ_arange) {
     m_max_range = fmax_range;
@@ -206,8 +206,8 @@ class gparticle {
   /// Derived versions can also recalculate the direction at currpos
   /// right after updating currpos = nextpos.
   /// This is especially important in the case when the motion is approximated
-  /// by straight-line steps, but there is a (magnetic) field which slightly  
-  /// deflects the trajectory. In this case, the velocity is corrected 
+  /// by straight-line steps, but there is a (magnetic) field which slightly
+  /// deflects the trajectory. In this case, the velocity is corrected
   /// at the end point of each interval, but the position is not.
   virtual void step(std::vector<gparticle*>& secondaries);
 
@@ -215,22 +215,23 @@ class gparticle {
   virtual void change_vol() { m_currpos.volume()->income(this); }
 
   /** Set curvature. Can also change the direction at the current position.
-    * \param curved 
-    *        flag whether the trajectory is curved
-    * \param frelcen
-    *        position of the centre of rotation relative to currpos.
-    * \param fmrange
-    *        step range
-    * \param prec 
-    *        tolerance for checking if the force is parallel or antiparallel to
-    *        dir. In the latter case, the range is restricted by the end point.
-    *        In calc_step_to_bord() it is set to m_max_straight_arange.
-    */
+   * \param curved
+   *        flag whether the trajectory is curved
+   * \param frelcen
+   *        position of the centre of rotation relative to currpos.
+   * \param fmrange
+   *        step range
+   * \param prec
+   *        tolerance for checking if the force is parallel or antiparallel to
+   *        dir. In the latter case, the range is restricted by the end point.
+   *        In calc_step_to_bord() it is set to m_max_straight_arange.
+   */
   virtual void curvature(bool& curved, vec& frelcen, double& fmrange,
-    double prec);
+                         double prec);
 
   /// Apply any other processes (turn the trajectory, kill the particle, ...).
-  virtual void physics_after_new_speed(std::vector<gparticle*>& /*secondaries*/) {}
+  virtual void physics_after_new_speed(
+      std::vector<gparticle*>& /*secondaries*/) {}
 
   /// Apply any other processes (turn the trajectory, kill the particle, ...).
   virtual void physics(std::vector<gparticle*>& /*secondaries*/) {}
@@ -261,12 +262,12 @@ class gparticle {
   /// Max. number of zero-steps allowed.
   static constexpr long m_max_qzero_step = 100;
   /// Number of previous steps with zero range (including this step).
-  long m_nzero_step = 0; 
+  long m_nzero_step = 0;
 
   /// Original point.
   stvpoint m_origin;
   /// Range from origin to current position.
-  double m_total_range_from_origin = 0.; 
+  double m_total_range_from_origin = 0.;
 
   /// Previous point.
   stvpoint m_prevpos;
@@ -285,6 +286,6 @@ class gparticle {
   /// Angular step limit for curved lines.
   double m_max_circ_arange = 0.2 * CLHEP::rad;
 };
-}
+}  // namespace Heed
 
 #endif

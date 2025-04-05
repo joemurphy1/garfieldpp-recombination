@@ -1,18 +1,18 @@
-#include <cmath>
-#include <iostream>
-#include <cstdio>
-#include <algorithm>
-#include <numeric>
-#include<array>
-
 #include "Garfield/ComponentNeBem2d.hh"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstdio>
+#include <iostream>
+#include <numeric>
+
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Geometry.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/Polygon.hh"
 #include "Garfield/Random.hh"
-#include "Garfield/Medium.hh"
-#include "Garfield/Geometry.hh"
-
 
 namespace {
 
@@ -93,13 +93,13 @@ bool Crossing(const double x1, const double y1, const double x2,
   a[1][1] = u1 - u2;
   const double det = a[0][0] * a[1][1] - a[1][0] * a[0][1];
   // Set tolerances.
-  const double epsx = std::max(1.e-10, 1.e-10 * std::max({fabs(x1), fabs(x2), 
-                                                          fabs(u1), fabs(u2)}));
-  const double epsy = std::max(1.e-10, 1.e-10 * std::max({fabs(y1), fabs(y2),
-                                                          fabs(v1), fabs(v2)}));
+  const double epsx = std::max(
+      1.e-10, 1.e-10 * std::max({fabs(x1), fabs(x2), fabs(u1), fabs(u2)}));
+  const double epsy = std::max(
+      1.e-10, 1.e-10 * std::max({fabs(y1), fabs(y2), fabs(v1), fabs(v2)}));
   // Check if the lines are parallel.
   if (fabs(det) < epsx * epsy) return false;
- 
+
   // Crossing, non-trivial lines: solve crossing equations.
   const double aux = a[1][1];
   a[1][1] = a[0][0] / det;
@@ -123,7 +123,6 @@ bool Intersecting(const std::vector<double>& xp1,
                   const std::vector<double>& yp1,
                   const std::vector<double>& xp2,
                   const std::vector<double>& yp2) {
-  
   const double xmin1 = *std::min_element(std::begin(xp1), std::end(xp1));
   const double ymin1 = *std::min_element(std::begin(yp1), std::end(yp1));
   const double xmax1 = *std::max_element(std::begin(xp1), std::end(xp1));
@@ -169,11 +168,8 @@ bool Intersecting(const std::vector<double>& xp1,
 }
 
 /// Determine whether polygon 1 is fully enclosed by polygon 2.
-bool Enclosed(const std::vector<double>& xp1,
-              const std::vector<double>& yp1,
-              const std::vector<double>& xp2,
-              const std::vector<double>& yp2) {
-  
+bool Enclosed(const std::vector<double>& xp1, const std::vector<double>& yp1,
+              const std::vector<double>& xp2, const std::vector<double>& yp2) {
   const double xmin1 = *std::min_element(std::begin(xp1), std::end(xp1));
   const double ymin1 = *std::min_element(std::begin(yp1), std::end(yp1));
   const double xmax1 = *std::max_element(std::begin(xp1), std::end(xp1));
@@ -191,9 +187,9 @@ bool Enclosed(const std::vector<double>& xp1,
   // Check the bounding boxes.
   if (xmax1 + epsx < xmin2 || xmax2 + epsx < xmin1) return false;
   if (ymax1 + epsy < ymin2 || ymax2 + epsy < ymin1) return false;
-  if (xmin1 + epsx < xmin2 || xmax1 > xmax2 + epsx) return false; 
-  if (ymin1 + epsy < ymin2 || ymax1 > ymax2 + epsy) return false; 
- 
+  if (xmin1 + epsx < xmin2 || xmax1 > xmax2 + epsx) return false;
+  if (ymin1 + epsy < ymin2 || ymax1 > ymax2 + epsy) return false;
+
   const unsigned int n1 = xp1.size();
   for (unsigned int i = 0; i < n1; ++i) {
     bool inside = false, edge = false;
@@ -203,7 +199,7 @@ bool Enclosed(const std::vector<double>& xp1,
   return true;
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -226,9 +222,9 @@ void ComponentNeBem2d::ElectricField(const double x, const double y,
   status = Field(x, y, z, ex, ey, ez, v, m, false);
 }
 
-int ComponentNeBem2d::Field(const double x, const double y, const double z,                            double& ex, double& ey, double& ez, double& v,
+int ComponentNeBem2d::Field(const double x, const double y, const double z,
+                            double& ex, double& ey, double& ez, double& v,
                             Medium*& m, const bool opt) {
-
   ex = ey = ez = 0.;
   // Check if the requested point is inside the z-range.
   if (m_useRangeZ && (z < m_zmin || z > m_zmax)) return -6;
@@ -258,7 +254,7 @@ int ComponentNeBem2d::Field(const double x, const double y, const double z,     
       return -11;
     }
   }
-  
+
   // See whether we are inside a wire.
   const unsigned int nWires = m_wires.size();
   for (unsigned int i = 0; i < nWires; ++i) {
@@ -351,9 +347,8 @@ bool ComponentNeBem2d::GetVoltageRange(double& vmin, double& vmax) {
   return gotValue;
 }
 
-Medium* ComponentNeBem2d::GetMedium(const double x, const double y, 
+Medium* ComponentNeBem2d::GetMedium(const double x, const double y,
                                     const double z) {
-
   if (m_geometry) return m_geometry->GetMedium(x, y, z);
   for (const auto& region : m_regions) {
     bool inside = false, edge = false;
@@ -363,20 +358,18 @@ Medium* ComponentNeBem2d::GetMedium(const double x, const double y,
   return m_medium;
 }
 
-bool ComponentNeBem2d::GetBoundingBox(
-    double& xmin, double& ymin, double& zmin,
-    double& xmax, double& ymax, double& zmax) {
-
+bool ComponentNeBem2d::GetBoundingBox(double& xmin, double& ymin, double& zmin,
+                                      double& xmax, double& ymax,
+                                      double& zmax) {
   if (m_geometry) {
     return m_geometry->GetBoundingBox(xmin, ymin, zmin, xmax, ymax, zmax);
   }
   return GetElementaryCell(xmin, ymin, zmin, xmax, ymax, zmax);
 }
 
-bool ComponentNeBem2d::GetElementaryCell(
-    double& xmin, double& ymin, double& zmin,
-    double& xmax, double& ymax, double& zmax) {
-
+bool ComponentNeBem2d::GetElementaryCell(double& xmin, double& ymin,
+                                         double& zmin, double& xmax,
+                                         double& ymax, double& zmax) {
   zmin = m_zmin;
   zmax = m_zmax;
   bool gotValue = false;
@@ -421,13 +414,14 @@ bool ComponentNeBem2d::GetElementaryCell(
       ymax = std::max(ymax, wire.y);
     }
   }
-  return gotValue; 
+  return gotValue;
 }
 
-bool ComponentNeBem2d::CrossedWire(
-    const double x0, const double y0, const double z0, 
-    const double x1, const double y1, const double z1,
-    double& xc, double& yc, double& zc, const bool centre, double& rc) {
+bool ComponentNeBem2d::CrossedWire(const double x0, const double y0,
+                                   const double z0, const double x1,
+                                   const double y1, const double z1, double& xc,
+                                   double& yc, double& zc, const bool centre,
+                                   double& rc) {
   xc = x0;
   yc = y0;
   zc = z0;
@@ -494,7 +488,6 @@ bool ComponentNeBem2d::CrossedWire(
 bool ComponentNeBem2d::InTrapRadius(const double q, const double x,
                                     const double y, const double /*z*/,
                                     double& xw, double& yw, double& rw) {
-
   for (const auto& wire : m_wires) {
     // Skip wires with the wrong charge.
     if (q * wire.q > 0.) continue;
@@ -512,14 +505,13 @@ bool ComponentNeBem2d::InTrapRadius(const double q, const double x,
 }
 
 void ComponentNeBem2d::SetRangeZ(const double zmin, const double zmax) {
-
-   if (fabs(zmax - zmin) <= 0.) {
-     std::cerr << m_className << "::SetRangeZ: Zero range is not permitted.\n";
-     return;
-   }
-   m_zmin = std::min(zmin, zmax);
-   m_zmax = std::max(zmin, zmax);
-   m_useRangeZ = true;
+  if (fabs(zmax - zmin) <= 0.) {
+    std::cerr << m_className << "::SetRangeZ: Zero range is not permitted.\n";
+    return;
+  }
+  m_zmin = std::min(zmin, zmax);
+  m_zmax = std::max(zmin, zmax);
+  m_useRangeZ = true;
 }
 
 bool ComponentNeBem2d::AddSegment(const double x0, const double y0,
@@ -542,8 +534,8 @@ bool ComponentNeBem2d::AddSegment(const double x0, const double y0,
   m_segments.push_back(std::move(segment));
 
   if (m_debug) {
-    std::cout << m_className << "::AddSegment:\n    (" 
-              << x0 << ", " << y0 << ") - (" << x1 << ", " << y1 << ")\n"
+    std::cout << m_className << "::AddSegment:\n    (" << x0 << ", " << y0
+              << ") - (" << x1 << ", " << y1 << ")\n"
               << "    Potential: " << v << " V\n";
   }
 
@@ -583,10 +575,9 @@ bool ComponentNeBem2d::AddWire(const double x, const double y, const double d,
 }
 
 bool ComponentNeBem2d::AddRegion(const std::vector<double>& xp,
-                                 const std::vector<double>& yp, 
-                                 Medium* medium, const unsigned int bctype,
-                                 const double v, const int ndiv) {
-
+                                 const std::vector<double>& yp, Medium* medium,
+                                 const unsigned int bctype, const double v,
+                                 const int ndiv) {
   if (xp.size() != yp.size()) {
     std::cerr << m_className << "::AddRegion:\n"
               << "    Mismatch between number of x- and y-coordinates.\n";
@@ -608,16 +599,16 @@ bool ComponentNeBem2d::AddRegion(const std::vector<double>& xp,
       const unsigned int i1 = i0 < np - 1 ? i0 + 1 : 0;
       for (unsigned int j = 0; j < np - 3; ++j) {
         const unsigned int j0 = i1 < np - 1 ? i1 + 1 : 0;
-        const unsigned int j1 = j0 < np - 1 ? j0 + 1 : 0; 
+        const unsigned int j1 = j0 < np - 1 ? j0 + 1 : 0;
         double xc = 0., yc = 0.;
-        if (Crossing(xp[i0], yp[i0], xp[i1], yp[i1], 
-                     xp[j0], yp[j0], xp[j1], yp[j1], xc, yc)) {
+        if (Crossing(xp[i0], yp[i0], xp[i1], yp[i1], xp[j0], yp[j0], xp[j1],
+                     yp[j1], xc, yc)) {
           std::cerr << m_className << "::AddRegion: Edges cross each other.\n";
           return false;
         }
       }
     }
-  } 
+  }
   std::vector<double> xv = xp;
   std::vector<double> yv = yp;
   const double xmin = *std::min_element(std::begin(xv), std::end(xv));
@@ -714,11 +705,9 @@ void ComponentNeBem2d::SetMaxNumberOfIterations(const unsigned int niter) {
   m_nMaxIterations = niter;
 }
 
-bool ComponentNeBem2d::GetRegion(const unsigned int i,
-                                 std::vector<double>& xv, 
-                                 std::vector<double>& yv,
-                                 Medium*& medium, unsigned int& bctype, 
-                                 double& v) {
+bool ComponentNeBem2d::GetRegion(const unsigned int i, std::vector<double>& xv,
+                                 std::vector<double>& yv, Medium*& medium,
+                                 unsigned int& bctype, double& v) {
   if (i >= m_regions.size()) return false;
   if (!m_ready) {
     if (!Initialise()) return false;
@@ -729,12 +718,11 @@ bool ComponentNeBem2d::GetRegion(const unsigned int i,
   medium = region.medium;
   bctype = region.bc.first == Voltage ? 1 : 4;
   v = region.bc.second;
-  return true; 
+  return true;
 }
 
-bool ComponentNeBem2d::GetSegment(const unsigned int i, 
-    double& x0, double& y0, double& x1, double& y1, double& v) const {
- 
+bool ComponentNeBem2d::GetSegment(const unsigned int i, double& x0, double& y0,
+                                  double& x1, double& y1, double& v) const {
   if (i >= m_segments.size()) return false;
   const auto& seg = m_segments[i];
   x0 = seg.x0[0];
@@ -745,9 +733,8 @@ bool ComponentNeBem2d::GetSegment(const unsigned int i,
   return true;
 }
 
-bool ComponentNeBem2d::GetWire(const unsigned int i,
-  double& x, double& y, double& d, double& v, double& q) const {
- 
+bool ComponentNeBem2d::GetWire(const unsigned int i, double& x, double& y,
+                               double& d, double& v, double& q) const {
   if (i >= m_wires.size()) return false;
   const auto& wire = m_wires[i];
   x = wire.x;
@@ -758,13 +745,12 @@ bool ComponentNeBem2d::GetWire(const unsigned int i,
   return true;
 }
 
-bool ComponentNeBem2d::GetElement(const unsigned int i,
-  double& x0, double& y0, double& x1, double& y1, double& q) const {
-
+bool ComponentNeBem2d::GetElement(const unsigned int i, double& x0, double& y0,
+                                  double& x1, double& y1, double& q) const {
   if (i >= m_elements.size()) return false;
   const auto& element = m_elements[i];
   ToGlobal(-element.a, 0., element.cphi, element.sphi, x0, y0);
-  ToGlobal( element.a, 0., element.cphi, element.sphi, x1, y1);
+  ToGlobal(element.a, 0., element.cphi, element.sphi, x1, y1);
   x0 += element.x;
   y0 += element.y;
   x1 += element.x;
@@ -774,11 +760,10 @@ bool ComponentNeBem2d::GetElement(const unsigned int i,
 }
 
 bool ComponentNeBem2d::Initialise() {
-
   m_ready = false;
   m_elements.clear();
 
-  double vmin = 0., vmax = 0.; 
+  double vmin = 0., vmax = 0.;
   if (!GetVoltageRange(vmin, vmax)) {
     std::cerr << m_className << "::Initialise:\n"
               << "    Could not determine the voltage range.\n";
@@ -804,8 +789,8 @@ bool ComponentNeBem2d::Initialise() {
       if (!Enclosed(region.xv, region.yv, other.xv, other.yv)) continue;
       motherRegions[i].push_back(j);
       if (m_debug) {
-        std::cout << "    Region " << i << " is enclosed by region "
-                  << j << ".\n";
+        std::cout << "    Region " << i << " is enclosed by region " << j
+                  << ".\n";
       }
     }
     region.depth = motherRegions[i].size();
@@ -822,7 +807,7 @@ bool ComponentNeBem2d::Initialise() {
         outerRegion = k;
       }
     }
-    // Add the segments bounding this region. 
+    // Add the segments bounding this region.
     const unsigned int n = region.xv.size();
     for (unsigned int j = 0; j < n; ++j) {
       const unsigned int k = j < n - 1 ? j + 1 : 0;
@@ -845,9 +830,9 @@ bool ComponentNeBem2d::Initialise() {
   for (unsigned int i = 0; i < nSegments; ++i) {
     if (done[i]) continue;
     if (m_debug) {
-      std::cout << "    Segment " << i << ". (" 
-                << segments[i].x0[0] << ", " << segments[i].x0[1] << ") - (" 
-                << segments[i].x1[0] << ", " << segments[i].x1[1] << ")\n";
+      std::cout << "    Segment " << i << ". (" << segments[i].x0[0] << ", "
+                << segments[i].x0[1] << ") - (" << segments[i].x1[0] << ", "
+                << segments[i].x1[1] << ")\n";
     }
     const double x0 = segments[i].x0[0];
     const double x1 = segments[i].x1[0];
@@ -860,12 +845,10 @@ bool ComponentNeBem2d::Initialise() {
       const double u1 = segments[j].x1[0];
       const double v0 = segments[j].x0[1];
       const double v1 = segments[j].x1[1];
-      const double epsx = std::max(1.e-10 * std::max({fabs(x0), fabs(x1), 
-                                                      fabs(u0), fabs(u1)}), 
-                                   1.e-10);
-      const double epsy = std::max(1.e-10 * std::max({fabs(y0), fabs(y1), 
-                                                      fabs(v0), fabs(v1)}), 
-                                   1.e-10);
+      const double epsx = std::max(
+          1.e-10 * std::max({fabs(x0), fabs(x1), fabs(u0), fabs(u1)}), 1.e-10);
+      const double epsy = std::max(
+          1.e-10 * std::max({fabs(y0), fabs(y1), fabs(v0), fabs(v1)}), 1.e-10);
       const double a00 = y1 - y0;
       const double a01 = v1 - v0;
       const double a10 = x0 - x1;
@@ -884,15 +867,15 @@ bool ComponentNeBem2d::Initialise() {
     newSegments.push_back(segments[i]);
     if (newSegments.size() > 1) {
       if (m_debug) {
-        std::cout << "      Determining overlaps of " << newSegments.size() 
+        std::cout << "      Determining overlaps of " << newSegments.size()
                   << " collinear segments.\n";
       }
       EliminateOverlaps(newSegments);
       if (m_debug) {
-        std::cout << "      " << newSegments.size() 
+        std::cout << "      " << newSegments.size()
                   << " segments after splitting/merging.\n";
       }
-    } 
+    }
     for (const auto& segment : newSegments) {
       double lambda = 0.;
       if (segment.bc.first == Dielectric) {
@@ -922,7 +905,7 @@ bool ComponentNeBem2d::Initialise() {
       const int ndiv = segment.ndiv <= 0 ? m_nDivisions : segment.ndiv;
       Discretise(segment, m_elements, lambda, ndiv);
     }
-  }  
+  }
   std::vector<std::vector<double> > influenceMatrix;
   std::vector<std::vector<double> > inverseMatrix;
 
@@ -1014,8 +997,8 @@ bool ComponentNeBem2d::Initialise() {
     }
   }
   // Sort the regions by depth (innermost first).
-  std::sort(m_regions.begin(), m_regions.end(),  
-            [](const Region& lhs, const Region& rhs) { 
+  std::sort(m_regions.begin(), m_regions.end(),
+            [](const Region& lhs, const Region& rhs) {
               return (lhs.depth > rhs.depth);
             });
   m_ready = true;
@@ -1023,7 +1006,6 @@ bool ComponentNeBem2d::Initialise() {
 }
 
 void ComponentNeBem2d::EliminateOverlaps(std::vector<Segment>& segments) {
-
   if (segments.empty()) return;
   const unsigned int nIn = segments.size();
   // Find the first/last point along the line.
@@ -1070,16 +1052,15 @@ void ComponentNeBem2d::EliminateOverlaps(std::vector<Segment>& segments) {
         }
       }
       if (found) continue;
-      points.push_back(std::make_pair(lambda, 
-                                      std::vector<unsigned int>({i})));
+      points.push_back(std::make_pair(lambda, std::vector<unsigned int>({i})));
     }
   }
   // Sort the points by linear coordinate.
   std::sort(std::begin(points), std::end(points));
-  
+
   std::vector<Segment> newSegments;
   const unsigned int nPoints = points.size();
-  std::array<double, 2> xl = {x0[0] + points[0].first * d[0], 
+  std::array<double, 2> xl = {x0[0] + points[0].first * d[0],
                               x0[1] + points[0].first * d[1]};
   std::vector<unsigned int> left = points[0].second;
   for (unsigned int i = 1; i < nPoints; ++i) {
@@ -1119,14 +1100,13 @@ void ComponentNeBem2d::EliminateOverlaps(std::vector<Segment>& segments) {
       }
     }
   }
-  segments.swap(newSegments); 
+  segments.swap(newSegments);
 }
 
 bool ComponentNeBem2d::Discretise(const Segment& seg,
                                   std::vector<Element>& elements,
-                                  const double lambda, 
+                                  const double lambda,
                                   const unsigned int ndiv) {
-
   if (ndiv < 1) {
     std::cerr << m_className << "::Discretise: Number of elements < 1.\n";
     return false;
@@ -1154,10 +1134,9 @@ bool ComponentNeBem2d::Discretise(const Segment& seg,
   }
   return true;
 }
- 
+
 bool ComponentNeBem2d::ComputeInfluenceMatrix(
     std::vector<std::vector<double> >& infmat) const {
-
   const unsigned int nL = m_elements.size();
   const unsigned int nE = nL + m_wires.size();
   // Loop over the target elements (F).
@@ -1168,12 +1147,12 @@ bool ComponentNeBem2d::ComputeInfluenceMatrix(
     // Collocation point.
     const double xF = iF < nL ? m_elements[iF].x : m_wires[iF - nL].x;
     const double yF = iF < nL ? m_elements[iF].y : m_wires[iF - nL].y;
-    
+
     // Loop over the source elements (S).
     for (unsigned int jS = 0; jS < nE; ++jS) {
       // Calculate the influence coefficient.
       double infCoeff = 0.;
-      if (jS < nL) { 
+      if (jS < nL) {
         // Straight line element.
         const auto& src = m_elements[jS];
         double xL = 0., yL = 0.;
@@ -1227,8 +1206,8 @@ bool ComponentNeBem2d::ComputeInfluenceMatrix(
   return true;
 }
 
-void ComponentNeBem2d::SplitElement(Element& oldElement, 
-  std::vector<Element>& elements) {
+void ComponentNeBem2d::SplitElement(Element& oldElement,
+                                    std::vector<Element>& elements) {
   oldElement.a *= 0.5;
 
   Element newElement = oldElement;
@@ -1245,7 +1224,6 @@ void ComponentNeBem2d::SplitElement(Element& oldElement,
 bool ComponentNeBem2d::InvertMatrix(
     std::vector<std::vector<double> >& influenceMatrix,
     std::vector<std::vector<double> >& inverseMatrix) const {
-
   const unsigned int nEntries = influenceMatrix.size();
 
   // Temporary arrays for LU decomposition/substitution
@@ -1348,7 +1326,6 @@ bool ComponentNeBem2d::LUDecomposition(std::vector<std::vector<double> >& mat,
 void ComponentNeBem2d::LUSubstitution(
     const std::vector<std::vector<double> >& mat, const std::vector<int>& index,
     std::vector<double>& col) const {
-
   const unsigned int n = m_elements.size() + m_wires.size();
   unsigned int ii = 0;
   // Forward substitution
@@ -1413,7 +1390,6 @@ bool ComponentNeBem2d::Solve(const std::vector<std::vector<double> >& invmat,
 
 bool ComponentNeBem2d::CheckConvergence(const double tol,
                                         std::vector<bool>& ok) {
-
   // Potential and normal component of the electric field
   // evaluated at the collocation points.
   std::vector<double> v(m_nCollocationPoints, 0.);
@@ -1472,7 +1448,7 @@ bool ComponentNeBem2d::CheckConvergence(const double tol,
         ToLocal(fx, fy, tgt.cphi, tgt.sphi, fx, fy);
         n[k] += fy * src.q;
       }
-      
+
       for (const auto& box : m_spaceCharge) {
         const double xL = xG - box.x;
         const double yL = yG - box.y;
@@ -1480,7 +1456,7 @@ bool ComponentNeBem2d::CheckConvergence(const double tol,
         double fx = 0., fy = 0.;
         BoxField(box.a, box.b, xL, yL, fx, fy);
         ToLocal(fx, fy, tgt.cphi, tgt.sphi, fx, fy);
-        n[k] += fy * box.q; 
+        n[k] += fy * box.q;
       }
     }
     const double v0 = scale * std::accumulate(v.begin(), v.end(), 0.);
@@ -1490,8 +1466,8 @@ bool ComponentNeBem2d::CheckConvergence(const double tol,
       const double dv = v0 - tgt.bc.second;
       if (fabs(dv) > tol) ok[i] = false;
       if (m_debug) {
-        std::printf(" %8u  cond.  %15.5f  %15.5f %15.5f\n", 
-                    i, v0, tgt.bc.second, dv);
+        std::printf(" %8u  cond.  %15.5f  %15.5f %15.5f\n", i, v0,
+                    tgt.bc.second, dv);
       }
     } else if (tgt.bc.first == Dielectric) {
       // Dielectric-dielectric interface
@@ -1567,8 +1543,7 @@ double ComponentNeBem2d::WirePotential(const double r0, const double x,
   return -log(r0) * r0 * InvEpsilon0;
 }
 
-void ComponentNeBem2d::LineField(const double a, 
-                                 const double x, const double y,
+void ComponentNeBem2d::LineField(const double a, const double x, const double y,
                                  double& ex, double& ey) const {
   const double amx = a - x;
   const double apx = a + x;
@@ -1589,9 +1564,8 @@ void ComponentNeBem2d::LineField(const double a,
   ey *= InvTwoPiEpsilon0;
 }
 
-void ComponentNeBem2d::WireField(const double r0, 
-                                 const double x, const double y,
-                                 double& ex, double& ey) const {
+void ComponentNeBem2d::WireField(const double r0, const double x,
+                                 const double y, double& ex, double& ey) const {
   const double r02 = r0 * r0;
   const double r2 = x * x + y * y;
   if (r2 > r02) {
@@ -1609,10 +1583,9 @@ void ComponentNeBem2d::WireField(const double r0,
   ey *= InvEpsilon0;
 }
 
-double ComponentNeBem2d::BoxPotential(const double a, const double b, 
+double ComponentNeBem2d::BoxPotential(const double a, const double b,
                                       const double x, const double y,
                                       const double v0) const {
-
   const double invc2 = 1. / (a * a + b * b);
   double v1 = 0., v2 = 0.;
   if (fabs(x) > a || fabs(y) > b) {
@@ -1621,14 +1594,15 @@ double ComponentNeBem2d::BoxPotential(const double a, const double b,
     const std::array<double, 2> dy = {y - b, y + b};
     const std::array<double, 2> dx2 = {dx[0] * dx[0], dx[1] * dx[1]};
     const std::array<double, 2> dy2 = {dy[0] * dy[0], dy[1] * dy[1]};
-    v1 = dx[0] * dy[0] * log((dx2[0] + dy2[0]) * invc2) 
-       - dx[1] * dy[0] * log((dx2[1] + dy2[0]) * invc2)
-       + dx[1] * dy[1] * log((dx2[1] + dy2[1]) * invc2) 
-       - dx[0] * dy[1] * log((dx2[0] + dy2[1]) * invc2);
+    v1 = dx[0] * dy[0] * log((dx2[0] + dy2[0]) * invc2) -
+         dx[1] * dy[0] * log((dx2[1] + dy2[0]) * invc2) +
+         dx[1] * dy[1] * log((dx2[1] + dy2[1]) * invc2) -
+         dx[0] * dy[1] * log((dx2[0] + dy2[1]) * invc2);
     std::array<double, 4> alpha = {atan2(dy[0], dx[0]), atan2(dy[0], dx[1]),
                                    atan2(dy[1], dx[1]), atan2(dy[1], dx[0])};
     if (x < 0.) {
-      for (size_t i = 0; i < 4; ++i) if (alpha[i] < 0.) alpha[i] += TwoPi;
+      for (size_t i = 0; i < 4; ++i)
+        if (alpha[i] < 0.) alpha[i] += TwoPi;
     }
     v2 = dx2[0] * (alpha[0] - alpha[3]) + dx2[1] * (alpha[2] - alpha[1]) +
          dy2[0] * (alpha[1] - alpha[0]) + dy2[1] * (alpha[3] - alpha[2]);
@@ -1640,22 +1614,21 @@ double ComponentNeBem2d::BoxPotential(const double a, const double b,
     const std::array<double, 2> dy2 = {dy[0] * dy[0], dy[1] * dy[1]};
     v1 = dx[0] * dy[0] * log((dx2[0] + dy2[0]) * invc2) +
          dy[0] * dx[1] * log((dx2[1] + dy2[0]) * invc2) +
-         dx[1] * dy[1] * log((dx2[1] + dy2[1]) * invc2) + 
+         dx[1] * dy[1] * log((dx2[1] + dy2[1]) * invc2) +
          dy[1] * dx[0] * log((dx2[0] + dy2[1]) * invc2);
     const double beta1 = atan2(dy[0], dx[0]);
     const double beta2 = atan2(dx[1], dy[0]);
     const double beta3 = atan2(dy[1], dx[1]);
-    const double beta4 = atan2(dx[0], dy[1]); 
+    const double beta4 = atan2(dx[0], dy[1]);
     v2 = dx2[0] * (beta1 - beta4) + dy2[0] * (beta2 - beta1) +
          dx2[1] * (beta3 - beta2) + dy2[1] * (beta4 - beta3);
-    v2 += HalfPi * (dx2[0] + dy2[0] + dx2[1] + dy2[1]); 
+    v2 += HalfPi * (dx2[0] + dy2[0] + dx2[1] + dy2[1]);
   }
   return -InvTwoPiEpsilon0 * 0.5 * (v1 + v2 - v0);
-}  
+}
 
-void ComponentNeBem2d::BoxField(const double a, const double b,
-                                const double x, const double y,
-                                double& ex, double& ey) const {
+void ComponentNeBem2d::BoxField(const double a, const double b, const double x,
+                                const double y, double& ex, double& ey) const {
   const std::array<double, 2> dx = {x - a, x + a};
   const std::array<double, 2> dy = {y - b, y + b};
   const std::array<double, 2> dx2 = {dx[0] * dx[0], dx[1] * dx[1]};
@@ -1670,15 +1643,16 @@ void ComponentNeBem2d::BoxField(const double a, const double b,
     std::array<double, 4> alpha = {atan2(dy[0], dx[0]), atan2(dy[0], dx[1]),
                                    atan2(dy[1], dx[1]), atan2(dy[1], dx[0])};
     if (x < 0.) {
-      for (size_t i = 0; i < 4; ++i) if (alpha[i] < 0.) alpha[i] += TwoPi;
+      for (size_t i = 0; i < 4; ++i)
+        if (alpha[i] < 0.) alpha[i] += TwoPi;
     }
     ex += dx[0] * (alpha[0] - alpha[3]) + dx[1] * (alpha[2] - alpha[1]);
     ey -= dy[0] * (alpha[0] - alpha[1]) + dy[1] * (alpha[2] - alpha[3]);
   } else {
     const double beta1 = atan2(-dy[0], -dx[0]);
-    const double beta2 = atan2( dx[1], -dy[0]);
-    const double beta3 = atan2( dy[1],  dx[1]);
-    const double beta4 = atan2(-dx[0],  dy[1]); 
+    const double beta2 = atan2(dx[1], -dy[0]);
+    const double beta3 = atan2(dy[1], dx[1]);
+    const double beta4 = atan2(-dx[0], dy[1]);
     ex += dx[0] * (HalfPi + beta1 - beta4) + dx[1] * (HalfPi + beta3 - beta2);
     ey -= dy[0] * (beta1 - beta2 - HalfPi) + dy[1] * (beta3 - beta4 - HalfPi);
   }
@@ -1700,7 +1674,7 @@ void ComponentNeBem2d::UpdatePeriodicity() {
             << "    Periodicities are not supported.\n";
 }
 
-void ComponentNeBem2d::ToLocal(const double xIn, const double yIn, 
+void ComponentNeBem2d::ToLocal(const double xIn, const double yIn,
                                const double cphi, const double sphi,
                                double& xOut, double& yOut) const {
   xOut = +cphi * xIn + sphi * yIn;
@@ -1714,4 +1688,4 @@ void ComponentNeBem2d::ToGlobal(const double xIn, const double yIn,
   yOut = sphi * xIn + cphi * yIn;
 }
 
-}
+}  // namespace Garfield

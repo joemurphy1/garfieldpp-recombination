@@ -1,4 +1,5 @@
 #include "wcpplib/geometry/gparticle.h"
+
 #include <limits>
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -39,11 +40,10 @@ void stvpoint::print(std::ostream& file, int l) const {
 }
 
 std::atomic<long> gparticle::s_counter{0L};
- 
+
 gparticle::gparticle(manip_absvol* primvol, const point& pt, const vec& vel,
-  double ftime)
-    : m_prevpos(),
-      m_nextpos() {
+                     double ftime)
+    : m_prevpos(), m_nextpos() {
   mfunname("gparticle::gparticle(...)");
   primvol->m_find_embed_vol(pt, vel, &m_origin.tid);
   m_origin.pt = pt;
@@ -90,7 +90,7 @@ void gparticle::step(std::vector<gparticle*>& secondaries) {
 }
 
 void gparticle::curvature(bool& curved, vec& frelcen, double& fmrange,
-  double /*prec*/) {
+                          double /*prec*/) {
   curved = false;
   frelcen.x = 0.;
   frelcen.y = 0.;
@@ -128,12 +128,11 @@ stvpoint gparticle::calc_step_to_bord() {
     return temp;
   }
   // Change to local system.
-  m_currpos.tid.up_absref(&relcen);  
+  m_currpos.tid.up_absref(&relcen);
   physics_mrange(mrange);
-  trajestep ts(m_max_range, m_rad_for_straight, 
-               m_max_straight_arange, m_max_circ_arange, 
-               m_currpos.ptloc, m_currpos.dirloc, curved, relcen, mrange,
-               m_currpos.tid.eid.back()->Gavol()->prec);
+  trajestep ts(m_max_range, m_rad_for_straight, m_max_straight_arange,
+               m_max_circ_arange, m_currpos.ptloc, m_currpos.dirloc, curved,
+               relcen, mrange, m_currpos.tid.eid.back()->Gavol()->prec);
   if (ts.mrange <= 0) {
     stvpoint temp(m_currpos);
     temp.s_ent = 0;
@@ -153,7 +152,6 @@ stvpoint gparticle::calc_step_to_bord() {
 }
 
 void gparticle::turn(const double ctheta, const double stheta) {
-
   vec dir = m_currpos.dir;
   basis temp(dir, "temp");
   vec vturn;
@@ -229,7 +227,7 @@ void gparticle::print(std::ostream& file, int l) const {
     Ifile << "current point:\n";
     indn.n += 2;
     m_currpos.print(file, l);
-     indn.n -= 2;
+    indn.n -= 2;
   }
   if (l - 3 >= 0) {
     Ifile << "next point:\n";
@@ -240,4 +238,4 @@ void gparticle::print(std::ostream& file, int l) const {
   indn.n -= 2;
   file.flush();
 }
-}
+}  // namespace Heed

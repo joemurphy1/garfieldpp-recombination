@@ -1,4 +1,5 @@
 #include "wcpplib/geometry/plane.h"
+
 #include "wcpplib/geometry/polyline.h"
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -19,9 +20,7 @@ namespace Heed {
 absref absref::* plane::aref[2] = {(absref absref::*)&plane::piv,
                                    (absref absref::*)&plane::dir};
 
-absref_transmit plane::get_components() {
-  return absref_transmit(2, aref);
-}
+absref_transmit plane::get_components() { return absref_transmit(2, aref); }
 
 plane::plane(const straight& sl, const point& pt) : piv(sl.Gpiv()), dir() {
   pvecerror("plane::plane( const straight& sl, const point& pt)");
@@ -39,7 +38,7 @@ plane::plane(const straight& sl1, const straight& sl2, double prec)
   if (vecerror == 0) {
     piv = pt;
     dir = unit_vec(sl1.Gdir() || sl2.Gdir());
-  } else if (vecerror == 2) { 
+  } else if (vecerror == 2) {
     // different parallel lines
     vecerror = 0;
     dir = unit_vec(sl1.Gdir() || (sl2.Gpiv() - sl1.Gpiv()));
@@ -97,7 +96,7 @@ straight plane::cross(const plane& pl) const {
   vec pldir = pl.Gdir();
   vec a = dir || pldir;  // direction of the overall straight lines
   if (a.length() == 0) {
-    if (plpiv == piv || check_par(pldir, dir, 0.0) != 0) {  
+    if (plpiv == piv || check_par(pldir, dir, 0.0) != 0) {
       // planes coincide
       vecerror = 3;
       return straight();
@@ -110,7 +109,7 @@ straight plane::cross(const plane& pl) const {
   vec c = a || dir;  // perpend. for ov. str.
   straight st(piv, c);
   point pt = pl.cross(st);  // one point on ov. str.
-  return straight(pt, a);  // overall straight
+  return straight(pt, a);   // overall straight
 }
 
 int plane::cross(const polyline& pll, point* crpt, int& qcrpt, polyline* crpll,
@@ -128,7 +127,7 @@ int plane::cross(const polyline& pll, point* crpt, int& qcrpt, polyline* crpll,
     else {
       vec v1 = cpt - pll.pt[n];
       if (v1.length() < prec) {
-        if (n == 0) { 
+        if (n == 0) {
           // otherwise it is probably included on the previous step
           crpt[qcrpt++] = cpt;
         }
@@ -162,4 +161,4 @@ std::ostream& operator<<(std::ostream& file, const plane& pl) {
   indn.n -= 2;
   return file;
 }
-}
+}  // namespace Heed

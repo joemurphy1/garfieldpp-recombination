@@ -1,3 +1,5 @@
+#include "Garfield/Numerics.hh"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -5,25 +7,22 @@
 #include <limits>
 #include <numeric>
 
-#include "Garfield/Numerics.hh"
-
 namespace {
 
-int deqnGen(const int n, std::vector<std::vector<double > >& a,
+int deqnGen(const int n, std::vector<std::vector<double> >& a,
             std::vector<double>& b) {
-
   std::vector<int> ir(n, 0);
   double det = 0.;
   int ifail = 0, jfail = 0;
-  Garfield::Numerics::CERNLIB::dfact(n, a, ir, ifail, det, jfail); 
+  Garfield::Numerics::CERNLIB::dfact(n, a, ir, ifail, det, jfail);
   if (ifail != 0) return ifail;
   Garfield::Numerics::CERNLIB::dfeqn(n, a, ir, b);
   return 0;
 }
 
 /// Epsilon algorithm.
-/// Determines the limit of a given sequence of approximations, 
-/// by means of the epsilon algorithm of P. Wynn. 
+/// Determines the limit of a given sequence of approximations,
+/// by means of the epsilon algorithm of P. Wynn.
 /// An estimate of the absolute error is also given.
 /// The condensed epsilon table is computed. Only those elements needed
 /// for the computation of the next diagonal are preserved.
@@ -36,14 +35,12 @@ int deqnGen(const int n, std::vector<std::vector<double > >& a,
 ///               result and the three previous results.
 /// \param lastRes last three results.
 /// \param nres number of calls to the function.
-void qelg(unsigned int& n, std::array<double, 52>& epstab, 
-          double& result, double& abserr, 
-          std::array<double, 3>& lastRes, unsigned int& nres) {
-
+void qelg(unsigned int& n, std::array<double, 52>& epstab, double& result,
+          double& abserr, std::array<double, 3>& lastRes, unsigned int& nres) {
   constexpr double eps = std::numeric_limits<double>::epsilon();
 
   ++nres;
-  abserr = std::numeric_limits<double>::max(); 
+  abserr = std::numeric_limits<double>::max();
   result = epstab[n - 1];
   if (n < 3) {
     abserr = std::max(abserr, 50. * eps * std::abs(result));
@@ -89,7 +86,7 @@ void qelg(unsigned int& n, std::array<double, 52>& epstab,
       n = i + i - 1;
       break;
     }
-    const double ss = 1. / delta1 + 1. / delta2 - 1./ delta3;
+    const double ss = 1. / delta1 + 1. / delta2 - 1. / delta3;
     // Test to detect irregular behaviour in the table, and
     // eventually omit a part of the table adjusting the value of n.
     if (std::abs(ss * e1) <= 1.e-4) {
@@ -113,7 +110,7 @@ void qelg(unsigned int& n, std::array<double, 52>& epstab,
   for (unsigned int i = 0; i <= nnew; ++i) {
     epstab[ib] = epstab[ib + 2];
     ib += 2;
-  } 
+  }
   if (nold != n) {
     for (unsigned int i = 0; i < n; ++i) {
       epstab[i] = epstab[nold - n + i];
@@ -121,8 +118,7 @@ void qelg(unsigned int& n, std::array<double, 52>& epstab,
   }
   if (nres >= 4) {
     // Compute error estimate.
-    abserr = std::abs(result - lastRes[2]) + 
-             std::abs(result - lastRes[1]) +
+    abserr = std::abs(result - lastRes[2]) + std::abs(result - lastRes[1]) +
              std::abs(result - lastRes[0]);
     lastRes[0] = lastRes[1];
     lastRes[1] = lastRes[2];
@@ -134,7 +130,7 @@ void qelg(unsigned int& n, std::array<double, 52>& epstab,
   abserr = std::max(abserr, 50. * eps * std::abs(result));
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -142,10 +138,9 @@ namespace Numerics {
 
 namespace QUADPACK {
 
-void qagi(std::function<double(double)> f, double bound, const int inf, 
-          const double epsabs, const double epsrel, 
-          double& result, double& abserr, unsigned int& status) {
-
+void qagi(std::function<double(double)> f, double bound, const int inf,
+          const double epsabs, const double epsrel, double& result,
+          double& abserr, unsigned int& status) {
   status = 0;
   result = 0.;
   abserr = 0.;
@@ -173,10 +168,10 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
   if ((abserr <= tol && abserr != resasc0) || abserr == 0.) return;
 
   struct Interval {
-    double a; ///< Left end point. 
-    double b; ///< Right end point.
-    double r; ///< Approximation to the integral over this interval.
-    double e; ///< Error estimate.
+    double a;  ///< Left end point.
+    double b;  ///< Right end point.
+    double r;  ///< Approximation to the integral over this interval.
+    double e;  ///< Error estimate.
   };
   std::vector<Interval> intervals(1);
   intervals[0].a = 0.;
@@ -208,9 +203,9 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
   double area = result;
   // Initialize the sum of the errors over the subintervals.
   double errSum = abserr;
-  // Length of the smallest interval considered up now, multiplied by 1.5. 
-  double small = 0.375; 
-  // Sum of the errors over the intervals larger than the smallest interval 
+  // Length of the smallest interval considered up now, multiplied by 1.5.
+  double small = 0.375;
+  // Sum of the errors over the intervals larger than the smallest interval
   // considered up to now.
   double errLarge = 0.;
   double errTest = 0.;
@@ -240,21 +235,21 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
     qk15i(f, bound, inf, a1, b1, area1, err1, resabs1, resasc1);
     double area2 = 0., err2 = 0., resabs2 = 0., resasc2 = 0.;
     qk15i(f, bound, inf, a2, b2, area2, err2, resabs2, resasc2);
-    // Improve previous approximations to integral and error 
+    // Improve previous approximations to integral and error
     // and test for accuracy.
     const double area12 = area1 + area2;
     const double err12 = err1 + err2;
     errSum += err12 - errMax;
     area += area12 - (*it).r;
     if (resasc1 != err1 && resasc2 != err2) {
-      if (std::abs((*it).r - area12) <= 1.e-5 * std::abs(area12) && 
+      if (std::abs((*it).r - area12) <= 1.e-5 * std::abs(area12) &&
           err12 >= 0.99 * errMax) {
         if (extrap) {
           ++nRoundOff[1];
         } else {
           ++nRoundOff[0];
         }
-      }   
+      }
       if (nIntervals > 10 && err12 > errMax) ++nRoundOff[2];
     }
     tol = std::max(epsabs, epsrel * std::abs(area));
@@ -280,7 +275,7 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
       interval.b = b1;
       interval.r = area1;
       interval.e = err1;
-      intervals.push_back(std::move(interval)); 
+      intervals.push_back(std::move(interval));
     } else {
       (*it).b = b1;
       (*it).r = area1;
@@ -290,13 +285,13 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
       interval.b = b2;
       interval.r = area2;
       interval.e = err2;
-      intervals.push_back(std::move(interval)); 
+      intervals.push_back(std::move(interval));
     }
-    // Sort the intervals in descending order by error estimate. 
+    // Sort the intervals in descending order by error estimate.
     std::sort(intervals.begin(), intervals.end(),
-             [](const Interval& lhs, const Interval& rhs) {
-               return (lhs.e > rhs.e);
-             });
+              [](const Interval& lhs, const Interval& rhs) {
+                return (lhs.e > rhs.e);
+              });
     // Select the subinterval to be bisected next.
     it = intervals.begin() + nrmax;
     errMax = (*it).e;
@@ -318,7 +313,7 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
       // Test whether the interval to be bisected next is the smallest one.
       if (std::abs((*it).b - (*it).a) > small) continue;
       extrap = true;
-      nrmax = 1; 
+      nrmax = 1;
     }
     // The smallest interval has the largest error.
     // Before bisecting decrease the sum of the errors over the
@@ -387,7 +382,8 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
     }
     // Test on divergence
     if (!dosum) {
-      if (!pos && std::max(std::abs(result), std::abs(area)) <= resabs0 * 0.01) {
+      if (!pos &&
+          std::max(std::abs(result), std::abs(area)) <= resabs0 * 0.01) {
         if (status > 2) --status;
         return;
       }
@@ -409,7 +405,6 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
 void qk15i(std::function<double(double)> f, double bound, const int inf,
            const double a, const double b, double& result, double& abserr,
            double& resabs, double& resasc) {
-
   // The abscissae and weights are supplied for the interval (-1, 1).
   // Because of symmetry only the positive abscissae and
   // their corresponding weights are given.
@@ -421,24 +416,16 @@ void qk15i(std::function<double(double)> f, double bound, const int inf,
                             0., 0.417959183673469387755102040816327};
   // Abscissae of the 15-point Kronrod rule.
   constexpr double xgk[8] = {
-    0.991455371120812639206854697526329, 
-    0.949107912342758524526189684047851,
-    0.864864423359769072789712788640926, 
-    0.741531185599394439863864773280788,
-    0.586087235467691130294144838258730, 
-    0.405845151377397166906606412076961,
-    0.207784955007898467600689403773245, 
-    0.};
+      0.991455371120812639206854697526329, 0.949107912342758524526189684047851,
+      0.864864423359769072789712788640926, 0.741531185599394439863864773280788,
+      0.586087235467691130294144838258730, 0.405845151377397166906606412076961,
+      0.207784955007898467600689403773245, 0.};
   // Weights of the 15-point Kronrod rule.
   constexpr double wgk[8] = {
-    0.022935322010529224963732008058970,
-    0.063092092629978553290700663189204,
-    0.104790010322250183839876322541518,
-    0.140653259715525918745189590510238,
-    0.169004726639267902826583426598550,
-    0.190350578064785409913256402421014,
-    0.204432940075298892414161999234649,
-    0.209482141084727828012999174891714};
+      0.022935322010529224963732008058970, 0.063092092629978553290700663189204,
+      0.104790010322250183839876322541518, 0.140653259715525918745189590510238,
+      0.169004726639267902826583426598550, 0.190350578064785409913256402421014,
+      0.204432940075298892414161999234649, 0.209482141084727828012999174891714};
 
   const int dinf = std::min(1, inf);
 
@@ -499,44 +486,33 @@ void qk15i(std::function<double(double)> f, double bound, const int inf,
 
 void qk15(std::function<double(double)> f, const double a, const double b,
           double& result, double& abserr, double& resabs, double& resasc) {
-
   // Gauss quadrature weights and Kronron quadrature abscissae and weights
   // as evaluated with 80 decimal digit arithmetic by L. W. Fullerton,
   // Bell labs, Nov. 1981.
 
   // Weights of the 7-point Gauss rule.
   constexpr double wg[4] = {
-    0.129484966168869693270611432679082,
-    0.279705391489276667901467771423780,
-    0.381830050505118944950369775488975,
-    0.417959183673469387755102040816327};
+      0.129484966168869693270611432679082, 0.279705391489276667901467771423780,
+      0.381830050505118944950369775488975, 0.417959183673469387755102040816327};
   // Abscissae of the 15-point Kronrod rule.
   constexpr double xgk[8] = {
-    0.991455371120812639206854697526329,
-    0.949107912342758524526189684047851,
-    0.864864423359769072789712788640926,
-    0.741531185599394439863864773280788,
-    0.586087235467691130294144838258730,
-    0.405845151377397166906606412076961,
-    0.207784955007898467600689403773245,
-    0.};
+      0.991455371120812639206854697526329, 0.949107912342758524526189684047851,
+      0.864864423359769072789712788640926, 0.741531185599394439863864773280788,
+      0.586087235467691130294144838258730, 0.405845151377397166906606412076961,
+      0.207784955007898467600689403773245, 0.};
   // Weights of the 15-point Kronrod rule.
   constexpr double wgk[8] = {
-    0.022935322010529224963732008058970,
-    0.063092092629978553290700663189204,
-    0.104790010322250183839876322541518,
-    0.140653259715525918745189590510238,
-    0.169004726639267902826583426598550,
-    0.190350578064785409913256402421014,
-    0.204432940075298892414161999234649,
-    0.209482141084727828012999174891714};
+      0.022935322010529224963732008058970, 0.063092092629978553290700663189204,
+      0.104790010322250183839876322541518, 0.140653259715525918745189590510238,
+      0.169004726639267902826583426598550, 0.190350578064785409913256402421014,
+      0.204432940075298892414161999234649, 0.209482141084727828012999174891714};
 
   // Mid point of the interval.
   const double xc = 0.5 * (a + b);
   // Half-length of the interval.
   const double h = 0.5 * (b - a);
   const double dh = std::abs(h);
-  // Compute the 15-point Kronrod approximation to the integral, 
+  // Compute the 15-point Kronrod approximation to the integral,
   // and estimate the absolute error.
   const double fc = f(xc);
   // Result of the 7-point Gauss formula.
@@ -587,13 +563,12 @@ void qk15(std::function<double(double)> f, const double a, const double b,
   }
 }
 
-}
+}  // namespace QUADPACK
 
 namespace CERNLIB {
 
 int deqn(const int n, std::vector<std::vector<double> >& a,
-         std::vector<double>& b) { 
-
+         std::vector<double>& b) {
   // REPLACES B BY THE SOLUTION X OF A*X=B, AFTER WHICH A IS UNDEFINED.
 
   if (n < 1) return 1;
@@ -607,7 +582,7 @@ int deqn(const int n, std::vector<std::vector<double> >& a,
     if (det == 0.) return -1;
     const double s = 1. / det;
     const double b1 = b[0];
-    b[0] = s * ( a[1][1] * b1 - a[0][1] * b[1]);
+    b[0] = s * (a[1][1] * b1 - a[0][1] * b[1]);
     b[1] = s * (-a[1][0] * b1 + a[0][0] * b[1]);
   } else if (n == 3) {
     // Factorize matrix A=L*U.
@@ -621,7 +596,7 @@ int deqn(const int n, std::vector<std::vector<double> >& a,
       m1 = 1;
       m2 = 0;
       m3 = 2;
-    } else if (t2 < t1 && t3 < t1) { 
+    } else if (t2 < t1 && t3 < t1) {
       // Pivot is A11
       m1 = 0;
       m2 = 1;
@@ -652,7 +627,7 @@ int deqn(const int n, std::vector<std::vector<double> >& a,
     temp = a[m3][2] - l31 * u13 - l32 * u23;
     if (temp == 0.) return deqnGen(n, a, b);
     const double l33 = 1. / temp;
- 
+
     // Solve L*Y=B and U*X=Y.
     const double y1 = l11 * b[m1];
     const double y2 = l22 * (b[m2] - l21 * y1);
@@ -786,7 +761,6 @@ void dfeqn(const int n, std::vector<std::vector<double> >& a,
 }
 
 int dinv(const int n, std::vector<std::vector<double> >& a) {
-
   if (n < 1) return 1;
   if (n > 3) {
     // Factorize matrix and invert.
@@ -843,7 +817,7 @@ int dinv(const int n, std::vector<std::vector<double> >& a) {
     const double c11 = s * a[1][1];
     a[0][1] = -s * a[0][1];
     a[1][0] = -s * a[1][0];
-    a[1][1] =  s * a[0][0];
+    a[1][1] = s * a[0][0];
     a[0][0] = c11;
   } else if (n == 1) {
     if (a[0][0] == 0.) return -1;
@@ -854,7 +828,6 @@ int dinv(const int n, std::vector<std::vector<double> >& a) {
 
 void dfinv(const int n, std::vector<std::vector<double> >& a,
            std::vector<int>& ir) {
-
   if (n <= 1) return;
   a[1][0] = -a[1][1] * a[0][0] * a[1][0];
   a[0][1] = -a[0][1];
@@ -907,9 +880,8 @@ void dfinv(const int n, std::vector<std::vector<double> >& a,
   }
 }
 
-int deqinv(const int n, std::vector<std::vector<double> >& a, 
+int deqinv(const int n, std::vector<std::vector<double> >& a,
            std::vector<double>& b) {
-
   // Test for parameter errors.
   if (n < 1) return 1;
 
@@ -1005,7 +977,8 @@ void cfact(const int n, std::vector<std::vector<std::complex<double> > >& a,
 
   for (int j = 1; j <= n; ++j) {
     int k = j;
-    double p = std::max(fabs(real(a[j - 1][j - 1])), fabs(imag(a[j - 1][j - 1])));
+    double p =
+        std::max(fabs(real(a[j - 1][j - 1])), fabs(imag(a[j - 1][j - 1])));
     if (j == n) {
       if (p <= 0.) {
         det = std::complex<double>(0., 0.);
@@ -1026,7 +999,8 @@ void cfact(const int n, std::vector<std::vector<std::complex<double> > >& a,
       continue;
     }
     for (int i = j + 1; i <= n; ++i) {
-      double q = std::max(fabs(real(a[i - 1][j - 1])), fabs(imag(a[i - 1][j - 1])));
+      double q =
+          std::max(fabs(real(a[i - 1][j - 1])), fabs(imag(a[i - 1][j - 1])));
       if (q <= p) continue;
       k = i;
       p = q;
@@ -1079,7 +1053,6 @@ void cfact(const int n, std::vector<std::vector<std::complex<double> > >& a,
 
 void cfinv(const int n, std::vector<std::vector<std::complex<double> > >& a,
            std::vector<int>& ir) {
-
   if (n <= 1) return;
   a[1][0] = -a[1][1] * a[0][0] * a[1][0];
   a[0][1] = -a[0][1];
@@ -1133,7 +1106,6 @@ void cfinv(const int n, std::vector<std::vector<std::complex<double> > >& a,
 }
 
 int cinv(const int n, std::vector<std::vector<std::complex<double> > >& a) {
-
   // Test for parameter errors.
   if (n < 1) return 1;
 
@@ -1203,7 +1175,6 @@ int cinv(const int n, std::vector<std::vector<std::complex<double> > >& a) {
 }
 
 void cfft(std::vector<std::complex<double> >& a, const int msign) {
-
   if (msign == 0) return;
   const int m = std::abs(msign);
   const int n = pow(2, m);
@@ -1250,12 +1221,10 @@ void cfft(std::vector<std::complex<double> >& a, const int msign) {
   }
 }
 
-}
+}  // namespace CERNLIB
 
-double Divdif(const std::vector<double>& ytab, 
-              const std::vector<double>& xtab,
+double Divdif(const std::vector<double>& ytab, const std::vector<double>& xtab,
               const int n, const double x, const int mm) {
-
   double t[20], d[20];
 
   // Check the arguments.
@@ -1353,9 +1322,7 @@ double Divdif(const std::vector<double>& ytab,
 }
 
 double LinearInterpolation(const std::vector<double>& ytab,
-                           const std::vector<double>& xtab,
-                           const double xx) {
-
+                           const std::vector<double>& xtab, const double xx) {
   const auto it1 = std::upper_bound(xtab.cbegin(), xtab.cend(), xx);
   if (it1 == xtab.cend()) return ytab.back();
   const auto it0 = std::prev(it1);
@@ -1672,8 +1639,8 @@ bool Boxin3(const std::vector<std::vector<std::vector<double> > >& value,
       const double x1 = xAxis[iX0 + 1];
       const double x2 = xAxis[iX0 + 2];
       const double x3 = xAxis[iX0 + 3];
-      if (x0 == x1 || x0 == x2 || x0 == x3 || 
-          x1 == x2 || x1 == x3 || x2 == x3) {
+      if (x0 == x1 || x0 == x2 || x0 == x3 || x1 == x2 || x1 == x3 ||
+          x2 == x3) {
         std::cerr << "Boxin3: One or more grid points in x coincide.\n"
                   << "    No interpolation.\n";
         return false;
@@ -1683,7 +1650,7 @@ bool Boxin3(const std::vector<std::vector<std::vector<double> > >& value,
       fX[0] = ((x - x1) * (x - x2) / ((x0 - x1) * (x0 - x2))) * (1. - xL);
       fX[1] = ((x - x0) * (x - x2) / ((x1 - x0) * (x1 - x2))) * (1. - xL) +
               ((x - x2) * (x - x3) / ((x1 - x2) * (x1 - x3))) * xL;
-      fX[2] = ((x - x0) * (x - x1) / ((x2 - x0) * (x2 - x1))) * (1. - xL) + 
+      fX[2] = ((x - x0) * (x - x1) / ((x2 - x0) * (x2 - x1))) * (1. - xL) +
               ((x - x1) * (x - x3) / ((x2 - x1) * (x2 - x3))) * xL;
       fX[3] = ((x - x1) * (x - x2) / ((x3 - x1) * (x3 - x2))) * xL;
     }
@@ -1772,8 +1739,8 @@ bool Boxin3(const std::vector<std::vector<std::vector<double> > >& value,
       const double y1 = yAxis[iY0 + 1];
       const double y2 = yAxis[iY0 + 2];
       const double y3 = yAxis[iY0 + 3];
-      if (y0 == y1 || y0 == y2 || y0 == y3 || 
-          y1 == y2 || y1 == y3 || y2 == y3) {
+      if (y0 == y1 || y0 == y2 || y0 == y3 || y1 == y2 || y1 == y3 ||
+          y2 == y3) {
         std::cerr << "Boxin3: One or more grid points in y coincide.\n"
                   << "    No interpolation.\n";
         return false;
@@ -1872,8 +1839,8 @@ bool Boxin3(const std::vector<std::vector<std::vector<double> > >& value,
       const double z1 = zAxis[iZ0 + 1];
       const double z2 = zAxis[iZ0 + 2];
       const double z3 = zAxis[iZ0 + 3];
-      if (z0 == z1 || z0 == z2 || z0 == z3 || 
-          z1 == z2 || z1 == z3 || z2 == z3) {
+      if (z0 == z1 || z0 == z2 || z0 == z3 || z1 == z2 || z1 == z3 ||
+          z2 == z3) {
         std::cerr << "Boxin3: One or more grid points in z coincide.\n"
                   << "    No interpolation.\n";
         return false;
@@ -1900,27 +1867,26 @@ bool Boxin3(const std::vector<std::vector<std::vector<double> > >& value,
 }
 
 bool LeastSquaresFit(
-    std::function<double(double, const std::vector<double>&)> f, 
+    std::function<double(double, const std::vector<double>&)> f,
     std::vector<double>& par, std::vector<double>& epar,
     const std::vector<double>& x, const std::vector<double>& y,
     const std::vector<double>& ey, const unsigned int nMaxIter,
-    const double diff, double& chi2, const double eps, 
-    const bool debug, const bool verbose) {
-
- //-----------------------------------------------------------------------
- //   LSQFIT - Subroutine fitting the parameters A in the routine F to
- //            the data points (X,Y) using a least squares method.
- //            Translated from an Algol routine written by Geert Jan van
- //            Oldenborgh and Rob Veenhof, based on Stoer + Bulirsch.
- //   VARIABLES : F( . ,A,VAL) : Subroutine to be fitted.
- //               (X,Y)        : Input data.
- //               D            : Derivative matrix.
- //               R            : Difference vector between Y and F(X,A).
- //               S            : Correction vector for A.
- //               EPSDIF       : Used for differentiating.
- //               EPS          : Numerical resolution.
- //   (Last updated on 23/ 5/11.)
- //-----------------------------------------------------------------------
+    const double diff, double& chi2, const double eps, const bool debug,
+    const bool verbose) {
+  //-----------------------------------------------------------------------
+  //   LSQFIT - Subroutine fitting the parameters A in the routine F to
+  //            the data points (X,Y) using a least squares method.
+  //            Translated from an Algol routine written by Geert Jan van
+  //            Oldenborgh and Rob Veenhof, based on Stoer + Bulirsch.
+  //   VARIABLES : F( . ,A,VAL) : Subroutine to be fitted.
+  //               (X,Y)        : Input data.
+  //               D            : Derivative matrix.
+  //               R            : Difference vector between Y and F(X,A).
+  //               S            : Correction vector for A.
+  //               EPSDIF       : Used for differentiating.
+  //               EPS          : Numerical resolution.
+  //   (Last updated on 23/ 5/11.)
+  //-----------------------------------------------------------------------
 
   const unsigned int n = par.size();
   const unsigned int m = x.size();
@@ -1986,7 +1952,7 @@ bool LeastSquaresFit(
       }
       converged = true;
       break;
-    } 
+    }
     // Calculate the derivative matrix.
     std::vector<std::vector<double> > d(n, std::vector<double>(m, 0.));
     for (unsigned int i = 0; i < n; ++i) {
@@ -2003,8 +1969,8 @@ bool LeastSquaresFit(
     std::vector<double> colsum(n, 0.);
     std::vector<int> pivot(n, 0);
     for (unsigned int i = 0; i < n; ++i) {
-      colsum[i] = std::inner_product(d[i].cbegin(), d[i].cend(), 
-                                     d[i].cbegin(), 0.);
+      colsum[i] =
+          std::inner_product(d[i].cbegin(), d[i].cend(), d[i].cbegin(), 0.);
       pivot[i] = i;
     }
     // Decomposition.
@@ -2026,7 +1992,7 @@ bool LeastSquaresFit(
         std::swap(d[k], d[jbar]);
       }
       sigma = 0.;
-      for (unsigned int i = k; i < m; ++i) sigma += d[k][i] * d[k][i]; 
+      for (unsigned int i = k; i < m; ++i) sigma += d[k][i] * d[k][i];
       if (sigma == 0. || sqrt(sigma) < 1.e-8 * std::abs(d[k][k])) {
         singular = true;
         break;
@@ -2066,8 +2032,8 @@ bool LeastSquaresFit(
       double sum = 0.;
       for (unsigned int j = i + 1; j <= n; ++j) {
         sum += d[j - 1][i - 1] * z[j - 1];
-      } 
-      z[i - 1] = (r[i - 1] - sum) / alpha[i - 1]; 
+      }
+      z[i - 1] = (r[i - 1] - sum) / alpha[i - 1];
     }
     // Correction vector.
     std::vector<double> s(n, 0.);
@@ -2109,13 +2075,12 @@ bool LeastSquaresFit(
     }
     // Print some debugging output.
     if (debug) {
-      std::cout << "  Values of the fit parameters after iteration " 
-                << iter << "\n    Parameter            Value\n";
+      std::cout << "  Values of the fit parameters after iteration " << iter
+                << "\n    Parameter            Value\n";
       for (unsigned int i = 0; i < n; ++i) {
         std::printf("    %9u  %15.8e\n", i, par[i]);
       }
-      std::printf("  for which chi2 = %15.8e and diff = %15.8e\n", 
-                  chi2, diffc);
+      std::printf("  for which chi2 = %15.8e and diff = %15.8e\n", chi2, diffc);
     } else if (verbose) {
       std::printf("  Step %3u: largest deviation = %15.8e, chi2 = %15.8e\n",
                   iter, diffc, chi2);
@@ -2141,8 +2106,8 @@ bool LeastSquaresFit(
   std::vector<std::vector<double> > cov(n, std::vector<double>(n, 0.));
   for (unsigned int i = 0; i < n; ++i) {
     for (unsigned int j = 0; j < n; ++j) {
-      cov[i][j] = std::inner_product(d[i].cbegin(), d[i].cend(), 
-                                     d[j].cbegin(), 0.);
+      cov[i][j] =
+          std::inner_product(d[i].cbegin(), d[i].cend(), d[j].cbegin(), 0.);
     }
   }
   // Compute the scaling factor for the errors.
@@ -2173,8 +2138,8 @@ bool LeastSquaresFit(
     for (unsigned int i = 0; i < n; ++i) {
       std::printf("    %9u  %15.8e  %15.8e\n", i, par[i], epar[i]);
     }
-    std::cout << "  The errors have been scaled by a factor of "
-              << sqrt(scale) << ".\n";
+    std::cout << "  The errors have been scaled by a factor of " << sqrt(scale)
+              << ".\n";
     std::cout << "  Covariance matrix:\n";
     for (unsigned int i = 0; i < n; ++i) {
       for (unsigned int j = 0; j < n; ++j) {
@@ -2198,5 +2163,5 @@ bool LeastSquaresFit(
   return converged;
 }
 
-}
-}
+}  // namespace Numerics
+}  // namespace Garfield

@@ -1,23 +1,25 @@
+#include "heed++/code/HeedMatterDef.h"
+
 #include <fstream>
 #include <iomanip>
+
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/math/tline.h"
-#include "heed++/code/HeedMatterDef.h"
 
 // 2003, I. Smirnov
 
 namespace Heed {
 
-using CLHEP::pi;
-using CLHEP::mole;
-using CLHEP::gram;
+using CLHEP::Avogadro;
 using CLHEP::cm3;
 using CLHEP::electron_mass_c2;
 using CLHEP::fine_structure_const;
-using CLHEP::Avogadro;
+using CLHEP::gram;
+using CLHEP::mole;
+using CLHEP::pi;
 
 HeedMatterDef::HeedMatterDef(EnergyMesh* fenergy_mesh, MatterDef* amatter,
-                             const std::vector<AtomPhotoAbsCS*>& faapacs, 
+                             const std::vector<AtomPhotoAbsCS*>& faapacs,
                              double fW, double fF)
     : matter(amatter), W(fW), F(fF), energy_mesh(fenergy_mesh) {
   mfunname("HeedMatterDef::HeedMatterDef(...)");
@@ -52,8 +54,8 @@ HeedMatterDef::HeedMatterDef(EnergyMesh* fenergy_mesh, MatterDef* amatter,
 }
 
 HeedMatterDef::HeedMatterDef(EnergyMesh* fenergy_mesh, GasDef* agas,
-                             std::vector<MolecPhotoAbsCS>& fampacs, 
-                             double fW, double fF)
+                             std::vector<MolecPhotoAbsCS>& fampacs, double fW,
+                             double fF)
     : matter(agas), W(fW), F(fF), energy_mesh(fenergy_mesh) {
   mfunname("HeedMatterDef::HeedMatterDef(...)");
   check_econd11(agas, == nullptr, mcerr);
@@ -169,16 +171,18 @@ void HeedMatterDef::initialize() {
     for (int na = 0; na < qat; ++na) {
       const double ta = apacs[na]->get_integral_ACS(e1, e2);
       sa += matter->weight_quan(na) * ta / (e2 - e1);
-      check_econd11a(ta, < 0, "ACS: ne=" << ne << " e1=" << e1 << " e2=" << e2
-                                         << " na=" << na << '\n',
+      check_econd11a(ta, < 0,
+                     "ACS: ne=" << ne << " e1=" << e1 << " e2=" << e2
+                                << " na=" << na << '\n',
                      mcerr);
       const double ti =
           s_use_mixture_thresholds == 1
               ? apacs[na]->get_integral_TICS(e1, e2, min_ioniz_pot)
               : apacs[na]->get_integral_ICS(e1, e2);
       si += matter->weight_quan(na) * ti / (e2 - e1);
-      check_econd11a(ti, < 0, "ICS: ne=" << ne << " e1=" << e1 << " e2=" << e2
-                                         << " na=" << na << '\n',
+      check_econd11a(ti, < 0,
+                     "ICS: ne=" << ne << " e1=" << e1 << " e2=" << e2
+                                << " na=" << na << '\n',
                      mcerr);
     }
     ACS[ne] = sa;
@@ -263,8 +267,9 @@ void HeedMatterDef::replace_epsi12(const std::string& file_name) {
   double emax = ener[qe - 1] + 0.5 * (ener[qe - 1] - ener[qe - 2]);
 
   qe = energy_mesh->get_q();
-  const auto interpolate = t_value_straight_point_ar<double, std::vector<double>,
-                                   PointCoorMesh<double, std::vector<double> > >;
+  const auto interpolate =
+      t_value_straight_point_ar<double, std::vector<double>,
+                                PointCoorMesh<double, std::vector<double> > >;
   for (long ne = 0; ne < qe; ++ne) {
     double ec = energy_mesh->get_ec(ne);
     // pcmd: dimension q; eps1, eps2: dimension q - 1.
@@ -319,4 +324,4 @@ void HeedMatterDef::print(std::ostream& file, int l) const {
   }
   indn.n -= 2;
 }
-}
+}  // namespace Heed

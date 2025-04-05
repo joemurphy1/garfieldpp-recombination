@@ -1,16 +1,15 @@
+#include "neBEMInterface.h"
+
 #include <stdio.h>
 
-#include "neBEMInterface.h"
+#include "Garfield/ComponentNeBem3d.hh"
 #include "NR.h"
 #include "neBEM.h"
-
-#include "Garfield/ComponentNeBem3d.hh"
 
 namespace neBEM {
 
 /// Assign default values to some of the important global variables.
 int neBEMSetDefaults(void) {
-
   neBEMState = 0;
 
   NbVolumes = 2;
@@ -54,10 +53,10 @@ int neBEMSetDefaults(void) {
   OptElementFiles = 1;
 
   // Same directory can be used over and over again - BEWARE!
-  OptReuseDir = 1;  
+  OptReuseDir = 1;
 
   // Matrix inversion procedure => 0: LU, 1: SVD, 2:GSL
-  OptInvMatProc = 0;  
+  OptInvMatProc = 0;
 
   OptValidateSolution = 0;
   OptForceValidation = 0;
@@ -182,7 +181,7 @@ int ReadInitFile(char filename[]) {
 }
 
 /// Do-nothing function (no file inputs).
-int neBEMGetInputsFromFiles(void) { return 0; } 
+int neBEMGetInputsFromFiles(void) { return 0; }
 
 /// Return the number of primitives.
 int neBEMGetNbPrimitives() {
@@ -194,7 +193,6 @@ int neBEMGetNbPrimitives() {
 int neBEMGetPrimitive(int prim, int* nvertex, double xvert[], double yvert[],
                       double zvert[], double* xnorm, double* ynorm,
                       double* znorm, int* volref1, int* volref2) {
-
   if (!Garfield::gComponentNeBem3d) return -1;
   if (prim < 1) return -1;
   double a = 0., b = 0., c = 0.;
@@ -202,8 +200,8 @@ int neBEMGetPrimitive(int prim, int* nvertex, double xvert[], double yvert[],
   std::vector<double> yv;
   std::vector<double> zv;
   int vol1 = 0, vol2 = 0;
-  if (!Garfield::gComponentNeBem3d->GetPrimitive(prim - 1, a, b, c, 
-                                                 xv, yv, zv, vol1, vol2)) {
+  if (!Garfield::gComponentNeBem3d->GetPrimitive(prim - 1, a, b, c, xv, yv, zv,
+                                                 vol1, vol2)) {
     return -1;
   }
   const size_t nv = xv.size();
@@ -240,11 +238,11 @@ int neBEMGetPeriodicities(int /*prim*/, int* ix, int* jx, double* sx, int* iy,
   Garfield::gComponentNeBem3d->IsPeriodic(perx, pery, perz);
   if (perx) *ix = 1;
   if (pery) *iy = 1;
-  if (perz) *iz = 1; 
+  if (perz) *iz = 1;
   Garfield::gComponentNeBem3d->IsMirrorPeriodic(perx, pery, perz);
   if (perx) *ix = 2;
   if (pery) *iy = 2;
-  if (perz) *iz = 2; 
+  if (perz) *iz = 2;
   *sx = 0.;
   *sy = 0.;
   *sz = 0.;
@@ -276,7 +274,6 @@ int neBEMGetPeriodicities(int /*prim*/, int* ix, int* jx, double* sx, int* iy,
 /// sx: x distance of the mirror from origin
 int neBEMGetMirror(int /*prim*/, int* ix, int* jx, double* sx, int* iy, int* jy,
                    double* sy, int* iz, int* jz, double* sz) {
-
   if (!Garfield::gComponentNeBem3d) return -1;
   *jx = *jy = *jz = 0;
   bool perx = false, pery = false, perz = false;
@@ -291,7 +288,7 @@ int neBEMGetMirror(int /*prim*/, int* ix, int* jx, double* sx, int* iy, int* jy,
     *iz = 2;
   }
   // Mirror assumed to be passing through the origin.
-  *sx = *sy = *sz = 0.;  
+  *sx = *sy = *sz = 0.;
   return 0;
 }
 
@@ -371,13 +368,12 @@ int neBEMGetBoundingPlanes(int* ixmin, double* cxmin, double* vxmin, int* ixmax,
 }
 
 /// Return information about a volume.
-int neBEMVolumeDescription(int vol, int* shape, int* material,
-                           double* epsilon, double* potential, double* charge,
+int neBEMVolumeDescription(int vol, int* shape, int* material, double* epsilon,
+                           double* potential, double* charge,
                            int* boundarytype) {
-  
   if (!Garfield::gComponentNeBem3d) return -1;
-  if (!Garfield::gComponentNeBem3d->GetVolume(vol, *shape, *material, 
-                                              *epsilon, *potential, *charge,
+  if (!Garfield::gComponentNeBem3d->GetVolume(vol, *shape, *material, *epsilon,
+                                              *potential, *charge,
                                               *boundarytype)) {
     return 0;
   }
@@ -386,15 +382,12 @@ int neBEMVolumeDescription(int vol, int* shape, int* material,
 
 /// Return the volume in which a point is located.
 int neBEMVolumePoint(double x, double y, double z) {
-  
   if (!Garfield::gComponentNeBem3d) return -1;
   return Garfield::gComponentNeBem3d->GetVolume(100. * x, 100. * y, 100. * z);
 }
 
 /// Return the primitives for a volume.
 /// TODO! Do we need this?
-void neBEMVolumePrimitives(int /*vol*/, int* /*nprim*/, int /*primlist*/[]) {
+void neBEMVolumePrimitives(int /*vol*/, int* /*nprim*/, int /*primlist*/[]) {}
 
-}
-
-}
+}  // namespace neBEM

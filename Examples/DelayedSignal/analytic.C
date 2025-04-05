@@ -1,7 +1,7 @@
-#include <TCanvas.h>
-#include <TROOT.h>
 #include <TApplication.h>
+#include <TCanvas.h>
 #include <TH1F.h>
+#include <TROOT.h>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentUser.hh"
@@ -12,8 +12,7 @@
 
 using namespace Garfield;
 
-int main(int argc, char *argv[]) {
-
+int main(int argc, char* argv[]) {
   plottingEngine.SetDefaultStyle();
   TApplication app("app", &argc, argv);
 
@@ -50,7 +49,8 @@ int main(int argc, char *argv[]) {
     ey = y < d0 ? 2 * (v / d0) * (1. - y / d0) : 0.;
   };
   // cmp.SetElectricField(efield);
-  cmp.SetElectricField("ey = y < 200.e-4 ? 2 * (-25.2 / 200.e-4) * (1. - y / 200.e-4) : 0.;");
+  cmp.SetElectricField(
+      "ey = y < 200.e-4 ? 2 * (-25.2 / 200.e-4) * (1. - y / 200.e-4) : 0.;");
 
   auto wfield = [](const double /*x*/, const double y, const double /*z*/,
                    double& wx, double& wy, double& wz) {
@@ -73,14 +73,20 @@ int main(int argc, char *argv[]) {
     wy *= exp(-t / tau) / tau;
   };
   // cmp.SetDelayedWeightingField(dwfield, "front");
-  cmp.SetDelayedWeightingField("double d = 300.e-4; double d0 = 200.e-4; double tau = 7.9; wy = y < d0 ? ((d - d0) / (d * d0)) : (-1. / d); wy *= exp(-t / tau) / tau", "front");
+  cmp.SetDelayedWeightingField(
+      "double d = 300.e-4; double d0 = 200.e-4; double tau = 7.9; wy = y < d0 "
+      "? ((d - d0) / (d * d0)) : (-1. / d); wy *= exp(-t / tau) / tau",
+      "front");
 
   auto dwpot = [](const double /*x*/, const double y, const double /*z*/,
                   const double t) {
     return y * ((d - d0) / (d * d0)) * (exp(-t / tau) - 1.);
   };
   // cmp.SetDelayedWeightingPotential(dwpot, "front");
-  cmp.SetDelayedWeightingPotential("double d = 300.e-4; double d0 = 200.e-4; double tau = 7.9; return y * ((d - d0) / (d * d0)) * (exp(-t / tau) - 1.);", "front");
+  cmp.SetDelayedWeightingPotential(
+      "double d = 300.e-4; double d0 = 200.e-4; double tau = 7.9; return y * "
+      "((d - d0) / (d * d0)) * (exp(-t / tau) - 1.);",
+      "front");
   cmp.SetDelayedSignalTimes(times);
 
   Sensor sensor(&cmp);
@@ -102,5 +108,4 @@ int main(int argc, char *argv[]) {
   ViewSignal signalView(&sensor);
   signalView.PlotSignal("front", "t", "t", "t");
   app.Run(true);
-
 }

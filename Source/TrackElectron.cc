@@ -1,18 +1,18 @@
+#include "Garfield/TrackElectron.hh"
+
 #include <cmath>
 #include <iostream>
 #include <numeric>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/TrackElectron.hh"
-#include "Garfield/Medium.hh"
 
 namespace Garfield {
 
 TrackElectron::TrackElectron() : Track("Electron") {
-
   // Setup the particle properties.
   m_q = -1;
   m_spin = 1;
@@ -97,8 +97,7 @@ bool TrackElectron::NewTrack(const double x0, const double y0, const double z0,
     t += step * dt;
 
     medium = m_sensor->GetMedium(x, y, z);
-    if (!medium || !medium->IsIonisable() ||
-        medium->GetName() != mediumName ||
+    if (!medium || !medium->IsIonisable() || medium->GetName() != mediumName ||
         medium->GetNumberDensity() != density) {
       break;
     }
@@ -124,13 +123,10 @@ double TrackElectron::GetClusterDensity() {
   return m_mfp > 0. ? 1. / m_mfp : 0.;
 }
 
-double TrackElectron::GetStoppingPower() {
-  return m_dedx;
-}
+double TrackElectron::GetStoppingPower() { return m_dedx; }
 
 bool TrackElectron::Setup(Medium* gas, std::vector<Parameters>& par,
                           std::vector<double>& frac) {
-
   if (!gas) {
     std::cerr << "TrackElectron::Setup: Medium is not defined.\n";
     return false;
@@ -260,8 +256,8 @@ bool TrackElectron::Setup(Medium* gas, std::vector<Parameters>& par,
       par[i].ethr = 15.581;
       par[i].wSplit = 13.8;
     } else {
-      std::cerr << "TrackElectron::Setup: Parameters for "
-                << gasname << " are not implemented.\n";
+      std::cerr << "TrackElectron::Setup: Parameters for " << gasname
+                << " are not implemented.\n";
       return false;
     }
   }
@@ -269,11 +265,10 @@ bool TrackElectron::Setup(Medium* gas, std::vector<Parameters>& par,
 }
 
 bool TrackElectron::Update(const double density, const double beta2,
-                           const std::vector<Parameters>& par, 
+                           const std::vector<Parameters>& par,
                            const std::vector<double>& frac,
-                           std::vector<double>& prob, 
-                           double& mfp, double& dedx) {
-
+                           std::vector<double>& prob, double& mfp,
+                           double& dedx) {
   if (beta2 <= 0.) return false;
   const double lnBg2 = log(beta2 / (1. - beta2));
   // Primary energy
@@ -314,7 +309,6 @@ bool TrackElectron::Update(const double density, const double beta2,
 }
 
 double TrackElectron::Delta(const double x, const Parameters& par) {
-
   double delta = 0.;
   if (par.x0 < par.x1 && x >= par.x0) {
     delta = 2 * log(10.) * x - par.cDens;
@@ -326,8 +320,8 @@ double TrackElectron::Delta(const double x, const Parameters& par) {
 }
 
 double TrackElectron::Esec(const double e0, const Parameters& par) {
- double esec = par.wSplit * tan(RndmUniform() * atan((e0 - par.ethr) / 
-                                                     (2. * par.wSplit)));
- return par.wSplit * pow(esec / par.wSplit, 0.9524);
+  double esec = par.wSplit *
+                tan(RndmUniform() * atan((e0 - par.ethr) / (2. * par.wSplit)));
+  return par.wSplit * pow(esec / par.wSplit, 0.9524);
 }
-}
+}  // namespace Garfield

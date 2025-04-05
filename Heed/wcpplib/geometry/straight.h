@@ -13,6 +13,7 @@ The file is provided "as is" without express or implied warranty.
 */
 
 #include <iostream>
+
 #include "wcpplib/geometry/vec.h"
 
 namespace Heed {
@@ -24,9 +25,9 @@ class plane;
 class straight : public absref {
  protected:
   /// Origin point, pivot.
-  point piv;  
+  point piv;
   /// Direction, unit vector
-  vec dir;    
+  vec dir;
 
  public:
   point Gpiv() const { return piv; }
@@ -57,8 +58,8 @@ class straight : public absref {
   // Draws line via four lines by interpolation.
   // pt[2] are starting points for two intermidiate layers
   straight(straight* sl,  // array of lines via which it need to draw
-           // this line
-           int qsl,                   // number of lines in array
+                          // this line
+           int qsl,       // number of lines in array
            const straight& sl_start,  // first approximation
            int anum,                  // prolong axis : 0 - x, 1 - y, 2 - z.
            double precision,          // wanted precision
@@ -96,16 +97,16 @@ class straight : public absref {
   friend bool apeq(const straight& sl1, const straight& sl2, double prec);
 
   /// Calculate distance of a point from the line and compare it with prec.
-  /// Return 1 if the point is on the line. 
+  /// Return 1 if the point is on the line.
   int check_point_in(const point& fp, double prec) const;
 
   /** Figure out whether the line crosses another straight line
-    * (within a precision prec).
-    * - Lines cross in one point (with precision prec) vecerror = 0
-    * - Lines do not cross                             vecerror = 1
-    * - Lines are parallel                             vecerror = 2
-    * - Lines are identical                            vecerror = 3
-    */
+   * (within a precision prec).
+   * - Lines cross in one point (with precision prec) vecerror = 0
+   * - Lines do not cross                             vecerror = 1
+   * - Lines are parallel                             vecerror = 2
+   * - Lines are identical                            vecerror = 3
+   */
   point cross(const straight& sl, double prec) const;
 
   /// Shortest distance between two lines, may be negative.
@@ -144,6 +145,6 @@ class straight : public absref {
 };
 
 std::ostream& operator<<(std::ostream& file, const straight& s);
-}
+}  // namespace Heed
 
 #endif

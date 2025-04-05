@@ -1,19 +1,17 @@
+#include "Garfield/SolidWire.hh"
+
 #include <cmath>
 #include <iostream>
-
-#include "Garfield/SolidWire.hh"
 
 namespace Garfield {
 
 SolidWire::SolidWire(const double cx, const double cy, const double cz,
                      const double rw, const double lz)
-    : Solid(cx, cy, cz, "SolidWire"),
-      m_r(rw),
-      m_lZ(lz) {}
+    : Solid(cx, cy, cz, "SolidWire"), m_r(rw), m_lZ(lz) {}
 
 SolidWire::SolidWire(const double cx, const double cy, const double cz,
-                     const double rw, const double lz,
-                     const double dx, const double dy, const double dz)
+                     const double rw, const double lz, const double dx,
+                     const double dy, const double dz)
     : SolidWire(cx, cy, cz, rw, lz) {
   SetDirection(dx, dy, dz);
 }
@@ -68,19 +66,15 @@ void SolidWire::SetHalfLength(const double lz) {
   m_lZ = lz;
 }
 
-bool SolidWire::SolidPanels(std::vector<Panel>& /*panels*/) {
-  return true;
-}
+bool SolidWire::SolidPanels(std::vector<Panel>& /*panels*/) { return true; }
 
 double SolidWire::GetDiscretisationLevel(const Panel& /*panel*/) {
   return m_dis;
-} 
-
-void SolidWire::Cut(
-    const double /*x0*/, const double /*y0*/, const double /*z0*/,
-    const double /*xn*/, const double /*yn*/, const double /*zn*/,
-    std::vector<Panel>& /*panels*/) {
-
 }
 
-}
+void SolidWire::Cut(const double /*x0*/, const double /*y0*/,
+                    const double /*z0*/, const double /*xn*/,
+                    const double /*yn*/, const double /*zn*/,
+                    std::vector<Panel>& /*panels*/) {}
+
+}  // namespace Garfield

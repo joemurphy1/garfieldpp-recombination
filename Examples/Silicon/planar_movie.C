@@ -1,13 +1,13 @@
-#include <iostream>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
 #include <TSystem.h>
-#include <TApplication.h>
+
+#include <iostream>
 
 #include "Garfield/AvalancheMC.hh"
-#include "Garfield/ComponentUser.hh"
 #include "Garfield/ComponentAnalyticField.hh"
+#include "Garfield/ComponentUser.hh"
 #include "Garfield/MediumSilicon.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
@@ -17,8 +17,7 @@
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   // plottingEngine.SetSerif();
 
@@ -36,10 +35,10 @@ int main(int argc, char * argv[]) {
     // Depletion voltage [V]
     constexpr double vdep = -20.;
     ex = ez = 0.;
-    ey = (vbias - vdep) / d + 2 * y * vdep / (d * d);  
+    ey = (vbias - vdep) / d + 2 * y * vdep / (d * d);
   };
   ComponentUser linearField;
-  linearField.SetArea(-2 * d, 0., - 2 * d, 2 * d, d, 2 * d);
+  linearField.SetArea(-2 * d, 0., -2 * d, 2 * d, d, 2 * d);
   linearField.SetMedium(&si);
   linearField.SetElectricField(eLinear);
 
@@ -51,15 +50,15 @@ int main(int argc, char * argv[]) {
   wField.AddPlaneY(d, 0, "front");
   wField.AddStripOnPlaneY('z', d, -0.5 * pitch, 0. * pitch, "strip");
 
-  // Create a sensor. 
-  Sensor sensor(&linearField); 
+  // Create a sensor.
+  Sensor sensor(&linearField);
   // const std::string label = "strip";
   const std::string label = "front";
   sensor.AddElectrode(&wField, label);
 
   // Set the time bins.
   const unsigned int nTimeBins = 1000;
-  const double tmin =  0.;
+  const double tmin = 0.;
   const double tmax = 10.;
   const double tstep = (tmax - tmin) / nTimeBins;
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
@@ -74,7 +73,7 @@ int main(int argc, char * argv[]) {
   AvalancheMC drift(&sensor);
   // Use steps of 1 micron.
   drift.SetDistanceSteps(1.e-4);
-  
+
   ViewDrift driftView;
   driftView.SetArea(-0.5 * d, 0, -0.5 * d, 0.5 * d, d, 0.5 * d);
   track.EnablePlotting(&driftView);
@@ -89,8 +88,8 @@ int main(int argc, char * argv[]) {
   driftView.SetCanvas((TPad*)canvas.cd(1));
   signalView.SetCanvas((TPad*)canvas.cd(2));
 
-  // Flag to randomise the position of the track.  
-  constexpr bool smearx = true; 
+  // Flag to randomise the position of the track.
+  constexpr bool smearx = true;
   // Simulate a charged-particle track.
   double xt = 0.;
   if (smearx) xt = -0.5 * pitch + RndmUniform() * pitch;
@@ -119,7 +118,7 @@ int main(int argc, char * argv[]) {
       snprintf(filename, 50, "frames/frame_%03d.png", i);
       canvas.SaveAs(filename);
     } else {
-      if (i == nFrames - 1) { 
+      if (i == nFrames - 1) {
         canvas.Print("planar_movie.gif++");
       } else {
         canvas.Print("planar_movie.gif+3");

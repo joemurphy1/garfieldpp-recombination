@@ -1,44 +1,43 @@
-#include <iostream>
-#include <cmath>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 
-#include "Garfield/MediumSilicon.hh"
-#include "Garfield/ComponentTcad2d.hh"
+#include <cmath>
+#include <iostream>
+
+#include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentAnalyticField.hh"
+#include "Garfield/ComponentTcad2d.hh"
+#include "Garfield/FundamentalConstants.hh"
+#include "Garfield/MediumSilicon.hh"
+#include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
-#include "Garfield/AvalancheMC.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/ViewDrift.hh"
+#include "Garfield/ViewField.hh"
 #include "Garfield/ViewSignal.hh"
-#include "Garfield/FundamentalConstants.hh"
-#include "Garfield/Random.hh"
 
 using namespace Garfield;
 
 // Transfer function
 double transfer(double t) {
-  constexpr double tR =  5.6;
-  constexpr double tI =  1.8;
+  constexpr double tR = 5.6;
+  constexpr double tI = 1.8;
   constexpr double tA = 47.;
   constexpr double c1 = tA / ((tA - tI) * (tA - tI) * (tA - tR));
   constexpr double c2 = 1. / ((tA - tI) * tI * (tI - tR));
   constexpr double c3 = tR / ((tA - tR) * (tI - tR) * (tI - tR));
-  constexpr double c4 = (tI * tI - tA * tR) / 
-                        ((tA - tI) * (tA - tI) * (tI - tR) * (tI - tR));
+  constexpr double c4 =
+      (tI * tI - tA * tR) / ((tA - tI) * (tA - tI) * (tI - tR) * (tI - tR));
   const double f1 = -exp(-t / tA) * c1;
-  const double f2 =  exp(-t / tI) * t * c2; 
-  const double f3 =  exp(-t / tR) * c3;
-  const double f4 =  exp(-t / tI) * c4; 
+  const double f2 = exp(-t / tI) * t * c2;
+  const double f3 = exp(-t / tR) * c3;
+  const double f4 = exp(-t / tI) * c4;
   // constexpr double g = 0.07 / 0.46938;
-  return tA * tR * (f1 + f2 + f3 + f4); 
+  return tA * tR * (f1 + f2 + f3 + f4);
 }
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   // Sensor thickness.
@@ -54,14 +53,13 @@ int main(int argc, char * argv[]) {
   // Load the mesh (.grd file) and electric field (.dat).
   fm.Initialise("pixel_des.grd", "pixel_des.dat");
   fm.SetRangeZ(-width, width);
-  // Associate the silicon regions in the field map with a medium object. 
+  // Associate the silicon regions in the field map with a medium object.
   fm.SetMedium("Silicon", &si);
 
   ComponentAnalyticField wfield;
-  wfield.AddPlaneY(0,    0.);
+  wfield.AddPlaneY(0, 0.);
   wfield.AddPlaneY(d, -100.);
-  wfield.AddStripOnPlaneY('z', d, 
-                          0.5 * width - 0.5 * pitch,
+  wfield.AddStripOnPlaneY('z', d, 0.5 * width - 0.5 * pitch,
                           0.5 * width + 0.5 * pitch, "strip");
 
   ViewField vField(&fm);
@@ -76,7 +74,7 @@ int main(int argc, char * argv[]) {
   sensor.SetTimeWindow(0., tStep, nSignalBins);
   sensor.SetTransferFunction(transfer);
   // Threshold.
-  const double thr1 = -1000. * ElementaryCharge;  
+  const double thr1 = -1000. * ElementaryCharge;
   std::cout << "Threshold: " << thr1 << " fC\n";
 
   // Charged-particle track.
@@ -102,7 +100,7 @@ int main(int argc, char * argv[]) {
   for (unsigned int j = 0; j < nEvents; ++j) {
     sensor.ClearSignal();
     const double x0 = 0.5 * width + (RndmUniform() - 0.5) * pitch;
-    const double t0 = 0.1; 
+    const double t0 = 0.1;
     track.NewTrack(x0, 0., 0., t0, 0., 1., 0.);
     unsigned int nesum = 0;
     unsigned int nc = 0;
@@ -121,8 +119,8 @@ int main(int argc, char * argv[]) {
         drift.DriftHole(hole.x, hole.y, hole.z, hole.t);
       }
     }
-    std::cout << nesum << " electrons, " 
-              << nesum * ElementaryCharge << " fC.\n";
+    std::cout << nesum << " electrons, " << nesum * ElementaryCharge
+              << " fC.\n";
     // Convolute the signal with the transfer function.
     sensor.ConvoluteSignals();
     // Plot the signal.
@@ -136,5 +134,4 @@ int main(int argc, char * argv[]) {
   }
 
   app.Run(true);
-
 }

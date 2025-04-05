@@ -1,24 +1,24 @@
 #ifndef G_VIEW_FE_MESH
 #define G_VIEW_FE_MESH
 
-#include<string>
-#include<map>
-#include<vector>
-
 #include <TGeoManager.h>
 #include <TMatrixDfwd.h>
+
+#include <map>
+#include <string>
+#include <vector>
 
 #include "Garfield/ViewBase.hh"
 
 class TGaxis;
 class TGeoVolume;
 class TGeoMedium;
-class ComponentCST;
 
 namespace Garfield {
 
-  class Component;
-  class ViewDrift;
+class Component;
+class ComponentCST;
+class ViewDrift;
 
 /// Draw the mesh of a field-map component.
 
@@ -34,9 +34,9 @@ class ViewFEMesh : public ViewBase {
   /// Set the component from which to retrieve the mesh and field.
   void SetComponent(Component* cmp);
 
-  void SetPlane(const double fx, const double fy, const double fz, 
+  void SetPlane(const double fx, const double fy, const double fz,
                 const double x0, const double y0, const double z0) override;
-  void SetPlane(const double fx, const double fy, const double fz, 
+  void SetPlane(const double fx, const double fy, const double fz,
                 const double x0, const double y0, const double z0,
                 const double hx, const double hy, const double hz) override;
 
@@ -63,7 +63,7 @@ class ViewFEMesh : public ViewBase {
   void SetColor(int matID, int colorID) { m_colorMap[matID] = colorID; }
   void SetColors(const std::map<int, int>& colors) {
     for (const auto& c : colors) SetColor(c.first, c.second);
-  } 
+  }
   void SetFillColor(int matID, int colorID) {
     m_colorMap_fill[matID] = colorID;
   }
@@ -130,10 +130,9 @@ class ViewFEMesh : public ViewBase {
 
   typedef std::vector<size_t> Facet;
   void AddFacets(const size_t i,
-    const std::vector<std::vector<Facet> >& elementFacets,
-    const std::map<Facet, std::vector<size_t> >& facetElements,
-    std::vector<Facet>& facets,
-    std::vector<bool>& done) const;
+                 const std::vector<std::vector<Facet> >& elementFacets,
+                 const std::map<Facet, std::vector<size_t> >& facetElements,
+                 std::vector<Facet>& facets, std::vector<bool>& done) const;
   bool FacetSign(const Facet& f, const size_t element) const;
   void DrawDriftLines2d();
   void DrawDriftLines3d();
@@ -146,8 +145,8 @@ class ViewFEMesh : public ViewBase {
   bool LinesCrossed(double x1, double y1, double x2, double y2, double u1,
                     double v1, double u2, double v2, double& xc,
                     double& yc) const;
-  bool IntersectPlaneArea(double& xmin, double& ymin,
-                          double& xmax, double& ymax);
+  bool IntersectPlaneArea(double& xmin, double& ymin, double& xmax,
+                          double& ymax);
   bool OnLine(double x1, double y1, double x2, double y2, double u,
               double v) const;
   void RemoveCrossings(std::vector<double>& x, std::vector<double>& y);

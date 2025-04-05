@@ -1,15 +1,14 @@
-#include <TROOT.h>
 #include <TApplication.h>
+#include <TROOT.h>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   // Setup the gas.
@@ -28,9 +27,9 @@ int main(int argc, char * argv[]) {
   // Plot the potential.
   ViewField fieldView(&cmp);
   const double xmin = -2.1;
-  const double xmax =  2.1;
+  const double xmax = 2.1;
   const double ymin = -2.1;
-  const double ymax =  2.1;
+  const double ymax = 2.1;
   fieldView.SetArea(xmin, ymin, xmax, ymax);
   fieldView.PlotContour();
   ViewCell cellView(&cmp);

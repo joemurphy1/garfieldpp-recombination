@@ -1,3 +1,5 @@
+#include "Garfield/TrackPAI.hh"
+
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -5,10 +7,9 @@
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/TrackPAI.hh"
-#include "Garfield/Medium.hh"
 
 namespace Garfield {
 
@@ -81,7 +82,7 @@ bool TrackPAI::NewTrack(const double x0, const double y0, const double z0,
     t += step / m_speed;
 
     medium = m_sensor->GetMedium(x, y, z);
-    if (!medium || !medium->IsIonisable() || 
+    if (!medium || !medium->IsIonisable() ||
         medium->GetName() != m_mediumName ||
         medium->GetNumberDensity() != m_mediumDensity) {
       break;
@@ -126,7 +127,7 @@ std::pair<double, double> TrackPAI::SampleEnergyDeposit(const double u) const {
   const double r1 = m_rutherford[it1 - begin];
   if (e0 < 100.) {
     const double f1 = (u - c0) / (c1 - c0);
-    const double f0 = 1. - f1; 
+    const double f0 = 1. - f1;
     return std::make_pair(f0 * e0 + f1 * e1, f0 * r0 + f1 * r1);
   }
   const double loge0 = log(e0);
@@ -227,7 +228,6 @@ double TrackPAI::GetClusterDensity() {
 }
 
 double TrackPAI::GetStoppingPower() {
-
   if (m_isChanged) {
     if (SetupCrossSectionTable()) {
       m_isChanged = false;
@@ -375,8 +375,9 @@ double TrackPAI::ComputeCsTail(const double emin, const double emax) {
     // Positrons
     const double ek = m_energy - m_mass;
     return 1. / emin - 1. / emax + 3 * (emax - emin) / (ek * ek) -
-           (emax - emin) * (ek * (emax + emin) +
-                            (emin * emin + emin * emax + emax * emax) / 3.) /
+           (emax - emin) *
+               (ek * (emax + emin) +
+                (emin * emin + emin * emax + emax * emax) / 3.) /
                pow(ek, 4) -
            (2. / ek) * log(emax / emin);
   }
@@ -579,4 +580,4 @@ double TrackPAI::SampleAsymptoticCsPositron(const double emin, double u) const {
 
   return 0.5 * (eLow + eUp);
 }
-}
+}  // namespace Garfield

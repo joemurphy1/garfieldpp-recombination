@@ -34,8 +34,8 @@ class SolidWire : public Solid {
   void SetDiscretisationLevel(const double dis) override { m_dis = dis; }
   double GetDiscretisationLevel(const Panel& panel) override;
 
-  void Cut(const double x0, const double y0, const double z0,
-           const double xn, const double yn, const double zn,
+  void Cut(const double x0, const double y0, const double z0, const double xn,
+           const double yn, const double zn,
            std::vector<Panel>& panels) override;
 
  private:
@@ -47,6 +47,6 @@ class SolidWire : public Solid {
   /// Discretisation level.
   double m_dis = -1.;
 };
-}
+}  // namespace Garfield
 
 #endif

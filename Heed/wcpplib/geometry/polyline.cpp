@@ -1,4 +1,5 @@
 #include "wcpplib/geometry/polyline.h"
+
 #include <limits>
 
 /*
@@ -50,15 +51,14 @@ polyline& polyline::operator=(const polyline& fpl) {
 
 void polyline::polyline_init(const point* fpt, int fqpt) {
   pvecerror("void polyline::polyline_init(const point* fpt, int fqpt)");
-  check_econd11(fqpt, < 0, mcerr)
-  if (fqpt < 1) {
+  check_econd11(fqpt, < 0, mcerr) if (fqpt < 1) {
     qpt = 0;
     qsl = 0;
     pt = NULL;
     sl = NULL;
     aref = NULL;
     return;
-  } 
+  }
   pt = new point[fqpt];
   for (qpt = 0; qpt < fqpt; ++qpt) pt[qpt] = fpt[qpt];
   if (fqpt >= 2) {
@@ -69,7 +69,7 @@ void polyline::polyline_init(const point* fpt, int fqpt) {
   } else {
     sl = NULL;
   }
-  aref = new absref* [qpt + qsl];
+  aref = new absref*[qpt + qsl];
   for (int n = 0; n < qpt; ++n) aref[n] = &pt[n];
   for (int n = 0; n < qsl; ++n) aref[n + qpt] = &sl[n];
 }
@@ -136,8 +136,8 @@ double polyline::dist_two_inter(polyline& pl2, double prec) const {
   if (pl1.check_point_in(cpt[0], prec) > 0 &&
       pl2.check_point_in(cpt[1], prec) > 0)
     return sldist;
-    double mx = std::numeric_limits<double>::max();
-    double r;
+  double mx = std::numeric_limits<double>::max();
+  double r;
   if ((r = pl1.distance(pl2.Gpt(0))) < mx) mx = r;
   if ((r = pl1.distance(pl2.Gpt(1))) < mx) mx = r;
   if ((r = pl2.distance(pl1.Gpt(0))) < mx) mx = r;
@@ -392,7 +392,7 @@ point polygon::cross(const straight& fsl, double prec) const {
   }
 }
 int polygon::range(const point& fpt, const vec& dir, double& rng, point& fptenr,
-  double prec) const {
+                   double prec) const {
   pvecerror(
       "int polygon::range(const point& fpt, const vec& dir, double& rng, "
       " point &fptenr)");
@@ -423,7 +423,7 @@ std::ostream& operator<<(std::ostream& file, const polygon& p) {
 
 // ***  rectangle ***
 absref absref::* rectangle::aref_rct[4] = {
-    (absref absref::*)&rectangle::pn,   (absref absref::*)&rectangle::piv,
+    (absref absref::*)&rectangle::pn, (absref absref::*)&rectangle::piv,
     (absref absref::*)&rectangle::dir1, (absref absref::*)&rectangle::dir2};
 
 absref_transmit rectangle::get_components() {
@@ -431,7 +431,7 @@ absref_transmit rectangle::get_components() {
 }
 
 rectangle::rectangle(const point& fpiv, vec fdir[2], double fdim[2],
-  double prec) {
+                     double prec) {
   pvecerror(
       "rectangle::rectangle(point fpiv, vec fdir[2], double fdim[2], "
       "double prec)");
@@ -482,7 +482,7 @@ std::ostream& operator<<(std::ostream& file, const rectangle& f) {
 // **** special quadrangle ****  for cathode strip shamber
 
 absref absref::* spquadr::aref_sp[4] = {
-    (absref absref::*)&spquadr::pn,   (absref absref::*)&spquadr::piv,
+    (absref absref::*)&spquadr::pn, (absref absref::*)&spquadr::piv,
     (absref absref::*)&spquadr::dir1, (absref absref::*)&spquadr::dir2};
 
 absref_transmit spquadr::get_components() {
@@ -541,4 +541,4 @@ std::ostream& operator<<(std::ostream& file, const spquadr& p) {
   indn.n -= 2;
   return file;
 }
-}
+}  // namespace Heed

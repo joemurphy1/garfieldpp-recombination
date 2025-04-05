@@ -1,26 +1,24 @@
-#include <iostream>
+#include <TApplication.h>
+#include <TCanvas.h>
+#include <TH1D.h>
+#include <TROOT.h>
+#include <TSystem.h>
+
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
-#include <TCanvas.h>
-#include <TROOT.h>
-#include <TApplication.h>
-#include <TSystem.h>
-#include <TH1D.h>
-
 #include "Garfield/ComponentUser.hh"
-#include "Garfield/Sensor.hh"
-#include "Garfield/ViewSignal.hh"
-#include "Garfield/Utilities.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Plotting.hh"
+#include "Garfield/Sensor.hh"
 #include "Garfield/Shaper.hh"
-
+#include "Garfield/Utilities.hh"
+#include "Garfield/ViewSignal.hh"
 
 using namespace Garfield;
 
 bool readTransferFunction(Sensor& sensor) {
-
   std::ifstream infile;
   infile.open("ft.txt", std::ios::in);
   if (!infile) {
@@ -41,8 +39,7 @@ bool readTransferFunction(Sensor& sensor) {
   return true;
 }
 
-int main(int argc, char * argv[]) {
-    
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
 
@@ -50,14 +47,14 @@ int main(int argc, char * argv[]) {
 
   // Make a dummy component.
   ComponentUser cmp;
-    
+
   // Create a sensor.
   Sensor sensor;
   const std::string label = "pad";
   sensor.AddElectrode(&cmp, label);
-   
+
   constexpr double noise = 1000.;
- 
+
   // Set transfer function.
   Shaper shaper(1, 25., 1., "unipolar");
   // sensor.SetTransferFunction(shaper);
@@ -70,19 +67,19 @@ int main(int argc, char * argv[]) {
 
   // Set the time bins.
   const unsigned int nTimeBins = 1000;
-  const double tmin =   0.;
+  const double tmin = 0.;
   const double tmax = 200.;
   const double tstep = (tmax - tmin) / nTimeBins;
   sensor.SetTimeWindow(tmin, tstep, nTimeBins);
 
   sensor.PlotTransferFunction();
 
-  TH1F hN("Noise", ";signal [e^{-}];entries", 100, -5 * noise, 5 * noise); 
+  TH1F hN("Noise", ";signal [e^{-}];entries", 100, -5 * noise, 5 * noise);
   // Plot the signal if requested.
   constexpr bool plotSignal = false;
   ViewSignal signalView(&sensor);
 
-  constexpr bool fft = false;    
+  constexpr bool fft = false;
   constexpr unsigned int nEvents = 1000;
   for (unsigned int i = 0; i < nEvents; ++i) {
     // Reset the signal.
@@ -98,13 +95,12 @@ int main(int argc, char * argv[]) {
     }
     for (unsigned int j = 400; j < nTimeBins; ++j) {
       hN.Fill(q * sensor.GetSignal(label, j));
-    } 
+    }
   }
   TCanvas cN;
   hN.Draw("");
   hN.Fit("gaus");
   cN.Update();
- 
+
   app.Run(true);
 }
-

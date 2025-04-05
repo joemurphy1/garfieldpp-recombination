@@ -1,6 +1,7 @@
 #ifndef EL_ELASTIC_SCAT_H
 #define EL_ELASTIC_SCAT_H
 
+#include <string>
 #include <vector>
 
 namespace Heed {
@@ -34,20 +35,20 @@ class ElElasticScatData {
 class ElElasticScat {
  public:
   /** Get the cross-section (in angstrom^2/srad).
-    * \param Z atomic number
-    * \param energy kinetic energy in MeV
-    * \param angle angle
-    * \param s_interp flag for debugging and various checks
-    *
-    * fill_hist call this function with s_interp=1 for histograms "int...".
-    */
+   * \param Z atomic number
+   * \param energy kinetic energy in MeV
+   * \param angle angle
+   * \param s_interp flag for debugging and various checks
+   *
+   * fill_hist call this function with s_interp=1 for histograms "int...".
+   */
   double get_CS(long Z, double energy, double angle, int s_interp = 0);
 
   /** Get the cross-section (in angstrom^2).
-    * \param Z atomic number
-    * \param energy kinetic energy in MeV
-    * \param angle angle in internal units (radian)
-    */
+   * \param Z atomic number
+   * \param energy kinetic energy in MeV
+   * \param angle angle in internal units (radian)
+   */
   double get_CS_Rutherford(long Z, double energy, double angle);
 
   long get_qe(void) const { return qe; }
@@ -81,7 +82,7 @@ class ElElasticScatLowSigma {
   double get_coef(const long Z, const long ne) const { return coef[Z - 1][ne]; }
   long get_qscat(void) const { return qscat; }
   ElElasticScat* get_ees() const { return ees; }
- 
+
   /// Default constructor
   ElElasticScatLowSigma() = default;
   ElElasticScatLowSigma(ElElasticScat* fees, const std::string& file_name);
@@ -97,6 +98,6 @@ class ElElasticScatLowSigma {
   /// sqrt(mean((1-cos(theta))^2))
   std::vector<std::vector<double> > coef;
 };
-}
+}  // namespace Heed
 
 #endif

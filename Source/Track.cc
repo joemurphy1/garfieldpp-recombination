@@ -1,12 +1,13 @@
-#include <iostream>
+#include "Garfield/Track.hh"
+
 #include <algorithm>
+#include <array>
 #include <cctype>
-#include<array>
+#include <iostream>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/Track.hh"
 #include "Garfield/ViewDrift.hh"
 
 namespace Garfield {
@@ -18,10 +19,9 @@ Track::Track(const std::string& name) : m_mass(MuonMass) {
 
 void Track::SetParticle(const std::string& part) {
   std::string id = part;
-  std::transform(id.begin(), id.end(), id.begin(), 
-                 [](unsigned char c) -> unsigned char { 
-                   return std::toupper(c);
-                 });
+  std::transform(
+      id.begin(), id.end(), id.begin(),
+      [](unsigned char c) -> unsigned char { return std::toupper(c); });
   m_isElectron = false;
   if (id == "ELECTRON" || id == "E-") {
     m_q = -1;
@@ -69,8 +69,8 @@ void Track::SetParticle(const std::string& part) {
     m_mass = ProtonMass;
     m_spin = 1;
     m_particleName = "p";
-  } else if (id == "ANTI-PROTON" || id == "ANTIPROTON" || 
-             id == "P-BAR" || id == "PBAR") {
+  } else if (id == "ANTI-PROTON" || id == "ANTIPROTON" || id == "P-BAR" ||
+             id == "PBAR") {
     m_q = -1;
     m_mass = ProtonMass;
     m_spin = 1;
@@ -184,9 +184,7 @@ void Track::EnablePlotting(ViewDrift* view) {
   m_viewer = view;
 }
 
-void Track::DisablePlotting() {
-  m_viewer = nullptr;
-}
+void Track::DisablePlotting() { m_viewer = nullptr; }
 
 void Track::PlotNewTrack(const double x0, const double y0, const double z0) {
   if (!m_viewer) return;
@@ -197,16 +195,16 @@ void Track::PlotCluster(const double x0, const double y0, const double z0) {
   if (m_viewer) m_viewer->AddTrackPoint(m_plotId, x0, y0, z0);
 }
 
-std::array<double, 3> Track::StepBfield(const double dt, 
-    const double qoverm, const double vmag, double bx, double by, double bz,
-    std::array<double, 3>& dir) {
-
+std::array<double, 3> Track::StepBfield(const double dt, const double qoverm,
+                                        const double vmag, double bx, double by,
+                                        double bz, std::array<double, 3>& dir) {
   double bmag = sqrt(bx * bx + by * by + bz * bz);
   if (bmag < Garfield::Small) {
     const double step = vmag * dt;
     return {step * dir[0], step * dir[1], step * dir[2]};
   }
-  std::array<std::array<double, 3>, 3> rot = {{{1, 0, 0}, {0, 1, 0}, {0, 0,      1}}};
+  std::array<std::array<double, 3>, 3> rot = {
+      {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}};
 
   bx /= bmag;
   by /= bmag;
@@ -228,8 +226,8 @@ std::array<double, 3> Track::StepBfield(const double dt,
     rot[1][1] = -1.;
   }
   bmag *= Garfield::Tesla2Internal;
-  const double omega = qoverm * Garfield::OmegaCyclotronOverB * bmag * 
-                       Garfield::ElectronMass;
+  const double omega =
+      qoverm * Garfield::OmegaCyclotronOverB * bmag * Garfield::ElectronMass;
   const double cphi = cos(omega * dt);
   const double sphi = sin(omega * dt);
 
@@ -239,7 +237,7 @@ std::array<double, 3> Track::StepBfield(const double dt,
   v0[1] = rot[1][0] * dir[0] + rot[1][1] * dir[1] + rot[1][2] * dir[2];
   v0[2] = rot[2][0] * dir[0] + rot[2][1] * dir[1] + rot[2][2] * dir[2];
 
-  // Calculate the new direction in the local frame. 
+  // Calculate the new direction in the local frame.
   std::array<double, 3> v1;
   v1[0] = v0[0];
   v1[1] = v0[1] * cphi + v0[2] * sphi;
@@ -257,10 +255,10 @@ std::array<double, 3> Track::StepBfield(const double dt,
   const double w = rho * (v0[2] * sphi - v0[1] * (1. - cphi));
   // .... and in the global frame.
   std::array<double, 3> pos;
-  pos[0] = rot[0][0] * u + rot[1][0] * v + rot[2][0] * w; 
+  pos[0] = rot[0][0] * u + rot[1][0] * v + rot[2][0] * w;
   pos[1] = rot[0][1] * u + rot[1][1] * v + rot[2][1] * w;
   pos[2] = rot[0][2] * u + rot[1][2] * v + rot[2][2] * w;
   return pos;
 }
 
-}
+}  // namespace Garfield

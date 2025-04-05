@@ -1,7 +1,8 @@
 #ifndef G_SOLID_EXTRUSION_H
 #define G_SOLID_EXTRUSION_H
 
-#include<array>
+#include <array>
+
 #include "Garfield/Solid.hh"
 
 namespace Garfield {
@@ -11,13 +12,13 @@ namespace Garfield {
 class SolidExtrusion : public Solid {
  public:
   /// Constructor from half-length and profile.
-  SolidExtrusion(const double lz,
-                 const std::vector<double>& xp, const std::vector<double>& yp);
+  SolidExtrusion(const double lz, const std::vector<double>& xp,
+                 const std::vector<double>& yp);
   /// Constructor from half-length, profile, offset and orientation.
-  SolidExtrusion(const double lz,
-                 const std::vector<double>& xp, const std::vector<double>& yp,
-                 const double cx, const double cy, const double cz, 
-                 const double dx, const double dy, const double dz);
+  SolidExtrusion(const double lz, const std::vector<double>& xp,
+                 const std::vector<double>& yp, const double cx,
+                 const double cy, const double cz, const double dx,
+                 const double dy, const double dz);
   /// Destructor
   ~SolidExtrusion() {}
 
@@ -28,7 +29,7 @@ class SolidExtrusion : public Solid {
   bool IsExtrusion() const override { return true; }
 
   double GetHalfLengthZ() const override { return m_lZ; }
-  bool GetProfile(std::vector<double>& xp, 
+  bool GetProfile(std::vector<double>& xp,
                   std::vector<double>& yp) const override {
     xp = m_xp;
     yp = m_yp;
@@ -37,21 +38,18 @@ class SolidExtrusion : public Solid {
   /// Set the half-length of the extrusion.
   void SetHalfLengthZ(const double lz);
   /// Set the coordinates of the extrusion profile.
-  void SetProfile(const std::vector<double>& xp,
-                  const std::vector<double>& yp);
+  void SetProfile(const std::vector<double>& xp, const std::vector<double>& yp);
   /// Request the extrusion to be closed with a lid at +z.
   void SetTopLid(const bool closed) { m_toplid = closed; }
   /// Request the extrusion to be closed with a lid at -z.
   void SetBottomLid(const bool closed) { m_botlid = closed; }
 
   bool SolidPanels(std::vector<Panel>& panels) override;
-  void SetDiscretisationLevel(const double dis) override {
-    m_dis.fill(dis);
-  }
+  void SetDiscretisationLevel(const double dis) override { m_dis.fill(dis); }
   double GetDiscretisationLevel(const Panel& panel) override;
 
-  void Cut(const double x0, const double y0, const double z0,
-           const double xn, const double yn, const double zn,
+  void Cut(const double x0, const double y0, const double z0, const double xn,
+           const double yn, const double zn,
            std::vector<Panel>& panels) override;
 
  private:
@@ -73,6 +71,6 @@ class SolidExtrusion : public Solid {
   /// Discretisation levels.
   std::array<double, 3> m_dis{{-1, -1, -1}};
 };
-}
+}  // namespace Garfield
 
 #endif

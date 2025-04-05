@@ -18,7 +18,7 @@ class OpticalData {
   static bool IsAvailable(const std::string& material);
   /// Photo-absorption cross-section and ionisation yield at a given energy.
   static bool PhotoabsorptionCrossSection(const std::string& material,
-                                          const double energy, double& cs, 
+                                          const double energy, double& cs,
                                           double& eta);
   /// Photo-absorption cross-section at a given energy.
   static double PhotoabsorptionCrossSection(const std::string& material,
@@ -39,11 +39,13 @@ class OpticalData {
   static bool PhotoAbsorptionCsMethane(const double e, double& cs, double& eta);
   static bool PhotoAbsorptionCsEthane(const double e, double& cs, double& eta);
   static bool PhotoAbsorptionCsButane(const double e, double& cs, double& eta);
-  static bool PhotoAbsorptionCsAcetylene(const double e, double& cs, double& eta);
+  static bool PhotoAbsorptionCsAcetylene(const double e, double& cs,
+                                         double& eta);
   static bool PhotoAbsorptionCsCF4(const double e, double& cs, double& eta);
 
-  static bool PhotoAbsorptionCsNitrogen(const double e, double& cs, double& eta);
+  static bool PhotoAbsorptionCsNitrogen(const double e, double& cs,
+                                        double& eta);
 };
-}
+}  // namespace Garfield
 
 #endif

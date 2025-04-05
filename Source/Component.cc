@@ -1,12 +1,13 @@
+#include "Garfield/Component.hh"
+
+#include <array>
 #include <cmath>
-#include<array>
 #include <iostream>
 
-#include "Garfield/Component.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/Numerics.hh"
 #include "Garfield/Geometry.hh"
+#include "Garfield/Numerics.hh"
 
 namespace Garfield {
 
@@ -41,8 +42,8 @@ void Component::Clear() {
   Reset();
 }
 
-std::array<double, 3> Component::ElectricField(
-    const double x, const double y, const double z) {
+std::array<double, 3> Component::ElectricField(const double x, const double y,
+                                               const double z) {
   double ex = 0., ey = 0., ez = 0.;
   Medium* medium = nullptr;
   int status = 0;
@@ -94,14 +95,14 @@ double Component::DelayedWeightingPotential(const double /*x*/,
                                             const double /*t*/,
                                             const std::string& /*label*/) {
   if (m_debug) {
-    std::cerr << m_className 
+    std::cerr << m_className
               << "::DelayedWeightingPotential: Not implemented.\n";
   }
   return 0.;
 }
 
 void Component::DelayedWeightingPotentials(const double x, const double y,
-                                           const double z, 
+                                           const double z,
                                            const std::string& label,
                                            std::vector<double>& dwp) {
   dwp.resize(m_wdtimes.size());
@@ -160,16 +161,16 @@ double Component::CellSizeZ() {
   return zmax - zmin;
 }
 
-bool Component::GetNode(const size_t /*i*/, double& /*x*/, double& /*y*/, 
+bool Component::GetNode(const size_t /*i*/, double& /*x*/, double& /*y*/,
                         double& /*z*/) const {
   return false;
-} 
+}
 
-bool Component::CrossedWire(
-    const double /*x0*/, const double /*y0*/, const double /*z0*/, 
-    const double /*x1*/, const double /*y1*/, const double /*z1*/,
-    double& /*xc*/, double& /*yc*/, double& /*zc*/, 
-    const bool /*centre*/, double& /*rc*/) {
+bool Component::CrossedWire(const double /*x0*/, const double /*y0*/,
+                            const double /*z0*/, const double /*x1*/,
+                            const double /*y1*/, const double /*z1*/,
+                            double& /*xc*/, double& /*yc*/, double& /*zc*/,
+                            const bool /*centre*/, double& /*rc*/) {
   return false;
 }
 
@@ -182,15 +183,15 @@ bool Component::InTrapRadius(const double /*q0*/, const double x0,
   return false;
 }
 
-bool Component::CrossedPlane(
-    const double /*x0*/, const double /*y0*/, const double /*z0*/, 
-    const double /*x1*/, const double /*y1*/, const double /*z1*/,
-    double& /*xc*/, double& /*yc*/, double& /*zc*/) {
+bool Component::CrossedPlane(const double /*x0*/, const double /*y0*/,
+                             const double /*z0*/, const double /*x1*/,
+                             const double /*y1*/, const double /*z1*/,
+                             double& /*xc*/, double& /*yc*/, double& /*zc*/) {
   return false;
-} 
+}
 
 bool Component::HasMagneticField() const {
-  return fabs(m_b0[0]) > Small || fabs(m_b0[1]) > Small || 
+  return fabs(m_b0[0]) > Small || fabs(m_b0[1]) > Small ||
          fabs(m_b0[2]) > Small;
 }
 
@@ -288,18 +289,17 @@ double Component::IntegrateFluxParallelogram(
     const double x0, const double y0, const double z0, const double dx1,
     const double dy1, const double dz1, const double dx2, const double dy2,
     const double dz2, const unsigned int nU, const unsigned int nV) {
-
-  return IntegrateFluxParallelogram(
-      x0, y0, z0, dx1, dy1, dz1, dx2, dy2, dz2, nU, nV, false, "");
+  return IntegrateFluxParallelogram(x0, y0, z0, dx1, dy1, dz1, dx2, dy2, dz2,
+                                    nU, nV, false, "");
 }
 
-double Component::IntegrateWeightingFluxParallelogram(const std::string& id,
-    const double x0, const double y0, const double z0, const double dx1,
-    const double dy1, const double dz1, const double dx2, const double dy2,
-    const double dz2, const unsigned int nU, const unsigned int nV) {
-
-  return IntegrateFluxParallelogram(
-      x0, y0, z0, dx1, dy1, dz1, dx2, dy2, dz2, nU, nV, true, id);
+double Component::IntegrateWeightingFluxParallelogram(
+    const std::string& id, const double x0, const double y0, const double z0,
+    const double dx1, const double dy1, const double dz1, const double dx2,
+    const double dy2, const double dz2, const unsigned int nU,
+    const unsigned int nV) {
+  return IntegrateFluxParallelogram(x0, y0, z0, dx1, dy1, dz1, dx2, dy2, dz2,
+                                    nU, nV, true, id);
 }
 
 double Component::IntegrateFluxParallelogram(
@@ -307,7 +307,6 @@ double Component::IntegrateFluxParallelogram(
     const double dy1, const double dz1, const double dx2, const double dy2,
     const double dz2, const unsigned int nU, const unsigned int nV,
     const bool wfield, const std::string& label) {
-
   // FLDIN4, FCHK4, FCHK5
   if (nU <= 1 || nV <= 1) {
     std::cerr << m_className << "::IntegrateFluxParallelogram:\n"
@@ -325,7 +324,7 @@ double Component::IntegrateFluxParallelogram(
   const double zn = dx1 * dy2 - dy1 * dx2;
   if (m_debug) {
     std::cout << m_className << "::IntegrateFluxParallelogram:\n"
-              << "    Normal vector = " << xn << ", " << yn << ", " << zn 
+              << "    Normal vector = " << xn << ", " << yn << ", " << zn
               << ".\n";
   }
   // If this vector has zero norm, return 0 flux.
@@ -450,6 +449,8 @@ double Component::IntegrateFluxLine(const double x0, const double y0,
 }
 
 #ifndef USEGPU
-double Component::CreateGPUTransferObject(ComponentGPU *&/*comp_gpu*/) { return 0; }
+double Component::CreateGPUTransferObject(ComponentGPU*& /*comp_gpu*/) {
+  return 0;
+}
 #endif
 }  // namespace Garfield

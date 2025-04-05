@@ -1,8 +1,8 @@
 #ifndef G_TRACK_PAI
 #define G_TRACK_PAI
 
-#include <string>
 #include <array>
+#include <string>
 #include <vector>
 
 #include "Garfield/Track.hh"
@@ -10,7 +10,7 @@
 namespace Garfield {
 
 /// Energy loss calculation using the Photoabsorption-Ionisation Model.
-
+class Medium;
 class TrackPAI : public Track {
  public:
   struct Cluster {
@@ -82,6 +82,6 @@ class TrackPAI : public Track {
     return eps > 0. ? eps2 / eps : 0.;
   }
 };
-}
+}  // namespace Garfield
 
 #endif

@@ -2,8 +2,8 @@
 #define G_NUMERICS_H
 
 #include <array>
-#include <functional>
 #include <complex>
+#include <functional>
 #include <vector>
 
 #include "Garfield/FundamentalConstants.hh"
@@ -16,9 +16,7 @@ namespace Numerics {
 constexpr std::array<double, 2> GaussLegendreNodes2() {
   return {-0.577350269189625765, 0.577350269189625765};
 }
-constexpr std::array<double, 2> GaussLegendreWeights2() {
-  return {1., 1.};
-}
+constexpr std::array<double, 2> GaussLegendreWeights2() { return {1., 1.}; }
 constexpr std::array<double, 3> GaussLegendreNodes3() {
   return {-0.774596669241483377, 0., 0.774596669241483377};
 }
@@ -26,35 +24,33 @@ constexpr std::array<double, 3> GaussLegendreWeights3() {
   return {5. / 9., 8. / 9., 5. / 9.};
 }
 constexpr std::array<double, 4> GaussLegendreNodes4() {
-  return {-0.861136311594052575, -0.339981043584856265,
-           0.339981043584856265,  0.861136311594052575};
+  return {-0.861136311594052575, -0.339981043584856265, 0.339981043584856265,
+          0.861136311594052575};
 }
 constexpr std::array<double, 4> GaussLegendreWeights4() {
-  return {0.347854845137453857, 0.652145154862546143,
-          0.652145154862546143, 0.347854845137453857}; 
+  return {0.347854845137453857, 0.652145154862546143, 0.652145154862546143,
+          0.347854845137453857};
 }
 constexpr std::array<double, 5> GaussLegendreNodes5() {
   return {-0.906179845938663993, -0.538469310105683091, 0.,
-           0.538469310105683091,  0.906179845938663993};
+          0.538469310105683091, 0.906179845938663993};
 }
 constexpr std::array<double, 5> GaussLegendreWeights5() {
   return {0.236926885056189088, 0.478628670499366468, 128. / 225.,
           0.478628670499366468, 0.236926885056189088};
 }
 constexpr std::array<double, 6> GaussLegendreNodes6() {
-  return {-0.932469514203152028, -0.661209386466264514,
-          -0.238619186083196909,  0.238619186083196909,
-           0.661209386466264514,  0.932469514203152028};
+  return {-0.932469514203152028, -0.661209386466264514, -0.238619186083196909,
+          0.238619186083196909,  0.661209386466264514,  0.932469514203152028};
 }
 constexpr std::array<double, 6> GaussLegendreWeights6() {
-  return {0.171324492379170345, 0.360761573048138608,
-          0.467913934572691047, 0.467913934572691047,
-          0.360761573048138608, 0.171324492379170345};
+  return {0.171324492379170345, 0.360761573048138608, 0.467913934572691047,
+          0.467913934572691047, 0.360761573048138608, 0.171324492379170345};
 }
 
-/// Functions for performing numerical integration (quadrature). 
+/// Functions for performing numerical integration (quadrature).
 /// Reimplemented from %QUADPACK.
-///  
+///
 /// R. Piessens, E. de Doncker-Kapenger, C. Ueberhuber, D. Kahaner,
 /// %QUADPACK, a Subroutine Package for Automatic Integration,
 /// Springer, 1983
@@ -62,15 +58,16 @@ namespace QUADPACK {
 
 /// Estimates an integral over a semi-infinite or infinite interval.
 /// Calculates an approximation to an integral
-/// \f[ I = \int_{a}^{\infty} f\left(x\right) dx, \f] 
-/// or 
-/// \f[ I = \int_{-\infty}^{a} f\left(x\right) dx, \f] 
-/// or 
-/// \f[ I = \int_{-\infty}^{\infty} f\left(x\right) dx \f] 
+/// \f[ I = \int_{a}^{\infty} f\left(x\right) dx, \f]
+/// or
+/// \f[ I = \int_{-\infty}^{a} f\left(x\right) dx, \f]
+/// or
+/// \f[ I = \int_{-\infty}^{\infty} f\left(x\right) dx \f]
 /// hopefully satisfying
 /// \f[
 ///     \left| I - \mathrm{RESULT} \right| \leq
-///     \max(\varepsilon_{\mathrm{abs}}, \varepsilon_{\mathrm{rel}} \left|I\right|).
+///     \max(\varepsilon_{\mathrm{abs}}, \varepsilon_{\mathrm{rel}}
+///     \left|I\right|).
 /// \f]
 /// \param f function to be integrated.
 /// \param bound value of the finite endpoint of the integration range (if any).
@@ -80,7 +77,7 @@ namespace QUADPACK {
 ///   -  2: (-Infinity, +Infinity)
 /// \param epsabs requested absolute accuracy
 /// \param epsrel requested relative accuracy
-/// \param result the estimated value of the integral 
+/// \param result the estimated value of the integral
 /// \param abserr estimated error
 /// \param status error flag
 ///   -   0: normal and reliable termination, requested accuracy
@@ -88,19 +85,19 @@ namespace QUADPACK {
 ///   - > 0: abnormal termination, estimates for result and error
 ///           are less reliable.
 ///     - 1: maximum number of subdivisions reached.
-///     - 2: occurance of roundoff error prevents the requested 
+///     - 2: occurance of roundoff error prevents the requested
 ///          tolerance from being achieved. Error may be underestimated.
-///     - 3: extremely bad integrand behaviour at some points of the 
+///     - 3: extremely bad integrand behaviour at some points of the
 ///          integration interval.
 ///     - 4: algorithm does not converge, roundoff error is detected in
 ///          the extrapolation table. It is assumed that the requested
 ///          tolerance cannot be achieved and that the returned result
 ///          is the best that can be obtained.
 ///     - 5: integral is probably divergent, or slowly convergent.
-///     - 6: invalid input.  
-void qagi(std::function<double(double)> f, double bound, const int inf, 
-          const double epsabs, const double epsrel, 
-          double& result, double& abserr, unsigned int& status);
+///     - 6: invalid input.
+void qagi(std::function<double(double)> f, double bound, const int inf,
+          const double epsabs, const double epsrel, double& result,
+          double& abserr, unsigned int& status);
 
 /// 15-point Gauss-Kronrod integration with (semi-)infinite integration range.
 /// \param f function to be integrated.
@@ -111,7 +108,7 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
 /// \param result approximation to the integral.
 /// \param abserr estimate of the modulus of the absolute error.
 /// \param resabs approximation to the integral over \f$\left|f\right|\f$.
-/// \param resasc approximation to the integral of 
+/// \param resasc approximation to the integral of
 ///               \f$\left|f - I / (b-a)\right|\f$ over \f$(a,b)\f$.
 void qk15i(std::function<double(double)> f, double bound, const int inf,
            const double a, const double b, double& result, double& abserr,
@@ -121,7 +118,7 @@ void qk15i(std::function<double(double)> f, double bound, const int inf,
 void qk15(std::function<double(double)> f, const double a, const double b,
           double& result, double& abserr, double& resabs, double& resasc);
 
-}
+}  // namespace QUADPACK
 
 /// Linear algebra routines from CERNLIB.
 namespace CERNLIB {
@@ -134,7 +131,7 @@ namespace CERNLIB {
 int deqn(const int n, std::vector<std::vector<double> >& a,
          std::vector<double>& b);
 /// Replaces b by the solution x of Ax = b, and replace A by its inverse.
-int deqinv(const int n, std::vector<std::vector<double> >& a, 
+int deqinv(const int n, std::vector<std::vector<double> >& a,
            std::vector<double>& b);
 
 void dfact(const int n, std::vector<std::vector<double> >& a,
@@ -156,11 +153,10 @@ void cfinv(const int n, std::vector<std::vector<std::complex<double> > >& a,
 int cinv(const int n, std::vector<std::vector<std::complex<double> > >& a);
 
 void cfft(std::vector<std::complex<double> >& a, const int msign);
-}
+}  // namespace CERNLIB
 
 /// Legendre polynomials.
 inline double Legendre(const unsigned int n, const double x) {
-
   if (std::abs(x) > 1.) return 0.;
   double p0 = 1.;
   double p1 = x;
@@ -178,27 +174,26 @@ inline double Legendre(const unsigned int n, const double x) {
 inline double BesselI0S(const double xx) {
   const double y = xx / 3.75;
   const double y2 = y * y;
-  return 1. + 3.5156229 * y2 + 3.0899424 * y2 * y2 +
-         1.2067492 * pow(y2, 3) + 0.2659732 * pow(y2, 4) +
-         0.0360768 * pow(y2, 5) + 0.0045813 * pow(y2, 6);
+  return 1. + 3.5156229 * y2 + 3.0899424 * y2 * y2 + 1.2067492 * pow(y2, 3) +
+         0.2659732 * pow(y2, 4) + 0.0360768 * pow(y2, 5) +
+         0.0045813 * pow(y2, 6);
 }
 
 inline double BesselI1S(const double xx) {
   const double y = xx / 3.75;
   const double y2 = y * y;
-  return xx *
-         (0.5 + 0.87890594 * y2 + 0.51498869 * y2 * y2 + 
-          0.15084934 * pow(y2, 3) + 0.02658733 * pow(y2, 4) + 
-          0.00301532 * pow(y2, 5) + 0.00032411 * pow(y2, 6));
+  return xx * (0.5 + 0.87890594 * y2 + 0.51498869 * y2 * y2 +
+               0.15084934 * pow(y2, 3) + 0.02658733 * pow(y2, 4) +
+               0.00301532 * pow(y2, 5) + 0.00032411 * pow(y2, 6));
 }
 
 inline double BesselK0S(const double xx) {
   const double y = xx / 2.;
   const double y2 = y * y;
-  return -log(y) * BesselI0S(xx) - Gamma +
-         0.42278420 * y2 + 0.23069756 * y2 * y2 +
-         0.03488590 * pow(y2, 3) + 0.00262698 * pow(y2, 4) +
-         0.00010750 * pow(y2, 5) + 0.00000740 * pow(y2, 6);
+  return -log(y) * BesselI0S(xx) - Gamma + 0.42278420 * y2 +
+         0.23069756 * y2 * y2 + 0.03488590 * pow(y2, 3) +
+         0.00262698 * pow(y2, 4) + 0.00010750 * pow(y2, 5) +
+         0.00000740 * pow(y2, 6);
 }
 
 inline double BesselK0L(const double xx) {
@@ -213,10 +208,9 @@ inline double BesselK1S(const double xx) {
   const double y = xx / 2.;
   const double y2 = y * y;
   return log(y) * BesselI1S(xx) +
-         (1. / xx) *
-             (1. + 0.15443144 * y2 - 0.67278579 * y2 * y2 -
-              0.18156897 * pow(y2, 3) - 0.01919402 * pow(y2, 4) -
-              0.00110404 * pow(y2, 5) - 0.00004686 * pow(y2, 6));
+         (1. / xx) * (1. + 0.15443144 * y2 - 0.67278579 * y2 * y2 -
+                      0.18156897 * pow(y2, 3) - 0.01919402 * pow(y2, 4) -
+                      0.00110404 * pow(y2, 5) - 0.00004686 * pow(y2, 6));
 }
 
 inline double BesselK1L(const double xx) {
@@ -233,8 +227,7 @@ double Divdif(const std::vector<double>& f, const std::vector<double>& a,
               int nn, double x, int mm);
 
 double LinearInterpolation(const std::vector<double>& ytab,
-                           const std::vector<double>& xtab,
-                           const double x);
+                           const std::vector<double>& xtab, const double x);
 
 /// Interpolation of order 1 and 2 in an irregular rectangular
 /// two-dimensional grid.
@@ -242,7 +235,7 @@ bool Boxin2(const std::vector<std::vector<double> >& value,
             const std::vector<double>& xAxis, const std::vector<double>& yAxis,
             const int nx, const int ny, const double xx, const double yy,
             double& f, const int iOrder);
-/// Interpolation of order 1 and 2 in an irregular rectangular 
+/// Interpolation of order 1 and 2 in an irregular rectangular
 /// three-dimensional grid.
 bool Boxin3(const std::vector<std::vector<std::vector<double> > >& value,
             const std::vector<double>& xAxis, const std::vector<double>& yAxis,
@@ -252,14 +245,14 @@ bool Boxin3(const std::vector<std::vector<std::vector<double> > >& value,
 
 /// Least-squares minimisation.
 bool LeastSquaresFit(
-    std::function<double(double, const std::vector<double>&)> f, 
+    std::function<double(double, const std::vector<double>&)> f,
     std::vector<double>& par, std::vector<double>& epar,
     const std::vector<double>& x, const std::vector<double>& y,
     const std::vector<double>& ey, const unsigned int nMaxIter,
-    const double diff, double& chi2, const double eps, 
-    const bool debug, const bool verbose);
+    const double diff, double& chi2, const double eps, const bool debug,
+    const bool verbose);
 
-}
-}
+}  // namespace Numerics
+}  // namespace Garfield
 
 #endif

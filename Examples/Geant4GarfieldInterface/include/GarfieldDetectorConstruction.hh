@@ -71,16 +71,16 @@ class GarfieldDetectorConstruction : public G4VUserDetectorConstruction {
   void DefineMaterials();
   G4VPhysicalVolume* DefineVolumes();
 
-  G4VPhysicalVolume* fAbsorberPV = nullptr; // absorber physical volume
-  G4VPhysicalVolume* fTubePV = nullptr;     // cathode physical volume
-  G4VPhysicalVolume* fGasPV = nullptr;      // gas physical volume
-  G4VPhysicalVolume* fWirePV = nullptr;     // wire physical volume
+  G4VPhysicalVolume* fAbsorberPV = nullptr;  // absorber physical volume
+  G4VPhysicalVolume* fTubePV = nullptr;      // cathode physical volume
+  G4VPhysicalVolume* fGasPV = nullptr;       // gas physical volume
+  G4VPhysicalVolume* fWirePV = nullptr;      // wire physical volume
 
   G4Material* fAbsorberMaterial = nullptr;
   G4LogicalVolume* fAbsorberLV = nullptr;
 
   // option to activate checking of volumes overlaps
-  G4bool fCheckOverlaps = true; 
+  G4bool fCheckOverlaps = true;
 
   GarfieldG4FastSimulationModel* fGarfieldG4FastSimulationModel = nullptr;
   GarfieldMessenger* fGarfieldMessenger = nullptr;

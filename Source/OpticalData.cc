@@ -1,8 +1,8 @@
+#include "Garfield/OpticalData.hh"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
-
-#include "Garfield/OpticalData.hh"
 
 namespace {
 
@@ -28,7 +28,7 @@ float Interpolate(const std::array<float, SIZE>& xs,
   const auto f = (x - *it0) / (*it1 - *it0);
   return y1 * f + (1. - f) * y0;
 }
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -1785,4 +1785,4 @@ bool OpticalData::PhotoAbsorptionCsNitrogen(const double e, double& cs,
   eta = 1.;
   return true;
 }
-}
+}  // namespace Garfield

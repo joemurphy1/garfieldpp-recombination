@@ -1,12 +1,10 @@
-#include "TCanvas.h"
-
-#include "Garfield/MediumMagboltz.hh"
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/MediumMagboltz.hh"
+#include "TCanvas.h"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   const double pressure = AtmosphericPressure;
   const double temperature = 293.15;
 
@@ -25,5 +23,4 @@ int main(int argc, char * argv[]) {
   // Plot the collision rates.
   gas.PlotElectronCollisionRates(c1);
   c1->SaveAs("DryAir_CollisionRates.png");
-  
 }

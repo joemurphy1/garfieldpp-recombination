@@ -1,14 +1,15 @@
 #ifndef PHOTOABSCS_H
 #define PHOTOABSCS_H
 
-#include <vector>
-#include <fstream>
-#include <cmath>
 #include <cfloat>
 #include <climits>
+#include <cmath>
+#include <fstream>
 #include <memory>
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include <vector>
+
 #include "heed++/code/PhysicalConstants.h"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 
 namespace Heed {
 
@@ -111,7 +112,6 @@ class AveragePhotoAbsCS : public PhotoAbsCS {
   void scale(double fact) override;
 
   void print(std::ostream& file, int l) const override;
-
 };
 
 /// Hydrogen: empirical fit of Kosarev & Podoliak.
@@ -204,11 +204,11 @@ class PhenoPhotoAbsCS : public PhotoAbsCS {
   /// Default constructor.
   PhenoPhotoAbsCS();
   /** Constructor
-    * \param fname name of the shell or atom
-    * \param fZ number of electrons
-    * \param fthreshold threshold level
-    * \param fpower positive number \f$x\f$ in \f$1/E^{-x}\f$
-    */
+   * \param fname name of the shell or atom
+   * \param fZ number of electrons
+   * \param fthreshold threshold level
+   * \param fpower positive number \f$x\f$ in \f$1/E^{-x}\f$
+   */
   PhenoPhotoAbsCS(const std::string& fname, int fZ, double fthreshold,
                   double fpower = 2.75);
   /// Destructor.
@@ -301,8 +301,8 @@ class AtomPhotoAbsCS {
   /// The photo-ionization cross-section does not include excitation.
   virtual double get_ICS(double energy) const = 0;
   /// Photo-ionization cross-section assuming a redefined ionization threshold.
-  /// This function can be useful for redefining the ionization threshold in 
-  /// atomic mixtures, where on atom can transfer excitations to another one 
+  /// This function can be useful for redefining the ionization threshold in
+  /// atomic mixtures, where on atom can transfer excitations to another one
   /// with lower ionization threshold (Penning/Jesse effect).
   virtual double get_TICS(double energy,
                           double factual_minimal_threshold) const;
@@ -328,10 +328,10 @@ class AtomPhotoAbsCS {
     * \param nshell
              shell index
     * \param energy
-             can be a little bit below threshold 
+             can be a little bit below threshold
     * \param el_energy
              electron energies. The photo-electron is the first one.
-             Later (in HeedPhoton) the photo-electron is emitted in the 
+             Later (in HeedPhoton) the photo-electron is emitted in the
              forward direction. The other are sampled isotropically.
     * \param ph_energy
              photon energies
@@ -345,9 +345,9 @@ class AtomPhotoAbsCS {
   /// If the shell number cannot be determined, the function returns -1.
   virtual int get_main_shell_number(int nshell) const = 0;
 
-  /// Deactivate a sub-shell. Set s_ignore_shell flag to true. 
+  /// Deactivate a sub-shell. Set s_ignore_shell flag to true.
   virtual void remove_shell(int nshell);
-  /// Activate a sub-shell. Set s_ignore_shell flag to false. 
+  /// Activate a sub-shell. Set s_ignore_shell flag to false.
   virtual void restore_shell(int nshell);
   virtual void print(std::ostream& file, int l) const;
 
@@ -410,7 +410,8 @@ class SimpleAtomPhotoAbsCS : public AtomPhotoAbsCS {
   std::vector<std::shared_ptr<PhotoAbsCS> > m_acs;
 };
 
-constexpr double low_boundary_of_excitations = 0.7; // from ionization threshold
+constexpr double low_boundary_of_excitations =
+    0.7;  // from ionization threshold
 
 /// Atomic photo-absorption with excitation.
 class ExAtomPhotoAbsCS : public AtomPhotoAbsCS {
@@ -440,7 +441,7 @@ class ExAtomPhotoAbsCS : public AtomPhotoAbsCS {
   ExAtomPhotoAbsCS() : AtomPhotoAbsCS() {}
 
   /** Constructor,
-    * \param fZ 
+    * \param fZ
              atomic number
     * \param fthreshold_file_name
              file from which to read name and shell energies
@@ -488,11 +489,10 @@ class ExAtomPhotoAbsCS : public AtomPhotoAbsCS {
     * \param s_no_scale
              scaling is not done, needs for next (?)
     * \param fminimal_threshold
-             threshold 
+             threshold
     **/
   ExAtomPhotoAbsCS(int fZ, const std::string& fname,
-                   const std::string& fFitBT_file_name,
-                   int id, int s_no_scale,
+                   const std::string& fFitBT_file_name, int id, int s_no_scale,
                    double fminimal_threshold = 0.0);
 
   /** Constructor, combination of Band and Thragzkovskaya fit and Henke tables.
@@ -513,7 +513,7 @@ class ExAtomPhotoAbsCS : public AtomPhotoAbsCS {
              2 - new files with fluorescence rate
              other values - error
     * \param fminimal_threshold
-             threshold 
+             threshold
     **/
   ExAtomPhotoAbsCS(int fZ, const std::string& fname,
                    const std::string& fFitBT_file_name,
@@ -539,7 +539,7 @@ class ExAtomPhotoAbsCS : public AtomPhotoAbsCS {
   /// Boundaries of excitation.
   double exener[2] = {0., 0.};
 
-  double minimal_threshold = 0.; 
+  double minimal_threshold = 0.;
   // The shells are corrected on the minimal_threshold "on the fly".
   // If the threshold of the atomic shell is less then minimal_threshold,
   // the difference is subtracted from the energy for which
@@ -579,9 +579,7 @@ class MolecPhotoAbsCS {
   int get_qatom() const { return qatom; }
   /// Number of atoms of a particular sort in the molecule.
   int get_qatom_ps(const int n) const { return qatom_ps[n]; }
-  const AtomPhotoAbsCS* get_atom(const int n) { 
-    return atom[n]; 
-  }
+  const AtomPhotoAbsCS* get_atom(const int n) { return atom[n]; }
 
   /// Photo-absorption cross-section [Mbarn] at a given energy [MeV].
   double get_ACS(double energy) const;
@@ -631,6 +629,6 @@ class MolecPhotoAbsCS {
   double F = standard_factor_Fano;
 };
 std::ostream& operator<<(std::ostream& file, const MolecPhotoAbsCS& f);
-}
+}  // namespace Heed
 
 #endif

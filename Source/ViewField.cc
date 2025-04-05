@@ -1,22 +1,23 @@
-#include <stdio.h>
-#include <string.h>
-#include <algorithm>
-#include <cmath>
-#include <iostream>
-#include<array>
-#include <limits>
+#include "Garfield/ViewField.hh"
 
 #include <TAxis.h>
-#include <TROOT.h>
 #include <TF1.h>
 #include <TF2.h>
 #include <TH1F.h>
+#include <TROOT.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <iostream>
+#include <limits>
 
 #include "Garfield/Component.hh"
+#include "Garfield/DriftLineRKF.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/DriftLineRKF.hh"
-#include "Garfield/ViewField.hh"
 
 namespace {
 
@@ -52,7 +53,6 @@ void SampleRange(TF1* f, double& ymin, double& ymax) {
 
 double Interpolate(const std::array<double, 1000>& y,
                    const std::array<double, 1000>& x, const double xx) {
-
   const double tol = 1.e-6 * fabs(x.back() - x.front());
   if (xx < x[0]) return y[0];
   const auto it1 = std::upper_bound(x.cbegin(), x.cend(), xx);
@@ -64,19 +64,17 @@ double Interpolate(const std::array<double, 1000>& y,
   return y[it0 - x.cbegin()] * (1. - f) + f * y[it1 - x.cbegin()];
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
-ViewField::ViewField() : ViewBase("ViewField") { }
+ViewField::ViewField() : ViewBase("ViewField") {}
 
-ViewField::ViewField(Sensor* sensor) : 
-    ViewBase("ViewField"),
-    m_sensor(sensor) {}
+ViewField::ViewField(Sensor* sensor)
+    : ViewBase("ViewField"), m_sensor(sensor) {}
 
-ViewField::ViewField(Component* component) : 
-    ViewBase("ViewField"),
-    m_component(component) {}
+ViewField::ViewField(Component* component)
+    : ViewBase("ViewField"), m_component(component) {}
 
 void ViewField::SetSensor(Sensor* s) {
   if (!s) {
@@ -140,8 +138,8 @@ void ViewField::PlotContour(const std::string& option) {
 
 void ViewField::Plot(const std::string& option, const std::string& drawopt) {
   std::string opt1;
-  std::transform(drawopt.begin(), drawopt.end(), 
-                 std::back_inserter(opt1), toupper);
+  std::transform(drawopt.begin(), drawopt.end(), std::back_inserter(opt1),
+                 toupper);
   if (opt1.find("CONT") != std::string::npos) {
     Draw2d(option, true, false, "", drawopt);
   } else {
@@ -175,14 +173,12 @@ void ViewField::PlotProfileWeightingField(const std::string& label,
   DrawProfile(x0, y0, z0, x1, y1, z1, option, true, label, normalised);
 }
 
-
 ViewField::Parameter ViewField::GetPar(const std::string& option,
                                        std::string& title, bool& bfield) const {
-
   bfield = false;
   std::string opt;
-  std::transform(option.begin(), option.end(), 
-                 std::back_inserter(opt), toupper);
+  std::transform(option.begin(), option.end(), std::back_inserter(opt),
+                 toupper);
   if (opt == "BMAG") {
     title = "field";
     bfield = true;
@@ -199,9 +195,9 @@ ViewField::Parameter ViewField::GetPar(const std::string& option,
     title = "field (z-component)";
     bfield = true;
     return Parameter::Bz;
-  } else if (opt == "V" || opt == "P" || opt == "PHI" || 
-      opt.find("VOLT") != std::string::npos ||
-      opt.find("POT") != std::string::npos) {
+  } else if (opt == "V" || opt == "P" || opt == "PHI" ||
+             opt.find("VOLT") != std::string::npos ||
+             opt.find("POT") != std::string::npos) {
     title = "potential";
     return Parameter::Potential;
   } else if (opt == "E" || opt == "FIELD" || opt == "NORM" ||
@@ -240,16 +236,19 @@ void ViewField::Draw2d(const std::string& option, const bool contour,
   bool bfield = false;
   const Parameter par = GetPar(option, title, bfield);
 
-  auto eval = [this, par, wfield, bfield, electrode, t](double* u, double* /*p*/) {
-      // Transform to global coordinates.
-      const double x = m_proj[0][0] * u[0] + m_proj[1][0] * u[1] + m_proj[2][0];
-      const double y = m_proj[0][1] * u[0] + m_proj[1][1] * u[1] + m_proj[2][1];
-      const double z = m_proj[0][2] * u[0] + m_proj[1][2] * u[1] + m_proj[2][2];
-      return wfield ? Wfield(x, y, z, par, electrode, t) :
-             bfield ? Bfield(x, y, z, par) : Efield(x, y, z, par);
+  auto eval = [this, par, wfield, bfield, electrode, t](double* u,
+                                                        double* /*p*/) {
+    // Transform to global coordinates.
+    const double x = m_proj[0][0] * u[0] + m_proj[1][0] * u[1] + m_proj[2][0];
+    const double y = m_proj[0][1] * u[0] + m_proj[1][1] * u[1] + m_proj[2][1];
+    const double z = m_proj[0][2] * u[0] + m_proj[1][2] * u[1] + m_proj[2][2];
+    return wfield   ? Wfield(x, y, z, par, electrode, t)
+           : bfield ? Bfield(x, y, z, par)
+                    : Efield(x, y, z, par);
   };
   const std::string fname = FindUnusedFunctionName("f2D");
-  TF2 f2(fname.c_str(), eval, m_xMinPlot, m_xMaxPlot, m_yMinPlot, m_yMaxPlot, 0);
+  TF2 f2(fname.c_str(), eval, m_xMinPlot, m_xMaxPlot, m_yMinPlot, m_yMaxPlot,
+         0);
 
   // Set the x-y range.
   f2.SetRange(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot);
@@ -264,8 +263,8 @@ void ViewField::Draw2d(const std::string& option, const bool contour,
       title = "Weighting " + title;
     }
     if (m_useAutoRange) {
-      SampleRange(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot, &f2, 
-                  zmin, zmax);
+      SampleRange(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot, &f2, zmin,
+                  zmax);
     } else if (par == Parameter::Potential) {
       zmin = 0.;
       zmax = 1.;
@@ -280,8 +279,8 @@ void ViewField::Draw2d(const std::string& option, const bool contour,
       title = "Magnetic " + title;
     }
     if (m_useAutoRange) {
-      SampleRange(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot, 
-                  &f2, zmin, zmax);
+      SampleRange(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot, &f2, zmin,
+                  zmax);
     } else {
       zmin = m_bmin;
       zmax = m_bmax;
@@ -296,13 +295,13 @@ void ViewField::Draw2d(const std::string& option, const bool contour,
       if (m_useAutoRange) {
         if (m_component) {
           if (m_samplePotential || !m_component->GetVoltageRange(zmin, zmax)) {
-            SampleRange(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot, 
-                        &f2, zmin, zmax);
+            SampleRange(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot, &f2,
+                        zmin, zmax);
           }
         } else if (m_sensor) {
           if (m_samplePotential || !m_sensor->GetVoltageRange(zmin, zmax)) {
-            SampleRange(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot, 
-                        &f2, zmin, zmax);
+            SampleRange(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot, &f2,
+                        zmin, zmax);
           }
         }
       } else {
@@ -311,8 +310,8 @@ void ViewField::Draw2d(const std::string& option, const bool contour,
       }
     } else {
       if (m_useAutoRange) {
-        SampleRange(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot, 
-                    &f2, zmin, zmax);
+        SampleRange(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot, &f2, zmin,
+                    zmax);
       } else {
         zmin = m_emin;
         zmax = m_emax;
@@ -361,8 +360,8 @@ void ViewField::Draw2d(const std::string& option, const bool contour,
 
 void ViewField::DrawProfile(const double x0, const double y0, const double z0,
                             const double x1, const double y1, const double z1,
-                            const std::string& option, 
-                            const bool wfield, const std::string& electrode,
+                            const std::string& option, const bool wfield,
+                            const std::string& electrode,
                             const bool normalised) {
   if (!m_sensor && !m_component) {
     std::cerr << m_className << "::DrawProfile:\n"
@@ -404,11 +403,11 @@ void ViewField::DrawProfile(const double x0, const double y0, const double z0,
     t1 = sqrt(dx * dx + dy * dy + dz * dz);
     dx /= t1;
     dy /= t1;
-    dz /= t1; 
+    dz /= t1;
   }
 
-  auto eval = [this, par, wfield, bfield, electrode, dir, 
-               x0, y0, z0, dx, dy, dz](double* u, double* /*p*/) {
+  auto eval = [this, par, wfield, bfield, electrode, dir, x0, y0, z0, dx, dy,
+               dz](double* u, double* /*p*/) {
     // Get the position.
     const double t = u[0];
     double x = dir == 0 ? t : x0;
@@ -419,8 +418,9 @@ void ViewField::DrawProfile(const double x0, const double y0, const double z0,
       y += t * dy;
       z += t * dz;
     }
-    return wfield ? Wfield(x, y, z, par, electrode) : 
-           bfield ? Bfield(x, y, z, par) : Efield(x, y, z, par);
+    return wfield   ? Wfield(x, y, z, par, electrode)
+           : bfield ? Bfield(x, y, z, par)
+                    : Efield(x, y, z, par);
   };
 
   const std::string fname = FindUnusedFunctionName("fProfile");
@@ -543,7 +543,6 @@ void ViewField::DrawProfile(const double x0, const double y0, const double z0,
 }
 
 bool ViewField::SetPlotLimits() {
-
   if (m_userPlotLimits) return true;
   double xmin = 0., ymin = 0., xmax = 0., ymax = 0.;
   if (m_userBox) {
@@ -553,7 +552,7 @@ bool ViewField::SetPlotLimits() {
       m_yMinPlot = ymin;
       m_yMaxPlot = ymax;
       return true;
-    } 
+    }
   }
   // Try to get the area/bounding box from the sensor/component.
   bool ok = false;
@@ -562,7 +561,7 @@ bool ViewField::SetPlotLimits() {
     ok = PlotLimits(m_sensor, xmin, ymin, xmax, ymax);
   } else {
     ok = PlotLimits(m_component, xmin, ymin, xmax, ymax);
-  } 
+  }
   if (ok) {
     m_xMinPlot = xmin;
     m_xMaxPlot = xmax;
@@ -574,7 +573,6 @@ bool ViewField::SetPlotLimits() {
 
 double ViewField::Efield(const double x, const double y, const double z,
                          const Parameter par) const {
-
   // Compute the field.
   double ex = 0., ey = 0., ez = 0., volt = 0.;
   int status = 0;
@@ -603,9 +601,8 @@ double ViewField::Efield(const double x, const double y, const double z,
 }
 
 double ViewField::Wfield(const double x, const double y, const double z,
-                         const Parameter par,
-                         const std::string& electrode, const double t) const {
-
+                         const Parameter par, const std::string& electrode,
+                         const double t) const {
   if (par == Parameter::Potential) {
     double v = 0.;
     if (m_sensor) {
@@ -642,11 +639,10 @@ double ViewField::Wfield(const double x, const double y, const double z,
       break;
   }
   return 0.;
-} 
+}
 
 double ViewField::Bfield(const double x, const double y, const double z,
                          const Parameter par) const {
-
   // Compute the field.
   double bx = 0., by = 0., bz = 0.;
   int status = 0;
@@ -676,7 +672,6 @@ void ViewField::PlotFieldLines(const std::vector<double>& x0,
                                const std::vector<double>& z0,
                                const bool electron, const bool axis,
                                const short col) {
-  
   if (x0.empty() || y0.empty() || z0.empty()) return;
   const size_t nLines = x0.size();
   if (y0.size() != nLines || z0.size() != nLines) {
@@ -705,14 +700,13 @@ void ViewField::PlotFieldLines(const std::vector<double>& x0,
     }
   }
   if (axis) {
-    auto frame = pad->DrawFrame(m_xMinPlot, m_yMinPlot,
-                                m_xMaxPlot, m_yMaxPlot);
+    auto frame = pad->DrawFrame(m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot);
     frame->GetXaxis()->SetTitle(LabelX().c_str());
     frame->GetYaxis()->SetTitle(LabelY().c_str());
     pad->Update();
   } else if (!rangeSet) {
     SetRange(pad, m_xMinPlot, m_yMinPlot, m_xMaxPlot, m_yMaxPlot);
-  } 
+  }
 
   DriftLineRKF drift;
   Sensor sensor;
@@ -723,8 +717,8 @@ void ViewField::PlotFieldLines(const std::vector<double>& x0,
     double xmax = 0., ymax = 0., zmax = 0.;
     if (!m_component->GetBoundingBox(xmin, ymin, zmin, xmax, ymax, zmax)) {
       if (m_userBox) {
-        sensor.SetArea(m_xMinBox, m_yMinBox, m_zMinBox, 
-                       m_xMaxBox, m_yMaxBox, m_zMaxBox);
+        sensor.SetArea(m_xMinBox, m_yMinBox, m_zMinBox, m_xMaxBox, m_yMaxBox,
+                       m_zMaxBox);
       }
     }
     sensor.AddComponent(m_component);
@@ -741,8 +735,8 @@ void ViewField::PlotFieldLines(const std::vector<double>& x0,
   for (size_t i = 0; i < nLines; ++i) {
     std::vector<std::array<float, 3> > xl;
     if (m_debug) {
-      std::printf("    Line %5zu: (%10.3f, %10.3f, %10.3f)\n",
-                  i, x0[i], y0[i], z0[i]);
+      std::printf("    Line %5zu: (%10.3f, %10.3f, %10.3f)\n", i, x0[i], y0[i],
+                  z0[i]);
     }
     if (!drift.FieldLine(x0[i], y0[i], z0[i], xl, electron)) continue;
     DrawLine(xl, col, 1);
@@ -750,13 +744,13 @@ void ViewField::PlotFieldLines(const std::vector<double>& x0,
   pad->Update();
 }
 
-bool ViewField::EqualFluxIntervals(
-    const double x0, const double y0, const double z0,
-    const double x1, const double y1, const double z1,
-    std::vector<double>& xf, std::vector<double>& yf,
-    std::vector<double>& zf,
-    const unsigned int nPoints) const {
-
+bool ViewField::EqualFluxIntervals(const double x0, const double y0,
+                                   const double z0, const double x1,
+                                   const double y1, const double z1,
+                                   std::vector<double>& xf,
+                                   std::vector<double>& yf,
+                                   std::vector<double>& zf,
+                                   const unsigned int nPoints) const {
   if (nPoints < 2) {
     std::cerr << m_className << "::EqualFluxIntervals:\n"
               << "    Number of flux lines must be > 1.\n";
@@ -772,11 +766,11 @@ bool ViewField::EqualFluxIntervals(
   // Compute the total flux, accepting positive and negative parts.
   double q = 0.;
   if (m_component) {
-    q = m_component->IntegrateFluxLine(x0, y0, z0, x1, y1, z1, 
-                                       xp, yp, zp, 20 * nV, 0);
+    q = m_component->IntegrateFluxLine(x0, y0, z0, x1, y1, z1, xp, yp, zp,
+                                       20 * nV, 0);
   } else {
-    q = m_sensor->IntegrateFluxLine(x0, y0, z0, x1, y1, z1, 
-                                    xp, yp, zp, 20 * nV, 0);
+    q = m_sensor->IntegrateFluxLine(x0, y0, z0, x1, y1, z1, xp, yp, zp, 20 * nV,
+                                    0);
   }
   const int isign = q > 0 ? +1 : -1;
   if (m_debug) {
@@ -800,11 +794,11 @@ bool ViewField::EqualFluxIntervals(
     const double y = y0 + i * dy;
     const double z = z0 + i * dz;
     if (m_component) {
-      q = m_component->IntegrateFluxLine(x, y, z, x + dx, y + dy, z + dz, 
-                                         xp, yp, zp, nV, isign);
+      q = m_component->IntegrateFluxLine(x, y, z, x + dx, y + dy, z + dz, xp,
+                                         yp, zp, nV, isign);
     } else {
-      q = m_sensor->IntegrateFluxLine(x, y, z, x + dx, y + dy, z + dz, 
-                                      xp, yp, zp, nV, isign);
+      q = m_sensor->IntegrateFluxLine(x, y, z, x + dx, y + dy, z + dz, xp, yp,
+                                      zp, nV, isign);
     }
     sTab[i] = (i + 1) * ds;
     if (q > 0) {
@@ -816,8 +810,8 @@ bool ViewField::EqualFluxIntervals(
     fTab[i] = fsum;
   }
   if (m_debug) {
-    std::printf("    Used flux: %15.8e V. Start: %10.3f End: %10.3f\n",
-                fsum, s0, s1);
+    std::printf("    Used flux: %15.8e V. Start: %10.3f End: %10.3f\n", fsum,
+                s0, s1);
   }
   // Make sure that the sum is positive.
   if (fsum <= 0) {
@@ -846,12 +840,13 @@ bool ViewField::EqualFluxIntervals(
   return true;
 }
 
-bool ViewField::FixedFluxIntervals(
-    const double x0, const double y0, const double z0,
-    const double x1, const double y1, const double z1,
-    std::vector<double>& xf, std::vector<double>& yf,
-    std::vector<double>& zf, const double interval) const {
-
+bool ViewField::FixedFluxIntervals(const double x0, const double y0,
+                                   const double z0, const double x1,
+                                   const double y1, const double z1,
+                                   std::vector<double>& xf,
+                                   std::vector<double>& yf,
+                                   std::vector<double>& zf,
+                                   const double interval) const {
   if (interval <= 0.) {
     std::cerr << m_className << "::FixedFluxIntervals:\n"
               << "    Flux interval must be > 0.\n";
@@ -867,11 +862,11 @@ bool ViewField::FixedFluxIntervals(
   // Compute the total flux, accepting positive and negative parts.
   double q = 0.;
   if (m_component) {
-    q = m_component->IntegrateFluxLine(x0, y0, z0, x1, y1, z1, 
-                                       xp, yp, zp, 20 * nV, 0);
+    q = m_component->IntegrateFluxLine(x0, y0, z0, x1, y1, z1, xp, yp, zp,
+                                       20 * nV, 0);
   } else {
-    q = m_sensor->IntegrateFluxLine(x0, y0, z0, x1, y1, z1, 
-                                    xp, yp, zp, 20 * nV, 0);
+    q = m_sensor->IntegrateFluxLine(x0, y0, z0, x1, y1, z1, xp, yp, zp, 20 * nV,
+                                    0);
   }
   const int isign = q > 0 ? +1 : -1;
   if (m_debug) {
@@ -894,11 +889,11 @@ bool ViewField::FixedFluxIntervals(
     const double y = y0 + i * dy;
     const double z = z0 + i * dz;
     if (m_component) {
-      q = m_component->IntegrateFluxLine(x, y, z, x + dx, y + dy, z + dz, 
-                                         xp, yp, zp, nV, isign);
+      q = m_component->IntegrateFluxLine(x, y, z, x + dx, y + dy, z + dz, xp,
+                                         yp, zp, nV, isign);
     } else {
-      q = m_sensor->IntegrateFluxLine(x, y, z, x + dx, y + dy, z + dz, 
-                                      xp, yp, zp, nV, isign);
+      q = m_sensor->IntegrateFluxLine(x, y, z, x + dx, y + dy, z + dz, xp, yp,
+                                      zp, nV, isign);
     }
     sTab[i] = (i + 1) * ds;
     if (q > 0) {
@@ -935,4 +930,4 @@ bool ViewField::FixedFluxIntervals(
   }
   return true;
 }
-}
+}  // namespace Garfield

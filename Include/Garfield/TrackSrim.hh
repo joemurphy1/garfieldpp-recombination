@@ -1,12 +1,13 @@
 #ifndef G_TRACK_SRIM_H
 #define G_TRACK_SRIM_H
 
-#include<array>
+#include <array>
 #include <vector>
+
 #include "Garfield/Track.hh"
 
 namespace Garfield {
-
+class Medium;
 /// Generate tracks based on SRIM energy loss, range and straggling tables.
 ///  - http://www.srim.org
 
@@ -21,7 +22,7 @@ class TrackSrim : public Track {
 
   /// Load data from a SRIM file.
   bool ReadFile(const std::string& file);
-  /// Print the energy loss table. 
+  /// Print the energy loss table.
   void Print();
   /// Plot the electromagnetic, hadronic, and total energy loss
   /// as function of the projectile energy.
@@ -29,7 +30,7 @@ class TrackSrim : public Track {
   /// Plot the projected range as function of the projectile energy.
   void PlotRange();
   /// Plot the transverse and longitudinal straggling as function
-  /// of the projectile energy. 
+  /// of the projectile energy.
   void PlotStraggling();
 
   /// Set the fluctuation model
@@ -54,12 +55,12 @@ class TrackSrim : public Track {
   /// Get the W value [eV].
   double GetWorkFunction() const { return m_work; }
   /// Set the Fano factor.
-  void SetFanoFactor(const double f) { 
-    m_fano = f; 
+  void SetFanoFactor(const double f) {
+    m_fano = f;
     m_fset = true;
   }
   /// Use the default Fano factor.
-  void UnsetFanoFactor() { m_fset = false; } 
+  void UnsetFanoFactor() { m_fset = false; }
   /// Get the Fano factor.
   double GetFanoFactor() const { return m_fano; }
   /// Set the density [g/cm3] of the target medium.
@@ -78,12 +79,12 @@ class TrackSrim : public Track {
   }
 
   /// Simulate transverse straggling (default: on).
-  void EnableTransverseStraggling(const bool on = true) { 
-    m_useTransStraggle = on; 
+  void EnableTransverseStraggling(const bool on = true) {
+    m_useTransStraggle = on;
   }
   /// Simulate longitudinal straggling (default: off).
-  void EnableLongitudinalStraggling(const bool on = true) { 
-    m_useLongStraggle = on; 
+  void EnableLongitudinalStraggling(const bool on = true) {
+    m_useLongStraggle = on;
   }
 
   struct Cluster {
@@ -97,7 +98,7 @@ class TrackSrim : public Track {
                 const double t0, const double dx0, const double dy0,
                 const double dz0) override;
   const std::vector<Cluster>& GetClusters() const { return m_clusters; }
-  bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc, 
+  bool GetCluster(double& xc, double& yc, double& zc, double& tc, int& nc,
                   double& ec, double& extra);
 
  protected:
@@ -122,7 +123,7 @@ class TrackSrim : public Track {
   double m_fano = -1.;
   /// Effective A of the target
   double m_a = -1.;
-  /// Effective Z of the target 
+  /// Effective Z of the target
   double m_z = -1.;
 
   /// Maximum number of clusters allowed (infinite if 0)
@@ -154,19 +155,19 @@ class TrackSrim : public Track {
   double DedxHD(const double e) const;
   bool PreciseLoss(const double step, const double estart, double& deem,
                    double& dehd) const;
-  bool EstimateRange(const double ekin, const double step, 
+  bool EstimateRange(const double ekin, const double step,
                      double& stpmax) const;
-  bool SmallestStep(const double ekin, const double edens,
-                    double de, double step, double& stpmin);
+  bool SmallestStep(const double ekin, const double edens, double de,
+                    double step, double& stpmin);
   Medium* GetMedium(const std::array<double, 3>& x) const;
   double Terminate(const std::array<double, 3>& x0,
                    const std::array<double, 3>& v0, const double step0) const;
   double TerminateBfield(const std::array<double, 3>& x0,
-                         const std::array<double, 3>& v0,
-                         const double dt0, const double vmag) const;
-  double RndmEnergyLoss(const double ekin, const double de,
-                        const double step, const double edens) const;
+                         const std::array<double, 3>& v0, const double dt0,
+                         const double vmag) const;
+  double RndmEnergyLoss(const double ekin, const double de, const double step,
+                        const double edens) const;
 };
-}
+}  // namespace Garfield
 
 #endif

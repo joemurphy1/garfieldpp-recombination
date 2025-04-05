@@ -1,9 +1,15 @@
+#include "Garfield/TrackHeed.hh"
+
 #include <algorithm>
 #include <iostream>
 
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
-#include "wcpplib/matter/MatterDef.h"
-
+#include "Garfield/FundamentalConstants.hh"
+#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Medium.hh"
+#include "Garfield/Random.hh"
+#include "Garfield/Sensor.hh"
+#include "HeedChamber.hh"
+#include "HeedFieldMap.hh"
 #include "heed++/code/ElElasticScat.h"
 #include "heed++/code/EnTransfCS.h"
 #include "heed++/code/HeedCondElectron.h"
@@ -13,17 +19,8 @@
 #include "heed++/code/HeedParticle.h"
 #include "heed++/code/HeedPhoton.h"
 #include "heed++/code/PhotoAbsCSLib.h"
-
-#include "HeedChamber.hh"
-#include "HeedFieldMap.hh"
-
-#include "Garfield/FundamentalConstants.hh"
-#include "Garfield/GarfieldConstants.hh"
-#include "Garfield/Random.hh"
-#include "Garfield/Sensor.hh"
-#include "Garfield/Medium.hh"
-
-#include "Garfield/TrackHeed.hh"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include "wcpplib/matter/MatterDef.h"
 
 namespace {
 
@@ -33,7 +30,7 @@ void ClearBank(std::vector<Heed::gparticle*>& bank) {
   bank.clear();
 }
 
-Heed::vec NormaliseDirection(const double dx0, const double dy0, 
+Heed::vec NormaliseDirection(const double dx0, const double dy0,
                              const double dz0) {
   double dx = dx0, dy = dy0, dz = dz0;
   const double d = sqrt(dx * dx + dy * dy + dz * dz);
@@ -47,7 +44,7 @@ Heed::vec NormaliseDirection(const double dx0, const double dy0,
     dy *= scale;
     dz *= scale;
   }
-  return Heed::vec(dx, dy, dz); 
+  return Heed::vec(dx, dy, dz);
 }
 
 Heed::MolecPhotoAbsCS makeMPACS(const std::string& atom, const int n,
@@ -58,7 +55,7 @@ Heed::MolecPhotoAbsCS makeMPACS(const std::string& atom, const int n,
 Heed::MolecPhotoAbsCS makeMPACS(const std::string& atom1, const int n1,
                                 const std::string& atom2, const int n2,
                                 const double w = 0.) {
-  return Heed::MolecPhotoAbsCS(Heed::PhotoAbsCSLib::getAPACS(atom1), n1, 
+  return Heed::MolecPhotoAbsCS(Heed::PhotoAbsCSLib::getAPACS(atom1), n1,
                                Heed::PhotoAbsCSLib::getAPACS(atom2), n2, w);
 }
 
@@ -66,12 +63,12 @@ Heed::MolecPhotoAbsCS makeMPACS(const std::string& atom1, const int n1,
                                 const std::string& atom2, const int n2,
                                 const std::string& atom3, const int n3,
                                 const double w = 0.) {
-  return Heed::MolecPhotoAbsCS(Heed::PhotoAbsCSLib::getAPACS(atom1), n1, 
+  return Heed::MolecPhotoAbsCS(Heed::PhotoAbsCSLib::getAPACS(atom1), n1,
                                Heed::PhotoAbsCSLib::getAPACS(atom2), n2,
                                Heed::PhotoAbsCSLib::getAPACS(atom3), n3, w);
 }
 
-}
+}  // namespace
 
 // Actual class implementation
 
@@ -198,9 +195,10 @@ bool TrackHeed::NewTrack(const double x0, const double y0, const double z0,
   }
 
   // Sort the clusters by time.
-  std::sort(particleBank.begin(), particleBank.end(), 
-      [](Heed::gparticle* p1, Heed::gparticle* p2) { 
-        return p1->time() < p2->time(); });
+  std::sort(particleBank.begin(), particleBank.end(),
+            [](Heed::gparticle* p1, Heed::gparticle* p2) {
+              return p1->time() < p2->time();
+            });
   // Loop over the clusters (virtual photons) created by the particle.
   for (auto gp : particleBank) {
     // Convert the particle to a (virtual) photon.
@@ -217,7 +215,7 @@ bool TrackHeed::NewTrack(const double x0, const double y0, const double z0,
   }
   ClearBank(particleBank);
   Heed::gparticle::reset_counter();
-  m_cluster = m_clusters.size() + 2; 
+  m_cluster = m_clusters.size() + 2;
 
   m_hasActiveTrack = true;
 
@@ -232,7 +230,6 @@ bool TrackHeed::NewTrack(const double x0, const double y0, const double z0,
 }
 
 double TrackHeed::GetClusterDensity() {
-
   if (!m_transferCs) {
     std::cerr << m_className << "::GetClusterDensity:\n"
               << "    Ionisation cross-section is not available.\n";
@@ -242,7 +239,6 @@ double TrackHeed::GetClusterDensity() {
 }
 
 double TrackHeed::GetStoppingPower() {
-
   if (!m_transferCs) {
     std::cerr << m_className << "::GetStoppingPower:\n"
               << "    Ionisation cross-section is not available.\n";
@@ -253,7 +249,6 @@ double TrackHeed::GetStoppingPower() {
 
 bool TrackHeed::AddCluster(Heed::HeedPhoton* virtualPhoton,
                            std::vector<Cluster>& clusters) {
-
   // Get the location of the interaction (convert from mm to cm
   // and shift with respect to bounding box center).
   const double xc = virtualPhoton->position().x * 0.1 + m_cX;
@@ -356,7 +351,6 @@ bool TrackHeed::AddCluster(Heed::HeedPhoton* virtualPhoton,
 void TrackHeed::AddElectrons(
     const std::vector<Heed::HeedCondElectron>& conductionElectrons,
     std::vector<Electron>& electrons) {
-
   for (const auto& conductionElectron : conductionElectrons) {
     Electron electron;
     electron.x = conductionElectron.x * 0.1 + m_cX;
@@ -367,23 +361,21 @@ void TrackHeed::AddElectrons(
   }
 }
 
-bool TrackHeed::GetCluster(double& xc, double& yc, double& zc,
-                           double& tc, int& ne, 
-                           double& ec, double& extra) {
+bool TrackHeed::GetCluster(double& xc, double& yc, double& zc, double& tc,
+                           int& ne, double& ec, double& extra) {
   int ni = 0, np = 0;
   return GetCluster(xc, yc, zc, tc, ne, ni, np, ec, extra);
 }
 
-bool TrackHeed::GetCluster(double& xc, double& yc, double& zc, 
-                           double& tc, int& ne, int& ni, 
-                           double& ec, double& extra) {
+bool TrackHeed::GetCluster(double& xc, double& yc, double& zc, double& tc,
+                           int& ne, int& ni, double& ec, double& extra) {
   int np = 0;
   return GetCluster(xc, yc, zc, tc, ne, ni, np, ec, extra);
 }
 
-bool TrackHeed::GetCluster(double& xc, double& yc, double& zc,
-                           double& tc, int& ne, int& ni, int& np, 
-                           double& ec, double& extra) {
+bool TrackHeed::GetCluster(double& xc, double& yc, double& zc, double& tc,
+                           int& ne, int& ni, int& np, double& ec,
+                           double& extra) {
   // Initialise.
   xc = yc = zc = tc = ec = extra = 0.;
   ne = ni = np = 0;
@@ -394,7 +386,7 @@ bool TrackHeed::GetCluster(double& xc, double& yc, double& zc,
     ++m_cluster;
   } else if (m_cluster > m_clusters.size()) {
     m_cluster = 0;
-  } 
+  }
   if (m_cluster >= m_clusters.size()) return false;
 
   ne = m_clusters[m_cluster].electrons.size();
@@ -412,7 +404,6 @@ bool TrackHeed::GetCluster(double& xc, double& yc, double& zc,
 bool TrackHeed::GetElectron(const unsigned int i, double& x, double& y,
                             double& z, double& t, double& e, double& dx,
                             double& dy, double& dz) {
-
   if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
   // Make sure an electron with this number exists.
   if (i >= m_clusters[m_cluster].electrons.size()) {
@@ -447,9 +438,9 @@ bool TrackHeed::GetIon(const unsigned int i, double& x, double& y, double& z,
   return true;
 }
 
-bool TrackHeed::GetPhoton(const unsigned int i, double& x, double& y,
-                          double& z, double& t, double& e, double& dx,
-                          double& dy, double& dz) const {
+bool TrackHeed::GetPhoton(const unsigned int i, double& x, double& y, double& z,
+                          double& t, double& e, double& dx, double& dy,
+                          double& dz) const {
   if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
   // Make sure a photon with this index exists.
   if (i >= m_clusters[m_cluster].photons.size()) {
@@ -569,9 +560,11 @@ void TrackHeed::TransportDeltaElectron(const double x0, const double y0,
   m_clusters.push_back(std::move(cluster));
 }
 
-TrackHeed::Cluster TrackHeed::TransportPhoton(
-    const double x0, const double y0, const double z0, const double t0,
-    const double e0, const double dx0, const double dy0, const double dz0) {
+TrackHeed::Cluster TrackHeed::TransportPhoton(const double x0, const double y0,
+                                              const double z0, const double t0,
+                                              const double e0, const double dx0,
+                                              const double dy0,
+                                              const double dz0) {
   Cluster cluster;
   // Make sure the energy is positive.
   if (e0 <= 0.) {
@@ -711,7 +704,7 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
                                 int& ni) {
   int np = 0;
   TransportPhoton(x0, y0, z0, t0, e0, dx0, dy0, dz0, ne, ni, np);
-} 
+}
 
 void TrackHeed::TransportPhoton(const double x0, const double y0,
                                 const double z0, const double t0,
@@ -732,13 +725,13 @@ void TrackHeed::TransportPhoton(const double x0, const double y0,
 void TrackHeed::EnableElectricField() { m_fieldMap->UseEfield(true); }
 void TrackHeed::DisableElectricField() { m_fieldMap->UseEfield(false); }
 
-void TrackHeed::EnableMagneticField() { 
-  m_fieldMap->UseBfield(true); 
+void TrackHeed::EnableMagneticField() {
+  m_fieldMap->UseBfield(true);
   m_useBfieldAuto = false;
 }
 
-void TrackHeed::DisableMagneticField() { 
-  m_fieldMap->UseBfield(false); 
+void TrackHeed::DisableMagneticField() {
+  m_fieldMap->UseBfield(false);
   m_useBfieldAuto = false;
 }
 
@@ -802,7 +795,7 @@ bool TrackHeed::Initialise(Medium* medium, const bool verbose) {
   if (databasePath.empty()) {
     std::cerr << m_className << "::Initialise:\n"
               << "    Cannot retrieve database path (none of the"
-              << " environment variables HEED_DATABASE, GARFIELD_INSTALL," 
+              << " environment variables HEED_DATABASE, GARFIELD_INSTALL,"
               << " GARFIELD_HOME is defined).\n"
               << "    Cannot proceed.\n";
     return false;
@@ -832,8 +825,7 @@ bool TrackHeed::Initialise(Medium* medium, const bool verbose) {
   // Energy transfer cross-section
   // Set a flag indicating whether the primary particle is an electron.
   m_transferCs.reset(new Heed::EnTransfCS(1.e-6 * m_mass, GetGamma() - 1.,
-                                          m_isElectron, m_matter.get(),
-                                          m_q));
+                                          m_isElectron, m_matter.get(), m_q));
   if (!m_transferCs->m_ok) {
     std::cerr << m_className << "::Initialise:\n"
               << "    Problems occured when calculating the differential"
@@ -886,8 +878,7 @@ bool TrackHeed::SetupGas(Medium* medium) {
     std::string gasname;
     double frac;
     medium->GetComponent(i, gasname, frac);
-    if (gasname == "paraH2" || gasname == "orthoD2" ||
-        gasname == "D2") {
+    if (gasname == "paraH2" || gasname == "orthoD2" || gasname == "D2") {
       gasname = "H2";
     } else if (gasname == "He-3") {
       gasname = "He";
@@ -947,8 +938,8 @@ bool TrackHeed::SetupGas(Medium* medium) {
       mpacs.emplace_back(makeMPACS("C for CO2", 1, "O", 1));
     } else if (gasname == "Methylal") {
       // W similar to C4H10
-      mpacs.emplace_back(makeMPACS("O", 2, "C for Methylal", 3,
-                                   "H for H2", 8, 10.0e-6 * 23.4 / 10.55));
+      mpacs.emplace_back(makeMPACS("O", 2, "C for Methylal", 3, "H for H2", 8,
+                                   10.0e-6 * 23.4 / 10.55));
     } else if (gasname == "DME") {
       mpacs.emplace_back(makeMPACS("C for Methylal", 2, "H for H2", 6, "O", 1));
     } else if (gasname == "C2F6") {
@@ -960,11 +951,11 @@ bool TrackHeed::SetupGas(Medium* medium) {
     } else if (gasname == "C3H6" || gasname == "cC3H6") {
       mpacs.emplace_back(makeMPACS("C for C2H6", 3, "H for H2", 6));
     } else if (gasname == "CH3OH") {
-      mpacs.emplace_back(makeMPACS("C for C2H6", 1, "H for H2", 4,
-                                    "O", 1, 24.7e-6));
+      mpacs.emplace_back(
+          makeMPACS("C for C2H6", 1, "H for H2", 4, "O", 1, 24.7e-6));
     } else if (gasname == "C2H5OH") {
-      mpacs.emplace_back(makeMPACS("C for C2H6", 2, "H for H2", 6,
-                                    "O", 1, 24.8e-6));
+      mpacs.emplace_back(
+          makeMPACS("C for C2H6", 2, "H for H2", 6, "O", 1, 24.8e-6));
     } else if (gasname == "C3H7OH") {
       mpacs.emplace_back(makeMPACS("C for C2H6", 3, "H for H2", 8, "O", 1));
     } else if (gasname == "Cs") {
@@ -999,8 +990,8 @@ bool TrackHeed::SetupGas(Medium* medium) {
       mpacs.emplace_back(makeMPACS("Si", 1, "H for H2", 4));
     } else {
       std::cerr << m_className << "::SetupGas:\n"
-                << "    Photoabsorption cross-section for " 
-                << gasname << " is not implemented.\n";
+                << "    Photoabsorption cross-section for " << gasname
+                << " is not implemented.\n";
       return false;
     }
     notations.push_back(gasname);
@@ -1015,7 +1006,8 @@ bool TrackHeed::SetupGas(Medium* medium) {
         double e = m_energyMesh->get_e(i);
         pacsfile << 1.e6 * e << "  ";
         for (unsigned int j = 0; j < nComponents; ++j) {
-          pacsfile << mpacs[j].get_ACS(e) << "  " << mpacs[j].get_ICS(e) << "  ";
+          pacsfile << mpacs[j].get_ACS(e) << "  " << mpacs[j].get_ICS(e)
+                   << "  ";
         }
         pacsfile << "\n";
       }
@@ -1135,7 +1127,6 @@ double TrackHeed::GetW() const { return m_matter->W * 1.e6; }
 double TrackHeed::GetFanoFactor() const { return m_matter->F; }
 
 double TrackHeed::GetPhotoAbsorptionCrossSection(const double en) const {
-
   if (!m_matter) return 0.;
   // Convert eV to MeV.
   const double e = 1.e-6 * en;
@@ -1209,4 +1200,4 @@ bool TrackHeed::UpdateBoundingBox(bool& update) {
 
   return true;
 }
-}
+}  // namespace Garfield

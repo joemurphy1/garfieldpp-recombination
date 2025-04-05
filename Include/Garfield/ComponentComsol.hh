@@ -52,24 +52,27 @@ class ComponentComsol : public ComponentFieldMap {
   void SetTimeInterval(const double mint, const double maxt,
                        const double stept);
   /// Get times of time-sliced dynamic weighting field.
-  void GetTimeInterval(std::vector<double>& delayedTimes){ delayedTimes = m_wdtimes; }
-  
-  /// Select material that will exclusivaly be imported based on its relative permitivity
-  void SetImportMaterial(const double epsr = 1.){
+  void GetTimeInterval(std::vector<double> &delayedTimes) {
+    delayedTimes = m_wdtimes;
+  }
+
+  /// Select material that will exclusivaly be imported based on its relative
+  /// permitivity
+  void SetImportMaterial(const double epsr = 1.) {
     m_materialSelect = true;
     m_epsr = epsr;
   }
 
-  #ifdef USEGPU
+#ifdef USEGPU
   /// Create and initialise GPU Transfer class
   double CreateGPUTransferObject(ComponentGPU *&comp_gpu) override;
-  
-  #endif
+
+#endif
  private:
   double m_unit = 100.;
   bool m_timeset = false;
   static constexpr double MaxNodeDistance = 1.e-8;
-  
+
   bool m_materialSelect = false;
   double m_epsr = 1.;
 
@@ -100,19 +103,18 @@ class ComponentComsol : public ComponentFieldMap {
     return true;
   }
 
-  bool ElementInRange(const Element& element,
-                      const std::vector<Node>& nodes) const {
+  bool ElementInRange(const Element &element,
+                      const std::vector<Node> &nodes) const {
     if (m_range.set) {
       for (size_t i = 0; i < 10; i++) {
-        const Node& node = nodes[element.emap[i]];
+        const Node &node = nodes[element.emap[i]];
         if (!CheckInRange(node.x, node.y, node.z)) return false;
       }
     }
-    if (m_materialSelect && m_materials[element.matmap].eps != m_epsr) return false;
+    if (m_materialSelect && m_materials[element.matmap].eps != m_epsr)
+      return false;
     return true;
   }
-  bool LoadPotentials(const std::string& field, 
-                      std::vector<double>& pot);
-
+  bool LoadPotentials(const std::string &field, std::vector<double> &pot);
 };
 }  // namespace Garfield

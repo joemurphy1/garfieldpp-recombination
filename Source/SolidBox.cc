@@ -1,8 +1,9 @@
+#include "Garfield/SolidBox.hh"
+
 #include <cmath>
 #include <iostream>
 
 #include "Garfield/Polygon.hh"
-#include "Garfield/SolidBox.hh"
 
 namespace Garfield {
 
@@ -192,7 +193,6 @@ bool SolidBox::SolidPanels(std::vector<Panel>& panels) {
 }
 
 double SolidBox::GetDiscretisationLevel(const Panel& panel) {
-
   // Transform the normal vector to local coordinates.
   double u = 0., v = 0., w = 0.;
   VectorToLocal(panel.a, panel.b, panel.c, u, v, w);
@@ -219,8 +219,7 @@ double SolidBox::GetDiscretisationLevel(const Panel& panel) {
 
 void SolidBox::Cut(const double x0, const double y0, const double z0,
                    const double xn, const double yn, const double zn,
-                   std::vector<Panel>& panels) { 
-
+                   std::vector<Panel>& panels) {
   //-----------------------------------------------------------------------
   //   PLABXC - Cuts box with a plane.
   //-----------------------------------------------------------------------
@@ -338,4 +337,4 @@ void SolidBox::Cut(const double x0, const double y0, const double z0,
   }
 }
 
-}
+}  // namespace Garfield

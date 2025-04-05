@@ -1,7 +1,8 @@
 #ifndef G_TRACK_SIMPLE_H
 #define G_TRACK_SIMPLE_H
 
-#include<vector>
+#include <vector>
+
 #include "Garfield/Track.hh"
 
 namespace Garfield {
@@ -49,6 +50,6 @@ class TrackSimple : public Track {
 
   std::vector<Cluster> m_clusters;
 };
-}
+}  // namespace Garfield
 
 #endif

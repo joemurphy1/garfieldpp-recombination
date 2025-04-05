@@ -10,7 +10,7 @@ namespace Heed {
 /// Characteristic feature of the Gas class is that it consists of molecules.
 /// Additional feature is that the density can be calculated by temperature
 /// and pressure. But this is not always the case, and therefore it is not a
-/// characteristic feature. Then with only one this feature (consisting of 
+/// characteristic feature. Then with only one this feature (consisting of
 /// molecules) we can also describe other substances as a gas,
 /// for example, liquids.
 ///
@@ -46,9 +46,7 @@ class GasDef : public MatterDef {
  public:
   double pressure() const { return pressureh; }
   long qmolec() const { return qmolech; }
-  const std::vector<const MoleculeDef*>& molec() const {
-    return molech;
-  }
+  const std::vector<const MoleculeDef*>& molec() const { return molech; }
   const MoleculeDef* molec(long n) const { return molech[n]; }
   const std::vector<double>& weight_quan_molec() const {
     return weight_quan_molech;
@@ -56,18 +54,14 @@ class GasDef : public MatterDef {
   const std::vector<double>& weight_mass_molec() const {
     return weight_mass_molech;
   }
-  double weight_quan_molec(const long n) const {
-    return weight_quan_molech[n];
-  }
-  double weight_mass_molec(const long n) const {
-    return weight_mass_molech[n];
-  }
+  double weight_quan_molec(const long n) const { return weight_quan_molech[n]; }
+  double weight_mass_molec(const long n) const { return weight_mass_molech[n]; }
   /// Mean charge of molecules in this gas
   double Z_mean_molec() const;
 
   /// Default constructor.
   GasDef() = default;
-  /// Constructor from arbitrary number of molecules (ideal gas). 
+  /// Constructor from arbitrary number of molecules (ideal gas).
   GasDef(const std::string& fname, const std::string& fnotation, long fqmolec,
          const std::vector<std::string>& fmolec_not,
          const std::vector<double>& fweight_quan_molec, double fpressure,
@@ -78,7 +72,7 @@ class GasDef : public MatterDef {
   GasDef(const std::string& fname, const std::string& fnotation, long fqmolec,
          const std::vector<std::string>& fmolec_not,
          const std::vector<double>& fweight_volume_molec, double fpressure,
-         double ftemperature, int s1, int s2);  
+         double ftemperature, int s1, int s2);
   /// Constructor from a single molecule (ideal gas).
   GasDef(const std::string& fname, const std::string& fnotation,
          const std::string& fmolec_not, double fpressure, double ftemperature,
@@ -119,6 +113,6 @@ class GasDef : public MatterDef {
 };
 std::ostream& operator<<(std::ostream& file, const GasDef& f);
 
-}
+}  // namespace Heed
 
 #endif

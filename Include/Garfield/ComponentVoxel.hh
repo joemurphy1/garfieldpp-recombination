@@ -18,38 +18,38 @@ class ComponentVoxel : public Component {
   void EnableInterpolation(const bool on = true) { m_interpolate = on; }
 
   /** Define the grid.
-    * \param nx,ny,nz number of bins along x, y, z.
-    * \param xmin,xmax range along \f$x\f$.
-    * \param ymin,ymax range along \f$y\f$.
-    * \param zmin,zmax range along \f$z\f$.
-    */
+   * \param nx,ny,nz number of bins along x, y, z.
+   * \param xmin,xmax range along \f$x\f$.
+   * \param ymin,ymax range along \f$y\f$.
+   * \param zmin,zmax range along \f$z\f$.
+   */
   void SetMesh(const unsigned int nx, const unsigned int ny,
                const unsigned int nz, const double xmin, const double xmax,
                const double ymin, const double ymax, const double zmin,
                const double zmax);
   /** Import electric field and potential values from a file.
-    * The file is supposed to contain one line for each mesh point starting with
-    *   - either two or three floating point numbers,
-    *     specifying the coordinates (in cm) of the element centre or
-    *   - two or three integers specifying the index of the element in the mesh,
-    *
-    * followed by
-    *   - two or three floating point numbers for the electric field (in V/cm),
-    * and (depending on the values of withPotential and withRegion),
-    *   - a floating point number specifying the potential (in V), and
-    *   - an integer specifying the "region" of the element.
-    *
-    * Format types are:
-    *  - "xy", "xyz": elements are specified by the coordinates of their centres
-    *  - "ij", "ijk": elements are specified by their indices
-    */
+   * The file is supposed to contain one line for each mesh point starting with
+   *   - either two or three floating point numbers,
+   *     specifying the coordinates (in cm) of the element centre or
+   *   - two or three integers specifying the index of the element in the mesh,
+   *
+   * followed by
+   *   - two or three floating point numbers for the electric field (in V/cm),
+   * and (depending on the values of withPotential and withRegion),
+   *   - a floating point number specifying the potential (in V), and
+   *   - an integer specifying the "region" of the element.
+   *
+   * Format types are:
+   *  - "xy", "xyz": elements are specified by the coordinates of their centres
+   *  - "ij", "ijk": elements are specified by their indices
+   */
   bool LoadElectricField(const std::string& filename, const std::string& format,
                          const bool withPotential, const bool withRegion,
                          const double scaleX = 1., const double scaleE = 1.,
                          const double scaleP = 1.);
   /// Import (prompt) weighting field from file.
-  bool LoadWeightingField(const std::string& filename, const std::string& format,
-                          const bool withPotential, 
+  bool LoadWeightingField(const std::string& filename,
+                          const std::string& format, const bool withPotential,
                           const double scaleX = 1., const double scaleE = 1.,
                           const double scaleP = 1.);
   /// Offset coordinates in the weighting field, such that the
@@ -58,10 +58,10 @@ class ComponentVoxel : public Component {
   void SetWeightingFieldOffset(const double x, const double y, const double z);
 
   /// Import delayed weighting field from file.
-  bool LoadWeightingField(const std::string& filename, const std::string& format,
-                          const double time, const bool withPotential, 
-                          const double scaleX = 1., const double scaleE = 1.,
-                          const double scaleP = 1.);
+  bool LoadWeightingField(const std::string& filename,
+                          const std::string& format, const double time,
+                          const bool withPotential, const double scaleX = 1.,
+                          const double scaleE = 1., const double scaleP = 1.);
   /// Import magnetic field values from a file.
   bool LoadMagneticField(const std::string& filename, const std::string& format,
                          const double scaleX = 1., const double scaleB = 1.);
@@ -109,10 +109,10 @@ class ComponentVoxel : public Component {
   bool GetVoltageRange(double& vmin, double& vmax) override;
   bool GetElectricFieldRange(double& exmin, double& exmax, double& eymin,
                              double& eymax, double& ezmin, double& ezmax);
-  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, 
-                      double& xmax, double& ymax, double& zmax) override;
-  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, 
-                         double& xmax, double& ymax, double& zmax) override;
+  bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
+                      double& ymax, double& zmax) override;
+  bool GetElementaryCell(double& xmin, double& ymin, double& zmin, double& xmax,
+                         double& ymax, double& zmax) override;
 
  private:
   std::vector<Medium*> m_media;
@@ -175,5 +175,5 @@ class ComponentVoxel : public Component {
   void Initialise(std::vector<std::vector<std::vector<Element> > >& fields);
   void InitialiseRegions();
 };
-}
+}  // namespace Garfield
 #endif

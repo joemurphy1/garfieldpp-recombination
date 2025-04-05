@@ -1,7 +1,9 @@
-#include <iomanip>
 #include "wcpplib/matter/GasDef.h"
-#include "wcpplib/util/FunNameStack.h"
+
+#include <iomanip>
+
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include "wcpplib/util/FunNameStack.h"
 
 namespace Heed {
 
@@ -24,8 +26,7 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
     auto amd = MoleculeDefs::getMolecule(fmolec_not[k]);
     check_econd11a(amd, == NULL,
                    "No molecule with such notation: " << fmolec_not[k] << '\n',
-                   mcerr)
-    if (!amd) {
+                   mcerr) if (!amd) {
       mcerr << "cannot find molecule with notation " << fmolec_not[k]
             << "\nIn particular, check the sequence of initialization\n";
       spexit(mcerr);
@@ -146,8 +147,9 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
       // van der Waals gas case
       int s_not_single;
       double number_of_moles =
-          fw[n] * 1.0 / aw->volume_of_mole(ftemperature,  // relative to T_k
-                                           fpressure, s_not_single);
+          fw[n] * 1.0 /
+          aw->volume_of_mole(ftemperature,  // relative to T_k
+                             fpressure, s_not_single);
       check_econd11(s_not_single, == 1, mcerr);
       fweight_quan_molec[n] = number_of_moles;
       double ms = fweight_quan_molec[n] * amolec[n]->A_total();
@@ -162,61 +164,50 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
 
 GasDef::GasDef(const std::string& fname, const std::string& fnotation,
                const std::string& fmolec_not, double fpressure,
-               double ftemperature, double fdensity) :
-    GasDef(fname, fnotation, 1, {fmolec_not}, {1.},
-           fpressure, ftemperature, fdensity) {
-
-}
+               double ftemperature, double fdensity)
+    : GasDef(fname, fnotation, 1, {fmolec_not}, {1.}, fpressure, ftemperature,
+             fdensity) {}
 
 GasDef::GasDef(const std::string& fname, const std::string& fnotation,
                const std::string& fmolec_not, double fpressure,
-               double ftemperature, int s1, int s2) :
-    GasDef(fname, fnotation, 1, {fmolec_not}, {1.},
-           fpressure, ftemperature, s1, s2) {
-
-}
+               double ftemperature, int s1, int s2)
+    : GasDef(fname, fnotation, 1, {fmolec_not}, {1.}, fpressure, ftemperature,
+             s1, s2) {}
 
 GasDef::GasDef(const std::string& fname, const std::string& fnotation,
                const std::string& fmolec_not1, double fweight_quan_molec1,
                const std::string& fmolec_not2, double fweight_quan_molec2,
-               double fpressure, double ftemperature, double fdensity) :
-    GasDef(fname, fnotation, 2, {fmolec_not1, fmolec_not2}, 
-           {fweight_quan_molec1, fweight_quan_molec2},
-           fpressure, ftemperature, fdensity) {
-
-}
+               double fpressure, double ftemperature, double fdensity)
+    : GasDef(fname, fnotation, 2, {fmolec_not1, fmolec_not2},
+             {fweight_quan_molec1, fweight_quan_molec2}, fpressure,
+             ftemperature, fdensity) {}
 
 GasDef::GasDef(const std::string& fname, const std::string& fnotation,
                const std::string& fmolec_not1, double fweight_volume_molec1,
                const std::string& fmolec_not2, double fweight_volume_molec2,
-               double fpressure, double ftemperature, int s1, int s2) :
-    GasDef(fname, fnotation, 2, {fmolec_not1, fmolec_not2}, 
-           {fweight_volume_molec1, fweight_volume_molec2},
-           fpressure, ftemperature, s1, s2) {
-
-}
+               double fpressure, double ftemperature, int s1, int s2)
+    : GasDef(fname, fnotation, 2, {fmolec_not1, fmolec_not2},
+             {fweight_volume_molec1, fweight_volume_molec2}, fpressure,
+             ftemperature, s1, s2) {}
 
 GasDef::GasDef(const std::string& fname, const std::string& fnotation,
                const std::string& fmolec_not1, double fweight_quan_molec1,
                const std::string& fmolec_not2, double fweight_quan_molec2,
                const std::string& fmolec_not3, double fweight_quan_molec3,
-               double fpressure, double ftemperature, double fdensity) :
-    GasDef(fname, fnotation, 3, {fmolec_not1, fmolec_not2, fmolec_not3},
-           {fweight_quan_molec1, fweight_quan_molec2, fweight_quan_molec3},
-           fpressure, ftemperature, fdensity) {
-
-}
+               double fpressure, double ftemperature, double fdensity)
+    : GasDef(fname, fnotation, 3, {fmolec_not1, fmolec_not2, fmolec_not3},
+             {fweight_quan_molec1, fweight_quan_molec2, fweight_quan_molec3},
+             fpressure, ftemperature, fdensity) {}
 
 GasDef::GasDef(const std::string& fname, const std::string& fnotation,
                const std::string& fmolec_not1, double fweight_volume_molec1,
                const std::string& fmolec_not2, double fweight_volume_molec2,
                const std::string& fmolec_not3, double fweight_volume_molec3,
-               double fpressure, double ftemperature, int s1, int s2) :
-    GasDef(fname, fnotation, 3, {fmolec_not1, fmolec_not2, fmolec_not3}, 
-           {fweight_volume_molec1, fweight_volume_molec2, fweight_volume_molec3},
-           fpressure, ftemperature, s1, s2) { 
-
-}
+               double fpressure, double ftemperature, int s1, int s2)
+    : GasDef(
+          fname, fnotation, 3, {fmolec_not1, fmolec_not2, fmolec_not3},
+          {fweight_volume_molec1, fweight_volume_molec2, fweight_volume_molec3},
+          fpressure, ftemperature, s1, s2) {}
 
 GasDef::GasDef(const std::string& fname, const std::string& fnotation,
                const GasDef& gd, double fpressure, double ftemperature,
@@ -271,9 +262,8 @@ std::ostream& operator<<(std::ostream& file, const GasDef& f) {
     indn.n += 2;
     Ifile << "weight_quan_molec(n)=" << f.weight_quan_molec(n)
           << " weight_mass_molec(n)=" << f.weight_mass_molec(n) << '\n';
-    Ifile << "Z_total=" << f.molec(n)->Z_total()
-          << " A_total/(gram/mole)=" << f.molec(n)->A_total() / (CLHEP::gram / CLHEP::mole)
-          << '\n';
+    Ifile << "Z_total=" << f.molec(n)->Z_total() << " A_total/(gram/mole)="
+          << f.molec(n)->A_total() / (CLHEP::gram / CLHEP::mole) << '\n';
     indn.n -= 2;
   }
   indn.n -= 2;
@@ -281,4 +271,4 @@ std::ostream& operator<<(std::ostream& file, const GasDef& f) {
   return file;
 }
 
-}
+}  // namespace Heed

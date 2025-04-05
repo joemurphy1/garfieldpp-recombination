@@ -1,14 +1,13 @@
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Plotting.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   plottingEngine.SetDefaultStyle();
 
@@ -17,7 +16,7 @@ int main(int argc, char * argv[]) {
   gas.LoadGasFile("ar_93_co2_7.gas");
   gas.PrintGas();
 
-  // Plot the Townsend coefficient (without Penning transfer). 
+  // Plot the Townsend coefficient (without Penning transfer).
   TCanvas c1("c1", "", 600, 600);
   gas.PlotTownsend("e", &c1);
 

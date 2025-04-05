@@ -1,34 +1,34 @@
-#include <iostream>
+#include "Garfield/ComponentUser.hh"
 
 #include <TInterpreter.h>
 #include <TROOT.h>
 
-#include "Garfield/ComponentUser.hh"
+#include <iostream>
+
 #include "Garfield/Medium.hh"
 
 namespace {
 
 void RemoveSpecialCharacters(std::string& str) {
-
-  str.erase(std::remove_if(str.begin(), str.end(),
-    [](char c) { return std::isspace(c) || !std::isalnum(c); }),
-    str.end()); 
+  str.erase(std::remove_if(
+                str.begin(), str.end(),
+                [](char c) { return std::isspace(c) || !std::isalnum(c); }),
+            str.end());
 }
 
-void* MakeFieldFunction(const std::string& fname,
-                        const std::string& expression,
-                        const bool wfield = false, 
-                        const bool bfield = false,
+void* MakeFieldFunction(const std::string& fname, const std::string& expression,
+                        const bool wfield = false, const bool bfield = false,
                         const bool timeDependent = false) {
-  std::string code = "std::function<void("
-    "const double, const double, const double, ";
+  std::string code =
+      "std::function<void("
+      "const double, const double, const double, ";
   if (timeDependent) code += "const double, ";
   code += "double&, double&, double&)> ";
   code += fname + " = [](const double x, const double y, const double z, ";
   if (timeDependent) code += "const double t, ";
   if (wfield && (expression.find("wx") != std::string::npos ||
                  expression.find("wy") != std::string::npos ||
-                 expression.find("wz") != std::string::npos)) { 
+                 expression.find("wz") != std::string::npos)) {
     code += "double& wx, double& wy, double& wz) {";
     code += "wx = wy = wz = 0.;";
   } else if (bfield) {
@@ -50,8 +50,9 @@ void* MakeFieldFunction(const std::string& fname,
 void* MakePotentialFunction(const std::string& fname,
                             const std::string& expression,
                             const bool timeDependent = false) {
-  std::string code = "std::function<double("
-    "const double, const double, const double";
+  std::string code =
+      "std::function<double("
+      "const double, const double, const double";
   if (timeDependent) code += ", const double";
   code += ")> ";
   code += fname + " = [](const double x, const double y, const double z";
@@ -67,7 +68,7 @@ void* MakePotentialFunction(const std::string& fname,
   return (void*)gInterpreter->ProcessLine(code.c_str());
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -156,7 +157,7 @@ double ComponentUser::WeightingPotential(const double x, const double y,
   return v;
 }
 
-void ComponentUser::DelayedWeightingField(const double x, const double y, 
+void ComponentUser::DelayedWeightingField(const double x, const double y,
                                           const double z, const double t,
                                           double& wx, double& wy, double& wz,
                                           const std::string& label) {
@@ -166,19 +167,16 @@ void ComponentUser::DelayedWeightingField(const double x, const double y,
   }
 }
 
-double ComponentUser::DelayedWeightingPotential(
-    const double x, const double y, const double z, const double t,
-    const std::string& label) {
-
+double ComponentUser::DelayedWeightingPotential(const double x, const double y,
+                                                const double z, const double t,
+                                                const std::string& label) {
   double v = 0.;
   if (m_dwpot.count(label) > 0) v = m_dwpot[label](x, y, z, t);
   return v;
 }
 
-bool ComponentUser::GetBoundingBox(
-    double& xmin, double& ymin, double& zmin,
-    double& xmax, double& ymax, double& zmax) {
-
+bool ComponentUser::GetBoundingBox(double& xmin, double& ymin, double& zmin,
+                                   double& xmax, double& ymax, double& zmax) {
   if (!m_hasArea) {
     return Component::GetBoundingBox(xmin, ymin, zmin, xmax, ymax, zmax);
   }
@@ -196,8 +194,9 @@ bool ComponentUser::HasMagneticField() const {
 }
 
 void ComponentUser::SetElectricField(
-    std::function<void(const double, const double, const double, 
-                       double&, double&, double&)> f) {
+    std::function<void(const double, const double, const double, double&,
+                       double&, double&)>
+        f) {
   if (!f) {
     std::cerr << m_className << "::SetElectricField: Function is empty.\n";
     return;
@@ -214,9 +213,10 @@ void ComponentUser::SetElectricField(const std::string& expression) {
               << "Could not convert the expression.\n";
     return;
   }
-  typedef std::function<void(const double, const double, const double,
-                             double&, double&, double&)> Fcn; 
-  Fcn& f = *((Fcn *) fPtr);
+  typedef std::function<void(const double, const double, const double, double&,
+                             double&, double&)>
+      Fcn;
+  Fcn& f = *((Fcn*)fPtr);
   m_efield = f;
   m_ready = true;
 }
@@ -239,13 +239,14 @@ void ComponentUser::SetPotential(const std::string& expression) {
     return;
   }
   typedef std::function<double(const double, const double, const double)> Fcn;
-  Fcn& f = *((Fcn *) fPtr);
+  Fcn& f = *((Fcn*)fPtr);
   m_epot = f;
 }
 
 void ComponentUser::SetWeightingField(
-    std::function<void(const double, const double, const double, 
-                       double&, double&, double&)> f,
+    std::function<void(const double, const double, const double, double&,
+                       double&, double&)>
+        f,
     const std::string& label) {
   if (!f) {
     std::cerr << m_className << "::SetWeightingField: Function is empty.\n";
@@ -258,16 +259,17 @@ void ComponentUser::SetWeightingField(const std::string& expression,
                                       const std::string& label) {
   std::string fname = label;
   RemoveSpecialCharacters(fname);
-  fname = "fComponentUserWfield" + fname; 
+  fname = "fComponentUserWfield" + fname;
   auto fPtr = MakeFieldFunction(fname, expression, true);
   if (!fPtr) {
     std::cerr << m_className << "::SetWeightingField: "
               << "Could not convert the expression.\n";
     return;
   }
-  typedef std::function<void(const double, const double, const double,
-                             double&, double&, double&)> Fcn; 
-  Fcn& f = *((Fcn *) fPtr);
+  typedef std::function<void(const double, const double, const double, double&,
+                             double&, double&)>
+      Fcn;
+  Fcn& f = *((Fcn*)fPtr);
   m_wfield[label] = f;
 }
 
@@ -285,7 +287,7 @@ void ComponentUser::SetWeightingPotential(const std::string& expression,
                                           const std::string& label) {
   std::string fname = label;
   RemoveSpecialCharacters(fname);
-  fname = "fComponentUserWpot" + fname; 
+  fname = "fComponentUserWpot" + fname;
   auto fPtr = MakePotentialFunction(fname, expression);
   if (!fPtr) {
     std::cerr << m_className << "::SetWeightingPotential: "
@@ -293,7 +295,7 @@ void ComponentUser::SetWeightingPotential(const std::string& expression,
     return;
   }
   typedef std::function<double(const double, const double, const double)> Fcn;
-  Fcn& f = *((Fcn *) fPtr);
+  Fcn& f = *((Fcn*)fPtr);
   m_wpot[label] = f;
 }
 
@@ -308,9 +310,9 @@ void ComponentUser::SetDelayedSignalTimes(const std::vector<double>& ts) {
 
 void ComponentUser::SetDelayedWeightingField(
     std::function<void(const double, const double, const double, const double,
-                       double&, double&, double&)> f,
+                       double&, double&, double&)>
+        f,
     const std::string& label) {
-
   if (!f) {
     std::cerr << m_className << "::SetDelayedWeightingField: "
               << "Function is empty.\n";
@@ -321,10 +323,9 @@ void ComponentUser::SetDelayedWeightingField(
 
 void ComponentUser::SetDelayedWeightingField(const std::string& expression,
                                              const std::string& label) {
- 
   std::string fname = label;
   RemoveSpecialCharacters(fname);
-  fname = "fComponentUserDWfield" + fname; 
+  fname = "fComponentUserDWfield" + fname;
   auto fPtr = MakeFieldFunction(fname, expression, true, false, true);
   if (!fPtr) {
     std::cerr << m_className << "::SetDelayedWeightingField: "
@@ -332,14 +333,16 @@ void ComponentUser::SetDelayedWeightingField(const std::string& expression,
     return;
   }
   typedef std::function<void(const double, const double, const double,
-                             const double, double&, double&, double&)> Fcn; 
-  Fcn& f = *((Fcn *) fPtr);
+                             const double, double&, double&, double&)>
+      Fcn;
+  Fcn& f = *((Fcn*)fPtr);
   m_dwfield[label] = f;
 }
 
 void ComponentUser::SetDelayedWeightingPotential(
     std::function<double(const double, const double, const double,
-                         const double)> f,
+                         const double)>
+        f,
     const std::string& label) {
   if (!f) {
     std::cerr << m_className << "::SetDelayedWeightingPotential: "
@@ -349,11 +352,11 @@ void ComponentUser::SetDelayedWeightingPotential(
   m_dwpot[label] = f;
 }
 
-void ComponentUser::SetDelayedWeightingPotential(
-    const std::string& expression, const std::string& label) {
+void ComponentUser::SetDelayedWeightingPotential(const std::string& expression,
+                                                 const std::string& label) {
   std::string fname = label;
   RemoveSpecialCharacters(fname);
-  fname = "fComponentUserDWpot" + fname; 
+  fname = "fComponentUserDWpot" + fname;
   auto fPtr = MakePotentialFunction(fname, expression, true);
   if (!fPtr) {
     std::cerr << m_className << "::SetDelayedWeightingPotential: "
@@ -361,14 +364,16 @@ void ComponentUser::SetDelayedWeightingPotential(
     return;
   }
   typedef std::function<double(const double, const double, const double,
-                               const double)> Fcn;
-  Fcn& f = *((Fcn *) fPtr);
+                               const double)>
+      Fcn;
+  Fcn& f = *((Fcn*)fPtr);
   m_dwpot[label] = f;
 }
 
 void ComponentUser::SetMagneticField(
-    std::function<void(const double, const double, const double, 
-                       double&, double&, double&)> f) {
+    std::function<void(const double, const double, const double, double&,
+                       double&, double&)>
+        f) {
   if (!f) {
     std::cerr << m_className << "::SetMagneticField: Function is empty.\n";
     return;
@@ -377,7 +382,6 @@ void ComponentUser::SetMagneticField(
 }
 
 void ComponentUser::SetMagneticField(const std::string& expression) {
- 
   const std::string fname = "fComponentUserBfield";
   auto fPtr = MakeFieldFunction(fname, expression, false, true);
   if (!fPtr) {
@@ -385,23 +389,23 @@ void ComponentUser::SetMagneticField(const std::string& expression) {
               << "Could not convert the expression.\n";
     return;
   }
-  typedef std::function<void(const double, const double, const double,
-                             double&, double&, double&)> Fcn; 
-  Fcn& f = *((Fcn *) fPtr);
+  typedef std::function<void(const double, const double, const double, double&,
+                             double&, double&)>
+      Fcn;
+  Fcn& f = *((Fcn*)fPtr);
   m_bfield = f;
 }
 
-void ComponentUser::SetArea(
-    const double xmin, const double ymin, const double zmin,
-    const double xmax, const double ymax, const double zmax) {
-
+void ComponentUser::SetArea(const double xmin, const double ymin,
+                            const double zmin, const double xmax,
+                            const double ymax, const double zmax) {
   m_xmin[0] = std::min(xmin, xmax);
   m_xmin[1] = std::min(ymin, ymax);
   m_xmin[2] = std::min(zmin, zmax);
   m_xmax[0] = std::max(xmin, xmax);
   m_xmax[1] = std::max(ymin, ymax);
   m_xmax[2] = std::max(zmin, zmax);
-  m_hasArea = true; 
+  m_hasArea = true;
 }
 
 void ComponentUser::UnsetArea() {
@@ -429,4 +433,4 @@ void ComponentUser::UpdatePeriodicity() {
               << "    Periodicities are not supported.\n";
   }
 }
-}
+}  // namespace Garfield

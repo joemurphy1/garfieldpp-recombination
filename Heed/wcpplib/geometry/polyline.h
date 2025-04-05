@@ -1,8 +1,8 @@
 #ifndef POLYLINE_H
 #define POLYLINE_H
-#include "wcpplib/geometry/vec.h"
-#include "wcpplib/geometry/straight.h"
 #include "wcpplib/geometry/plane.h"
+#include "wcpplib/geometry/straight.h"
+#include "wcpplib/geometry/vec.h"
 
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -29,7 +29,7 @@ class polyline : public absref {
 
  public:
   int Gqpt() const { return qpt; }
-  point Gpt(int n) const {  
+  point Gpt(int n) const {
     if (n >= qpt) {
       mcerr << "error in polyline:Gpt(int n): n>qpt: n=" << n << " qpt=" << qpt
             << '\n';
@@ -64,7 +64,7 @@ class polyline : public absref {
   /// If one of the points is common, it is given several times.
   /// For example, if line crosses break point the point is given two times.
   int cross(const straight& fsl, point* pc, int& qpc, polyline* pl, int& qpl,
-    double prec) const;
+            double prec) const;
   /// Distance between two intervals.
   double dist_two_inter(polyline& pl, double prec) const;
   double distance(const point& fpt) const;
@@ -156,7 +156,7 @@ class polygon : public polyline_pl {
   // if no cross, returns vecerror=1.
 
   int range(const point& fpt, const vec& dir, double& rng, point& fptenr,
-    double prec) const;
+            double prec) const;
   polygon& operator=(const polygon& fpl);
   polygon() : polyline_pl(), s_convex(0) {}
   polygon(const polygon& plg) : polyline_pl((polyline_pl)plg) {
@@ -164,7 +164,7 @@ class polygon : public polyline_pl {
   }
   polygon(const polyline_pl& fpl, int fs_convex)
       : polyline_pl(fpl), s_convex(fs_convex) {
-    if (fpl.Gqpt() < 4 || fpl.Gpt(0) != fpl.Gpt(qpt - 1)) {  
+    if (fpl.Gqpt() < 4 || fpl.Gpt(0) != fpl.Gpt(qpt - 1)) {
       mcerr << "ERROR in polygon::polygon(polyline_pl& fpl, int fs_convex)\n";
       mcerr << "fpl.Gqpt() < 4 || fpl.Gpt(0)!=fpl.Gpt(qpt-1)\n";
       spexit(mcerr);
@@ -180,11 +180,11 @@ std::ostream& operator<<(std::ostream& file, const polygon& p);
 class rectangle : public polygon {
  public:
   /// Central point
-  point piv;      
+  point piv;
   /// Directions of sides, unit length
-  vec dir1;       
+  vec dir1;
   /// Directions of sides, unit length
-  vec dir2;       
+  vec dir2;
   // Dimensions
   double dim[2] = {0., 0.};
   rectangle() : polygon() {}
@@ -205,7 +205,7 @@ class spquadr : public polygon {
   point piv;
   vec dir1, dir2;
   /// Width of total plane in units of radians
-  double awidth;  
+  double awidth;
 
  public:
   point Gpiv() const { return piv; }
@@ -219,7 +219,7 @@ class spquadr : public polygon {
 
  public:
   /// Position in units of radians.
-  double apos(const point& fpt) const { 
+  double apos(const point& fpt) const {
     // it is assumed that the point is inside
     return acos(cos2vec(dir1, vec(fpt - piv)));
   }
@@ -229,7 +229,7 @@ class spquadr : public polygon {
     return apos(pth);
   }
   /// Perpendicular position. Distance from basis sl[0].
-  double perpos(const point& fpt) const { 
+  double perpos(const point& fpt) const {
     // it is assumed that the point is inside
     double r = sl[0].distance(fpt);
     return r;
@@ -270,6 +270,6 @@ class spquadr : public polygon {
 };
 
 std::ostream& operator<<(std::ostream& file, const spquadr& p);
-}
+}  // namespace Heed
 
 #endif

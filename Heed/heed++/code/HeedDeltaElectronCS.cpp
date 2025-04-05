@@ -1,8 +1,10 @@
-#include <iomanip>
 #include "heed++/code/HeedDeltaElectronCS.h"
+
+#include <iomanip>
+
 #include "heed++/code/ElElasticScat.h"
-#include "wcpplib/ioniz/e_cont_enloss.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include "wcpplib/ioniz/e_cont_enloss.h"
 #include "wcpplib/math/lorgamma.h"
 #include "wcpplib/util/FunNameStack.h"
 
@@ -10,16 +12,16 @@
 
 namespace Heed {
 
-using CLHEP::twopi;
+using CLHEP::Avogadro;
+using CLHEP::cm;
+using CLHEP::cm3;
 using CLHEP::degree;
 using CLHEP::electron_mass_c2;
 using CLHEP::eV;
-using CLHEP::MeV;
-using CLHEP::cm;
-using CLHEP::cm3;
 using CLHEP::gram;
+using CLHEP::MeV;
 using CLHEP::mole;
-using CLHEP::Avogadro;
+using CLHEP::twopi;
 
 HeedDeltaElectronCS::HeedDeltaElectronCS(HeedMatterDef* fhmd,
                                          ElElasticScat* fees,
@@ -266,7 +268,8 @@ void HeedDeltaElectronCS::print(std::ostream& file, int l) const {
   Iprintn(file, mthetac);
   Iprintn(file, sruth);
   Ifile << "         get_ec,        beta,      momentum,    eLoss,    lambda,  "
-           " low_lambda:" << std::endl;
+           " low_lambda:"
+        << std::endl;
   indn.n += 2;
   for (long ne = 0; ne < qe; ne++) {
     Ifile << std::setw(3) << ne << ' ' << std::setw(12)
@@ -301,4 +304,4 @@ void HeedDeltaElectronCS::print(std::ostream& file, int l) const {
 #endif
   indn.n -= 2;
 }
-}
+}  // namespace Heed

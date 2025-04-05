@@ -1,11 +1,11 @@
 #ifndef VOLUME_H
 #define VOLUME_H
+#include <cstring>
 #include <iostream>
 #include <vector>
-#include <cstring>
 
-#include "wcpplib/geometry/vec.h"
 #include "wcpplib/geometry/trajestep.h"
+#include "wcpplib/geometry/vec.h"
 
 /*
 The main definitions related to volume.
@@ -36,9 +36,7 @@ class manip_absvol_treeid {
   /// List of volumes
   std::vector<manip_absvol*> eid;
   /// Get last address of manipulator
-  manip_absvol* G_lamvol() const {
-    return eid.empty() ? nullptr : eid.back();
-  }
+  manip_absvol* G_lamvol() const { return eid.empty() ? nullptr : eid.back(); }
   /// Get last address of volume
   absvol* G_lavol() const;
 
@@ -69,7 +67,7 @@ inline int operator!=(manip_absvol_treeid& tid1, manip_absvol_treeid& tid2) {
 /// For interface with external system please use manip_absvol.
 class absvol : virtual public absref {
  public:
- double prec = 1.;
+  double prec = 1.;
   bool s_sensitive;
 
   /// Destructor
@@ -185,6 +183,6 @@ class sh_manip_absvol : public manip_absvol {
   virtual void m_print(std::ostream& file, int l) const override;
 };
 
-}
+}  // namespace Heed
 
 #endif

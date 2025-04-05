@@ -1,23 +1,21 @@
-#include <iostream>
-#include <fstream>
-#include <cstdlib>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 
-#include "Garfield/ViewDrift.hh"
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
 
 #include "Garfield/ComponentAnalyticField.hh"
+#include "Garfield/DriftLineRKF.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/DriftLineRKF.hh"
 #include "Garfield/TrackHeed.hh"
+#include "Garfield/ViewDrift.hh"
 
 using namespace Garfield;
 
 bool readTransferFunction(Sensor& sensor) {
-
   std::ifstream infile;
   infile.open("mdt_elx_delta.txt", std::ios::in);
   if (!infile) {
@@ -38,10 +36,9 @@ bool readTransferFunction(Sensor& sensor) {
   return true;
 }
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
- 
+
   // Make a gas medium.
   MediumMagboltz gas;
   gas.LoadGasFile("ar_93_co2_7_3bar.gas");
@@ -78,7 +75,7 @@ int main(int argc, char * argv[]) {
   TrackHeed track(&sensor);
   track.SetParticle("muon");
   track.SetEnergy(170.e9);
- 
+
   TCanvas* cD = nullptr;
   ViewDrift driftView;
   constexpr bool plotDrift = true;
@@ -87,7 +84,7 @@ int main(int argc, char * argv[]) {
     driftView.SetCanvas(cD);
     track.EnablePlotting(&driftView);
   }
- 
+
   TCanvas* cS = nullptr;
   constexpr bool plotSignal = true;
   if (plotSignal) cS = new TCanvas("cS", "", 600, 600);
@@ -102,13 +99,12 @@ int main(int argc, char * argv[]) {
     track.NewTrack(x0, y0, 0, 0, 0, 1, 0);
     for (const auto& cluster : track.GetClusters()) {
       for (const auto& electron : cluster.electrons) {
-        electrons.push_back({electron.x, electron.y, electron.z, 
-                             electron.t});      
+        electrons.push_back({electron.x, electron.y, electron.z, electron.t});
       }
     }
     // Loop over the primary electrons along the track.
     const std::size_t ne = electrons.size();
-    #pragma omp parallel for
+#pragma omp parallel for
     for (size_t k = 0; k < ne; ++k) {
       DriftLineRKF drift(&sensor);
       drift.SetGainFluctuationsPolya(0., 20000., true);
@@ -134,5 +130,4 @@ int main(int argc, char * argv[]) {
   }
 
   app.Run(kTRUE);
-
 }

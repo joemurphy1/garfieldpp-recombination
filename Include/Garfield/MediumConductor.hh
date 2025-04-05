@@ -21,6 +21,6 @@ class MediumConductor : public Medium {
   void EnableDrift(const bool /*on*/) override {}
   void EnablePrimaryIonisation(const bool /*on*/) override {}
 };
-}
+}  // namespace Garfield
 
 #endif

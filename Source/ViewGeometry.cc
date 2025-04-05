@@ -1,30 +1,28 @@
-#include <cmath>
-#include<array>
-#include <iostream>
+#include "Garfield/ViewGeometry.hh"
 
-#include <TGeoBBox.h>
-#include <TGeoCone.h>
 #include <TGeoArb8.h>
-#include <TGeoXtru.h>
+#include <TGeoBBox.h>
 #include <TGeoBoolNode.h>
 #include <TGeoCompositeShape.h>
+#include <TGeoCone.h>
+#include <TGeoXtru.h>
 #include <TPolyLine.h>
 #include <TPolyLine3D.h>
 
+#include <array>
+#include <cmath>
+#include <iostream>
+
 #include "Garfield/GeometrySimple.hh"
-#include "Garfield/Solid.hh"
-#include "Garfield/ViewGeometry.hh"
 #include "Garfield/Medium.hh"
+#include "Garfield/Solid.hh"
 
 namespace Garfield {
 
-ViewGeometry::ViewGeometry(GeometrySimple* geo) : 
-    ViewBase("ViewGeometry"),
-    m_geometry(geo) {} 
+ViewGeometry::ViewGeometry(GeometrySimple* geo)
+    : ViewBase("ViewGeometry"), m_geometry(geo) {}
 
-ViewGeometry::~ViewGeometry() {
-  Reset();
-}
+ViewGeometry::~ViewGeometry() { Reset(); }
 
 void ViewGeometry::SetGeometry(GeometrySimple* geo) {
   if (!geo) {
@@ -36,7 +34,6 @@ void ViewGeometry::SetGeometry(GeometrySimple* geo) {
 }
 
 void ViewGeometry::Plot(const bool twod) {
-
   if (twod) {
     Plot2d();
   } else {
@@ -89,7 +86,8 @@ void ViewGeometry::Plot3d() {
     // Get the center coordinates.
     double x0 = 0., y0 = 0., z0 = 0.;
     if (!solid->GetCentre(x0, y0, z0)) {
-      std::cerr << m_className << "::Plot3d: Could not determine solid centre.\n";
+      std::cerr << m_className
+                << "::Plot3d: Could not determine solid centre.\n";
       continue;
     }
     // Get the rotation.
@@ -132,10 +130,10 @@ void ViewGeometry::Plot3d() {
       const double dr = 0.5 * (r2 - r1) * lz / dz;
       TGeoBBox* box = new TGeoBBox("HoleBox", dx, dy, dz);
       TGeoCone* cone = new TGeoCone("HoleCone", lz, 0, rm - dr, 0, rm + dr);
-      TGeoCompositeShape* hole = new TGeoCompositeShape("Hole", 
-        new TGeoSubtraction(box, cone));
+      TGeoCompositeShape* hole =
+          new TGeoCompositeShape("Hole", new TGeoSubtraction(box, cone));
       hole->RegisterYourself();
-      volume = new TGeoVolume("Hole", hole, medDefault); 
+      volume = new TGeoVolume("Hole", hole, medDefault);
     } else if (solid->IsRidge()) {
       const double dx = solid->GetHalfLengthX();
       const double dy = solid->GetHalfLengthY();
@@ -194,7 +192,6 @@ void ViewGeometry::Plot3d() {
 }
 
 void ViewGeometry::Plot2d() {
-
   if (!m_geometry) {
     std::cerr << m_className << "::Plot2d: Geometry is not defined.\n";
     return;
@@ -219,8 +216,8 @@ void ViewGeometry::Plot2d() {
   } else {
     std::array<double, 3> bbmin;
     std::array<double, 3> bbmax;
-    if (!m_geometry->GetBoundingBox(bbmin[0], bbmin[1], bbmin[2], 
-                                    bbmax[0], bbmax[1], bbmax[2])) {
+    if (!m_geometry->GetBoundingBox(bbmin[0], bbmin[1], bbmin[2], bbmax[0],
+                                    bbmax[1], bbmax[2])) {
       std::cerr << m_className << "::Plot2d: Cannot retrieve bounding box.\n";
       return;
     }
@@ -253,8 +250,8 @@ void ViewGeometry::Plot2d() {
     auto solid = m_geometry->GetSolid(i);
     if (!solid) continue;
     std::vector<Panel> panels;
-    solid->Cut(m_proj[2][0], m_proj[2][1], m_proj[2][2],
-               m_plane[0], m_plane[1], m_plane[2], panels);
+    solid->Cut(m_proj[2][0], m_proj[2][1], m_proj[2][2], m_plane[0], m_plane[1],
+               m_plane[2], panels);
     for (const auto& panel : panels) {
       const auto nv = panel.xv.size();
       if (nv < 3) continue;
@@ -280,7 +277,6 @@ void ViewGeometry::Plot2d() {
 }
 
 void ViewGeometry::PlotPanels() {
-
   if (!m_geometry) {
     std::cerr << m_className << "::PlotPanels: Geometry is not defined.\n";
     return;
@@ -352,5 +348,5 @@ void ViewGeometry::Reset() {
 
   m_geoManager.reset(nullptr);
 }
- 
-}
+
+}  // namespace Garfield

@@ -1,6 +1,8 @@
+#include "wcpplib/math/cubic.h"
+
 #include <cfloat>
 #include <iomanip>
-#include "wcpplib/math/cubic.h"
+
 #include "wcpplib/util/FunNameStack.h"
 
 /*
@@ -117,4 +119,4 @@ int Cubic::find_real_zero(double z[3]) const {
   return q;
 }
 
-}
+}  // namespace Heed

@@ -26,9 +26,9 @@ class ComponentTcadBase : public Component {
   virtual ~ComponentTcadBase() {}
 
   /** Import mesh and field map from files.
-    * \param gridfilename name of the .grd file containing the mesh
-    * \param datafilename name of the .dat file containing the nodal solution
-    */
+   * \param gridfilename name of the .grd file containing the mesh
+   * \param datafilename name of the .dat file containing the nodal solution
+   */
   bool Initialise(const std::string& gridfilename,
                   const std::string& datafilename);
 
@@ -45,11 +45,11 @@ class ComponentTcadBase : public Component {
   bool SetWeightingField(const std::string& datfile1,
                          const std::string& datfile2, const double dv,
                          const std::string& label);
-  
+
   /// Import field maps defining the prompt weighting field and potential.
   bool SetWeightingPotential(const std::string& datfile1,
                              const std::string& datfile2, const double dv,
-                             const std::string& label){
+                             const std::string& label) {
     return SetWeightingField(datfile1, datfile2, dv, label);
   }
   /// Shift the maps of weighting field/potential for a given electrode
@@ -59,12 +59,13 @@ class ComponentTcadBase : public Component {
                               const double y, const double z);
   /// Import time-dependent weighting potentials at t >= 0.
   bool SetDynamicWeightingPotential(const std::string& datfile1,
-                                    const std::string& datfile2, const double dv,
-                                    const double t, const std::string& label);
+                                    const std::string& datfile2,
+                                    const double dv, const double t,
+                                    const std::string& label);
   /// Import time-dependent weighting fields at t >= 0.
   bool SetDynamicWeightingField(const std::string& datfile1,
-                         const std::string& datfile2, const double dv,
-                         const double t, const std::string& label);
+                                const std::string& datfile2, const double dv,
+                                const double t, const std::string& label);
 
   /// List all currently defined regions.
   void PrintRegions() const;
@@ -82,10 +83,10 @@ class ComponentTcadBase : public Component {
   void SetMedium(const std::string& material, Medium* m);
 
   size_t GetNumberOfElements() const override { return m_elements.size(); }
-  bool GetElementNodes(const size_t i, 
+  bool GetElementNodes(const size_t i,
                        std::vector<size_t>& nodes) const override;
-  bool GetElementRegion(const size_t i, 
-                        size_t& region, bool& active) const override;
+  bool GetElementRegion(const size_t i, size_t& region,
+                        bool& active) const override;
   size_t GetNumberOfNodes() const override { return m_vertices.size(); }
 
   /// Switch use of the imported velocity map on/off.
@@ -97,11 +98,11 @@ class ComponentTcadBase : public Component {
   size_t GetNumberOfAcceptors() { return m_acceptors.size(); }
 
   /** Set the properties of a donor-type defect state.
-    * \param donorNumber index of the donor
-    * \param exsec cross-section [cm2] for electrons
-    * \param hxsec cross-section [cm2] for holes
-    * \param concentration defect density [cm-3]
-    */
+   * \param donorNumber index of the donor
+   * \param exsec cross-section [cm2] for electrons
+   * \param hxsec cross-section [cm2] for holes
+   * \param concentration defect density [cm-3]
+   */
   bool SetDonor(const size_t donorNumber, const double exsec,
                 const double hxsec, const double concentration);
   /// Set the properties of an acceptor-type defect state.
@@ -113,9 +114,9 @@ class ComponentTcadBase : public Component {
 
   /// Use the imported trapping map or not.
   void EnableTrapOccupationMap(const bool on = true);
-  /// Use the imported lifetime map or not. 
+  /// Use the imported lifetime map or not.
   void EnableLifetimeMap(const bool on = true);
- 
+
   /// Get the electron mobility at a given point in the mesh.
   bool GetElectronMobility(const double x, const double y, const double z,
                            double& mob);
@@ -133,7 +134,7 @@ class ComponentTcadBase : public Component {
                             const std::string& label) override;
   const std::vector<double>& DelayedSignalTimes(
       const std::string& label) override {
-    if (m_dwtp.count(label) > 0) return m_dwtp[label]; 
+    if (m_dwtp.count(label) > 0) return m_dwtp[label];
     static const std::vector<double> emptyVector;
     return emptyVector;
   }
@@ -158,7 +159,7 @@ class ComponentTcadBase : public Component {
     return m_useAlphaMap && !(m_eAlpha.empty() && m_hAlpha.empty());
   }
   bool HasAttachmentMap() const override {
-    return ((m_useTrapOccMap || m_useLifetimeMap) && 
+    return ((m_useTrapOccMap || m_useLifetimeMap) &&
             !(m_eEta.empty() && m_hEta.empty()));
   }
   bool HasMobilityMap() const override {
@@ -169,9 +170,9 @@ class ComponentTcadBase : public Component {
   bool HoleAttachment(const double x, const double y, const double z,
                       double& eta) override;
   bool ElectronMobility(const double x, const double y, const double z,
-                          double& mu) override;
+                        double& mu) override;
   bool HoleMobility(const double x, const double y, const double z,
-                      double& mu) override;
+                    double& mu) override;
 
   bool ElectronTownsend(const double x, const double y, const double z,
                         double& alpha) override;
@@ -237,7 +238,8 @@ class ComponentTcadBase : public Component {
   std::map<std::string, std::vector<double> > m_wshift;
 
   // Delayed weighting field and potential.
-  std::map<std::string, std::vector<std::vector<std::array<double, N> > > > m_dwf;
+  std::map<std::string, std::vector<std::vector<std::array<double, N> > > >
+      m_dwf;
   std::map<std::string, std::vector<std::vector<double> > > m_dwp;
   // Times corresponding to the delayed weighting fields/potentials.
   std::map<std::string, std::vector<double> > m_dwtf;
@@ -326,5 +328,5 @@ class ComponentTcadBase : public Component {
                           std::vector<std::array<double, N> >& wf,
                           std::vector<double>& wp);
 };
-}
+}  // namespace Garfield
 #endif

@@ -1,11 +1,12 @@
-#include <cmath>
-#include <iostream>
+#include "Garfield/GeometryRoot.hh"
 
 #include <TGeoBBox.h>
 #include <TGeoNode.h>
 #include <TList.h>
 
-#include "Garfield/GeometryRoot.hh"
+#include <cmath>
+#include <iostream>
+
 #include "Garfield/Medium.hh"
 
 namespace Garfield {
@@ -156,9 +157,8 @@ bool GeometryRoot::GetBoundingBox(double& xmin, double& ymin, double& zmin,
 }
 
 void GeometryRoot::PrintGeoNotDefined(const std::string& fcn) const {
-
   std::cerr << m_className + "::" + fcn << ":\n"
             << "    ROOT geometry is not defined. Call SetGeometry first.\n";
 }
 
-}
+}  // namespace Garfield

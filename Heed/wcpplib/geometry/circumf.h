@@ -53,21 +53,20 @@ class circumf : public absref {
   int cross(const plane& pn, point pt[2], double prec) const;
 
   friend std::ostream& operator<<(std::ostream& file, const circumf& f);
- 
+
  protected:
   /// Central point, pivot.
-  point piv;   
+  point piv;
   /// Normal direction, unit vector.
   /// Circles with dir and -dir are considered the same.
-  vec dir;     
+  vec dir;
   /// Radius, >0.
-  double rad;  
+  double rad;
 
   virtual absref_transmit get_components() override;
   static absref absref::* aref[2];
-
 };
 std::ostream& operator<<(std::ostream& file, const circumf& f);
-}
+}  // namespace Heed
 
 #endif

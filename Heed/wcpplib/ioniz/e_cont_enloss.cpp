@@ -1,27 +1,30 @@
-#include <stdlib.h>
-#include <limits.h>
-#include <cmath>
 #include "wcpplib/ioniz/e_cont_enloss.h"
-#include "wcpplib/math/lorgamma.h"
+
+#include <limits.h>
+#include <stdlib.h>
+
+#include <cmath>
+
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include "wcpplib/math/lorgamma.h"
 #include "wcpplib/util/FunNameStack.h"
 
 // 2003,  I. Smirnov
 
 namespace Heed {
 
-using CLHEP::twopi;
-using CLHEP::electron_mass_c2;
+using CLHEP::Avogadro;
 using CLHEP::classic_electr_radius;
+using CLHEP::cm2;
+using CLHEP::cm3;
+using CLHEP::electron_mass_c2;
 using CLHEP::GeV;
 using CLHEP::gram;
 using CLHEP::mole;
-using CLHEP::Avogadro;
-using CLHEP::cm2;
-using CLHEP::cm3;
+using CLHEP::twopi;
 
 double e_cont_enloss(double ratio_Z_to_A,  // do not forget:
-                     // 1.0/(gram/mole)
+                                           // 1.0/(gram/mole)
                      double I_eff, double density,
                      double Ekin,  // in internal units
                      double Ecut,  // in internal units
@@ -45,8 +48,9 @@ double e_cont_enloss(double ratio_Z_to_A,  // do not forget:
     const double D3 = 2.0 * D2 * D / 3.0;
     const double D4 = D2 * D2;
     F = log(gamma_1 * D) -
-        beta2 * (gamma_1 + 2.0 * D -
-                 y * (3.0 * D2 + y * (D - D3 + y * (D2 - gamma_1 * D3 + D4)))) /
+        beta2 *
+            (gamma_1 + 2.0 * D -
+             y * (3.0 * D2 + y * (D - D3 + y * (D2 - gamma_1 * D3 + D4)))) /
             gamma_1;
   } else {
     // electron
@@ -118,4 +122,4 @@ double e_cont_enloss(double ratio_Z_to_A,  // do not forget:
       cons * eldens * (log(2.0 * gamma_1 + 4.0) - 2.0 * logI + F - del) / beta2;
   return dedx > 0. ? dedx : 0.;
 }
-}
+}  // namespace Heed

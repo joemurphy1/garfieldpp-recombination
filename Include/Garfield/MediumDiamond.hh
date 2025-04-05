@@ -18,7 +18,7 @@ class MediumDiamond : public Medium {
 
   bool IsSemiconductor() const override { return true; }
 
-  void GetComponent(const unsigned int i, std::string& label, 
+  void GetComponent(const unsigned int i, std::string& label,
                     double& f) override;
 
   // Electron transport parameters
@@ -49,9 +49,10 @@ class MediumDiamond : public Medium {
 
   void SetSaturationVelocity(const double vsate, const double vsath);
   void UnsetSaturationVelocity();
+
  private:
   std::mutex m_mutex;
- 
+
   // Low-field mobility
   double m_eMobility = 4.551e-6;
   double m_hMobility = 2.750e-6;
@@ -66,6 +67,6 @@ class MediumDiamond : public Medium {
 
   void UpdateTransportParameters();
 };
-}
+}  // namespace Garfield
 
 #endif

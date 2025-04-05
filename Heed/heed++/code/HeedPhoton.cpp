@@ -1,23 +1,25 @@
+#include "heed++/code/HeedPhoton.h"
+
 #include <algorithm>
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
-#include "wcpplib/random/chisran.h"
+
+#include "Garfield/Random.hh"
+#include "heed++/code/EnTransfCS.h"
 #include "heed++/code/HeedDeltaElectron.h"
 #include "heed++/code/HeedDeltaElectronCS.h"
-#include "heed++/code/EnTransfCS.h"
-#include "heed++/code/HeedPhoton.h"
-#include "Garfield/Random.hh"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include "wcpplib/random/chisran.h"
 
 // 2003, I. Smirnov
 
 namespace Heed {
 
+using CLHEP::Avogadro;
+using CLHEP::c_light;
 using CLHEP::cm;
 using CLHEP::cm3;
+using CLHEP::electron_mass_c2;
 using CLHEP::gram;
 using CLHEP::mole;
-using CLHEP::c_light;
-using CLHEP::electron_mass_c2;
-using CLHEP::Avogadro;
 
 HeedPhoton::HeedPhoton(manip_absvol* primvol, const point& pt, const vec& vel,
                        double ftime, long fparent_particle_number,
@@ -89,7 +91,7 @@ void HeedPhoton::physics(std::vector<gparticle*>& /*secondaries*/) {
 #ifdef SFER_PHOTOEL
     // Assume that virtual photons are already
     // absorbed and s_sfer_photoel is 0 for them
-    s_sfer_photoel = 1;  
+    s_sfer_photoel = 1;
 #endif
     // Sample the shell.
     chispre(cs);
@@ -127,8 +129,8 @@ void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
   // Generate delta-electrons.
   std::vector<double> el_energy;
   std::vector<double> ph_energy;
-  hmd->apacs[m_na_absorbing]
-      ->get_escape_particles(m_ns_absorbing, m_energy, el_energy, ph_energy);
+  hmd->apacs[m_na_absorbing]->get_escape_particles(m_ns_absorbing, m_energy,
+                                                   el_energy, ph_energy);
   if (m_print_listing) {
     mcout << "The condition:\n";
     Iprint2n(mcout, m_na_absorbing, m_ns_absorbing);
@@ -141,7 +143,7 @@ void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
   const long qel = el_energy.size();
   for (long nel = 0; nel < qel; nel++) {
     vec vel = m_currpos.dir;
-    if (nel == 0) {  
+    if (nel == 0) {
       // The first in the list should be the photoelectron.
 #ifdef SFER_PHOTOEL
       if (s_sfer_photoel == 1) {
@@ -178,9 +180,9 @@ void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
       mcout << "Initializing photon\n";
       Iprint2n(mcout, el_energy[nph], vel);
     }
-    HeedPhoton* hp = new HeedPhoton(m_currpos.tid.eid[0], m_currpos.pt,
-                                    vel, m_currpos.time, m_particle_number,
-                                    ph_energy[nph], m_fm);
+    HeedPhoton* hp =
+        new HeedPhoton(m_currpos.tid.eid[0], m_currpos.pt, vel, m_currpos.time,
+                       m_particle_number, ph_energy[nph], m_fm);
     secondaries.push_back(hp);
   }
   m_delta_generated = true;
@@ -195,7 +197,7 @@ void HeedPhoton::print(std::ostream& file, int l) const {
   if (l == 1) return;
   indn.n += 2;
   Ifile << "s_photon_absorbed=" << m_photon_absorbed
-        << " na_absorbing=" << m_na_absorbing 
+        << " na_absorbing=" << m_na_absorbing
         << " ns_absorbing=" << m_ns_absorbing
         << " s_delta_generated=" << m_delta_generated
 #ifdef SFER_PHOTOEL
@@ -206,4 +208,4 @@ void HeedPhoton::print(std::ostream& file, int l) const {
   gparticle::print(file, l - 1);
   indn.n -= 2;
 }
-}
+}  // namespace Heed

@@ -1,6 +1,8 @@
 #include "wcpplib/geometry/mparticle.h"
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
+
 #include <limits>
+
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 /*
 Copyright (c) 2000 Igor B. Smirnov
 
@@ -19,10 +21,8 @@ using CLHEP::c_light;
 using CLHEP::c_squared;
 
 mparticle::mparticle(manip_absvol* primvol, const point& pt, const vec& vel,
-  double ftime, double fmass) 
-    : gparticle(primvol, pt, vel, ftime),
-      m_mass(fmass) {
-
+                     double ftime, double fmass)
+    : gparticle(primvol, pt, vel, ftime), m_mass(fmass) {
   mfunname("mparticle::mparticle(...)");
 
   const double mc2 = m_mass * c_squared;
@@ -54,18 +54,24 @@ void mparticle::check_consistency() const {
   const double mc2 = m_mass * c_squared;
   double ek = m_orig_gamma_1 * mc2;
   if (ek > 1000.0 * std::numeric_limits<double>::min()) {
-    check_econd11a(fabs(m_orig_ekin - ek) / (m_orig_ekin + ek), > 1.0e-9, 
-        "ek=" << ek << '\n' << (*this), mcerr);
+    check_econd11a(fabs(m_orig_ekin - ek) / (m_orig_ekin + ek), > 1.0e-9,
+                   "ek=" << ek << '\n'
+                         << (*this),
+                   mcerr);
   }
   ek = m_prev_gamma_1 * mc2;
   if (ek > 1000.0 * std::numeric_limits<double>::min()) {
-    check_econd11a(fabs(m_prev_ekin - ek) / (m_prev_ekin + ek), > 1.0e-9, 
-        "ek=" << ek << '\n' << (*this), mcerr);
+    check_econd11a(fabs(m_prev_ekin - ek) / (m_prev_ekin + ek), > 1.0e-9,
+                   "ek=" << ek << '\n'
+                         << (*this),
+                   mcerr);
   }
   ek = m_curr_gamma_1 * mc2;
   if (ek > 1000.0 * std::numeric_limits<double>::min()) {
-    check_econd11a(fabs(m_curr_ekin - ek) / (m_curr_ekin + ek), > 1.0e-9, 
-        "ek=" << ek << '\n' << (*this), mcerr);
+    check_econd11a(fabs(m_curr_ekin - ek) / (m_curr_ekin + ek), > 1.0e-9,
+                   "ek=" << ek << '\n'
+                         << (*this),
+                   mcerr);
   }
 }
 
@@ -97,8 +103,7 @@ void mparticle::step(std::vector<gparticle*>& secondaries) {
 }
 
 void mparticle::curvature(bool& curved, vec& frelcen, double& fmrange,
-  double prec) {
-
+                          double prec) {
   pvecerror("void mparticle::curvature(...)");
   vec f;
   vec f_perp_fl;
@@ -130,7 +135,8 @@ void mparticle::curvature(bool& curved, vec& frelcen, double& fmrange,
     frelcen = unit_vec(fn);
     double len = fn.length();
     double rad =
-        (m_currpos.speed * m_currpos.speed * (m_curr_gamma_1 + 1) * m_mass) / len;
+        (m_currpos.speed * m_currpos.speed * (m_curr_gamma_1 + 1) * m_mass) /
+        len;
     frelcen *= rad;
   }
   m_currpos.dirloc = m_currpos.dir;
@@ -166,7 +172,7 @@ void mparticle::new_speed() {
     m_curr_ekin = m_prev_ekin;
     m_curr_gamma_1 = m_prev_gamma_1;
     // speed is preserved by gparticle
-    m_currpos.speed = m_prevpos.speed;  
+    m_currpos.speed = m_prevpos.speed;
   } else {
     vec r = m_currpos.pt - m_prevpos.pt;
     double W = 0;  // force * range * cos() = work * cos() (may be negative)
@@ -195,15 +201,16 @@ void mparticle::new_speed() {
     vec fn2 = project_to_plane(f2, m_currpos.dir);  // normal component
     check_econd11a(vecerror, != 0, "position 3, after computing fn2\n", mcerr);
     // mean ortogonal component of working force
-    vec mean_fn = 0.5 * (fn1 + fn2);  
+    vec mean_fn = 0.5 * (fn1 + fn2);
     double mean_fn_len = mean_fn.length();
     vec fdir = m_prevpos.dir;
     if (mean_fn_len > 0.0) {
       vec relcen = unit_vec(mean_fn);
       double mean_speed = (m_prevpos.speed + m_currpos.speed) * 0.5;
-      double new_rad = (mean_speed * mean_speed *
-                        ((m_prev_gamma_1 + m_curr_gamma_1) * 0.5 + 1) * m_mass) /
-                       mean_fn_len;
+      double new_rad =
+          (mean_speed * mean_speed *
+           ((m_prev_gamma_1 + m_curr_gamma_1) * 0.5 + 1) * m_mass) /
+          mean_fn_len;
       if (new_rad > 0.0) {
         double ang = m_currpos.prange / new_rad;  // angle to turn
         fdir.turn(m_prevpos.dir || relcen, ang);  // direction at the end
@@ -219,10 +226,11 @@ void mparticle::new_speed() {
       vec fdir_proj = project_to_plane(m_prevpos.dir, mean_f_perp_fl);
       if (!apeq(fdir_proj.length(), 0.0)) {
         check_econd11a(vecerror, != 0, "position 6\n", mcerr);
-        double length_proj = m_currpos.prange * cos2vec(m_prevpos.dir, fdir_proj);
+        double length_proj =
+            m_currpos.prange * cos2vec(m_prevpos.dir, fdir_proj);
         check_econd11a(vecerror, != 0, "position 7\n", mcerr);
-        double acc =
-            mean_f_perp / (((m_prev_gamma_1 + m_curr_gamma_1) * 0.5 + 1) * m_mass);
+        double acc = mean_f_perp /
+                     (((m_prev_gamma_1 + m_curr_gamma_1) * 0.5 + 1) * m_mass);
         double mean_speed = (m_prevpos.speed + m_currpos.speed) * 0.5;
         double new_rad = pow(mean_speed * fdir_proj.length(), 2) / acc;
         double ang = length_proj / new_rad;
@@ -238,21 +246,21 @@ void mparticle::new_speed() {
   m_currpos.dirloc = m_currpos.dir;
   m_currpos.tid.up_absref(&m_currpos.dirloc);
   const double mean_speed = 0.5 * (m_prevpos.speed + m_currpos.speed);
-  m_currpos.time = m_prevpos.time + m_currpos.prange / mean_speed; 
+  m_currpos.time = m_prevpos.time + m_currpos.prange / mean_speed;
   check_consistency();
 }
 void mparticle::print(std::ostream& file, int l) const {
   if (l < 0) return;
   Ifile << "mparticle: mass=" << m_mass << " (" << m_mass / CLHEP::kg << " kg, "
-          << m_mass * c_squared / CLHEP::GeV << " GeV)\n";
-  Ifile << "orig_ekin=" << m_orig_ekin << " ("
-        << m_orig_ekin / CLHEP::GeV << " GeV)"
+        << m_mass * c_squared / CLHEP::GeV << " GeV)\n";
+  Ifile << "orig_ekin=" << m_orig_ekin << " (" << m_orig_ekin / CLHEP::GeV
+        << " GeV)"
         << " orig_gamma_1=" << m_orig_gamma_1 << '\n';
-  Ifile << "prev_ekin=" << m_prev_ekin << " ("
-        << m_prev_ekin / CLHEP::GeV << " GeV)"
+  Ifile << "prev_ekin=" << m_prev_ekin << " (" << m_prev_ekin / CLHEP::GeV
+        << " GeV)"
         << " prev_gamma_1=" << m_prev_gamma_1 << '\n';
-  Ifile << "curr_kin_energy=" << m_curr_ekin << " ("
-        << m_curr_ekin / CLHEP::GeV << " GeV)"
+  Ifile << "curr_kin_energy=" << m_curr_ekin << " (" << m_curr_ekin / CLHEP::GeV
+        << " GeV)"
         << " curr_gamma_1=" << m_curr_gamma_1 << '\n';
   gparticle::print(file, l);
 }
@@ -261,4 +269,4 @@ std::ostream& operator<<(std::ostream& file, const mparticle& f) {
   (&f)->print(file, 10);
   return file;
 }
-}
+}  // namespace Heed

@@ -1,6 +1,7 @@
 #ifndef MPARTICLE_H
 #define MPARTICLE_H
 #include <iostream>
+
 #include "wcpplib/geometry/gparticle.h"
 #include "wcpplib/math/lorgamma.h"
 
@@ -25,8 +26,8 @@ class mparticle : public gparticle {
   /// Default constructor.
   mparticle() = default;
   /// Constructor, \f$\gamma - 1\f$ calculated from the from velocity vector.
-  mparticle(manip_absvol* primvol, const point& pt, const vec& vel, 
-    double ftime, double fmass);
+  mparticle(manip_absvol* primvol, const point& pt, const vec& vel,
+            double ftime, double fmass);
   /// Destructor.
   virtual ~mparticle() {}
 
@@ -35,7 +36,6 @@ class mparticle : public gparticle {
 
   void print(std::ostream& file, int l) const override;
 
-
  protected:
   void step(std::vector<gparticle*>& secondaries) override;
 
@@ -43,17 +43,17 @@ class mparticle : public gparticle {
   /// - If force is zero, set curved = false, frelcen = (0, 0, 0).
   ///   - If, in addition, currpos.dir == (0, 0, 0), set fmrange = 0.
   /// - If currpos.dir == (0, 0, 0), set currpos.dir = unit_vec(f).
-  /// - If force is parallel or anti-parallel to dir, 
+  /// - If force is parallel or anti-parallel to dir,
   ///   set curved = false, frelcen = (0, 0, 0).
   /// - If force is anti-parallel to dir, restrict range till exceeding
   ///   kinetic energy.
-  void curvature(bool& curved, vec& frelcen, double& fmrange, 
-    double prec) override;
+  void curvature(bool& curved, vec& frelcen, double& fmrange,
+                 double prec) override;
 
   /// The force is considered to be split in two components.
   /// One component, f, can be in any direction and is
   /// capable of doing work. The other one is always normal to dir
-  /// and cannot do work. The latter can represent the magnetic component of 
+  /// and cannot do work. The latter can represent the magnetic component of
   /// the Lorentz force.
   /// This splitting improve precision of calculation of kinetic energy.
   /// But the latter component is not the true force. To derive the force
@@ -87,10 +87,9 @@ class mparticle : public gparticle {
   void check_consistency() const;
   /// Set new speed, direction and time for the current position.
   void new_speed();
-
 };
 
 std::ostream& operator<<(std::ostream& file, const mparticle& f);
-}
+}  // namespace Heed
 
 #endif

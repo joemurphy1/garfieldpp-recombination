@@ -10,8 +10,8 @@ namespace Heed {
 class HeedCluster {
  public:
   HeedCluster() = default;
-  HeedCluster(double ftransferred_energy, const point& fpt,
-              long fnatom, long fnshell)
+  HeedCluster(double ftransferred_energy, const point& fpt, long fnatom,
+              long fnshell)
       : transferred_energy(ftransferred_energy),
         pt(fpt),
         natom(fnatom),
@@ -24,6 +24,6 @@ class HeedCluster {
   long nshell = 0;
   void print(std::ostream& file, int l) const;
 };
-}
+}  // namespace Heed
 
 #endif

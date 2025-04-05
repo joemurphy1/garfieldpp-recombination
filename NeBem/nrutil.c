@@ -552,5 +552,5 @@ void free_d4tensor(double ****t,long nrl, long nrh, long ncl, long nch,
 */
 
 #ifdef __cplusplus
-} // namespace
+}  // namespace
 #endif

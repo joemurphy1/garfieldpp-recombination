@@ -1,9 +1,10 @@
+#include "Garfield/GeometrySimple.hh"
+
 #include <algorithm>
 #include <iostream>
 
-#include "Garfield/GeometrySimple.hh"
-#include "Garfield/Solid.hh"
 #include "Garfield/Medium.hh"
+#include "Garfield/Solid.hh"
 
 namespace Garfield {
 
@@ -45,17 +46,16 @@ void GeometrySimple::AddSolid(Solid* solid, Medium* medium) {
   m_solids.emplace_back(std::make_pair(solid, medium));
 }
 
-Solid* GeometrySimple::GetSolid(const double x, const double y,
-                                const double z, const bool tesselated) const {
+Solid* GeometrySimple::GetSolid(const double x, const double y, const double z,
+                                const bool tesselated) const {
   for (const auto& solid : m_solids) {
     if (solid.first->IsInside(x, y, z, tesselated)) return solid.first;
   }
   return nullptr;
 }
 
-Medium* GeometrySimple::GetMedium(
-    const double x, const double y, const double z, 
-    const bool tesselated) const {
+Medium* GeometrySimple::GetMedium(const double x, const double y,
+                                  const double z, const bool tesselated) const {
   for (const auto& solid : m_solids) {
     if (solid.first->IsInside(x, y, z, tesselated)) {
       return solid.second;
@@ -123,8 +123,8 @@ void GeometrySimple::PrintSolids() {
   }
 }
 
-bool GeometrySimple::IsInside(const double x, const double y,
-                              const double z, const bool tesselated) const {
+bool GeometrySimple::IsInside(const double x, const double y, const double z,
+                              const bool tesselated) const {
   if (!IsInBoundingBox(x, y, z)) return false;
 
   for (const auto& solid : m_solids) {
@@ -143,10 +143,9 @@ bool GeometrySimple::IsInBoundingBox(const double x, const double y,
     return true;
   }
 
-  if (x >= m_bbMin[0] && x <= m_bbMax[0] &&
-      y >= m_bbMin[1] && y <= m_bbMax[1] &&
-      z >= m_bbMin[2] && z <= m_bbMax[2])
+  if (x >= m_bbMin[0] && x <= m_bbMax[0] && y >= m_bbMin[1] &&
+      y <= m_bbMax[1] && z >= m_bbMin[2] && z <= m_bbMax[2])
     return true;
   return false;
 }
-}
+}  // namespace Garfield

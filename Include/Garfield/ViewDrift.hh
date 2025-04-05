@@ -1,12 +1,12 @@
 #ifndef G_VIEW_DRIFT
 #define G_VIEW_DRIFT
 
-#include<cstddef>
-#include<vector>
-#include<array>
-#include<mutex>
-
 #include <Rtypes.h>
+
+#include <array>
+#include <cstddef>
+#include <mutex>
+#include <vector>
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/ViewBase.hh"
@@ -42,61 +42,61 @@ class ViewDrift : public ViewBase {
   void SetCollisionMarkerSize(const double size);
 
   /// Set the colour with which to draw electron drift lines.
-  void SetColourElectrons(const short col) { m_colElectron = col; } 
+  void SetColourElectrons(const short col) { m_colElectron = col; }
   /// Set the colour with which to draw hole drift lines.
-  void SetColourHoles(const short col) { m_colHole = col; } 
+  void SetColourHoles(const short col) { m_colHole = col; }
   /// Set the colour with which to draw negative ion drift lines.
-  void SetColourNegativeIons(const short col) { m_colNegativeIon = col; } 
+  void SetColourNegativeIons(const short col) { m_colNegativeIon = col; }
   /// Set the colour with which to draw ion drift lines.
-  void SetColourIons(const short col) { m_colIon = col; } 
+  void SetColourIons(const short col) { m_colIon = col; }
   /// Set the colour with which to draw charged particle tracks.
-  void SetColourTracks(const short col) { m_colTrack = col; } 
+  void SetColourTracks(const short col) { m_colTrack = col; }
   /// Set the colour with which to draw photons.
-  void SetColourPhotons(const short col) { m_colPhoton = col; } 
+  void SetColourPhotons(const short col) { m_colPhoton = col; }
   /// Set the colour with which to draw excitation markers.
-  void SetColourExcitations(const short col) { m_colExcitation = col; } 
+  void SetColourExcitations(const short col) { m_colExcitation = col; }
   /// Set the colour with which to draw ionisation markers.
-  void SetColourIonisations(const short col) { m_colIonisation = col; } 
+  void SetColourIonisations(const short col) { m_colIonisation = col; }
   /// Set the colour with which to draw attachment markers.
   void SetColourAttachments(const short col) { m_colAttachment = col; }
   /// Put electron drift lines on top of the ion/hole drift lines
   void SetElectronsToFront() { m_eTop = true; }
 
-  /// Get the number of drift lines stored. 
+  /// Get the number of drift lines stored.
   std::size_t GetNumberOfDriftLines() const { return m_driftLines.size(); }
   /// Retrieve the coordinates of a given drift line.
-  void GetDriftLine(const std::size_t i, 
-                    std::vector<std::array<float, 3> >& driftLine, 
+  void GetDriftLine(const std::size_t i,
+                    std::vector<std::array<float, 3> >& driftLine,
                     bool& electron) const;
 
   // Functions used by the transport classes.
-  std::size_t NewDriftLine(const Particle particle, const std::size_t np,  
-                      const float x0, const float y0, const float z0);
-  void NewChargedParticleTrack(const std::size_t np, std::size_t& id, const float x0,
-                               const float y0, const float z0);
+  std::size_t NewDriftLine(const Particle particle, const std::size_t np,
+                           const float x0, const float y0, const float z0);
+  void NewChargedParticleTrack(const std::size_t np, std::size_t& id,
+                               const float x0, const float y0, const float z0);
 
   void SetDriftLinePoint(const std::size_t iL, const std::size_t iP,
                          const float x, const float y, const float z);
   void AddDriftLinePoint(const std::size_t iL, const float x, const float y,
                          const float z);
-  void SetTrackPoint(const std::size_t iL, const std::size_t iP,
-                     const float x, const float y, const float z);
+  void SetTrackPoint(const std::size_t iL, const std::size_t iP, const float x,
+                     const float y, const float z);
   void AddTrackPoint(const std::size_t iL, const float x, const float y,
                      const float z);
   void AddExcitation(const float x, const float y, const float z);
   void AddIonisation(const float x, const float y, const float z);
   void AddAttachment(const float x, const float y, const float z);
 
-  void AddPhoton(const float x0, const float y0, const float z0,
-                 const float x1, const float y1, const float z1);
+  void AddPhoton(const float x0, const float y0, const float z0, const float x1,
+                 const float y1, const float z1);
 
   friend class ViewFEMesh;
 
  private:
   std::mutex m_mutex;
 
-  std::vector<std::pair<std::vector<std::array<float, 3> >,
-                        Particle> > m_driftLines;
+  std::vector<std::pair<std::vector<std::array<float, 3> >, Particle> >
+      m_driftLines;
 
   std::vector<std::vector<std::array<float, 3> > > m_tracks;
   std::vector<std::array<std::array<float, 3>, 2> > m_photons;
@@ -107,7 +107,7 @@ class ViewDrift : public ViewBase {
 
   double m_markerSizeCluster = 0.01;
   double m_markerSizeCollision = 0.5;
-  
+
   short m_colTrack = kGreen + 3;
   short m_colPhoton = kBlue + 1;
   short m_colElectron = kOrange - 3;
@@ -119,7 +119,7 @@ class ViewDrift : public ViewBase {
   short m_colAttachment = kCyan + 3;
 
   bool m_drawClusters = false;
-  
+
   bool m_eTop = false;
 
   bool SetPlotLimits2d();
@@ -129,5 +129,5 @@ class ViewDrift : public ViewBase {
   void DrawMarkers3d(const std::vector<std::array<float, 3> >& points,
                      const short col, const double size);
 };
-}
+}  // namespace Garfield
 #endif

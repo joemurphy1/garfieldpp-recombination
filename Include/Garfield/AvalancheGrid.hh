@@ -1,10 +1,10 @@
 #ifndef G_AVALANCHE_GRID_H
 #define G_AVALANCHE_GRID_H
 
-#include<cmath>
-#include<vector>
-#include<string>
-#include<array>
+#include <array>
+#include <cmath>
+#include <string>
+#include <vector>
 
 namespace Garfield {
 
@@ -13,13 +13,12 @@ class AvalancheMicroscopic;
 class ComponentParallelPlate;
 
 /// Calculate avalanches in a uniform electric field using avalanche statistics.
-class AvalancheGrid
-{
+class AvalancheGrid {
  public:
   /// Default constructor
   AvalancheGrid() : AvalancheGrid(nullptr) {}
   /// Constructor
-  AvalancheGrid(Sensor* sensor);
+  AvalancheGrid(Sensor *sensor);
   /// Destructor
   ~AvalancheGrid() = default;
 
@@ -29,10 +28,10 @@ class AvalancheGrid
   /// Start grid based avalanche simulation.
   void StartGridAvalanche();
   /// Set the electron drift velocity (in cm / ns).
-  void SetElectronVelocity(const double vx, const double vy, const double vz)
-  {
+  void SetElectronVelocity(const double vx, const double vy, const double vz) {
     double vel = std::sqrt(vx * vx + vy * vy + vz * vz);
-    if (vel != std::abs(vx) && vel != std::abs(vy) && vel != std::abs(vz)) return;
+    if (vel != std::abs(vx) && vel != std::abs(vy) && vel != std::abs(vz))
+      return;
     int nx = (int)vx / vel;
     int ny = (int)vy / vel;
     int nz = (int)vz / vel;
@@ -94,9 +93,9 @@ class AvalancheGrid
 
   double m_MaxSize = 1.6e7;  // Saturations size
   // Check if avalanche has reached maximum size
-  bool m_Saturated = false;  
+  bool m_Saturated = false;
   // Time when the avalanche has reached maximum size
-  double m_SaturationTime = -1.;  
+  double m_SaturationTime = -1.;
 
   int m_nestart = 0.;
 
@@ -117,16 +116,16 @@ class AvalancheGrid
   std::vector<double> m_xgrid;  ///< Grid points of x-coordinate.
   double m_xStepSize = 0.;      ///< Distance between the grid points.
 
-  bool m_gridset = false; ///< Keeps track if the grid has been defined.
-  int m_nTotal = 0;       ///< Total amount of charge.
-  double m_time = 0;      ///< Clock.
-  bool m_run = true;      ///< Tracking if the charges are still in the drift gap.
- 
- struct Path {
-    std::vector<double> ts ={};
-    std::vector< std::array<double, 3> > xs ={};
+  bool m_gridset = false;  ///< Keeps track if the grid has been defined.
+  int m_nTotal = 0;        ///< Total amount of charge.
+  double m_time = 0;       ///< Clock.
+  bool m_run = true;  ///< Tracking if the charges are still in the drift gap.
+
+  struct Path {
+    std::vector<double> ts = {};
+    std::vector<std::array<double, 3> > xs = {};
     std::vector<double> qs = {};
- };
+  };
 
   struct AvalancheNode {
     double ix = 0;
@@ -148,7 +147,7 @@ class AvalancheGrid
     double dt = -1.;   ///< time step.
 
     bool active = true;
-      
+
     Path path;
   };
 

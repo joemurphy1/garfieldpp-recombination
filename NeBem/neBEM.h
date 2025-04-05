@@ -19,10 +19,9 @@
 
 #define EPS0 8.854187817e-12       // in C2/Nm2 (SI) equivalent to pF/m
 #define MyFACTOR 111.26500547e-12  // 4 pi eps_0 is ofn reqrd for normalization
-// #define EPS0 1.0						// relevant for other
-// physics problems
-// #define MyFACTOR 1.0				// relevant for other physics
-// problems
+// #define EPS0 1.0						// relevant for
+// other physics problems #define MyFACTOR 1.0				//
+// relevant for other physics problems
 
 #define Q_E -1.60217646e-19  // charge of electron in SI units (Coulomb)
 #define Q_I 1.60217646e-19   // charge of ion in SI units (Coulomb)
@@ -143,7 +142,7 @@ typedef struct {
   int PrimitiveNb;  // Index of the primitive to which the element belongs
   short int GType;  // 4: rectangular, 3: triangular, 2: linear (wire)
   Point3D Origin;   // centroid / barycenter / axis-center
-  double LX, LZ;      // length, breadth / base, height / radius, length
+  double LX, LZ;    // length, breadth / base, height / radius, length
   double Solution;  // accumulated charge, or similar solution
   double Assigned;  // assigned charge, or similar property
 } Element;

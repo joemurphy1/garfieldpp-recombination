@@ -1,13 +1,13 @@
+#include "heed++/code/BGMesh.h"
+
 #include <cmath>
 
 #include "wcpplib/util/FunNameStack.h"
-#include "heed++/code/BGMesh.h"
 
 namespace Heed {
 
 BGMesh::BGMesh(double fxmin, double fxmax, long fq)
     : xmin(fxmin), xmax(fxmax), q(fq) {
-
   mfunname("BGMesh::BGMesh(double fxmin, double fxmax, long fq)");
   // The minimum is one interval and two points.
   check_econd11(fq, <= 1, mcerr);
@@ -39,4 +39,4 @@ std::ostream& operator<<(std::ostream& file, const BGMesh& bgm) {
   bgm.print(file, 2);
   return file;
 }
-}
+}  // namespace Heed

@@ -5,10 +5,10 @@
 namespace Heed {
 
 eparticle::eparticle(manip_absvol* primvol, const point& pt, const vec& vel,
-  double ftime, particle_def* fpardef, fieldmap* fm)
-    : mparticle(primvol, pt, vel, ftime, fpardef->mass), 
-      m_pardef(fpardef), m_fm(fm) {
-}
+                     double ftime, particle_def* fpardef, fieldmap* fm)
+    : mparticle(primvol, pt, vel, ftime, fpardef->mass),
+      m_pardef(fpardef),
+      m_fm(fm) {}
 
 int eparticle::force(const point& pt, vec& f, vec& f_perp, double& mrange) {
   vec efield(0., 0., 0.);
@@ -34,4 +34,4 @@ void eparticle::print(std::ostream& file, int l) const {
   file << '\n';
   mparticle::print(file, l);
 }
-}
+}  // namespace Heed

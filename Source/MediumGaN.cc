@@ -1,8 +1,9 @@
+#include "Garfield/MediumGaN.hh"
+
 #include <cmath>
 #include <iostream>
 
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/MediumGaN.hh"
 
 namespace Garfield {
 
@@ -10,9 +11,9 @@ MediumGaN::MediumGaN() : Medium() {
   m_className = "MediumGaN";
   m_name = "GaN";
 
-  // J. Wang et al., 
+  // J. Wang et al.,
   // Review of using gallium nitride for ionizing radiation detection,
-  // Appl. Phys. Rev. 2 (2015), 
+  // Appl. Phys. Rev. 2 (2015),
   // http://dx.doi.org/10.1063/1.4929913
 
   SetTemperature(300.);
@@ -41,9 +42,9 @@ void MediumGaN::GetComponent(const unsigned int i, std::string& label,
 }
 
 bool MediumGaN::ElectronVelocity(const double ex, const double ey,
-                                  const double ez, const double bx,
-                                  const double by, const double bz, double& vx,
-                                  double& vy, double& vz) {
+                                 const double ez, const double bx,
+                                 const double by, const double bz, double& vx,
+                                 double& vy, double& vz) {
   vx = vy = vz = 0.;
   if (m_isChanged) {
     UpdateTransportParameters();
@@ -60,22 +61,22 @@ bool MediumGaN::ElectronVelocity(const double ex, const double ey,
   const double e0 = emag / ec;
   const double e1 = pow(e0, 4.19);
   const double den = 1. + e1 + 3.24 * pow(e0, 0.885);
-  const double mu = -(m_eMobility + vsat * e1 / emag) / den; 
+  const double mu = -(m_eMobility + vsat * e1 / emag) / den;
   const double b2 = bx * bx + by * by + bz * bz;
   if (b2 < Small) {
     vx = mu * ex;
     vy = mu * ey;
     vz = mu * ez;
   } else {
-    Langevin(ex, ey, ez, bx, by, bz, mu, m_eHallFactor * mu, vx, vy, vz); 
+    Langevin(ex, ey, ez, bx, by, bz, mu, m_eHallFactor * mu, vx, vy, vz);
   }
   return true;
 }
 
 bool MediumGaN::ElectronTownsend(const double ex, const double ey,
-                                  const double ez, const double bx,
-                                  const double by, const double bz,
-                                  double& alpha) {
+                                 const double ez, const double bx,
+                                 const double by, const double bz,
+                                 double& alpha) {
   alpha = 0.;
   if (m_isChanged) {
     UpdateTransportParameters();
@@ -88,14 +89,14 @@ bool MediumGaN::ElectronTownsend(const double ex, const double ey,
   const double emag = sqrt(ex * ex + ey * ey + ez * ez);
   if (emag > Small) {
     alpha = m_eImpactA * exp(-m_eImpactB / emag);
-  } 
+  }
   return true;
 }
 
 bool MediumGaN::ElectronAttachment(const double ex, const double ey,
-                                    const double ez, const double bx,
-                                    const double by, const double bz,
-                                    double& eta) {
+                                   const double ez, const double bx,
+                                   const double by, const double bz,
+                                   double& eta) {
   eta = 0.;
   if (!m_eAtt.empty()) {
     // Interpolation in user table.
@@ -105,8 +106,8 @@ bool MediumGaN::ElectronAttachment(const double ex, const double ey,
 }
 
 bool MediumGaN::HoleVelocity(const double ex, const double ey, const double ez,
-                              const double bx, const double by, const double bz,
-                              double& vx, double& vy, double& vz) {
+                             const double bx, const double by, const double bz,
+                             double& vx, double& vy, double& vz) {
   vx = vy = vz = 0.;
   if (m_isChanged) {
     UpdateTransportParameters();
@@ -118,7 +119,7 @@ bool MediumGaN::HoleVelocity(const double ex, const double ey, const double ez,
   }
   // Calculate the mobility.
   const double emag = sqrt(ex * ex + ey * ey + ez * ez);
-  // Values for saturation velocity and exponent from Sentaurus Synopsys. 
+  // Values for saturation velocity and exponent from Sentaurus Synopsys.
   constexpr double vsat = 7.e-3;
   constexpr double beta = 0.725;
   constexpr double invbeta = 1. / beta;
@@ -136,8 +137,8 @@ bool MediumGaN::HoleVelocity(const double ex, const double ey, const double ez,
 }
 
 bool MediumGaN::HoleTownsend(const double ex, const double ey, const double ez,
-                              const double bx, const double by, const double bz,
-                              double& alpha) {
+                             const double bx, const double by, const double bz,
+                             double& alpha) {
   alpha = 0.;
   if (m_isChanged) {
     UpdateTransportParameters();
@@ -150,13 +151,13 @@ bool MediumGaN::HoleTownsend(const double ex, const double ey, const double ez,
   const double emag = sqrt(ex * ex + ey * ey + ez * ez);
   if (emag > Small) {
     alpha = m_hImpactA * exp(-m_hImpactB / emag);
-  } 
+  }
   return true;
 }
 
 bool MediumGaN::HoleAttachment(const double ex, const double ey,
-                                const double ez, const double bx,
-                                const double by, const double bz, double& eta) {
+                               const double ez, const double bx,
+                               const double by, const double bz, double& eta) {
   eta = 0.;
   if (!m_hAtt.empty()) {
     // Interpolation in user table.
@@ -166,7 +167,6 @@ bool MediumGaN::HoleAttachment(const double ex, const double ey,
 }
 
 void MediumGaN::SetElectronConcentration(const double c) {
-
   if (c < 0.) {
     std::cerr << m_className << "::SetElectronConcentration:\n"
               << "    Concentration cannot be negative.\n";
@@ -176,7 +176,6 @@ void MediumGaN::SetElectronConcentration(const double c) {
 }
 
 void MediumGaN::SetLowFieldMobility(const double mue, const double muh) {
-
   if (mue <= 0. || muh <= 0.) {
     std::cerr << m_className << "::SetLowFieldMobility:\n"
               << "    Mobility must be greater than zero.\n";
@@ -194,7 +193,6 @@ void MediumGaN::UnsetLowFieldMobility() {
 }
 
 void MediumGaN::UpdateTransportParameters() {
-
   if (m_userMobility) return;
   const double t = m_temperature / 300.;
 
@@ -206,11 +204,10 @@ void MediumGaN::UpdateTransportParameters() {
   const double cRef = 7.78e16 * pow(t, 1.3);
   const double alpha = 0.71 * pow(t, 0.31);
   const double den = 1. + pow(m_eDensity / cRef, alpha);
-  m_eMobility = eMuMin + (eMuMax - eMuMin) / den; 
+  m_eMobility = eMuMin + (eMuMax - eMuMin) / den;
   // Low-field mobility for holes (using only the lattice mobility).
   // - T. TMnatsakanov et al., Solid-State Electronics 47 (2003), 111
-  //   https://doi.org/10.1016/S0038-1101(02)00256-3 
+  //   https://doi.org/10.1016/S0038-1101(02)00256-3
   m_hMobility = 0.170e-6 * pow(t, -5.);
-
 }
-}
+}  // namespace Garfield

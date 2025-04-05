@@ -1,9 +1,10 @@
+#include "Garfield/SolidTube.hh"
+
 #include <cmath>
 #include <iostream>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Polygon.hh"
-#include "Garfield/SolidTube.hh"
 
 namespace Garfield {
 
@@ -12,18 +13,15 @@ SolidTube::SolidTube(const double cx, const double cy, const double cz,
     : SolidTube(cx, cy, cz, 0., rt, lz) {}
 
 SolidTube::SolidTube(const double cx, const double cy, const double cz,
-                     const double rt, const double lz,
-                     const double dx, const double dy, const double dz)
+                     const double rt, const double lz, const double dx,
+                     const double dy, const double dz)
     : SolidTube(cx, cy, cz, rt, lz) {
   SetDirection(dx, dy, dz);
 }
 
 SolidTube::SolidTube(const double cx, const double cy, const double cz,
                      const double ri, const double ro, const double lz)
-    : Solid(cx, cy, cz, "SolidTube"),
-      m_rO(ro),
-      m_rI(ri),
-      m_lZ(lz) {
+    : Solid(cx, cy, cz, "SolidTube"), m_rO(ro), m_rI(ri), m_lZ(lz) {
   UpdatePolygon();
 }
 
@@ -46,15 +44,15 @@ void SolidTube::UpdatePolygon() {
     const double f = 2. / (1. + asinh(tan(alpha)) * calpha / tan(alpha));
     m_rpO *= f;
     m_rpI *= f;
-  } 
+  }
   // Set the inradius of the polygon.
   m_riO = m_rpO * calpha;
   m_riI = m_rpI * calpha;
   // Set the coordinates of the polygon corners.
   m_xpO.clear();
-  m_ypO.clear(); 
+  m_ypO.clear();
   m_xpI.clear();
-  m_ypI.clear(); 
+  m_ypI.clear();
   for (unsigned int i = 0; i < nP; ++i) {
     const double phi = m_rot + HalfPi * i / (m_n - 1.);
     const double cphi = cos(phi);
@@ -78,7 +76,7 @@ bool SolidTube::IsInside(const double x, const double y, const double z,
 
   const double rho = sqrt(u * u + v * v);
   if (!tesselated) return (rho <= m_rO && rho >= m_rI);
- 
+
   if (rho > m_rpO || rho < m_riI) return false;
   if (rho < m_riO && rho > m_rpI) return true;
   bool inside = false;
@@ -141,7 +139,6 @@ void SolidTube::SetSectors(const unsigned int n) {
 }
 
 bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
-
   const auto id = GetId();
   const auto nPanels = panels.size();
   // Direction vector.
@@ -157,7 +154,7 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
   if (m_toplid) {
     const double a = m_cPhi * m_sTheta;
     const double b = m_sPhi * m_sTheta;
-    const double c = m_cTheta; 
+    const double c = m_cTheta;
     if (m_rI > 0.) {
       double alpha = m_rot;
       double calpha = cos(alpha);
@@ -189,14 +186,14 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
         panel.volume = id;
         panels.push_back(std::move(panel));
         // Shift.
-        xv0 = xv3; 
+        xv0 = xv3;
         yv0 = yv3;
         zv0 = zv3;
         xv1 = xv2;
         yv1 = yv2;
         zv1 = zv2;
       }
-    } else { 
+    } else {
       std::vector<double> xv;
       std::vector<double> yv;
       std::vector<double> zv;
@@ -258,7 +255,7 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
         panel.volume = id;
         panels.push_back(std::move(panel));
         // Shift.
-        xv0 = xv3; 
+        xv0 = xv3;
         yv0 = yv3;
         zv0 = zv3;
         xv1 = xv2;
@@ -347,7 +344,6 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
 }
 
 double SolidTube::GetDiscretisationLevel(const Panel& panel) {
-
   // Transform the normal vector to local coordinates.
   double u = 0., v = 0., w = 0.;
   VectorToLocal(panel.a, panel.b, panel.c, u, v, w);
@@ -358,12 +354,11 @@ double SolidTube::GetDiscretisationLevel(const Panel& panel) {
     return m_dis[1];
   }
   return m_dis[2];
-} 
+}
 
 void SolidTube::Cut(const double x0, const double y0, const double z0,
                     const double xn, const double yn, const double zn,
                     std::vector<Panel>& panels) {
-
   // -----------------------------------------------------------------------
   //    PLACYC - Cuts cylinder with a plane.
   // -----------------------------------------------------------------------
@@ -384,8 +379,8 @@ void SolidTube::Cut(const double x0, const double y0, const double z0,
       ToGlobal(r * cos(phi), r * sin(phi), zLid, x2, y2, z2);
       // Cut with the plane.
       double xc, yc, zc;
-      if (Intersect(x1, y1, z1, x2, y2, z2, x0, y0, z0, 
-                    xn, yn, zn, xc, yc, zc)) {
+      if (Intersect(x1, y1, z1, x2, y2, z2, x0, y0, z0, xn, yn, zn, xc, yc,
+                    zc)) {
         xv.push_back(xc);
         yv.push_back(yc);
         zv.push_back(zc);
@@ -431,4 +426,4 @@ void SolidTube::Cut(const double x0, const double y0, const double z0,
   }
 }
 
-}
+}  // namespace Garfield

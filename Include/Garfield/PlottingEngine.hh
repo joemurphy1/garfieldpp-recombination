@@ -33,6 +33,6 @@ class PlottingEngine {
 
   TStyle m_garfieldStyle;
 };
-}
+}  // namespace Garfield
 
 #endif

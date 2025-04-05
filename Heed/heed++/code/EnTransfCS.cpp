@@ -1,20 +1,21 @@
-#include <iomanip>
-#include <fstream>
+#include "heed++/code/EnTransfCS.h"
+
 #include <algorithm>
+#include <fstream>
+#include <iomanip>
+
+#include "heed++/code/HeedMatterDef.h"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/math/lorgamma.h"
 #include "wcpplib/math/tline.h"
-#include "heed++/code/EnTransfCS.h"
-#include "heed++/code/HeedMatterDef.h"
 
 // 2003, I. Smirnov
 
 namespace {
 
 double integrate(const Heed::PointCoorMesh<double, const double*>& mesh,
-                 const std::vector<double>& y,
-                 double x1, double x2, const unsigned int xpower) {
-
+                 const std::vector<double>& y, double x1, double x2,
+                 const unsigned int xpower) {
   if (xpower > 1) return 0.;
   if (x1 >= x2) return 0.;
   const long qi = mesh.get_qi();
@@ -42,7 +43,7 @@ double integrate(const Heed::PointCoorMesh<double, const double*>& mesh,
       }
       if (xpower == 0) {
         s += (b2 - x1) * y[n1];
-     } else {
+      } else {
         s += 0.5 * (b2 * b2 - x1 * x1) * y[n1];
       }
     }
@@ -79,8 +80,7 @@ double integrate(const Heed::PointCoorMesh<double, const double*>& mesh,
 }
 
 double cdf(const Heed::PointCoorMesh<double, const double*>& mesh,
-          const std::vector<double>& y, std::vector<double>& integ_y) {
-
+           const std::vector<double>& y, std::vector<double>& integ_y) {
   const long qi = mesh.get_qi();
   if (qi < 1) return 0.;
 
@@ -99,15 +99,15 @@ double cdf(const Heed::PointCoorMesh<double, const double*>& mesh,
   return s;
 }
 
-}
+}  // namespace
 
 namespace Heed {
 
-using CLHEP::twopi;
+using CLHEP::cm;
 using CLHEP::electron_mass_c2;
 using CLHEP::fine_structure_const;
 using CLHEP::hbarc;
-using CLHEP::cm;
+using CLHEP::twopi;
 
 EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
                        bool fs_primary_electron, HeedMatterDef* fhmd,
@@ -236,15 +236,17 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
       }
     } else {
       if (!s_primary_electron) {
-        Rruth[ne] = 1. / (ec * ec) * (1. - beta2 * ec / max_etransf +
-                                      ec * ec / (2. * ener * ener));
+        Rruth[ne] =
+            1. / (ec * ec) *
+            (1. - beta2 * ec / max_etransf + ec * ec / (2. * ener * ener));
       } else {
         const double delta = ec / particle_mass;
         const double pg2 = gamma * gamma;
         const double dgd = delta * (gamma_1 - delta);
         Rruth[ne] = beta2 / (particle_mass * particle_mass) * 1.0 /
-                    (pg2 - 1.0) * (gamma_1 * gamma_1 * pg2 / (dgd * dgd) -
-                                   (2.0 * pg2 + 2.0 * gamma - 1.0) / dgd + 1.0);
+                    (pg2 - 1.0) *
+                    (gamma_1 * gamma_1 * pg2 / (dgd * dgd) -
+                     (2.0 * pg2 + 2.0 * gamma - 1.0) / dgd + 1.0);
       }
     }
   }
@@ -291,7 +293,7 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
           fruth[na][ns][ne] = (s + 0.5 * r) * Rruth[ne];
           check_econd11a(fruth[na][ns][ne], < 0,
                          "na=" << na << " ns=" << ns << " na=" << na, mcerr);
-        } 
+        }
         s += r;
       }
     }
@@ -309,8 +311,8 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
     const double eps2 = hmd->epsi2[ne];
     const double eps11 = 1. + eps1;
     const double sqepsi = eps11 * eps11 + eps2 * eps2;
-    const double cL = C1_MEV2_MBN * coefpa * (log1C[ne] + log2C[ne]) / 
-                      (ec * Z_mean * sqepsi); 
+    const double cL =
+        C1_MEV2_MBN * coefpa * (log1C[ne] + log2C[ne]) / (ec * Z_mean * sqepsi);
     for (long na = 0; na < qa; na++) {
       double awq = hmd->matter->weight_quan(na);
       auto pacs = hmd->apacs[na];
@@ -329,8 +331,8 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
           if (debug) {
             funnw.whdr(mcout);
             mcout << "negative adda\n";
-            mcout << "na=" << na << " ns=" << ns << " ne=" << ne
-                  << ": " << r << '\n';
+            mcout << "na=" << na << " ns=" << ns << " ne=" << ne << ": " << r
+                  << '\n';
           }
           r = 0.;
         }
@@ -344,8 +346,8 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
           if (debug) {
             funnw.whdr(mcout);
             mcout << "negative adda_a\n";
-            mcout << "na=" << na << " ns=" << ns << " ne=" << ne
-                  << ": " << r_a << '\n';
+            mcout << "na=" << na << " ns=" << ns << " ne=" << ne << ": " << r_a
+                  << '\n';
           }
           r_a = 0.;
         }
@@ -400,9 +402,8 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
       if (max_etransf > hmd->energy_mesh->get_e(qe)) {
         double e1 = hmd->energy_mesh->get_e(qe);
         double e2 = max_etransf;
-        meanC1 += coef *
-                  (log(e2 / e1) - beta2 / max_etransf * (e2 - e1) +
-                   (e2 * e2 - e1 * e1) / (4.0 * ener * ener));
+        meanC1 += coef * (log(e2 / e1) - beta2 / max_etransf * (e2 - e1) +
+                          (e2 * e2 - e1 * e1) / (4.0 * ener * ener));
       }
 #ifndef EXCLUDE_A_VALUES
       meanC1_a = meanC_a;
@@ -410,8 +411,7 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
         double e1 = hmd->energy_mesh->get_e(qe);
         double e2 = max_etransf;
         meanC1_a += coef * (log(e2 / e1) - beta2 / max_etransf * (e2 - e1) +
-                            (e2 * e2 - e1 * e1) /
-                                (4.0 * ener * ener));
+                            (e2 * e2 - e1 * e1) / (4.0 * ener * ener));
       }
 #endif
     }
@@ -457,7 +457,7 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
     const double det_value = 1.0 / (gamma * gamma) - hmd->epsi1[ne] * beta2;
     length_y0[ne] = det_value > 0. ? beta / k0 * 1.0 / sqrt(det_value) : 0.;
   }
-  
+
   // Prefactor of the Highland formula.
   sigma_ms = sqrt(2.) * 13.6 / (beta * beta * gamma * particle_mass);
 
@@ -468,7 +468,7 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
   for (int i = 0; i < qe; ++i) {
     double sumR = 0.;
     double sumC = 0.;
-    double sumL = 0.; 
+    double sumL = 0.;
     for (long na = 0; na < qa; ++na) {
       const long qs = hmd->apacs[na]->get_qshell();
       for (long ns = 0; ns < qs; ++ns) {
@@ -485,11 +485,10 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
     const double sumL1 = f1 * sumL;
     const double sumL2 = f2 * sumL;
     dcsfile << hmd->energy_mesh->get_ec(i) << "  " << addaC[i] / C1_MEV2_MBN
-            << "  " << sumL1 << "  " << "  " << sumC << "  " << sumL2 << "  " << sumR 
-            << "\n";
+            << "  " << sumL1 << "  " << "  " << sumC << "  " << sumL2 << "  "
+            << sumR << "\n";
   }
   dcsfile.close();
-
 }
 
 void EnTransfCS::print(std::ostream& file, int l) const {
@@ -517,8 +516,8 @@ void EnTransfCS::print(std::ostream& file, int l) const {
     if (l > 4) {
       Ifile << "       enerc,      length_y0\n";
       for (long ne = 0; ne < qe; ne++) {
-        Ifile << std::setw(12) << hmd->energy_mesh->get_ec(ne) 
-              << std::setw(12) << length_y0[ne] << '\n';
+        Ifile << std::setw(12) << hmd->energy_mesh->get_ec(ne) << std::setw(12)
+              << length_y0[ne] << '\n';
       }
     }
     if (l > 3) {
@@ -551,4 +550,4 @@ void EnTransfCS::print(std::ostream& file, int l) const {
   }
   indn.n -= 2;
 }
-}
+}  // namespace Heed

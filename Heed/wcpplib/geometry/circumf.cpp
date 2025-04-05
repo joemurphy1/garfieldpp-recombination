@@ -1,4 +1,5 @@
 #include "wcpplib/geometry/circumf.h"
+
 #include "wcpplib/geometry/plane.h"
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -27,9 +28,7 @@ circumf::circumf(const point& fpiv, const vec& fdir, double frad)
 circumf::circumf(const circumf& f)
     : absref(f), piv(f.piv), dir(f.dir), rad(f.rad) {}
 
-absref_transmit circumf::get_components() {
-  return absref_transmit(2, aref);
-}
+absref_transmit circumf::get_components() { return absref_transmit(2, aref); }
 
 int operator==(const circumf& f1, const circumf& f2) {
   pvecerror("int operator==(const circumf &f1, const circumf &f2)");
@@ -89,4 +88,4 @@ std::ostream& operator<<(std::ostream& file, const circumf& f) {
   indn.n -= 2;
   return file;
 }
-}
+}  // namespace Heed

@@ -82,7 +82,9 @@ extern struct {
   double qt4[nEnergySteps];
 } mix2_;
 
-extern struct { double den[nEnergySteps]; } dens_;
+extern struct {
+  double den[nEnergySteps];
+} dens_;
 
 extern struct {
   double time[300];
@@ -157,7 +159,9 @@ extern struct {
 } larget_;
 
 // Definition of the gas mixture
-extern struct { std::int64_t ngasn[6]; } gasn_;
+extern struct {
+  std::int64_t ngasn[6];
+} gasn_;
 
 extern struct {
   double an1, an2, an3, an4, an5, an6, an;
@@ -166,8 +170,12 @@ extern struct {
 
 // Calculation results
 // Drift velocity
-extern struct { double wx, wy, wz; } vel_;
-extern struct { double dwx, dwy, dwz; } velerr_;
+extern struct {
+  double wx, wy, wz;
+} vel_;
+extern struct {
+  double dwx, dwy, dwz;
+} velerr_;
 
 // Diffusion
 extern struct {
@@ -178,12 +186,20 @@ extern struct {
   double dxxer, dyyer, dzzer;
   double dyzer, dxyer, dxzer;
 } diferb_;
-extern struct { double difln, diftr; } difvel_;
-extern struct { double dfler, dfter; } diferl_;
+extern struct {
+  double difln, diftr;
+} difvel_;
+extern struct {
+  double dfler, dfter;
+} diferl_;
 
 // Townsend and attachment coefficient
-extern struct { double alpha, att; } ctowns_;
-extern struct { double alper, atter; } ctwner_;
+extern struct {
+  double alpha, att;
+} ctowns_;
+extern struct {
+  double alper, atter;
+} ctwner_;
 
 // Time of flight swarm parameters
 extern struct {
@@ -196,33 +212,34 @@ extern struct {
 
 // Steady state townsend swarm parameters
 extern struct {
-    double vdout, vderr;  //< diffusion modified drift
-    double wsout, wserr, dlout, dlerr; //< seems to be WS SST velocities i.e. mean arrival time drift velocity?
-    double dtout, dterr, alphasst, alphaerr;
-    double attsst, atterr;
+  double vdout, vderr;                //< diffusion modified drift
+  double wsout, wserr, dlout, dlerr;  //< seems to be WS SST velocities i.e.
+                                      // mean arrival time drift velocity?
+  double dtout, dterr, alphasst, alphaerr;
+  double attsst, atterr;
 } sstout_;
 
-
-void gasmix_(std::int64_t* ngs, double* q, double* qin, std::int64_t* nin, double* e,
-             double* ei, char* name, double* virl, double* eb, double* peqel,
-             double* peqin, double* penfra, std::int64_t* kel, std::int64_t* kin,
-             double* qion, double* peqion, double* eion, std::int64_t* nion,
-             double* qatt, std::int64_t* natt, double* qnull, std::int64_t* nnull,
-             double* scln, std::int64_t* nc0, double* ec0, double* wk, double* efl,
+void gasmix_(std::int64_t* ngs, double* q, double* qin, std::int64_t* nin,
+             double* e, double* ei, char* name, double* virl, double* eb,
+             double* peqel, double* peqin, double* penfra, std::int64_t* kel,
+             std::int64_t* kin, double* qion, double* peqion, double* eion,
+             std::int64_t* nion, double* qatt, std::int64_t* natt,
+             double* qnull, std::int64_t* nnull, double* scln,
+             std::int64_t* nc0, double* ec0, double* wk, double* efl,
              std::int64_t* ng1, double* eg1, std::int64_t* ng2, double* eg2,
              char scrpt[nMaxLevelsPerComponent][nCharDescr],
-             char scrptn[nMaxNullTerms][nCharDescr],
-             short namelen, short scrpt_len, short scrptn_len);
+             char scrptn[nMaxNullTerms][nCharDescr], short namelen,
+             short scrpt_len, short scrptn_len);
 
-void colf_(double* freq, double* freel, double* freion, double* freatt, 
-           double* frein, std::int64_t *ntotal);
+void colf_(double* freq, double* freel, double* freion, double* freatt,
+           double* frein, std::int64_t* ntotal);
 
-void colft_(double* freq, double* freel, double* freion, double* freatt, 
-            double* frein, std::int64_t *ntotal);
+void colft_(double* freq, double* freel, double* freion, double* freatt,
+            double* frein, std::int64_t* ntotal);
 
 void magboltz_();
 }
-}
-}
+}  // namespace Magboltz
+}  // namespace Garfield
 #endif
 #endif

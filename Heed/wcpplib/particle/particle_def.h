@@ -1,8 +1,8 @@
 #ifndef PARTICLE_DEF_H
 #define PARTICLE_DEF_H
 
-#include <string>
 #include <list>
+#include <string>
 
 namespace Heed {
 
@@ -28,10 +28,12 @@ class particle_def {
   particle_def(const std::string& fname, const std::string& fnotation,
                particle_def& p);
   /// Copy constructor.
-  particle_def(const particle_def& f) 
-      : name(f.name), notation(f.notation), mass(f.mass), charge(f.charge), 
-        spin(f.spin) {
-  }
+  particle_def(const particle_def& f)
+      : name(f.name),
+        notation(f.notation),
+        mass(f.mass),
+        charge(f.charge),
+        spin(f.spin) {}
   /// Assignment operator.
   particle_def& operator=(const particle_def&) = default;
 
@@ -63,6 +65,6 @@ extern particle_def K_minus_meson_def;
 extern particle_def deuteron_def;
 extern particle_def alpha_particle_def;
 
-}
+}  // namespace Heed
 
 #endif

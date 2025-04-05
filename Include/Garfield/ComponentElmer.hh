@@ -1,7 +1,8 @@
 #ifndef G_COMPONENT_ELMER_H
 #define G_COMPONENT_ELMER_H
 
-#include<string>
+#include <string>
+
 #include "Garfield/ComponentFieldMap.hh"
 
 namespace Garfield {
@@ -34,19 +35,19 @@ class ComponentElmer : public ComponentFieldMap {
                   const std::string& mplist = "dielectrics.dat",
                   const std::string& volt = "out.result",
                   const std::string& unit = "cm");
-  /// Import a list of voltages to be used as weighting potentials. 
+  /// Import a list of voltages to be used as weighting potentials.
   bool SetWeightingPotential(const std::string& prnsol,
                              const std::string& label) {
     return SetWeightingField(prnsol, label);
   }
   bool SetWeightingField(const std::string& prnsol, const std::string& label);
 
-  #ifdef USEGPU
+#ifdef USEGPU
   /// Create and initialise GPU Transfer class
-  double CreateGPUTransferObject(ComponentGPU *&comp_gpu) override;
-  #endif
+  double CreateGPUTransferObject(ComponentGPU*& comp_gpu) override;
+#endif
  private:
   bool LoadPotentials(const std::string& prnsol, std::vector<double>& pot);
 };
-}
+}  // namespace Garfield
 #endif

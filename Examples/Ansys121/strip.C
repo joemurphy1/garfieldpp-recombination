@@ -2,18 +2,17 @@
 #include <TCanvas.h>
 
 #include "Garfield/ComponentAnsys121.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/ViewFEMesh.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   // Load the field map.
   ComponentAnsys121 fm;
-  fm.Initialise("fieldmap/ELIST.lis", "fieldmap/NLIST.lis", 
+  fm.Initialise("fieldmap/ELIST.lis", "fieldmap/NLIST.lis",
                 "fieldmap/MPLIST.lis", "fieldmap/PRNSOL.lis", "micron");
   fm.EnableMirrorPeriodicityX();
   fm.PrintRange();

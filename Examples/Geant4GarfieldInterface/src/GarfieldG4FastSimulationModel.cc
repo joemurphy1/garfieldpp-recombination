@@ -82,7 +82,6 @@ G4bool GarfieldG4FastSimulationModel::ModelTrigger(
 
 void GarfieldG4FastSimulationModel::DoIt(const G4FastTrack& fastTrack,
                                          G4FastStep& fastStep) {
-
   G4ThreeVector localdir = fastTrack.GetPrimaryTrackLocalDirection();
   G4ThreeVector localpos = fastTrack.GetPrimaryTrackLocalPosition();
 
@@ -103,10 +102,10 @@ void GarfieldG4FastSimulationModel::DoIt(const G4FastTrack& fastTrack,
     particleName = "anti-proton";
   }
 
-  fGarfieldPhysics->DoIt(
-      particleName, ekin_MeV, globalTime, localpos.x() / CLHEP::cm,
-      localpos.y() / CLHEP::cm, localpos.z() / CLHEP::cm,
-      localdir.x(), localdir.y(), localdir.z());
+  fGarfieldPhysics->DoIt(particleName, ekin_MeV, globalTime,
+                         localpos.x() / CLHEP::cm, localpos.y() / CLHEP::cm,
+                         localpos.z() / CLHEP::cm, localdir.x(), localdir.y(),
+                         localdir.z());
 
   fastStep.SetTotalEnergyDeposited(fGarfieldPhysics->GetEnergyDeposit_MeV());
 
@@ -129,11 +128,10 @@ void GarfieldG4FastSimulationModel::DoIt(const G4FastTrack& fastTrack,
       fastStep.CreateSecondaryTrack(particle, position, time, true);
       totalEnergySecondaries_MeV += eKin_MeV;
     } else if (sp.getParticleName() == "gamma") {
-       G4DynamicParticle particle(G4Gamma::GammaDefinition(),
-                                  momentumDirection, eKin_MeV);
+      G4DynamicParticle particle(G4Gamma::GammaDefinition(), momentumDirection,
+                                 eKin_MeV);
       fastStep.CreateSecondaryTrack(particle, position, time, true);
       totalEnergySecondaries_MeV += eKin_MeV;
     }
   }
-  
 }

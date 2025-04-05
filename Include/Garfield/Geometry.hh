@@ -1,8 +1,8 @@
 #ifndef G_GEOMETRY_H
 #define G_GEOMETRY_H
 
-#include<cstddef>
-#include<string>
+#include <cstddef>
+#include <string>
 
 namespace Garfield {
 
@@ -42,6 +42,6 @@ class Geometry {
  protected:
   std::string m_className = "Geometry";
 };
-}
+}  // namespace Garfield
 
 #endif

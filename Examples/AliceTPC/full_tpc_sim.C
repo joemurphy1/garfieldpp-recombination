@@ -1,6 +1,7 @@
-#include <cstdlib>
-#include <TROOT.h>
 #include <TApplication.h>
+#include <TROOT.h>
+
+#include <cstdlib>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/DriftLineRKF.hh"
@@ -8,16 +9,15 @@
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
-#include "Garfield/ViewField.hh"
 #include "Garfield/ViewCell.hh"
 #include "Garfield/ViewDrift.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  
+
   // Switch between IROC and OROC.
   constexpr bool iroc = false;
 
@@ -41,11 +41,11 @@ int main(int argc, char * argv[]) {
   // Gate wires.
   constexpr double vg = -70.;
   constexpr double deltav = 90.;
- 
+
   // HV plane (drift field).
   constexpr double yHV = 249.7;
   constexpr double vHV = -100000;
- 
+
   // Setup the gas.
   MediumMagboltz gas;
   // Set the temperature [K] and pressure [Torr].
@@ -58,7 +58,7 @@ int main(int argc, char * argv[]) {
   // Read the ion mobility table from file.
   gas.LoadIonMobility("IonMobility_Ne+_Ne.txt");
 
-  // Setup the electric field, using separate components for the 
+  // Setup the electric field, using separate components for the
   // electrons (gating open) and the ions (gating switched on).
   ComponentAnalyticField cmpe;
   ComponentAnalyticField cmpi;
@@ -102,8 +102,8 @@ int main(int argc, char * argv[]) {
   sensor.AddComponent(&cmpe);
   sensor.AddComponent(&cmpi);
   sensor.AddElectrode(&cmpi, "pad_plane");
-  const double xmin = -3 * period; 
-  const double xmax =  3 * period;
+  const double xmin = -3 * period;
+  const double xmax = 3 * period;
   sensor.SetArea(xmin, 0., -1., xmax, yHV, 1.);
 
   // Plot isopotential contours.
@@ -133,7 +133,7 @@ int main(int argc, char * argv[]) {
   const double xt = xmin;
   const double yt = 0.5 * yHV;
   track.NewTrack(xt, yt, 0., 0., 1., 0., 0.);
-  // Retrieve the clusters. 
+  // Retrieve the clusters.
   for (const auto& cluster : track.GetClusters()) {
     // Retrieve the electrons of the cluster.
     for (const auto& electron : cluster.electrons) {

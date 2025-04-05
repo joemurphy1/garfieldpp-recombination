@@ -16,7 +16,7 @@ class MediumGaAs : public Medium {
 
   bool IsSemiconductor() const override { return true; }
 
-  void GetComponent(const unsigned int i, std::string& label, 
+  void GetComponent(const unsigned int i, std::string& label,
                     double& f) override;
 
   // Electron transport parameters
@@ -66,6 +66,6 @@ class MediumGaAs : public Medium {
   bool m_userMobility = false;
   void UpdateTransportParameters();
 };
-}
+}  // namespace Garfield
 
 #endif

@@ -1,21 +1,21 @@
+#include "Garfield/ComponentCST.hh"
+
 #include <math.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
-#include "Garfield/ComponentCST.hh"
 #include "Garfield/Medium.hh"
 
 namespace {
 
-bool ReadHeader(FILE* f, const int fileSize, const bool debug, 
-                int& nX, int& nY, int& nZ, int& nNS,
-                int& nES, int& nEM, int& nMaterials) {
-
+bool ReadHeader(FILE* f, const int fileSize, const bool debug, int& nX, int& nY,
+                int& nZ, int& nNS, int& nES, int& nEM, int& nMaterials) {
   if (!f) return false;
   // Size of the header in binary files used in the CST export
   static constexpr int headerSize = 1000;
@@ -44,16 +44,16 @@ bool ReadHeader(FILE* f, const int fileSize, const bool debug,
   fmt += "elements_vector_y=%d elements_vector_z=%d\n";
   fmt += "elements_material=%d\n";
   fmt += "n_materials=%d\n";
-  int filled = std::sscanf(header, fmt.c_str(),
-      &nMeshX, &nMeshY, &nMeshZ, &nX, &nY, &nZ, 
-      &nNS, &nNx, &nNy, &nNz, &nES, &nEx, &nEy, &nEz, &nEM, &nMaterials);
+  int filled = std::sscanf(header, fmt.c_str(), &nMeshX, &nMeshY, &nMeshZ, &nX,
+                           &nY, &nZ, &nNS, &nNx, &nNy, &nNz, &nES, &nEx, &nEy,
+                           &nEz, &nEM, &nMaterials);
   if (filled != 16) {
     std::cerr << "ComponentCST::ReadHeader: File header is broken.\n";
     return false;
   }
   if (fileSize < 1000 + (nX + nY + nZ) * 8 +
-                 (nNS + nNx + nNy + nNz + nES + nEx + nEy + nEz) * 4 +
-                  nEM * 1 + nMaterials * 20) {
+                     (nNS + nNx + nNy + nNz + nES + nEx + nEy + nEz) * 4 +
+                     nEM * 1 + nMaterials * 20) {
     std::cerr << "ComponentCST::ReadHeader: Unexpected file size.\n";
     return false;
   }
@@ -61,7 +61,7 @@ bool ReadHeader(FILE* f, const int fileSize, const bool debug,
     std::cout << "ComponentCST::ReadHeader:\n"
               << "  Mesh (nx): " << nMeshX << "\t Mesh (ny): " << nMeshY
               << "\t Mesh (nz): " << nMeshZ << std::endl
-              << "  Mesh (x_lines): " << nX << "\t Mesh (y_lines): " << nY 
+              << "  Mesh (x_lines): " << nX << "\t Mesh (y_lines): " << nY
               << "\t Mesh (z_lines): " << nZ << std::endl
               << "  Nodes (scalar): " << nNS << "\t Nodes (x): " << nNx
               << "\t Nodes (y): " << nNy << "\t Nodes (z): " << nNz << "\n"
@@ -73,7 +73,7 @@ bool ReadHeader(FILE* f, const int fileSize, const bool debug,
   return true;
 }
 
-}
+}  // namespace
 namespace Garfield {
 
 ComponentCST::ComponentCST() : ComponentFieldMap("CST") {
@@ -157,8 +157,8 @@ bool ComponentCST::Initialise(std::string elist, std::string nlist,
         } else {
           std::cerr << m_className << "::Initialise:\n"
                     << "    Unknown material property flag " << token << "\n"
-                    << "    in material properties file " << mplist 
-                    << " (line " << il << ").\n";
+                    << "    in material properties file " << mplist << " (line "
+                    << il << ").\n";
           ok = false;
         }
         token = strtok(nullptr, " ");
@@ -180,8 +180,8 @@ bool ComponentCST::Initialise(std::string elist, std::string nlist,
         }
         if (readerror) {
           std::cerr << m_className << "::Initialise:\n"
-                    << "     Error reading file " << mplist 
-                    << " (line " << il << ")." << std::endl;
+                    << "     Error reading file " << mplist << " (line " << il
+                    << ")." << std::endl;
           fmplist.close();
           return false;
         }
@@ -216,14 +216,14 @@ bool ComponentCST::Initialise(std::string elist, std::string nlist,
   // Check the value of the unit
   double funit = ScalingFactor(unit);
   if (funit <= 0.) {
-    std::cerr << m_className << "::Initialise:\n" 
+    std::cerr << m_className << "::Initialise:\n"
               << "    Unknown length unit " << unit << ".\n";
     ok = false;
     funit = 1.0;
   }
   if (m_debug) {
-    std::cout << m_className << "::Initialise: Unit scaling factor = " 
-              << funit << ".\n";
+    std::cout << m_className << "::Initialise: Unit scaling factor = " << funit
+              << ".\n";
   }
 
   // Open the node list
@@ -304,8 +304,8 @@ bool ComponentCST::Initialise(std::string elist, std::string nlist,
   // Check syntax
   if (readerror) {
     std::cerr << m_className << "::Initialise:\n"
-              << "    Error reading file " << nlist 
-              << " (line " << il << ").\n";
+              << "    Error reading file " << nlist << " (line " << il
+              << ").\n";
     fnlist.close();
     return false;
   }
@@ -482,8 +482,8 @@ bool ComponentCST::Initialise(std::string dataFile, std::string unit) {
     funit = 1.0;
   }
   if (m_debug) {
-    std::cout << m_className << "::Initialise: Unit scaling factor = " 
-              << funit << ".\n";
+    std::cout << m_className << "::Initialise: Unit scaling factor = " << funit
+              << ".\n";
   }
   FILE* f = fopen(dataFile.c_str(), "rb");
   if (f == nullptr) {
@@ -498,11 +498,11 @@ bool ComponentCST::Initialise(std::string dataFile, std::string unit) {
   int nLinesX = 0, nLinesY = 0, nLinesZ = 0;
   int nNS = 0, nES = 0, nEM = 0;
   int nMaterials = 0;
-  if (!ReadHeader(f, fileSize, m_debug, nLinesX, nLinesY, nLinesZ,
-                  nNS, nES, nEM, nMaterials)) {
+  if (!ReadHeader(f, fileSize, m_debug, nLinesX, nLinesY, nLinesZ, nNS, nES,
+                  nEM, nMaterials)) {
     fclose(f);
     return false;
-  } 
+  }
   m_nx = nLinesX;
   m_ny = nLinesY;
   m_nz = nLinesZ;
@@ -623,9 +623,12 @@ bool ComponentCST::Initialise(std::string dataFile, std::string unit) {
   std::sort(m_ylines.begin(), m_ylines.end());
   std::sort(m_zlines.begin(), m_zlines.end());
   if (funit != 1) {
-    std::transform(m_xlines.begin(), m_xlines.end(), m_xlines.begin(), [funit](double x) { return x * funit;});
-    std::transform(m_ylines.begin(), m_ylines.end(), m_ylines.begin(), [funit](double x) { return x * funit;});
-    std::transform(m_zlines.begin(), m_zlines.end(), m_zlines.begin(), [funit](double x) { return x * funit;});
+    std::transform(m_xlines.begin(), m_xlines.end(), m_xlines.begin(),
+                   [funit](double x) { return x * funit; });
+    std::transform(m_ylines.begin(), m_ylines.end(), m_ylines.begin(),
+                   [funit](double x) { return x * funit; });
+    std::transform(m_zlines.begin(), m_zlines.end(), m_zlines.begin(),
+                   [funit](double x) { return x * funit; });
   }
 
   std::cout << m_className << "::Initialise" << std::endl;
@@ -680,8 +683,8 @@ bool ComponentCST::SetWeightingField(std::string prnsol, std::string label,
 
   if (isBinary) {
     std::cout << m_className << "::SetWeightingField:" << std::endl;
-    std::cout << "    Reading weighting field from binary file:"
-              << prnsol << std::endl;
+    std::cout << "    Reading weighting field from binary file:" << prnsol
+              << std::endl;
     FILE* f = fopen(prnsol.c_str(), "rb");
     if (f == nullptr) {
       PrintCouldNotOpen("SetWeightingField", prnsol);
@@ -695,11 +698,11 @@ bool ComponentCST::SetWeightingField(std::string prnsol, std::string label,
     int nLinesX = 0, nLinesY = 0, nLinesZ = 0;
     int nES = 0, nEM = 0;
     int nMaterials = 0;
-    if (!ReadHeader(f, fileSize, m_debug, nLinesX, nLinesY, nLinesZ,
-                    nread, nES, nEM, nMaterials)) {
+    if (!ReadHeader(f, fileSize, m_debug, nLinesX, nLinesY, nLinesZ, nread, nES,
+                    nEM, nMaterials)) {
       fclose(f);
       return false;
-    } 
+    }
     // Skip everything, but the potential
     fseek(f, nLinesX * sizeof(double), SEEK_CUR);
     fseek(f, nLinesY * sizeof(double), SEEK_CUR);
@@ -785,9 +788,12 @@ bool ComponentCST::SetWeightingField(std::string prnsol, std::string label,
 
 void ComponentCST::ShiftComponent(const double xShift, const double yShift,
                                   const double zShift) {
-  std::transform(m_xlines.begin(), m_xlines.end(), m_xlines.begin(), [xShift](double x) { return x + xShift;});
-  std::transform(m_ylines.begin(), m_ylines.end(), m_ylines.begin(), [yShift](double x) { return x + yShift;});
-  std::transform(m_zlines.begin(), m_zlines.end(), m_zlines.begin(), [zShift](double x) { return x + zShift;});
+  std::transform(m_xlines.begin(), m_xlines.end(), m_xlines.begin(),
+                 [xShift](double x) { return x + xShift; });
+  std::transform(m_ylines.begin(), m_ylines.end(), m_ylines.begin(),
+                 [yShift](double x) { return x + yShift; });
+  std::transform(m_zlines.begin(), m_zlines.end(), m_zlines.begin(),
+                 [zShift](double x) { return x + zShift; });
   SetRange();
   UpdatePeriodicity();
 
@@ -861,7 +867,8 @@ void ComponentCST::WeightingField(const double xin, const double yin,
   if (mirrored[1]) fwy *= -1.f;
   if (mirrored[2]) fwz *= -1.f;
   if (m_warning) PrintWarning("WeightingField");
-  if (m_materials.at(m_elementMaterial.at(Index2Element(i, j, k))).driftmedium) {
+  if (m_materials.at(m_elementMaterial.at(Index2Element(i, j, k)))
+          .driftmedium) {
     if (!disableFieldComponent[0]) wx = fwx;
     if (!disableFieldComponent[1]) wy = fwy;
     if (!disableFieldComponent[2]) wz = fwz;
@@ -895,12 +902,9 @@ double ComponentCST::WeightingPotential(const double xin, const double yin,
   if (!Coordinate2Index(x, y, z, i, j, k, pos, mirrored)) {
     return 0.;
   }
-  double rx = (pos[0] - m_xlines.at(i)) /
-              (m_xlines.at(i + 1) - m_xlines.at(i));
-  double ry = (pos[1] - m_ylines.at(j)) /
-              (m_ylines.at(j + 1) - m_ylines.at(j));
-  double rz = (pos[2] - m_zlines.at(k)) /
-              (m_zlines.at(k + 1) - m_zlines.at(k));
+  double rx = (pos[0] - m_xlines.at(i)) / (m_xlines.at(i + 1) - m_xlines.at(i));
+  double ry = (pos[1] - m_ylines.at(j)) / (m_ylines.at(j + 1) - m_ylines.at(j));
+  double rz = (pos[2] - m_zlines.at(k)) / (m_zlines.at(k + 1) - m_zlines.at(k));
 
   double potential = GetPotential(i, j, k, rx, ry, rz, (*it).second);
 
@@ -944,9 +948,9 @@ void ComponentCST::GetNumberOfMeshLines(unsigned int& n_x, unsigned int& n_y,
   n_z = m_zlines.size();
 }
 
-bool ComponentCST::GetElementNodes(const size_t element, 
+bool ComponentCST::GetElementNodes(const size_t element,
                                    std::vector<size_t>& nodes) const {
-  nodes.clear(); 
+  nodes.clear();
   if (element >= m_nElements || element >= m_elementMaterial.size()) {
     std::cerr << m_className << "::GetElement: Index out of range.\n";
     return false;
@@ -955,7 +959,7 @@ bool ComponentCST::GetElementNodes(const size_t element,
   Element2Index(element, i0, j0, k0);
   const auto i1 = i0 + 1;
   const auto j1 = j0 + 1;
-  const auto k1 = k0 + 1; 
+  const auto k1 = k0 + 1;
   nodes.push_back(Index2Node(i0, j0, k0));
   nodes.push_back(Index2Node(i1, j0, k0));
   nodes.push_back(Index2Node(i0, j1, k0));
@@ -967,7 +971,7 @@ bool ComponentCST::GetElementNodes(const size_t element,
   return true;
 }
 
-bool ComponentCST::GetElementRegion(const size_t element, size_t& mat, 
+bool ComponentCST::GetElementRegion(const size_t element, size_t& mat,
                                     bool& drift) const {
   if (element >= m_nElements || element >= m_elementMaterial.size()) {
     std::cerr << m_className << "::GetElementRegion: Index out of range.\n";
@@ -978,8 +982,8 @@ bool ComponentCST::GetElementRegion(const size_t element, size_t& mat,
   return true;
 }
 
-bool ComponentCST::GetNode(const size_t node, 
-                           double& x, double& y, double& z) const {
+bool ComponentCST::GetNode(const size_t node, double& x, double& y,
+                           double& z) const {
   if (node >= m_nNodes) {
     std::cerr << m_className << "::GetNode: Index out of range.\n";
     return false;
@@ -989,7 +993,7 @@ bool ComponentCST::GetNode(const size_t node,
   x = m_xlines[i];
   y = m_ylines[j];
   z = m_zlines[k];
-  return true; 
+  return true;
 }
 
 void ComponentCST::GetElementBoundaries(unsigned int element, double& xmin,
@@ -1014,12 +1018,12 @@ Medium* ComponentCST::GetMedium(const double x, const double y,
     std::cout << m_className << "::GetMedium:\n"
               << "    Position (" << x << ", " << y << ", " << z << "):\n"
               << "    Indices are: x: " << i << "/" << m_xlines.size()
-              << "\t y: " << j << "/" << m_ylines.size() 
-              << "\t z: " << k << "/" << m_zlines.size() << std::endl;
+              << "\t y: " << j << "/" << m_ylines.size() << "\t z: " << k << "/"
+              << m_zlines.size() << std::endl;
     const auto element = Index2Element(i, j, k);
     std::cout << "    Element index: " << element << std::endl
-              << "    Material index: "
-              << (int)m_elementMaterial.at(element) << std::endl;
+              << "    Material index: " << (int)m_elementMaterial.at(element)
+              << std::endl;
   }
   return m_materials.at(m_elementMaterial.at(Index2Element(i, j, k))).medium;
 }
@@ -1068,7 +1072,6 @@ bool ComponentCST::Coordinate2Index(const double x, const double y,
   return Coordinate2Index(x, y, z, i, j, k, pos, mirrored);
 }
 
-
 bool ComponentCST::Coordinate2Index(const double xin, const double yin,
                                     const double zin, unsigned int& i,
                                     unsigned int& j, unsigned int& k,
@@ -1079,27 +1082,22 @@ bool ComponentCST::Coordinate2Index(const double xin, const double yin,
   pos[2] = zin;
   double rcoordinate = 0.;
   double rotation = 0.;
-  MapCoordinates(pos[0], pos[1], pos[2],
-                 mirrored[0], mirrored[1], mirrored[2], rcoordinate, rotation);
+  MapCoordinates(pos[0], pos[1], pos[2], mirrored[0], mirrored[1], mirrored[2],
+                 rcoordinate, rotation);
 
-  auto it_x =
-      std::lower_bound(m_xlines.begin(), m_xlines.end(), pos[0]);
-  auto it_y =
-      std::lower_bound(m_ylines.begin(), m_ylines.end(), pos[1]);
-  auto it_z =
-      std::lower_bound(m_zlines.begin(), m_zlines.end(), pos[2]);
+  auto it_x = std::lower_bound(m_xlines.begin(), m_xlines.end(), pos[0]);
+  auto it_y = std::lower_bound(m_ylines.begin(), m_ylines.end(), pos[1]);
+  auto it_z = std::lower_bound(m_zlines.begin(), m_zlines.end(), pos[2]);
   if (it_x == m_xlines.end() || it_y == m_ylines.end() ||
       it_z == m_zlines.end() || pos[0] < m_xlines.at(0) ||
-      pos[1] < m_ylines.at(0) ||
-      pos[2] < m_zlines.at(0)) {
+      pos[1] < m_ylines.at(0) || pos[2] < m_zlines.at(0)) {
     if (m_debug) {
       std::cerr << m_className << "::ElectricFieldBinary:" << std::endl;
       std::cerr << "    Could not find the given coordinate!" << std::endl;
       std::cerr << "    You ask for the following position: " << xin << ", "
                 << yin << ", " << zin << std::endl;
-      std::cerr << "    The mapped position is: " << pos[0] << ", "
-                << pos[1] << ", " << pos[2]
-                << std::endl;
+      std::cerr << "    The mapped position is: " << pos[0] << ", " << pos[1]
+                << ", " << pos[2] << std::endl;
     }
     return false;
   }
@@ -1160,7 +1158,8 @@ double ComponentCST::GetElementVolume(const size_t element) const {
 void ComponentCST::ElectricFieldBinary(const double xin, const double yin,
                                        const double zin, double& ex, double& ey,
                                        double& ez, double& volt, Medium*& m,
-                                       int& status, bool calculatePotential) const {
+                                       int& status,
+                                       bool calculatePotential) const {
   // Copy the coordinates
   double x = xin, y = yin, z = zin;
 
@@ -1219,14 +1218,13 @@ void ComponentCST::ElectricFieldBinary(const double xin, const double yin,
   if (!disableFieldComponent[0]) ex = fex;
   if (!disableFieldComponent[1]) ey = fey;
   if (!disableFieldComponent[2]) ez = fez;
-  if (calculatePotential)
-    volt = GetPotential(i, j, k, rx, ry, rz, m_potential);
+  if (calculatePotential) volt = GetPotential(i, j, k, rx, ry, rz, m_potential);
 }
 
 float ComponentCST::GetFieldComponent(
-    const unsigned int i, const unsigned int j, const unsigned int k, 
-    const double rx, const double ry, const double rz,
-    const char component, const std::vector<float>& potentials) const {
+    const unsigned int i, const unsigned int j, const unsigned int k,
+    const double rx, const double ry, const double rz, const char component,
+    const std::vector<float>& potentials) const {
   float e = 0.;
   if (component == 'x') {
     const float dv1 = potentials.at(Index2Node(i + 1, j, k)) -
@@ -1276,10 +1274,10 @@ float ComponentCST::GetFieldComponent(
   return e;
 }
 
-float ComponentCST::GetPotential(
-    const unsigned int i, const unsigned int j, const unsigned int k, 
-    const double rx, const double ry, const double rz,
-    const std::vector<float>& potentials) const {
+float ComponentCST::GetPotential(const unsigned int i, const unsigned int j,
+                                 const unsigned int k, const double rx,
+                                 const double ry, const double rz,
+                                 const std::vector<float>& potentials) const {
   double t1 = rx * 2. - 1;
   double t2 = ry * 2. - 1;
   double t3 = rz * 2. - 1;
@@ -1292,8 +1290,8 @@ float ComponentCST::GetPotential(
           potentials.at(Index2Node(i, j, k)) * (1 - t1) * (1 + t2) * (1 - t3) +
           potentials.at(Index2Node(i + 1, j, k + 1)) * (1 - t1) * (1 - t2) *
               (1 + t3) +
-          potentials.at(Index2Node(i + 1, j + 1, k + 1)) * (1 + t1) *
-              (1 - t2) * (1 + t3) +
+          potentials.at(Index2Node(i + 1, j + 1, k + 1)) * (1 + t1) * (1 - t2) *
+              (1 + t3) +
           potentials.at(Index2Node(i, j + 1, k + 1)) * (1 + t1) * (1 + t2) *
               (1 + t3) +
           potentials.at(Index2Node(i, j, k + 1)) * (1 - t1) * (1 + t2) *
@@ -1301,11 +1299,11 @@ float ComponentCST::GetPotential(
          8.;
 }
 
-void ComponentCST::ShapeField(float& ex, float& ey, float& ez, 
-    const double rx, const double ry, const double rz,
-    const unsigned int i, const unsigned int j, const unsigned int k,
-    const std::vector<float>& potentials) const {
-
+void ComponentCST::ShapeField(float& ex, float& ey, float& ez, const double rx,
+                              const double ry, const double rz,
+                              const unsigned int i, const unsigned int j,
+                              const unsigned int k,
+                              const std::vector<float>& potentials) const {
   const auto m1 = m_elementMaterial.at(Index2Element(i, j, k));
   const auto imax = m_xlines.size() - 2;
   if ((i == 0 && rx >= 0.5) || (i == imax && rx < 0.5) || (i > 0 && i < imax)) {
@@ -1314,20 +1312,18 @@ void ComponentCST::ShapeField(float& ex, float& ey, float& ez,
       if (m1 == m2) {
         float ex_next =
             GetFieldComponent(i + 1, j, k, 0.5, ry, rz, 'x', potentials);
-        ex = ex +
-             (rx - 0.5) * (ex_next - ex) *
-                 (m_xlines.at(i + 1) - m_xlines.at(i)) /
-                 (m_xlines.at(i + 2) - m_xlines.at(i + 1));
+        ex = ex + (rx - 0.5) * (ex_next - ex) *
+                      (m_xlines.at(i + 1) - m_xlines.at(i)) /
+                      (m_xlines.at(i + 2) - m_xlines.at(i + 1));
       }
     } else {
       const auto m2 = m_elementMaterial.at(Index2Element(i - 1, j, k));
       if (m1 == m2) {
         float ex_before =
             GetFieldComponent(i - 1, j, k, 0.5, ry, rz, 'x', potentials);
-        ex = ex_before +
-             (rx + 0.5) * (ex - ex_before) *
-                 (m_xlines.at(i) - m_xlines.at(i - 1)) /
-                 (m_xlines.at(i + 1) - m_xlines.at(i));
+        ex = ex_before + (rx + 0.5) * (ex - ex_before) *
+                             (m_xlines.at(i) - m_xlines.at(i - 1)) /
+                             (m_xlines.at(i + 1) - m_xlines.at(i));
       }
     }
   }
@@ -1339,20 +1335,18 @@ void ComponentCST::ShapeField(float& ex, float& ey, float& ez,
       if (m1 == m2) {
         float ey_next =
             GetFieldComponent(i, j + 1, k, rx, 0.5, rz, 'y', potentials);
-        ey = ey +
-             (ry - 0.5) * (ey_next - ey) *
-                 (m_ylines.at(j + 1) - m_ylines.at(j)) /
-                 (m_ylines.at(j + 2) - m_ylines.at(j + 1));
+        ey = ey + (ry - 0.5) * (ey_next - ey) *
+                      (m_ylines.at(j + 1) - m_ylines.at(j)) /
+                      (m_ylines.at(j + 2) - m_ylines.at(j + 1));
       }
     } else {
       const auto m2 = m_elementMaterial.at(Index2Element(i, j - 1, k));
       if (m1 == m2) {
         float ey_next =
             GetFieldComponent(i, j - 1, k, rx, 0.5, rz, 'y', potentials);
-        ey = ey_next +
-             (ry + 0.5) * (ey - ey_next) *
-                 (m_ylines.at(j) - m_ylines.at(j - 1)) /
-                 (m_ylines.at(j + 1) - m_ylines.at(j));
+        ey = ey_next + (ry + 0.5) * (ey - ey_next) *
+                           (m_ylines.at(j) - m_ylines.at(j - 1)) /
+                           (m_ylines.at(j + 1) - m_ylines.at(j));
       }
     }
   }
@@ -1363,27 +1357,25 @@ void ComponentCST::ShapeField(float& ex, float& ey, float& ez,
       if (m1 == m2) {
         float ez_next =
             GetFieldComponent(i, j, k + 1, rx, ry, 0.5, 'z', potentials);
-        ez = ez +
-             (rz - 0.5) * (ez_next - ez) *
-                 (m_zlines.at(k + 1) - m_zlines.at(k)) /
-                 (m_zlines.at(k + 2) - m_zlines.at(k + 1));
+        ez = ez + (rz - 0.5) * (ez_next - ez) *
+                      (m_zlines.at(k + 1) - m_zlines.at(k)) /
+                      (m_zlines.at(k + 2) - m_zlines.at(k + 1));
       }
     } else {
       const auto m2 = m_elementMaterial.at(Index2Element(i, j, k - 1));
       if (m1 == m2) {
         float ez_next =
             GetFieldComponent(i, j, k - 1, rx, ry, 0.5, 'z', potentials);
-        ez = ez_next +
-             (rz + 0.5) * (ez - ez_next) *
-                 (m_zlines.at(k) - m_zlines.at(k - 1)) /
-                 (m_zlines.at(k + 1) - m_zlines.at(k));
+        ez = ez_next + (rz + 0.5) * (ez - ez_next) *
+                           (m_zlines.at(k) - m_zlines.at(k - 1)) /
+                           (m_zlines.at(k + 1) - m_zlines.at(k));
       }
     }
   }
 }
 
-void ComponentCST::Element2Index(const size_t element, 
-    unsigned int& i, unsigned int& j, unsigned int& k) const {
+void ComponentCST::Element2Index(const size_t element, unsigned int& i,
+                                 unsigned int& j, unsigned int& k) const {
   const auto nx = m_xlines.size() - 1;
   const auto ny = m_ylines.size() - 1;
   const auto nxy = nx * ny;
@@ -1401,16 +1393,15 @@ int ComponentCST::Index2Node(const unsigned int i, const unsigned int j,
   return i + j * m_nx + k * m_nx * m_ny;
 }
 
-void ComponentCST::Node2Index(const size_t node, 
-    unsigned int& i, unsigned int& j, unsigned int& k) const {
-
+void ComponentCST::Node2Index(const size_t node, unsigned int& i,
+                              unsigned int& j, unsigned int& k) const {
   const auto nx = m_xlines.size();
-  const auto ny = m_ylines.size(); 
+  const auto ny = m_ylines.size();
   const auto nxy = nx * ny;
   k = node / nxy;
   const auto tmp = node - k * nxy;
   j = tmp / nx;
   i = tmp - j * nx;
-} 
-
 }
+
+}  // namespace Garfield

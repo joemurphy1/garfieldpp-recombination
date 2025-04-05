@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include "heed++/code/HeedMatterDef.h"
 #include "heed++/code/ElElasticScat.h"
+#include "heed++/code/HeedMatterDef.h"
 #include "heed++/code/PairProd.h"
 #include "wcpplib/random/PointsRan.h"
 
@@ -92,6 +92,6 @@ class HeedDeltaElectronCS {
 // this is sigma of cos(theta) - 1.0, supposing that center is 1.0
 #endif
 };
-}
+}  // namespace Heed
 
 #endif

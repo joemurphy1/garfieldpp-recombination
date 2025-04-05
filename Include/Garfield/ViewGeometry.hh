@@ -1,10 +1,10 @@
 #ifndef G_VIEW_GEOMETRY
 #define G_VIEW_GEOMETRY
 
+#include <TGeoManager.h>
+
 #include <memory>
 #include <vector>
-
-#include <TGeoManager.h>
 
 #include "Garfield/ViewBase.hh"
 
@@ -27,7 +27,7 @@ class ViewGeometry : public ViewBase {
   void SetGeometry(GeometrySimple* geo);
   /// Draw the geometry.
   void Plot(const bool twod = false);
-  /// Draw a cut through the geometry at the current viewing plane. 
+  /// Draw a cut through the geometry at the current viewing plane.
   void Plot2d();
   /// Draw a three-dimensional view of the geometry.
   void Plot3d();
@@ -44,5 +44,5 @@ class ViewGeometry : public ViewBase {
 
   void Reset();
 };
-}
+}  // namespace Garfield
 #endif

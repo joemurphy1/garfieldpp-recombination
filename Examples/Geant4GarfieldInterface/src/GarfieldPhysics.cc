@@ -26,10 +26,10 @@
 /// \file GarfieldPhysics.cc
 /// \brief Implementation of the GarfieldPhysics class
 #include "GarfieldPhysics.hh"
-#include "GarfieldAnalysis.hh"
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
+#include "GarfieldAnalysis.hh"
 
 GarfieldPhysics* GarfieldPhysics::fGarfieldPhysics = nullptr;
 
@@ -255,10 +255,10 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
   if (fIonizationModel != "Heed" || particleName == "gamma") {
     Garfield::TrackHeed::Cluster cl;
     if (particleName == "gamma") {
-      cl = fTrackHeed->TransportPhoton(x_cm, y_cm, z_cm, time, eKin_eV, 
-                                       dx, dy, dz);
+      cl = fTrackHeed->TransportPhoton(x_cm, y_cm, z_cm, time, eKin_eV, dx, dy,
+                                       dz);
     } else {
-      cl = fTrackHeed->TransportDeltaElectron(x_cm, y_cm, z_cm, time, eKin_eV, 
+      cl = fTrackHeed->TransportDeltaElectron(x_cm, y_cm, z_cm, time, eKin_eV,
                                               dx, dy, dz);
       fEnergyDeposit = eKin_eV;
     }
@@ -271,12 +271,13 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
       if (particleName == "gamma") {
         fEnergyDeposit += fTrackHeed->GetW();
       }
-      analysisManager->FillH3(1, electron.z * 10, electron.x * 10, electron.y * 10);
+      analysisManager->FillH3(1, electron.z * 10, electron.x * 10,
+                              electron.y * 10);
       if (createSecondariesInGeant4) {
         double newTime = electron.t;
         if (newTime < time) newTime += time;
-        fSecondaryParticles.emplace_back(GarfieldParticle("e-", electron.e, 
-            newTime, electron.x, electron.y, electron.z, 
+        fSecondaryParticles.emplace_back(GarfieldParticle(
+            "e-", electron.e, newTime, electron.x, electron.y, electron.z,
             electron.dx, electron.dy, electron.dz));
       }
 
@@ -288,7 +289,7 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
         x1 += 2 * rWire;
       } else if (0 > x1 && x1 > -rWire) {
         x1 += -2 * rWire;
-      } 
+      }
       if (0 < y1 && y1 < rWire) {
         y1 += 2 * rWire;
       } else if (0 > y1 && y1 > -rWire) {
@@ -318,14 +319,15 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
         if (sqrt(electron.x * electron.x + electron.y * electron.y) >= rTube) {
           continue;
         }
-        analysisManager->FillH3(1, electron.z * 10, electron.x * 10, electron.y * 10);
+        analysisManager->FillH3(1, electron.z * 10, electron.x * 10,
+                                electron.y * 10);
         if (createSecondariesInGeant4) {
           double newTime = electron.t;
           if (newTime < time) {
             newTime += time;
           }
           fSecondaryParticles.emplace_back(GarfieldParticle(
-              "e-", electron.e, newTime, electron.x, electron.y, electron.z, 
+              "e-", electron.e, newTime, electron.x, electron.y, electron.z,
               electron.dx, electron.dy, electron.dz));
         }
 
@@ -354,4 +356,3 @@ void GarfieldPhysics::DoIt(std::string particleName, double ekin_MeV,
   }
   fGain = fAvalancheSize / nsum;
 }
-

@@ -1,6 +1,6 @@
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 
 #include "Garfield/ComponentGrid.hh"
 #include "Garfield/ViewField.hh"
@@ -8,7 +8,6 @@
 using namespace Garfield;
 
 int main(int argc, char *argv[]) {
-
   TApplication app("app", &argc, argv);
 
   // Load the field map.
@@ -22,6 +21,6 @@ int main(int argc, char *argv[]) {
   const double theta = 0.;
   const double x0 = r * cos(theta);
   const double y0 = r * sin(theta);
-  view.PlotProfile(x0, y0, -20., x0, y0, 20., "bz"); 
+  view.PlotProfile(x0, y0, -20., x0, y0, 20., "bz");
   app.Run(true);
 }

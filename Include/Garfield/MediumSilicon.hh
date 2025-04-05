@@ -22,7 +22,7 @@ class MediumSilicon : public Medium {
 
   /// Set doping concentration [cm-3] and type ('i', 'n', 'p').
   void SetDoping(const char type, const double c);
-  /// Retrieve doping concentration. 
+  /// Retrieve doping concentration.
   void GetDoping(char& type, double& c) const;
 
   /// Trapping cross-sections for electrons and holes.
@@ -34,12 +34,12 @@ class MediumSilicon : public Medium {
 
   /// Specify the low field values of the electron and hole mobilities.
   void SetLowFieldMobility(const double mue, const double muh);
-  /// Set the parameterisation to be used for calculating the 
+  /// Set the parameterisation to be used for calculating the
   /// lattice mobility model. The currently implemented models are
   /// - Sentaurus
   /// - Reggiani
   /// - Minimos
-  /// The default is Sentaurus. 
+  /// The default is Sentaurus.
   void SetLatticeMobilityModel(const std::string& model);
   /// Calculate the lattice mobility using the Minimos model.
   void SetLatticeMobilityModelMinimos();
@@ -62,13 +62,13 @@ class MediumSilicon : public Medium {
   /// Calculate the saturation velocities using the Reggiani model.
   void SetSaturationVelocityModelReggiani();
 
-  /// Set the parameterisation to be used for the drift velocity as 
+  /// Set the parameterisation to be used for the drift velocity as
   /// function of the electric field.
-  /// The currently implemented models are 
+  /// The currently implemented models are
   ///  - Canali
   ///  - Reggiani
   ///  - Minimos
-  ///  - Constant (velocity increases linearly with the electric field) 
+  ///  - Constant (velocity increases linearly with the electric field)
   /// The default is Canali.
   void SetHighFieldMobilityModel(const std::string& model);
   /// Parameterize the high-field mobility using the Minimos model.
@@ -80,8 +80,8 @@ class MediumSilicon : public Medium {
   /// Make the velocity proportional to the electric field (no saturation).
   void SetHighFieldMobilityModelConstant();
 
-  /// Set the parameterisation to be used for calculating the 
-  /// impact ionisation coefficient. The currently implemented models are 
+  /// Set the parameterisation to be used for calculating the
+  /// impact ionisation coefficient. The currently implemented models are
   ///  - van Overstraeten - de Man
   ///  - Okuto - Crowell
   ///  - Massey
@@ -285,11 +285,11 @@ class MediumSilicon : public Medium {
     // Cross-section type.
     std::vector<int> scatType;
     // Number of scattering terms.
-    int nLevels = 0; 
+    int nLevels = 0;
   };
 
-  // Conduction bands. 
-  std::array<Band, 3> m_cb; 
+  // Conduction bands.
+  std::array<Band, 3> m_cb;
   std::vector<size_t> m_cbIndex;
   // Valence band.
   Band m_vb;
@@ -340,21 +340,20 @@ class MediumSilicon : public Medium {
   bool HoleScatteringRates();
   bool AcousticScatteringRates(const double rho, const double kbt,
                                const double dp, Band& band);
-  bool OpticalScatteringRates(const double rho, const double kbt, 
-                              const double dtk, const double eph,
-                              Band& band);
-  bool IntervalleyScatteringRates(const double rho, const double kbt, 
+  bool OpticalScatteringRates(const double rho, const double kbt,
+                              const double dtk, const double eph, Band& band);
+  bool IntervalleyScatteringRates(const double rho, const double kbt,
                                   const double dtk, const double eph,
-                                  Band& bndI, Band& bndF, const double zF, 
+                                  Band& bndI, Band& bndF, const double zF,
                                   const int collType);
   bool IonisationRates(const std::vector<double>& p,
-                       const std::vector<double>& eth, 
+                       const std::vector<double>& eth,
                        const std::vector<double>& b, Band& band);
   bool ImpurityScatteringRates(const double kbt, Band& band);
 
   void InitialiseDOS();
   void ComputeDOS();
 };
-}
+}  // namespace Garfield
 
 #endif

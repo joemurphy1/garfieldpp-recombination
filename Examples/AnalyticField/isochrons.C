@@ -1,10 +1,10 @@
-#include <vector>
-#include <array>
-
+#include <TApplication.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <TApplication.h>
 #include <TStyle.h>
+
+#include <array>
+#include <vector>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/FundamentalConstants.hh"
@@ -14,10 +14,9 @@
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  gStyle->SetPadLeftMargin(0.15); 
+  gStyle->SetPadLeftMargin(0.15);
 
   // Make a gas medium.
   MediumMagboltz gas;
@@ -27,7 +26,7 @@ int main(int argc, char * argv[]) {
   cmp.SetMedium(&gas);
   // Describe the cell layout.
   constexpr double h = 0.75;
-  constexpr double ds =  20.e-4;
+  constexpr double ds = 20.e-4;
   constexpr double df = 120.e-4;
   constexpr double vs = 1700.;
   cmp.AddWire(0, 0, ds, vs, "s");
@@ -38,18 +37,18 @@ int main(int argc, char * argv[]) {
   cmp.SetPeriodicityY(2 * h);
 
   const double xmin = -1.5 * h;
-  const double xmax =  1.5 * h;
+  const double xmax = 1.5 * h;
   const double ymin = -1.5 * h;
-  const double ymax =  1.5 * h;
+  const double ymax = 1.5 * h;
 
   ViewCell cellView(&cmp);
   cellView.SetArea(xmin, ymin, -10., xmax, ymax, 10.);
 
   ViewIsochrons isoView;
   isoView.SetComponent(&cmp);
-  isoView.SetArea(xmin, ymin, -10., xmax, ymax, 10.); 
+  isoView.SetArea(xmin, ymin, -10., xmax, ymax, 10.);
 
-  // Loop around the sense wire and make a list of 
+  // Loop around the sense wire and make a list of
   // starting points of the drift lines.
   std::vector<std::array<double, 3> > points;
   unsigned int nPoints = 40;
@@ -80,17 +79,16 @@ int main(int argc, char * argv[]) {
     std::array<double, 3> p0 = {x0, y0, 0.};
     points.push_back(std::move(p0));
   }
-  
+
   TCanvas c2("c2", "", 600, 600);
   isoView.SetCanvas(&c2);
   // Calculate drift lines for (negatively charged) electrons.
   isoView.DriftElectrons();
-  // Measure the drift time from the endpoint of the drift lines. 
+  // Measure the drift time from the endpoint of the drift lines.
   const bool reverse = true;
   isoView.PlotIsochrons(10., points, reverse);
   cellView.SetCanvas(&c2);
   cellView.Plot2d();
 
   app.Run(true);
-
 }

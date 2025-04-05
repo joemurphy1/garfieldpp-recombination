@@ -160,11 +160,11 @@ int AnalyzeWire(int prim, int *NbSeg, FILE *fMeshLog) {
   if (nb < 1) {
     // absurd! use the trio: target, min, max
     double lWire = (XVertex[prim][1] - XVertex[prim][0]) *
-                   (XVertex[prim][1] - XVertex[prim][0]) +
+                       (XVertex[prim][1] - XVertex[prim][0]) +
                    (YVertex[prim][1] - YVertex[prim][0]) *
-                   (YVertex[prim][1] - YVertex[prim][0]) +
+                       (YVertex[prim][1] - YVertex[prim][0]) +
                    (ZVertex[prim][1] - ZVertex[prim][0]) *
-                   (ZVertex[prim][1] - ZVertex[prim][0]);
+                       (ZVertex[prim][1] - ZVertex[prim][0]);
     lWire = sqrt(lWire);
 
     nb = (int)(lWire / ElementLengthRqstd);
@@ -205,11 +205,11 @@ int AnalyzeWire(int prim, int *NbSeg, FILE *fMeshLog) {
             prim, *NbSeg);
   } else {  // number of dicretization specified by user
     double lWire = (XVertex[prim][1] - XVertex[prim][0]) *
-                   (XVertex[prim][1] - XVertex[prim][0]) +
+                       (XVertex[prim][1] - XVertex[prim][0]) +
                    (YVertex[prim][1] - YVertex[prim][0]) *
-                   (YVertex[prim][1] - YVertex[prim][0]) +
+                       (YVertex[prim][1] - YVertex[prim][0]) +
                    (ZVertex[prim][1] - ZVertex[prim][0]) *
-                   (ZVertex[prim][1] - ZVertex[prim][0]);
+                       (ZVertex[prim][1] - ZVertex[prim][0]);
     lWire = sqrt(lWire);
 
     double ellength = lWire / (double)nb;
@@ -249,18 +249,18 @@ int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2,
     // absurd! use the trio: target, min, max
     // Triangle primitives have their right angle on vertex 1
     double l1 = (XVertex[prim][0] - XVertex[prim][1]) *
-                (XVertex[prim][0] - XVertex[prim][1]) +
+                    (XVertex[prim][0] - XVertex[prim][1]) +
                 (YVertex[prim][0] - YVertex[prim][1]) *
-                (YVertex[prim][0] - YVertex[prim][1]) +
+                    (YVertex[prim][0] - YVertex[prim][1]) +
                 (ZVertex[prim][0] - ZVertex[prim][1]) *
-                (ZVertex[prim][0] - ZVertex[prim][1]);
+                    (ZVertex[prim][0] - ZVertex[prim][1]);
     l1 = sqrt(l1);
     double l2 = (XVertex[prim][2] - XVertex[prim][1]) *
-                (XVertex[prim][2] - XVertex[prim][1]) +
+                    (XVertex[prim][2] - XVertex[prim][1]) +
                 (YVertex[prim][2] - YVertex[prim][1]) *
-                (YVertex[prim][2] - YVertex[prim][1]) +
+                    (YVertex[prim][2] - YVertex[prim][1]) +
                 (ZVertex[prim][2] - ZVertex[prim][1]) *
-                (ZVertex[prim][2] - ZVertex[prim][1]);
+                    (ZVertex[prim][2] - ZVertex[prim][1]);
     l2 = sqrt(l2);
 
     // We can use the lengths independently and forget about area
@@ -336,18 +336,18 @@ int AnalyzeSurface(int prim, int *NbSegCoord1, int *NbSegCoord2,
   } else {  // number of discretization specified by the user
     // Triangle primitives have their right angle on the vertex 1
     double l1 = (XVertex[prim][0] - XVertex[prim][1]) *
-                (XVertex[prim][0] - XVertex[prim][1]) +
+                    (XVertex[prim][0] - XVertex[prim][1]) +
                 (YVertex[prim][0] - YVertex[prim][1]) *
-                (YVertex[prim][0] - YVertex[prim][1]) +
+                    (YVertex[prim][0] - YVertex[prim][1]) +
                 (ZVertex[prim][0] - ZVertex[prim][1]) *
-                (ZVertex[prim][0] - ZVertex[prim][1]);
+                    (ZVertex[prim][0] - ZVertex[prim][1]);
     l1 = sqrt(l1);
     double l2 = (XVertex[prim][2] - XVertex[prim][1]) *
-                (XVertex[prim][2] - XVertex[prim][1]) +
+                    (XVertex[prim][2] - XVertex[prim][1]) +
                 (YVertex[prim][2] - YVertex[prim][1]) *
-                (YVertex[prim][2] - YVertex[prim][1]) +
+                    (YVertex[prim][2] - YVertex[prim][1]) +
                 (ZVertex[prim][2] - ZVertex[prim][1]) *
-                (ZVertex[prim][2] - ZVertex[prim][1]);
+                    (ZVertex[prim][2] - ZVertex[prim][1]);
     l2 = sqrt(l2);
 
     if (l1 > l2) {
@@ -407,7 +407,6 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
                    double zvert[], double radius, int volref1, int volref2,
                    int inttype, double potential, double charge, double lambda,
                    int NbSegs) {
-
   // Check inputs
   if (PrimType[prim] != 2) {
     neBEMMessage("DiscretizeWire - PrimType in DiscretizeWire");
@@ -440,7 +439,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   snprintf(primstr, 10, "%d", prim);
 
   // length of wire
-  double WireL = sqrt((xvert[1] - xvert[0]) * (xvert[1] - xvert[0]) + 
+  double WireL = sqrt((xvert[1] - xvert[0]) * (xvert[1] - xvert[0]) +
                       (yvert[1] - yvert[0]) * (yvert[1] - yvert[0]) +
                       (zvert[1] - zvert[0]) * (zvert[1] - zvert[0]));
   double WireElL = WireL / NbSegs;  // length of each wire element
@@ -486,7 +485,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
       XUnit.Y = 0.0;
       XUnit.Z = 0.0;
       YUnit = Vector3DCrossProduct(ZUnit, XUnit);
-    } else { 
+    } else {
       // For a point on the above surface where both Y and Z are zero
       O = CreatePoint3D(WireX, WireY, WireZ);
       R = CreatePoint3D(Const, 0, 0);
@@ -545,7 +544,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
   PrimOriginY[prim] = 0.5 * (yvert[0] + yvert[1]);
   PrimOriginZ[prim] = 0.5 * (zvert[0] + zvert[1]);
   PrimLX[prim] = radius;  // radius for wire
-  PrimLZ[prim] = WireL;  // length of wire
+  PrimLZ[prim] = WireL;   // length of wire
 
   // file output for a primitive
   FILE *fPrim = NULL;
@@ -605,7 +604,7 @@ int DiscretizeWire(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
 
-  }    // seg loop for wire elements
+  }  // seg loop for wire elements
   ElementEnd[prim] = EleCntr;
 
   if (OptPrimitiveFiles) {
@@ -750,7 +749,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
   }
 
   // file output for a primitive
-  FILE* fPrim = NULL;
+  FILE *fPrim = NULL;
   if (OptPrimitiveFiles) {
     char OutPrim[256];
     strcpy(OutPrim, ModelOutDir);
@@ -893,8 +892,8 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       globalDisp = RotatePoint3D(&localDisp, &pdc, local2global);
       // These are the coords in GCS of origin of
       // the triangular element under consideration:
-      SurfElX = SurfX + globalDisp.X;  
-      SurfElY = SurfY + globalDisp.Y;  
+      SurfElX = SurfX + globalDisp.X;
+      SurfElY = SurfY + globalDisp.Y;
       SurfElZ = SurfZ + globalDisp.Z;
     }  // vector rotation over
 
@@ -910,10 +909,13 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     (EleArr + EleCntr - 1)->Origin.X = SurfElX;
     (EleArr + EleCntr - 1)->Origin.Y = SurfElY;
     (EleArr + EleCntr - 1)->Origin.Z = SurfElZ;
-    // (EleArr+EleCntr-1)->LX = SurfElLX;	// previously written as xlopt - xhipt;
-    (EleArr + EleCntr - 1)->LX = xlopt - xhipt;  // back to old ways on 21 Feb 2014
+    // (EleArr+EleCntr-1)->LX = SurfElLX;	// previously written as xlopt -
+    // xhipt;
+    (EleArr + EleCntr - 1)->LX =
+        xlopt - xhipt;  // back to old ways on 21 Feb 2014
     (EleArr + EleCntr - 1)->LZ = SurfElLZ;
-    (EleArr + EleCntr - 1)->LZ = zhipt - zlopt;  // to be on the safe side, 21/2/14
+    (EleArr + EleCntr - 1)->LZ =
+        zhipt - zlopt;  // to be on the safe side, 21/2/14
     (EleArr + EleCntr - 1)->Solution = 0.0;
     (EleArr + EleCntr - 1)->Assigned = charge;
     // Boundary condition is applied at the barycenter, not at the origin
@@ -922,8 +924,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     if (DebugLevel == 201) {
       printf("Primitive nb: %d\n", (EleArr + EleCntr - 1)->PrimitiveNb);
       printf("Element id: %d\n", EleCntr);
-      printf("Element X, Y, Z: %lg %lg %lg\n",
-             (EleArr + EleCntr - 1)->Origin.X,
+      printf("Element X, Y, Z: %lg %lg %lg\n", (EleArr + EleCntr - 1)->Origin.X,
              (EleArr + EleCntr - 1)->Origin.Y,
              (EleArr + EleCntr - 1)->Origin.Z);
       printf("Element LX, LZ: %lg %lg\n", (EleArr + EleCntr - 1)->LX,
@@ -936,7 +937,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
              pdc.ZUnit.X, pdc.ZUnit.Y, pdc.ZUnit.Z);
     }
 
-    if (k == NbSegZ) continue; // no rectangular element on this row
+    if (k == NbSegZ) continue;  // no rectangular element on this row
 
     // determine NbSegXOnThisRow and ElLXOnThisRow for the rectagnular elements
     // and then loop.
@@ -952,7 +953,7 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
     }
     for (int i = 1; i <= NbSegXOnThisRow; ++i) {
       // PCS centroid of the rectangular element
-      double xorigin = (i - 1) * ElLXOnThisRow + 0.5 * ElLXOnThisRow;  
+      double xorigin = (i - 1) * ElLXOnThisRow + 0.5 * ElLXOnThisRow;
       double yorigin = 0.0;
       double zorigin = 0.5 * (zlopt + zhipt);
       // printf("k: %d, i: %d, xo: %lg, yo: %lg, zo: %lg\n", k, i,
@@ -983,11 +984,12 @@ int DiscretizeTriangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->Origin.Z = SurfElZ;
       (EleArr + EleCntr - 1)->LX = ElLXOnThisRow;
       (EleArr + EleCntr - 1)->LZ = SurfElLZ;
-      (EleArr + EleCntr - 1)->LZ = zhipt - zlopt;  // to be on the safe side! 21/2/14
+      (EleArr + EleCntr - 1)->LZ =
+          zhipt - zlopt;  // to be on the safe side! 21/2/14
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
-    }    // for i
-  }      // for k
+    }  // for i
+  }  // for k
   ElementEnd[prim] = EleCntr;
 
   if (OptPrimitiveFiles) {
@@ -1009,7 +1011,6 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
                         double znorm, int volref1, int volref2, int inttype,
                         double potential, double charge, double lambda,
                         int NbSegX, int NbSegZ) {
-
   // Check inputs
   if ((NbSegX <= 0) || (NbSegZ <= 0)) {
     printf("segmentation input wrong in DiscretizeRectangle ...\n");
@@ -1080,7 +1081,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   PrimLZ[prim] = SurfLZ;
 
   // file output for a primitive
-  FILE* fPrim = NULL;
+  FILE *fPrim = NULL;
   if (OptPrimitiveFiles) {
     char OutPrim[256];
     strcpy(OutPrim, ModelOutDir);
@@ -1145,7 +1146,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       SurfElLX = SurfLX / NbSegX;  // element sizes
       SurfElLZ = SurfLZ / NbSegZ;
     }
-  }     // NbSegX > NbSegZ
+  }  // NbSegX > NbSegZ
   else  // NbSegX < NbSegZ
   {
     if (SurfLX < SurfLZ) {
@@ -1200,7 +1201,7 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
   ElementBgn[prim] = EleCntr + 1;
   for (int i = 1; i <= NbSegX; ++i) {
     // assuming centroid at 0,0,0
-    double x1 = -0.5 * SurfLX + (double)(i - 1) * SurfElLX;  
+    double x1 = -0.5 * SurfLX + (double)(i - 1) * SurfElLX;
     double x2 = -0.5 * SurfLX + (double)(i)*SurfElLX;
     double xav = 0.5 * (x1 + x2);
 
@@ -1234,8 +1235,8 @@ int DiscretizeRectangle(int prim, int nvertex, double xvert[], double yvert[],
       (EleArr + EleCntr - 1)->Solution = 0.0;
       (EleArr + EleCntr - 1)->Assigned = charge;
 
-    }    // for k
-  }      // for i
+    }  // for k
+  }  // for i
   ElementEnd[prim] = EleCntr;
   if (OptPrimitiveFiles) {
     fprintf(fPrim, "Element begin: %d, Element end: %d\n", ElementBgn[prim],
@@ -1265,7 +1266,6 @@ int DiscretizePolygon(int /*prim*/, int /*nvertex*/, double /*xvert*/[],
 
 // Set up initial conditions (C styling to be fixed)
 int InitialConditions(void) {
-
   // Known charges
   if (OptKnCh) {
     startClock = clock();
@@ -1405,7 +1405,7 @@ int InitKnownCharges(void) {
           PointKnChArr =
               (PointKnCh *)malloc((NbPointsKnCh + 1) * sizeof(PointKnCh));
 
-          for (int point = 0; point <= NbPointsKnCh; ++point) {  
+          for (int point = 0; point <= NbPointsKnCh; ++point) {
             // CHECK!!! ele limits start from 0, but all else from 1 to ...
             PointKnChArr[point].Nb = 0;
             PointKnChArr[point].P.X = 0.0;
@@ -1453,7 +1453,7 @@ int InitKnownCharges(void) {
           LineKnChArr =
               (LineKnCh *)malloc((NbLinesKnCh + 1) * sizeof(LineKnCh));
 
-          for (int line = 0; line <= NbLinesKnCh; ++line) {  
+          for (int line = 0; line <= NbLinesKnCh; ++line) {
             // CHECK!!! ele limits start from 0, but all else from 1 to ...
             LineKnChArr[line].Nb = 0;
             LineKnChArr[line].Start.X = 0.0;
@@ -1516,7 +1516,7 @@ int InitKnownCharges(void) {
           AreaKnChArr =
               (AreaKnCh *)malloc((NbAreasKnCh + 1) * sizeof(AreaKnCh));
 
-          for (int area = 0; area <= NbAreasKnCh; ++area) {  
+          for (int area = 0; area <= NbAreasKnCh; ++area) {
             // CHECK!!! ele limits start from 0, but all else from 1 to ...
             AreaKnChArr[area].Nb = 0;
             AreaKnChArr[area].NbVertices = 0;
@@ -1573,7 +1573,7 @@ int InitKnownCharges(void) {
           VolumeKnChArr =
               (VolumeKnCh *)malloc((NbVolumesKnCh + 1) * sizeof(VolumeKnCh));
 
-          for (int volume = 0; volume <= NbVolumesKnCh; ++volume) {  
+          for (int volume = 0; volume <= NbVolumesKnCh; ++volume) {
             // CHECK!!! ele limits start from 0, but all else from 1 to ...
             VolumeKnChArr[volume].Nb = 0;
             VolumeKnChArr[volume].NbVertices = 0;
@@ -1621,7 +1621,7 @@ int InitKnownCharges(void) {
 
       fclose(KnChInpFile);
     }  // else KnChInpFile
-  }    // parameters related to known charge calculations
+  }  // parameters related to known charge calculations
 
   return (0);
 }  // InitKnownCharges ends
@@ -1689,10 +1689,10 @@ int InitChargingUp(void) {
             neBEMMessage("Too few lines in ChargingUpE ... returning\n");
             fclose(fptrChargingUpEFile);
             return -11;
-          } 
+          }
           // initialize
-          int* NbChUpEonEle = (int *)malloc((NbElements + 1) * sizeof(int));
-          for (int ele = 0; ele <= NbElements; ++ele) {  
+          int *NbChUpEonEle = (int *)malloc((NbElements + 1) * sizeof(int));
+          for (int ele = 0; ele <= NbElements; ++ele) {
             // CHECK!!! ele limits start from 0, but all else from 1 to ...
             NbChUpEonEle[ele] = 0;
           }
@@ -1788,7 +1788,7 @@ int InitChargingUp(void) {
             int nearestprim = -1;  // absurd value
             double dist = 1.0e6, mindist = 1.0e6;  // absurdly high numbers
             // check all primitives
-            for (int prim = 1; prim <= NbPrimitives; ++prim) { 
+            for (int prim = 1; prim <= NbPrimitives; ++prim) {
               if (InterfaceType[prim] != 4)
                 continue;  // primitive not a dielectric
 
@@ -1881,7 +1881,7 @@ int InitChargingUp(void) {
                   fflush(stdout);
                 }
 
-                if (fabs(denom) < tol * norm1 * norm2) { 
+                if (fabs(denom) < tol * norm1 * norm2) {
                   // line parallel to the plane
                   if (fabs(a * xlbend + b * ylbend + c * zlbend + d) <=
                       1.0e-16) {  // CHECK: was == 0.0 in original code
@@ -1904,7 +1904,7 @@ int InitChargingUp(void) {
                            extrasect);
                     printf("intersection point: %lg, %lg, %lg\n", ptintsct.X,
                            ptintsct.Y, ptintsct.Z);
-                  }       // if line and plane are parallel
+                  }  // if line and plane are parallel
                 } else {  // if they are not parallel, they must intersect
                   intersect = 1;
                   double t =
@@ -1938,9 +1938,9 @@ int InitChargingUp(void) {
                         "for an interesting intersection, lseg > t > 0.0 "
                         "...\n\n");
                     fflush(stdout);
-                  }   // must intersect
-                }     // if not parallel
-              }       // if PrimType is 3 or 4
+                  }  // must intersect
+                }  // if not parallel
+              }  // if PrimType is 3 or 4
               else {  // this is a wire primitive - assume no charging up issues
                 dist = -1.0;  // an absurd negative distance
                 intersect = 0;
@@ -2104,7 +2104,7 @@ int InitChargingUp(void) {
                     return -2;
                   }
                 }  // if InPrim
-              }    // if intersection and no extrasection
+              }  // if intersection and no extrasection
 
               if ((InPrim) && (intersect) && (!extrasect) &&
                   (InEle))  // all satisfied
@@ -2297,7 +2297,7 @@ int InitChargingUp(void) {
                           polynode[0].Z);
                   fprintf(ftmpEF, "\n");
                 }  // debug
-              }    // if prim == NbPrimitives
+              }  // if prim == NbPrimitives
 
             }  // for all primitives // just not those on the volume
 
@@ -2391,8 +2391,7 @@ int InitChargingUp(void) {
             (EleArr + ele - 1)->Assigned +=
                 ChUpFactor * Q_E * NbChUpEonEle[ele] / ElementArea(ele);
             fprintf(fEleEChUpMap, "%d %lg %lg %lg %d %lg\n", ele,
-                    (EleArr + ele - 1)->Origin.X,
-                    (EleArr + ele - 1)->Origin.Y,
+                    (EleArr + ele - 1)->Origin.X, (EleArr + ele - 1)->Origin.Y,
                     (EleArr + ele - 1)->Origin.Z, NbChUpEonEle[ele],
                     (EleArr + ele - 1)->Assigned);
           }
@@ -2415,8 +2414,8 @@ int InitChargingUp(void) {
             return -11;
           }
           // initialize
-          int* NbChUpIonEle = (int *)malloc((NbElements + 1) * sizeof(int));
-          for (int ele = 0; ele <= NbElements; ++ele) {  
+          int *NbChUpIonEle = (int *)malloc((NbElements + 1) * sizeof(int));
+          for (int ele = 0; ele <= NbElements; ++ele) {
             // CHECK!!! ele limit starts from 0 but all other from 1 to ...
             NbChUpIonEle[ele] = 0;
           }
@@ -2510,7 +2509,7 @@ int InitChargingUp(void) {
             double dist = 1.0e6, mindist = 1.0e6;  // absurdly high numbers
             double SumOfAngles;
             // check all primitives
-            for (int prim = 1; prim <= NbPrimitives; ++prim) { 
+            for (int prim = 1; prim <= NbPrimitives; ++prim) {
               if (InterfaceType[prim] != 4)
                 continue;  // primitive not a dielectric
 
@@ -2634,7 +2633,7 @@ int InitChargingUp(void) {
                            extrasect);
                     printf("intersection point: %lg, %lg, %lg\n", ptintsct.X,
                            ptintsct.Y, ptintsct.Z);
-                  }       // if line and plane are parallel
+                  }  // if line and plane are parallel
                 } else {  // if they are not parallel, they must intersect
                   intersect = 1;
                   double t =
@@ -2666,9 +2665,9 @@ int InitChargingUp(void) {
                         "for an interesting intersection, lseg > t > 0.0 "
                         "...\n\n");
                     fflush(stdout);
-                  }   // must intersect
-                }     // if not parallel
-              }       // if PrimType is 3 or 4
+                  }  // must intersect
+                }  // if not parallel
+              }  // if PrimType is 3 or 4
               else {  // this is a wire primitive - assume no charging up issues
                 dist = -1.0;  // an absurd negative distance
                 intersect = 0;
@@ -2810,8 +2809,8 @@ int InitChargingUp(void) {
                       fflush(stdout);
                     }
                     break;  // desired element has been found!
-                  }         // if InEle
-                }           // for all elements on this primitive
+                  }  // if InEle
+                }  // for all elements on this primitive
 
                 if (InEle)
                   break;
@@ -3020,7 +3019,7 @@ int InitChargingUp(void) {
                   fprintf(ftmpIF, "\n");
                   fflush(stdout);
                 }  // debug
-              }    // if prim == NbPrimitives
+              }  // if prim == NbPrimitives
 
             }  // for all primitives // just not those on the volume
 
@@ -3094,7 +3093,7 @@ int InitChargingUp(void) {
               }
               fclose(fipd);
             }  // if 1
-          }    // for all the ions
+          }  // for all the ions
           fclose(fPtIChUpMap);
 
           // This file contains information about number of ions (I)
@@ -3108,8 +3107,7 @@ int InitChargingUp(void) {
             (EleArr + ele - 1)->Assigned +=
                 ChUpFactor * Q_I * NbChUpIonEle[ele] / ElementArea(ele);
             fprintf(fEleEIChUpMap, "%d %lg %lg %lg %d %lg\n", ele,
-                    (EleArr + ele - 1)->Origin.X,
-                    (EleArr + ele - 1)->Origin.Y,
+                    (EleArr + ele - 1)->Origin.X, (EleArr + ele - 1)->Origin.Y,
                     (EleArr + ele - 1)->Origin.Z, NbChUpIonEle[ele],
                     (EleArr + ele - 1)->Assigned);
           }

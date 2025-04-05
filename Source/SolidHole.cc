@@ -1,22 +1,20 @@
+#include "Garfield/SolidHole.hh"
+
+#include <array>
 #include <cmath>
 #include <iostream>
-#include<array>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Polygon.hh"
-#include "Garfield/SolidHole.hh"
 
 namespace {
 
 void CutBox(const std::array<double, 8>& xbox,
             const std::array<double, 8>& ybox,
-            const std::array<double, 8>& zbox,
-            std::vector<double>& xcut,
-            std::vector<double>& ycut,
-            std::vector<double>& zcut,
-            const double x0, const double y0, const double z0,
-            const double a, const double b, const double c) {
-
+            const std::array<double, 8>& zbox, std::vector<double>& xcut,
+            std::vector<double>& ycut, std::vector<double>& zcut,
+            const double x0, const double y0, const double z0, const double a,
+            const double b, const double c) {
   //-----------------------------------------------------------------------
   //   PLABOX - Crossings between a box and a plane.
   //-----------------------------------------------------------------------
@@ -31,10 +29,9 @@ void CutBox(const std::array<double, 8>& xbox,
       j = 0;
     } else if (i == 7) {
       j = 4;
-    } 
-    if (Garfield::Solid::Intersect(xbox[i], ybox[i], zbox[i], 
-                                   xbox[j], ybox[j], zbox[j], 
-                                   x0, y0, z0, a, b, c, xc, yc, zc)) {
+    }
+    if (Garfield::Solid::Intersect(xbox[i], ybox[i], zbox[i], xbox[j], ybox[j],
+                                   zbox[j], x0, y0, z0, a, b, c, xc, yc, zc)) {
       xcut.push_back(xc);
       ycut.push_back(yc);
       zcut.push_back(zc);
@@ -43,9 +40,8 @@ void CutBox(const std::array<double, 8>& xbox,
   for (unsigned int i = 0; i < 4; ++i) {
     double xc, yc, zc;
     const unsigned int j = i + 4;
-    if (Garfield::Solid::Intersect(xbox[i], ybox[i], zbox[i],
-                                   xbox[j], ybox[j], zbox[j],
-                                   x0, y0, z0, a, b, c, xc, yc, zc)) {
+    if (Garfield::Solid::Intersect(xbox[i], ybox[i], zbox[i], xbox[j], ybox[j],
+                                   zbox[j], x0, y0, z0, a, b, c, xc, yc, zc)) {
       xcut.push_back(xc);
       ycut.push_back(yc);
       zcut.push_back(zc);
@@ -56,26 +52,26 @@ void CutBox(const std::array<double, 8>& xbox,
   Garfield::Polygon::EliminateButterflies(xcut, ycut, zcut);
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
 SolidHole::SolidHole(const double cx, const double cy, const double cz,
-                     const double rup, const double rlow, 
-                     const double lx, const double ly, const double lz)
+                     const double rup, const double rlow, const double lx,
+                     const double ly, const double lz)
     : Solid(cx, cy, cz, "SolidHole"),
       m_rUp(rup),
       m_rLow(rlow),
-      m_lX(lx), 
+      m_lX(lx),
       m_lY(ly),
       m_lZ(lz) {
   Update();
 }
 
 SolidHole::SolidHole(const double cx, const double cy, const double cz,
-                     const double rup, const double rlow, 
-                     const double lx, const double ly, const double lz,
-                     const double dx, const double dy, const double dz)
+                     const double rup, const double rlow, const double lx,
+                     const double ly, const double lz, const double dx,
+                     const double dy, const double dz)
     : SolidHole(cx, cy, cz, rup, rlow, lx, ly, lz) {
   SetDirection(dx, dy, dz);
 }
@@ -88,7 +84,7 @@ void SolidHole::Update() {
   } else {
     m_fp = 1.;
   }
-  m_fi = cos(alpha); 
+  m_fi = cos(alpha);
 }
 
 bool SolidHole::IsInside(const double x, const double y, const double z,
@@ -100,7 +96,7 @@ bool SolidHole::IsInside(const double x, const double y, const double z,
   if (fabs(u) > m_lX || fabs(v) > m_lY || fabs(w) > m_lZ) {
     return false;
   }
- 
+
   double r = m_rLow + (w + m_lZ) * (m_rUp - m_rLow) / (2 * m_lZ);
   if (!tesselated) return (u * u + v * v >= r * r);
   const double rho = sqrt(u * u + v * v);
@@ -121,7 +117,7 @@ bool SolidHole::IsInside(const double x, const double y, const double z,
   }
   bool inside = false;
   bool edge = false;
-  Polygon::Inside(xp, yp, u, v, inside, edge);  
+  Polygon::Inside(xp, yp, u, v, inside, edge);
   return !inside;
 }
 
@@ -350,8 +346,7 @@ bool SolidHole::SolidPanels(std::vector<Panel>& panels) {
     }
   }
   // The panels of the central cylinder, compute the projection angles.
-  const double alpha = atan2((r1 - r2) * cos(Pi / (4 * (m_n - 1))), 
-                             2 * m_lZ);
+  const double alpha = atan2((r1 - r2) * cos(Pi / (4 * (m_n - 1))), 2 * m_lZ);
   const double ci = cos(alpha);
   const double si = sin(alpha);
   // Initialise loop.
@@ -369,12 +364,10 @@ bool SolidHole::SolidPanels(std::vector<Panel>& panels) {
     const double phim = phi0 + dphi * (i - 0.5);
     const double cm = cos(phim);
     const double sm = sin(phim);
-    panel.a = -m_cPhi * m_cTheta * cm * ci +
-               m_sPhi *            sm * ci -
-               m_cPhi * m_sTheta      * si;
-    panel.b = -m_sPhi * m_cTheta * cm * ci -
-               m_cPhi *            sm * ci -
-               m_sPhi * m_sTheta      * si;
+    panel.a = -m_cPhi * m_cTheta * cm * ci + m_sPhi * sm * ci -
+              m_cPhi * m_sTheta * si;
+    panel.b = -m_sPhi * m_cTheta * cm * ci - m_cPhi * sm * ci -
+              m_sPhi * m_sTheta * si;
     panel.c = m_sTheta * cm * ci - m_cTheta * si;
     panel.xv = {xv0, xv1, xv2, xv3};
     panel.yv = {yv0, yv1, yv2, yv3};
@@ -396,7 +389,6 @@ bool SolidHole::SolidPanels(std::vector<Panel>& panels) {
 }
 
 double SolidHole::GetDiscretisationLevel(const Panel& panel) {
-  
   // Transform the normal vector to local coordinates.
   double un = 0., vn = 0., wn = 0.;
   VectorToLocal(panel.a, panel.b, panel.c, un, vn, wn);
@@ -429,7 +421,6 @@ double SolidHole::GetDiscretisationLevel(const Panel& panel) {
 void SolidHole::Cut(const double x0, const double y0, const double z0,
                     const double xn, const double yn, const double zn,
                     std::vector<Panel>& panels) {
-
   //-----------------------------------------------------------------------
   //   PLACHC - Cuts a cylindrical hole with a plane.
   //-----------------------------------------------------------------------
@@ -457,10 +448,10 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
       const double w = iside * m_lZ;
       const unsigned int k = iside < 0 ? 0 : 4;
       const double phi0 = -0.5 * HalfPi;
-      ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, 
-               xbox[k], ybox[k], zbox[k]);
-      ToGlobal(r * cos(phi0 + phi2), r * sin(phi0 + phi2), w, 
-               xbox[k + 3], ybox[k + 3], zbox[k + 3]);
+      ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, xbox[k], ybox[k],
+               zbox[k]);
+      ToGlobal(r * cos(phi0 + phi2), r * sin(phi0 + phi2), w, xbox[k + 3],
+               ybox[k + 3], zbox[k + 3]);
       ToGlobal(m_lX, m_lY * t1, w, xbox[k + 1], ybox[k + 1], zbox[k + 1]);
       ToGlobal(m_lX, m_lY * t2, w, xbox[k + 2], ybox[k + 2], zbox[k + 2]);
     }
@@ -478,7 +469,7 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
       panel.zv = zv;
       panel.colour = m_colour;
       panel.volume = GetId();
-      panels.push_back(std::move(panel));    
+      panels.push_back(std::move(panel));
     }
     xv.clear();
     yv.clear();
@@ -489,10 +480,10 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
       const double w = iside * m_lZ;
       const unsigned int k = iside < 0 ? 0 : 4;
       const double phi0 = 0.5 * HalfPi;
-      ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, 
-               xbox[k], ybox[k], zbox[k]);
-      ToGlobal(r * cos(phi0 + phi2), r * sin(phi0 + phi2), w, 
-               xbox[k + 3], ybox[k + 3], zbox[k + 3]);
+      ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, xbox[k], ybox[k],
+               zbox[k]);
+      ToGlobal(r * cos(phi0 + phi2), r * sin(phi0 + phi2), w, xbox[k + 3],
+               ybox[k + 3], zbox[k + 3]);
       ToGlobal(-m_lX * t1, m_lY, w, xbox[k + 1], ybox[k + 1], zbox[k + 1]);
       ToGlobal(-m_lX * t2, m_lY, w, xbox[k + 2], ybox[k + 2], zbox[k + 2]);
     }
@@ -507,7 +498,7 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
       panel.zv = zv;
       panel.colour = m_colour;
       panel.volume = GetId();
-      panels.push_back(std::move(panel));    
+      panels.push_back(std::move(panel));
     }
     xv.clear();
     yv.clear();
@@ -518,10 +509,10 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
       const double w = iside * m_lZ;
       const unsigned int k = iside < 0 ? 0 : 4;
       const double phi0 = 1.5 * HalfPi;
-      ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, 
-               xbox[k], ybox[k], zbox[k]);
-      ToGlobal(r * cos(phi0 + phi2), r * sin(phi0 + phi2), w, 
-               xbox[k + 3], ybox[k + 3], zbox[k + 3]);
+      ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, xbox[k], ybox[k],
+               zbox[k]);
+      ToGlobal(r * cos(phi0 + phi2), r * sin(phi0 + phi2), w, xbox[k + 3],
+               ybox[k + 3], zbox[k + 3]);
       ToGlobal(-m_lX, -m_lY * t1, w, xbox[k + 1], ybox[k + 1], zbox[k + 1]);
       ToGlobal(-m_lX, -m_lY * t2, w, xbox[k + 2], ybox[k + 2], zbox[k + 2]);
     }
@@ -536,7 +527,7 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
       panel.zv = zv;
       panel.colour = m_colour;
       panel.volume = GetId();
-      panels.push_back(std::move(panel));    
+      panels.push_back(std::move(panel));
     }
     xv.clear();
     yv.clear();
@@ -547,13 +538,12 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
       const double w = iside * m_lZ;
       const unsigned int k = iside < 0 ? 0 : 4;
       const double phi0 = -1.5 * HalfPi;
-      ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, 
-               xbox[k], ybox[k], zbox[k]);
-      ToGlobal(r * cos(phi0 + phi2), r * sin(phi0 + phi2), w, 
-               xbox[k + 3], ybox[k + 3], zbox[k + 3]);
+      ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, xbox[k], ybox[k],
+               zbox[k]);
+      ToGlobal(r * cos(phi0 + phi2), r * sin(phi0 + phi2), w, xbox[k + 3],
+               ybox[k + 3], zbox[k + 3]);
       ToGlobal(m_lX * t1, -m_lY, w, xbox[k + 1], ybox[k + 1], zbox[k + 1]);
       ToGlobal(m_lX * t2, -m_lY, w, xbox[k + 2], ybox[k + 2], zbox[k + 2]);
-
     }
     CutBox(xbox, ybox, zbox, xv, yv, zv, x0, y0, z0, xn, yn, zn);
     if (xv.size() >= 3) {
@@ -566,9 +556,9 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
       panel.zv = zv;
       panel.colour = m_colour;
       panel.volume = GetId();
-      panels.push_back(std::move(panel));    
+      panels.push_back(std::move(panel));
     }
   }
 }
 
-}
+}  // namespace Garfield

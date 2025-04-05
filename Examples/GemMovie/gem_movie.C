@@ -1,32 +1,31 @@
+#include <TApplication.h>
+#include <TCanvas.h>
+#include <TLatex.h>
+#include <TROOT.h>
+#include <TSystem.h>
+
 #include <cstdlib>
 #include <iostream>
 
-#include <TApplication.h>
-#include <TCanvas.h>
-#include <TSystem.h>
-#include <TROOT.h>
-#include <TLatex.h>
-
+#include "Garfield/AvalancheMC.hh"
+#include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentAnsys123.hh"
-#include "Garfield/ViewField.hh"
-#include "Garfield/ViewFEMesh.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/AvalancheMicroscopic.hh"
-#include "Garfield/AvalancheMC.hh"
 #include "Garfield/ViewDrift.hh"
+#include "Garfield/ViewFEMesh.hh"
+#include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
-int main(int argc, char * argv[]) {
-
+int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
   // Setup the gas.
   MediumMagboltz gas("ar", 80., "co2", 20.);
   gas.SetTemperature(293.15);
   gas.SetPressure(760.);
-  gas.Initialise(true);  
+  gas.Initialise(true);
   // Set the Penning transfer efficiency.
   gas.EnablePenningTransfer();
   // Load the ion mobilities.
@@ -40,7 +39,7 @@ int main(int argc, char * argv[]) {
   fm.EnableMirrorPeriodicityY();
   fm.PrintRange();
 
-  // Associate the gas with the corresponding field map material. 
+  // Associate the gas with the corresponding field map material.
   fm.SetGas(&gas);
   fm.PrintMaterials();
 
@@ -49,8 +48,7 @@ int main(int argc, char * argv[]) {
 
   // Create the sensor.
   Sensor sensor(&fm);
-  sensor.SetArea(-5 * pitch, -5 * pitch, -0.02,
-                  5 * pitch,  5 * pitch,  0.025);
+  sensor.SetArea(-5 * pitch, -5 * pitch, -0.02, 5 * pitch, 5 * pitch, 0.025);
 
   AvalancheMicroscopic aval(&sensor);
 
@@ -71,7 +69,7 @@ int main(int argc, char * argv[]) {
   meshView.SetArea(-2 * pitch, -0.02, 2 * pitch, 0.02);
   meshView.SetComponent(&fm);
   meshView.SetPlane(0, -1, 0, 0, 0, 0);
-  meshView.SetFillMesh(true); 
+  meshView.SetFillMesh(true);
   meshView.SetColor(2, kGray);
   meshView.SetCanvas(&canvas);
 
@@ -86,7 +84,7 @@ int main(int argc, char * argv[]) {
   driftView.SetCanvas(&canvas);
 
   TLatex label;
-  
+
   // Add the initial electron.
   const double x0 = 0.;
   const double y0 = 0.;
@@ -100,7 +98,7 @@ int main(int argc, char * argv[]) {
   double dt = 0.1;
   const unsigned int nFrames = 207;
   for (unsigned int i = 0; i < nFrames; ++i) {
-    if (i % 10 == 0) std::cout << "Frame " << i << "\n"; 
+    if (i % 10 == 0) std::cout << "Frame " << i << "\n";
     driftView.Clear();
     if (!aval.GetElectrons().empty()) {
       aval.SetTimeWindow(tmin, tmin + dt);
@@ -133,7 +131,7 @@ int main(int argc, char * argv[]) {
     if (!drift.GetIons().empty()) {
       drift.SetTimeWindow(tmin, tmin + dt);
       drift.ResumeAvalanche();
-    } 
+    }
     if (plotField && i < 5) {
       fieldView.Plot("v", "CONT1");
       driftView.Plot2d(false, true);
@@ -157,7 +155,7 @@ int main(int argc, char * argv[]) {
       snprintf(filename, 50, "frames/frame_%03d.png", i);
       canvas.SaveAs(filename);
     } else {
-      if (i == nFrames - 1) { 
+      if (i == nFrames - 1) {
         canvas.Print("gem_movie.gif++");
       } else {
         canvas.Print("gem_movie.gif+3");

@@ -46,9 +46,9 @@ class TrackBichsel : public Track {
 
   /// Optical oscillator strength density.
   std::array<double, NEnergyBins> m_dfdE;
-  /// Real part of the dielectric function. 
+  /// Real part of the dielectric function.
   std::array<double, NEnergyBins> m_eps1;
-  /// Imaginary part of the dielectric function. 
+  /// Imaginary part of the dielectric function.
   std::array<double, NEnergyBins> m_eps2;
   /// Integral over the generalised oscillator strength density.
   std::array<double, NEnergyBins> m_int;
@@ -62,19 +62,19 @@ class TrackBichsel : public Track {
   double m_density;
   /// Conversion from optical loss function to oscillator strength density.
   double m_conv = 0.0092456;
-  
+
   bool m_initialised = false;
 
   /// Inverse mean free path [cm-1].
   double m_imfp = 0.;
   /// Stopping power [eV/cm].
   double m_dEdx = 0.;
- 
+
   /// Particle speed
   double m_speed = SpeedOfLight;
 
   std::vector<Cluster> m_clusters;
 };
-}
+}  // namespace Garfield
 
 #endif

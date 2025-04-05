@@ -77,14 +77,18 @@ int ComputeSolution(void) {
       OptGSL = 0;
   }
   if ((OptSVD == 0) && (OptLU == 0) && (OptGSL == 0)) {
-    printf("ComputeSolution: Cannot proceed with OptSVD, OptLU and OptGSL zero.\n");
+    printf(
+        "ComputeSolution: Cannot proceed with OptSVD, OptLU and OptGSL "
+        "zero.\n");
     printf("                 Assuming the safer option OptSVD = 1.\n");
     OptLU = 0;
     OptSVD = 1;
     OptGSL = 0;
   }
   if ((OptSVD == 1) && (OptLU == 1) && (OptGSL == 1)) {
-    printf("ComputeSolution: Cannot proceed with all OptSVD, OptLU and OptGSL one.\n");
+    printf(
+        "ComputeSolution: Cannot proceed with all OptSVD, OptLU and OptGSL "
+        "one.\n");
     printf("                 Assuming the safer option OptSVD = 1.\n");
     OptLU = 0;
     OptSVD = 1;
@@ -100,14 +104,14 @@ int ComputeSolution(void) {
     return (-1);
   }
   if (OptSystemChargeZero) {
-     // Constraint making total charge on the system zero.
+    // Constraint making total charge on the system zero.
     ++NbConstraints;
     NbUnknowns = NbElements + NbConstraints;
     NbEqns = NbElements + NbConstraints;
     // Which equation and unknown relates to this contraint.
-    NbSystemChargeZero = NbUnknowns;          
+    NbSystemChargeZero = NbUnknowns;
   }
-  if (NbFloatingConductors) { 
+  if (NbFloatingConductors) {
     // Number of floating conductors now restricted to one.
     if (NbFloatingConductors > 1) {
       printf("ComputeSolution: Number of floating conductors > 1!\n");
@@ -117,8 +121,8 @@ int ComputeSolution(void) {
     ++NbConstraints;
     NbUnknowns = NbElements + NbConstraints;
     NbEqns = NbElements + NbConstraints;
-    // Which equation and unknown relates to this floating conductor. 
-    NbFloatCon = NbUnknowns; 
+    // Which equation and unknown relates to this floating conductor.
+    NbFloatCon = NbUnknowns;
   }
 
   if (NewModel || NewMesh) {
@@ -174,8 +178,7 @@ int ComputeSolution(void) {
     if ((!InfluenceMatrixFlag) && NewBC) {
       if (OptReadInvMatrix) {
         startClock = clock();
-        printf(
-            "ComputeSolution: Reading inverted matrix, will take time...\n");
+        printf("ComputeSolution: Reading inverted matrix, will take time...\n");
         int fstatus = ReadInvertedMatrix();
         if (fstatus != 0) {
           printf("ComputeSolution: ReadInvertedMatrix failed.\n");
@@ -191,7 +194,7 @@ int ComputeSolution(void) {
         return -1;
       }
     }  // if (!InfluenceMatrixFlag) && NewBC
-  }    // if TimeStep == 1
+  }  // if TimeStep == 1
 
   // If TimeStep > 1, use the Infl (LHS) and InvMat existing in memory
 
@@ -308,9 +311,8 @@ int LHMatrix(void) {
 #ifdef _OPENMP
   int dbgFn = 0;
 #endif
-  printf(
-      "LHMatrix: The size of the influence coefficient matrix is %d X %d\n",
-      NbEqns, NbUnknowns);
+  printf("LHMatrix: The size of the influence coefficient matrix is %d X %d\n",
+         NbEqns, NbUnknowns);
   fflush(stdout);
 
   // The influence coefficient matrix is created only when the
@@ -328,7 +330,8 @@ int LHMatrix(void) {
   // The field points are followed using elefld (field counter) and the
   // source elements are followed using elesrc (source counter)
   // printf("field point: ");	// do not remove
-  printf("LHMatrix: Computing influence coefficient matrix, will take time ...\n");
+  printf(
+      "LHMatrix: Computing influence coefficient matrix, will take time ...\n");
 
 #ifdef _OPENMP
   int nthreads = 1, tid = 0;
@@ -372,7 +375,7 @@ int LHMatrix(void) {
         const double xsrc = (EleArr + elesrc - 1)->Origin.X;
         const double ysrc = (EleArr + elesrc - 1)->Origin.Y;
         const double zsrc = (EleArr + elesrc - 1)->Origin.Z;
-        DirnCosn3D* dcsrc = &PrimDC[primsrc];
+        DirnCosn3D *dcsrc = &PrimDC[primsrc];
         if (InterfaceType[primsrc] == 0) {
           printf("LHMatrix: Wrong EType for element %d (primitive %d)!\n",
                  elesrc, primsrc);
@@ -422,8 +425,8 @@ int LHMatrix(void) {
           else
             DebugISLES = 0;
 
-          Inf[elefld][elesrc] = ComputeInfluence(elefld, elesrc, &localP,
-                                                 dcsrc);
+          Inf[elefld][elesrc] =
+              ComputeInfluence(elefld, elesrc, &localP, dcsrc);
           if (DebugLevel == 301) {
             printf("elefld: %d, elesrc: %d, Influence: %.16lg\n", elefld,
                    elesrc, Inf[elefld][elesrc]);
@@ -586,8 +589,8 @@ int LHMatrix(void) {
 
                     // Direction cosines remain unchanged for a regular
                     // repetition
-                    double AddnalInfl = ComputeInfluence(
-                        elefld, elesrc, &localP, dcsrc);
+                    double AddnalInfl =
+                        ComputeInfluence(elefld, elesrc, &localP, dcsrc);
                     Inf[elefld][elesrc] += AddnalInfl;
 
                     if (DebugLevel == 301) {
@@ -688,17 +691,17 @@ int LHMatrix(void) {
                     }  // reflections of repetitions taken care of
 
                   }  // for zrpt
-                }    // for yrpt
-              }      // for xrpt
-            }        // PeriodicInX || PeriodicInY || PeriodicInZ
-          }          // PeriodicType == 1
-        }            // end of influence due to virtual elements
+                }  // for yrpt
+              }  // for xrpt
+            }  // PeriodicInX || PeriodicInY || PeriodicInZ
+          }  // PeriodicType == 1
+        }  // end of influence due to virtual elements
 
       }  // loop for elesrc, source element (influencing)
 
       // printf("\b\b\b\b\b\b");
     }  // loop for elefld, field element (influenced)
-  }    // pragma omp parallel
+  }  // pragma omp parallel
   // Enforce total charge on the system to be zero.
   // All the voltages in the system need to be shifted by an unknown amount
   // V_shift
@@ -786,8 +789,7 @@ int LHMatrix(void) {
   if (OptStoreInflMatrix &&
       OptUnformattedFile)  // Raw cannot be implemented now.
   {  // It may be because of the memory allocation using the NR routines -
-    printf(
-        "LHMatrix: Binary write of Infl matrix not implemented yet.\n");
+    printf("LHMatrix: Binary write of Infl matrix not implemented yet.\n");
     return -1;
 
     char InflFile[256];
@@ -1381,7 +1383,7 @@ int InvertMatrix(void) {
     tmpmat = dmatrix(1, NbEqns, 1, NbUnknowns);
 
     // calculate w+ (transpose)u
-    for (int j = 1; j <= NbUnknowns; j++) {  
+    for (int j = 1; j <= NbUnknowns; j++) {
       // w+ is obtained by replacing every non-zero diagonal entry of [W]
       int i;
 #ifdef _OPENMP
@@ -1446,7 +1448,7 @@ int InvertMatrix(void) {
     fflush(stdout);
     ludcmp(tmpInf, NbUnknowns, index, &d);  // The tmpInf matrix over-written
 
-    for (int j = 1; j <= NbUnknowns; j++) { 
+    for (int j = 1; j <= NbUnknowns; j++) {
       // Find inverse by columns.
       int i;
 #ifdef _OPENMP
@@ -1650,9 +1652,8 @@ double ComputeInfluence(int elefld, int elesrc, Point3D *localP,
 
   if (0) {
     printf("\nContinuity satisfaction using following parameters ...\n");
-    printf("gtsrc: %d, lxsrc: %lg, lzsrc% lg\n",
-           (EleArr + elesrc - 1)->GType, (EleArr + elesrc - 1)->LX,
-           (EleArr + elesrc - 1)->LZ);
+    printf("gtsrc: %d, lxsrc: %lg, lzsrc% lg\n", (EleArr + elesrc - 1)->GType,
+           (EleArr + elesrc - 1)->LX, (EleArr + elesrc - 1)->LZ);
     printf("xlocal: %lg, ylocal: %lg, zlocal: %lg\n", localP->X, localP->Y,
            localP->Z);
   }
@@ -1660,7 +1661,7 @@ double ComputeInfluence(int elefld, int elesrc, Point3D *localP,
   switch (InterfaceType[primfld]) {
     // Depending on the interface type at the field point
     // different boundary conditions need to be applied
-    case 1:              // conductor with known potential
+    case 1:  // conductor with known potential
       value = SatisfyValue(elesrc, localP);
       return (value);
       break;
@@ -1707,7 +1708,7 @@ double ComputeInfluence(int elefld, int elesrc, Point3D *localP,
              InterfaceType[primfld]);
       return (-1);
       break;  // unreachable
-  }           // switch on etfld ends
+  }  // switch on etfld ends
 }  // end of ComputeInfluence
 
 /* To be tried later
@@ -1774,7 +1775,7 @@ double SatisfyValue(int elesrc, Point3D *localP) {
       printf("Geometrical type out of range! ... exiting ...\n");
       return (-1);
       break;  // never comes here
-  }           // switch over gtsrc ends
+  }  // switch over gtsrc ends
 }  // end of SatisfyValue
 
 // Satisfy Neumann condition.
@@ -1834,7 +1835,7 @@ double SatisfyContinuity(int elefld, int elesrc, Point3D *localP,
         printf("Geometrical type out of range! ... exiting ...\n");
         exit(-1);
         break;  // never comes here
-    }           // switch over gtsrc ends
+    }  // switch over gtsrc ends
 
     // flux in the global co-ordinate system
     // globalF = RotateVector3D(&localF, &(EleArr+elesrc-1)->G.DC,
@@ -2044,16 +2045,19 @@ int RHVector(void) {
           if (isinf(valueChUp)) exit(-1);
         }
         RHS[elefld] = value - valueKnCh - valueChUp;  // Check Bardhan's eqn 16
-        // Add effect due to assigned charge; 
+        // Add effect due to assigned charge;
         // what happens when assigned elements are charged up in addition?
-        RHS[elefld] += (EleArr + elefld - 1)->Assigned;  
+        RHS[elefld] += (EleArr + elefld - 1)->Assigned;
         break;
       case 6:  // E parallel symmetry boundary
-        printf("RHVector: Symmetry boundary, E parallel not implemented yet.\n");
+        printf(
+            "RHVector: Symmetry boundary, E parallel not implemented yet.\n");
         return -1;
         break;
       case 7:  // E perpendicular symmetry boundary
-        printf("RHVector: Symmetry boundary, E perpendicular not implemented yet.\n");
+        printf(
+            "RHVector: Symmetry boundary, E perpendicular not implemented "
+            "yet.\n");
         return -1;
         break;
       default:
@@ -2061,8 +2065,7 @@ int RHVector(void) {
         return -1;
     }
     fprintf(fout, "%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", elefld,
-            (EleArr + elefld - 1)->Origin.X,
-            (EleArr + elefld - 1)->Origin.Y,
+            (EleArr + elefld - 1)->Origin.X, (EleArr + elefld - 1)->Origin.Y,
             (EleArr + elefld - 1)->Origin.Z, (EleArr + elefld - 1)->Assigned,
             value, valueKnCh, valueChUp, RHS[elefld]);
   }  // for elefld ends
@@ -2076,11 +2079,14 @@ int RHVector(void) {
         // can be parallelized
         for (int ele = 1; ele <= NbElements; ++ele) {
           double assigned = (EleArr + ele - 1)->Assigned;
-          SumAssigned += assigned * ElementArea(ele);  // charge density * element area
+          SumAssigned +=
+              assigned * ElementArea(ele);  // charge density * element area
         }
-        RHS[eqn] = -SumAssigned;  // applied charge considered - too small change
-        RHS[eqn] = 0.0;  // applied charge not considered while meeting constraint
-      }           // if eqn == NbSystemChargeZero
+        RHS[eqn] =
+            -SumAssigned;  // applied charge considered - too small change
+        RHS[eqn] =
+            0.0;  // applied charge not considered while meeting constraint
+      }  // if eqn == NbSystemChargeZero
       else {
         RHS[eqn] = 0.0;
       }
@@ -2128,22 +2134,20 @@ double ValueKnCh(int elefld) {
 
     // Retrieve element properties from the structure
     const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
-    DirnCosn3D* dcsrc = &PrimDC[primsrc];
+    DirnCosn3D *dcsrc = &PrimDC[primsrc];
 
     if (InterfaceType[primsrc] == 0) {
-      printf("Wrong EType for element %d (primitive %d)!\n",
-             elesrc, primsrc);
+      printf("Wrong EType for element %d (primitive %d)!\n", elesrc, primsrc);
       exit(-1);
     }
 
     Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
 
     {  // Rotate point3D from global to local system
-      double InitialVector[3] =
-             {xfld - pOrigin->X, yfld - pOrigin->Y, zfld - pOrigin->Z};
-      double TransformationMatrix[3][3] = {{0.0, 0.0, 0.0},
-                                           {0.0, 0.0, 0.0},
-                                           {0.0, 0.0, 0.0}};
+      double InitialVector[3] = {xfld - pOrigin->X, yfld - pOrigin->Y,
+                                 zfld - pOrigin->Z};
+      double TransformationMatrix[3][3] = {
+          {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
       TransformationMatrix[0][0] = dcsrc->XUnit.X;
       TransformationMatrix[0][1] = dcsrc->XUnit.Y;
       TransformationMatrix[0][2] = dcsrc->XUnit.Z;
@@ -2181,8 +2185,8 @@ double ValueKnCh(int elefld) {
         printf("Geometrical type out of range! ... exiting ...\n");
         exit(-1);
         break;  // never comes here
-    }           // switch over gtsrc ends
-  }             // for all source elements - elesrc
+    }  // switch over gtsrc ends
+  }  // for all source elements - elesrc
 
   // HS: Shouldn't this be "*= MyFACTOR"?
   value += MyFACTOR;  // in order reduce divisions by MyFACTOR later
@@ -2249,10 +2253,10 @@ double ValueKnCh(int elefld) {
 
   // Contribution due to known volume charges
   for (int vol = 1; vol <= NbVolumesKnCh; ++vol) {
-    value += (VolumeKnChArr + vol - 1)->Assigned *
-             VolumeKnChPF((VolumeKnChArr + vol - 1)->NbVertices,
-                          ((VolumeKnChArr + vol - 1)->Vertex), fieldPt,
-                          &tmpglobalF);
+    value +=
+        (VolumeKnChArr + vol - 1)->Assigned *
+        VolumeKnChPF((VolumeKnChArr + vol - 1)->NbVertices,
+                     ((VolumeKnChArr + vol - 1)->Vertex), fieldPt, &tmpglobalF);
   }  // for vols
 
   value /= MyFACTOR;
@@ -2284,7 +2288,7 @@ double ContinuityKnCh(int elefld) {
   double yfld = collPt.Y;
   double zfld = collPt.Z;
   const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
-  DirnCosn3D* dcfld = &PrimDC[primfld];
+  DirnCosn3D *dcfld = &PrimDC[primfld];
 
   Vector3D localF, globalF;
 
@@ -2300,21 +2304,19 @@ double ContinuityKnCh(int elefld) {
     Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
 
     const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
-    DirnCosn3D* dcsrc = &PrimDC[primsrc];
+    DirnCosn3D *dcsrc = &PrimDC[primsrc];
 
     // Retrieve element properties from the structure
     if (InterfaceType[primsrc] == 0) {
-      printf("Wrong EType for element %d (primitive %d)!\n",
-             elesrc, primsrc);
+      printf("Wrong EType for element %d (primitive %d)!\n", elesrc, primsrc);
       exit(-1);
     }
 
     {  // Rotate point3D from global to local system
-      double InitialVector[3]
-                = {xfld - pOrigin->X, yfld - pOrigin->Y, zfld - pOrigin->Z};
-      double TransformationMatrix[3][3] = {{0.0, 0.0, 0.0},
-                                           {0.0, 0.0, 0.0},
-                                           {0.0, 0.0, 0.0}};
+      double InitialVector[3] = {xfld - pOrigin->X, yfld - pOrigin->Y,
+                                 zfld - pOrigin->Z};
+      double TransformationMatrix[3][3] = {
+          {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
       TransformationMatrix[0][0] = dcsrc->XUnit.X;
       TransformationMatrix[0][1] = dcsrc->XUnit.Y;
       TransformationMatrix[0][2] = dcsrc->XUnit.Z;
@@ -2350,8 +2352,7 @@ double ContinuityKnCh(int elefld) {
     } else {
       // Retrieve element properties from the structure
       if (InterfaceType[primsrc] == 0) {
-        printf("Wrong EType for element %d (primitive %d)!\n",
-               elesrc, primsrc);
+        printf("Wrong EType for element %d (primitive %d)!\n", elesrc, primsrc);
         exit(-1);
       }
 
@@ -2370,7 +2371,7 @@ double ContinuityKnCh(int elefld) {
           printf("Geometrical type out of range! ... exiting ...\n");
           exit(-1);
           break;  // never comes here
-      }           // switch over gtsrc ends
+      }  // switch over gtsrc ends
 
       // in GCS - mirror points?!
       globalF = RotateVector3D(&localF, dcsrc, local2global);
@@ -2380,10 +2381,10 @@ double ContinuityKnCh(int elefld) {
       value -= assigned * localF.Y;  // +ve gradient of Green's is -ve normal
                                      // force (changed from -= to += on 02/11/11
                                      // - CHECK!!! - and back to -= on 05/11/11)
-    }                                // else self-influence
-  }                                  // for elesrc
+    }  // else self-influence
+  }  // for elesrc
 
-  value *= MyFACTOR; // so that later MyFACTOR divisions are reduced.
+  value *= MyFACTOR;  // so that later MyFACTOR divisions are reduced.
   if (dbgFn) {
     printf("value (* MyFACTOR): %g\n", value);
   }
@@ -2430,7 +2431,7 @@ double ContinuityKnCh(int elefld) {
   for (int area = 1; area <= NbAreasKnCh; ++area) {
     // potential not being used to evaluate Neumann continuity
     (void)AreaKnChPF((AreaKnChArr + area - 1)->NbVertices,
-                   ((AreaKnChArr + area - 1)->Vertex), fieldPt, &globalF);
+                     ((AreaKnChArr + area - 1)->Vertex), fieldPt, &globalF);
     localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= (AreaKnChArr + area - 1)->Assigned * localF.Y;
   }  // loop over areas
@@ -2439,24 +2440,24 @@ double ContinuityKnCh(int elefld) {
   for (int vol = 1; vol <= NbVolumesKnCh; ++vol) {
     // potential not being used to evaluate Neumann continuity
     (void)VolumeKnChPF((VolumeKnChArr + vol - 1)->NbVertices,
-                     ((VolumeKnChArr + vol - 1)->Vertex), fieldPt, &globalF);
+                       ((VolumeKnChArr + vol - 1)->Vertex), fieldPt, &globalF);
     localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= (VolumeKnChArr + vol - 1)->Assigned * localF.Y;
   }  // loop over volumes
 
-  value /= MyFACTOR; // factored in
+  value /= MyFACTOR;  // factored in
   return (value);
 }  // end of ContinuityKnCh
 
 double ElementArea(int ele) {
-  Element* eleptr = EleArr + ele - 1;
+  Element *eleptr = EleArr + ele - 1;
   double area = 0.;
   switch (eleptr->GType) {
     case 2:
       // Wire
       area = 2. * MyPI * eleptr->LX * eleptr->LZ;
       break;
-    case 3: 
+    case 3:
       // Triangle
       area = 0.5 * eleptr->LX * eleptr->LZ;
       break;
@@ -2473,9 +2474,9 @@ double ElementArea(int ele) {
 
 Point3D CollocationPoint(int ele) {
   Point3D pt;
-  Element* eleptr = EleArr + ele - 1;
+  Element *eleptr = EleArr + ele - 1;
   if (eleptr->GType == 2 || eleptr->GType == 4) {
-    // For wires and rectangles, the collocation point is 
+    // For wires and rectangles, the collocation point is
     // identical to the origin.
     pt.X = eleptr->Origin.X;
     pt.Y = eleptr->Origin.Y;
@@ -2503,8 +2504,7 @@ Point3D CollocationPoint(int ele) {
 }
 
 void ElementVertices(int ele, Point3D vertices[4]) {
-
-  Element* eleptr = EleArr + ele - 1;
+  Element *eleptr = EleArr + ele - 1;
   const int prim = eleptr->PrimitiveNb;
   const double x0 = eleptr->Origin.X;
   const double y0 = eleptr->Origin.Y;
@@ -2607,20 +2607,18 @@ double ValueChUp(int elefld) {
     // Retrieve element properties from the structure
     Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
     const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
-    DirnCosn3D* dcsrc = &PrimDC[primsrc];
+    DirnCosn3D *dcsrc = &PrimDC[primsrc];
 
     if (InterfaceType[primsrc] == 0) {
-      printf("Wrong EType for element %d (primitive %d)!\n",
-             elesrc, primsrc);
+      printf("Wrong EType for element %d (primitive %d)!\n", elesrc, primsrc);
       exit(-1);
     }
 
     {  // Rotate point3D from global to local system
-      double InitialVector[3]
-                  = {xfld - pOrigin->X, yfld - pOrigin->Y, zfld - pOrigin->Z};
-      double TransformationMatrix[3][3] = {{0.0, 0.0, 0.0},
-                                           {0.0, 0.0, 0.0},
-                                           {0.0, 0.0, 0.0}};
+      double InitialVector[3] = {xfld - pOrigin->X, yfld - pOrigin->Y,
+                                 zfld - pOrigin->Z};
+      double TransformationMatrix[3][3] = {
+          {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
       TransformationMatrix[0][0] = dcsrc->XUnit.X;
       TransformationMatrix[0][1] = dcsrc->XUnit.Y;
       TransformationMatrix[0][2] = dcsrc->XUnit.Z;
@@ -2661,8 +2659,8 @@ double ValueChUp(int elefld) {
         printf("Geometrical type out of range! ... exiting ...\n");
         exit(-1);
         break;  // never comes here
-    }           // switch over gtsrc ends
-  }             // for all source elements - elesrc
+    }  // switch over gtsrc ends
+  }  // for all source elements - elesrc
 
   value *= MyFACTOR;
   if (dbgFn) {
@@ -2708,10 +2706,10 @@ double ValueChUp(int elefld) {
 
   // Contribution due to known volume charges
   for (int vol = 1; vol <= NbVolumesKnCh; ++vol) {
-    value += (VolumeKnChArr + vol - 1)->Assigned *
-             VolumeKnChPF((VolumeKnChArr + vol - 1)->NbVertices,
-                          ((VolumeKnChArr + vol - 1)->Vertex), globalP,
-                          &tmpglobalF);
+    value +=
+        (VolumeKnChArr + vol - 1)->Assigned *
+        VolumeKnChPF((VolumeKnChArr + vol - 1)->NbVertices,
+                     ((VolumeKnChArr + vol - 1)->Vertex), globalP, &tmpglobalF);
   }  // for vols
 
   value /= MyFACTOR;
@@ -2739,7 +2737,7 @@ double ContinuityChUp(int elefld) {
   const double yfld = collPt.Y;
   const double zfld = collPt.Z;
   const int primfld = (EleArr + elefld - 1)->PrimitiveNb;
-  DirnCosn3D* dcfld = &PrimDC[primfld];
+  DirnCosn3D *dcfld = &PrimDC[primfld];
 
   Vector3D localF, globalF;
 
@@ -2754,7 +2752,7 @@ double ContinuityChUp(int elefld) {
 
     Point3D *pOrigin = &(EleArr + elesrc - 1)->Origin;
     const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
-    DirnCosn3D* dcsrc = &PrimDC[primsrc];
+    DirnCosn3D *dcsrc = &PrimDC[primsrc];
 
     // Retrieve element properties from the structure
     if (InterfaceType[primsrc] == 0) {
@@ -2763,11 +2761,10 @@ double ContinuityChUp(int elefld) {
     }
 
     {  // Rotate point3D from global to local system
-      double InitialVector[3]
-                = {xfld - pOrigin->X, yfld - pOrigin->Y, zfld - pOrigin->Z};
-      double TransformationMatrix[3][3] = {{0.0, 0.0, 0.0},
-                                           {0.0, 0.0, 0.0},
-                                           {0.0, 0.0, 0.0}};
+      double InitialVector[3] = {xfld - pOrigin->X, yfld - pOrigin->Y,
+                                 zfld - pOrigin->Z};
+      double TransformationMatrix[3][3] = {
+          {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
       TransformationMatrix[0][0] = dcsrc->XUnit.X;
       TransformationMatrix[0][1] = dcsrc->XUnit.Y;
       TransformationMatrix[0][2] = dcsrc->XUnit.Z;
@@ -2802,8 +2799,7 @@ double ContinuityChUp(int elefld) {
       value += assigned / (2.0 * EPS0 * Lambda[primsrc]);
     } else {
       if (InterfaceType[primsrc] == 0) {
-        printf("Wrong EType for element %d (primitive %d)!\n",
-               elesrc, primsrc);
+        printf("Wrong EType for element %d (primitive %d)!\n", elesrc, primsrc);
         exit(-1);
       }
       // Retrieve element properties from the structure
@@ -2821,7 +2817,7 @@ double ContinuityChUp(int elefld) {
           printf("Geometrical type out of range! ... exiting ...\n");
           exit(-1);
           break;  // never comes here
-      }           // switch over gtsrc ends
+      }  // switch over gtsrc ends
 
       // in GCS - mirror points?!
       globalF = RotateVector3D(&localF, dcsrc, local2global);
@@ -2831,7 +2827,7 @@ double ContinuityChUp(int elefld) {
       value -= assigned * localF.Y;  // +ve gradient of Green's is -ve normal
                                      // force (changed from -= to += on 02/11/11
                                      // - CHECK!!! - and back to -= on 05/11/11)
-    }                                // else self-influence
+    }  // else self-influence
   }
 
   value *= MyFACTOR;
@@ -2855,7 +2851,7 @@ double ContinuityChUp(int elefld) {
   for (int line = 1; line <= NbLinesKnCh; ++line) {
     // potential not being used to evaluate Neumann continuity
     (void)LineKnChPF((LineKnChArr + line - 1)->Start,
-                   (LineKnChArr + line - 1)->Stop, globalP, &globalF);
+                     (LineKnChArr + line - 1)->Stop, globalP, &globalF);
     localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= (LineKnChArr + line - 1)->Assigned * localF.Y;
   }  // loop over lines
@@ -2863,7 +2859,7 @@ double ContinuityChUp(int elefld) {
   for (int area = 1; area <= NbAreasKnCh; ++area) {
     // potential not being used to evaluate Neumann continuity
     (void)AreaKnChPF((AreaKnChArr + area - 1)->NbVertices,
-                   ((AreaKnChArr + area - 1)->Vertex), globalP, &globalF);
+                     ((AreaKnChArr + area - 1)->Vertex), globalP, &globalF);
     localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= (AreaKnChArr + area - 1)->Assigned * localF.Y;
   }  // loop over areas
@@ -2871,7 +2867,7 @@ double ContinuityChUp(int elefld) {
   for (int vol = 1; vol <= NbVolumesKnCh; ++vol) {
     // potential not being used to evaluate Neumann continuity
     (void)VolumeKnChPF((VolumeKnChArr + vol - 1)->NbVertices,
-                     ((VolumeKnChArr + vol - 1)->Vertex), globalP, &globalF);
+                       ((VolumeKnChArr + vol - 1)->Vertex), globalP, &globalF);
     localF = RotateVector3D(&globalF, dcfld, global2local);
     value -= (VolumeKnChArr + vol - 1)->Assigned * localF.Y;
   }  // loop over volumes
@@ -3004,7 +3000,9 @@ int Solve(void) {
   // not available, it can be retrieved by carrying out the computation once
   // again, reading it from a formatted or an unformatted file.
   if (OptValidateSolution) {
-    printf("Solve: Computing solution at the collocation points for comparison.\n");
+    printf(
+        "Solve: Computing solution at the collocation points for "
+        "comparison.\n");
     fflush(stdout);
 
     if (InfluenceMatrixFlag) {
@@ -3022,7 +3020,8 @@ int Solve(void) {
         printf("Solve: Influence matrix NOT in memory.\n");
 
         if (OptRepeatLHMatrix) {
-          printf("Solve: Repeating influence coefficient matrix computation...\n");
+          printf(
+              "Solve: Repeating influence coefficient matrix computation...\n");
 
           int fstatus = LHMatrix();
           // assert(fstatus == 0);
@@ -3034,7 +3033,8 @@ int Solve(void) {
 
         if (OptStoreInflMatrix && OptFormattedFile) {
           printf(
-              "Solve: Reading influence coefficient matrix from formatted file...\n");
+              "Solve: Reading influence coefficient matrix from formatted "
+              "file...\n");
 
           char InflFile[256];
           strcpy(InflFile, MeshOutDir);
@@ -3100,8 +3100,8 @@ int Solve(void) {
                   unknown, eqn, Inf[unknown][eqn], RawInf[unknown][eqn],
                   fabs(Inf[unknown][eqn] - RawInf[unknown][eqn]));
         }  // if OptStoreInflMatrix and Unformatted file
-      }    // else TimeStep != 1
-    }      // if(!InfluenceMatrixFlag)
+      }  // else TimeStep != 1
+    }  // if(!InfluenceMatrixFlag)
 
     // Used for all validations except where re-computation is forced which
     // is taken care of by else of this if
@@ -3144,7 +3144,8 @@ int Solve(void) {
         fprintf(fChk, "%d\t%lg\t%lg\n", elefld, RHS[elefld], Error[elefld]);
       free_dvector(Error, 1, NbEqns);
 
-      printf("Solve: Computed values at the collocation points for comparison.\n");
+      printf(
+          "Solve: Computed values at the collocation points for comparison.\n");
       printf("Solve: Error maximum on element %d and its magnitude is %lg.\n",
              ElementOfMaxError, MaxError);
       fflush(stdout);
@@ -3199,7 +3200,9 @@ int Solve(void) {
           }
         }
 
-        printf("Solve: Computed values at the collocation points for comparison.\n");
+        printf(
+            "Solve: Computed values at the collocation points for "
+            "comparison.\n");
         printf("Solve: Error maximum on element %d and its magnitude is %lg.\n",
                ElementOfMaxError, MaxError);
         fflush(stdout);
@@ -3214,7 +3217,7 @@ int Solve(void) {
         printf("Solve: Infl matrix not available, no validation.\n");
       }
     }  // else (Inf || RawInf)
-  }    // if(OptValidateSolution)
+  }  // if(OptValidateSolution)
 
   /*
   Find out the error at relevant points. The points are chosen such that the
@@ -3347,7 +3350,7 @@ int Solve(void) {
               zerrMax = zb;
             }
           }
-          if (InterfaceType[prim] == 4) {  
+          if (InterfaceType[prim] == 4) {
             // compute displacement currents in the two dielectrics
             double xplus = xb + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
@@ -3424,7 +3427,7 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] == 4) {  
+          if (InterfaceType[prim] == 4) {
             // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
@@ -3440,8 +3443,7 @@ int Solve(void) {
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
             localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+                = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
             double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
             xminus -= PrimDC[prim].YUnit.X * normdisp;
@@ -3457,8 +3459,7 @@ int Solve(void) {
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
             localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+                = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
@@ -3516,8 +3517,7 @@ int Solve(void) {
             globalP.Z = zplus;
             PFAtPoint(&globalP, &Potential, &globalF);
             localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+                = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value1 = -localF.Y;
             double xminus = xerr - PrimDC[prim].XUnit.X * normdisp;
             xminus -= PrimDC[prim].YUnit.X * normdisp;
@@ -3533,8 +3533,7 @@ int Solve(void) {
             globalP.Z = zminus;
             PFAtPoint(&globalP, &Potential, &globalF);
             localF  // Flux in the ECS
-                = RotateVector3D(&globalF, &PrimDC[prim],
-                                 global2local);
+                = RotateVector3D(&globalF, &PrimDC[prim], global2local);
             double value2 = -localF.Y;
             double epsratio = (Epsilon2[prim] / Epsilon1[prim]);
             Err = epsratio - (value1 / value2);
@@ -3576,7 +3575,7 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] == 4) {  
+          if (InterfaceType[prim] == 4) {
             // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
@@ -3758,7 +3757,7 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] == 4) {  
+          if (InterfaceType[prim] == 4) {
             // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
@@ -3832,7 +3831,7 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] == 4) {  
+          if (InterfaceType[prim] == 4) {
             // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
@@ -3906,7 +3905,7 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] == 4) {  
+          if (InterfaceType[prim] == 4) {
             // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
@@ -3980,7 +3979,7 @@ int Solve(void) {
               zerrMax = zerr;
             }
           }
-          if (InterfaceType[prim] == 4) {  
+          if (InterfaceType[prim] == 4) {
             // compute displacement currents in the two dielectrics
             double xplus = xerr + PrimDC[prim].XUnit.X * normdisp;
             xplus += PrimDC[prim].YUnit.X * normdisp;
@@ -4063,8 +4062,8 @@ int ReadSolution(void) {
     int itmp = 0;
     double x = 0., y = 0., z = 0.;
     double sol = 0., assigned = 0., total = 0.;
-    fscanf(fSoln, "%d %lg %lg %lg %lg %lg %lg\n", 
-           &itmp, &x, &y, &z, &sol, &assigned, &total);
+    fscanf(fSoln, "%d %lg %lg %lg %lg %lg %lg\n", &itmp, &x, &y, &z, &sol,
+           &assigned, &total);
     // assert(ele == itmp);
     if (ele != itmp) {
       neBEMMessage("ReadSolution - ele_itmp in ReadSolution");
@@ -4114,9 +4113,9 @@ int ReadSolution(void) {
   for (int prim = 1; prim <= NbPrimitives; ++prim) {
     int itmp = 0, eleBgn = 0, eleEnd = 0;
     double x = 0., y = 0., z = 0.;
-    double rho = 0., rhoa = 0.; 
-    fscanf(fPrimSoln, "%d %d %d %lg %lg %lg %lg %lg\n",
-           &itmp, &eleBgn, &eleEnd, &x, &y, &z, &rho, &rhoa);
+    double rho = 0., rhoa = 0.;
+    fscanf(fPrimSoln, "%d %d %d %lg %lg %lg %lg %lg\n", &itmp, &eleBgn, &eleEnd,
+           &x, &y, &z, &rho, &rhoa);
     PrimOriginX[prim] = x;
     PrimOriginY[prim] = y;
     PrimOriginZ[prim] = z;
@@ -4134,7 +4133,6 @@ int ReadSolution(void) {
 // TryWtField is a script that elucidates the idea.
 int WeightingFieldSolution(int NbPrimsWtField, int PrimListWtField[],
                            double solnarray[]) {
-
   if (!InvMat && OptReadInvMatrix) {
     printf("WeightingFieldSolution: Reading inverted matrix...\n");
     if (ReadInvertedMatrix() != 0) {
@@ -4287,7 +4285,7 @@ Point3D ReflectOnMirror(char Axis, int elesrc, Point3D srcpt, Point3D fldpt,
                         double distance, DirnCosn3D *MirroredDC) {
   Vector3D n;     // define mirror by a bi-vector perpendicular to it
   Point3D Image;  // reflected point by mirror assumed at origin
-  const int primsrc = (EleArr + elesrc- 1)->PrimitiveNb;
+  const int primsrc = (EleArr + elesrc - 1)->PrimitiveNb;
   switch (Axis) {
     case 'x':
     case 'X':

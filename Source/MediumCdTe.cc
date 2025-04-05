@@ -1,7 +1,8 @@
+#include "Garfield/MediumCdTe.hh"
+
 #include <cmath>
 #include <iostream>
 
-#include "Garfield/MediumCdTe.hh"
 #include "Garfield/GarfieldConstants.hh"
 
 namespace Garfield {
@@ -58,7 +59,7 @@ bool MediumCdTe::ElectronVelocity(const double ex, const double ey,
     vy = mu * ey;
     vz = mu * ez;
   } else {
-    Langevin(ex, ey, ez, bx, by, bz, mu, m_eHallFactor * mu, vx, vy, vz); 
+    Langevin(ex, ey, ez, bx, by, bz, mu, m_eHallFactor * mu, vx, vy, vz);
   }
   return true;
 }
@@ -152,7 +153,6 @@ void MediumCdTe::UnsetLowFieldMobility() {
 }
 
 void MediumCdTe::UpdateTransportParameters() {
-
   if (!m_userMobility) {
     const double t = m_temperature / 300.;
     m_eMobility = 1.05e-6 * pow(t, -1.7);
@@ -160,4 +160,4 @@ void MediumCdTe::UpdateTransportParameters() {
   }
 }
 
-}
+}  // namespace Garfield

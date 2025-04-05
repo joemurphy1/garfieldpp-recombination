@@ -1,9 +1,10 @@
+#include "Garfield/TrackSimple.hh"
+
 #include <iostream>
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/TrackSimple.hh"
 
 namespace Garfield {
 
@@ -38,7 +39,6 @@ double TrackSimple::GetStoppingPower() { return m_eloss; }
 bool TrackSimple::NewTrack(const double x0, const double y0, const double z0,
                            const double t0, const double dx0, const double dy0,
                            const double dz0) {
-
   m_clusters.clear();
   // Make sure the sensor is defined.
   if (!m_sensor) {
@@ -103,4 +103,4 @@ bool TrackSimple::NewTrack(const double x0, const double y0, const double z0,
   return true;
 }
 
-}
+}  // namespace Garfield
