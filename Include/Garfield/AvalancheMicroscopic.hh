@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/MultiProcessInterface.hh"
 
 class TH1;
@@ -16,7 +17,6 @@ namespace Garfield {
 
 class AvalancheMicroscopicGPU;
 class ViewDrift;
-class Medium;
 class Sensor;
 
 /// Calculate electron drift lines and avalanches using microscopic tracking.
@@ -438,8 +438,18 @@ class AvalancheMicroscopic {
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
                  double& y1, double& z1, double& t1) const;
 
+  void CreatePenningElectron(const double x, const double y, const double z,
+                             const double t, const size_t w, 
+                             const Medium::Secondary& secondary,
+                             const int level, 
+                             std::vector<Seed>& stack) const;
   void PlotCollision(const int cstype, const size_t did, const double x,
                      const double y, const double z, size_t& nCollPlot) const;
+  void CallUserHandles(const int cstype, const double x, const double y, 
+                       const double z, const double t, const int level,
+                       Medium* medium, const double en1, const double en, 
+                       const double kx, const double ky, const double kz,
+                       const double kx1, const double ky1, const double kz1);
   void FillDistanceHistogram(const int cstype, const double x, const double y,
                              const double z, double& xLast, double& yLast,
                              double& zLast) const;

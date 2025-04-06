@@ -8,7 +8,6 @@
 #include <string>
 
 #include "Garfield/FundamentalConstants.hh"
-#include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewDrift.hh"
@@ -860,6 +859,11 @@ int AvalancheMicroscopic::TransportElectron(
   double yLast = y;
   double zLast = z;
   auto hEnergy = hole ? m_histHoleEnergy : m_histElectronEnergy;
+  // Do we have call-back functions?
+  const bool userHandles = m_userHandleCollision ||
+                           m_userHandleIonisation ||
+                           m_userHandleAttachment ||
+                           m_userHandleInelastic; 
   // Trace the electron/hole.
   size_t nColl = 0;
   size_t nCollPlot = 0;
@@ -1172,113 +1176,42 @@ int AvalancheMicroscopic::TransportElectron(
       FillDistanceHistogram(cstype, x, y, z, xLast, yLast, zLast);
     }
 
-    if (m_userHandleCollision) {
-      m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx, ky,
-                            kz, kx1, ky1, kz1);
+    if (userHandles) {
+      CallUserHandles(cstype, x, y, z, t, level, medium, en1, en, kx, ky, kz,
+                      kx1, ky1, kz1);
     }
-    switch (cstype) {
-      // Elastic collision
-      case ElectronCollisionTypeElastic:
-        break;
-      // Ionising collision
-      case ElectronCollisionTypeIonisation:
-        if (m_userHandleIonisation) {
-          m_userHandleIonisation(x, y, z, t, cstype, level, medium);
+
+    if (cstype == ElectronCollisionTypeIonisation) { 
+      // Loop over the particles produced in the ionising collision.
+      for (const auto& secondary : secondaries) {
+        const double esec = secondary.type == Particle::Ion ? 0. :
+                            std::max(secondary.energy, Small);
+        // Add the secondary to the stack.
+        stack.emplace_back(MakeSeed(
+            MakePoint(x, y, z, t, esec), secondary.type, seed.w));
+        if (secondary.type == Particle::Electron) {
+          if (m_histSecondary) m_histSecondary->Fill(esec);
         }
-        for (const auto& secondary : secondaries) {
-          const double esec = secondary.type == Particle::Ion ? 0. :
-                              std::max(secondary.energy, Small);
-          // Add the secondary to the stack.
-          stack.emplace_back(MakeSeed(
-              MakePoint(x, y, z, t, esec), secondary.type, seed.w));
-          if (secondary.type == Particle::Electron) {
-            if (m_histSecondary) m_histSecondary->Fill(esec);
-          }
+      }
+    } else if (cstype == ElectronCollisionTypeAttachment) {
+      // Attachment. 
+      path.emplace_back(MakePoint(x, y, z, t, en, kx1, ky1, kz1, band));
+      return StatusAttached;
+    } else if (cstype == ElectronCollisionTypeExcitation) { 
+      // Loop over the particles produced in the deexcitation cascade.
+      for (const auto& secondary : secondaries) {
+        if (secondary.type == Particle::Electron) {
+          // Penning ionisation.
+          CreatePenningElectron(x, y, z, t, seed.w, secondary, level, stack);
+        } else if (secondary.type == Particle::Photon && m_usePhotons &&
+                   secondary.energy > m_gammaCut) {
+          // Radiative de-excitation
+          TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
+                          seed.w, stack);
         }
-        break;
-      // Attachment
-      case ElectronCollisionTypeAttachment:
-        if (m_userHandleAttachment) {
-          m_userHandleAttachment(x, y, z, t, cstype, level, medium);
-        }
-        path.emplace_back(MakePoint(x, y, z, t, en, kx1, ky1, kz1, band));
-        return StatusAttached;
-        break;
-      // Inelastic collision
-      case ElectronCollisionTypeInelastic:
-        if (m_userHandleInelastic) {
-          m_userHandleInelastic(x, y, z, t, cstype, level, medium);
-        }
-        break;
-      // Excitation
-      case ElectronCollisionTypeExcitation:
-        if (m_userHandleInelastic) {
-          m_userHandleInelastic(x, y, z, t, cstype, level, medium);
-        }
-        // Loop over the particles produced in the deexcitation cascade.
-        for (const auto& secondary : secondaries) {
-          if (secondary.type == Particle::Electron) {
-            // Penning ionisation
-            double xp = x, yp = y, zp = z;
-            if (secondary.distance > Small) {
-              // Randomise the point of creation.
-              double dxp = 0., dyp = 0., dzp = 0.;
-              RndmDirection(dxp, dyp, dzp);
-              xp += secondary.distance * dxp;
-              yp += secondary.distance * dyp;
-              zp += secondary.distance * dzp;
-            }
-            // Get the electric field and medium at this location.
-            Medium* med = nullptr;
-            double fx = 0., fy = 0., fz = 0.;
-            m_sensor->ElectricField(xp, yp, zp, fx, fy, fz, med, status);
-            // Check if this location is inside a drift medium/area.
-            if (status != 0 || !m_sensor->IsInArea(xp, yp, zp)) continue;
-            // Make sure we haven't jumped across a wire.
-            if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc, false,
-                                      rc)) {
-              continue;
-            }
-            if (m_userHandleIonisation) {
-              m_userHandleIonisation(xp, yp, zp, t, cstype, level, medium);
-            }
-            // Add the Penning electron to the list.
-            const double tp = t + secondary.time;
-            const double ep = std::max(secondary.energy, Small);
-            stack.emplace_back(MakeSeed(
-                MakePoint(xp, yp, zp, tp, ep), Particle::Electron, seed.w));
-            stack.emplace_back(MakeSeed(
-                MakePoint(xp, yp, zp, tp, 0.), Particle::Ion, seed.w));
-          } else if (secondary.type == Particle::Photon && m_usePhotons &&
-                     secondary.energy > m_gammaCut) {
-            // Radiative de-excitation
-            TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                            seed.w, stack);
-          }
-        }
-        break;
-      // Super-elastic collision
-      case ElectronCollisionTypeSuperelastic:
-      // Virtual/null collision
-      case ElectronCollisionTypeVirtual:
-      // Acoustic phonon scattering (intravalley)
-      case ElectronCollisionTypeAcousticPhonon:
-      // Optical phonon scattering (intravalley)
-      case ElectronCollisionTypeOpticalPhonon:
-      // Intervalley scattering (phonon assisted)
-      case ElectronCollisionTypeIntervalleyG:
-      case ElectronCollisionTypeIntervalleyF:
-      case ElectronCollisionTypeInterbandXL:
-      case ElectronCollisionTypeInterbandXG:
-      case ElectronCollisionTypeInterbandLG:
-      // Coulomb scattering
-      case ElectronCollisionTypeImpurity:
-        break;
-      default:
-        std::cerr << m_className
-                  << "::TransportElectron: Unknown collision type.\n";
-        break;
+      }
     }
+
     if (m_viewer) {
       if (m_rknSteps) {
         for (const auto& pt : rknIntPoints) {
@@ -1408,6 +1341,11 @@ int AvalancheMicroscopic::TransportElectronBfield(
   double yLast = y;
   double zLast = z;
   auto hEnergy = hole ? m_histHoleEnergy : m_histElectronEnergy;
+  // Do we have call-back functions?
+  const bool userHandles = m_userHandleCollision ||
+                           m_userHandleIonisation ||
+                           m_userHandleAttachment ||
+                           m_userHandleInelastic; 
   // Trace the electron/hole.
   size_t nColl = 0;
   size_t nCollPlot = 0;
@@ -1635,112 +1573,39 @@ int AvalancheMicroscopic::TransportElectronBfield(
       FillDistanceHistogram(cstype, x, y, z, xLast, yLast, zLast);
     }
 
-    if (m_userHandleCollision) {
-      m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx, ky,
-                            kz, kx1, ky1, kz1);
+    if (userHandles) {
+      CallUserHandles(cstype, x, y, z, t, level, medium, en1, en, kx, ky, kz,
+                      kx1, ky1, kz1);
     }
-    switch (cstype) {
-      // Elastic collision
-      case ElectronCollisionTypeElastic:
-        break;
+
+    if (cstype == ElectronCollisionTypeIonisation) {
       // Ionising collision
-      case ElectronCollisionTypeIonisation:
-        if (m_userHandleIonisation) {
-          m_userHandleIonisation(x, y, z, t, cstype, level, medium);
+      for (const auto& secondary : secondaries) {
+        const double esec = secondary.type == Particle::Ion ? 0. :
+                            std::max(secondary.energy, Small);
+        // Add the secondary to the stack.
+        stack.emplace_back(MakeSeed(
+            MakePoint(x, y, z, t, esec), secondary.type, seed.w));
+        if (secondary.type == Particle::Electron) {
+          if (m_histSecondary) m_histSecondary->Fill(esec);
+        } 
+      }
+    } else if (cstype == ElectronCollisionTypeAttachment) { 
+      path.emplace_back(MakePoint(x, y, z, t, en, kx1, ky1, kz1, band));
+      return StatusAttached;
+    } else if (cstype == ElectronCollisionTypeExcitation) { 
+      // Loop over the particles produced in the deexcitation cascade.
+      for (const auto& secondary : secondaries) {
+        if (secondary.type == Particle::Electron) {
+          // Penning ionisation.
+          CreatePenningElectron(x, y, z, t, seed.w, secondary, level, stack);
+        } else if (secondary.type == Particle::Photon && m_usePhotons &&
+                   secondary.energy > m_gammaCut) {
+          // Radiative de-excitation
+          TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
+                          seed.w, stack);
         }
-        for (const auto& secondary : secondaries) {
-          const double esec = secondary.type == Particle::Ion ? 0. :
-                              std::max(secondary.energy, Small);
-          // Add the secondary to the stack.
-          stack.emplace_back(MakeSeed(
-              MakePoint(x, y, z, t, esec), secondary.type, seed.w));
-          if (secondary.type == Particle::Electron) {
-            if (m_histSecondary) m_histSecondary->Fill(esec);
-          } 
-        }
-        break;
-      // Attachment
-      case ElectronCollisionTypeAttachment:
-        if (m_userHandleAttachment) {
-          m_userHandleAttachment(x, y, z, t, cstype, level, medium);
-        }
-        path.emplace_back(MakePoint(x, y, z, t, en, kx1, ky1, kz1, band));
-        return StatusAttached;
-        break;
-      // Inelastic collision
-      case ElectronCollisionTypeInelastic:
-        if (m_userHandleInelastic) {
-          m_userHandleInelastic(x, y, z, t, cstype, level, medium);
-        }
-        break;
-      // Excitation
-      case ElectronCollisionTypeExcitation:
-        if (m_userHandleInelastic) {
-          m_userHandleInelastic(x, y, z, t, cstype, level, medium);
-        }
-        // Loop over the particles produced in the deexcitation cascade.
-        for (const auto& secondary : secondaries) {
-          if (secondary.type == Particle::Electron) {
-            // Penning ionisation
-            double xp = x, yp = y, zp = z;
-            if (secondary.distance > Small) {
-              // Randomise the point of creation.
-              double dxp = 0., dyp = 0., dzp = 0.;
-              RndmDirection(dxp, dyp, dzp);
-              xp += secondary.distance * dxp;
-              yp += secondary.distance * dyp;
-              zp += secondary.distance * dzp;
-            }
-            // Get the electric field and medium at this location.
-            Medium* med = nullptr;
-            double fx = 0., fy = 0., fz = 0.;
-            m_sensor->ElectricField(xp, yp, zp, fx, fy, fz, med, status);
-            // Check if this location is inside a drift medium/area.
-            if (status != 0 || !m_sensor->IsInArea(xp, yp, zp)) continue;
-            // Make sure we haven't jumped across a wire.
-            if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc, false,
-                                      rc)) {
-              continue;
-            }
-            if (m_userHandleIonisation) {
-              m_userHandleIonisation(xp, yp, zp, t, cstype, level, medium);
-            }
-            // Add the Penning electron to the list.
-            const double tp = t + secondary.time;
-            const double ep = std::max(secondary.energy, Small);
-            stack.emplace_back(MakeSeed(
-                MakePoint(xp, yp, zp, tp, ep), Particle::Electron, seed.w));
-            stack.emplace_back(MakeSeed(
-                MakePoint(xp, yp, zp, tp, 0.), Particle::Ion, seed.w));
-          } else if (secondary.type == Particle::Photon && m_usePhotons &&
-                     secondary.energy > m_gammaCut) {
-            // Radiative de-excitation
-            TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                            seed.w, stack);
-          }
-        }
-        break;
-      // Super-elastic collision
-      case ElectronCollisionTypeSuperelastic:
-      // Virtual/null collision
-      case ElectronCollisionTypeVirtual:
-      // Acoustic phonon scattering (intravalley)
-      case ElectronCollisionTypeAcousticPhonon:
-      // Optical phonon scattering (intravalley)
-      case ElectronCollisionTypeOpticalPhonon:
-      // Intervalley scattering (phonon assisted)
-      case ElectronCollisionTypeIntervalleyG:
-      case ElectronCollisionTypeIntervalleyF:
-      case ElectronCollisionTypeInterbandXL:
-      case ElectronCollisionTypeInterbandXG:
-      case ElectronCollisionTypeInterbandLG:
-      // Coulomb scattering
-      case ElectronCollisionTypeImpurity:
-        break;
-      default:
-        std::cerr << m_className
-                  << "::TransportElectron: Unknown collision type.\n";
-        break;
+      }
     }
     if (m_viewer) PlotCollision(cstype, did, x, y, z, nCollPlot);
 
@@ -1779,8 +1644,7 @@ int AvalancheMicroscopic::TransportElectronBfield(
 int AvalancheMicroscopic::TransportElectronSc(
     const Seed& seed, const bool signal,
     std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-    std::vector<Point>& path,
-    std::vector<Seed>& stack) {
+    std::vector<Point>& path, std::vector<Seed>& stack) {
   double x = seed.pt.x;
   double y = seed.pt.y;
   double z = seed.pt.z;
@@ -1839,6 +1703,11 @@ int AvalancheMicroscopic::TransportElectronSc(
   double yLast = y;
   double zLast = z;
   auto hEnergy = hole ? m_histHoleEnergy : m_histElectronEnergy;
+  // Do we have call-back functions?
+  const bool userHandles = m_userHandleCollision || 
+                           m_userHandleIonisation ||
+                           m_userHandleAttachment ||
+                           m_userHandleInelastic; 
   // Trace the electron/hole.
   size_t nColl = 0;
   size_t nCollPlot = 0;
@@ -2032,127 +1901,53 @@ int AvalancheMicroscopic::TransportElectronSc(
       FillDistanceHistogram(cstype, x, y, z, xLast, yLast, zLast);
     }
 
-    if (m_userHandleCollision) {
-      m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx, ky,
-                            kz, kx1, ky1, kz1);
+    if (userHandles) {
+      CallUserHandles(cstype, x, y, z, t, level, medium, en1, en, kx, ky, kz,
+                      kx1, ky1, kz1);
     }
-    switch (cstype) {
-      // Elastic collision
-      case ElectronCollisionTypeElastic:
-        break;
-      // Ionising collision
-      case ElectronCollisionTypeIonisation:
-        if (m_userHandleIonisation) {
-          m_userHandleIonisation(x, y, z, t, cstype, level, medium);
+
+    if (cstype == ElectronCollisionTypeIonisation) { 
+      for (const auto& secondary : secondaries) {
+        if (secondary.type == Particle::Electron) {
+          const double esec = std::max(secondary.energy, Small);
+          if (m_histSecondary) m_histSecondary->Fill(esec);
+          // Add the secondary electron to the stack.
+          double kxs = 0., kys = 0., kzs = 0.;
+          int bs = -1;
+          medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
+          stack.emplace_back(MakeSeed(
+              MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs),
+              Particle::Electron, seed.w));
+        } else if (secondary.type == Particle::Hole) {
+          const double esec = std::max(secondary.energy, Small);
+          // Add the secondary hole to the stack.
+          double kxs = 0., kys = 0., kzs = 0.;
+          int bs = -1;
+          medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
+          stack.emplace_back(MakeSeed(
+              MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs),
+              Particle::Hole, seed.w));
+        } else if (secondary.type == Particle::Ion) {
+          stack.emplace_back(MakeSeed(
+              MakePoint(x, y, z, t, 0.), Particle::Ion, seed.w));
         }
-        for (const auto& secondary : secondaries) {
-          if (secondary.type == Particle::Electron) {
-            const double esec = std::max(secondary.energy, Small);
-            if (m_histSecondary) m_histSecondary->Fill(esec);
-            // Add the secondary electron to the stack.
-            double kxs = 0., kys = 0., kzs = 0.;
-            int bs = -1;
-            medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
-            stack.emplace_back(MakeSeed(
-                MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs),
-                Particle::Electron, seed.w));
-          } else if (secondary.type == Particle::Hole) {
-            const double esec = std::max(secondary.energy, Small);
-            // Add the secondary hole to the stack.
-            double kxs = 0., kys = 0., kzs = 0.;
-            int bs = -1;
-            medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
-            stack.emplace_back(MakeSeed(
-                MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs),
-                Particle::Hole, seed.w));
-          } else if (secondary.type == Particle::Ion) {
-            stack.emplace_back(MakeSeed(
-                MakePoint(x, y, z, t, 0.), Particle::Ion, seed.w));
-          }
+      }
+    } else if (cstype == ElectronCollisionTypeAttachment) {
+      path.emplace_back(MakePoint(x, y, z, t, en, kx1, ky1, kz1, band));
+      return StatusAttached;
+    } else if (cstype == ElectronCollisionTypeExcitation) { 
+      // Loop over the particles produced in the deexcitation cascade.
+      for (const auto& secondary : secondaries) {
+        if (secondary.type == Particle::Electron) {
+          // Penning ionisation.
+          CreatePenningElectron(x, y, z, t, seed.w, secondary, level, stack);
+        } else if (secondary.type == Particle::Photon && m_usePhotons &&
+                   secondary.energy > m_gammaCut) {
+          // Radiative de-excitation
+          TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
+                          seed.w, stack);
         }
-        break;
-      // Attachment
-      case ElectronCollisionTypeAttachment:
-        if (m_userHandleAttachment) {
-          m_userHandleAttachment(x, y, z, t, cstype, level, medium);
-        }
-        path.emplace_back(MakePoint(x, y, z, t, en, kx1, ky1, kz1, band));
-        return StatusAttached;
-        break;
-      // Inelastic collision
-      case ElectronCollisionTypeInelastic:
-        if (m_userHandleInelastic) {
-          m_userHandleInelastic(x, y, z, t, cstype, level, medium);
-        }
-        break;
-      // Excitation
-      case ElectronCollisionTypeExcitation:
-        if (m_userHandleInelastic) {
-          m_userHandleInelastic(x, y, z, t, cstype, level, medium);
-        }
-        // Loop over the particles produced in the deexcitation cascade.
-        for (const auto& secondary : secondaries) {
-          if (secondary.type == Particle::Electron) {
-            // Penning ionisation
-            double xp = x, yp = y, zp = z;
-            if (secondary.distance > Small) {
-              // Randomise the point of creation.
-              double dxp = 0., dyp = 0., dzp = 0.;
-              RndmDirection(dxp, dyp, dzp);
-              xp += secondary.distance * dxp;
-              yp += secondary.distance * dyp;
-              zp += secondary.distance * dzp;
-            }
-            // Get the electric field and medium at this location.
-            Medium* med = nullptr;
-            double fx = 0., fy = 0., fz = 0.;
-            m_sensor->ElectricField(xp, yp, zp, fx, fy, fz, med, status);
-            // Check if this location is inside a drift medium/area.
-            if (status != 0 || !m_sensor->IsInArea(xp, yp, zp)) continue;
-            // Make sure we haven't jumped across a wire.
-            if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc, false,
-                                      rc)) {
-              continue;
-            }
-            if (m_userHandleIonisation) {
-              m_userHandleIonisation(xp, yp, zp, t, cstype, level, medium);
-            }
-            // Add the Penning electron to the list.
-            const double tp = t + secondary.time;
-            const double ep = std::max(secondary.energy, Small);
-            stack.emplace_back(MakeSeed(
-                MakePoint(xp, yp, zp, tp, ep), Particle::Electron, seed.w));
-            stack.emplace_back(
-                MakeSeed(MakePoint(xp, yp, zp, tp, 0.), Particle::Ion, seed.w));
-          } else if (secondary.type == Particle::Photon && m_usePhotons &&
-                     secondary.energy > m_gammaCut) {
-            // Radiative de-excitation
-            TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                            seed.w, stack);
-          }
-        }
-        break;
-      // Super-elastic collision
-      case ElectronCollisionTypeSuperelastic:
-      // Virtual/null collision
-      case ElectronCollisionTypeVirtual:
-      // Acoustic phonon scattering (intravalley)
-      case ElectronCollisionTypeAcousticPhonon:
-      // Optical phonon scattering (intravalley)
-      case ElectronCollisionTypeOpticalPhonon:
-      // Intervalley scattering (phonon assisted)
-      case ElectronCollisionTypeIntervalleyG:
-      case ElectronCollisionTypeIntervalleyF:
-      case ElectronCollisionTypeInterbandXL:
-      case ElectronCollisionTypeInterbandXG:
-      case ElectronCollisionTypeInterbandLG:
-      // Coulomb scattering
-      case ElectronCollisionTypeImpurity:
-        break;
-      default:
-        std::cerr << m_className
-                  << "::TransportElectron: Unknown collision type.\n";
-        break;
+      }
     }
     if (m_viewer) PlotCollision(cstype, did, x, y, z, nCollPlot);
 
@@ -2185,6 +1980,45 @@ int AvalancheMicroscopic::TransportElectronSc(
   return status;
 }
 
+void AvalancheMicroscopic::CreatePenningElectron(
+    const double x, const double y, const double z, const double t,
+    const size_t w, const Medium::Secondary& secondary, const int level, 
+    std::vector<Seed>& stack) const {
+
+  // Penning ionisation
+  double xp = x, yp = y, zp = z;
+  if (secondary.distance > Small) {
+    // Randomise the point of creation.
+    double dx = 0., dy = 0., dz = 0.;
+    RndmDirection(dx, dy, dz);
+    xp += secondary.distance * dx;
+    yp += secondary.distance * dy;
+    zp += secondary.distance * dz;
+  }
+  // Get the electric field and medium at this location.
+  double fx = 0., fy = 0., fz = 0.;
+  Medium* medium = nullptr;
+  int status = 0;
+  m_sensor->ElectricField(xp, yp, zp, fx, fy, fz, medium, status);
+  // Check if this location is inside a drift medium/area.
+  if (status != 0 || !m_sensor->IsInArea(xp, yp, zp)) return;
+  // Make sure we haven't jumped across a wire.
+  double xc = x, yc = y, zc = z, rc = 0.;
+  if (m_sensor->CrossedWire(x, y, z, xp, yp, zp, xc, yc, zc, false, rc)) {
+    return;
+  }
+  if (m_userHandleIonisation) {
+    m_userHandleIonisation(xp, yp, zp, t, ElectronCollisionTypeExcitation,                            level, medium);
+  }
+  // Add the Penning electron to the list.
+  const double tp = t + secondary.time;
+  const double ep = std::max(secondary.energy, Small);
+  stack.emplace_back(MakeSeed(
+      MakePoint(xp, yp, zp, tp, ep), Particle::Electron, w));
+  stack.emplace_back(
+      MakeSeed(MakePoint(xp, yp, zp, tp, 0.), Particle::Ion, w));
+}
+
 void AvalancheMicroscopic::PlotCollision(const int cstype, const size_t did,
                                          const double x, const double y,
                                          const double z,
@@ -2206,6 +2040,34 @@ void AvalancheMicroscopic::PlotCollision(const int cstype, const size_t did,
     if (m_plotAttachments) {
       m_viewer->AddAttachment(x, y, z);
       m_viewer->AddDriftLinePoint(did, x, y, z);
+    }
+  }
+}
+
+void AvalancheMicroscopic::CallUserHandles(const int cstype, const double x,
+                                           const double y, const double z,
+                                           const double t, const int level, 
+                                           Medium* medium, const double en1,
+                                           const double en, const double kx,
+                                           const double ky, const double kz,
+                                           const double kx1, const double ky1,
+                                           const double kz1) {
+  if (m_userHandleCollision) {
+    m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx,
+                          ky, kz, kx1, ky1, kz1);
+  }
+  if (cstype == ElectronCollisionTypeIonisation) {
+    if (m_userHandleIonisation) {
+      m_userHandleIonisation(x, y, z, t, cstype, level, medium);
+    }
+  } else if (cstype == ElectronCollisionTypeAttachment) {
+    if (m_userHandleAttachment) {
+      m_userHandleAttachment(x, y, z, t, cstype, level, medium);
+    }
+  } else if (cstype == ElectronCollisionTypeInelastic || 
+             cstype == ElectronCollisionTypeExcitation) {
+    if (m_userHandleInelastic) {
+      m_userHandleInelastic(x, y, z, t, cstype, level, medium);
     }
   }
 }
