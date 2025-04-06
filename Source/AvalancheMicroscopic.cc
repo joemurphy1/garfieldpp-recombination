@@ -740,13 +740,13 @@ bool AvalancheMicroscopic::transportParticleStack(
     std::vector<std::array<double, 3> > xs;
     int status = 0;
     if (sc) {
-      status = TransportElectronSc(particle, aval, signal, ts, xs,
+      status = TransportElectronSc(particle, signal, ts, xs,
                                    path, newParticles);
     } else if (useBfield) {
-      status = TransportElectronBfield(particle, aval, signal, ts,
+      status = TransportElectronBfield(particle, signal, ts,
                                        xs, path, newParticles);
     } else {
-      status = TransportElectron(particle, aval, signal, ts, xs,
+      status = TransportElectron(particle, signal, ts, xs,
                                  path, newParticles);
     }
     double pathLength = 0.;
@@ -785,7 +785,7 @@ bool AvalancheMicroscopic::transportParticleStack(
 }
 
 int AvalancheMicroscopic::TransportElectron(
-    const Seed& seed, const bool aval, const bool signal,
+    const Seed& seed, const bool signal,
     std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
     std::vector<Point>& path,
     std::vector<Seed>& newParticles) {
@@ -1251,9 +1251,8 @@ int AvalancheMicroscopic::TransportElectron(
           } else if (secondary.type == Particle::Photon && m_usePhotons &&
                      secondary.energy > m_gammaCut) {
             // Radiative de-excitation
-            if (aval)
-              TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                              newParticles);
+            TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
+                            newParticles);
           }
         }
         break;
@@ -1322,7 +1321,7 @@ int AvalancheMicroscopic::TransportElectron(
 }
 
 int AvalancheMicroscopic::TransportElectronBfield(
-    const Seed& seed, const bool aval, const bool signal,
+    const Seed& seed, const bool signal,
     std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
     std::vector<Point>& path,
     std::vector<Seed>& newParticles) {
@@ -1722,9 +1721,8 @@ int AvalancheMicroscopic::TransportElectronBfield(
           } else if (secondary.type == Particle::Photon && m_usePhotons &&
                      secondary.energy > m_gammaCut) {
             // Radiative de-excitation
-            if (aval)
-              TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                              newParticles);
+            TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
+                            newParticles);
           }
         }
         break;
@@ -1785,7 +1783,7 @@ int AvalancheMicroscopic::TransportElectronBfield(
 }
 
 int AvalancheMicroscopic::TransportElectronSc(
-    const Seed& seed, const bool aval, const bool signal,
+    const Seed& seed, const bool signal,
     std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
     std::vector<Point>& path,
     std::vector<Seed>& newParticles) {
@@ -2140,9 +2138,8 @@ int AvalancheMicroscopic::TransportElectronSc(
           } else if (secondary.type == Particle::Photon && m_usePhotons &&
                      secondary.energy > m_gammaCut) {
             // Radiative de-excitation
-            if (aval)
-              TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                              newParticles);
+            TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
+                            newParticles);
           }
         }
         break;

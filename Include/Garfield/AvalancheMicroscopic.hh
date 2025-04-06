@@ -411,18 +411,18 @@ class AvalancheMicroscopic {
 
   bool TransportElectrons(std::vector<Seed>& stack,
                           const bool aval);
-  int TransportElectron(const Seed& seed, const bool aval,
-                        const bool signal, std::vector<double>& ts,
+  int TransportElectron(const Seed& seed, const bool signal, 
+                        std::vector<double>& ts,
                         std::vector<std::array<double, 3> >& xs,
                         std::vector<Point>& path,
                         std::vector<Seed>& newParticles);
   int TransportElectronBfield(
-      const Seed& seed, const bool aval, const bool signal,
+      const Seed& seed, const bool signal,
       std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
       std::vector<Point>& path,
       std::vector<Seed>& newParticles);
   int TransportElectronSc(
-      const Seed& seed, const bool aval, const bool signal,
+      const Seed& seed, const bool signal,
       std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
       std::vector<Point>& path,
       std::vector<Seed>& newParticles);
