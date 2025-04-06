@@ -1257,8 +1257,7 @@ int AvalancheMicroscopic::TransportElectron(
 int AvalancheMicroscopic::TransportElectronBfield(
     const Seed& seed, const bool signal,
     std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-    std::vector<Point>& path,
-    std::vector<Seed>& stack) {
+    std::vector<Point>& path, std::vector<Seed>& stack) {
   double x = seed.pt.x;
   double y = seed.pt.y;
   double z = seed.pt.z;
@@ -2044,14 +2043,11 @@ void AvalancheMicroscopic::PlotCollision(const int cstype, const size_t did,
   }
 }
 
-void AvalancheMicroscopic::CallUserHandles(const int cstype, const double x,
-                                           const double y, const double z,
-                                           const double t, const int level, 
-                                           Medium* medium, const double en1,
-                                           const double en, const double kx,
-                                           const double ky, const double kz,
-                                           const double kx1, const double ky1,
-                                           const double kz1) {
+void AvalancheMicroscopic::CallUserHandles(
+    const int cstype, const double x, const double y, const double z,
+    const double t, const int level, Medium* medium, const double en1,
+    const double en, const double kx, const double ky, const double kz,
+    const double kx1, const double ky1, const double kz1) const {
   if (m_userHandleCollision) {
     m_userHandleCollision(x, y, z, t, cstype, level, medium, en1, en, kx,
                           ky, kz, kx1, ky1, kz1);

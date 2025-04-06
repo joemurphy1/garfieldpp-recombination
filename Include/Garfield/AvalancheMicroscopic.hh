@@ -415,10 +415,10 @@ class AvalancheMicroscopic {
   bool m_debug = false;
 
   bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
-  int TransportElectron(const Seed& seed, const bool signal, 
-                        std::vector<double>& ts,
-                        std::vector<std::array<double, 3> >& xs,
-                        std::vector<Point>& path, std::vector<Seed>& stack);
+  int TransportElectron(
+      const Seed& seed, const bool signal, 
+      std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
+      std::vector<Point>& path, std::vector<Seed>& stack);
   int TransportElectronBfield(
       const Seed& seed, const bool signal,
       std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
@@ -445,11 +445,12 @@ class AvalancheMicroscopic {
                              std::vector<Seed>& stack) const;
   void PlotCollision(const int cstype, const size_t did, const double x,
                      const double y, const double z, size_t& nCollPlot) const;
-  void CallUserHandles(const int cstype, const double x, const double y, 
-                       const double z, const double t, const int level,
-                       Medium* medium, const double en1, const double en, 
-                       const double kx, const double ky, const double kz,
-                       const double kx1, const double ky1, const double kz1);
+  void CallUserHandles(
+      const int cstype, const double x, const double y, const double z, 
+      const double t, const int level, Medium* medium, 
+      const double en1, const double en, 
+      const double kx, const double ky, const double kz,
+      const double kx1, const double ky1, const double kz1) const;
   void FillDistanceHistogram(const int cstype, const double x, const double y,
                              const double z, double& xLast, double& yLast,
                              double& zLast) const;
