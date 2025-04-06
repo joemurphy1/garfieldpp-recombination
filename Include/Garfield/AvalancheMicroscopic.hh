@@ -444,16 +444,6 @@ class AvalancheMicroscopic {
               const double y, const double z, const double t,
               const double energy, const double kx, const double ky,
               const double kz, const int band);
-  void AddToEndPoints(const Electron& item, const bool hole) {
-    Electron electron;
-    electron.status = item.status;
-    electron.path = item.path;
-    if (hole) {
-      m_holes.push_back(std::move(electron));
-    } else {
-      m_electrons.push_back(std::move(electron));
-    }
-  }
 
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
                  double& y1, double& z1, double& t1) const;
