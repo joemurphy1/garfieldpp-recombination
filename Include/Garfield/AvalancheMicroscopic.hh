@@ -184,6 +184,12 @@ class AvalancheMicroscopic {
     double pathLength = 0.;   ///< Path length.
   };
 
+  struct Seed {
+    Point pt;
+    Particle type;
+  };
+  // using Seed = std::pair<Point, Particle>;
+
   const std::vector<Electron>& GetElectrons() const { return m_electrons; }
   const std::vector<Electron>& GetHoles() const { return m_holes; }
   /** Return the number of electron trajectories in the last
@@ -315,7 +321,7 @@ class AvalancheMicroscopic {
   std::vector<Electron> m_electrons_gpu;
   std::vector<Electron> m_holes;
 
-  std::vector<std::pair<Point, Particle> > m_stackStoreCPU;
+  std::vector<Seed> m_stackStoreCPU;
   std::vector<Electron> m_stackStoreGPU;
 
   struct Photon {
@@ -403,30 +409,30 @@ class AvalancheMicroscopic {
   // Switch on/off debugging messages
   bool m_debug = false;
 
-  bool TransportElectrons(std::vector<std::pair<Point, Particle> >& stack,
+  bool TransportElectrons(std::vector<Seed>& stack,
                           const bool aval);
-  int TransportElectron(const Point& p0, const bool hole, const bool aval,
+  int TransportElectron(const Seed& seed, const bool aval,
                         const bool signal, std::vector<double>& ts,
                         std::vector<std::array<double, 3> >& xs,
                         std::vector<Point>& path,
-                        std::vector<std::pair<Point, Particle> >& newParticles);
+                        std::vector<Seed>& newParticles);
   int TransportElectronBfield(
-      const Point& p0, const bool hole, const bool aval, const bool signal,
+      const Seed& seed, const bool aval, const bool signal,
       std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
       std::vector<Point>& path,
-      std::vector<std::pair<Point, Particle> >& newParticles);
+      std::vector<Seed>& newParticles);
   int TransportElectronSc(
-      const Point& p0, const bool hole, const bool aval, const bool signal,
+      const Seed& seed, const bool aval, const bool signal,
       std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
       std::vector<Point>& path,
-      std::vector<std::pair<Point, Particle> >& newParticles);
+      std::vector<Seed>& newParticles);
   void TransportPhoton(const double x, const double y, const double z,
                        const double t, const double e,
-                       std::vector<std::pair<Point, Particle> >& newParticles);
+                       std::vector<Seed>& newParticles);
 
   bool transportParticleStack(
-      const bool aval, std::vector<std::pair<Point, Particle> >& particles,
-      std::vector<std::pair<Point, Particle> >& newParticles, const bool signal,
+      const bool aval, std::vector<Seed>& particles,
+      std::vector<Seed>& newParticles, const bool signal,
       const bool useBfield, const bool sc);
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
                  double& y1, double& z1, double& t1) const;
@@ -438,7 +444,7 @@ class AvalancheMicroscopic {
                              double& zLast) const;
 
  public:
-  std::vector<std::pair<Point, Particle> > GetStackOld() {
+  std::vector<Seed> GetStackOld() {
     return m_stackStoreCPU;
   }
   std::vector<Electron> GetStackOldGPU() { return m_stackStoreGPU; }
