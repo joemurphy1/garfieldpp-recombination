@@ -181,14 +181,15 @@ class AvalancheMicroscopic {
   struct Electron {
     int status = 0;           ///< Status.
     std::vector<Point> path;  ///< Drift line.
+    size_t weight = 1;        ///< Multiplicity.
     double pathLength = 0.;   ///< Path length.
   };
 
   struct Seed {
-    Point pt;
-    Particle type;
+    Point pt;      ///< Starting point.
+    Particle type; ///< Particle type.
+    size_t w = 1;  ///< Multiplicity.
   };
-  // using Seed = std::pair<Point, Particle>;
 
   const std::vector<Electron>& GetElectrons() const { return m_electrons; }
   const std::vector<Electron>& GetHoles() const { return m_holes; }
@@ -230,19 +231,23 @@ class AvalancheMicroscopic {
    * \param e initial energy of the electron
    * \param dx,dy,dz initial direction vector of the electron
    * If the initial direction is not specified, it is sampled randomly.
+   * \param w weight (multiplicity) of the electron
    * Secondary electrons are not transported. */
   bool DriftElectron(const double x, const double y, const double z,
                      const double t, const double e, const double dx = 0.,
-                     const double dy = 0., const double dz = 0.);
+                     const double dy = 0., const double dz = 0.,
+                     const size_t w = 1);
 
   /// Calculate an avalanche initiated by a given electron.
   bool AvalancheElectron(const double x, const double y, const double z,
                          const double t, const double e, const double dx = 0.,
-                         const double dy = 0., const double dz = 0.);
+                         const double dy = 0., const double dz = 0.,
+                         const size_t w = 1);
   /// Add an electron to the list of particles to be transported.
   void AddElectron(const double x, const double y, const double z,
                    const double t, const double e, const double dx = 0.,
-                   const double dy = 0., const double dz = 0.);
+                   const double dy = 0., const double dz = 0.,
+                   const size_t w = 1);
   /// Continue the avalanche simulation from the current set of electrons.
   bool ResumeAvalanche();
 
@@ -409,29 +414,25 @@ class AvalancheMicroscopic {
   // Switch on/off debugging messages
   bool m_debug = false;
 
-  bool TransportElectrons(std::vector<Seed>& stack,
-                          const bool aval);
+  bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
   int TransportElectron(const Seed& seed, const bool signal, 
                         std::vector<double>& ts,
                         std::vector<std::array<double, 3> >& xs,
-                        std::vector<Point>& path,
-                        std::vector<Seed>& newParticles);
+                        std::vector<Point>& path, std::vector<Seed>& stack);
   int TransportElectronBfield(
       const Seed& seed, const bool signal,
       std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-      std::vector<Point>& path,
-      std::vector<Seed>& newParticles);
+      std::vector<Point>& path, std::vector<Seed>& stack);
   int TransportElectronSc(
       const Seed& seed, const bool signal,
       std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-      std::vector<Point>& path,
-      std::vector<Seed>& newParticles);
+      std::vector<Point>& path, std::vector<Seed>& stack);
   void TransportPhoton(const double x, const double y, const double z,
-                       const double t, const double e,
-                       std::vector<Seed>& newParticles);
+                       const double t, const double e, const size_t w,
+                       std::vector<Seed>& stack);
 
   bool transportParticleStack(
-      const bool aval, std::vector<Seed>& particles,
+      const bool aval, std::vector<Seed>& stack,
       std::vector<Seed>& newParticles, const bool signal,
       const bool useBfield, const bool sc);
   void Terminate(double x0, double y0, double z0, double t0, double& x1,

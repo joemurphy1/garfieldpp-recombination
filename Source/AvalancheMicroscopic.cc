@@ -135,11 +135,12 @@ Garfield::AvalancheMicroscopic::Point MakePoint(const double x, const double y,
 
 Garfield::AvalancheMicroscopic::Seed MakeSeed(
     const Garfield::AvalancheMicroscopic::Point point,
-    const Garfield::Particle particle) {
+    const Garfield::Particle particle, const size_t w) {
 
   Garfield::AvalancheMicroscopic::Seed seed;
   seed.pt = point;
   seed.type = particle;
+  seed.w = w;
   return seed;
 }
 
@@ -428,50 +429,54 @@ void AvalancheMicroscopic::SetUserHandleIonisation(void (*f)(
 bool AvalancheMicroscopic::DriftElectron(const double x, const double y,
                                          const double z, const double t,
                                          const double e, const double dx,
-                                         const double dy, const double dz) {
-  std::vector<Seed> particles;
+                                         const double dy, const double dz,
+                                         const size_t w) {
+  std::vector<Seed> stack;
   Point p = MakePoint(x, y, z, t, e, dx, dy, dz, 0);
-  particles.emplace_back(MakeSeed(std::move(p), Particle::Electron));
-  return TransportElectrons(particles, false);
+  stack.emplace_back(MakeSeed(std::move(p), Particle::Electron, w));
+  return TransportElectrons(stack, false);
 }
 
 bool AvalancheMicroscopic::AvalancheElectron(const double x, const double y,
                                              const double z, const double t,
                                              const double e, const double dx,
-                                             const double dy, const double dz) {
-  std::vector<Seed> particles;
+                                             const double dy, const double dz,
+                                             const size_t w) {
+  std::vector<Seed> stack;
   Point p = MakePoint(x, y, z, t, e, dx, dy, dz, 0);
-  particles.emplace_back(MakeSeed(std::move(p), Particle::Electron));
-  return TransportElectrons(particles, true);
+  stack.emplace_back(MakeSeed(std::move(p), Particle::Electron, w));
+  return TransportElectrons(stack, true);
 }
 
 void AvalancheMicroscopic::AddElectron(const double x, const double y,
                                        const double z, const double t,
                                        const double e, const double dx,
-                                       const double dy, const double dz) {
+                                       const double dy, const double dz,
+                                       const size_t w) {
   Electron electron;
   electron.status = StatusAlive;
   electron.path.emplace_back(MakePoint(x, y, z, t, e, dx, dy, dz, 0));
+  electron.weight = w;
   m_electrons.push_back(std::move(electron));
 }
 
 bool AvalancheMicroscopic::ResumeAvalanche() {
-  std::vector<Seed> particles;
+  std::vector<Seed> stack;
   for (const auto& p : m_electrons) {
     if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) {
-      particles.emplace_back(MakeSeed(p.path.back(), Particle::Electron));
+      stack.emplace_back(MakeSeed(p.path.back(), Particle::Electron, p.weight));
     }
   }
   for (const auto& p : m_holes) {
     if (p.status == StatusAlive || p.status == StatusOutsideTimeWindow) {
-      particles.emplace_back(MakeSeed(p.path.back(), Particle::Hole));
+      stack.emplace_back(MakeSeed(p.path.back(), Particle::Hole, p.weight));
     }
   }
-  return TransportElectrons(particles, true);
+  return TransportElectrons(stack, true);
 }
 
 bool AvalancheMicroscopic::TransportElectrons(
-    std::vector<Seed>& particles, const bool aval) {
+    std::vector<Seed>& stack, const bool aval) {
   // Clear the list of electrons, holes and photons.
   m_electrons.clear();
   m_holes.clear();
@@ -495,7 +500,7 @@ bool AvalancheMicroscopic::TransportElectrons(
   const bool signal = m_doSignal && (m_sensor->GetNumberOfElectrodes() > 0);
   bool sc = false;
   // Loop over the initial set of electrons/holes.
-  for (auto& p : particles) {
+  for (auto& p : stack) {
     // Make sure that the starting point is inside the active area.
     const double x0 = p.pt.x;
     const double y0 = p.pt.y;
@@ -559,7 +564,7 @@ bool AvalancheMicroscopic::TransportElectrons(
       m_gpuInterface->SetCUDADevice(m_cudaDevice);
       m_gpuInterface->TransferClassInternalInfo(this);
     }
-    m_gpuInterface->TransferStackFromCPUToGPU(particles);
+    m_gpuInterface->TransferStackFromCPUToGPU(stack);
 #else
     std::cout << "ERROR: GPU use requested but Garfield has not been built "
                  "with GPU support"
@@ -596,19 +601,19 @@ bool AvalancheMicroscopic::TransportElectrons(
       // this is all the processing of the particle stack that's needed
       if (loop_count) {
         if (!aval) break;
-        particles.swap(newParticles);
+        stack.swap(newParticles);
       }
 
-      if (particles.size() == 0) break;
+      if (stack.size() == 0) break;
 
       process_time_cpu =
           std::chrono::duration_cast<second_t>(highres_clock_t::now() - start)
               .count();
       start = highres_clock_t::now();
 
-      num_curr_particles = particles.size();
+      num_curr_particles = stack.size();
 
-      if (!transportParticleStack(aval, particles, newParticles, signal,
+      if (!transportParticleStack(aval, stack, newParticles, signal,
                                   useBfield, sc))
         return false;
 
@@ -694,7 +699,7 @@ bool AvalancheMicroscopic::TransportElectrons(
     // copy over stack if there's any to compare
     if (m_maxNumShowerLoops > -1) {
       m_gpuInterface->TransferStackFromGPUToCPU(m_stackStoreGPU, false);
-      m_stackStoreCPU = particles;
+      m_stackStoreCPU = stack;
     }
 
     // Copy endpoints over
@@ -706,12 +711,14 @@ bool AvalancheMicroscopic::TransportElectrons(
   // Calculate the induced charge.
   if (m_doInducedCharge) {
     for (const auto& p : m_electrons) {
-      m_sensor->AddInducedCharge(-1, p.path[0].x, p.path[0].y, p.path[0].z,
+      m_sensor->AddInducedCharge(-1. * p.weight, 
+                                 p.path[0].x, p.path[0].y, p.path[0].z,
                                  p.path.back().x, p.path.back().y,
                                  p.path.back().z);
     }
     for (const auto& p : m_holes) {
-      m_sensor->AddInducedCharge(+1, p.path[0].x, p.path[0].y, p.path[0].z,
+      m_sensor->AddInducedCharge(+1. * p.weight, 
+                                 p.path[0].x, p.path[0].y, p.path[0].z,
                                  p.path.back().x, p.path.back().y,
                                  p.path.back().z);
     }
@@ -720,34 +727,33 @@ bool AvalancheMicroscopic::TransportElectrons(
 }
 
 bool AvalancheMicroscopic::transportParticleStack(
-    const bool aval, std::vector<Seed>& particles,
+    const bool aval, std::vector<Seed>& stack,
     std::vector<Seed>& newParticles, const bool signal,
     const bool useBfield, const bool sc) {
   newParticles.clear();
   // Loop over the particles in the avalanche.
-  for (const auto& particle : particles) {
-    if (particle.type == Particle::Ion) {
-      ++m_nIons;
+  for (const auto& seed : stack) {
+    if (seed.type == Particle::Ion) {
+      m_nIons += seed.w;
       continue;
     }
     if (aval && m_sizeCut > 0 && m_nElectrons >= (int)m_sizeCut) {
       newParticles.clear();
       break;
     }
-    const bool isHole = (particle.type == Particle::Hole);
     std::vector<Point> path;
     std::vector<double> ts;
     std::vector<std::array<double, 3> > xs;
     int status = 0;
     if (sc) {
-      status = TransportElectronSc(particle, signal, ts, xs,
-                                   path, newParticles);
+      status = TransportElectronSc(seed, signal, ts, xs, path,
+                                   newParticles);
     } else if (useBfield) {
-      status = TransportElectronBfield(particle, signal, ts,
-                                       xs, path, newParticles);
+      status = TransportElectronBfield(seed, signal, ts, xs, path, 
+                                       newParticles);
     } else {
-      status = TransportElectron(particle, signal, ts, xs,
-                                 path, newParticles);
+      status = TransportElectron(seed, signal, ts, xs, path,
+                                 newParticles);
     }
     double pathLength = 0.;
     if (m_computePathLength && xs.size() > 1) {
@@ -757,27 +763,30 @@ bool AvalancheMicroscopic::transportParticleStack(
                           xs[i + 1][2] - xs[i][2]);
       }
     }
-    if (isHole) {
+    if (seed.type == Particle::Hole) {
       Electron hole;
       hole.status = status;
       hole.path = std::move(path);
+      hole.weight = seed.w;
       hole.pathLength = pathLength;
       m_holes.push_back(std::move(hole));
-      if (status != StatusAttached) ++m_nHoles;
+      if (status != StatusAttached) m_nHoles += seed.w;
     } else {
       Electron electron;
       electron.status = status;
       electron.path = std::move(path);
+      electron.weight = seed.w;
       electron.pathLength = pathLength;
       m_electrons.push_back(std::move(electron));
-      if (status != StatusAttached) ++m_nElectrons;
+      if (status != StatusAttached) m_nElectrons += seed.w;
     }
     if (signal) {
-      const double q = isHole ? 1. : -1.;
+      const double q = seed.type == Particle::Hole ? 1. : -1.;
       if (m_useWeightingPotential) {
-        m_sensor->AddSignalWeightingPotential(q, ts, xs);
+        m_sensor->AddSignalWeightingPotential(q * seed.w, ts, xs);
       } else {
-        m_sensor->AddSignalWeightingField(q, ts, xs, m_integrateWeightingField);
+        m_sensor->AddSignalWeightingField(q * seed.w, ts, xs, 
+                                          m_integrateWeightingField);
       }
     }
   }
@@ -787,8 +796,7 @@ bool AvalancheMicroscopic::transportParticleStack(
 int AvalancheMicroscopic::TransportElectron(
     const Seed& seed, const bool signal,
     std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-    std::vector<Point>& path,
-    std::vector<Seed>& newParticles) {
+    std::vector<Point>& path, std::vector<Seed>& stack) {
   double x = seed.pt.x;
   double y = seed.pt.y;
   double z = seed.pt.z;
@@ -1178,20 +1186,13 @@ int AvalancheMicroscopic::TransportElectron(
           m_userHandleIonisation(x, y, z, t, cstype, level, medium);
         }
         for (const auto& secondary : secondaries) {
+          const double esec = secondary.type == Particle::Ion ? 0. :
+                              std::max(secondary.energy, Small);
+          // Add the secondary to the stack.
+          stack.emplace_back(MakeSeed(
+              MakePoint(x, y, z, t, esec), secondary.type, seed.w));
           if (secondary.type == Particle::Electron) {
-            const double esec = std::max(secondary.energy, Small);
             if (m_histSecondary) m_histSecondary->Fill(esec);
-            // Add the secondary electron to the stack.
-            newParticles.emplace_back(MakeSeed(
-                MakePoint(x, y, z, t, esec), Particle::Electron));
-          } else if (secondary.type == Particle::Hole) {
-            const double esec = std::max(secondary.energy, Small);
-            // Add the secondary hole to the stack.
-            newParticles.emplace_back(
-                MakeSeed(MakePoint(x, y, z, t, esec), Particle::Hole));
-          } else if (secondary.type == Particle::Ion) {
-            newParticles.emplace_back(
-                MakeSeed(MakePoint(x, y, z, t, 0.), Particle::Ion));
           }
         }
         break;
@@ -1244,15 +1245,15 @@ int AvalancheMicroscopic::TransportElectron(
             // Add the Penning electron to the list.
             const double tp = t + secondary.time;
             const double ep = std::max(secondary.energy, Small);
-            newParticles.emplace_back(MakeSeed(
-                MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
-            newParticles.emplace_back(
-                MakeSeed(MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
+            stack.emplace_back(MakeSeed(
+                MakePoint(xp, yp, zp, tp, ep), Particle::Electron, seed.w));
+            stack.emplace_back(MakeSeed(
+                MakePoint(xp, yp, zp, tp, 0.), Particle::Ion, seed.w));
           } else if (secondary.type == Particle::Photon && m_usePhotons &&
                      secondary.energy > m_gammaCut) {
             // Radiative de-excitation
             TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                            newParticles);
+                            seed.w, stack);
           }
         }
         break;
@@ -1324,7 +1325,7 @@ int AvalancheMicroscopic::TransportElectronBfield(
     const Seed& seed, const bool signal,
     std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
     std::vector<Point>& path,
-    std::vector<Seed>& newParticles) {
+    std::vector<Seed>& stack) {
   double x = seed.pt.x;
   double y = seed.pt.y;
   double z = seed.pt.z;
@@ -1648,21 +1649,14 @@ int AvalancheMicroscopic::TransportElectronBfield(
           m_userHandleIonisation(x, y, z, t, cstype, level, medium);
         }
         for (const auto& secondary : secondaries) {
+          const double esec = secondary.type == Particle::Ion ? 0. :
+                              std::max(secondary.energy, Small);
+          // Add the secondary to the stack.
+          stack.emplace_back(MakeSeed(
+              MakePoint(x, y, z, t, esec), secondary.type, seed.w));
           if (secondary.type == Particle::Electron) {
-            const double esec = std::max(secondary.energy, Small);
             if (m_histSecondary) m_histSecondary->Fill(esec);
-            // Add the secondary electron to the stack.
-            newParticles.emplace_back(MakeSeed(
-                MakePoint(x, y, z, t, esec), Particle::Electron));
-          } else if (secondary.type == Particle::Hole) {
-            const double esec = std::max(secondary.energy, Small);
-            // Add the secondary hole to the stack.
-            newParticles.emplace_back(
-                MakeSeed(MakePoint(x, y, z, t, esec), Particle::Hole));
-          } else if (secondary.type == Particle::Ion) {
-            newParticles.emplace_back(
-                MakeSeed(MakePoint(x, y, z, t, 0.), Particle::Ion));
-          }
+          } 
         }
         break;
       // Attachment
@@ -1714,15 +1708,15 @@ int AvalancheMicroscopic::TransportElectronBfield(
             // Add the Penning electron to the list.
             const double tp = t + secondary.time;
             const double ep = std::max(secondary.energy, Small);
-            newParticles.emplace_back(MakeSeed(
-                MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
-            newParticles.emplace_back(
-                MakeSeed(MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
+            stack.emplace_back(MakeSeed(
+                MakePoint(xp, yp, zp, tp, ep), Particle::Electron, seed.w));
+            stack.emplace_back(MakeSeed(
+                MakePoint(xp, yp, zp, tp, 0.), Particle::Ion, seed.w));
           } else if (secondary.type == Particle::Photon && m_usePhotons &&
                      secondary.energy > m_gammaCut) {
             // Radiative de-excitation
             TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                            newParticles);
+                            seed.w, stack);
           }
         }
         break;
@@ -1786,7 +1780,7 @@ int AvalancheMicroscopic::TransportElectronSc(
     const Seed& seed, const bool signal,
     std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
     std::vector<Point>& path,
-    std::vector<Seed>& newParticles) {
+    std::vector<Seed>& stack) {
   double x = seed.pt.x;
   double y = seed.pt.y;
   double z = seed.pt.z;
@@ -2059,21 +2053,21 @@ int AvalancheMicroscopic::TransportElectronSc(
             double kxs = 0., kys = 0., kzs = 0.;
             int bs = -1;
             medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
-            newParticles.emplace_back(
-                MakeSeed(MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs),
-                               Particle::Electron));
+            stack.emplace_back(MakeSeed(
+                MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs),
+                Particle::Electron, seed.w));
           } else if (secondary.type == Particle::Hole) {
             const double esec = std::max(secondary.energy, Small);
             // Add the secondary hole to the stack.
             double kxs = 0., kys = 0., kzs = 0.;
             int bs = -1;
             medium->GetElectronMomentum(esec, kxs, kys, kzs, bs);
-            newParticles.emplace_back(
-                MakeSeed(MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs),
-                               Particle::Hole));
+            stack.emplace_back(MakeSeed(
+                MakePoint(x, y, z, t, esec, kxs, kys, kzs, bs),
+                Particle::Hole, seed.w));
           } else if (secondary.type == Particle::Ion) {
-            newParticles.emplace_back(
-                MakeSeed(MakePoint(x, y, z, t, 0.), Particle::Ion));
+            stack.emplace_back(MakeSeed(
+                MakePoint(x, y, z, t, 0.), Particle::Ion, seed.w));
           }
         }
         break;
@@ -2081,11 +2075,6 @@ int AvalancheMicroscopic::TransportElectronSc(
       case ElectronCollisionTypeAttachment:
         if (m_userHandleAttachment) {
           m_userHandleAttachment(x, y, z, t, cstype, level, medium);
-        }
-        if (hole) {
-          --m_nHoles;
-        } else {
-          --m_nElectrons;
         }
         path.emplace_back(MakePoint(x, y, z, t, en, kx1, ky1, kz1, band));
         return StatusAttached;
@@ -2131,15 +2120,15 @@ int AvalancheMicroscopic::TransportElectronSc(
             // Add the Penning electron to the list.
             const double tp = t + secondary.time;
             const double ep = std::max(secondary.energy, Small);
-            newParticles.emplace_back(MakeSeed(
-                MakePoint(xp, yp, zp, tp, ep), Particle::Electron));
-            newParticles.emplace_back(
-                MakeSeed(MakePoint(xp, yp, zp, tp, 0.), Particle::Ion));
+            stack.emplace_back(MakeSeed(
+                MakePoint(xp, yp, zp, tp, ep), Particle::Electron, seed.w));
+            stack.emplace_back(
+                MakeSeed(MakePoint(xp, yp, zp, tp, 0.), Particle::Ion, seed.w));
           } else if (secondary.type == Particle::Photon && m_usePhotons &&
                      secondary.energy > m_gammaCut) {
             // Radiative de-excitation
             TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                            newParticles);
+                            seed.w, stack);
           }
         }
         break;
@@ -2252,7 +2241,7 @@ void AvalancheMicroscopic::FillDistanceHistogram(const int cstype,
 
 void AvalancheMicroscopic::TransportPhoton(
     const double x0, const double y0, const double z0, const double t0,
-    const double e0, std::vector<Seed>& newParticles) {
+    const double e0, const size_t w0, std::vector<Seed>& stack) {
   // Make sure that the sensor is defined.
   if (!m_sensor) {
     std::cerr << m_className << "::TransportPhoton: Sensor is not defined.\n";
@@ -2362,15 +2351,11 @@ void AvalancheMicroscopic::TransportPhoton(
   }
   if (type == PhotonCollisionTypeIonisation) {
     for (const auto& secondary : secondaries) {
-      if (secondary.type == Particle::Electron) {
-        // Add the secondary electron (random direction).
-        newParticles.emplace_back(MakeSeed(
-            MakePoint(x, y, z, t, std::max(secondary.energy, Small)),
-            Particle::Electron));
-      } else if (secondary.type == Particle::Ion) {
-        newParticles.emplace_back(
-            MakeSeed(MakePoint(x, y, z, t, 0.), Particle::Ion));
-      }
+      const double esec = secondary.type == Particle::Ion ? 0. :
+                          std::max(secondary.energy, Small);
+      // Add the secondary (random direction).
+      stack.emplace_back(MakeSeed(
+          MakePoint(x, y, z, t, esec), secondary.type, w0));
     }
   } else if (type == PhotonCollisionTypeExcitation) {
     std::vector<double> tPhotons;
@@ -2379,8 +2364,9 @@ void AvalancheMicroscopic::TransportPhoton(
       if (secondary.type == Particle::Electron) {
         // Ionisation.
         const double esec = std::max(secondary.energy, Small);
-        newParticles.emplace_back(MakeSeed(
-            MakePoint(x, y, z, t + secondary.time, esec), Particle::Electron));
+        stack.emplace_back(MakeSeed(
+            MakePoint(x, y, z, t + secondary.time, esec), 
+            Particle::Electron, w0));
       } else if (secondary.type == Particle::Photon && m_usePhotons) {
         // Radiative de-excitation
         if (secondary.energy > m_gammaCut) {
@@ -2392,7 +2378,7 @@ void AvalancheMicroscopic::TransportPhoton(
     // Transport the photons (if any).
     const size_t nSizePhotons = tPhotons.size();
     for (size_t k = 0; k < nSizePhotons; ++k) {
-      TransportPhoton(x, y, z, tPhotons[k], ePhotons[k], newParticles);
+      TransportPhoton(x, y, z, tPhotons[k], ePhotons[k], w0, stack);
     }
   }
 
