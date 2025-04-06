@@ -208,10 +208,6 @@ class AvalancheMicroscopic {
                               double& z0, double& t0, double& e0, double& x1,
                               double& y1, double& z1, double& t1, double& e1,
                               int& status) const;
-  void GetElectronEndpoint(const size_t i, double& x0, double& y0, double& z0,
-                           double& t0, double& e0, double& x1, double& y1,
-                           double& z1, double& t1, double& e1, double& dx1,
-                           double& dy1, double& dz1, int& status) const;
   size_t GetNumberOfElectronDriftLinePoints(const size_t i = 0) const;
   void GetElectronDriftLinePoint(double& x, double& y, double& z, double& t,
                                  const size_t ip, const size_t ie = 0) const;
