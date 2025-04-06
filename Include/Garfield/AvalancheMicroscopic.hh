@@ -432,19 +432,6 @@ class AvalancheMicroscopic {
       const bool aval, std::vector<std::pair<Point, Particle> >& particles,
       std::vector<std::pair<Point, Particle> >& newParticles, const bool signal,
       const bool useBfield, const bool sc);
-
-  static bool IsInactive(const Electron& item) {
-    return item.status == StatusLeftDriftMedium ||
-           item.status == StatusBelowTransportCut ||
-           item.status == StatusOutsideTimeWindow ||
-           item.status == StatusLeftDriftArea ||
-           item.status == StatusAttached || item.status == StatusHitPlane;
-  }
-  void Update(std::vector<Electron>::iterator it, const double x,
-              const double y, const double z, const double t,
-              const double energy, const double kx, const double ky,
-              const double kz, const int band);
-
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
                  double& y1, double& z1, double& t1) const;
 
