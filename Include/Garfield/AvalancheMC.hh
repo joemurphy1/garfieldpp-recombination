@@ -29,38 +29,43 @@ class AvalancheMC {
 
   /// Simulate the drift line of an electron from a given starting point.
   bool DriftElectron(const double x, const double y, const double z,
-                     const double t);
+                     const double t, const size_t w = 1);
   /// Simulate the drift line of a hole from a given starting point.
   bool DriftHole(const double x, const double y, const double z,
-                 const double t);
+                 const double t, const size_t w = 1);
   /// Simulate the drift line of an ion from a given starting point.
-  bool DriftIon(const double x, const double y, const double z, const double t);
+  bool DriftIon(const double x, const double y, const double z, 
+                const double t, const size_t w = 1);
   /// Simulate the drift line of a negative ion from a given starting point.
   bool DriftNegativeIon(const double x, const double y, const double z,
-                        const double t);
+                        const double t, const size_t w = 1);
   /** Simulate an avalanche initiated by an electron at a given starting point.
    * \param x,y,z,t coordinates and time of the initial electron
    * \param hole simulate the hole component of the avalanche or not
    */
   bool AvalancheElectron(const double x, const double y, const double z,
-                         const double t, const bool hole = false);
+                         const double t, const bool hole = false,
+                         const size_t w = 1);
   /// Simulate an avalanche initiated by a hole at a given starting point.
   bool AvalancheHole(const double x, const double y, const double z,
-                     const double t, const bool electron = false);
+                     const double t, const bool electron = false,
+                     const size_t w = 1);
   /// Simulate an avalanche initiated by an electron-hole pair.
   bool AvalancheElectronHole(const double x, const double y, const double z,
-                             const double t);
+                             const double t, const size_t w = 1);
 
   /// Add an electron to the list of particles to be transported.
   void AddElectron(const double x, const double y, const double z,
-                   const double t);
+                   const double t, const size_t w = 1);
   /// Add a hole to the list of particles to be transported.
-  void AddHole(const double x, const double y, const double z, const double t);
+  void AddHole(const double x, const double y, const double z, 
+               const double t, const size_t w = 1);
   /// Add an ion to the list of particles to be transported.
-  void AddIon(const double x, const double y, const double z, const double t);
+  void AddIon(const double x, const double y, const double z, 
+              const double t, const size_t w = 1);
   /// Add an negative ion to the list of particles to be transported.
   void AddNegativeIon(const double x, const double y, const double z,
-                      const double t);
+                      const double t, const size_t w = 1);
   /// Resume the simulation from the current set of charge carriers.
   bool ResumeAvalanche(const bool electron = true, const bool hole = true);
 
@@ -72,6 +77,13 @@ class AvalancheMC {
   struct EndPoint {
     int status;               ///< Status flag.
     std::vector<Point> path;  ///< Drift line.
+    size_t weight;            ///< Multiplicity.
+  };
+
+  struct Seed {
+    Point pt;      ///< Starting point.
+    Particle type; ///< Particle type.
+    size_t w = 1;  ///< Multiplicity.
   };
 
   const std::vector<EndPoint>& GetElectrons() const { return m_electrons; }
@@ -287,12 +299,11 @@ class AvalancheMC {
   bool m_debug = false;
 
   /// Compute a single drift line.
-  int DriftLine(const Point& p0, const Particle particle,
-                std::vector<Point>& path,
-                std::vector<std::pair<Point, Particle> >& secondaries,
-                const bool aval, const bool signal);
+  int DriftLine(const Seed& seed, std::vector<Point>& path,
+                std::vector<Seed>& secondaries,
+                const bool aval, const bool signal) const;
   /// Compute an avalanche.
-  bool TransportParticles(std::vector<std::pair<Point, Particle> >& particles,
+  bool TransportParticles(std::vector<Seed>& stack,
                           const bool withElectrons, const bool withHoles,
                           const bool aval);
 
@@ -336,12 +347,12 @@ class AvalancheMC {
   void Terminate(const std::array<double, 3>& x0, const double t0,
                  std::array<double, 3>& x, double& t) const;
   /// Compute multiplication and losses along the current drift line.
-  bool ComputeGainLoss(const Particle particle, std::vector<Point>& path,
-                       int& status,
-                       std::vector<std::pair<Point, Particle> >& secondaries,
-                       const bool semiconductor = false);
+  bool ComputeGainLoss(const Particle ptype, const size_t w,
+                       std::vector<Point>& path, int& status,
+                       std::vector<Seed>& secondaries,
+                       const bool semiconductor = false) const;
   /// Compute Townsend and attachment coefficients along the current drift line.
-  bool ComputeAlphaEta(const Particle particle, std::vector<Point>& path,
+  bool ComputeAlphaEta(const Particle ptype, std::vector<Point>& path,
                        std::vector<double>& alphas,
                        std::vector<double>& etas) const;
   bool Equilibrate(std::vector<double>& alphas) const;
