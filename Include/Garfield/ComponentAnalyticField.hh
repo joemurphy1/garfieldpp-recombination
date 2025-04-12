@@ -10,9 +10,10 @@
 #include "Garfield/Component.hh"
 
 class TPad;
-class Medium;
 
 namespace Garfield {
+
+class Medium;
 
 /// Semi-analytic calculation of two-dimensional configurations
 /// consisting of wires, planes, and tubes.

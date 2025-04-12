@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/MultiProcessInterface.hh"
 
 class TH1;
@@ -16,7 +17,6 @@ namespace Garfield {
 
 class AvalancheMicroscopicGPU;
 class ViewDrift;
-class Medium;
 class Sensor;
 
 /// Calculate electron drift lines and avalanches using microscopic tracking.
@@ -181,7 +181,14 @@ class AvalancheMicroscopic {
   struct Electron {
     int status = 0;           ///< Status.
     std::vector<Point> path;  ///< Drift line.
+    size_t weight = 1;        ///< Multiplicity.
     double pathLength = 0.;   ///< Path length.
+  };
+
+  struct Seed {
+    Point pt;      ///< Starting point.
+    Particle type; ///< Particle type.
+    size_t w = 1;  ///< Multiplicity.
   };
 
   const std::vector<Electron>& GetElectrons() const { return m_electrons; }
@@ -208,10 +215,6 @@ class AvalancheMicroscopic {
                               double& z0, double& t0, double& e0, double& x1,
                               double& y1, double& z1, double& t1, double& e1,
                               int& status) const;
-  void GetElectronEndpoint(const size_t i, double& x0, double& y0, double& z0,
-                           double& t0, double& e0, double& x1, double& y1,
-                           double& z1, double& t1, double& e1, double& dx1,
-                           double& dy1, double& dz1, int& status) const;
   size_t GetNumberOfElectronDriftLinePoints(const size_t i = 0) const;
   void GetElectronDriftLinePoint(double& x, double& y, double& z, double& t,
                                  const size_t ip, const size_t ie = 0) const;
@@ -228,19 +231,23 @@ class AvalancheMicroscopic {
    * \param e initial energy of the electron
    * \param dx,dy,dz initial direction vector of the electron
    * If the initial direction is not specified, it is sampled randomly.
+   * \param w weight (multiplicity) of the electron
    * Secondary electrons are not transported. */
   bool DriftElectron(const double x, const double y, const double z,
                      const double t, const double e, const double dx = 0.,
-                     const double dy = 0., const double dz = 0.);
+                     const double dy = 0., const double dz = 0.,
+                     const size_t w = 1);
 
   /// Calculate an avalanche initiated by a given electron.
   bool AvalancheElectron(const double x, const double y, const double z,
                          const double t, const double e, const double dx = 0.,
-                         const double dy = 0., const double dz = 0.);
+                         const double dy = 0., const double dz = 0.,
+                         const size_t w = 1);
   /// Add an electron to the list of particles to be transported.
   void AddElectron(const double x, const double y, const double z,
                    const double t, const double e, const double dx = 0.,
-                   const double dy = 0., const double dz = 0.);
+                   const double dy = 0., const double dz = 0.,
+                   const size_t w = 1);
   /// Continue the avalanche simulation from the current set of electrons.
   bool ResumeAvalanche();
 
@@ -319,7 +326,7 @@ class AvalancheMicroscopic {
   std::vector<Electron> m_electrons_gpu;
   std::vector<Electron> m_holes;
 
-  std::vector<std::pair<Point, Particle> > m_stackStoreCPU;
+  std::vector<Seed> m_stackStoreCPU;
   std::vector<Electron> m_stackStoreGPU;
 
   struct Photon {
@@ -407,65 +414,49 @@ class AvalancheMicroscopic {
   // Switch on/off debugging messages
   bool m_debug = false;
 
-  bool TransportElectrons(std::vector<std::pair<Point, Particle> >& stack,
-                          const bool aval);
-  int TransportElectron(const Point& p0, const bool hole, const bool aval,
-                        const bool signal, std::vector<double>& ts,
-                        std::vector<std::array<double, 3> >& xs,
-                        std::vector<Point>& path,
-                        std::vector<std::pair<Point, Particle> >& newParticles);
+  bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
+  int TransportElectron(
+      const Seed& seed, const bool signal, 
+      std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
+      std::vector<Point>& path, std::vector<Seed>& stack);
   int TransportElectronBfield(
-      const Point& p0, const bool hole, const bool aval, const bool signal,
+      const Seed& seed, const bool signal,
       std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-      std::vector<Point>& path,
-      std::vector<std::pair<Point, Particle> >& newParticles);
+      std::vector<Point>& path, std::vector<Seed>& stack);
   int TransportElectronSc(
-      const Point& p0, const bool hole, const bool aval, const bool signal,
+      const Seed& seed, const bool signal,
       std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-      std::vector<Point>& path,
-      std::vector<std::pair<Point, Particle> >& newParticles);
+      std::vector<Point>& path, std::vector<Seed>& stack);
   void TransportPhoton(const double x, const double y, const double z,
-                       const double t, const double e,
-                       std::vector<std::pair<Point, Particle> >& newParticles);
+                       const double t, const double e, const size_t w,
+                       std::vector<Seed>& stack);
 
   bool transportParticleStack(
-      const bool aval, std::vector<std::pair<Point, Particle> >& particles,
-      std::vector<std::pair<Point, Particle> >& newParticles, const bool signal,
+      const bool aval, std::vector<Seed>& stack,
+      std::vector<Seed>& newParticles, const bool signal,
       const bool useBfield, const bool sc);
-
-  static bool IsInactive(const Electron& item) {
-    return item.status == StatusLeftDriftMedium ||
-           item.status == StatusBelowTransportCut ||
-           item.status == StatusOutsideTimeWindow ||
-           item.status == StatusLeftDriftArea ||
-           item.status == StatusAttached || item.status == StatusHitPlane;
-  }
-  void Update(std::vector<Electron>::iterator it, const double x,
-              const double y, const double z, const double t,
-              const double energy, const double kx, const double ky,
-              const double kz, const int band);
-  void AddToEndPoints(const Electron& item, const bool hole) {
-    Electron electron;
-    electron.status = item.status;
-    electron.path = item.path;
-    if (hole) {
-      m_holes.push_back(std::move(electron));
-    } else {
-      m_electrons.push_back(std::move(electron));
-    }
-  }
-
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
                  double& y1, double& z1, double& t1) const;
 
+  void CreatePenningElectron(const double x, const double y, const double z,
+                             const double t, const size_t w, 
+                             const Medium::Secondary& secondary,
+                             const int level, 
+                             std::vector<Seed>& stack) const;
   void PlotCollision(const int cstype, const size_t did, const double x,
                      const double y, const double z, size_t& nCollPlot) const;
+  void CallUserHandles(
+      const int cstype, const double x, const double y, const double z, 
+      const double t, const int level, Medium* medium, 
+      const double en1, const double en, 
+      const double kx, const double ky, const double kz,
+      const double kx1, const double ky1, const double kz1) const;
   void FillDistanceHistogram(const int cstype, const double x, const double y,
                              const double z, double& xLast, double& yLast,
                              double& zLast) const;
 
  public:
-  std::vector<std::pair<Point, Particle> > GetStackOld() {
+  std::vector<Seed> GetStackOld() {
     return m_stackStoreCPU;
   }
   std::vector<Electron> GetStackOldGPU() { return m_stackStoreGPU; }

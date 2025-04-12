@@ -7,9 +7,8 @@
 #ifndef __GPUCOMPILE__
 #include <array>
 #include <mutex>
-
-#include "Garfield/MagboltzInterface.hh"
 #endif
+#include "Garfield/MagboltzInterface.hh"
 #include "Garfield/MediumGas.hh"
 #ifndef __GPUCOMPILE__
 
