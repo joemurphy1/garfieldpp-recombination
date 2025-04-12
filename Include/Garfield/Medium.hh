@@ -7,7 +7,7 @@
 #endif
 
 #ifdef __GPUCOMPILE__
-
+#include "GPUInterface.hh"
 #else
 
 #include <string>
