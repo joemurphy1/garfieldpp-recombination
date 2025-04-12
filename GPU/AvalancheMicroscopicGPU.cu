@@ -190,7 +190,8 @@ namespace Garfield {
         checkCudaErrors( cudaMemcpy(dest.ptype + offset, source.ptype, num*sizeof(Particle), cuda_type ));
     }
 
-void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<AvalancheMicroscopic::Point, Particle> > &stackOld) {
+void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(
+    std::vector<Garfield::AvalancheMicroscopic::Seed> &stackOld) {
 
         // assumes that stackOld contains only active particles and the current state of the
         // GPU memory can be overwritten
@@ -206,23 +207,22 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
         thrust::host_vector<int> index_transfer;
         for (const auto &particle : stackOld)
         {
-            stackTransfer.x[i] = particle.first.x;
-            stackTransfer.y[i] = particle.first.y;
-            stackTransfer.z[i] = particle.first.z;
-            stackTransfer.t[i] = particle.first.t;
-            stackTransfer.energy[i] = particle.first.energy;
-            stackTransfer.x0[i] = particle.first.x;
-            stackTransfer.y0[i] = particle.first.y;
-            stackTransfer.z0[i] = particle.first.z;
-            stackTransfer.t0[i] = particle.first.t;
-            stackTransfer.e0[i] = particle.first.energy;
-            stackTransfer.band[i] = particle.first.band;
-            stackTransfer.kx[i] = particle.first.kx;
-            stackTransfer.ky[i] = particle.first.ky;
-            stackTransfer.kz[i] = particle.first.kz;
-            stackTransfer.ptype[i] = particle.second;
-            //stackTransfer.status[i] = particle.first.status;
-	    stackTransfer.status[i] = 0;
+            stackTransfer.x[i] = particle.pt.x;
+            stackTransfer.y[i] = particle.pt.y;
+            stackTransfer.z[i] = particle.pt.z;
+            stackTransfer.t[i] = particle.pt.t;
+            stackTransfer.energy[i] = particle.pt.energy;
+            stackTransfer.x0[i] = particle.pt.x;
+            stackTransfer.y0[i] = particle.pt.y;
+            stackTransfer.z0[i] = particle.pt.z;
+            stackTransfer.t0[i] = particle.pt.t;
+            stackTransfer.e0[i] = particle.pt.energy;
+            stackTransfer.band[i] = particle.pt.band;
+            stackTransfer.kx[i] = particle.pt.kx;
+            stackTransfer.ky[i] = particle.pt.ky;
+            stackTransfer.kz[i] = particle.pt.kz;
+            stackTransfer.ptype[i] = particle.type;
+            stackTransfer.status[i] = 0;
             index_transfer.push_back(i);
             i++;
         }
@@ -443,7 +443,6 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
                                       SensorGPU *m_sensor,
                                       cuda_t m_deltaCut,
                                       int /*id*/,
-                                      bool /*useBandStructure*/,
                                       cuda_t c1,
                                       cuda_t c2,
                                       cuda_t /*fLim*/,
@@ -983,8 +982,8 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
     }
 
 
-    bool AvalancheMicroscopicGPU::transportParticleStack(const bool aval, AvalancheMicroscopic *aval_ptr, int id, bool useBandStructure,
-                              const double /*c1*/, const double /*c2*/, double fLim, double fInv, bool useBfield, bool sc, int debug_electron) {
+    bool AvalancheMicroscopicGPU::transportParticleStack(const bool aval, AvalancheMicroscopic *aval_ptr, int id, 
+                              double fLim, double fInv, bool useBfield, bool sc, int debug_electron) {
 
         // check we have enough space
         if (stackOldGPU.stack_size > MAXPARTICLES)
@@ -1005,7 +1004,6 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(std::vector<std::pair<Av
             m_sensor,
             aval_ptr->m_deltaCut,
             id,
-            useBandStructure,
             c1,
             c2,
             fLim,

@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/Medium.hh"
 #include "Garfield/MultiProcessInterface.hh"
 
 class TH1;
@@ -16,6 +15,7 @@ class TH1;
 namespace Garfield {
 
 class AvalancheMicroscopicGPU;
+class Medium;
 class ViewDrift;
 class Sensor;
 
@@ -440,9 +440,8 @@ class AvalancheMicroscopic {
 
   void CreatePenningElectron(const double x, const double y, const double z,
                              const double t, const size_t w, 
-                             const Medium::Secondary& secondary,
-                             const int level, 
-                             std::vector<Seed>& stack) const;
+                             const double ds, const double dt, const double ep,
+                             const int level, std::vector<Seed>& stack) const;
   void PlotCollision(const int cstype, const size_t did, const double x,
                      const double y, const double z, size_t& nCollPlot) const;
   void CallUserHandles(

@@ -8,6 +8,7 @@
 #include <string>
 
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewDrift.hh"
@@ -635,8 +636,8 @@ bool AvalancheMicroscopic::TransportElectrons(
 
       // TODO: TN GPU: Fix arguments (medium, ID, useBandStructure, Flim, Finv
       // all set to constant values)
-      if (!m_gpuInterface->transportParticleStack(aval, this, 0, false, 0, 0, 0,
-                                                  0, useBfield, sc))
+      if (!m_gpuInterface->transportParticleStack(aval, this, 0, 0, 0, 
+                                                  useBfield, sc))
         return false;
 
       stack_time_gpu =
@@ -1199,15 +1200,15 @@ int AvalancheMicroscopic::TransportElectron(
       return StatusAttached;
     } else if (cstype == ElectronCollisionTypeExcitation) { 
       // Loop over the particles produced in the deexcitation cascade.
-      for (const auto& secondary : secondaries) {
-        if (secondary.type == Particle::Electron) {
+      for (const auto& sec : secondaries) {
+        if (sec.type == Particle::Electron) {
           // Penning ionisation.
-          CreatePenningElectron(x, y, z, t, seed.w, secondary, level, stack);
-        } else if (secondary.type == Particle::Photon && m_usePhotons &&
-                   secondary.energy > m_gammaCut) {
+          CreatePenningElectron(x, y, z, t, seed.w, sec.distance, sec.time, 
+                                sec.energy, level, stack);
+        } else if (sec.type == Particle::Photon && m_usePhotons &&
+                   sec.energy > m_gammaCut) {
           // Radiative de-excitation
-          TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                          seed.w, stack);
+          TransportPhoton(x, y, z, t + sec.time, sec.energy, seed.w, stack);
         }
       }
     }
@@ -1594,15 +1595,15 @@ int AvalancheMicroscopic::TransportElectronBfield(
       return StatusAttached;
     } else if (cstype == ElectronCollisionTypeExcitation) { 
       // Loop over the particles produced in the deexcitation cascade.
-      for (const auto& secondary : secondaries) {
-        if (secondary.type == Particle::Electron) {
+      for (const auto& sec : secondaries) {
+        if (sec.type == Particle::Electron) {
           // Penning ionisation.
-          CreatePenningElectron(x, y, z, t, seed.w, secondary, level, stack);
-        } else if (secondary.type == Particle::Photon && m_usePhotons &&
-                   secondary.energy > m_gammaCut) {
+          CreatePenningElectron(x, y, z, t, seed.w, sec.distance, sec.time,
+                                sec.energy, level, stack);
+        } else if (sec.type == Particle::Photon && m_usePhotons &&
+                   sec.energy > m_gammaCut) {
           // Radiative de-excitation
-          TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                          seed.w, stack);
+          TransportPhoton(x, y, z, t + sec.time, sec.energy, seed.w, stack);
         }
       }
     }
@@ -1936,15 +1937,15 @@ int AvalancheMicroscopic::TransportElectronSc(
       return StatusAttached;
     } else if (cstype == ElectronCollisionTypeExcitation) { 
       // Loop over the particles produced in the deexcitation cascade.
-      for (const auto& secondary : secondaries) {
-        if (secondary.type == Particle::Electron) {
+      for (const auto& sec : secondaries) {
+        if (sec.type == Particle::Electron) {
           // Penning ionisation.
-          CreatePenningElectron(x, y, z, t, seed.w, secondary, level, stack);
-        } else if (secondary.type == Particle::Photon && m_usePhotons &&
-                   secondary.energy > m_gammaCut) {
+          CreatePenningElectron(x, y, z, t, seed.w, sec.distance, sec.time,
+                                sec.energy, level, stack);
+        } else if (sec.type == Particle::Photon && m_usePhotons &&
+                   sec.energy > m_gammaCut) {
           // Radiative de-excitation
-          TransportPhoton(x, y, z, t + secondary.time, secondary.energy,
-                          seed.w, stack);
+          TransportPhoton(x, y, z, t + sec.time, sec.energy, seed.w, stack);
         }
       }
     }
@@ -1981,18 +1982,18 @@ int AvalancheMicroscopic::TransportElectronSc(
 
 void AvalancheMicroscopic::CreatePenningElectron(
     const double x, const double y, const double z, const double t,
-    const size_t w, const Medium::Secondary& secondary, const int level, 
-    std::vector<Seed>& stack) const {
+    const size_t w, const double ds, const double dt, const double ep,
+    const int level, std::vector<Seed>& stack) const {
 
   // Penning ionisation
   double xp = x, yp = y, zp = z;
-  if (secondary.distance > Small) {
+  if (ds > Small) {
     // Randomise the point of creation.
     double dx = 0., dy = 0., dz = 0.;
     RndmDirection(dx, dy, dz);
-    xp += secondary.distance * dx;
-    yp += secondary.distance * dy;
-    zp += secondary.distance * dz;
+    xp += ds * dx;
+    yp += ds * dy;
+    zp += ds * dz;
   }
   // Get the electric field and medium at this location.
   double fx = 0., fy = 0., fz = 0.;
@@ -2007,13 +2008,13 @@ void AvalancheMicroscopic::CreatePenningElectron(
     return;
   }
   if (m_userHandleIonisation) {
-    m_userHandleIonisation(xp, yp, zp, t, ElectronCollisionTypeExcitation,                            level, medium);
+    m_userHandleIonisation(xp, yp, zp, t, ElectronCollisionTypeExcitation,
+                           level, medium);
   }
   // Add the Penning electron to the list.
-  const double tp = t + secondary.time;
-  const double ep = std::max(secondary.energy, Small);
+  const double tp = t + dt;
   stack.emplace_back(MakeSeed(
-      MakePoint(xp, yp, zp, tp, ep), Particle::Electron, w));
+      MakePoint(xp, yp, zp, tp, std::max(ep, Small)), Particle::Electron, w));
   stack.emplace_back(
       MakeSeed(MakePoint(xp, yp, zp, tp, 0.), Particle::Ion, w));
 }
