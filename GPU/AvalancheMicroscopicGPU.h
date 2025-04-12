@@ -62,14 +62,15 @@ namespace Garfield {
         void FreeGPUParticleStack(ParticleStack &stack);
         void InitialiseCPUParticleStack(ParticleStack &stack, unsigned int num);
         void FreeCPUParticleStack(ParticleStack &stack);
-        void TransferStackFromCPUToGPU(std::vector<std::pair<AvalancheMicroscopic::Point, Particle> > &particles);
+        void TransferStackFromCPUToGPU(
+            std::vector<AvalancheMicroscopic::Seed> &particles);
         void TransferStackFromGPUToCPU(std::vector<AvalancheMicroscopic::Electron> &stack, bool end_points);
         void TransferClassInternalInfo(AvalancheMicroscopic *src);
         void transferParticleStack(ParticleStack dest, unsigned int offset, ParticleStack source,
             unsigned int num, TransferType type, bool init_dest = false);
         size_t processParticleStack(unsigned int &num_active, unsigned int &num_new);
-        bool transportParticleStack(const bool aval, AvalancheMicroscopic *aval_ptr, int id, bool useBandStructure,
-                                    const double c1, const double c2, double fLim, double fInv, bool useBfield, bool sc, int debug_electron = -1);
+        bool transportParticleStack(const bool aval, AvalancheMicroscopic *aval_ptr, int id, 
+                                    double fLim, double fInv, bool useBfield, bool sc, int debug_electron = -1);
         void SetCUDADevice(int dev);
 
         unsigned long memUsageStack{0};
