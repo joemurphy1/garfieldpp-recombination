@@ -132,7 +132,8 @@ void DriftLineRKF::SetGainFluctuationsPolya(const double theta,
 }
 
 bool DriftLineRKF::DriftElectron(const double x0, const double y0,
-                                 const double z0, const double t0) {
+                                 const double z0, const double t0,
+                                 const size_t w) {
   std::vector<std::array<double, 3> > x;
   std::vector<double> t;
   int status = 0;
@@ -144,6 +145,7 @@ bool DriftLineRKF::DriftElectron(const double x0, const double y0,
     std::vector<double> nn(nPoints, 0.);
     double scale = 1.;
     if (m_doAvalanche) Avalanche(Particle::Electron, x, ne, ni, nn, scale);
+    scale *= w;
     if (m_doSignal) {
       ComputeSignal(Particle::Electron, scale * m_scaleE, t, x, ne);
     }
@@ -229,13 +231,14 @@ bool DriftLineRKF::AddNegativeIonTail(const std::vector<double>& te,
 }
 
 bool DriftLineRKF::DriftPositron(const double x0, const double y0,
-                                 const double z0, const double t0) {
+                                 const double z0, const double t0,
+                                 const size_t w) {
   std::vector<std::array<double, 3> > x;
   std::vector<double> t;
   int status = 0;
   const bool ok = DriftLine({x0, y0, z0}, t0, Particle::Positron, t, x, status);
   if (ok && m_doSignal) {
-    ComputeSignal(Particle::Positron, m_scaleE, t, x, {});
+    ComputeSignal(Particle::Positron, m_scaleE * w, t, x, {});
   }
   std::swap(m_x, x);
   std::swap(m_t, t);
@@ -245,13 +248,13 @@ bool DriftLineRKF::DriftPositron(const double x0, const double y0,
 }
 
 bool DriftLineRKF::DriftHole(const double x0, const double y0, const double z0,
-                             const double t0) {
+                             const double t0, const size_t w) {
   std::vector<std::array<double, 3> > x;
   std::vector<double> t;
   int status = 0;
   const bool ok = DriftLine({x0, y0, z0}, t0, Particle::Hole, t, x, status);
   if (ok && m_doSignal) {
-    ComputeSignal(Particle::Hole, m_scaleH, t, x, {});
+    ComputeSignal(Particle::Hole, m_scaleH * w, t, x, {});
   }
   std::swap(m_x, x);
   std::swap(m_t, t);
@@ -261,13 +264,13 @@ bool DriftLineRKF::DriftHole(const double x0, const double y0, const double z0,
 }
 
 bool DriftLineRKF::DriftIon(const double x0, const double y0, const double z0,
-                            const double t0) {
+                            const double t0, const size_t w) {
   std::vector<std::array<double, 3> > x;
   std::vector<double> t;
   int status = 0;
   const bool ok = DriftLine({x0, y0, z0}, t0, Particle::Ion, t, x, status);
   if (ok && m_doSignal) {
-    ComputeSignal(Particle::Ion, m_scaleI, t, x, {});
+    ComputeSignal(Particle::Ion, m_scaleI * w, t, x, {});
   }
   std::swap(m_x, x);
   std::swap(m_t, t);
@@ -277,14 +280,15 @@ bool DriftLineRKF::DriftIon(const double x0, const double y0, const double z0,
 }
 
 bool DriftLineRKF::DriftNegativeIon(const double x0, const double y0,
-                                    const double z0, const double t0) {
+                                    const double z0, const double t0,
+                                    const size_t w) {
   std::vector<std::array<double, 3> > x;
   std::vector<double> t;
   int status = 0;
   const bool ok =
       DriftLine({x0, y0, z0}, t0, Particle::NegativeIon, t, x, status);
   if (ok && m_doSignal) {
-    ComputeSignal(Particle::NegativeIon, m_scaleI, t, x, {});
+    ComputeSignal(Particle::NegativeIon, m_scaleI * w, t, x, {});
   }
   std::swap(m_x, x);
   std::swap(m_t, t);
