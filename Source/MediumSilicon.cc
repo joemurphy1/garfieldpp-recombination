@@ -575,7 +575,7 @@ void MediumSilicon::GetElectronMomentum(const double e, double& px, double& py,
   const int nX = m_cb[0].nValleys;
   const int nL = m_cb[1].nValleys;
   // If the band index is out of range or inconsistent, choose one at random.
-  if (band < 0 || band >= m_cbIndex.size() ||
+  if (band < 0 || (unsigned)band >= m_cbIndex.size() ||
       (e < m_cb[1].eMin && band >= nX) ||
       (e < m_cb[2].eMin && band >= nX + nL)) {
     std::vector<double> cdos;
@@ -654,7 +654,7 @@ void MediumSilicon::GetElectronMomentum(const double e, double& px, double& py,
 
 double MediumSilicon::GetElectronNullCollisionRate(const int band) {
   if (!Update()) return 0.;
-  if (band < 0 || band >= m_cbIndex.size()) {
+  if (band < 0 || (unsigned)band >= m_cbIndex.size()) {
     std::cerr << m_className << "::GetElectronNullCollisionRate:\n"
               << "    Band index (" << band << ") out of range.\n";
     return 0.;
@@ -679,7 +679,7 @@ double MediumSilicon::GetElectronCollisionRate(const double e, const int band) {
 
   if (!Update()) return 0.;
 
-  if (band < 0 || band >= m_cbIndex.size()) {
+  if (band < 0 || (unsigned)band >= m_cbIndex.size()) {
     std::cerr << m_className << "::GetElectronCollisionRate:\n"
               << "    Band index (" << band << ") out of range.\n";
     return 0.;
@@ -713,7 +713,7 @@ bool MediumSilicon::ElectronCollision(const double e, int& type, int& level,
 
   if (!Update()) return false;
 
-  if (band < 0 || band >= m_cbIndex.size()) {
+  if (band < 0 || (unsigned)band >= m_cbIndex.size()) {
     std::cerr << m_className << "::ElectronCollision:\n"
               << "    Band index (" << band << ") out of range.\n";
     return false;
@@ -963,7 +963,7 @@ unsigned int MediumSilicon::GetNumberOfElectronBands() const {
 }
 
 int MediumSilicon::GetElectronBandPopulation(const int band) {
-  if (band < 0 || band >= m_nCollElectronBand.size()) {
+  if (band < 0 || (unsigned)band >= m_nCollElectronBand.size()) {
     std::cerr << m_className << "::GetElectronBandPopulation:\n"
               << "    Band index (" << band << ") out of range.\n";
     return 0;
@@ -1469,7 +1469,7 @@ bool MediumSilicon::LoadOpticalData(const std::string& filename) {
     const double energy = std::stod(words[0]);
     const double eps1 = std::stod(words[1]);
     const double eps2 = std::stod(words[2]);
-    const double loss = std::stod(words[3]);
+    // const double loss = std::stod(words[3]);
     // Make sure the values make sense.
     // The table has to be in ascending order
     //  with respect to the photon energy.
@@ -1691,7 +1691,6 @@ bool MediumSilicon::AcousticScatteringRates(const double rho, const double kbt,
                    (Hbar * u * u * rho);
 
   for (int i = 0; i < band.nEnergySteps; ++i) {
-    const double en = (i + 0.5) * band.eStep;
     band.cf[i].push_back(c * band.dos[i]);
   }
 

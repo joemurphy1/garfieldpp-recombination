@@ -1404,7 +1404,6 @@ void AvalancheGridSpaceCharge::GetLocalField(const int iz, const int ir,
       double eps = 1.;  //< neighbored resistive layer thickness from where?
       rpc->getPermittivityFromLayer(IndexOfRightLayer, eps);
       double alpha12 = (1. - eps) / (1. + eps);
-      double beta12 = -4. * eps / ((eps + 1.) * (eps + 1) * alpha12);
 
       // Obtain bounds of current gas gap
       double zTop, zBottom;
@@ -1418,8 +1417,6 @@ void AvalancheGridSpaceCharge::GetLocalField(const int iz, const int ir,
 
         double zf = m_zGrid[fz];
         double rf = m_rGrid[fr];
-        double zi = m_zGrid[iz];
-        double ri = m_rGrid[ir];
 
         // direct charge interaction, delta_Q = 1 (except itself)
         AddFieldFromChargeAt(iz, ir, fz, fr, N, eFieldZ, eFieldR);
@@ -1622,7 +1619,7 @@ double AvalancheGridSpaceCharge::GetMeanDistance() {
   // Returns mean distance of electrons on the whole grid (doesn't work for
   // MRPCs)
   long nofElectrons = 0;
-  double z = 0., meanDistance = 0.;
+  double z = 0.;
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
       const auto ne = m_grid[iz][ir].nElectron;
