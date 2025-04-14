@@ -213,6 +213,15 @@ add_library(Garfield SHARED
 if(GARFIELD_CUDA_USE_FLOAT)
   target_compile_definitions(Garfield PRIVATE GARFIELD_CUDA_USE_FLOAT)
 endif()
+target_compile_options(Garfield PRIVATE
+  $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+      -Wall
+      -Wextra
+      -pedantic
+      -Wfatal-errors
+      -Wno-missing-braces
+      -Wshadow>
+      $<$<CXX_COMPILER_ID:MSVC>:/W3>)
 target_link_libraries(Garfield PUBLIC GarfieldRandom)
 set_property(TARGET Garfield PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET Garfield PROPERTY CXX_EXTENSIONS OFF)

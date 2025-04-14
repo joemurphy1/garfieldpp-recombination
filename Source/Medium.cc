@@ -302,7 +302,7 @@ bool Medium::VelocityFluxBulk(
     const double by, const double bz,
     const std::vector<std::vector<std::vector<double> > >& velWv,
     const std::vector<std::vector<std::vector<double> > >& velWr,
-    const double q, double& wv, double& wr) const {
+    double& wv, double& wr) const {
   wv = wr = 0;
   // Make sure there is at least a table of velocities along E.
   if (velWv.empty() || velWr.empty()) return false;
@@ -320,13 +320,13 @@ bool Medium::VelocityFluxBulk(
   // Calculate the velocity along E.
   double wv_hold = 0., wr_hold = 0.;
   if (!Interpolate(e0, b, ebang, velWv, wv_hold, m_intpVel, m_extrVel)) {
-    std::cerr << m_className
-              << "::ExtVelocity: Interpolation of flux velocity (Wv) failed.\n";
+    std::cerr << m_className << "::VelocityFluxBulk: "
+              << "Interpolation of flux velocity (Wv) failed.\n";
     return false;
   }
   if (!Interpolate(e0, b, ebang, velWr, wr_hold, m_intpVel, m_extrVel)) {
-    std::cerr << m_className
-              << "::ExtVelocity: Interpolation of bulk velocity (Wr) failed.\n";
+    std::cerr << m_className << "::VelocityFluxBulk: "
+              << "Interpolation of bulk velocity (Wr) failed.\n";
     return false;
   }
   // only needed in B = 0 case so far.
@@ -489,7 +489,7 @@ bool Medium::ElectronVelocityFluxBulk(const double ex, const double ey,
                                       const double ez, const double bx,
                                       const double by, const double bz,
                                       double& wv, double& wr) {
-  return VelocityFluxBulk(ex, ey, ez, bx, by, bz, m_eVelWv, m_eVelWr, -1., wv,
+  return VelocityFluxBulk(ex, ey, ez, bx, by, bz, m_eVelWv, m_eVelWr, wv,
                           wr);
 }
 
@@ -808,7 +808,7 @@ double Medium::GetPhotonCollisionRate(const double e) {
 
 bool Medium::PhotonCollision(const double e, int& type, int& level, double& e1,
                              double& ctheta,
-                             std::vector<Secondary>& secondaries) {
+                             std::vector<Secondary>& /*secondaries*/) {
   type = level = -1;
   e1 = e;
   ctheta = 1.;

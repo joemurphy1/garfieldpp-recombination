@@ -40,7 +40,8 @@ class DriftLineRKF {
   /// Newton-Raphson integration. Default: 2.
   void SetSignalAveragingOrder(const unsigned int navg) { m_navg = navg; }
   /// Use the weighting potential (as opposed to the weighting field)
-  /// for calculating the induced signal.
+  /// for calculating the induced signal. 
+  /// By default, the weighting potential is used.
   void UseWeightingPotential(const bool on = true) {
     m_useWeightingPotential = on;
   }
@@ -52,7 +53,7 @@ class DriftLineRKF {
   /// Try to set an upper limit to the allowable step size based
   /// on the feature size of the sensor.
   void SetMaximumStepSize();
-  /// Do not apply an upper limit to the step size that is allowed.
+  /// Do not apply an upper limit to the allowable step size.
   void UnsetMaximumStepSize() { m_useStepSizeLimit = false; }
   /// Request (or not) the drift line calculation to be aborted if the
   /// drift line makes a bend sharper than 90 degrees.
@@ -87,22 +88,22 @@ class DriftLineRKF {
   void EnableVelocityMap(const bool on = true) { m_useVelocityMap = on; }
 
   /// Simulate the drift line of an electron with a given starting point.
-  bool DriftElectron(const double x0, const double y0, const double z0,
-                     const double t0);
+  bool DriftElectron(const double x, const double y, const double z,
+                     const double t, const size_t w = 1);
   /// Simulate the drift line of a hole with a given starting point.
-  bool DriftHole(const double x0, const double y0, const double z0,
-                 const double t0);
+  bool DriftHole(const double x, const double y, const double z,
+                 const double t, const size_t w = 1);
   /// Simulate the drift line of an ion with a given starting point.
-  bool DriftIon(const double x0, const double y0, const double z0,
-                const double t0);
+  bool DriftIon(const double x, const double y, const double z,
+                const double t, const size_t w = 1);
   /// Simulate the drift line of an electron with a given starting point,
   /// assuming that it has positive charge.
-  bool DriftPositron(const double x0, const double y0, const double z0,
-                     const double t0);
+  bool DriftPositron(const double x, const double y, const double z,
+                     const double t, const size_t w = 1);
   /// Simulate the drift line of an ion with a given starting point,
   /// assuming that it has negative charge.
-  bool DriftNegativeIon(const double x0, const double y0, const double z0,
-                        const double t0);
+  bool DriftNegativeIon(const double x, const double y, const double z,
+                        const double t, const size_t w = 1);
 
   /// Print the trajectory of the most recent drift line.
   void PrintDriftLine() const;

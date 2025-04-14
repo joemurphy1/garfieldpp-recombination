@@ -15,7 +15,8 @@ namespace Garfield {
 
 ComponentParallelPlate::ComponentParallelPlate() : Component("ParallelPlate") {}
 
-void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
+void ComponentParallelPlate::Setup(const unsigned int N, 
+                                   std::vector<double> eps,
                                    std::vector<double> d, const double V,
                                    std::vector<int> sigmaIndex) {
   // Here I switch conventions with the z-axis the direction of drift.
@@ -41,7 +42,7 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
 
   m_conductive.assign(N + 1, false);
   if (sigmaIndex.empty()) {
-    for (int i = 0; i < N; i++) {
+    for (unsigned int i = 0; i < N; i++) {
       if (eps[i] != 1) m_conductive[i + 1] = true;
     }
   } else {
@@ -49,7 +50,7 @@ void ComponentParallelPlate::Setup(const int N, std::vector<double> eps,
   }
 
   m_z.assign(N + 1, 0.);
-  for (int i = 1; i <= N; i++) {
+  for (unsigned int i = 1; i <= N; i++) {
     m_z[i] = m_z[i - 1] + m_d[i - 1];
 
     if (m_debug)
@@ -348,7 +349,7 @@ Medium *ComponentParallelPlate::GetMedium(const double x, const double y,
   int i = -1;
   double eps = 0.;
   if (!getLayer(y, i, eps)) return nullptr;
-  return m_conductive[i] ? nullptr : m_medium;
+  return m_conductive[i] ? nullptr : medium;
 }
 
 bool ComponentParallelPlate::Nsigma(

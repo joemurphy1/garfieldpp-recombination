@@ -805,10 +805,10 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type, int& level,
           secondaries_type[num_secondaries] = Particle::Electron;
           secondaries_energy[num_secondaries++] = eav;
 #else
-          Secondary esec;
-          esec.type = Particle::Electron;
-          esec.energy = eav;
-          secondaries.push_back(std::move(esec));
+          Secondary sec;
+          sec.type = Particle::Electron;
+          sec.energy = eav;
+          secondaries.push_back(std::move(sec));
 #endif
         }
       }
@@ -819,10 +819,10 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type, int& level,
           secondaries_type[num_secondaries] = Particle::Electron;
           secondaries_energy[num_secondaries++] = eav;
 #else
-          Secondary esec;
-          esec.type = Particle::Electron;
-          esec.energy = eav;
-          secondaries.push_back(std::move(esec));
+          Secondary sec;
+          sec.type = Particle::Electron;
+          sec.energy = eav;
+          secondaries.push_back(std::move(sec));
 #endif
         }
       }
@@ -833,10 +833,10 @@ bool MediumMagboltz::ElectronCollision(const double e, int& type, int& level,
         secondaries_type[num_secondaries] = Particle::Electron;
         secondaries_energy[num_secondaries++] = eav;
 #else
-        Secondary esec;
-        esec.type = Particle::Electron;
-        esec.energy = eav;
-        secondaries.push_back(std::move(esec));
+        Secondary sec;
+        sec.type = Particle::Electron;
+        sec.energy = eav;
+        secondaries.push_back(std::move(sec));
 #endif
       }
     }
@@ -1573,7 +1573,6 @@ bool MediumMagboltz::Mixer(const bool verbose) {
     const double m = (2. / e[1]) * ElectronMass / AtomicMassUnitElectronVolt;
     m_mgas[iGas] = m;
     if (m_debug || verbose) {
-      const double m = (2. / e[1]) * ElectronMass / AtomicMassUnitElectronVolt;
       std::cout << "    " << name << "\n"
                 << "      mass: " << m << " amu\n";
       if (nIon > 1) {
@@ -2153,8 +2152,6 @@ void MediumMagboltz::PlotElectronCollisionRates(TPad* pad) {
 
 void MediumMagboltz::PlotElectronInverseMeanFreePath(TPad* pad) {
   if (!Update()) return;
-
-  const double density = GetNumberDensity();
 
   std::array<float, Magboltz::nEnergySteps> en;
   std::array<float, Magboltz::nEnergySteps> imfp;

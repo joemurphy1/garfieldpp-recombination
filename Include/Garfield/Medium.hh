@@ -770,7 +770,7 @@ class GARFIELD_CLASS_NAME(Medium) {
       const double by, const double bz,
       const std::vector<std::vector<std::vector<double> > >& velWv,
       const std::vector<std::vector<std::vector<double> > >& velWr,
-      const double q, double& wv, double& wr) const;
+      double& wv, double& wr) const;
   static void Langevin(const double ex, const double ey, const double ez,
                        double bx, double by, double bz, const double mu,
                        double& vx, double& vy, double& vz);

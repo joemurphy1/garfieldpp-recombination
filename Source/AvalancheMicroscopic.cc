@@ -144,14 +144,6 @@ Garfield::AvalancheMicroscopic::Seed MakeSeed(
   return seed;
 }
 
-void PrintStatus(const std::string& hdr, const std::string& status,
-                 const double x, const double y, const double z,
-                 const bool hole) {
-  const std::string eh = hole ? "Hole " : "Electron ";
-  std::cout << hdr << eh << status << " at " << x << ", " << y << ", " << z
-            << "\n";
-}
-
 }  // namespace
 
 namespace Garfield {
@@ -578,7 +570,6 @@ bool AvalancheMicroscopic::TransportElectrons(
   double stack_time_cpu{0};
   double process_time_gpu{0};
   double stack_time_gpu{0};
-  unsigned int num_new_particles{0};
   unsigned int num_curr_particles{0};
   unsigned int num_new_particles_gpu{0};
   unsigned int num_curr_particles_gpu{0};
@@ -596,7 +587,6 @@ bool AvalancheMicroscopic::TransportElectrons(
     // Process and transport the particle stack depending on GPU config
     if (m_runMode == MPRunMode::Normal) {
       start = highres_clock_t::now();
-      num_new_particles = newParticles.size();
 
       // this is all the processing of the particle stack that's needed
       if (loop_count) {
@@ -1070,11 +1060,11 @@ int AvalancheMicroscopic::TransportElectron(
     double kx1, ky1, kz1;
     if (m_rknSteps) {
       // Update the direction.
-      const double a1 = 1 / (c1 * sqrt(en1));
+      const double b1 = 1. / (c1 * sqrt(en1));
 
-      kx1 = vr[0] * a1;
-      ky1 = vr[1] * a1;
-      kz1 = vr[2] * a1;
+      kx1 = vr[0] * b1;
+      ky1 = vr[1] * b1;
+      kz1 = vr[2] * b1;
 
       vx = vr[0];
       vy = vr[1];
