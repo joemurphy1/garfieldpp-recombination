@@ -42,6 +42,7 @@ class AvalancheMC {
   /** Simulate an avalanche initiated by an electron at a given starting point.
    * \param x,y,z,t coordinates and time of the initial electron
    * \param hole simulate the hole component of the avalanche or not
+   * \param w multiplicity of the initial electron
    */
   bool AvalancheElectron(const double x, const double y, const double z,
                          const double t, const bool hole = false,
