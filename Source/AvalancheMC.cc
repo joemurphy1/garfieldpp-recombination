@@ -1089,7 +1089,7 @@ bool AvalancheMC::ComputeGainLoss(
     }
     // Add the new holes/ions to the table.
     if (ni > 0) {
-      const double n1 = std::exp(alps[i]) - 1;
+      const double n1 = std::expm1(alps[i]);
       const double a1 = n1 > 0. ? 1. / std::log1p(n1) : 0.;
       for (int j = 0; j < ni; ++j) {
         const double f1 = n1 > 0. ? a1 * std::log1p(RndmUniform() * n1) : 0.5;

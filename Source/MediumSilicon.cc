@@ -1714,7 +1714,7 @@ bool MediumSilicon::OpticalScatteringRates(const double rho, const double kbt,
   //    Fundamentals of carrier transport
 
   // Phonon occupation numbers
-  const double nocc = 1. / (exp(eph / kbt) - 1);
+  const double nocc = 1. / std::expm1(eph / kbt);
   // Prefactors
   const double c0 = HbarC * SpeedOfLight * Pi / rho;
   double c = c0 * dtk * dtk / eph;
@@ -1759,7 +1759,7 @@ bool MediumSilicon::IntervalleyScatteringRates(
   //    Semicond. Sci. Technol. 8, 1291-1297
 
   // Phonon occcupation numbers
-  const double nocc = 1. / (exp(eph / kbt) - 1.);
+  const double nocc = 1. / std::expm1(eph / kbt);
   const double c0 = HbarC * SpeedOfLight * Pi / rho;
   const double c = zF * c0 * dtk * dtk / eph;
 
