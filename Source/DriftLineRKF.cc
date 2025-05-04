@@ -688,7 +688,7 @@ bool DriftLineRKF::Avalanche(const Particle particle,
       overflow = true;
       ni[i] = exp(expmax);
     } else {
-      ni[i] = ne[i - 1] * (exp(d * alpsum) - 1);
+      ni[i] = ne[i - 1] * std::expm1(d * alpsum);
     }
     nn[i] = std::max(ne[i - 1] + ni[i] - ne[i], 0.);
   }

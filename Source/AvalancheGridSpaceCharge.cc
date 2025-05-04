@@ -61,10 +61,10 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
       //  and net Nion = nPos - nNeg = nOut - nIn
       if (nElectronOut <= 0) nElectronOut = 0;  //< unphysical
       if (nElectronOut >= nElectronIn) {
-        nNegIonOut = (std::exp(eta * dx) - 1) * nElectronIn;     //< >= 0
+        nNegIonOut = std::expm1(eta * dx) * nElectronIn;         //< >= 0
         nPosIonOut = (nElectronOut - nElectronIn) + nNegIonOut;  //< >= 0
       } else {
-        nPosIonOut = (std::exp(alpha * dx) - 1) * nElectronIn;   //< >= 0
+        nPosIonOut = std::expm1(alpha * dx) * nElectronIn;       //< >= 0
         nNegIonOut = nPosIonOut - (nElectronOut - nElectronIn);  //< >= 0
       }
     }
@@ -139,13 +139,13 @@ void GetAvalancheSizeFromStep(double dx, const long nElectronIn,
 
       // either the above has not been executed or nPosIonOut was not positive
       if (nElectronOut >= nElectronIn) {
-        nNegIonOut = (std::exp(eta * dx) - 1) * nElectronIn;  //< >= 0
+        nNegIonOut = std::expm1(eta * dx) * nElectronIn;
         // nNegIonOut = eta / (alpha - eta) * (nElectronOut - nElectronIn);
-        nPosIonOut = (nElectronOut - nElectronIn) + nNegIonOut;  //< >= 0
+        nPosIonOut = (nElectronOut - nElectronIn) + nNegIonOut;
       } else {
-        nPosIonOut = (std::exp(alpha * dx) - 1) * nElectronIn;  //< >= 0
+        nPosIonOut = std::expm1(alpha * dx) * nElectronIn;
         // nPosIonOut = alpha / (alpha - eta) * (nElectronOut - nElectronIn);
-        nNegIonOut = nPosIonOut - (nElectronOut - nElectronIn);  //< >= 0
+        nNegIonOut = nPosIonOut - (nElectronOut - nElectronIn);
       }
     }
   }
@@ -166,10 +166,10 @@ void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn,
 
   // either the above has not been executed or nPosIonOut was not positive
   if (nElectronOut >= nElectronIn) {
-    nNegIonOut = (std::exp(eta * dx) - 1) * nElectronIn;     //< >= 0
+    nNegIonOut = std::expm1(eta * dx) * nElectronIn;     //< >= 0
     nPosIonOut = (nElectronOut - nElectronIn) + nNegIonOut;  //< >= 0
   } else {
-    nPosIonOut = (std::exp(alpha * dx) - 1) * nElectronIn;   //< >= 0
+    nPosIonOut = std::expm1(alpha * dx) * nElectronIn;   //< >= 0
     nNegIonOut = nPosIonOut - (nElectronOut - nElectronIn);  //< >= 0
   }
 }
