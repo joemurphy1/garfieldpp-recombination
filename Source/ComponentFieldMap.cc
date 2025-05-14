@@ -2519,6 +2519,36 @@ void ComponentFieldMap::UpdatePeriodicityCommon() {
       m_warning = true;
     }
   }
+  
+  // Triangle symmetry
+  const int triSymmN = std::count(m_triangleSymmetric.begin(),
+                                       m_triangleSymmetric.end(), true);
+  // Check octant setting
+  if (triSymmN == 1){
+    if(m_triangleSymmetricOct < 1 || m_triangleSymmetricOct > 8){
+      std::cerr << m_className << "::UpdatePeriodicityCommon:\n"
+                << "    For triangle symmetry octant needs to be in "
+                << "the range 1 - 8; reset.\n";
+      m_mirrorPeriodic.fill(false);
+      m_triangleSymmetric.fill(false);
+      m_triangleSymmetricOct = 0;
+      m_warning = true;
+    } else {
+      m_outsideCone = (m_triangleOctRules[0] == m_triangleSymmetricOct) ||
+                 (m_triangleOctRules[1] == m_triangleSymmetricOct) ||
+                 (m_triangleOctRules[2] == m_triangleSymmetricOct) ||
+                 (m_triangleOctRules[3] == m_triangleSymmetricOct);
+    }
+  }
+  // Not more than 1 triangle symmetry
+  if (triSymmN > 1){
+    std::cerr << m_className << "::UpdatePeriodicityCommon:\n"
+              << "    Only one triangle symmetry allowed; reset.\n";
+    m_mirrorPeriodic.fill(false);
+    m_triangleSymmetric.fill(false);
+    m_triangleSymmetricOct = 0;
+    m_warning = true;
+  }
 
   // Recompute the cell ranges.
   for (size_t i = 0; i < 3; ++i) {
@@ -2594,6 +2624,17 @@ void ComponentFieldMap::UpdatePeriodicity2d() {
               << "    around x or y for a 2d map; reset.\n";
     m_axiallyPeriodic[0] = false;
     m_axiallyPeriodic[1] = false;
+    m_warning = true;
+  }
+  
+  // No xz or yz-planes in 2d
+  if (m_triangleSymmetric[1] || m_triangleSymmetric[2]) {
+    std::cerr << m_className << "::UpdatePeriodicity2d:\n"
+              << "    triangle periodicity does not allow\n"
+              << "    for xz or yz planes; reset.\n";
+    m_triangleSymmetric.fill(false);
+    m_mirrorPeriodic.fill(false);
+    m_triangleSymmetricOct = 0;
     m_warning = true;
   }
 }
@@ -2714,6 +2755,21 @@ void ComponentFieldMap::PrintRange() {
     if (!(m_periodic[i] || m_mirrorPeriodic[i] || m_axiallyPeriodic[i] ||
           m_rotationSymmetric[i]))
       std::cout << " none";
+    std::cout << "\n";
+  }
+  
+  // triangle symmetry check
+  const bool triangleSymm = std::any_of(m_triangleSymmetric.begin(),
+                                        m_triangleSymmetric.end(), [](bool val)
+                                        { return val; });
+  if(triangleSymm){
+    const std::array<std::string, 3> planes = {{"xy", "xz", "yz"}};
+    for (unsigned int i = 0; i < 3; ++i) {
+      if (m_triangleSymmetric[i]) {
+        std::cout << "            " << planes[i] << "-plane:";
+        std::cout << " triangle with right sides of " << m_cells[i] << " cm";
+      }
+    }
     std::cout << "\n";
   }
 }
@@ -2864,6 +2920,34 @@ void ComponentFieldMap::
     xpos = rcoordinate;
     ypos = zcoordinate;
     zpos = 0;
+  }
+  
+  if (m_triangleSymmetric[0] || m_triangleSymmetric[1] ||
+      m_triangleSymmetric[2]) {
+    const double pH[2] = {xpos, ypos};
+    bool triSwap = false;
+    double prefixH = 1.;
+    
+    if(m_outsideCone) {
+      prefixH = (m_triangleSymmetricOct % 2 == 0) ? 1 : -1;
+      if (std::abs(xpos) < std::abs(ypos)) triSwap = true;
+    } else {
+      prefixH = (m_triangleSymmetricOct % 2 == 0) ? -1 : 1;
+      if (std::abs(xpos) > std::abs(ypos)) triSwap = true;
+    }
+    
+    if(triSwap) {
+      if (m_triangleSymmetric[0]){
+        xpos = prefixH * ypos;
+        ypos = prefixH * pH[0];
+      } else if (m_triangleSymmetric[1]) {
+        xpos = prefixH * zpos;
+        zpos = prefixH * pH[0];
+      } else {
+        ypos = prefixH * zpos;
+        zpos = prefixH * pH[1];
+      }
+    }
   }
 }
 
