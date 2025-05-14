@@ -359,6 +359,31 @@ class GARFIELD_CLASS_NAME(Component) {
     roty = m_rotationSymmetric[1];
     rotz = m_rotationSymmetric[2];
   }
+  
+  /// Enable triangular periodicity in the \f$xy\f$ plane.
+  void EnableTriangleSymmetricXY(const bool on = true,
+                                 const bool oct = 2) {
+    m_triangleSymmetric[0] = on;
+    m_triangleSymmetricOct = oct;
+    m_mirrorPeriodic[0] = on;
+    m_mirrorPeriodic[1] = on;
+  }
+  /// Enable triangular periodicity in the \f$xz\f$ plane.
+  void EnableTriangleSymmetricXZ(const bool on = true,
+                                 const bool oct = 2) {
+    m_triangleSymmetric[1] = on;
+    m_triangleSymmetricOct = oct;
+    m_mirrorPeriodic[0] = on;
+    m_mirrorPeriodic[2] = on;
+  }
+  /// Enable triangular periodicity in the \f$yz\f$ plane.
+  void EnableTriangleSymmetricYZ(const bool on = true,
+                                 const bool oct = 2) {
+    m_triangleSymmetric[2] = on;
+     m_triangleSymmetricOct = oct;
+    m_mirrorPeriodic[1] = on;
+    m_mirrorPeriodic[2] = on;
+  }
 
   /// Switch on debugging messages.
   void EnableDebugging(const bool on = true) { m_debug = on; }
@@ -457,6 +482,13 @@ class GARFIELD_CLASS_NAME(Component) {
   bool m_axiallyPeriodic[3] = {false, false, false};
   /// Rotation symmetry around x-axis, y-axis, z-axis.
   bool m_rotationSymmetric[3] = {false, false, false};
+  /// Triangle symmetric in the xy, xz, and yz plane.
+  bool m_triangleSymmetric[3] = {false, false, false};
+  /// Triangle symmetric octant of imported map (0 < phi < Pi/4 --> octant 1).
+  int m_triangleSymmetricOct = 0;
+  /// Octants where |x| >= |y|
+  const int m_triangleOctRules[4] = {1, 4, 5, 8};
+  bool m_outsideCone = false;
 #else
   /// Switch on/off debugging messages
   bool m_debug = false;
@@ -469,6 +501,13 @@ class GARFIELD_CLASS_NAME(Component) {
   std::array<bool, 3> m_axiallyPeriodic = {{false, false, false}};
   /// Rotation symmetry around x-axis, y-axis, z-axis.
   std::array<bool, 3> m_rotationSymmetric = {{false, false, false}};
+  /// Triangle symmetric in the xy, xz, and yz plane.
+  std::array<bool, 3> m_triangleSymmetric = {{false, false, false}};
+  /// Triangle symmetric octant of imported map (0 < phi < Pi/4 --> octant 1).
+  int m_triangleSymmetricOct = 0;
+  /// Octants where |x| >= |y|
+  const std::array<int, 4> m_triangleOctRules = {1, 4, 5, 8};
+  bool m_outsideCone = false;
 #endif
 
 #ifndef __GPUCOMPILE__

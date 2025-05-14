@@ -37,6 +37,8 @@ void Component::Clear() {
   m_mirrorPeriodic.fill(false);
   m_axiallyPeriodic.fill(false);
   m_rotationSymmetric.fill(false);
+  m_triangleSymmetric.fill(false);
+  m_triangleSymmetricOct = 0;
   // Reset the magnetic field.
   m_b0.fill(0.);
   Reset();
