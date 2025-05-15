@@ -1466,9 +1466,10 @@ double Medium::Interpolate1D(const double x, const std::vector<double>& ytab,
         result = ytab[0] + extr4 * (x - xtab[0]);
       } else {
         // Log values in gas table for alpha, eta.
-        const double extr4 =
-            (std::exp(ytab[1]) - std::exp(ytab[0])) / (xtab[1] - xtab[0]);
-        result = log(std::exp(ytab[0]) + extr4 * (x - xtab[0]));
+        const double y0 = std::exp(ytab[0]);
+        const double extr4 = (std::exp(ytab[1]) - y0) / (xtab[1] - xtab[0]);
+        result = y0 + extr4 * (x - xtab[0]);
+        result = result > 0. ? log(result) : -30.;
       }
     } else if (extr.first == 2) {
       // Exponential extrapolation
@@ -1502,9 +1503,11 @@ double Medium::Interpolate1D(const double x, const std::vector<double>& ytab,
         result = ytab[nt - 1] + extr2 * (x - xtab[nt - 1]);
       } else {
         // Log values in gas table for alpha, eta.
-        const double extr2 = (std::exp(ytab[nt - 1]) - std::exp(ytab[nt - 2])) /
+        const double y0 = std::exp(ytab[nt - 1]);
+        const double extr2 = (y0 - std::exp(ytab[nt - 2])) /
                              (xtab[nt - 1] - xtab[nt - 2]);
-        result = log(std::exp(ytab[nt - 1]) + extr2 * (x - xtab[nt - 1]));
+        result = y0 + extr2 * (x - xtab[nt - 1]);
+        result = result > 0. ? log(result) : -30.;
       }
     } else if (extr.second == 2) {
       if (!logval) {
