@@ -30,15 +30,13 @@ tmin = -0.5 * tstep
 nbins = 1000
 sensor.SetTimeWindow(tmin, tstep, nbins)
 # Set the delta reponse function.
-infile = open('mdt_elx_delta.txt', 'r')
 times = ROOT.std.vector('double')()
 values = ROOT.std.vector('double')()
-for line in infile:
-  line = line.strip()
-  line = line.split()
-  times.push_back(1.e3 * float(line[0]))
-  values.push_back(float(line[1]))
-infile.close()
+with open('mdt_elx_delta.txt', 'r') as infile:
+  for line in infile:
+    t, f = map(float, line.strip().split())
+    times.push_back(1.e3 * t)
+    values.push_back(f)
 sensor.SetTransferFunction(times, values)
 
 # Set up Heed.
