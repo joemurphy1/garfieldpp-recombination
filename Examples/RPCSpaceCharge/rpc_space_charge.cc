@@ -54,37 +54,35 @@ int main(int argc, char *argv[]) {
   cmp.SetMedium(&gas);
 
   // Sensor
-  Sensor sens;
-  sens.AddComponent(&cmp);
+  Sensor sens(&cmp);
   sens.AddElectrode(&cmp, label);
-  sens.SetTimeWindow(0, (25. - 0) / 200., 200);
+  const unsigned int nBins = 200;
+  const double tMax = 25.;
+  sens.SetTimeWindow(0., tMax / nBins, nBins);
 
-  // AvalancheGridSpace Charge
-  AvalancheGridSpaceCharge avalsc;
+  AvalancheGridSpaceCharge avalsc(&sens);
   avalsc.EnableDebugging();
   avalsc.EnableDiffusion(true);
   avalsc.EnableStickyAnode(true);
   avalsc.EnableAdaptiveTimeStepping(true);
   avalsc.SetStopAtK(true);
-  // disable space charge calculation
+  // Disable space charge calculation.
   avalsc.EnableSpaceChargeEffect(false);
-  // set sensor and grid
-  avalsc.SetSensor(&sens);
+  // Set the grid.
   avalsc.Set2dGrid(y_mid - 0.5 * d_gas + 1.e-8, y_mid + 0.5 * d_gas - 1.e-8,
                    400, 0.05, 100);
 
-  // Place 1000 electrons in the middle of the gas gap
+  // Place 1000 electrons in the middle of the gas gap.
   avalsc.AddElectron(0., y_mid, 0., 0., 1000.);
   avalsc.StartGridAvalanche();
-  // export grid
+  // Export grid.
   avalsc.ExportGrid("my_rpc_grid");
 
-  // view recorded signals from plane electrode
+  // View recorded signals from plane electrode.
   ViewSignal *signal_view = new ViewSignal(&sens);
   TCanvas *c_signal = new TCanvas(label.c_str(), label.c_str(), 600, 600);
   signal_view->SetCanvas(c_signal);
   signal_view->PlotSignal(label);
-  c_signal->SetTitle(label.c_str());
   gSystem->ProcessEvents();
 
   app.Run(true);

@@ -76,7 +76,7 @@ class AvalancheGridSpaceCharge {
   /// Stop the avalanche if K % field is reached
   void SetStopAtK(bool option = true) { m_bStopAtK = option; }
 
-  /// Set the sensor (+ determines if base Cmp is CmpParallelPlate (MRPCS)).
+  /// Set the sensor (and determine if it includes a parallel-plate component).
   void SetSensor(Sensor *sensor);
 
   /**
@@ -283,7 +283,7 @@ class AvalancheGridSpaceCharge {
   int m_iFieldApprox = 1;    //< order of approximation in Set(1,2,3,...)
   double m_dMinGroups = 50;  //< same values as lippmann
 
-  ComponentParallelPlate *m_ParallelPlate = nullptr;
+  ComponentParallelPlate *m_pp = nullptr;
   Sensor *m_sensor = nullptr;
 
   std::vector<double> m_zGrid;  ///< Grid points of z-coordinate.
