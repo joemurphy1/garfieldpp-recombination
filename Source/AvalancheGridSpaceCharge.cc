@@ -218,18 +218,15 @@ void AvalancheGridSpaceCharge::Reset() {
   std::cout << m_className << "::Reset: Instance reset, ready to use again.\n";
 }
 
-/// Set the sensor (+ determines if base Cmp is CmpParallelPlate (MRPCS)).
 void AvalancheGridSpaceCharge::SetSensor(Sensor *sensor) {
   m_sensor = sensor;
-  // Determine if any component is CmpParallelPlate (if not it will stay
-  // nullptr).
-  m_ParallelPlate = nullptr;
-  const size_t nofCmp = m_sensor->GetNumberOfComponents();
-  for (size_t i = 0; i < nofCmp; i++) {
-    if (!m_ParallelPlate) {
-      m_ParallelPlate =
-          dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(i));
-    }
+  // Determine if one of the components is a parallel-plate one.
+  m_pp = nullptr;
+  if (!m_sensor) return;
+  const size_t nCmp = m_sensor->GetNumberOfComponents();
+  for (size_t i = 0; i < nCmp; i++) {
+    m_pp = dynamic_cast<ComponentParallelPlate*>(m_sensor->GetComponent(i));
+    if (m_pp) break;
   }
 }
 
@@ -276,9 +273,7 @@ void AvalancheGridSpaceCharge::AddElectrons(AvalancheMicroscopic *avmc) {
     m_bImportAvalanche = true;
 
     // resize the electrons according to # gap
-    if (m_ParallelPlate) {
-      m_ParallelPlate->IndexOfGasGaps(m_vIndexGasGaps);
-    }
+    if (m_pp) m_pp->IndexOfGasGaps(m_vIndexGasGaps);
     m_vElectrons.resize(m_vIndexGasGaps.size());
   }
 
@@ -292,10 +287,10 @@ void AvalancheGridSpaceCharge::AddElectrons(AvalancheMicroscopic *avmc) {
       continue;
     }
     int k = 0;
-    if (m_ParallelPlate) {
+    if (m_pp) {
       int ind;
       double eps;
-      if (!m_ParallelPlate->getLayer(electron.path.back().y, ind, eps)) {
+      if (!m_pp->getLayer(electron.path.back().y, ind, eps)) {
         std::cerr << m_className
                   << "::AddElectrons: Electron outside component.\n";
         continue;
@@ -326,15 +321,15 @@ void AvalancheGridSpaceCharge::AddElectron(const double x, const double y,
                                            const int n) {
   int gasGap = 0;
   // check if avalanche electron in a gas gap
-  if (m_ParallelPlate) {
+  if (m_pp) {
     int ind;
     double eps = -1;
-    if (!m_ParallelPlate->getLayer(y, ind, eps) && eps != 1.) {
+    if (!m_pp->getLayer(y, ind, eps) && eps != 1.) {
       std::cerr << m_className << "AddElectron: Electron is not in a gas gap.";
       return;
     }
     // determine indices of gas gaps
-    m_ParallelPlate->IndexOfGasGaps(m_vIndexGasGaps);
+    m_pp->IndexOfGasGaps(m_vIndexGasGaps);
     gasGap = GetGasGapNumber(ind);
   } else {
     // put the y-electron coord as reference
@@ -382,10 +377,10 @@ void AvalancheGridSpaceCharge::AddExtraElectron(double y, int n) {
 
   // check if avalanche electron in a gas gap
   int gasGap = 0;
-  if (m_ParallelPlate) {
+  if (m_pp) {
     int ind;
     double eps = -1;
-    if (!m_ParallelPlate->getLayer(y, ind, eps) && eps != 1.) {
+    if (!m_pp->getLayer(y, ind, eps) && eps != 1.) {
       std::cerr << m_className
                 << "AddExtraElectron: Electron is not in a gas gap.";
       return;
@@ -692,13 +687,13 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
   int n = m_vIndexGasGaps.size();
   m_ezBkg.resize(n);
 
-  if (m_ParallelPlate) {
+  if (m_pp) {
     m_vYPointInGasGap.resize(n);
     for (int iz = 0; iz <= m_zSteps; iz++) {
       // determine layer index
       int layerIndex = 0;
       double eps = 0.;
-      m_ParallelPlate->getLayer(m_zGrid[iz], layerIndex, eps);
+      m_pp->getLayer(m_zGrid[iz], layerIndex, eps);
       // determine gap number from m_iIndexGasGaps and layer index
       int k = GetGasGapNumber(layerIndex);
       if (k != -1 && k < n) m_vYPointInGasGap[k] = m_zGrid[iz];
@@ -749,9 +744,9 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
     int k = 0;
     // Determine layer index.
     int layerIndex = 0;
-    if (m_ParallelPlate) {
+    if (m_pp) {
       double eps = 0.;
-      m_ParallelPlate->getLayer(m_zGrid[iz], layerIndex, eps);
+      m_pp->getLayer(m_zGrid[iz], layerIndex, eps);
       // Determine gap number.
       k = GetGasGapNumber(layerIndex);
     }
@@ -1387,7 +1382,7 @@ void AvalancheGridSpaceCharge::GetLocalField(const int iz, const int ir,
 
     // get the rpc (ComponentParallelPlate)
     // HS: why?
-    auto *rpc = m_ParallelPlate;
+    auto *rpc = m_pp;
 
     // loop over all cells with particles and add fields
     int k;
