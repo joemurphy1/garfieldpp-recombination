@@ -1,9 +1,8 @@
 #include "heed++/code/PhotoAbsCSLib.h"
-
-#include <iostream>
-
 #include "heed++/code/PhysicalConstants.h"
-
+#include<vector>
+#include <iostream>
+#include<map>
 // 2004, I. Smirnov
 
 namespace {

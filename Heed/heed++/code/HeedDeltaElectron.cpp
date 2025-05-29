@@ -3,7 +3,10 @@
 #include "Garfield/Random.hh"
 #include "heed++/code/HeedDeltaElectronCS.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
-
+#include "heed++/code/ElElasticScat.h"
+#include "heed++/code/HeedMatterDef.h"
+#include "heed++/code/PairProd.h"
+#include "heed++/code/EnergyMesh.h"
 // 2003, I. Smirnov
 
 #define USE_ADJUSTED_W

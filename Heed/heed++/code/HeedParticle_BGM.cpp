@@ -10,6 +10,10 @@
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/math/kinem.h"
 #include "wcpplib/math/tline.h"
+#include "heed++/code/BGMesh.h"
+#include "wcpplib/matter/MatterDef.h"
+#include "heed++/code/EnergyMesh.h"
+#include "heed++/code/HeedMatterDef.h"
 
 // 2003-2008, I. Smirnov
 

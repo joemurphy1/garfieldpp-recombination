@@ -1,13 +1,15 @@
-#include "heed++/code/EnTransfCS.h"
-
-#include <algorithm>
+#include <cmath>
 #include <fstream>
-#include <iomanip>
-
+#include "heed++/code/EnTransfCS.h"
 #include "heed++/code/HeedMatterDef.h"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/math/lorgamma.h"
 #include "wcpplib/math/tline.h"
+#include "heed++/code/HeedMatterDef.h"
+#include "heed++/code/EnergyMesh.h"
+#include "wcpplib/matter/MatterDef.h"
+#include "heed++/code/PhysicalConstants.h"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 
 // 2003, I. Smirnov
 

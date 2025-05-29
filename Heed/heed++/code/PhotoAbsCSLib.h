@@ -2,6 +2,7 @@
 #define PHOTOABSCSLIB_H
 
 #include <map>
+#include <string>
 
 #include "heed++/code/PhotoAbsCS.h"
 

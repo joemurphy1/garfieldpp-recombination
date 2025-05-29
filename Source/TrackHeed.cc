@@ -1,6 +1,7 @@
 #include "Garfield/TrackHeed.hh"
 
 #include <algorithm>
+#include<fstream>
 #include <iostream>
 
 #include "Garfield/FundamentalConstants.hh"
@@ -21,6 +22,9 @@
 #include "heed++/code/PhotoAbsCSLib.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/matter/MatterDef.h"
+#include "heed++/code/PairProd.h"
+#include "heed++/code/EnergyMesh.h"
+#include "wcpplib/matter/GasDef.h"
 
 namespace {
 

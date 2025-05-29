@@ -8,6 +8,8 @@
 #include "heed++/code/HeedDeltaElectronCS.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/random/chisran.h"
+#include "heed++/code/HeedMatterDef.h"
+#include "wcpplib/matter/MatterDef.h"
 
 // 2003, I. Smirnov
 

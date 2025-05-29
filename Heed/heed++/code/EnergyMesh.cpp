@@ -1,7 +1,6 @@
 #include "heed++/code/EnergyMesh.h"
 
 #include <cmath>
-#include <iomanip>
 
 #include "wcpplib/util/FunNameStack.h"
 

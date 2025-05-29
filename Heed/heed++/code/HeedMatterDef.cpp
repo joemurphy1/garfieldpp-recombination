@@ -1,11 +1,17 @@
 #include "heed++/code/HeedMatterDef.h"
 
 #include <fstream>
-#include <iomanip>
+#include<cmath>
+#include<limits>
 
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/math/tline.h"
-
+#include "heed++/code/EnergyMesh.h"
+#include "heed++/code/PhotoAbsCS.h"
+#include "wcpplib/matter/GasDef.h"
+#include "wcpplib/matter/MatterDef.h"
+#include "heed++/code/PhysicalConstants.h"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 // 2003, I. Smirnov
 
 namespace Heed {
@@ -151,7 +157,7 @@ void HeedMatterDef::initialize() {
   }
   Rutherford_const *= rho * Avogadro / amean;
 
-  min_ioniz_pot = DBL_MAX;
+  min_ioniz_pot = std::numeric_limits<double>::max();
   for (long n = 0; n < qat; ++n) {
     if (min_ioniz_pot > apacs[n]->get_I_min()) {
       min_ioniz_pot = apacs[n]->get_I_min();

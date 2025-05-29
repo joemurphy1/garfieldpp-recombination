@@ -1,7 +1,7 @@
 #ifndef PAIRPROD_H
 #define PAIRPROD_H
+#include <string>
 #include "wcpplib/random/PointsRan.h"
-#include "wcpplib/stream/prstream.h"
 
 namespace Heed {
 

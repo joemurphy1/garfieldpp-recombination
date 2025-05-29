@@ -1,24 +1,12 @@
 #ifndef PHOTOABSCS_H
 #define PHOTOABSCS_H
 
-#include <cfloat>
-#include <climits>
-#include <cmath>
-#include <fstream>
+#include <string>
+#include <ostream>
 #include <memory>
 #include <vector>
 
-#include "heed++/code/PhysicalConstants.h"
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
-
 namespace Heed {
-
-/// TRK sum rule [1/MeV], constant per one electron.
-constexpr double Thomas_sum_rule_const =
-    2 * CLHEP::pi2 * CLHEP::fine_structure_const / CLHEP::electron_mass_c2;
-/// TRK sum rule [Mb * MeV].
-constexpr double Thomas_sum_rule_const_Mb =
-    Thomas_sum_rule_const * 1.0E-6 / C1_MEV2_BN;
 
 /// Photoabsorption cross-section base class.
 ///

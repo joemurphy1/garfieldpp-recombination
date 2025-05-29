@@ -5,11 +5,14 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
-
+#include<limits>
+#include "heed++/code/PhysicalConstants.h"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "Garfield/Random.hh"
 #include "wcpplib/math/tline.h"
 #include "wcpplib/stream/findmark.h"
-
+#include "heed++/code/PhysicalConstants.h"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 // 2004, I. Smirnov
 
 // #define DEBUG_PRINT_get_escape_particles
@@ -18,6 +21,10 @@
 // #define ALWAYS_LINEAR_INTERPOLATION  // how the paper was computed
 
 namespace {
+/// TRK sum rule [1/MeV], constant per one electron.
+constexpr double Thomas_sum_rule_const = 2 * Heed::CLHEP::pi2 * Heed::CLHEP::fine_structure_const / Heed::CLHEP::electron_mass_c2;
+/// TRK sum rule [Mb * MeV].
+constexpr double Thomas_sum_rule_const_Mb = Thomas_sum_rule_const * 1.0E-6 / Heed::C1_MEV2_BN;
 
 /// Determine whether to use linear or nonlinear interpolation.
 /// Usually photoabsorption cross sections decrease as inverse power function
@@ -164,7 +171,7 @@ HydrogenPhotoAbsCS::HydrogenPhotoAbsCS() : PhotoAbsCS("H", 1, 15.43e-6) {
 }
 
 double HydrogenPhotoAbsCS::get_CS(double energy) const {
-  if (energy < threshold || energy == DBL_MAX) return 0.0;
+  if (energy < threshold || energy == std::numeric_limits<double>::max()) return 0.0;
   // The factor 0.5 is needed because we have one atom instead of two.
   return 0.5 * prefactor * 0.0535 * (pow(100.0e-6 / energy, 3.228));
 }
@@ -173,7 +180,7 @@ double HydrogenPhotoAbsCS::get_integral_CS(double e1, double e2) const {
   if (e2 < threshold) return 0.;
   if (e1 < threshold) e1 = threshold;
   const double c1 = 0.5 * 0.0535 * pow(100.0e-6, 3.228) / 2.228;
-  if (e2 == DBL_MAX) {
+  if (e2 == std::numeric_limits<double>::max()) {
     return prefactor * c1 * (1. / pow(e1, 2.228));
   } else {
     return prefactor * c1 * (1. / pow(e1, 2.228) - 1. / pow(e2, 2.228));
@@ -344,9 +351,9 @@ double SimpleTablePhotoAbsCS::get_CS(double energy) const {
     return t_value_generic_point_ar<
         double, std::vector<double>,
         PointCoorMesh<double, const std::vector<double> > >(
-        pcm, cs, &my_val_fun, energy, 1, threshold, 0, DBL_MAX);
+        pcm, cs, &my_val_fun, energy, 1, threshold, 0, std::numeric_limits<double>::max());
   } else {
-    if (energy == DBL_MAX)
+    if (energy == std::numeric_limits<double>::max())
       return 0.0;
     else
       return cs[q - 1] * pow(energy, -2.75) / pow(ener[q - 1], -2.75);
@@ -371,7 +378,7 @@ double SimpleTablePhotoAbsCS::get_integral_CS(double energy1,
     s = t_integ_generic_point_ar<
         double, std::vector<double>,
         PointCoorMesh<double, const std::vector<double> > >(
-        pcm, cs, &my_integr_fun, energy1, energy21, 1, threshold, 0, DBL_MAX);
+        pcm, cs, &my_integr_fun, energy1, energy21, 1, threshold, 0, std::numeric_limits<double>::max());
   }
   // print(mcout, 3);
   // mcout << "energy1="<<energy1
@@ -382,7 +389,7 @@ double SimpleTablePhotoAbsCS::get_integral_CS(double energy1,
   check_econd11(s, < 0.0, mcout);
   if (energy2 > ener[q - 1]) {
     // add tail
-    if (energy2 == DBL_MAX) {
+    if (energy2 == std::numeric_limits<double>::max()) {
       if (energy1 < ener[q - 1]) energy1 = ener[q - 1];
       double c =
           cs[q - 1] / (1.75 * pow(ener[q - 1], -2.75)) * pow(energy1, -1.75);
@@ -434,7 +441,7 @@ PhenoPhotoAbsCS::PhenoPhotoAbsCS(const std::string& fname, int fZ,
 }
 
 double PhenoPhotoAbsCS::get_CS(double energy) const {
-  if (energy < threshold || energy == DBL_MAX) return 0.0;
+  if (energy < threshold || energy == std::numeric_limits<double>::max()) return 0.0;
   return factor * pow(energy, -power);
 }
 
@@ -443,7 +450,7 @@ double PhenoPhotoAbsCS::get_integral_CS(double energy1, double energy2) const {
   if (energy1 < threshold) energy1 = threshold;
   const double a = power - 1.;
   double s;
-  if (energy2 == DBL_MAX) {
+  if (energy2 == std::numeric_limits<double>::max()) {
     s = factor / a * (1. / pow(energy1, a));
   } else {
     s = factor / a * (1. / pow(energy1, a) - 1. / pow(energy2, a));
@@ -665,7 +672,7 @@ std::ostream& operator<<(std::ostream& file, const AtomPhotoAbsCS& f) {
 
 double AtomPhotoAbsCS::get_I_min() const {
   mfunname("double AtomPhotoAbsCS::get_I_min() const");
-  double st = DBL_MAX;
+  double st = std::numeric_limits<double>::max();
   // The minimal shell is normally the last, but to be safe we check all.
   for (int n = 0; n < qshell; ++n) st = std::min(st, get_threshold(n));
   return st;
@@ -693,7 +700,7 @@ void AtomPhotoAbsCS::get_escape_particles(
 
   // Find the shell with the lowest threshold (should be the last).
   int n_min = 0;
-  double thrMin = DBL_MAX;
+  double thrMin = std::numeric_limits<double>::max();
   for (int n = 0; n < qshell; ++n) {
     if (get_threshold(n) < thrMin) {
       n_min = n;
@@ -801,7 +808,7 @@ void AtomPhotoAbsCS::get_escape_particles(
   // In this case we use more advanced scheme.
   // Look for shell with larger main number and with less energy
   int n_chosen = -1;
-  double thr = DBL_MAX;  // this will be the least threshold
+  double thr = std::numeric_limits<double>::max();  // this will be the least threshold
                          // among the shells with next principal number
   for (int n = 0; n < qshell; ++n) {
     // currently the minimal shell is the last,
@@ -895,7 +902,7 @@ SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
     check_econd12(sZshell, !=, Z, mcerr);
 
     int n_min = 0;
-    double st = DBL_MAX;
+    double st = std::numeric_limits<double>::max();
     for (int nshell = 0; nshell < qshell; ++nshell) {
       // currently the minimal shell is the last,
       // but to avoid this assumption we check all
@@ -1079,7 +1086,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
     // currently the minimal shell is the last,
     // but to avoid this assumption, we check all.
     int n_min = 0;
-    double st = DBL_MAX;
+    double st = std::numeric_limits<double>::max();
     for (int nshell = 0; nshell < qshell; nshell++) {
       if (thr[nshell] < st) {
         n_min = nshell;
@@ -1236,7 +1243,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
   }
   height_of_excitation = 0.0;
   exener[0] = exener[1] = 0.0;
-  double integ = get_integral_ACS(0.0, DBL_MAX);
+  double integ = get_integral_ACS(0.0, std::numeric_limits<double>::max());
   // Iprintn(mcout, integ);
   integ_abs_before_corr = integ;
   double pred_integ = Thomas_sum_rule_const_Mb * Z;
@@ -1264,8 +1271,8 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
       }
     }
   }
-  integ_abs_after_corr = get_integral_ACS(0.0, DBL_MAX);
-  integ_ioniz_after_corr = get_integral_ICS(0.0, DBL_MAX);
+  integ_abs_after_corr = get_integral_ACS(0.0, std::numeric_limits<double>::max());
+  integ_ioniz_after_corr = get_integral_ICS(0.0, std::numeric_limits<double>::max());
 }
 
 ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
@@ -1336,7 +1343,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
   if (id == 2) {
     // a copy of similar thing from subroutine above
     int n_min = 0;
-    double st = DBL_MAX;
+    double st = std::numeric_limits<double>::max();
     for (int nshell = 0; nshell < qshell; ++nshell) {
       // currently the minimal shell is the last,
       // but to avoid this assumption we check all
@@ -1361,7 +1368,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
   s_ignore_shell.resize(qshell, false);
   height_of_excitation = 0.0;
   exener[0] = exener[1] = 0.0;
-  double integ = get_integral_ACS(0.0, DBL_MAX);
+  double integ = get_integral_ACS(0.0, std::numeric_limits<double>::max());
   // Iprintn(mcout, integ);
   integ_abs_before_corr = integ;
   double pred_integ = Thomas_sum_rule_const_Mb * Z;
@@ -1389,8 +1396,8 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
       }
     }
   }
-  integ_abs_after_corr = get_integral_ACS(0.0, DBL_MAX);
-  integ_ioniz_after_corr = get_integral_ICS(0.0, DBL_MAX);
+  integ_abs_after_corr = get_integral_ACS(0.0, std::numeric_limits<double>::max());
+  integ_ioniz_after_corr = get_integral_ICS(0.0, std::numeric_limits<double>::max());
 }
 
 #define READ_FILE_WITH_PRINCIPAL_NUMBERS
@@ -1509,7 +1516,7 @@ mark1:
   if (id == 2) {
     // a copy of similar thing from subroutine above
     int n_min = 0;
-    double st = DBL_MAX;
+    double st = std::numeric_limits<double>::max();
     for (int nshell = 0; nshell < qshell; ++nshell) {
       // currently the minimal shell is the last,
       // but to avoid this assumption we check all
@@ -1534,7 +1541,7 @@ mark1:
   s_ignore_shell.resize(qshell, false);
   height_of_excitation = 0.0;
   exener[0] = exener[1] = 0.0;
-  double integ = get_integral_ACS(0.0, DBL_MAX);
+  double integ = get_integral_ACS(0.0, std::numeric_limits<double>::max());
   // Iprintn(mcout, integ);
   integ_abs_before_corr = integ;
   double pred_integ = Thomas_sum_rule_const_Mb * Z;
@@ -1562,8 +1569,8 @@ mark1:
       }
     }
   }
-  integ_abs_after_corr = get_integral_ACS(0.0, DBL_MAX);
-  integ_ioniz_after_corr = get_integral_ICS(0.0, DBL_MAX);
+  integ_abs_after_corr = get_integral_ACS(0.0, std::numeric_limits<double>::max());
+  integ_ioniz_after_corr = get_integral_ICS(0.0, std::numeric_limits<double>::max());
 }
 
 ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(
@@ -1581,7 +1588,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(
   height_of_excitation = 0.0;
   exener[0] = exener[1] = 0.0;
 
-  double thrmin = DBL_MAX;
+  double thrmin = std::numeric_limits<double>::max();
   long nsmin = -1;
   // Look for minimal shell (usually the last).
   for (long ns = 0; ns < qshell; ++ns) {
@@ -1608,7 +1615,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(
   s_ignore_shell.resize(qshell, false);
   height_of_excitation = 0.0;
   exener[0] = exener[1] = 0.0;
-  double integ = get_integral_ACS(0.0, DBL_MAX);
+  double integ = get_integral_ACS(0.0, std::numeric_limits<double>::max());
   integ_abs_before_corr = integ;
   double pred_integ = Thomas_sum_rule_const_Mb * Z;
   if (pred_integ > integ) {
@@ -1634,8 +1641,8 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(
       }
     }
   }
-  integ_abs_after_corr = get_integral_ACS(0.0, DBL_MAX);
-  integ_ioniz_after_corr = get_integral_ICS(0.0, DBL_MAX);
+  integ_abs_after_corr = get_integral_ACS(0.0, std::numeric_limits<double>::max());
+  integ_ioniz_after_corr = get_integral_ICS(0.0, std::numeric_limits<double>::max());
 }
 
 double ExAtomPhotoAbsCS::get_threshold(int nshell) const {
@@ -1791,8 +1798,8 @@ void ExAtomPhotoAbsCS::print(std::ostream& file, int l) const {
   Ifile << "integrals by shells:\n";
   Ifile << "nshell, int(acs), int(ics)\n";
   for (long n = 0; n < qshell; n++) {
-    double ainteg = get_integral_ACS(n, 0.0, DBL_MAX);
-    double iinteg = get_integral_ICS(n, 0.0, DBL_MAX);
+    double ainteg = get_integral_ACS(n, 0.0, std::numeric_limits<double>::max());
+    double iinteg = get_integral_ICS(n, 0.0, std::numeric_limits<double>::max());
     Ifile << n << "    " << ainteg << "    " << iinteg << '\n';
   }
 

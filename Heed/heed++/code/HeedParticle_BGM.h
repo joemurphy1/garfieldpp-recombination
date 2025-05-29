@@ -20,9 +20,7 @@ class HeedParticle_BGM : public eparticle {
   /// no other physics: no deposition of clusters,
   /// no generation of virtual photons.
   /// Thus it is just a PAI without even clusters
-  HeedParticle_BGM(manip_absvol* primvol, const point& pt, const vec& vel,
-                   double time, particle_def* fpardef, fieldmap* fm,
-                   bool fs_loss_only = false, bool fs_print_listing = false);
+  HeedParticle_BGM(manip_absvol* primvol, const point& pt, const vec& vel, double time, particle_def* fpardef, fieldmap* fm, bool fs_loss_only = false, bool fs_print_listing = false);
   /// Destructor
   virtual ~HeedParticle_BGM() {}
 

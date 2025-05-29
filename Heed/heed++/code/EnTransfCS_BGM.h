@@ -1,19 +1,22 @@
 #ifndef ENTRANFCS_BGM_H
 #define ENTRANFCS_BGM_H
 
-#include "heed++/code/BGMesh.h"
+#include<vector>
 #include "heed++/code/EnTransfCS.h"
 
 namespace Heed {
 
+class BGMesh;
+class HeedMatterDef;
+
 /// Energy transfer cross-section
-class EnTransfCS_BGM {
+class EnTransfCS_BGM
+{
  public:
   /// Default constructor
   EnTransfCS_BGM() = default;
   /// Constructor
-  EnTransfCS_BGM(double fparticle_mass, BGMesh* fmesh, int fs_primary_electron,
-                 HeedMatterDef* fhmd, long fparticle_charge = 1);
+  EnTransfCS_BGM(double fparticle_mass, BGMesh* fmesh, int fs_primary_electron, HeedMatterDef* fhmd, long fparticle_charge = 1);
 
   // All data from EnTransfCS that do not depend on speed.
   // Particle mass [MeV]
