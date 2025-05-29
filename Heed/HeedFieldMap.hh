@@ -60,7 +60,8 @@ class HeedFieldMap : public Heed::fieldmap {
     }
   }
 
-  bool inside(const Heed::point& pt) override {
+  bool inside(const Heed::point& pt) const override
+  {
     const double x = pt.v.x * conv + m_x;
     const double y = pt.v.y * conv + m_y;
     const double z = pt.v.z * conv + m_z;
