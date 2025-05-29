@@ -22,7 +22,6 @@ class HeedCluster {
   point pt;
   long natom = 0;
   long nshell = 0;
-  void print(std::ostream& file, int l) const;
 };
 }  // namespace Heed
 

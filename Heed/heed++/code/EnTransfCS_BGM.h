@@ -28,7 +28,6 @@ class EnTransfCS_BGM {
   BGMesh* mesh = nullptr;
   std::vector<EnTransfCS> etcs_bgm;
 
-  void print(std::ostream& file, int l) const;
 };
 }  // namespace Heed
 

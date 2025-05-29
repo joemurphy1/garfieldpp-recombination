@@ -279,49 +279,4 @@ void HeedMatterDef::replace_epsi12(const std::string& file_name) {
   }
 }
 
-void HeedMatterDef::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "HeedMatterDef:\n";
-  indn.n += 2;
-  matter->print(file, 1);
-  if (l >= 2) {
-    long q = matter->qatom();
-    Ifile << "Printing " << q << " photoabsorption cross sections:\n";
-    indn.n += 2;
-    for (long n = 0; n < q; ++n) {
-      apacs[n]->print(file, l - 1);
-    }
-    indn.n -= 2;
-  }
-  Iprintan(file, eldens_cm_3, "1/cm^3");
-  Iprintan(file, eldens, "MeV^3");
-  Iprintan(file, xeldens, "MeV^2/cm");
-  Iprintn(file, wpla);
-  Iprintn(file, radiation_length);
-  Iprintan(file, Rutherford_const, "1/cm^3");
-  Iprintn(file, W);
-  Iprintn(file, F);
-  Iprintn(file, min_ioniz_pot);
-  Iprintn(file, energy_mesh->get_q());
-  if (l >= 2) {
-    long qe = energy_mesh->get_q();
-    long ne;
-    indn.n += 2;
-    Ifile << " ne       energy      ACS(Mb)      ICS(Mb) ACS(1/MeV^2) "
-             "ICS(1/MeV^2)       epsip       epsi1       epsi2   "
-             "(1+epsi1)^2+epsi2^2\n";
-    for (ne = 0; ne < qe; ne++) {
-      Ifile << std::setw(3) << ne << ' ' << std::setw(12)
-            << energy_mesh->get_e(ne) << ' ' << std::setw(12) << ACS[ne] << ' '
-            << std::setw(12) << ICS[ne] << ' ' << std::setw(12)
-            << ACS[ne] * C1_MEV2_MBN << ' ' << std::setw(12)
-            << ICS[ne] * C1_MEV2_MBN << ' ' << std::setw(12) << epsip[ne] << ' '
-            << std::setw(12) << epsi1[ne] << ' ' << std::setw(12) << epsi2[ne]
-            << ' ' << std::setw(12)
-            << pow((1 + epsi1[ne]), 2) + pow(epsi2[ne], 2) << " \n";
-    }
-    indn.n -= 2;
-  }
-  indn.n -= 2;
-}
 }  // namespace Heed

@@ -36,7 +36,6 @@ class HeedCondElectron {
   HeedCondElectron(const double fx, const double fy, const double fz,
                    const double ftime)
       : x(fx), y(fy), z(fz), time(ftime) {}
-  void print(std::ostream& file, int l) const;
 };
 }  // namespace Heed
 

@@ -26,8 +26,6 @@ class HeedPhoton : public gparticle {
   /// Destructor
   virtual ~HeedPhoton() {}
 
-  void print(std::ostream& file, int l) const override;
-
   long m_particle_number;
   long m_parent_particle_number;
 

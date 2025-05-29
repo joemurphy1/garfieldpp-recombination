@@ -22,8 +22,6 @@ class HeedDeltaElectron : public eparticle {
   /// Destructor
   virtual ~HeedDeltaElectron() {}
 
-  void print(std::ostream& file, int l) const override;
-
   std::vector<HeedCondElectron> conduction_electrons;
   std::vector<HeedCondElectron> conduction_ions;
 

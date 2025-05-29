@@ -23,8 +23,6 @@ class EnTransfCS {
              HeedMatterDef* fhmd, double fparticle_charge = 1.,
              const bool debug = false);
 
-  void print(std::ostream& file, int l) const;
-
   /// Flag indicating whether the calculation was successful.
   bool m_ok = true;
 

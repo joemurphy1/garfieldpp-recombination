@@ -78,37 +78,4 @@ long EnergyMesh::get_interval_number_between_centers(const double ener) const {
   return n1;
 }
 
-std::ostream& operator<<(std::ostream& file, EnergyMesh& f) {
-  Ifile << "EnergyMesh: \n";
-  indn.n += 2;
-  Ifile << "emin=" << f.emin << " emax=" << f.emax
-        << " number of intervals=" << f.q << '\n'
-        << " maximal number of intervals=" << EnergyMesh::pqener << '\n';
-  Ifile << " bin  left side        center       right side       width\n";
-  for (int n = 0; n < f.q; n++) {
-    Ifile << std::setw(5) << n << std::setw(15) << f.e[n] << std::setw(15)
-          << f.ec[n] << std::setw(15) << f.e[n + 1] << std::setw(15)
-          << (f.e[n + 1] - f.e[n]) << '\n';
-  }
-  indn.n -= 2;
-  return file;
-}
-
-void EnergyMesh::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "EnergyMesh (l=" << l << "): \n";
-  indn.n += 2;
-  Ifile << "emin=" << emin << " emax=" << emax << " quantity of intervals=" << q
-        << '\n'
-        << " maximal possible quantity of intervals=" << pqener << '\n';
-  if (l > 1) {
-    Ifile << " number  left side        center       right side       widht\n";
-    for (int n = 0; n < q; n++) {
-      Ifile << std::setw(5) << n << std::setw(15) << e[n] << std::setw(15)
-            << ec[n] << std::setw(15) << e[n + 1] << std::setw(15)
-            << (e[n + 1] - e[n]) << '\n';
-    }
-  }
-  indn.n -= 2;
-}
 }  // namespace Heed

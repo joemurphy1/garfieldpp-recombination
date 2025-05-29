@@ -22,8 +22,6 @@ class PairProd {
   /// Calculate energy loss (in eV) assuming V = wa / 2.
   double get_eloss(const double ecur) const;
 
-  void print(std::ostream& file, int l) const;
-
  private:
   double m_w = 30.;
   double m_f = 0.16;

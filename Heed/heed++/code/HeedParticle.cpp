@@ -42,7 +42,7 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
   const double stp = m_currpos.prange / cm;
   const vec dir = unit_vec(m_currpos.pt - m_prevpos.pt);
   const double range = (m_currpos.pt - m_prevpos.pt).length();
-  if (m_print_listing) Iprint3n(mcout, m_prevpos.pt, dir, range);
+  //if (m_print_listing) Iprint3n(mcout, m_prevpos.pt, dir, range);
   // Get local volume.
   const absvol* av = m_currpos.volume();
   auto etcs = dynamic_cast<const EnTransfCS*>(av);
@@ -148,16 +148,4 @@ void HeedParticle::physics_mrange(double& fmrange) {
   }
 }
 
-void HeedParticle::print(std::ostream& file, int l) const {
-  if (l < 0) return;
-  file << "HeedParticle: particle_number=" << m_particle_number << " type=";
-  if (!m_pardef) {
-    file << "none";
-  } else {
-    file << m_pardef->notation;
-  }
-  file << "\n  edep=" << m_edep << "\n";
-  if (l <= 1) return;
-  mparticle::print(file, l - 1);
-}
 }  // namespace Heed

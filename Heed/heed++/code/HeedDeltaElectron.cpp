@@ -323,12 +323,12 @@ void HeedDeltaElectron::ionisation(const double eloss, const double dedx,
   point curpt = m_prevpos.pt;
   vec dir = m_prevpos.dir;  // this approximation ignores curvature
   double ekin = m_prev_ekin;
-  if (m_print_listing) Iprintnf(mcout, curpt);
+  //if (m_print_listing) Iprintnf(mcout, curpt);
   while (eloss_left >= m_necessary_energy) {
     const double step_length = m_necessary_energy / (dedx * MeV / cm);
     if (m_print_listing) Iprintnf(mcout, step_length);
     curpt = curpt + dir * step_length;
-    if (m_print_listing) Iprintf(mcout, curpt);
+    //if (m_print_listing) Iprintf(mcout, curpt);
     point ptloc = curpt;
     m_prevpos.tid.up_absref(&ptloc);
     if (m_print_listing) mcout << "New conduction electron\n";
@@ -355,18 +355,4 @@ void HeedDeltaElectron::ionisation(const double eloss, const double dedx,
   if (m_print_listing) Iprintnf(mcout, m_necessary_energy / eV);
 }
 
-void HeedDeltaElectron::print(std::ostream& file, int l) const {
-  if (l < 0) return;
-  file << "HeedDeltaElectron: particle_number=" << m_particle_number << "\n";
-  if (l <= 1) return;
-  file << " s_low_mult_scattering=" << s_low_mult_scattering
-       << " s_high_mult_scattering=" << s_high_mult_scattering << '\n'
-       << " phys_mrange=" << m_phys_mrange << " stop_eloss=" << m_stop_eloss
-       << " mult_low_path_length=" << m_mult_low_path_length << '\n'
-       << " q_low_path_length=" << m_q_low_path_length
-       << " path_length=" << m_path_length
-       << " necessary_energy/eV=" << m_necessary_energy / eV << '\n'
-       << " parent_particle_number=" << parent_particle_number << '\n';
-  mparticle::print(file, l - 1);
-}
 }  // namespace Heed

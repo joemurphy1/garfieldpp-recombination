@@ -213,53 +213,6 @@ double ElElasticScat::get_CS_Rutherford(long Z, double energy, double angle) {
   return r;
 }
 
-void ElElasticScat::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "ElElasticScat(l=" << l << "): qe=" << qe
-        << " atom.size()=" << atom.size() << std::endl;
-  if (l <= 1) return;
-  indn.n += 2;
-  Ifile << "energy_mesh=";
-  for (long ne = 0; ne < qe; ++ne) {
-    file << std::setw(12) << energy_mesh[ne];
-  }
-  file << std::endl;
-  Ifile << "gamma_beta2=";
-  for (long ne = 0; ne < qe; ++ne) {
-    file << std::setw(12) << gamma_beta2[ne];
-  }
-  file << std::endl;
-  indn.n -= 2;
-  const long qa = atom.size();
-  for (long na = 0; na < qa; ++na) {
-    Ifile << "atom[na].Z=" << atom[na].Z << '\n';
-    Ifile << "     ";
-    for (long ne = 0; ne < qe; ++ne) {
-      file << std::setw(12) << energy_mesh[ne];
-    }
-    file << std::endl;
-    for (long n = 0; n < 4; ++n) {
-      Ifile << "A[" << n << "]";
-      for (long ne = 0; ne < qe; ++ne) {
-        file << std::setw(12) << atom[na].data[ne].A[n];
-      }
-      file << std::endl;
-    }
-    for (int n = 0; n < 7; ++n) {
-      Ifile << "C[" << n << "]";
-      for (long ne = 0; ne < qe; ++ne) {
-        file << std::setw(12) << atom[na].data[ne].C[n];
-      }
-      file << std::endl;
-    }
-    Ifile << "B     ";
-    for (long ne = 0; ne < qe; ++ne) {
-      file << std::setw(12) << atom[na].data[ne].B;
-    }
-    file << std::endl;
-  }
-}
-
 ElElasticScatLowSigma::ElElasticScatLowSigma(ElElasticScat* fees,
                                              const std::string& file_name)
     : ees(fees) {

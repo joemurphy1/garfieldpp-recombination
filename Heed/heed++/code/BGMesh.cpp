@@ -22,21 +22,4 @@ BGMesh::BGMesh(double fxmin, double fxmax, long fq)
   }
 }
 
-void BGMesh::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "BGMesh (l=" << l << "): \n";
-  indn.n += 2;
-  Ifile << "xmin=" << xmin << " xmax=" << xmax << " quantity of intervals=" << q
-        << '\n';
-  if (l > 1) {
-    for (long k = 1; k < q; ++k) Iprintn(mcout, x[k]);
-  }
-  indn.n -= 2;
-}
-
-std::ostream& operator<<(std::ostream& file, const BGMesh& bgm) {
-  Ifile << "operator<<(std::ostream& file, const BGMesh& bgm):\n";
-  bgm.print(file, 2);
-  return file;
-}
 }  // namespace Heed
