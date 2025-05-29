@@ -1,13 +1,8 @@
 #include "wcpplib/ioniz/bethe_bloch.h"
-
-#include <limits.h>
-#include <stdlib.h>
-
 #include <cmath>
 
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/math/lorgamma.h"
-#include "wcpplib/stream/prstream.h"
 
 // 2002, I. Smirnov
 

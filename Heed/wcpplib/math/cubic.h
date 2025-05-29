@@ -45,13 +45,11 @@ class Cubic {
   }
 
   Cubic() : da(0.0), db(0.0), dc(0.0), dd(0.0), s_dxzero(0) {}
-  Cubic(double fa, double fb, double fc, double fd)
-      : da(fa), db(fb), dc(fc), dd(fd), s_dxzero(0) {}
+  Cubic(double fa, double fb, double fc, double fd) : da(fa), db(fb), dc(fc), dd(fd), s_dxzero(0) {}
 
   double y(double x) const { return da * x * x * x + db * x * x + dc * x + dd; }
 
-  void find_zero(double_complex& z1, double_complex& z2,
-                 double_complex& z3) const;
+  void find_zero(double_complex& z1, double_complex& z2, double_complex& z3) const;
   // They are not ordered and analysed
   int find_real_zero(double z[3]) const;
   // returns number of solutions

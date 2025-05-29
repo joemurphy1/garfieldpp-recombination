@@ -1,8 +1,6 @@
 #ifndef LINEXI2_H
 #define LINEXI2_H
 
-#include <iostream>
-
 /*
 Drawing straight line by a range of points by method xi2
 
@@ -36,7 +34,6 @@ class linexi2_coor {
     return *this;
   }
 };
-std::ostream& operator<<(std::ostream& file, const linexi2_coor& l);
 
 class linexi2 : public linexi2_coor {
  public:
@@ -65,7 +62,6 @@ class linexi2 : public linexi2_coor {
   }
   double line(const double x) { return a * x + b; }
 };
-std::ostream& operator<<(std::ostream& file, const linexi2& l);
 
 }  // namespace Heed
 #endif

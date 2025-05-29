@@ -1,6 +1,8 @@
 #ifndef MOLECULE_DEF_H
 #define MOLECULE_DEF_H
-
+#include <vector>
+#include <string>
+#include <list>
 #include <memory>
 
 #include "wcpplib/matter/AtomDef.h"

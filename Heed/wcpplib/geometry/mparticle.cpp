@@ -1,8 +1,9 @@
 #include "wcpplib/geometry/mparticle.h"
 
 #include <limits>
-
+#include "wcpplib/math/lorgamma.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include "wcpplib/geometry/vfloat.h"
 /*
 Copyright (c) 2000 Igor B. Smirnov
 

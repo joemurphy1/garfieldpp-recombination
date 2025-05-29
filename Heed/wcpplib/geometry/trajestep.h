@@ -105,6 +105,6 @@ class trajestep : public absref {
   void Gnextpoint1(double frange, point& fpos, vec& fdir, vec& frelcen) const;
 };
 std::ostream& operator<<(std::ostream& file, const trajestep& f);
-}  // namespace Heed
 
+}  // namespace Heed
 #endif

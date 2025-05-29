@@ -27,13 +27,7 @@ linexi2_coor::linexi2_coor(const long fqlr, const double* fax)
   Dx /= qlr;
   Dx = Dx - x_mean * x_mean;
 }
-std::ostream& operator<<(std::ostream& file, const linexi2_coor& l) {
-  Ifile << "linexi2_coor: qlr=" << l.qlr << " x_mean=" << l.x_mean
-        << " Dx=" << l.Dx << '\n';
-  for (int n = 0; n < l.qlr; n++)
-    Ifile << "n=" << n << " x=" << l.ax[n] << '\n';
-  return file;
-}
+
 linexi2::linexi2(const linexi2_coor& lc, const double* fay)
     : linexi2_coor(lc), ay(fay) {
   y_mean = 0;
@@ -50,6 +44,7 @@ linexi2::linexi2(const linexi2_coor& lc, const double* fay)
     a = DBL_MAX;
   b = y_mean - a * x_mean;
 }
+
 linexi2::linexi2(const long fqlr, const double* fax, const double* fay)
     : linexi2_coor(fqlr, fax), ay(fay) {
   y_mean = 0;
@@ -66,13 +61,5 @@ linexi2::linexi2(const long fqlr, const double* fax, const double* fay)
     a = DBL_MAX;
   b = y_mean - a * x_mean;
 }
-std::ostream& operator<<(std::ostream& file, const linexi2& l) {
-  Ifile << "linexi2_coor: qlr=" << l.qlr << '\n';
-  Ifile << "x_mean=" << l.x_mean << " Dx=" << l.Dx << '\n';
-  Ifile << "y_mean=" << l.y_mean << " xy_mean=" << l.xy_mean << '\n';
-  Ifile << "a=" << l.a << " b=" << l.b << '\n';
-  for (int n = 0; n < l.qlr; n++)
-    Ifile << "n=" << n << " x=" << l.ax[n] << " y=" << l.ay[n] << '\n';
-  return file;
-}
+
 }  // namespace Heed

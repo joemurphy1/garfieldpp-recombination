@@ -1,6 +1,8 @@
 #include "wcpplib/geometry/surface.h"
 
 #include "wcpplib/geometry/circumf.h"
+#include "wcpplib/geometry/polyline.h"
+#include "wcpplib/geometry/trajestep.h"
 /*
 Copyright (c) 2000 Igor B. Smirnov
 

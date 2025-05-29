@@ -6,7 +6,8 @@
 
 // 1998 - 2004, I. Smirnov.
 
-namespace Heed {
+namespace Heed
+{
 
 /// Charged particle. Combination of features of massive geometrical
 /// particle and specification of concrete particle as one of types

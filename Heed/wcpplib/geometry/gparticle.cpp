@@ -1,5 +1,5 @@
 #include "wcpplib/geometry/gparticle.h"
-
+#include <atomic>
 #include <limits>
 /*
 Copyright (c) 2000 Igor B. Smirnov

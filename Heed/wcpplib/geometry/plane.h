@@ -15,7 +15,8 @@ The file is provided "as is" without express or implied warranty.
 #include "wcpplib/geometry/straight.h"
 #include "wcpplib/geometry/vec.h"
 
-namespace Heed {
+namespace Heed
+{
 
 class polyline;
 

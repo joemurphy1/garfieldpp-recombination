@@ -7,6 +7,7 @@
 #include "heed++/code/HeedMatterDef.h"
 #include "heed++/code/PairProd.h"
 #include "heed++/code/EnergyMesh.h"
+#include "wcpplib/math/lorgamma.h"
 // 2003, I. Smirnov
 
 #define USE_ADJUSTED_W
