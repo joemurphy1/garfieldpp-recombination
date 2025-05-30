@@ -1,9 +1,6 @@
 #include "wcpplib/math/cubic.h"
-
-#include <cfloat>
-#include <iomanip>
-
 #include "wcpplib/util/FunNameStack.h"
+#include<limits>
 
 /*
 Copyright (c) 2005 Igor B. Smirnov
@@ -78,7 +75,7 @@ int Cubic::find_real_zero(double z[3]) const {
   double_complex zc2;
   double_complex zc3;
   find_zero(zc1, zc2, zc3);
-  double thresh = 10.0 * DBL_MIN;
+  double thresh = 10.0 * std::numeric_limits<double>::min();
   int q = 0;
   if (fabs(zc1.imag()) < thresh ||
       (zc1.real() != 0.0 && fabs(zc1.imag() / zc1.real()) < thresh)) {

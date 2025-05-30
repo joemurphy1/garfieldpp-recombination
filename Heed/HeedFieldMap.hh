@@ -1,6 +1,6 @@
 #ifndef G_HEED_FIELDMAP_H
 #define G_HEED_FIELDMAP_H
-
+#include <limits>
 #include "Garfield/Medium.hh"
 #include "Garfield/Sensor.hh"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
@@ -32,7 +32,7 @@ class HeedFieldMap : public Heed::fieldmap {
     // Initialise the electric and magnetic field.
     efield.x = efield.y = efield.z = 0.;
     bfield.x = bfield.y = bfield.z = 0.;
-    mrange = DBL_MAX;
+    mrange = std::numeric_limits<double>::max();
 
     if (!m_sensor) {
       std::cerr << "HeedFieldMap::evaluate: Sensor not defined.\n";
@@ -60,7 +60,8 @@ class HeedFieldMap : public Heed::fieldmap {
     }
   }
 
-  bool inside(const Heed::point& pt) override {
+  bool inside(const Heed::point& pt) const override
+  {
     const double x = pt.v.x * conv + m_x;
     const double y = pt.v.y * conv + m_y;
     const double z = pt.v.z * conv + m_z;

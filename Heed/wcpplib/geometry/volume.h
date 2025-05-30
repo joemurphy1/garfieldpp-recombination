@@ -1,7 +1,6 @@
 #ifndef VOLUME_H
 #define VOLUME_H
 #include <cstring>
-#include <iostream>
 #include <vector>
 
 #include "wcpplib/geometry/trajestep.h"
@@ -93,8 +92,7 @@ class absvol : virtual public absref {
   /// dir is directed inside it.
   /// Also algorithm of volume is effective if it interrupts
   /// checking after first volume found.
-  virtual int find_embed_vol(const point& fpt, const vec& dir,
-                             manip_absvol_treeid* atid) const;
+  virtual int find_embed_vol(const point& fpt, const vec& dir, manip_absvol_treeid* atid) const;
 
   /// range considering this volume, all embracing volumes
   /// sb=0 range restricted by precision reasons.
@@ -107,8 +105,7 @@ class absvol : virtual public absref {
   /// to one of embracing volumes.
   /// In the last case *faeid is filled by its id.
   /// Otherwise *faeid is filled by NULL.
-  virtual int range(trajestep& fts, int s_ext, int& sb,
-                    manip_absvol*& faeid) const;
+  virtual int range(trajestep& fts, int s_ext, int& sb, manip_absvol*& faeid) const;
 
   /// Find cross with current volume ignoring embraced ones.
   /// s_ext=1 exit, now point is inside, but embraced volumes are ingnored.
@@ -132,14 +129,12 @@ class manip_absvol : virtual public absref {
     return NULL;
   }
   virtual int m_check_point_inside(const point& fpt, const vec& dir) const;
-  virtual int m_find_embed_vol(const point& fpt, const vec& fdir,
-                               manip_absvol_treeid* atid) const;
+  virtual int m_find_embed_vol(const point& fpt, const vec& fdir, manip_absvol_treeid* atid) const;
   // Do the appropriate manipulations with atid and calls avol->find_embed_vol
 
   // The two following functions changes syscoor if necessary and
   // calls similar named functions of absvol
-  virtual int m_range(trajestep& fts, int s_ext, int& sb,
-                      manip_absvol*& faeid) const;
+  virtual int m_range(trajestep& fts, int s_ext, int& sb, manip_absvol*& faeid) const;
   virtual int m_range_ext(trajestep& fts, int s_ext) const;
   // s_ext=1 inside, but embraced volumes are ingnored.
   // s_ext=0 outside

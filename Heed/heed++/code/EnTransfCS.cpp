@@ -1,13 +1,15 @@
-#include "heed++/code/EnTransfCS.h"
-
-#include <algorithm>
+#include <cmath>
 #include <fstream>
-#include <iomanip>
-
+#include "heed++/code/EnTransfCS.h"
 #include "heed++/code/HeedMatterDef.h"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/math/lorgamma.h"
 #include "wcpplib/math/tline.h"
+#include "heed++/code/HeedMatterDef.h"
+#include "heed++/code/EnergyMesh.h"
+#include "wcpplib/matter/MatterDef.h"
+#include "heed++/code/PhysicalConstants.h"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 
 // 2003, I. Smirnov
 
@@ -491,63 +493,4 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
   dcsfile.close();
 }
 
-void EnTransfCS::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "EnTransfCS(l=" << l << "):\n";
-  indn.n += 2;
-  Ifile << "particle_mass=" << particle_mass
-        << "particle_ener=" << particle_mass * (gamma_1 + 1.)
-        << " particle_charge=" << particle_charge << std::endl;
-  Ifile << "max_etransf=" << max_etransf << std::endl;
-  Ifile << "s_primary_electron=" << s_primary_electron << std::endl;
-  Ifile << "hmd:\n";
-  hmd->print(file, 1);
-#ifndef EXCLUDE_A_VALUES
-  Ifile << "quanC=" << quanC << " quanC_a=" << quanC_a << '\n';
-  Ifile << "meanC=" << meanC << " meanC_a=" << meanC_a << '\n';
-  Ifile << "meanC1=" << meanC1 << " meanC1_a=" << meanC1_a << '\n';
-#else
-  Ifile << "quanC=" << quanC << '\n';
-  Ifile << "meanC=" << meanC << '\n';
-  Ifile << "meanC1=" << meanC1 << '\n';
-#endif
-  if (l > 2) {
-    const long qe = hmd->energy_mesh->get_q();
-    if (l > 4) {
-      Ifile << "       enerc,      length_y0\n";
-      for (long ne = 0; ne < qe; ne++) {
-        Ifile << std::setw(12) << hmd->energy_mesh->get_ec(ne) << std::setw(12)
-              << length_y0[ne] << '\n';
-      }
-    }
-    if (l > 3) {
-      const long qa = hmd->matter->qatom();
-      Iprintn(file, hmd->matter->qatom());
-      for (long na = 0; na < qa; na++) {
-        Iprintn(file, na);
-        const long qs = hmd->apacs[na]->get_qshell();
-        Iprintn(file, hmd->apacs[na]->get_qshell());
-        for (long ns = 0; ns < qs; ns++) {
-          Iprintn(file, ns);
-          Ifile << "quan      =" << std::setw(13) << quan[na][ns] << '\n';
-#ifndef EXCLUDE_A_VALUES
-          Ifile << "quan_a    =" << std::setw(13) << quan_a[na][ns] << '\n';
-#endif
-          if (l > 5) {
-            Ifile << "   enerc,      fadda,      fadda_a\n";
-            for (long ne = 0; ne < qe; ne++) {
-              Ifile << std::setw(12) << hmd->energy_mesh->get_ec(ne)
-                    << std::setw(12) << fadda[na][ns][ne]
-#ifndef EXCLUDE_A_VALUES
-                    << std::setw(12) << fadda_a[na][ns][ne]
-#endif
-                    << '\n';
-            }
-          }
-        }
-      }
-    }
-  }
-  indn.n -= 2;
-}
 }  // namespace Heed

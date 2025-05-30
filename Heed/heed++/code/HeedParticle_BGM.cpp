@@ -10,6 +10,10 @@
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/math/kinem.h"
 #include "wcpplib/math/tline.h"
+#include "heed++/code/BGMesh.h"
+#include "wcpplib/matter/MatterDef.h"
+#include "heed++/code/EnergyMesh.h"
+#include "heed++/code/HeedMatterDef.h"
 
 // 2003-2008, I. Smirnov
 
@@ -43,7 +47,7 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
   const vec dir = unit_vec(m_currpos.pt - m_prevpos.pt);
   // This approximation ignores curvature
   const double range = (m_currpos.pt - m_prevpos.pt).length();
-  if (m_print_listing) Iprint3n(mcout, m_prevpos.pt, dir, range);
+  //if (m_print_listing) Iprint3n(mcout, m_prevpos.pt, dir, range);
   // Get local volume.
   const absvol* av = m_currpos.volume();
   auto etcs = dynamic_cast<const EnTransfCS_BGM*>(av);
@@ -160,18 +164,4 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
   }
 }
 
-void HeedParticle_BGM::print(std::ostream& file, int l) const {
-  if (l < 0) return;
-  Ifile << "HeedParticle_BGM (l=" << l
-        << "): particle_number=" << m_particle_number << " type=";
-  if (!m_pardef) {
-    file << "none";
-  } else {
-    file << m_pardef->notation;
-  }
-  file << std::endl;
-  if (l == 1) return;
-  mparticle::print(file, l - 1);
-  Iprintn(mcout, m_edep);
-}
 }  // namespace Heed

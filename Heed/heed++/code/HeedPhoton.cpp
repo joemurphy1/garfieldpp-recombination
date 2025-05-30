@@ -8,6 +8,8 @@
 #include "heed++/code/HeedDeltaElectronCS.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/random/chisran.h"
+#include "heed++/code/HeedMatterDef.h"
+#include "wcpplib/matter/MatterDef.h"
 
 // 2003, I. Smirnov
 
@@ -190,22 +192,4 @@ void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
   if (m_print_listing) mcout << "HeedPhoton::physics_after_new_speed exited\n";
 }
 
-void HeedPhoton::print(std::ostream& file, int l) const {
-  if (l < 0) return;
-  Ifile << "HeedPhoton (l=" << l << "): particle_number=" << m_particle_number
-        << " energy=" << m_energy << "MeV\n";
-  if (l == 1) return;
-  indn.n += 2;
-  Ifile << "s_photon_absorbed=" << m_photon_absorbed
-        << " na_absorbing=" << m_na_absorbing
-        << " ns_absorbing=" << m_ns_absorbing
-        << " s_delta_generated=" << m_delta_generated
-#ifdef SFER_PHOTOEL
-        << " s_sfer_photoel=" << s_sfer_photoel
-#endif
-        << " parent_particle_number=" << m_parent_particle_number
-        << " s_print_listing=" << m_print_listing << '\n';
-  gparticle::print(file, l - 1);
-  indn.n -= 2;
-}
 }  // namespace Heed

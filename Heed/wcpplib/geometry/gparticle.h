@@ -1,5 +1,6 @@
 #ifndef GPARTICLE_H
 #define GPARTICLE_H
+#include <vector>
 #include <atomic>
 
 #include "wcpplib/geometry/volume.h"

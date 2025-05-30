@@ -1,6 +1,6 @@
 #ifndef CIRCUMF_H
 #define CIRCUMF_H
-
+#include <ostream>
 #include "wcpplib/geometry/vec.h"
 
 /*
@@ -20,7 +20,8 @@ namespace Heed {
 class plane;
 
 /// Circumference, determined by point (center), normal vector, and radius.
-class circumf : public absref {
+class circumf : public absref
+{
  public:
   /// Default constructor.
   circumf();

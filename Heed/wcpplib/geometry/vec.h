@@ -25,6 +25,7 @@ The file is provided "as is" without express or implied warranty.
 #include <string>
 
 #include "wcpplib/util/FunNameStack.h"
+#include "wcpplib/geometry/vfloat.h"
 
 #define pvecerror(string)                                      \
   mfunname(string);                                            \
@@ -44,7 +45,7 @@ The file is provided "as is" without express or implied warranty.
 // It makes up stack of functions names if FUNNAMESTACK is defined.
 // To work correctly stackline(string); should not be in any additional {}
 
-#include "wcpplib/geometry/vfloat.h"
+//#include "wcpplib/geometry/vfloat.h"
 
 namespace Heed {
 

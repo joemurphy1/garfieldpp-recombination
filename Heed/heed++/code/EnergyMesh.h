@@ -1,7 +1,5 @@
 #ifndef ENERGYMESH_H
 #define ENERGYMESH_H
-
-#include <ostream>
 #include <vector>
 
 namespace Heed {
@@ -56,9 +54,6 @@ class EnergyMesh {
 
   long get_interval_number(const double ener) const;
   long get_interval_number_between_centers(const double ener) const;  // left
-  friend std::ostream& operator<<(std::ostream& file, EnergyMesh& f);
-
-  void print(std::ostream& file, int l) const;
 
  private:
   /// qener-1 is maximal possible number of bins

@@ -1,12 +1,17 @@
 #include "heed++/code/HeedDeltaElectronCS.h"
-
-#include <iomanip>
+#include <cmath>
+#include <limits>
 
 #include "heed++/code/ElElasticScat.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/ioniz/e_cont_enloss.h"
 #include "wcpplib/math/lorgamma.h"
+#include "heed++/code/ElElasticScat.h"
+#include "heed++/code/HeedMatterDef.h"
+#include "heed++/code/PairProd.h"
 #include "wcpplib/util/FunNameStack.h"
+#include "wcpplib/matter/MatterDef.h"
+#include "heed++/code/EnergyMesh.h"
 
 // 2003, I. Smirnov
 
@@ -59,7 +64,7 @@ HeedDeltaElectronCS::HeedDeltaElectronCS(HeedMatterDef* fhmd,
     momentum2[ne] =
         (en * en - electron_mass_c2 * electron_mass_c2) / (MeV * MeV);
     momentum[ne] = sqrt(momentum2[ne]);
-    const double dedx = e_cont_enloss(ZA, I_eff, rho, ec, DBL_MAX, -1);
+    const double dedx = e_cont_enloss(ZA, I_eff, rho, ec, std::numeric_limits<double>::max(), -1);
     if (smax < dedx) smax = dedx;
     eLoss[ne] = dedx / (MeV / cm);
   }
@@ -258,50 +263,4 @@ double HeedDeltaElectronCS::get_sigma(double energy, double nscat) const {
   return v1 + (v2 - v1) / (e2 - e1) * (energyKeV - e1);
 }
 
-void HeedDeltaElectronCS::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "HeedDeltaElectronCS(l=" << l << "):";
-  long qe = hmd->energy_mesh->get_q();
-  // Iprintn(mcout, qe);
-  // mcout<<std::endl;
-  Iprintn(file, mlambda);
-  Iprintn(file, mthetac);
-  Iprintn(file, sruth);
-  Ifile << "         get_ec,        beta,      momentum,    eLoss,    lambda,  "
-           " low_lambda:"
-        << std::endl;
-  indn.n += 2;
-  for (long ne = 0; ne < qe; ne++) {
-    Ifile << std::setw(3) << ne << ' ' << std::setw(12)
-          << hmd->energy_mesh->get_ec(ne) << ' ' << std::setw(12) << beta[ne]
-          << ' ' << std::setw(12) << momentum[ne] << ' ' << std::setw(12)
-          << eLoss[ne] << ' ' << std::setw(12) << lambda[ne] << ' '
-          << std::setw(12) << low_lambda[ne] << '\n';
-  }
-  indn.n -= 2;
-  Ifile << "na, angular_mesh_c:" << std::endl;
-  indn.n += 2;
-  for (long na = 0; na < q_angular_mesh; na++) {
-    Ifile << na << ' ' << std::setw(12) << angular_mesh_c[na] << '\n';
-  }
-  indn.n -= 2;
-  Iprintn(file, eesls->get_ees()->get_qe());
-  indn.n += 2;
-#ifdef USE_MEAN_COEF
-  Ifile << "ne, energy_mesh(ne), mean_coef_low_sigma:" << std::endl;
-  for (long ne = 0; ne < eesls->get_ees()->get_qe(); ne++) {
-    Ifile << std::setw(3) << ne << ' ' << std::setw(12)
-          << eesls->get_ees()->get_energy_mesh(ne) << " KeV " << std::setw(12)
-          << mean_coef_low_sigma[ne] << '\n';
-  }
-#else
-  Ifile << "ne, energy_mesh(ne), coef_low_sigma:" << std::endl;
-  for (long ne = 0; ne < eesls->get_ees()->get_qe(); ne++) {
-    Ifile << std::setw(3) << ne << ' ' << std::setw(12)
-          << eesls->get_ees()->get_energy_mesh(ne) << " KeV " << std::setw(12)
-          << coef_low_sigma[ne] << '\n';
-  }
-#endif
-  indn.n -= 2;
-}
 }  // namespace Heed

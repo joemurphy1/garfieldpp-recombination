@@ -1,9 +1,7 @@
 #ifndef BOX_H
 #define BOX_H
-#include <iostream>
 
-#include "wcpplib/geometry/plane.h"
-#include "wcpplib/geometry/straight.h"
+#include <string>
 #include "wcpplib/geometry/surface.h"
 #include "wcpplib/geometry/volume.h"
 /*
@@ -36,8 +34,7 @@ class box : public absvol {
   // Constructor, compute precision from mean of dimensions.
   box(double fdx, double fdy, double fdz, const std::string& fname);
   /// Constructor with user-provided precision.
-  box(double fdx, double fdy, double fdz, double fprec,
-      const std::string& fname);
+  box(double fdx, double fdy, double fdz, double fprec, const std::string& fname);
   box(box& fb);
   box(const box& fb);
   /// Destructor
@@ -60,7 +57,8 @@ class box : public absvol {
 
 /// Box "manipulator".
 
-class manip_box : public manip_absvol, public box {
+class manip_box : public manip_absvol, public box
+{
  public:
   /// Constructor
   manip_box() : manip_absvol(), box() {}
@@ -75,13 +73,13 @@ class manip_box : public manip_absvol, public box {
 
 // *****   sh_manip_box  ********
 
-class sh_manip_box : public sh_manip_absvol, public box {
+class sh_manip_box : public sh_manip_absvol, public box
+{
  public:
   /// Constructor
   sh_manip_box() : sh_manip_absvol(), box() {}
   sh_manip_box(const box& f) : sh_manip_absvol(), box(f) {}
-  sh_manip_box(const abssyscoor& fcsys, const box& fbx)
-      : sh_manip_absvol(fcsys), box(fbx) {}
+  sh_manip_box(const abssyscoor& fcsys, const box& fbx) : sh_manip_absvol(fcsys), box(fbx) {}
   /// Destructor
   virtual ~sh_manip_box() {}
 
@@ -92,6 +90,6 @@ class sh_manip_box : public sh_manip_absvol, public box {
  protected:
   absref_transmit get_components() override;
 };
-}  // namespace Heed
 
+}  // namespace Heed
 #endif

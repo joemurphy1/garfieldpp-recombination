@@ -1,8 +1,4 @@
 #include "wcpplib/ioniz/e_cont_enloss.h"
-
-#include <limits.h>
-#include <stdlib.h>
-
 #include <cmath>
 
 #include "wcpplib/clhep_units/WPhysicalConstants.h"

@@ -12,8 +12,6 @@ appear in all copies and in supporting documentation.
 The file is provided "as is" without express or implied warranty.
 */
 
-#include <iostream>
-
 #include "wcpplib/geometry/vec.h"
 
 namespace Heed {
@@ -39,8 +37,7 @@ class straight : public absref {
 
  public:
   straight() : piv(), dir() {}
-  straight(const point& fpiv, const vec& fdir)
-      : piv(fpiv), dir(unit_vec(fdir)) {}
+  straight(const point& fpiv, const vec& fdir) : piv(fpiv), dir(unit_vec(fdir)) {}
   straight(const point& fp1, const point& fp2) : piv(fp1), dir() {
     pvecerror("straight::straight(const point& fp1, const point& fp2)");
     check_econd12(fp1, ==, fp2, mcerr);

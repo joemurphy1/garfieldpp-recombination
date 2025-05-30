@@ -2,14 +2,16 @@
 #define HEEDMATTERDEF_H
 
 #include <vector>
-
-#include "heed++/code/EnergyMesh.h"
+#include <string>
 #include "heed++/code/PhotoAbsCS.h"
-#include "wcpplib/matter/GasDef.h"
-#include "wcpplib/matter/MatterDef.h"
 
-namespace Heed {
+namespace Heed
+{
 
+class MatterDef;
+class AtomPhotoAbsCS;
+class EnergyMesh;
+class GasDef;
 /// Definition of matter parameters necessary for HEED.
 /// This is photoabsorption cross section, dielectric constant
 /// and other parameters related to these.
@@ -62,21 +64,16 @@ class HeedMatterDef {
   /// molecules for gas or from atoms for matters.
   /// If fF is input as 0.0, it is assigned to be mean for gas.
   /// For matters this is the terminating error.
-  HeedMatterDef(EnergyMesh* fenergy_mesh, MatterDef* amatter,
-                const std::vector<AtomPhotoAbsCS*>& faapacs, double fW = 0.0,
-                double fF = standard_factor_Fano);
+  HeedMatterDef(EnergyMesh* fenergy_mesh, MatterDef* amatter, const std::vector<AtomPhotoAbsCS*>& faapacs, double fW = 0.0, double fF = standard_factor_Fano);
   // Gas consists of molecules, molecules of atoms
   // The order in which molecules appear in fampacs should correspond
   // to that of agas.
   // The order in which atoms appear in fampacs[n] should correspond to that
   // of molecules in gas.
-  HeedMatterDef(EnergyMesh* fenergy_mesh, GasDef* agas,
-                std::vector<MolecPhotoAbsCS>& fampacs, double fW = 0.0,
-                double fF = standard_factor_Fano);
+  HeedMatterDef(EnergyMesh* fenergy_mesh, GasDef* agas, std::vector<MolecPhotoAbsCS>& fampacs, double fW = 0.0, double fF = standard_factor_Fano);
   // Replace permeability (epsi1 and epsi2) by the numbers
   // calculated by another program and written to a file (only for debug)
   void replace_epsi12(const std::string& file_name);
-  void print(std::ostream& file, int l) const;
 
   /// Flag affecting mixtures of atoms with different ionization potentials.
   /// If 1, all energy transfers what is absorbed even with the energy less than

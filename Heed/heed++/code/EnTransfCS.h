@@ -1,10 +1,12 @@
 #ifndef ENTRANFCS_H
 #define ENTRANFCS_H
 
-#include "heed++/code/HeedMatterDef.h"
+#include <vector>
 
-namespace Heed {
+namespace Heed
+{
 
+class HeedMatterDef;
 #define EXCLUDE_A_VALUES  // exclude absorption values
 
 /// The PAI cross section of energy transfers from charged particle to media.
@@ -19,11 +21,7 @@ class EnTransfCS {
   /// Default constructor
   EnTransfCS() = default;
   /// Constructor
-  EnTransfCS(double fparticle_mass, double fgamma_1, bool fs_primary_electron,
-             HeedMatterDef* fhmd, double fparticle_charge = 1.,
-             const bool debug = false);
-
-  void print(std::ostream& file, int l) const;
+  EnTransfCS(double fparticle_mass, double fgamma_1, bool fs_primary_electron, HeedMatterDef* fhmd, double fparticle_charge = 1., const bool debug = false);
 
   /// Flag indicating whether the calculation was successful.
   bool m_ok = true;

@@ -6,8 +6,6 @@ add_library(Heed SHARED
             heed++/code/EnTransfCS.cpp
             heed++/code/EnTransfCS_BGM.cpp
             heed++/code/EnergyMesh.cpp
-            heed++/code/HeedCluster.cpp
-            heed++/code/HeedCondElectron.cpp
             heed++/code/HeedDeltaElectron.cpp
             heed++/code/HeedDeltaElectronCS.cpp
             heed++/code/HeedMatterDef.cpp

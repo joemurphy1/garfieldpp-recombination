@@ -69,14 +69,4 @@ double PairProd::get_eloss(const double e_cur) const {
 
 #endif
 
-void PairProd::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "PairProd:\n";
-  indn.n += 2;
-  Ifile << "W=" << m_w << " Fano factor=" << m_f << '\n';
-  Ifile << "W table=" << m_wtable << " Fano factor table=" << m_ftable << '\n';
-  Ifile << "I=" << m_i << " J=" << m_j << " k=" << m_k << " s=" << m_s << '\n';
-  pran.print(file);
-  indn.n -= 2;
-}
 }  // namespace Heed

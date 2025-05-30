@@ -1,9 +1,5 @@
 #include "wcpplib/stream/findmark.h"
-
-#include <cstdio>
-#include <iostream>
-
-#include "wcpplib/stream/prstream.h"
+#include <cstring>
 
 /*
 Copyright (c) 2000 I. B. Smirnov

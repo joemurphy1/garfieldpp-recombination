@@ -119,24 +119,4 @@ double PointsRan::ran(double flat_ran) const {
   return r;
 }
 
-void PointsRan::print(std::ostream& file) const {
-  Ifile << "PointsRan:\n";
-  indn.n += 2;
-  Ifile << "xmin=" << xmin << " xmax=" << xmax << '\n';
-  Ifile << "n_start=" << n_start << " n_finish=" << n_finish << '\n';
-  Ifile << "integ_start=" << integ_start << " integ_finish=" << integ_finish
-        << '\n';
-  Ifile << "integ_total=" << integ_total << " integ_active=" << integ_active
-        << '\n';
-  // Iprintn(file, integ);
-  const long q = x.size();
-  Iprintn(file, q);
-  for (long n = 0; n < q; n++) {
-    file << std::setw(3) << n << ' ' << std::setw(12) << x[n] << ' '
-         << std::setw(12) << y[n] << ' ' << std::setw(12) << iy[n];
-    if (n < q - 1) file << ' ' << std::setw(12) << a[n];
-    file << '\n';
-  }
-  indn.n -= 2;
-}
 }  // namespace Heed

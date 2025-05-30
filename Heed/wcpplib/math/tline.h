@@ -119,8 +119,7 @@ class EqualStepCoorMesh {
 };
 
 template <class T>
-EqualStepCoorMesh<T>::EqualStepCoorMesh(long fq, T fxmin, T fxmax)
-    : q(fq), xmin(fxmin), xmax(fxmax) {
+EqualStepCoorMesh<T>::EqualStepCoorMesh(long fq, T fxmin, T fxmax) : q(fq), xmin(fxmin), xmax(fxmax) {
   mfunname(
       "template<class T> EqualStepCoorMesh<T>::EqualStepCoorMesh<T>(long "
       "fq, T fxmin, T fxmax)");
@@ -131,8 +130,8 @@ EqualStepCoorMesh<T>::EqualStepCoorMesh(long fq, T fxmin, T fxmax)
   check_econd11(step, == 0, mcerr);
 }
 
-template <class T>
-int EqualStepCoorMesh<T>::get_interval(T x, long& n1) const {
+template <class T> int EqualStepCoorMesh<T>::get_interval(T x, long& n1) const
+{
   if (x < xmin || x >= xmax) {
     n1 = 0;
     return 0;

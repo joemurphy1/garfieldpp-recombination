@@ -1,7 +1,7 @@
 #ifndef PAIRPROD_H
 #define PAIRPROD_H
+#include <string>
 #include "wcpplib/random/PointsRan.h"
-#include "wcpplib/stream/prstream.h"
 
 namespace Heed {
 
@@ -21,8 +21,6 @@ class PairProd {
   double get_eloss() const;
   /// Calculate energy loss (in eV) assuming V = wa / 2.
   double get_eloss(const double ecur) const;
-
-  void print(std::ostream& file, int l) const;
 
  private:
   double m_w = 30.;

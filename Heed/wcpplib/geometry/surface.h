@@ -1,8 +1,8 @@
 #ifndef SURFACE_H
 #define SURFACE_H
 #include <array>
-#include <iostream>
 #include <memory>
+#include <string>
 
 #include "wcpplib/geometry/polyline.h"
 #include "wcpplib/geometry/volume.h"
@@ -27,19 +27,16 @@ namespace Heed {
 class surface : public absref {
  public:
   virtual ~surface() {}
-  virtual int check_point_inside(const point& fpt, const vec& dir,
-                                 double fprec) const = 0;
+  virtual int check_point_inside(const point& fpt, const vec& dir, double fprec) const = 0;
   // If two volumes are exactly adjusted, it may happens that the point
   // belongs to both volumes, to their borders. If dir != dv0,
   // the exiting volume is ignored.
 
-  virtual int check_point_inside1(const point& fpt, int s_ext,
-                                  double fprec) const = 0;
+  virtual int check_point_inside1(const point& fpt, int s_ext, double fprec) const = 0;
   // s_ext=0 - entering
   //       1 - exiting
 
-  virtual int range(const trajestep& fts, double* crange, point* cpt,
-                    int* s_ext) const = 0;
+  virtual int range(const trajestep& fts, double* crange, point* cpt, int* s_ext) const = 0;
   // Does not change fts
   // If no cross or cross father than fts.mrange,
   // returns 0 and does not change fts
@@ -58,8 +55,7 @@ class surface : public absref {
   // the range is 0, s_ext is taken from direction.
   // In case of parallel to border, s_ext=2.
 
-  virtual int cross(const polyline& fpl, point* cntrpt, int& qcntrpt,
-                    double prec) const = 0;
+  virtual int cross(const polyline& fpl, point* cntrpt, int& qcntrpt, double prec) const = 0;
   virtual void print(std::ostream& file, int l) const = 0;
 };
 
@@ -77,15 +73,12 @@ class splane : public surface {
   /// Default constructor
   splane() : pn() {}
   splane(const splane& fsp) : surface(fsp), pn(fsp.pn), dir_ins(fsp.dir_ins) {}
-  splane(const plane& fpn, const vec& fdir_ins)
-      : pn(fpn), dir_ins(unit_vec(fdir_ins)) {}
+  splane(const plane& fpn, const vec& fdir_ins) : pn(fpn), dir_ins(unit_vec(fdir_ins)) {}
   /// Destructor
   virtual ~splane() {}
 
-  int check_point_inside(const point& fpt, const vec& dir,
-                         double fprec) const override;
-  int check_point_inside1(const point& fpt, int s_ext,
-                          double fprec) const override;
+  int check_point_inside(const point& fpt, const vec& dir, double fprec) const override;
+  int check_point_inside1(const point& fpt, int s_ext, double fprec) const override;
   // s_ext=0 - entering
   //       1 - exiting
   // 15.02.2006: Remark on check_point_inside vs. check_point_inside1.
@@ -102,15 +95,13 @@ class splane : public surface {
   // all the surfaces, thus faking the entering even if the particle is
   // actually exiting. This allows to make a stop there.
 
-  int range(const trajestep& fts, double* crange, point* cpt,
-            int* s_ext) const override;
+  int range(const trajestep& fts, double* crange, point* cpt, int* s_ext) const override;
   // Does not change fts
   // If no cross, returns 0 a
   // If there are crosses, returns number of them and
   // assign crange and cpt
 
-  int cross(const polyline& fpl, point* cntrpt, int& qcntrpt,
-            double prec) const override {
+  int cross(const polyline& fpl, point* cntrpt, int& qcntrpt, double prec) const override {
     polyline* plh = new polyline[fpl.Gqsl()];
     int qplh;
     int i = pn.cross(fpl, cntrpt, qcntrpt, plh, qplh, prec);
@@ -170,8 +161,7 @@ class ulsvolume : public absvol {
   // If no cross, returns 0 and does not change fts
   // If there is cross, returns 1 and assign fts.mrange and fts.mpoint
 
-  void ulsvolume_init(const std::vector<std::shared_ptr<surface> >& fsurf,
-                      const std::string& fname, double fprec);
+  void ulsvolume_init(const std::vector<std::shared_ptr<surface> >& fsurf, const std::string& fname, double fprec);
 
   void income(gparticle* /*gp*/) override {}
   void chname(char* nm) const override {

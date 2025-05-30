@@ -28,8 +28,6 @@ class HeedParticle : public eparticle {
   /// Destructor
   virtual ~HeedParticle() {}
 
-  void print(std::ostream& file, int l) const override;
-
  protected:
   void physics(std::vector<gparticle*>& secondaries) override;
   void physics_mrange(double& fmrange) override;
