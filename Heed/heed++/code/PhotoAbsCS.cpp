@@ -3,28 +3,27 @@
 #include <cmath>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 #include <sstream>
 #include <string>
-#include<limits>
+
+#include "Garfield/Random.hh"
 #include "heed++/code/PhysicalConstants.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
-#include "Garfield/Random.hh"
 #include "wcpplib/math/tline.h"
 #include "wcpplib/stream/findmark.h"
-#include "heed++/code/PhysicalConstants.h"
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
 // 2004, I. Smirnov
-
-// #define DEBUG_PRINT_get_escape_particles
-// #define DEBUG_ignore_non_standard_channels
 
 // #define ALWAYS_LINEAR_INTERPOLATION  // how the paper was computed
 
 namespace {
 /// TRK sum rule [1/MeV], constant per one electron.
-constexpr double Thomas_sum_rule_const = 2 * Heed::CLHEP::pi2 * Heed::CLHEP::fine_structure_const / Heed::CLHEP::electron_mass_c2;
+constexpr double Thomas_sum_rule_const = 2 * Heed::CLHEP::pi2 *
+                                         Heed::CLHEP::fine_structure_const /
+                                         Heed::CLHEP::electron_mass_c2;
 /// TRK sum rule [Mb * MeV].
-constexpr double Thomas_sum_rule_const_Mb = Thomas_sum_rule_const * 1.0E-6 / Heed::C1_MEV2_BN;
+constexpr double Thomas_sum_rule_const_Mb =
+    Thomas_sum_rule_const * 1.0E-6 / Heed::C1_MEV2_BN;
 
 /// Determine whether to use linear or nonlinear interpolation.
 /// Usually photoabsorption cross sections decrease as inverse power function
@@ -171,7 +170,8 @@ HydrogenPhotoAbsCS::HydrogenPhotoAbsCS() : PhotoAbsCS("H", 1, 15.43e-6) {
 }
 
 double HydrogenPhotoAbsCS::get_CS(double energy) const {
-  if (energy < threshold || energy == std::numeric_limits<double>::max()) return 0.0;
+  if (energy < threshold || energy == std::numeric_limits<double>::max())
+    return 0.0;
   // The factor 0.5 is needed because we have one atom instead of two.
   return 0.5 * prefactor * 0.0535 * (pow(100.0e-6 / energy, 3.228));
 }
@@ -351,7 +351,8 @@ double SimpleTablePhotoAbsCS::get_CS(double energy) const {
     return t_value_generic_point_ar<
         double, std::vector<double>,
         PointCoorMesh<double, const std::vector<double> > >(
-        pcm, cs, &my_val_fun, energy, 1, threshold, 0, std::numeric_limits<double>::max());
+        pcm, cs, &my_val_fun, energy, 1, threshold, 0,
+        std::numeric_limits<double>::max());
   } else {
     if (energy == std::numeric_limits<double>::max())
       return 0.0;
@@ -378,7 +379,8 @@ double SimpleTablePhotoAbsCS::get_integral_CS(double energy1,
     s = t_integ_generic_point_ar<
         double, std::vector<double>,
         PointCoorMesh<double, const std::vector<double> > >(
-        pcm, cs, &my_integr_fun, energy1, energy21, 1, threshold, 0, std::numeric_limits<double>::max());
+        pcm, cs, &my_integr_fun, energy1, energy21, 1, threshold, 0,
+        std::numeric_limits<double>::max());
   }
   // print(mcout, 3);
   // mcout << "energy1="<<energy1
@@ -441,7 +443,8 @@ PhenoPhotoAbsCS::PhenoPhotoAbsCS(const std::string& fname, int fZ,
 }
 
 double PhenoPhotoAbsCS::get_CS(double energy) const {
-  if (energy < threshold || energy == std::numeric_limits<double>::max()) return 0.0;
+  if (energy < threshold || energy == std::numeric_limits<double>::max())
+    return 0.0;
   return factor * pow(energy, -power);
 }
 
@@ -513,16 +516,9 @@ int AtomicSecondaryProducts::get_channel(
     std::vector<double>& felectron_energy,
     std::vector<double>& fphoton_energy) const {
   mfunname("int AtomicSecondaryProducts::get_channel(...)");
-#ifdef DEBUG_PRINT_get_escape_particles
-  mcout << "AtomicSecondaryProducts::get_channel is started\n";
-  Iprintn(mcout, channel_prob_dens.size());
-#endif
   if (channel_prob_dens.empty()) return 0;
   int ir = 0;
   double rn = Garfield::RndmUniform();
-#ifdef DEBUG_PRINT_get_escape_particles
-  Iprintn(mcout, rn);
-#endif
   if (channel_prob_dens.size() == 1) {
     if (rn < channel_prob_dens[0]) {
       felectron_energy = electron_energy[0];
@@ -538,17 +534,10 @@ int AtomicSecondaryProducts::get_channel(
         felectron_energy = electron_energy[n];
         fphoton_energy = photon_energy[n];
         ir = 1;
-#ifdef DEBUG_PRINT_get_escape_particles
-        Iprint2n(mcout, n, s);
-#endif
         break;
       }
     }
   }
-#ifdef DEBUG_PRINT_get_escape_particles
-  mcout << "AtomicSecondaryProducts::get_channel is finishing\n";
-  Iprintn(mcout, ir);
-#endif
   return ir;
 }
 
@@ -682,11 +671,6 @@ void AtomPhotoAbsCS::get_escape_particles(
     const int nshell, double energy, std::vector<double>& el_energy,
     std::vector<double>& ph_energy) const {
   mfunname("void AtomPhotoAbsCS::get_escape_particles(...)");
-#ifdef DEBUG_PRINT_get_escape_particles
-  mcout << "AtomPhotoAbsCS::get_escape_particles is started\n";
-  Iprintn(mcout, nshell);
-  Iprintn(mcout, energy);
-#endif
   // In principle, the energy is allowed to be slightly less than threshold
   // due to unprecision of definition of point-wise cross sections.
   // To keep correct norm it is better not to ignore such events.
@@ -707,9 +691,6 @@ void AtomPhotoAbsCS::get_escape_particles(
       thrMin = get_threshold(n);
     }
   }
-#ifdef DEBUG_PRINT_get_escape_particles
-  Iprintn(mcout, n_min);
-#endif
   if (nshell == n_min) {
     // Outermost (valence) shell. Only generate the delta electron.
     const double en = std::max(energy - thrMin, 0.);
@@ -732,23 +713,7 @@ void AtomPhotoAbsCS::get_escape_particles(
   int is = 0;
   std::vector<double> felectron_energy;
   std::vector<double> fphoton_energy;
-#ifdef DEBUG_PRINT_get_escape_particles
-  Iprint2n(mcout, asp.size(), get_qshell());
-#endif
-#ifndef DEBUG_ignore_non_standard_channels
-  if (asp.size() == get_qshell()) {
-    // works only in this case?
-    is = asp[nshell].get_channel(felectron_energy, fphoton_energy);
-    // Here zero can be if the shell is not included in database
-    // or if not standard channel is not chosen by random way.
-    // In both cases the standard way should be invoked.
-  }
-#endif
   int main_n = get_main_shell_number(nshell);
-#ifdef DEBUG_PRINT_get_escape_particles
-  Iprint2n(mcout, nshell, main_n);
-  Iprintn(mcout, is);
-#endif
 
   if (is != 0) {
     // Generate photo-electron and just copy all what is proposed by
@@ -794,9 +759,6 @@ void AtomPhotoAbsCS::get_escape_particles(
   for (int n = 0; n < qshell; ++n) {
     main_n_largest = std::max(main_n_largest, get_main_shell_number(n));
   }
-#ifdef DEBUG_PRINT_get_escape_particles
-  Iprintn(mcout, main_n_largest);
-#endif
   if (main_n_largest - main_n < 2) {
     // Generate Auger from the outermost shell.
     double en1 = thrShell - hdist - 2 * thrMin;
@@ -808,8 +770,10 @@ void AtomPhotoAbsCS::get_escape_particles(
   // In this case we use more advanced scheme.
   // Look for shell with larger main number and with less energy
   int n_chosen = -1;
-  double thr = std::numeric_limits<double>::max();  // this will be the least threshold
-                         // among the shells with next principal number
+  double thr =
+      std::numeric_limits<double>::max();  // this will be the least threshold
+                                           // among the shells with next
+                                           // principal number
   for (int n = 0; n < qshell; ++n) {
     // currently the minimal shell is the last,
     // but to avoid this assumption we check all
@@ -821,9 +785,6 @@ void AtomPhotoAbsCS::get_escape_particles(
       }
     }
   }
-#ifdef DEBUG_PRINT_get_escape_particles
-  Iprint2n(mcout, n_chosen, thr);
-#endif
   check_econd11(n_chosen, < 0, mcerr);
   double en1 = thrShell - hdist - 2 * get_threshold(n_chosen);
   if (en1 > 0.) {
@@ -1271,8 +1232,10 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
       }
     }
   }
-  integ_abs_after_corr = get_integral_ACS(0.0, std::numeric_limits<double>::max());
-  integ_ioniz_after_corr = get_integral_ICS(0.0, std::numeric_limits<double>::max());
+  integ_abs_after_corr =
+      get_integral_ACS(0.0, std::numeric_limits<double>::max());
+  integ_ioniz_after_corr =
+      get_integral_ICS(0.0, std::numeric_limits<double>::max());
 }
 
 ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
@@ -1396,8 +1359,10 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
       }
     }
   }
-  integ_abs_after_corr = get_integral_ACS(0.0, std::numeric_limits<double>::max());
-  integ_ioniz_after_corr = get_integral_ICS(0.0, std::numeric_limits<double>::max());
+  integ_abs_after_corr =
+      get_integral_ACS(0.0, std::numeric_limits<double>::max());
+  integ_ioniz_after_corr =
+      get_integral_ICS(0.0, std::numeric_limits<double>::max());
 }
 
 #define READ_FILE_WITH_PRINCIPAL_NUMBERS
@@ -1569,8 +1534,10 @@ mark1:
       }
     }
   }
-  integ_abs_after_corr = get_integral_ACS(0.0, std::numeric_limits<double>::max());
-  integ_ioniz_after_corr = get_integral_ICS(0.0, std::numeric_limits<double>::max());
+  integ_abs_after_corr =
+      get_integral_ACS(0.0, std::numeric_limits<double>::max());
+  integ_ioniz_after_corr =
+      get_integral_ICS(0.0, std::numeric_limits<double>::max());
 }
 
 ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(
@@ -1641,8 +1608,10 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(
       }
     }
   }
-  integ_abs_after_corr = get_integral_ACS(0.0, std::numeric_limits<double>::max());
-  integ_ioniz_after_corr = get_integral_ICS(0.0, std::numeric_limits<double>::max());
+  integ_abs_after_corr =
+      get_integral_ACS(0.0, std::numeric_limits<double>::max());
+  integ_ioniz_after_corr =
+      get_integral_ICS(0.0, std::numeric_limits<double>::max());
 }
 
 double ExAtomPhotoAbsCS::get_threshold(int nshell) const {
@@ -1798,8 +1767,10 @@ void ExAtomPhotoAbsCS::print(std::ostream& file, int l) const {
   Ifile << "integrals by shells:\n";
   Ifile << "nshell, int(acs), int(ics)\n";
   for (long n = 0; n < qshell; n++) {
-    double ainteg = get_integral_ACS(n, 0.0, std::numeric_limits<double>::max());
-    double iinteg = get_integral_ICS(n, 0.0, std::numeric_limits<double>::max());
+    double ainteg =
+        get_integral_ACS(n, 0.0, std::numeric_limits<double>::max());
+    double iinteg =
+        get_integral_ICS(n, 0.0, std::numeric_limits<double>::max());
     Ifile << n << "    " << ainteg << "    " << iinteg << '\n';
   }
 
