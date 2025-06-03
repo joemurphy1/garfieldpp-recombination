@@ -1,5 +1,3 @@
-#include <stdlib.h>
-
 #include <iomanip>
 #ifdef VISUAL_STUDIO
 #define _USE_MATH_DEFINES

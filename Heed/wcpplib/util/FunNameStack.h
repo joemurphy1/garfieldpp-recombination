@@ -25,10 +25,6 @@ It is provided "as is" without express or implied warranty.
 //  it can be visually missed even if it is interrupted by play of threads.
 //  This message is not necessary in routine work.
 
-#ifdef USE_BOOST_MULTITHREADING
-#include "boost/thread/mutex.hpp"
-#endif
-
 /*
 // Here there is a good place to switch off the
 // initialization of the function names in all the programs
@@ -262,49 +258,6 @@ extern int s_exit_without_core;          // the key above have larger priority
     spexit_action(stream);                                               \
   }
 
-// Converting to a quasi-singleton class:
-// The program operates only with main hidden exsemplar.
-// Nothing could be copied to, but it itself can be copied,
-// for example for passing with exception classes
-
-#ifdef USE_BOOST_MULTITHREADING
-/* For multithreading we will keep own stack for each thread.
-This complicates things a lot, but still managable.
-In one thread case the stack data qname and name[] are kept directly
-in a singleton object of FunNameStack class.
-For multithreading mode we need to introduce special intermediate class
-NameStack and initialize one object of this class per each found thread.
-*/
-
-class NameStack {
- public:
-  static const int pqname = 1000;
-  // this depth of stack is completely OK for all correct programs.
-  // If you have overflow, it is likely the infinite loop with recursion
-  // in your program!
-  int qname;
-  char* name[pqname];
-  pthread_t id;
-  int nmode;  // 0 - name points to a string in outside world
-              //     used for global object funnamestack
-              // 1 - name is inited by new and deleted by delete
-              //     may be used for sending as parameter of exception
-              //     It is not convenient for normal work due
-              //     to time expense
-  NameStack(void) : qname(0), id(0), nmode(0) {
-    for (int n = 0; n < pqname; n++) name[n] = NULL;
-  }
-  NameStack(const NameStack& f) : qname(0), id(0), nmode(0) { *this = f; }
-
-  NameStack& operator=(const NameStack& f);
-
-  ~NameStack(void) {
-    if (nmode == 1)
-      for (int n = 0; n < qname; n++) delete name[n];
-  }
-};
-#endif
-
 namespace Heed {
 
 class FunNameStack {
@@ -320,24 +273,9 @@ class FunNameStack {
 
   FunNameStack(void);  // usually called inly from instance()
  private:
-#ifdef USE_BOOST_MULTITHREADING
-  // Two next functions return NameStack corresponding to
-  // current thread.
-  NameStack* get_thread_stack(void) const;
-  NameStack* get_thread_stack_q(long& nthread, long& qthread) const;
-  // retrieve not only NameStack, but also nthread and qthread.
-
-  void remove_thread_stack(void);
-#endif
-#ifdef USE_BOOST_MULTITHREADING
-  std::list<NameStack>* namestack;
-// Cannot put ActivePtr here because it uses  FunNameStack itself
-// and wants it to be completed.
-#else
   int qname;
   static const int pqname = 1000;
   char* name[pqname];
-#endif
   int s_init;  // 1 - sign that it is inited,
                // any other value - not inited
                // Now this variable is used only for debug printing.
@@ -360,11 +298,8 @@ class FunNameStack {
               //     It is not convenient for normal work due
               //     to time expense
 
-#ifdef USE_BOOST_MULTITHREADING
-  std::ostream& printname(std::ostream& file, NameStack* ns, int n);
-#else
   std::ostream& printname(std::ostream& file, int n);
-#endif
+
  public:
   void set_parameters(int fs_act = 1, int fs_print = 0);
   ~FunNameStack();
@@ -377,21 +312,6 @@ class FunNameStack {
   inline int put(const char* fname) {
     // if(s_init != 1) init();
     if (s_act != 1) return 0;
-#ifdef USE_BOOST_MULTITHREADING
-    NameStack* ns = get_thread_stack();
-    if (ns->qname >= pqname) {
-      mcerr << "FunNameStack::put: error: qname == pqname\n";
-      mcerr << "Most oftenly this happens due to infinite recursion.\n";
-      mcerr << "ns->id=" << ns->id << '\n';
-      mcerr << "*this=" << (*this);
-      exit(1);
-    }
-    ns->name[ns->qname++] = fname;
-    if (s_print > 0) {
-      printput(mcout);
-    }
-    return ns->qname - 1;
-#else
     if (qname >= pqname) {
       mcerr << "FunNameStack::put: error: qname == pqname\n";
       mcerr << "Most oftenly this happens due to infinite recursion.\n";
@@ -403,23 +323,9 @@ class FunNameStack {
       printput(mcout);
     }
     return qname - 1;
-#endif
   }
   inline void del(int nname) {
     if (s_act != 1) return;
-#ifdef USE_BOOST_MULTITHREADING
-    NameStack* ns = get_thread_stack();
-    if (nname != ns->qname - 1) {
-      // not last
-      ns->qname = nname;
-    } else {
-      if (s_print > 0) {
-        printdel(mcout);
-      }
-      ns->qname--;
-    }
-    if (ns->qname == 0) remove_thread_stack();
-#else
     if (nname != qname - 1) {
       // not last
       qname = nname;
@@ -429,23 +335,10 @@ class FunNameStack {
       }
       qname--;
     }
-#endif
   }
   inline void replace(const char* fname) {
     // if(s_init != 1) init();
     if (s_act != 1) return;
-#ifdef USE_BOOST_MULTITHREADING
-    NameStack* ns = get_thread_stack();
-    if (ns->qname >= pqname) {
-      mcerr << "FunNameStack::put: error: qname == pqname\n";
-      mcerr << "Most oftenly this happens due to infinite recursion.\n";
-      mcerr << "ns->id=" << ns->id << '\n';
-      mcerr << "*this=" << (*this);
-      exit(1);
-    }
-    ns->name[ns->qname - 1] = fname;
-    if (s_print > 0) printput(mcout);
-#else
     if (qname >= pqname) {
       mcerr << "FunNameStack::put: error: qname == pqname\n";
       mcerr << "Most oftenly this happens due to infinite recursion.\n";
@@ -454,7 +347,6 @@ class FunNameStack {
     }
     name[qname - 1] = const_cast<char*>(fname);
     if (s_print > 0) printput(mcout);
-#endif
   }
   friend std::ostream& operator<<(std::ostream& file, const FunNameStack& f);
 };
@@ -471,16 +363,10 @@ class FunNameWatch {
                      // Used for printing of headers.
  public:
   inline FunNameWatch(const char* fname) {
-    // #ifdef FUNNAMESTACK
     nname = FunNameStack::instance().put(fname);
-    // #else
-    //  nname=0;
-    // #endif
   }
   inline ~FunNameWatch() {
-    // #ifdef FUNNAMESTACK
     if (nname >= 0) FunNameStack::instance().del(nname);
-    // #endif
   }
 
   // print header
