@@ -1,17 +1,17 @@
 #include "heed++/code/HeedDeltaElectronCS.h"
+
 #include <cmath>
 #include <limits>
 
 #include "heed++/code/ElElasticScat.h"
+#include "heed++/code/EnergyMesh.h"
+#include "heed++/code/HeedMatterDef.h"
+#include "heed++/code/PairProd.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/ioniz/e_cont_enloss.h"
 #include "wcpplib/math/lorgamma.h"
-#include "heed++/code/ElElasticScat.h"
-#include "heed++/code/HeedMatterDef.h"
-#include "heed++/code/PairProd.h"
-#include "wcpplib/util/FunNameStack.h"
 #include "wcpplib/matter/MatterDef.h"
-#include "heed++/code/EnergyMesh.h"
+#include "wcpplib/util/FunNameStack.h"
 
 // 2003, I. Smirnov
 
@@ -64,7 +64,8 @@ HeedDeltaElectronCS::HeedDeltaElectronCS(HeedMatterDef* fhmd,
     momentum2[ne] =
         (en * en - electron_mass_c2 * electron_mass_c2) / (MeV * MeV);
     momentum[ne] = sqrt(momentum2[ne]);
-    const double dedx = e_cont_enloss(ZA, I_eff, rho, ec, std::numeric_limits<double>::max(), -1);
+    const double dedx = e_cont_enloss(ZA, I_eff, rho, ec,
+                                      std::numeric_limits<double>::max(), -1);
     if (smax < dedx) smax = dedx;
     eLoss[ne] = dedx / (MeV / cm);
   }
@@ -140,14 +141,10 @@ HeedDeltaElectronCS::HeedDeltaElectronCS(HeedMatterDef* fhmd,
     }
     rr = rr / (rho / (gram / cm3));
     rr = rr * 0.1;
-    // Iprintn(mcout, rr);
     double cor = 1.0;
     {
-      // b-k*(x-a)**2 = 0  =>  x= a +- sqrt(b/k)
-      // k = b / (x - a)**2
       double a = 2.5;
       double b = 4;
-      // k=1.0/4.0
       double x = 0.0;
       double k = b / ((x - a) * (x - a));
       x = ek * 1000.0;

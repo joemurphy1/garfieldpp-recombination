@@ -83,8 +83,6 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
       */
       fatom_not[qat] = molech[k]->atom(n)->notation();
       weight_qa[qat] = fweight_quan_molec[k] * molech[k]->qatom_ps(n);
-      // mcout << "qat=" << qat << " fatom_not[qat]=" << fatom_not[qat]
-      //      << " weight_qa[qat]=" << weight_qa[qat] << '\n';
       ++qat;
     }
   }
@@ -141,7 +139,6 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
       // ideal gas case
       fweight_quan_molec[n] = fw[n] * fpressure / (rydberg * ftemperature);
       double ms = fweight_quan_molec[n] * amolec[n]->A_total();
-      // Iprint2n(mcout, fweight_quan_molec[n], ms/gram);
       mass_t += ms;
     } else {
       // van der Waals gas case
@@ -153,7 +150,6 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
       check_econd11(s_not_single, == 1, mcerr);
       fweight_quan_molec[n] = number_of_moles;
       double ms = fweight_quan_molec[n] * amolec[n]->A_total();
-      // Iprint2n(mcout, fweight_quan_molec[n], ms/gram);
       mass_t += ms;
     }
   }

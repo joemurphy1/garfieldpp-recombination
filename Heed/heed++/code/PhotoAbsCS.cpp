@@ -380,26 +380,18 @@ double SimpleTablePhotoAbsCS::get_integral_CS(double energy1,
         pcm, cs, &my_integr_fun, energy1, energy21, 1, threshold, 0,
         std::numeric_limits<double>::max());
   }
-  // print(mcout, 3);
-  // mcout << "energy1="<<energy1
-  //      << " energy21="<<energy21
-  //      << " ener[q-1]="<<ener[q-1]
-  //      << " threshold="<<threshold
-  //      << " s="<<s<<'\n';
-  check_econd11(s, < 0.0, mcout);
+  check_econd11(s, < 0.0, std::cout);
   if (energy2 > ener[q - 1]) {
     // add tail
     if (energy2 == std::numeric_limits<double>::max()) {
       if (energy1 < ener[q - 1]) energy1 = ener[q - 1];
       double c =
           cs[q - 1] / (1.75 * pow(ener[q - 1], -2.75)) * pow(energy1, -1.75);
-      // check_econd11(c , < 0.0, mcout);
       s += c;
     } else {
       if (energy1 < ener[q - 1]) energy1 = ener[q - 1];
       double c = cs[q - 1] / (1.75 * pow(ener[q - 1], -2.75)) *
                  (pow(energy1, -1.75) - pow(energy2, -1.75));
-      // check_econd11(c , < 0.0, mcout);
       s += c;
     }
   }
@@ -623,7 +615,7 @@ void AtomPhotoAbsCS::print(std::ostream& file, int l) const {
   if (l <= 0) return;
   Ifile << "AtomPhotoAbsCS(l=" << l << "): name=" << name << " Z = " << Z
         << " qshell = " << qshell << std::endl;
-  Iprintn(mcout, asp.size());
+  Iprintn(std::cout, asp.size());
   long q = asp.size();
   if (q == 0) {
     q = s_ignore_shell.size();
@@ -639,7 +631,7 @@ void AtomPhotoAbsCS::print(std::ostream& file, int l) const {
     for (long n = 0; n < q; ++n) {
       Ifile << "n=" << n << " s_ignore_shell[n] = " << s_ignore_shell[n]
             << '\n';
-      asp[n].print(mcout, l);
+      asp[n].print(std::cout, l);
     }
     indn.n -= 2;
   }
@@ -906,10 +898,10 @@ double SimpleAtomPhotoAbsCS::get_integral_ACS(double energy1,
     if (s_ignore_shell[n]) continue;
     const double t = m_acs[n]->get_integral_CS(energy1, energy2);
     if (t < 0) {
-      mcout << "t < 0\n";
-      Iprintn(mcout, t);
-      print(mcout, 4);
-      spexit(mcout);
+      std::cout << "t < 0\n";
+      Iprintn(std::cout, t);
+      print(std::cout, 4);
+      spexit(std::cout);
     }
     s += t;
   }
@@ -1004,7 +996,6 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
     threshold_file >> qshell;
     check_econd21(qshell, < 1 ||, > 10000, mcerr);
     s_ignore_shell.resize(qshell, false);
-    // Iprintn(mcout, qshell);
     thr.resize(qshell, 0.0);
     Zshell.resize(qshell, 0);
     fl.resize(qshell, 0.0);
@@ -1100,7 +1091,6 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
     int nt1 = nct;
     int nce_next = ener.size();
     nt2 = nt + 1;
-    // mcout<<"nt="<<nt<<" nt1="<<nt1<<" nt2="<<nt2<<" s_more="<<s_more<<'\n';
     if (s_more == 1) {
       // if(nt >= 0)  // so if there are other larger thresholds,
       //{        // we should check how far we can pass at this step
@@ -1124,7 +1114,6 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
             thr[nt] <= ener[ne + 1] &&
             (thr[nt] - ener[ne]) / (ener[ne + 1] - ener[ne]) < 0.1 &&
             CS[ne] > CS[ne - 1]) {
-          // mcout<<"special condition is satisf.\n";
           nce_next = ne;
           s_spes = 1;
           break;
@@ -1133,10 +1122,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
       if (ne == ener.size())  // threshold is larger then energy mesh
         s_more = 0;           // to finish the loop
     }
-    // Iprintn(mcout, nce_next);
-    // Iprintn(mcout, ener[nce_next-1]);
     int qt = nt1 - nt2 + 1;  // quantity of the new thresholds
-    // Iprintn(mcout, qt);
 
     // Calculate sum of Z.
     int s = 0;
@@ -1187,10 +1173,8 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
   height_of_excitation = 0.0;
   exener[0] = exener[1] = 0.0;
   double integ = get_integral_ACS(0.0, std::numeric_limits<double>::max());
-  // Iprintn(mcout, integ);
   integ_abs_before_corr = integ;
   double pred_integ = Thomas_sum_rule_const_Mb * Z;
-  // Iprintn(mcout, pred_integ);
   if (pred_integ > integ) {
     if (s_add_excitations_to_normalize == 1) {
       const double threshold = m_acs[qshell - 1]->get_threshold();
@@ -1250,7 +1234,6 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
     check_econd11(i, != Z, mcerr);
     std::string shellname;
     BT_file >> shellname;
-    // Iprintn(mcout, shellname);
     i = findmark(BT_file, "$");
     check_econd11(i, != 1, mcerr);
     long qen;
@@ -1267,7 +1250,6 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
       fl.resize(fl.size() + 1);
       BT_file >> fl[qshell];
       check_econd21(fl[qshell], < 0.0 ||, > 1.0, mcerr);
-      // Iprintn(mcout, fl[qshell]);
     }
     long nen;
     for (nen = 0; nen < qen; nen++) {
@@ -1310,10 +1292,8 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
   height_of_excitation = 0.0;
   exener[0] = exener[1] = 0.0;
   double integ = get_integral_ACS(0.0, std::numeric_limits<double>::max());
-  // Iprintn(mcout, integ);
   integ_abs_before_corr = integ;
   double pred_integ = Thomas_sum_rule_const_Mb * Z;
-  // Iprintn(mcout, pred_integ);
   if (pred_integ > integ) {
     if (s_add_excitations_to_normalize == 1) {
       const double thr = m_acs[qshell - 1]->get_threshold();
@@ -1369,7 +1349,6 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
     BT_file >> iZ;
     if (iZ != Z) continue;
     BT_file >> qshell;
-    // Iprintn(mcout, qshell);
     check_econd11(qshell, <= 0, mcerr);
     check_econd11(qshell, > 1000, mcerr);
     m_acs.resize(qshell);
@@ -1438,10 +1417,6 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
 #endif
       m_acs[nshell].reset(new SimpleTablePhotoAbsCS(shellname, 0, threshold, l,
                                                     E0, yw, ya, P, sigma));
-      // Iprintn(mcout, nshell);
-      // Iprint3n(mcout, l, threshold, E0);
-      // Iprint4n(mcout, yw, ya, P, sigma);
-      // acs[nshell]->print(mcout, 5);
     }
     goto mark1;
   }
@@ -1478,10 +1453,8 @@ mark1:
   height_of_excitation = 0.0;
   exener[0] = exener[1] = 0.0;
   double integ = get_integral_ACS(0.0, std::numeric_limits<double>::max());
-  // Iprintn(mcout, integ);
   integ_abs_before_corr = integ;
   double pred_integ = Thomas_sum_rule_const_Mb * Z;
-  // Iprintn(mcout, pred_integ);
   if (pred_integ > integ) {
     if (s_add_excitations_to_normalize == 1) {
       const double thr = m_acs[qshell - 1]->get_threshold();

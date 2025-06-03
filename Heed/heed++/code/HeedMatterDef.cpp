@@ -247,7 +247,7 @@ void HeedMatterDef::replace_epsi12(const std::string& file_name) {
     mcerr << "cannot open file " << file_name << std::endl;
     spexit(mcerr);
   } else {
-    mcout << "file " << file_name << " is opened" << std::endl;
+    std::cout << "file " << file_name << " is opened" << std::endl;
   }
   long qe = 0;  // number of points in input mesh
   file >> qe;
@@ -278,7 +278,6 @@ void HeedMatterDef::replace_epsi12(const std::string& file_name) {
     // pcmd: dimension q; eps1, eps2: dimension q - 1.
     epsi1[ne] = interpolate(pcmd, eps1, ec, 0, 1, emin, 1, emax);
     epsi2[ne] = interpolate(pcmd, eps2, ec, 1, 1, emin, 1, emax);
-    // Iprint3n(mcout, ec, epsi1[ne], epsi2[ne]);
   }
 }
 

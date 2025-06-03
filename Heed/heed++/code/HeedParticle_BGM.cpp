@@ -4,16 +4,16 @@
 #include <numeric>
 
 #include "Garfield/Random.hh"
+#include "heed++/code/BGMesh.h"
 #include "heed++/code/EnTransfCS_BGM.h"
+#include "heed++/code/EnergyMesh.h"
 #include "heed++/code/HeedCluster.h"
+#include "heed++/code/HeedMatterDef.h"
 #include "heed++/code/HeedPhoton.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/math/kinem.h"
 #include "wcpplib/math/tline.h"
-#include "heed++/code/BGMesh.h"
 #include "wcpplib/matter/MatterDef.h"
-#include "heed++/code/EnergyMesh.h"
-#include "heed++/code/HeedMatterDef.h"
 
 // 2003-2008, I. Smirnov
 
@@ -38,8 +38,8 @@ HeedParticle_BGM::HeedParticle_BGM(manip_absvol* primvol, const point& pt,
 void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
   mfunname("void HeedParticle_BGM::physics()");
   if (m_print_listing) {
-    mcout << "HeedParticle_BGM::physics is started\n";
-    Iprintn(mcout, m_currpos.prange);
+    std::cout << "HeedParticle_BGM::physics is started\n";
+    Iprintn(std::cout, m_currpos.prange);
   }
   // Get the step.
   if (m_currpos.prange <= 0.0) return;
@@ -47,7 +47,6 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
   const vec dir = unit_vec(m_currpos.pt - m_prevpos.pt);
   // This approximation ignores curvature
   const double range = (m_currpos.pt - m_prevpos.pt).length();
-  //if (m_print_listing) Iprint3n(mcout, m_prevpos.pt, dir, range);
   // Get local volume.
   const absvol* av = m_currpos.volume();
   auto etcs = dynamic_cast<const EnTransfCS_BGM*>(av);
@@ -90,23 +89,23 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
   const double f2 = (bg - b1) * (b2 - b1);
   const double f1 = 1. - f2;
   const long qa = matter->qatom();
-  if (m_print_listing) Iprintn(mcout, qa);
+  if (m_print_listing) Iprintn(std::cout, qa);
   basis tempbas(m_currpos.dir, "tempbas");
   // Shorthand.
   const auto sampleTransfer =
       t_hisran_step_ar<double, std::vector<double>,
                        PointCoorMesh<double, const double*> >;
   for (long na = 0; na < qa; ++na) {
-    if (m_print_listing) Iprintn(mcout, na);
+    if (m_print_listing) Iprintn(std::cout, na);
     long qs = hmd->apacs[na]->get_qshell();
     for (long ns = 0; ns < qs; ++ns) {
-      if (m_print_listing) Iprintn(mcout, ns);
+      if (m_print_listing) Iprintn(std::cout, ns);
       const double y1 = etcs->etcs_bgm[n1].quan[na][ns];
       const double y2 = etcs->etcs_bgm[n2].quan[na][ns];
       const double mean_pois = f1 * y1 + f2 * y2;
       if (mean_pois <= 0.) continue;
       const long qt = Garfield::RndmPoisson(mean_pois * stp);
-      if (m_print_listing) Iprintn(mcout, qt);
+      if (m_print_listing) Iprintn(std::cout, qt);
       if (qt <= 0) continue;
       for (long nt = 0; nt < qt; nt++) {
         // Sample the energy transfer in this collision.
@@ -117,18 +116,18 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
             sampleTransfer(pcm_e, etcs->etcs_bgm[n2].fadda[na][ns], rn);
         const double r = f1 * r1 + f2 * r2;
         if (m_print_listing) {
-          Iprintn(mcout, rn);
-          Iprint3n(mcout, r1, r2, r);
+          Iprintn(std::cout, rn);
+          Iprint3n(std::cout, r1, r2, r);
         }
         // Convert to internal units.
         const double et = r * MeV;
         m_edep += et;
-        if (m_print_listing) Iprint2n(mcout, nt, et);
+        if (m_print_listing) Iprint2n(std::cout, nt, et);
         // Sample the position of the collision.
         const double arange = Garfield::RndmUniform() * range;
         point pt = m_prevpos.pt + dir * arange;
         if (m_loss_only) continue;
-        if (m_print_listing) mcout << "generating new cluster\n";
+        if (m_print_listing) std::cout << "generating new cluster\n";
         m_clusterBank.push_back(HeedCluster(et, pt, na, ns));
         // Generate a virtual photon.
         double theta_p, theta_t;
@@ -138,7 +137,7 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
         vel.down(&tempbas);  // direction is OK
         vel *= c_light;
         const double t = m_prevpos.time + arange * invSpeed;
-        if (m_print_listing) mcout << "generating new virtual photon\n";
+        if (m_print_listing) std::cout << "generating new virtual photon\n";
         HeedPhoton* hp = new HeedPhoton(m_currpos.tid.eid[0], pt, vel, t,
                                         m_particle_number, et, m_fm);
         if (!hp->alive()) {
@@ -159,8 +158,8 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
   }
 
   if (m_print_listing) {
-    Iprintn(mcout, m_edep);
-    mcout << "Exiting HeedParticle_BGM::physics\n";
+    Iprintn(std::cout, m_edep);
+    std::cout << "Exiting HeedParticle_BGM::physics\n";
   }
 }
 

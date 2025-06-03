@@ -17,7 +17,7 @@ namespace Heed {
 void spexit_action(std::ostream& file) {
   file << "spexit_action: the streams will be now flushed\n";
   file.flush();
-  mcout.flush();
+  std::cout.flush();
   mcerr.flush();
   file << "spexit_action: the exit(1) function is called\n";
   std::exit(1);

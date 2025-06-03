@@ -119,7 +119,8 @@ class EqualStepCoorMesh {
 };
 
 template <class T>
-EqualStepCoorMesh<T>::EqualStepCoorMesh(long fq, T fxmin, T fxmax) : q(fq), xmin(fxmin), xmax(fxmax) {
+EqualStepCoorMesh<T>::EqualStepCoorMesh(long fq, T fxmin, T fxmax)
+    : q(fq), xmin(fxmin), xmax(fxmax) {
   mfunname(
       "template<class T> EqualStepCoorMesh<T>::EqualStepCoorMesh<T>(long "
       "fq, T fxmin, T fxmax)");
@@ -130,8 +131,8 @@ EqualStepCoorMesh<T>::EqualStepCoorMesh(long fq, T fxmin, T fxmax) : q(fq), xmin
   check_econd11(step, == 0, mcerr);
 }
 
-template <class T> int EqualStepCoorMesh<T>::get_interval(T x, long& n1) const
-{
+template <class T>
+int EqualStepCoorMesh<T>::get_interval(T x, long& n1) const {
   if (x < xmin || x >= xmax) {
     n1 = 0;
     return 0;
@@ -240,8 +241,8 @@ int apeq_mant(const EqualStepCoorMesh<T>& f1, const EqualStepCoorMesh<T>& f2,
   if (f1.get_qi() != f2.get_qi() ||
       !apeq_mant(f1.get_xmin(), f2.get_xmin(), prec) ||
       !apeq_mant(f1.get_xmax(), f2.get_xmax(), prec)) {
-    Iprintn(mcout, !apeq_mant(f1.get_xmin(), f2.get_xmin(), prec));
-    Iprintn(mcout, !apeq_mant(f1.get_xmax(), f2.get_xmax(), prec));
+    Iprintn(std::cout, !apeq_mant(f1.get_xmin(), f2.get_xmin(), prec));
+    Iprintn(std::cout, !apeq_mant(f1.get_xmax(), f2.get_xmax(), prec));
     return 0;
   } else
     return 1;
@@ -307,7 +308,7 @@ long t_find_interval_end(double x, long q, const D& coor, long n_start) {
   if (n_start < 0 || n_start > q - 1) {
     mcerr << " ERROR in t_find_interval_end(...):\n";
     mcerr << "n_start < 0 || n_start > q-1\n";
-    Iprint2n(mcout, n_start, q);
+    Iprint2n(std::cout, n_start, q);
     spexit(mcerr);
   }
 #ifndef TLINE_REDUCE_TO_RAW_ARR
@@ -731,8 +732,6 @@ T t_integ_step_ar(const M& mesh, const D& y,  // array of function values
     T b1, b2;
     int i_ret = 0;
     i_ret = mesh.get_interval(x1, n1, b1, n2, b2);
-    // Iprint2n(mcout, x1, i_ret);
-    // Iprint4n(mcout, n1, b1, n2, b2);
     check_econd11(i_ret, != 1, mcerr);
     if (b2 - x1 > 0) {  // otherwise it could be only equal to 0
       if (x2 <= b2) {   // if x2 in the same interval
@@ -759,8 +758,6 @@ T t_integ_step_ar(const M& mesh, const D& y,  // array of function values
     T b1, b2;
     int i_ret = 0;
     i_ret = mesh.get_interval(x2, n1, b1, n2, b2);
-    // Iprint2n(mcout, x2, i_ret);
-    // Iprint4n(mcout, n1, b1, n2, b2);
     check_econd11(i_ret, != 1, mcerr);
     if (x2 - b1 > 0) {
       if (xpower == 0) {
@@ -771,7 +768,6 @@ T t_integ_step_ar(const M& mesh, const D& y,  // array of function values
     }
     iafterend = n1;
   }
-  // Iprint2n(mcout, istart, iafterend);
   long i;
   double b;
   mesh.get_scoor(istart, b);
@@ -826,8 +822,6 @@ T t_integ_generic_step_ar(const M& mesh,
     T b1, b2;
     int i_ret = 0;
     i_ret = mesh.get_interval(x1, n1, b1, n2, b2);
-    // Iprint2n(mcout, x1, i_ret);
-    // Iprint4n(mcout, n1, b1, n2, b2);
     check_econd11(i_ret, != 1, mcerr);
     if (b2 - x1 > 0)  // otherwise it could be only equal to 0
     {
@@ -848,15 +842,12 @@ T t_integ_generic_step_ar(const M& mesh,
     T b1, b2;
     int i_ret = 0;
     i_ret = mesh.get_interval(x2, n1, b1, n2, b2);
-    // Iprint2n(mcout, x2, i_ret);
-    // Iprint4n(mcout, n1, b1, n2, b2);
     check_econd11(i_ret, != 1, mcerr);
     if (x2 - b1 > 0) {
       s += fun(n1, b1, b2, y[n1], xmin, xmax, b1, x2);
     }
     iafterend = n1;
   }
-  // Iprint2n(mcout, istart, iafterend);
   long i;
   double b;
   mesh.get_scoor(istart, b);
@@ -865,9 +856,6 @@ T t_integ_generic_step_ar(const M& mesh,
     mesh.get_scoor(i + 1, b);
     s += fun(i, a, b, y[i], xmin, xmax, a, b);
   }
-  // Iprintn(mcout, s);
-
-  // T t;
   return s;
 }
 
@@ -915,7 +903,6 @@ T t_find_x_for_already_integ_step_ar(const M& mesh,
     else
       nl = nc;
   }
-  // Iprint2n(mcout, nl, nr);
   T xl(0.0);
   T xr(0.0);
   mesh.get_scoor(nl + 1, xl);
@@ -946,8 +933,6 @@ long t_find_entire_x_for_already_integ_step_ar(
     T integ, int* s_err)        // for power = 0 only
 {
   mfunname("double t_find_entire_x_for_already_integ_step_ar(...)");
-  // Iprintn(mcout, mesh);
-  // Iprintn(mcout, integ);
   *s_err = 0;
   // check_econd11(xpower , != 0 , mcerr);
   check_econd11(integ, < 0.0, mcerr);
@@ -978,13 +963,8 @@ long t_find_entire_x_for_already_integ_step_ar(
     else
       nl = nc;
   }
-  // Iprint2n(mcout, nl, nr);
-  // Iprint2n(mcout, y[nl], y[nr]);
-  // Iprint2n(mcout, nl, nr);
   long x(0);
   mesh.get_scoor(nr, x);
-  // Iprintn(mcout, x);
-
   return x;
 }
 
@@ -1017,7 +997,6 @@ T t_hispre_step_ar(const M& mesh, const D& y,  // array of function values
                    mcerr);
     s = s + y[n] * step;
     integ_y[n] = s;
-    // Iprint3n(mcout, n, s1, integ);
   }
   // TODO!! (HS)
   // check_econd11a(s, <= 0.0, "y=" << y << " integ_y=" << integ_y << '\n',
@@ -1039,7 +1018,6 @@ T t_hisran_step_ar(const M& mesh, const D& integ_y, T rannum) {
   check_econd11a(s_same, != 1.0, "integ_y[qi-1]=" << integ_y[qi - 1] << '\n',
                  mcerr);
 
-  // Iprintn(mcout, rannum);
   // check_econd11(integ_y[qi-1] , != 1.0 , mcerr);
   int s_err;
 
@@ -1218,7 +1196,6 @@ T t_value_straight_point_ar(const M& mesh,
   mfunname("double t_value_straight_point_ar(...)");
   double xmin = mesh.get_xmin();
   double xmax = mesh.get_xmax();
-  // Iprint3n(mcout, x, xmin, xmax);
   if (x < left_bond) return 0.0;
   if (x > right_bond) return 0.0;
   if (x < xmin && s_extrap_left == 0) return 0.0;
@@ -1245,7 +1222,6 @@ T t_value_generic_point_ar(
   mfunname("double t_value_generic_point_ar(...)");
   double xmin = mesh.get_xmin();
   double xmax = mesh.get_xmax();
-  // Iprint3n(mcout, x, xmin, xmax);
   if (x < left_bond) return 0.0;
   if (x > right_bond) return 0.0;
   if (x < xmin && s_extrap_left == 0) return 0.0;
@@ -1331,7 +1307,6 @@ T t_integ_straight_point_ar(const M& mesh,
                             int s_extrap_right, T right_bond) {
   mfunname("double t_integ_straight_point_ar(...)");
 
-  // mcout<<"Strart t_integ_straight_point_ar\n";
   check_econd21(xpower, != 0 &&, != 1, mcerr);
   check_econd12(x1, >, x2, mcerr);
   long qi = mesh.get_qi();
@@ -1396,10 +1371,6 @@ T t_integ_straight_point_ar(const M& mesh,
       yp2 = y[np2];
       res += t_integ_straight_2point<T>(xp1, yp1, xp2, yp2, x1i, x2i, xpower,
                                         s_ban_neg);
-      // Iprint2n(mcout, xp1, xp2);
-      // Iprint2n(mcout, x1i, x2i);
-      // Iprint2n(mcout, yp1, yp2);
-      // Iprint2n(mcout, res, s_stop);
 
     } while (s_stop == 0);
   }
@@ -1438,8 +1409,6 @@ T t_integ_generic_point_ar(
     T x2, int s_extrap_left, T left_bond, int s_extrap_right, T right_bond) {
   mfunname("double t_integ_generic_point_ar(...)");
 
-  // mcout<<"Strart t_integ_straight_point_ar\n";
-  // check_econd21(xpower , != 0 &&  , != 1 , mcerr);
   check_econd12(x1, >, x2, mcerr);
   long qi = mesh.get_qi();
   check_econd12(qi, <, 1, mcerr);
@@ -1500,10 +1469,6 @@ T t_integ_generic_point_ar(
       yp1 = yp2;
       yp2 = y[np2];
       res += fun(xp1, yp1, xp2, yp2, xmin, xmax, x1i, x2i);
-      // Iprint2n(mcout, xp1, xp2);
-      // Iprint2n(mcout, x1i, x2i);
-      // Iprint2n(mcout, yp1, yp2);
-      // Iprint2n(mcout, res, s_stop);
 
     } while (s_stop == 0);
   }

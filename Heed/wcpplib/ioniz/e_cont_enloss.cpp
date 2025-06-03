@@ -1,4 +1,5 @@
 #include "wcpplib/ioniz/e_cont_enloss.h"
+
 #include <cmath>
 
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
@@ -61,12 +62,8 @@ double e_cont_enloss(double ratio_Z_to_A,  // do not forget:
   double C = 1.0 + 2.0 * log((I_eff / GeV) /
                              (28.8e-9 * sqrt(density / (gram / cm3) *
                                              ratio_Z_to_A * gram / mole)));
-  // Iprintn(mcout, density/(g/cm3));
-  // Iprintn(mcout, ratio_Z_to_A * gram/mole);
-  // Iprintn(mcout, C);
   double x0, x1;
   if (density > 0.05 * gram / cm3) {
-    // mcout<<"density > 0.05 * g/cm3\n";
     if (I_eff < 1.0e-7 * GeV) {
       if (C < 3.681) {
         x0 = 1.0;
@@ -75,9 +72,7 @@ double e_cont_enloss(double ratio_Z_to_A,  // do not forget:
       }
       x1 = 2.0;
     } else {
-      // mcout<<"I_eff >= 1.0e-7 * GeV\n";
       if (C < 5.215) {
-        // mcout<<"C < 5.215\n";
         x0 = 0.2;
       } else {
         x0 = 0.326 * C - 1.5;
@@ -85,9 +80,7 @@ double e_cont_enloss(double ratio_Z_to_A,  // do not forget:
       x1 = 3.0;
     }
   } else {
-    // mcout<<"density <= 0.05 * g/cm3\n";
     if (C <= 12.25) {
-      // mcout<<"C <= 12.25\n";
       double ip = long((C - 10.0) / 0.5) + 1;
       if (ip < 0) ip = 0;
       if (ip > 4) ip = 4;

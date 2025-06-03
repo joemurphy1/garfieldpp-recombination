@@ -6,10 +6,10 @@
 #include "heed++/code/EnTransfCS.h"
 #include "heed++/code/HeedDeltaElectron.h"
 #include "heed++/code/HeedDeltaElectronCS.h"
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
-#include "wcpplib/random/chisran.h"
 #include "heed++/code/HeedMatterDef.h"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/matter/MatterDef.h"
+#include "wcpplib/random/chisran.h"
 
 // 2003, I. Smirnov
 
@@ -44,7 +44,7 @@ HeedPhoton::HeedPhoton(manip_absvol* primvol, const point& pt, const vec& vel,
 
 void HeedPhoton::physics(std::vector<gparticle*>& /*secondaries*/) {
   mfunname("void HeedPhoton::physics()");
-  if (m_print_listing) mcout << "HeedPhoton::physics() starts\n";
+  if (m_print_listing) std::cout << "HeedPhoton::physics() starts\n";
   // Stop here if the photon has already been absorbed.
   if (m_photon_absorbed) return;
   if (m_nextpos.prange <= 0.0) return;
@@ -77,17 +77,17 @@ void HeedPhoton::physics(std::vector<gparticle*>& /*secondaries*/) {
       s += cs.back();
     }
   }
-  if (m_print_listing) Iprintn(mcout, s);
+  if (m_print_listing) Iprintn(std::cout, s);
   // Multiply with the density and calculate the path length.
   // s = s * hmd->eldens / hmd->matter->Z_mean() * C1_MEV_CM;
   s = s * 1.0e-18 * Avogadro / (hmd->matter->A_mean() / (gram / mole)) *
       hmd->matter->density() / (gram / cm3);
-  if (m_print_listing) Iprintn(mcout, s);
+  if (m_print_listing) Iprintn(std::cout, s);
   const double path_length = 1.0 / s;  // cm
-  if (m_print_listing) Iprint2n(mcout, m_energy, path_length);
+  if (m_print_listing) Iprint2n(std::cout, m_energy, path_length);
   // Draw a random step length.
   const double xleng = -path_length * log(1.0 - Garfield::RndmUniform());
-  if (m_print_listing) Iprint2n(mcout, xleng, m_nextpos.prange / cm);
+  if (m_print_listing) Iprint2n(std::cout, xleng, m_nextpos.prange / cm);
   if (xleng * cm < m_nextpos.prange) {
     m_photon_absorbed = true;
 #ifdef SFER_PHOTOEL
@@ -99,7 +99,7 @@ void HeedPhoton::physics(std::vector<gparticle*>& /*secondaries*/) {
     chispre(cs);
     const double r = chisran(Garfield::RndmUniform(), cs);
     const long n = std::min(std::max(long(r), 0L), long(cs.size() - 1));
-    if (m_print_listing) Iprintn(mcout, n);
+    if (m_print_listing) Iprintn(std::cout, n);
     m_na_absorbing = nat[n];
     m_ns_absorbing = nsh[n];
     m_nextpos.prange = xleng * cm;
@@ -111,7 +111,8 @@ void HeedPhoton::physics(std::vector<gparticle*>& /*secondaries*/) {
 
 void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
   mfunname("void HeedPhoton::physics_after_new_speed()");
-  if (m_print_listing) mcout << "HeedPhoton::physics_after_new_speed starts\n";
+  if (m_print_listing)
+    std::cout << "HeedPhoton::physics_after_new_speed starts\n";
   // Stop if the photon has not been absorbed.
   if (!m_photon_absorbed) return;
   // Stop if the delta electrons have already been generated.
@@ -134,13 +135,13 @@ void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
   hmd->apacs[m_na_absorbing]->get_escape_particles(m_ns_absorbing, m_energy,
                                                    el_energy, ph_energy);
   if (m_print_listing) {
-    mcout << "The condition:\n";
-    Iprint2n(mcout, m_na_absorbing, m_ns_absorbing);
-    mcout << "The decay products:\n";
+    std::cout << "The condition:\n";
+    Iprint2n(std::cout, m_na_absorbing, m_ns_absorbing);
+    std::cout << "The decay products:\n";
     for (unsigned int k = 0; k < el_energy.size(); ++k)
-      mcout << el_energy[k] << "\n";
+      std::cout << el_energy[k] << "\n";
     for (unsigned int k = 0; k < ph_energy.size(); ++k)
-      mcout << ph_energy[k] << "\n";
+      std::cout << ph_energy[k] << "\n";
   }
   const long qel = el_energy.size();
   for (long nel = 0; nel < qel; nel++) {
@@ -165,8 +166,8 @@ void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
     const double mod_v = beta * c_light;
     vel = vel * mod_v;
     if (m_print_listing) {
-      mcout << "Initializing delta electron\n";
-      Iprint4n(mcout, el_energy[nel], gam_1, beta, mod_v);
+      std::cout << "Initializing delta electron\n";
+      Iprint4n(std::cout, el_energy[nel], gam_1, beta, mod_v);
     }
     HeedDeltaElectron* hd =
         new HeedDeltaElectron(m_currpos.tid.eid[0], m_currpos.pt, vel,
@@ -179,8 +180,8 @@ void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
     vel.random_sfer_vec();
     vel *= c_light;
     if (m_print_listing) {
-      mcout << "Initializing photon\n";
-      Iprint2n(mcout, el_energy[nph], vel);
+      std::cout << "Initializing photon\n";
+      Iprint2n(std::cout, el_energy[nph], vel);
     }
     HeedPhoton* hp =
         new HeedPhoton(m_currpos.tid.eid[0], m_currpos.pt, vel, m_currpos.time,
@@ -189,7 +190,8 @@ void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
   }
   m_delta_generated = true;
   m_alive = false;
-  if (m_print_listing) mcout << "HeedPhoton::physics_after_new_speed exited\n";
+  if (m_print_listing)
+    std::cout << "HeedPhoton::physics_after_new_speed exited\n";
 }
 
 }  // namespace Heed

@@ -306,7 +306,6 @@ class vec : public absref {
   friend inline int check_par(const vec& r1, const vec& r2, double prec) {
     // 1 par, -1 antipar, 0 not parallel
     double a = ang2vec(r1, r2);
-    // mcout<<"check_par: a="<<a<<" a-(M_PI - prec)="<<a-(M_PI - prec)<<'\n';
     if (vecerror != 0) {
       vecerror = 0;
       return 0;

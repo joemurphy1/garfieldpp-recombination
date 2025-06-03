@@ -104,9 +104,6 @@ It is provided "as is" without express or implied warranty.
 
 #include <iostream>
 
-// #ifndef mcout
-#define mcout std::cout /* change to ordinary default C++ stream */
-// #endif
 #define mcerr std::cerr
 
 namespace Heed {
@@ -131,7 +128,7 @@ std::ostream& noindent(std::ostream& f);
 std::ostream& yesindent(std::ostream& f);
 
 #define Ifile file << indn
-#define Imcout mcout << indn
+#define Imcout std::cout << indn
 #define Iprint(file, name) \
   file << indn << #name << "=" << noindent << name << yesindent;
 #define Iprintf(file, name)                                        \

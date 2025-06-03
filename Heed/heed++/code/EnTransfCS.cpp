@@ -330,9 +330,9 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
         if (r < 0.) {
           ++nNegative;
           if (debug) {
-            mcout << "negative adda\n";
-            mcout << "na=" << na << " ns=" << ns << " ne=" << ne << ": " << r
-                  << '\n';
+            std::cout << "negative adda\n";
+            std::cout << "na=" << na << " ns=" << ns << " ne=" << ne << ": "
+                      << r << '\n';
           }
           r = 0.;
         }
@@ -344,9 +344,9 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
         r_a += cher[na][ns][ne];
         if (r_a < 0.) {
           if (debug) {
-            mcout << "negative adda_a\n";
-            mcout << "na=" << na << " ns=" << ns << " ne=" << ne << ": " << r_a
-                  << '\n';
+            std::cout << "negative adda_a\n";
+            std::cout << "na=" << na << " ns=" << ns << " ne=" << ne << ": "
+                      << r_a << '\n';
           }
           r_a = 0.;
         }

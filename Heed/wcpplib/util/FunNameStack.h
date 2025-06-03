@@ -1,6 +1,6 @@
 #ifndef FUNNAMESTACK_H
 #define FUNNAMESTACK_H
-
+#include "wcpplib/stream/prstream.h"
 /*
 Copyright (c) 1999 I. B. Smirnov
 
@@ -12,8 +12,6 @@ appear in all copies and in supporting documentation.
 It is provided "as is" without express or implied warranty.
 */
 #include <ostream>
-
-#include "wcpplib/stream/prstream.h"
 
 // Switch on/off initialization of function names.
 #define mfunname(string)

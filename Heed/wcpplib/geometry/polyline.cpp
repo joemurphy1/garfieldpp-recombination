@@ -296,7 +296,7 @@ polygon::polygon(const straight* fsl, int fqsl, double prec)
           mcerr << "error in polyline_init(straight* fsl, int fqsl):\n"
                 << "Parallel lines with the same pivot cannot form polygin\n";
           for (int k = 0; k < fqsl; k++)
-            mcout << "n=" << k << " fsl[n]=" << fsl[k];
+            std::cout << "n=" << k << " fsl[n]=" << fsl[k];
           spexit(mcerr);
         }
     }
@@ -380,8 +380,6 @@ int polygon::check_point_in(const point& fpt, double prec) const {
 point polygon::cross(const straight& fsl, double prec) const {
   pvecerror("point polygon::cross(straight& fsl)");
   point cpt = pn.cross(fsl);  // does it cross the plane
-  // mcout<<"polygon::cross: cpt="<<cpt;
-  // mcout<<"vecerror="<<vecerror<<'\n';
   if (vecerror != 0) return cpt;
   int s = check_point_in(cpt, prec);
   if (s > 0)
@@ -457,9 +455,6 @@ rectangle::rectangle(const point& fpiv, vec fdir[2], double fdim[2],
   dir2 = unit_vec(fdir[1]);
   dim[0] = fdim[0];
   dim[1] = fdim[1];
-  // mcout<<"piv:\n"<<piv;
-  // mcout<<"dir[2](directions of sides):\n"<<dir[0]<<dir[1];
-  // mcout<<"dim (dimensions):"<<dim[0]<<' '<<dim[1]<<'\n';
   straight slh[4];
   slh[0] = straight(piv + dir1 * dim[0] / 2.0, dir2);
   slh[1] = straight(piv + dir2 * dim[1] / 2.0, -dir1);

@@ -1,9 +1,10 @@
 #include "wcpplib/geometry/mparticle.h"
 
 #include <limits>
-#include "wcpplib/math/lorgamma.h"
+
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/geometry/vfloat.h"
+#include "wcpplib/math/lorgamma.h"
 /*
 Copyright (c) 2000 Igor B. Smirnov
 
@@ -89,7 +90,7 @@ void mparticle::step(std::vector<gparticle*>& secondaries) {
     m_nzero_step++;
     check_econd12a(m_nzero_step, >, m_max_qzero_step,
                    "too many zero steps, possible infinite loop\n";
-                   print(mcout, 10);, mcerr);
+                   print(std::cout, 10);, mcerr);
   } else {
     m_nzero_step = 0;
   }

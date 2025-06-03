@@ -33,14 +33,14 @@ double VanDerWaals::volume_of_mole(double T, double p, int& s_not_single) {
 
   double Tr = T / Tkh;
   double Pr = p / Pkh;
-  Iprint2n(mcout, Tr, Pr);
+  Iprint2n(std::cout, Tr, Pr);
   Cubic cb(Pr, -1.0 / 3.0 * (Pr + 8 * Tr), 3, -1);
   double r[3];
   int q = cb.find_real_zero(r);
   check_econd11(q, <= 0, mcerr);
   double x = r[q - 1];   // this is the relative volume taken by one mole
   double res = x * Vkh;  // this is the absolute volume taken by one mole
-  Iprint2n(mcout, x, res);
+  Iprint2n(std::cout, x, res);
   s_not_single = q == 2 ? 1 : 0;
   return res;
 }
@@ -127,13 +127,10 @@ std::ostream& operator<<(std::ostream& file, const MoleculeDef& f) {
   if (at) {
     Ifile << "Density at the crucial conditions for ideal gas (for debug):\n";
     double rydberg = k_Boltzmann * Avogadro;  // more precise
-    // mcout<<"rydberg/(joule/(kelvin*mole)) ="
-    //     << rydberg/(joule/(kelvin*mole))<<'\n';
-    // double sa = f.A_total();
-    Iprintn(mcout,
+    Iprintn(std::cout,
             f.A_total() * at->Pk() / (rydberg * at->Tk()) / (gram / cm3));
     Ifile << "For the Waals:\n";
-    Iprintn(mcout, f.A_total() / at->Vk() / (gram / cm3));
+    Iprintn(std::cout, f.A_total() / at->Vk() / (gram / cm3));
   }
   indn.n -= 2;
   return file;

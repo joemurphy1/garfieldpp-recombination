@@ -233,12 +233,12 @@ void manip_absvol::m_print(std::ostream& file, int l) const {
     if (asys)
       asys->print(file, l - 1);
     else
-      mcout << "manip_absvol::m_print: system==NULL\n";
+      std::cout << "manip_absvol::m_print: system==NULL\n";
     absvol* avol = Gavol();
     if (avol)
       avol->print(file, l - 1);
     else
-      mcout << "manip_absvol::m_print: avol==NULL\n";
+      std::cout << "manip_absvol::m_print: avol==NULL\n";
     indn.n -= 2;
   }
   file.flush();
@@ -280,7 +280,7 @@ void sh_manip_absvol::m_print(std::ostream& file, int l) const {
     if (avol)
       avol->print(file, l - 1);
     else
-      mcout << "manip_absvol::m_print: avol==NULL\n";
+      std::cout << "manip_absvol::m_print: avol==NULL\n";
     indn.n -= 2;
   }
   file.flush();

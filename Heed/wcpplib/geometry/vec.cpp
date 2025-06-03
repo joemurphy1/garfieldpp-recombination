@@ -67,9 +67,6 @@ double cos2vec(const vec& r1, const vec& r2) {
   pvecerror("double cos2vec(const vec& r1, const vec& r2)");
   double lr1 = r1.length2();
   double lr2 = r2.length2();
-  // mcout<<"cos2vec:\n";
-  // Iprintn(mcout, lr1);
-  // Iprintn(mcout, lr2);
   if (lr1 == 0 || lr2 == 0) {
     vecerror = 1;
     return 0;
@@ -79,9 +76,7 @@ double cos2vec(const vec& r1, const vec& r2) {
   if (cs < 0) sign = -1;
   cs = cs * cs;
   cs = sign * sqrt(cs / (lr1 * lr2));
-  // mcout<<"r1="<<r1<<"r2="<<r2<<"cos="<<cs<<'\n';
   return cs;
-  // return r1*r2/(lr1*lr2);
 }
 
 double ang2vec(const vec& r1, const vec& r2) {
@@ -114,9 +109,7 @@ double sin2vec(const vec& r1, const vec& r2) {
   double sn = (r1 || r2).length();
   sn = sn * sn;
   sn = sqrt(sn / (lr1 * lr2));
-  // mcout<<"r1="<<r1<<"r2="<<r2<<"sin="<<sn<<'\n';
   return sn;
-  // return sin(ang2vec(r1,r2));
 }
 
 vec project_to_plane(const vec& r, const vec& normal) {
@@ -144,9 +137,6 @@ double ang2projvec(const vec& r1, const vec& r2, const vec& normal) {
   if (tang == 0) return tang;  // projections are parallel
   vec at = rt1 || rt2;
   int i = check_par(at, normal, 0.0001);
-  // mcout<<"r1="<<r1<<"r2="<<r2<<"normal="<<normal
-  //     <<"rt1="<<rt1<<"rt2="<<rt2<<"\ntang="<<tang
-  //     <<"\nat="<<at<<" i="<<i<<'\n';
   if (i == -1) return 2.0 * M_PI - tang;
   return tang;  // it works if angle <= PI
 }
@@ -201,12 +191,8 @@ vec vec::turn_new(const vec& dir, double angle) {
   vec ort2 = ort1 || u;
   vec perpcomp = ort2 * (*this) * ort2;
   double len = perpcomp.length();
-  // mcout<<" constcomp="<<constcomp<<" ort1="<<ort1<<" ort2="<<ort2;
   ort1 = sin(angle) * len * ort1;
   ort2 = cos(angle) * len * ort2;
-  // mcout<<" constcomp="<<constcomp<<" ort1="<<ort1<<" ort2="<<ort2
-  //    <<" len="<<len<<" sin(angle)="<<sin(angle)<<" cos(angle)="<<cos(angle)
-  //    <<" angle="<<angle<<'\n';
   return constcomp + ort1 + ort2;
 }
 

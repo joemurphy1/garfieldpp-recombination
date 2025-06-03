@@ -15,8 +15,8 @@ double chispre(std::vector<double> &f, int s_allow_zero_f) {
       check_econd11a(f[i], < 0.0, "i=" << i << '\n', mcerr);
     } else {
       if (f[i] < 0.0) {
-        mcout << "Warning: f[i] < 0.0 in chispre\n";
-        Iprint2n(mcout, i, f[i]);
+        std::cout << "Warning: f[i] < 0.0 in chispre\n";
+        Iprint2n(std::cout, i, f[i]);
         f[i] = 0.0;
       }
     }
@@ -63,10 +63,6 @@ double chisran(double flat_random_number, const std::vector<double> &f) {
       const double yr = f[nr];
       const double a = (xr - xl) / (yr - yl);
       const double b = xl;
-      // Iprint3n(mcout, nl, nr, nc);
-      // Iprint2n(mcout, xl, xr);
-      // Iprint2n(mcout, yl, yr);
-      // Iprint2n(mcout, a, b);
       return a * (flat_random_number - yl) + b;
     }
   }
