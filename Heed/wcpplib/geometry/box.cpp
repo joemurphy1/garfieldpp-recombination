@@ -3,8 +3,9 @@
 #include <array>
 #include <cmath>
 #include <memory>
-#include "wcpplib/geometry/surface.h"
+
 #include "wcpplib/geometry/polyline.h"
+#include "wcpplib/geometry/surface.h"
 #include "wcpplib/geometry/trajestep.h"
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -132,11 +133,6 @@ void box::init_planes() {
 
 int box::check_point_inside(const point& fpt, const vec& dir) const {
   mfunname("int check_point_inside(const point& fpt, const vec& dir)");
-#ifdef TRACE_find_embed_vol
-  mcout << "box::check_point_inside: \n";
-  print(mcout, 1);
-  mcout << "fpt=" << fpt << "dir=" << dir;
-#endif
   if (dir == dv0) {
     if (fabs(fpt.v.x) <= m_dxh && fabs(fpt.v.y) <= m_dyh &&
         fabs(fpt.v.z) <= m_dzh) {
@@ -146,19 +142,10 @@ int box::check_point_inside(const point& fpt, const vec& dir) const {
   }
   if (fabs(fpt.v.x) <= m_dxh - prec && fabs(fpt.v.y) <= m_dyh - prec &&
       fabs(fpt.v.z) <= m_dzh - prec) {
-#ifdef TRACE_find_embed_vol
-    mcout << "cond 1, returning 1\n";
-#endif
     return 1;
   }
   if (fabs(fpt.v.x) > m_dxh + prec || fabs(fpt.v.y) > m_dyh + prec ||
       fabs(fpt.v.z) > m_dzh + prec) {
-#ifdef TRACE_find_embed_vol
-    if (fabs(fpt.v.x) > m_dxh + prec) mcout << "cond 2.1 satisfied\n";
-    if (fabs(fpt.v.y) > m_dyh + prec) mcout << "cond 2.2 satisfied\n";
-    if (fabs(fpt.v.z) > m_dzh + prec) mcout << "cond 2.3 satisfied\n";
-    mcout << "cond 2, returning 0\n";
-#endif
     return 0;
   }
   // What remains is point belonging to border.
@@ -169,9 +156,6 @@ int box::check_point_inside(const point& fpt, const vec& dir) const {
     if (dir.x == 0.0) return 0;
 #endif
     if ((fpt.v.x > 0 && dir.x > 0) || (fpt.v.x < 0 && dir.x < 0)) {
-#ifdef TRACE_find_embed_vol
-      mcout << "cond 3, returning 0\n";
-#endif
       return 0;
     }
   }
@@ -180,9 +164,6 @@ int box::check_point_inside(const point& fpt, const vec& dir) const {
     if (dir.y == 0.0) return 0;
 #endif
     if ((fpt.v.y > 0 && dir.y > 0) || (fpt.v.y < 0 && dir.y < 0)) {
-#ifdef TRACE_find_embed_vol
-      mcout << "cond 4, returning 0\n";
-#endif
       return 0;
     }
   }
@@ -191,15 +172,9 @@ int box::check_point_inside(const point& fpt, const vec& dir) const {
     if (dir.z == 0.0) return 0;
 #endif
     if ((fpt.v.z > 0 && dir.z > 0) || (fpt.v.z < 0 && dir.z < 0)) {
-#ifdef TRACE_find_embed_vol
-      mcout << "cond 5, returning 0\n";
-#endif
       return 0;
     }
   }
-#ifdef TRACE_find_embed_vol
-  mcout << "finish, returning 1\n";
-#endif
   return 1;
 }
 

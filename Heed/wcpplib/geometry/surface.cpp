@@ -200,24 +200,12 @@ int ulsvolume::check_point_inside(const point& fpt, const vec& dir) const {
       return 0;
     }
   }
-#ifdef TRACE_find_embed_vol
-  indn.n++;
-  Imcout << "ulsvolume::check_point_inside: the point is in volume\n";
-  Imcout << "point:" << fpt;
-  print(mcout, 0);
-  indn.n--;
-#endif
   return 1;
 }
 
 int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
   mfunnamep("int ulsvolume::range_ext(trajestep& fts, int s_ext) const");
   check_econd11(qsurf, <= 0, mcerr);
-#ifdef DEBUG_ulsvolume_range_ext
-  mcout << "ulsvolume::range_ext, START, s_ext=" << s_ext << " qsurf=" << qsurf
-        << '\n';
-  mcout << fts;
-#endif
   constexpr int pqcrossurf = 4;
   double crange[pqcrossurf];
   point cpt[pqcrossurf];
@@ -255,19 +243,9 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
   } else {       // for if(s_ext==1)
     int ss = 0;  // sign that there is cross with any of the surfaces
     for (n = 0; n < qsurf; n++) {
-#ifdef DEBUG_ulsvolume_range_ext
-      Iprintn(mcout, n);
-#endif
       int qc = surf[n].get()->range(fts, crange, cpt, fs_ext);
-#ifdef DEBUG_ulsvolume_range_ext
-      mcout << "ulsvolume::range_ext: qc=" << qc << "\n";
-      surf[n]->print(mcout, 1);
-#endif
       for (nc = 0; nc < qc; nc++)  // loop by crossing points
       {
-#ifdef DEBUG_ulsvolume_range_ext
-        mcout << "nc=" << nc << " fs_ext[nc]=" << fs_ext[nc] << '\n';
-#endif
         if (fs_ext[nc] == 0)  // thus ignoring exitted surfaces
         {
           s = 1;
@@ -276,24 +254,12 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
             if (m != n) {
               if (surf[m].get()->check_point_inside1(cpt[nc], fs_ext[nc],
                                                      prec) == 0) {
-#ifdef DEBUG_ulsvolume_range_ext
-                mcout << "m=" << m << '\n';
-                mcout << "Since the point is outside of the other surface, "
-                      << "it can not be border of volume\n";
-#endif
                 s = 0;
                 break;
               }
             }
           }
-#ifdef DEBUG_ulsvolume_range_ext
-          Iprintn(mcout, s);
-#endif
           if (s == 1) {
-#ifdef DEBUG_ulsvolume_range_ext
-            mcout << "The crossing point is inside all other surfaces, \n"
-                  << "so it is good crossing point\n";
-#endif
             ss = 1;
             fts.mrange = crange[nc];
             fts.mpoint = cpt[nc];
@@ -306,11 +272,6 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
     if (ss == 1) {
       fts.s_prec = 0;
     }
-#ifdef DEBUG_ulsvolume_range_ext
-    mcout << "ulsvolume::range_ext: at the end\n";
-    print(mcout, 1);
-    mcout << "ss=" << ss << '\n';
-#endif
     return ss;
   }
 }
