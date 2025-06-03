@@ -7,7 +7,6 @@
 namespace Heed {
 
 double chispre(std::vector<double> &f, int s_allow_zero_f) {
-  mfunnamep("double chispre(vector<double>& f, int s_allow_zero_f)");
   const size_t q = f.size();
   check_econd11(q, <= 0, mcerr);
   double r = 0;
@@ -31,7 +30,6 @@ double chispre(std::vector<double> &f, int s_allow_zero_f) {
 }
 
 double chisran(double flat_random_number, const std::vector<double> &f) {
-  mfunnamep("double chisran(double flat_random_number, vector<double>& f)");
   const long q = f.size();
   check_econd11(q, <= 0, mcerr);
   check_econd21(flat_random_number, < 0.0 ||, > 1.0, mcerr);
@@ -72,7 +70,6 @@ double chisran(double flat_random_number, const std::vector<double> &f) {
       return a * (flat_random_number - yl) + b;
     }
   }
-  funnw.ehdr(mcerr);
   mcerr << "should never happen\n";
   spexit(mcerr);
   return 0.0;

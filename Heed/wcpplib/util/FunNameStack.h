@@ -34,106 +34,7 @@ It is provided "as is" without express or implied warranty.
 */
 
 // Switch on/off initialization of function names.
-#ifdef FUNNAMESTACK
-#define mfunname(string)                   \
-  static const char* FunNameIIII = string; \
-  FunNameWatch funnw(FunNameIIII)
-#else
 #define mfunname(string)
-#endif
-
-// Permanent definitions
-#define mfunnamep(string)                  \
-  static const char* FunNameIIII = string; \
-  FunNameWatch funnw(FunNameIIII)
-
-// Switch on/off checks
-#define DO_CHECKS
-#ifdef DO_CHECKS
-
-#ifdef FUNNAMESTACK
-
-#define check_econd1(condition, a1, stream) \
-  if (condition) {                          \
-    funnw.ehdr(stream);                     \
-    stream << '\n' << #condition << '\n';   \
-    stream << #a1 << '=' << (a1) << '\n';   \
-    spexit(stream);                         \
-  }
-#define check_wcond1(condition, a1, stream) \
-  if (condition) {                          \
-    funnw.whdr(stream);                     \
-    stream << '\n' << #condition << '\n';   \
-    stream << #a1 << '=' << (a1) << '\n';   \
-  }
-
-#define check_econd11(a, signb, stream)     \
-  if (a signb) {                            \
-    funnw.ehdr(stream);                     \
-    stream << '\n' << #a << #signb << '\n'; \
-    stream << #a << '=' << (a) << '\n';     \
-    spexit(stream);                         \
-  }
-
-#define check_econd12(a, sign, b, stream)                          \
-  if (a sign b) {                                                  \
-    funnw.ehdr(stream);                                            \
-    stream << '\n' << #a << #sign << #b << '\n';                   \
-    stream << #a << '=' << (a) << ' ' << #b << '=' << (b) << '\n'; \
-    spexit(stream);                                                \
-  }
-
-// condition + additional any commands
-#define check_econd11a(a, signb, add, stream) \
-  if (a signb) {                              \
-    funnw.ehdr(stream);                       \
-    stream << '\n' << #a << #signb << '\n';   \
-    stream << #a << '=' << (a) << '\n';       \
-    stream << add;                            \
-    spexit(stream);                           \
-  }
-
-#define check_econd12a(a, sign, b, add, stream)                    \
-  if (a sign b) {                                                  \
-    funnw.ehdr(stream);                                            \
-    stream << '\n' << #a << #sign << #b << '\n';                   \
-    stream << #a << '=' << (a) << ' ' << #b << '=' << (b) << '\n'; \
-    stream << add;                                                 \
-    spexit(stream);                                                \
-  }
-
-// and of two conditions for one variable
-#define check_econd21(a, sign1_b1_sign0, sign2_b2, stream)              \
-  if (a sign1_b1_sign0 a sign2_b2) {                                    \
-    funnw.ehdr(stream);                                                 \
-    stream << '\n' << #a << #sign1_b1_sign0 << #a << #sign2_b2 << '\n'; \
-    stream << #a << '=' << (a) << '\n';                                 \
-    spexit(stream);                                                     \
-  }
-
-// and of two conditions for one variable
-#define check_econd23(a, sign1, b1, sign0, sign2, b2, stream)               \
-  if (a sign1 b1 sign0 a sign2 b2) {                                        \
-    funnw.ehdr(stream);                                                     \
-    stream << '\n'                                                          \
-           << #a << #sign1 << #b1 << #sign0 << #a << #sign2 << #b2 << '\n'; \
-    stream << #a << '=' << (a) << ' ' << #b1 << '=' << (b1) << ' ' << #b2   \
-           << '=' << (b2) << '\n';                                          \
-    spexit(stream);                                                         \
-  }
-
-// two conditions for four variables
-#define check_econd24(a1, sign1, b1, sign0, a2, sign2, b2, stream)            \
-  if (a1 sign1 b1 sign0 a2 sign2 b2) {                                        \
-    funnw.ehdr(stream);                                                       \
-    stream << '\n'                                                            \
-           << #a1 << #sign1 << #b1 << #sign0 << #a2 << #sign2 << #b2 << '\n'; \
-    stream << #a1 << '=' << (a1) << ' ' << #b1 << '=' << (b1) << '\n';        \
-    stream << #a2 << '=' << (a2) << ' ' << #b2 << '=' << (b2) << '\n';        \
-    spexit(stream);                                                           \
-  }
-
-#else  // without FUNNAMESTACK, print only condition
 
 #define check_econd1(condition, a1, stream) \
   if (condition) {                          \
@@ -214,26 +115,6 @@ It is provided "as is" without express or implied warranty.
     stream << #a2 << '=' << (a2) << ' ' << #b2 << '=' << (b2) << '\n';        \
     spexit(stream);                                                           \
   }
-
-#endif
-
-#else  // without checks
-
-#define check_econd1(condition, a1, stream)
-#define check_wcond1(condition, a1, stream)
-
-#define check_econd11(a, signb, stream)
-#define check_econd12(a, sign, b, stream)
-#define check_econd11a(a, signb, add, stream)
-#define check_econd12a(a, sign, b, add, stream)
-// and of two conditions for one variable
-#define check_econd21(a, sign1_b1_sign0, sign2_b2, stream)
-// and of two conditions for one variable
-#define check_econd23(a, sign1, b1, sign0, sign2, b2, stream)
-// two conditions for four variables
-#define check_econd24(a1, sign1, b1, sign0, a2, sign2, b2, stream)
-
-#endif
 
 namespace Heed {
 

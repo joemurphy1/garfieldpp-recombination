@@ -172,7 +172,6 @@ vec vec::up_new(const basis* fabas_new) {
   // check_econd11(fabas_new , ==NULL, mcerr);
   // not compiled in IRIX, reason is unkown
   if (fabas_new == NULL) {
-    funnw.ehdr(mcerr);
     mcerr << "fabas_new==NULL\n";
     spexit(mcerr);
   }

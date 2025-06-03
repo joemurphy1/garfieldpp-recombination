@@ -204,7 +204,6 @@ int ulsvolume::check_point_inside(const point& fpt, const vec& dir) const {
 }
 
 int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
-  mfunnamep("int ulsvolume::range_ext(trajestep& fts, int s_ext) const");
   check_econd11(qsurf, <= 0, mcerr);
   constexpr int pqcrossurf = 4;
   double crange[pqcrossurf];
@@ -225,7 +224,6 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
         } else if (fs_ext[m] == 0) {
           if (!(surf[n].get()->check_point_inside(fts.currpos, fts.dir,
                                                   prec))) {
-            funnw.ehdr(mcerr);
             mcerr << "\nshould never happen\n"
                   << "It may happen if you  call this function with s_ext==1\n"
                   << "for point outside the volume\n";

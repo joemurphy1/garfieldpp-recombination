@@ -108,7 +108,6 @@ void MoleculeDef::print(std::ostream& file, int l) const {
 }
 
 std::ostream& operator<<(std::ostream& file, const MoleculeDef& f) {
-  mfunnamep("std::ostream& operator << (std::ostream&, const MoleculeDef&)");
   constexpr double gpm = gram / mole;
   Ifile << "MoleculeDef: name=" << std::setw(10) << f.name()
         << " notation=" << std::setw(3) << f.notation() << '\n';

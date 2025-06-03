@@ -1,7 +1,9 @@
 #include "heed++/code/EnTransfCS_BGM.h"
-#include "wcpplib/util/FunNameStack.h"
-#include "heed++/code/BGMesh.h"
+
 #include <cmath>
+
+#include "heed++/code/BGMesh.h"
+#include "wcpplib/util/FunNameStack.h"
 
 namespace Heed {
 
@@ -13,8 +15,6 @@ EnTransfCS_BGM::EnTransfCS_BGM(double fparticle_mass, BGMesh* fmesh,
       s_primary_electron(fs_primary_electron),
       hmd(fhmd),
       mesh(fmesh) {
-  mfunnamep("EnTransfCS_BGM::EnTransfCS_BGM(...)");
-
   const long q = mesh->q;
   etcs_bgm.resize(q);
   for (long n = 0; n < q; n++) {

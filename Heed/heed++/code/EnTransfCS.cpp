@@ -1,15 +1,16 @@
+#include "heed++/code/EnTransfCS.h"
+
 #include <cmath>
 #include <fstream>
-#include "heed++/code/EnTransfCS.h"
+
+#include "heed++/code/EnergyMesh.h"
 #include "heed++/code/HeedMatterDef.h"
+#include "heed++/code/PhysicalConstants.h"
+#include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/math/lorgamma.h"
 #include "wcpplib/math/tline.h"
-#include "heed++/code/HeedMatterDef.h"
-#include "heed++/code/EnergyMesh.h"
 #include "wcpplib/matter/MatterDef.h"
-#include "heed++/code/PhysicalConstants.h"
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
 
 // 2003, I. Smirnov
 
@@ -119,8 +120,6 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
       gamma_1(fgamma_1),
       s_primary_electron(fs_primary_electron),
       hmd(fhmd) {
-  mfunnamep("EnTransfCS::EnTransfCS(...)");
-
   const double beta = lorbeta(fgamma_1);
   const double beta2 = beta * beta;
   const double beta12 = 1.0 - beta2;
@@ -331,7 +330,6 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
         if (r < 0.) {
           ++nNegative;
           if (debug) {
-            funnw.whdr(mcout);
             mcout << "negative adda\n";
             mcout << "na=" << na << " ns=" << ns << " ne=" << ne << ": " << r
                   << '\n';
@@ -346,7 +344,6 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
         r_a += cher[na][ns][ne];
         if (r_a < 0.) {
           if (debug) {
-            funnw.whdr(mcout);
             mcout << "negative adda_a\n";
             mcout << "na=" << na << " ns=" << ns << " ne=" << ne << ": " << r_a
                   << '\n';

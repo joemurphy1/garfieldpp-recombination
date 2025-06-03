@@ -24,8 +24,8 @@ The file is provided "as is" without express or implied warranty.
 */
 #include <string>
 
-#include "wcpplib/util/FunNameStack.h"
 #include "wcpplib/geometry/vfloat.h"
+#include "wcpplib/util/FunNameStack.h"
 
 #define pvecerror(string)                                      \
   mfunname(string);                                            \
@@ -35,7 +35,7 @@ The file is provided "as is" without express or implied warranty.
     spexit(mcerr);                                             \
   }
 #define pvecerrorp(string)                                     \
-  mfunnamep(string);                                           \
+  mfunname(string);                                            \
   if (vecerror != 0) {                                         \
     mcerr << "vecerror is not zero, program is terminated\n"   \
           << " function detected error is " << string << '\n'; \
@@ -45,7 +45,7 @@ The file is provided "as is" without express or implied warranty.
 // It makes up stack of functions names if FUNNAMESTACK is defined.
 // To work correctly stackline(string); should not be in any additional {}
 
-//#include "wcpplib/geometry/vfloat.h"
+// #include "wcpplib/geometry/vfloat.h"
 
 namespace Heed {
 

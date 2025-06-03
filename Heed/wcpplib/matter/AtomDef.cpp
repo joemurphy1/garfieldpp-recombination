@@ -120,22 +120,18 @@ const AtomDef* AtomDefs::getAtom(const std::string& fnotation) {
 }
 
 double AtomDefs::getA(int fZ) {
-  mfunnamep("double AtomDefs::getA(int fZ)");
   for (const auto& atom : getAtoms()) {
     if (atom.Z() == fZ) return atom.A();
   }
-  funnw.ehdr(mcerr);
   mcerr << "Atom is not found, Z=" << fZ << '\n';
   spexit(mcerr);
   return 0.0;
 }
 
 const AtomDef* AtomDefs::getAtom(int fZ) {
-  mfunnamep("AtomDef* AtomDefs::getAtom(int fZ)");
   for (const auto& atom : getAtoms()) {
     if (atom.Z() == fZ) return &atom;
   }
-  funnw.ehdr(mcerr);
   mcerr << "Atom is not found, Z=" << fZ << '\n';
   spexit(mcerr);
   return nullptr;
@@ -148,7 +144,6 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
       atomh(fqatom, nullptr),
       weight_quanh(fqatom, 0.0),
       weight_massh(fqatom, 0.0) {
-  mfunnamep("AtomMixDef::AtomMixDef(...)");
   check_econd11(fqatom, <= 0, mcerr);
   check_econd12(fqatom, >, fatom_not.size(), mcerr);
   check_econd12(fqatom, >, fweight_quan.size(), mcerr);
@@ -156,7 +151,6 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
   for (long n = 0; n < qatomh; ++n) {
     auto ad = AtomDefs::getAtom(fatom_not[n]);
     if (!ad) {
-      funnw.ehdr(mcerr);
       mcerr << "cannot find atom with notation " << fatom_not[n]
             << "\nIn particular, check the sequence of initialization\n";
       spexit(mcerr);
@@ -204,7 +198,6 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
       atomh(fqatom, nullptr),
       weight_quanh(fqatom, 0.0),
       weight_massh(fqatom, 0.0) {
-  mfunnamep("AtomMixDef::AtomMixDef(...)");
   check_econd11(fqatom, <= 0, mcerr);
   check_econd12(fqatom, >, fatom_not.size(), mcerr);
   check_econd12(fqatom, >, fweight_quan.size(), mcerr);
@@ -212,7 +205,6 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
   for (long n = 0; n < qatomh; ++n) {
     auto ad = AtomDefs::getAtom(fatom_not[n]);
     if (!ad) {
-      funnw.ehdr(mcerr);
       mcerr << "cannot find atom with notation " << fatom_not[n]
             << "\nIn particular, check the sequence of initialization\n";
       spexit(mcerr);

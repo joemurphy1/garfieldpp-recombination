@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <fstream>
+
 #include "heed++/code/PhysicalConstants.h"
 #include "wcpplib/geometry/vec.h"
 #include "wcpplib/math/PolLeg.h"
@@ -29,10 +30,8 @@ double ElElasticScatDataStruct::CS(const double theta) const {
 }
 
 ElElasticScat::ElElasticScat(const std::string& file_name) : atom(0) {
-  mfunnamep("ElElasticScat::ElElasticScat(const string& filename)");
   std::ifstream file(file_name.c_str());
   if (!file) {
-    funnw.ehdr(mcerr);
     mcerr << "cannot open file " << file_name << std::endl;
     spexit(mcerr);
   }
@@ -44,7 +43,6 @@ ElElasticScat::ElElasticScat(const std::string& file_name) : atom(0) {
   for (long ne = 0; ne < qe; ++ne) {
     file >> energy_mesh[ne];
     if (!file.good()) {
-      funnw.ehdr(mcerr);
       mcerr << "error at reading energy_mesh, ne=" << ne << '\n';
       spexit(mcerr);
     }
@@ -63,7 +61,6 @@ ElElasticScat::ElElasticScat(const std::string& file_name) : atom(0) {
       for (long ne = 0; ne < qe; ++ne) {
         file >> atom.back().data[ne].A[nc];
         if (!file.good()) {
-          funnw.ehdr(mcerr);
           mcerr << "error at reading A, Z=" << Z << " nc=" << nc << " ne=" << ne
                 << '\n';
           spexit(mcerr);
@@ -74,7 +71,6 @@ ElElasticScat::ElElasticScat(const std::string& file_name) : atom(0) {
       for (long ne = 0; ne < qe; ++ne) {
         file >> atom.back().data[ne].C[nc];
         if (!file.good()) {
-          funnw.ehdr(mcerr);
           mcerr << "error at reading C, Z=" << Z << " nc=" << nc << " ne=" << ne
                 << '\n';
           spexit(mcerr);
@@ -84,7 +80,6 @@ ElElasticScat::ElElasticScat(const std::string& file_name) : atom(0) {
     for (long ne = 0; ne < qe; ++ne) {
       file >> atom.back().data[ne].B;
       if (!file.good()) {
-        funnw.ehdr(mcerr);
         mcerr << "error at reading B, Z=" << Z << " ne=" << ne << '\n';
         spexit(mcerr);
       }
@@ -94,9 +89,6 @@ ElElasticScat::ElElasticScat(const std::string& file_name) : atom(0) {
 
 double ElElasticScat::get_CS_for_presented_atom(long na, double energy,
                                                 double angle) {
-  mfunnamep(
-      "double ElElasticScat::get_CS_for_presented_atom(long na, double "
-      "energy, double angle)");
   const double enKeV = energy * 1000.0;
   const double rm = energy / electron_mass_c2;
   const double gamma = 1. + rm;
@@ -151,7 +143,6 @@ double ElElasticScat::get_CS_for_presented_atom(long na, double energy,
     } else if (cs[1] >= 0.0) {
       r = cs[1];
     } else {
-      funnw.ehdr(mcerr);
       mcerr << "not implemented case\n";
       spexit(mcerr);
     }
@@ -211,10 +202,8 @@ double ElElasticScat::get_CS_Rutherford(long Z, double energy, double angle) {
 ElElasticScatLowSigma::ElElasticScatLowSigma(ElElasticScat* fees,
                                              const std::string& file_name)
     : ees(fees) {
-  mfunnamep("ElElasticScatLowSigma::ElElasticScatLowSigma(...)");
   std::ifstream file(file_name.c_str());
   if (!file) {
-    funnw.ehdr(mcerr);
     mcerr << "cannot open file " << file_name << std::endl;
     spexit(mcerr);
   }

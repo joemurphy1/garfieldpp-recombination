@@ -22,8 +22,6 @@ The file is provided "as is" without express or implied warranty.
 namespace Heed {
 
 absref_transmit box::get_components() {
-  mfunnamep("box::get_components(...)");
-  funnw.ehdr(mcerr);
   mcerr << "one should not call this function, since this object cannot be "
            "modified\n";
   spexit(mcerr);

@@ -201,10 +201,8 @@ SimpleTablePhotoAbsCS::SimpleTablePhotoAbsCS(const std::string& fname, int fZ,
                                              double fthreshold,
                                              const std::string& ffile_name)
     : PhotoAbsCS(fname, fZ, fthreshold), file_name(ffile_name) {
-  mfunnamep("SimpleTablePhotoAbsCS::SimpleTablePhotoAbsCS(...)");
   std::ifstream file(file_name.c_str());
   if (!file) {
-    funnw.ehdr(mcerr);
     mcerr << "cannot open file " << file_name << std::endl;
     spexit(mcerr);
   }
@@ -409,7 +407,6 @@ double SimpleTablePhotoAbsCS::get_integral_CS(double energy1,
 }
 
 void SimpleTablePhotoAbsCS::scale(double fact) {
-  mfunnamep("void SimpleTablePhotoAbsCS::scale(double fact)");
   const long q = ener.size();
   for (long n = 0; n < q; ++n) cs[n] *= fact;
 }
@@ -461,10 +458,7 @@ double PhenoPhotoAbsCS::get_integral_CS(double energy1, double energy2) const {
   return s;
 }
 
-void PhenoPhotoAbsCS::scale(double fact) {
-  mfunnamep("void PhenoPhotoAbsCS::scale(double fact)");
-  factor *= fact;
-}
+void PhenoPhotoAbsCS::scale(double fact) { factor *= fact; }
 
 void PhenoPhotoAbsCS::print(std::ostream& file, int l) const {
   if (l <= 0) return;
@@ -478,7 +472,6 @@ void PhenoPhotoAbsCS::print(std::ostream& file, int l) const {
 void AtomicSecondaryProducts::add_channel(
     double fchannel_prob_dens, const std::vector<double>& felectron_energy,
     const std::vector<double>& fphoton_energy, int s_all_rest) {
-  mfunnamep("void AtomicSecondaryProducts::add_channel(...)");
   check_econd21(fchannel_prob_dens, < 0.0 ||, > 1.0, mcerr);
   long q_old = channel_prob_dens.size();
   long q_new = q_old + 1;
@@ -501,7 +494,6 @@ void AtomicSecondaryProducts::add_channel(
     s += channel_prob_dens[n];
   }
   if (s > 1.0) {
-    funnw.ehdr(mcerr);
     mcerr << "s > 1.0, s=" << s << '\n';
     Iprintn(mcerr, q_new);
     for (long n = 0; n < q_new; ++n) {
@@ -628,7 +620,6 @@ void AtomPhotoAbsCS::restore_shell(int nshell) {
 }
 
 void AtomPhotoAbsCS::print(std::ostream& file, int l) const {
-  mfunnamep("void AtomPhotoAbsCS::print(std::ostream& file, int l) const");
   if (l <= 0) return;
   Ifile << "AtomPhotoAbsCS(l=" << l << "): name=" << name << " Z = " << Z
         << " qshell = " << qshell << std::endl;
@@ -816,7 +807,6 @@ void AtomPhotoAbsCS::get_escape_particles(
 }
 
 AtomicSecondaryProducts* AtomPhotoAbsCS::get_asp(int nshell) {
-  mfunnamep("AtomicSecondaryProducts* AtomPhotoAbsCS::get_asp(int nshell)");
   check_econd21(nshell, < 0 ||, >= qshell, mcerr);
   return &(asp[nshell]);
 }
@@ -826,11 +816,9 @@ SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS() : AtomPhotoAbsCS() {}
 SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
                                            const std::string& ffile_name)
     : file_name(ffile_name) {
-  mfunnamep("SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(...)");
   check_econd11(fZ, < 1, mcerr);
   std::ifstream file(file_name.c_str());
   if (!file) {
-    funnw.ehdr(mcerr);
     mcerr << "cannot open file " << file_name << std::endl;
     spexit(mcerr);
   }
@@ -879,7 +867,6 @@ SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
     }
     return;
   }
-  funnw.ehdr(mcerr);
   mcerr << "there is no element Z=" << fZ << " in file " << file_name << '\n';
   spexit(mcerr);
 }
@@ -914,13 +901,11 @@ double SimpleAtomPhotoAbsCS::get_ACS(double energy) const {
 }
 double SimpleAtomPhotoAbsCS::get_integral_ACS(double energy1,
                                               double energy2) const {
-  mfunnamep("double SimpleAtomPhotoAbsCS::get_integral_ACS(...) const");
   double s = 0.0;
   for (int n = 0; n < qshell; ++n) {
     if (s_ignore_shell[n]) continue;
     const double t = m_acs[n]->get_integral_CS(energy1, energy2);
     if (t < 0) {
-      funnw.ehdr(mcout);
       mcout << "t < 0\n";
       Iprintn(mcout, t);
       print(mcout, 4);
@@ -1002,11 +987,9 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
       simple_table_file_name(fsimple_table_file_name),
       BT_file_name("none"),
       minimal_threshold(fminimal_threshold) {
-  mfunnamep("ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(...) const");
   check_econd11(fZ, < 1, mcerr);
   std::ifstream threshold_file(threshold_file_name.c_str());
   if (!threshold_file) {
-    funnw.ehdr(mcerr);
     mcerr << "cannot open file " << threshold_file_name << std::endl;
     spexit(mcerr);
   }
@@ -1066,7 +1049,6 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
     break;
   }
   if (!foundZ) {
-    funnw.ehdr(mcerr);
     mcerr << "there is no element Z=" << fZ << " in file "
           << threshold_file_name << std::endl;
     spexit(mcerr);
@@ -1245,16 +1227,12 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
       simple_table_file_name("none"),
       BT_file_name(fBT_file_name),
       minimal_threshold(fminimal_threshold) {
-  mfunnamep(
-      "ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname, "
-      "const std::string& fBT_file_name, int id, double fminimal_threshold)");
   check_econd11(fZ, < 1, mcerr);
   check_econd21(id, < 1 ||, > 2, mcerr);
 
   name = fname;
   std::ifstream BT_file(BT_file_name.c_str());
   if (!BT_file) {
-    funnw.ehdr(mcerr);
     mcerr << "cannot open file " << BT_file_name << std::endl;
     spexit(mcerr);
   }
@@ -1374,18 +1352,12 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
       simple_table_file_name("none"),
       BT_file_name(fFitBT_file_name),
       minimal_threshold(fminimal_threshold) {
-  mfunnamep(
-      "ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname, "
-      "const "
-      "std::string& fFitBT_file_name, int id, int id1, double "
-      "fminimal_threshold)");
   check_econd11(fZ, < 1, mcerr);
   check_econd21(id, < 1 ||, > 2, mcerr);
   Z = fZ;
   name = fname;
   std::ifstream BT_file(fFitBT_file_name.c_str());
   if (!BT_file) {
-    funnw.ehdr(mcerr);
     mcerr << "cannot open file " << BT_file_name << std::endl;
     spexit(mcerr);
   }
@@ -1473,7 +1445,6 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
     }
     goto mark1;
   }
-  funnw.ehdr(mcerr);
   mcerr << "there is no element Z=" << fZ << " in file " << fFitBT_file_name
         << std::endl;
   spexit(mcerr);

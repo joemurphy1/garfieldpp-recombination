@@ -16,18 +16,14 @@ namespace Heed {
 
 PairProd::PairProd(const std::string& file_name, double fw, double ffano)
     : m_w(fw), m_f(ffano) {
-  mfunnamep("PairProd::PairProd(const std::string&, double, double)");
-
   std::ifstream file(file_name.c_str());
   if (!file) {
-    funnw.ehdr(mcerr);
     mcerr << "cannot open file " << file_name << std::endl;
     spexit(mcerr);
   }
   long q;
   file >> m_wtable >> m_i >> m_j >> m_ftable >> q;
   if (!file.good()) {
-    funnw.ehdr(mcerr);
     mcerr << "error at reading file" << std::endl;
     spexit(mcerr);
   }

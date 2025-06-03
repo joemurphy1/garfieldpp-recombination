@@ -21,7 +21,6 @@ namespace Heed {
 PointsRan::PointsRan(const std::vector<double>& fx,
                      const std::vector<double>& fy, double fxmin, double fxmax)
     : xmin(fxmin), xmax(fxmax), x(fx), y(fy) {
-  mfunnamep("PointsRan::PointsRan(...)");
   check_econd12(x.size(), !=, y.size(), mcerr);
   check_econd11(x.size(), < 2, mcerr);
   check_econd12(xmin, >=, xmax, mcerr);
@@ -91,7 +90,6 @@ PointsRan::PointsRan(const std::vector<double>& fx,
 }
 
 double PointsRan::ran(double flat_ran) const {
-  mfunnamep("double PointsRan::ran(double flat_ran) const");
   flat_ran = integ_start + integ_active * flat_ran;
   // long q = x.get_qel();
   long n1 = n_start;

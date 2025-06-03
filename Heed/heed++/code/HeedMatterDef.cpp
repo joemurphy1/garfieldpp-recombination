@@ -1,17 +1,17 @@
 #include "heed++/code/HeedMatterDef.h"
 
+#include <cmath>
 #include <fstream>
-#include<cmath>
-#include<limits>
+#include <limits>
 
-#include "wcpplib/clhep_units/WSystemOfUnits.h"
-#include "wcpplib/math/tline.h"
 #include "heed++/code/EnergyMesh.h"
 #include "heed++/code/PhotoAbsCS.h"
-#include "wcpplib/matter/GasDef.h"
-#include "wcpplib/matter/MatterDef.h"
 #include "heed++/code/PhysicalConstants.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
+#include "wcpplib/clhep_units/WSystemOfUnits.h"
+#include "wcpplib/math/tline.h"
+#include "wcpplib/matter/GasDef.h"
+#include "wcpplib/matter/MatterDef.h"
 // 2003, I. Smirnov
 
 namespace Heed {
@@ -242,11 +242,8 @@ void HeedMatterDef::initialize() {
 }
 
 void HeedMatterDef::replace_epsi12(const std::string& file_name) {
-  mfunnamep("void HeedMatterDef::replace_epsi12(const std::string& file_name)");
-
   std::ifstream file(file_name.c_str());
   if (!file) {
-    funnw.ehdr(mcerr);
     mcerr << "cannot open file " << file_name << std::endl;
     spexit(mcerr);
   } else {
