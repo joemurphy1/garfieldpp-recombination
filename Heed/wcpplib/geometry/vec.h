@@ -460,8 +460,6 @@ std::ostream& operator<<(std::ostream& file, const point& p);
 /// If asc==NULL and abs(c)==0 than it is primary system of coordinate
 /// and therefore c.abas and abas->ex.abas must be zero,
 /// baz may be zero or pointer to unit basis.
-
-#define vec_syscoor_index 0
 class abssyscoor {
  public:
   std::string name = "none";
