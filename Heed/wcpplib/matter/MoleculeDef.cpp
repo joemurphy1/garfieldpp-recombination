@@ -98,47 +98,7 @@ MoleculeDef::MoleculeDef(const std::string& fname, const std::string& fnotation,
     : MoleculeDef(fname, fnotation, 3, {fatom_not1, fatom_not2, fatom_not3},
                   {fqatom_ps1, fqatom_ps2, fqatom_ps3}, fvdw) {}
 
-void MoleculeDef::print(std::ostream& file, int l) const {
-  if (l > 0) file << (*this);
-}
-
-std::ostream& operator<<(std::ostream& file, const MoleculeDef& f) {
-  constexpr double gpm = gram / mole;
-  Ifile << "MoleculeDef: name=" << std::setw(10) << f.name()
-        << " notation=" << std::setw(3) << f.notation() << '\n';
-  indn.n += 2;
-  Ifile << "Z_total()=" << std::setw(3) << f.Z_total()
-        << " A_total()/(gram/mole)=" << f.A_total() / gpm
-        << " tqatom()=" << f.tqatom() << '\n';
-  Iprintn(file, f.qatom());
-  indn.n += 2;
-  for (long n = 0; n < f.qatom(); n++) {
-    Ifile << "n=" << n << " atom(n)->notation=" << f.atom(n)->notation()
-          << " qatom_ps(n)=" << f.qatom_ps(n) << '\n';
-  }
-  indn.n -= 2;
-  f.AtomMixDef::print(file, 1);
-  VanDerWaals* at = f.vdw().get();
-  if (at) {
-    Ifile << "Density at the crucial conditions for ideal gas (for debug):\n";
-    double rydberg = k_Boltzmann * Avogadro;  // more precise
-    Iprintn(std::cout,
-            f.A_total() * at->Pk() / (rydberg * at->Tk()) / (gram / cm3));
-    Ifile << "For the Waals:\n";
-    Iprintn(std::cout, f.A_total() / at->Vk() / (gram / cm3));
-  }
-  indn.n -= 2;
-  return file;
-}
-
 std::list<MoleculeDef> MoleculeDefs::molecules;
-
-void MoleculeDefs::printMolecules(std::ostream& file) {
-  Ifile << "MoleculeDefs::printMolecules:\n";
-  for (const auto& molecule : getMolecules()) {
-    file << molecule;
-  }
-}
 
 const MoleculeDef* MoleculeDefs::getMolecule(const std::string& fnotation) {
   for (const auto& molecule : getMolecules()) {

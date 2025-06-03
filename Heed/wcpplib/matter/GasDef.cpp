@@ -226,40 +226,4 @@ double GasDef::Z_mean_molec(void) const {
   return s;
 }
 
-void GasDef::print(std::ostream& file, int l) const {
-  if (l > 0) file << (*this);
-}
-
-std::ostream& operator<<(std::ostream& file, const GasDef& f) {
-  Ifile << "GasDef: \n";
-  indn.n += 2;
-  indn.n += 2;
-  file << ((MatterDef&)f);
-  indn.n -= 2;
-  constexpr double mm_rt_st_in_atmosphere = 760.;
-  // This corresponds to 133.322 pascal in one mm
-  //( 101325 pascal in one atmosphere )
-  const double patm = f.pressure() / CLHEP::atmosphere;
-  Ifile << "pressure/atmosphere=" << patm
-        << " pressure/atmosphere * mm_rt_st_in_atmosphere = "
-        << patm * mm_rt_st_in_atmosphere << '\n';
-  Ifile << "Z_mean_molec=" << f.Z_mean_molec() << '\n';
-
-  file << "qmolec()=" << f.qmolec() << '\n';
-  indn.n += 2;
-  for (long n = 0; n < f.qmolec(); ++n) {
-    Ifile << "n=" << n << " molec(n)->notation=" << f.molec(n)->notation()
-          << '\n';
-    indn.n += 2;
-    Ifile << "weight_quan_molec(n)=" << f.weight_quan_molec(n)
-          << " weight_mass_molec(n)=" << f.weight_mass_molec(n) << '\n';
-    Ifile << "Z_total=" << f.molec(n)->Z_total() << " A_total/(gram/mole)="
-          << f.molec(n)->A_total() / (CLHEP::gram / CLHEP::mole) << '\n';
-    indn.n -= 2;
-  }
-  indn.n -= 2;
-  indn.n -= 2;
-  return file;
-}
-
 }  // namespace Heed

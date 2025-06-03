@@ -20,18 +20,6 @@ AtomDef::AtomDef(const std::string& fnameh, const std::string& fnotationh,
   check_econd21(fZh, < 1 ||, > max_poss_atom_z, mcerr);
 }
 
-void AtomDef::print(std::ostream& file, int l) const {
-  if (l > 0) file << (*this);
-}
-
-std::ostream& operator<<(std::ostream& file, const AtomDef& f) {
-  Ifile << "AtomDef: name=" << std::setw(10) << f.name()
-        << " notation=" << std::setw(3) << f.notation();
-  Ifile << " Z()=" << std::setw(3) << f.Z()
-        << " A()/(gram/mole)=" << f.A() / (gram / mole) << '\n';
-  return file;
-}
-
 std::list<AtomDef> AtomDefs::atoms;
 
 void AtomDefs::addAtom(const std::string& name, const std::string& notation,
@@ -104,11 +92,6 @@ const std::list<AtomDef>& AtomDefs::getAtoms() {
   addAtom("Uranium", "U", 92, 238.0289 * gram / mole);
   addAtom("Plutonium", "Pu", 94, 244.0 * gram / mole);
   return atoms;
-}
-
-void AtomDefs::printAtoms(std::ostream& file) {
-  Ifile << "AtomDefs::printAtoms:\n";
-  for (const auto& atom : getAtoms()) file << atom;
 }
 
 const AtomDef* AtomDefs::getAtom(const std::string& fnotation) {
@@ -244,34 +227,4 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
   NumberOfElectronsInGramh = mean_ratio_Z_to_Ah * (gram / mole) * Avogadro;
 }
 
-void AtomMixDef::print(std::ostream& file, int l) const {
-  if (l > 0) file << (*this);
-}
-
-std::ostream& operator<<(std::ostream& file, const AtomMixDef& f) {
-  Ifile << "AtomMixDef\n";
-  indn.n += 2;
-  constexpr double gpm = gram / mole;
-  Ifile << "Z_mean()=" << std::setw(3) << f.Z_mean()
-        << " A_mean()/(gram/mole)=" << f.A_mean() / gpm << '\n';
-  Ifile << "inv_A_mean()*(gram/mole)=" << f.inv_A_mean() * gpm << '\n';
-  Ifile << "mean_ratio_Z_to_A()*(gram/mole)=" << f.mean_ratio_Z_to_A() * gpm
-        << '\n';
-  Ifile << "NumberOfElectronsInGram()=" << f.NumberOfElectronsInGram() << '\n';
-  // Here above the mass unit is defined,
-  // therefore there is no need to divide by gram.
-  Iprintn(file, f.qatom());
-  indn.n += 2;
-  for (long n = 0; n < f.qatom(); n++) {
-    Ifile << "n=" << n << " atom(n)->notation=" << f.atom(n)->notation()
-          << "\n";
-    indn.n += 2;
-    Ifile << " weight_quan(n)=" << f.weight_quan(n)
-          << " weight_mass(n)=" << f.weight_mass(n) << '\n';
-    indn.n -= 2;
-  }
-  indn.n -= 2;
-  indn.n -= 2;
-  return file;
-}
 }  // namespace Heed

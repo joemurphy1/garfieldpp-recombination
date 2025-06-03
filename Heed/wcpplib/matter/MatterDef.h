@@ -46,10 +46,7 @@ class MatterDef : public AtomMixDef {
   double density() const { return densityh; }
   double temperature() const { return temperatureh; }
   double I_eff() const { return I_effh; }
-
-  void print(std::ostream& file, int l) const;
 };
-std::ostream& operator<<(std::ostream& file, const MatterDef& f);
 
 }  // namespace Heed
 #endif

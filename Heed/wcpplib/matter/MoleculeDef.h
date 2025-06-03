@@ -1,9 +1,9 @@
 #ifndef MOLECULE_DEF_H
 #define MOLECULE_DEF_H
-#include <vector>
-#include <string>
 #include <list>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "wcpplib/matter/AtomDef.h"
 
@@ -86,10 +86,7 @@ class MoleculeDef : public AtomMixDef {
               const std::string& fatom_not3, long fqatom_ps3,
               std::shared_ptr<VanDerWaals> fvdw = {});
   ~MoleculeDef() = default;
-
-  void print(std::ostream& file, int l) const;
 };
-std::ostream& operator<<(std::ostream& file, const MoleculeDef& f);
 
 /// Library of molecules.
 
@@ -100,8 +97,6 @@ class MoleculeDefs {
   /// If there is no molecule with this notation, the function returns NULL
   /// but does not terminate the program as that for AtomDef. Be careful.
   static const MoleculeDef* getMolecule(const std::string& fnotation);
-  /// Print all registered molecules.
-  static void printMolecules(std::ostream& file);
 
  private:
   static std::list<MoleculeDef> molecules;
