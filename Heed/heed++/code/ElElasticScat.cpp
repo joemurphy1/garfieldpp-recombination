@@ -152,9 +152,6 @@ double ElElasticScat::get_CS_for_presented_atom(long na, double energy,
 
 double ElElasticScat::get_CS(long Z, double energy, double angle,
                              int s_interp) {
-  mfunname(
-      "double ElElasticScat::get_CS(long Z, double energy, double angle, "
-      "int s_interp)");
   const long qa = atom.size();
   long na_left = 0;
   long Z_left = -100;
@@ -186,9 +183,6 @@ double ElElasticScat::get_CS(long Z, double energy, double angle,
 }
 
 double ElElasticScat::get_CS_Rutherford(long Z, double energy, double angle) {
-  mfunname(
-      "double ElElasticScat::get_CS_Rutherford(long Z, double energy, "
-      "double angle)");
   const double gamma_1 = energy / electron_mass_c2;
   const double beta2 = lorbeta2(gamma_1);
   const double momentum2 = energy * energy + 2.0 * electron_mass_c2 * energy;

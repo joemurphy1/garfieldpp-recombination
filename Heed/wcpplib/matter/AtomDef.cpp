@@ -16,7 +16,6 @@ using CLHEP::mole;
 AtomDef::AtomDef(const std::string& fnameh, const std::string& fnotationh,
                  int fZh, double fAh)
     : nameh(fnameh), notationh(fnotationh), Zh(fZh), Ah(fAh) {
-  mfunname("AtomDef::AtomDef(...)");
   static constexpr int max_poss_atom_z = 100;
   check_econd21(fZh, < 1 ||, > max_poss_atom_z, mcerr);
 }
@@ -250,7 +249,6 @@ void AtomMixDef::print(std::ostream& file, int l) const {
 }
 
 std::ostream& operator<<(std::ostream& file, const AtomMixDef& f) {
-  mfunname("std::ostream& operator << (std::ostream&, const AtomMixDef&)");
   Ifile << "AtomMixDef\n";
   indn.n += 2;
   constexpr double gpm = gram / mole;

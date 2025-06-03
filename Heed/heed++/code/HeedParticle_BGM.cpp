@@ -35,7 +35,6 @@ HeedParticle_BGM::HeedParticle_BGM(manip_absvol* primvol, const point& pt,
       m_particle_number(s_counter++) {}
 
 void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
-  mfunname("void HeedParticle_BGM::physics()");
   // Get the step.
   if (m_currpos.prange <= 0.0) return;
   const double stp = m_currpos.prange / cm;

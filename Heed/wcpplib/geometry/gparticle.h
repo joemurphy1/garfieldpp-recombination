@@ -1,7 +1,7 @@
 #ifndef GPARTICLE_H
 #define GPARTICLE_H
-#include <vector>
 #include <atomic>
+#include <vector>
 
 #include "wcpplib/geometry/volume.h"
 
@@ -158,7 +158,6 @@ class gparticle {
 
   /// Transport the particle.
   virtual void fly(std::vector<gparticle*>& secondaries) {
-    mfunname("virtual void gparticle::fly()");
     while (m_alive) {
       step(secondaries);
       physics(secondaries);
@@ -166,7 +165,6 @@ class gparticle {
   }
 
   virtual void fly(std::vector<gparticle*>& secondaries, const bool one_step) {
-    mfunname("virtual void gparticle::fly()");
     int nstep = 0;
     while (m_alive) {
       step(secondaries);

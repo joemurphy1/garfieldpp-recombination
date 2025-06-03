@@ -17,8 +17,6 @@ namespace Heed {
 
 double cos_theta_two_part(const double Ep0, const double Ep1, const double Mp,
                           const double Mt) {
-  mfunname("double cos_theta_two_part(...)");
-
   const double Mp2 = Mp * Mp;
   const double d0 = Ep0 * Ep0 - Mp2;
   check_econd11(d0, <= 0, mcerr);
@@ -29,8 +27,6 @@ double cos_theta_two_part(const double Ep0, const double Ep1, const double Mp,
 
 void theta_two_part(const double Ep0, const double Ep1, const double Mp,
                     const double Mt, double& theta_p, double& theta_t) {
-  mfunname("void theta_two_part(...)");
-
   const double Mp2 = Mp * Mp;
   const double d0 = Ep0 * Ep0 - Mp2;
   check_econd11(d0, <= 0, mcerr);

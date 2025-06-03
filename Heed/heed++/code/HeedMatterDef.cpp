@@ -28,7 +28,6 @@ HeedMatterDef::HeedMatterDef(EnergyMesh* fenergy_mesh, MatterDef* amatter,
                              const std::vector<AtomPhotoAbsCS*>& faapacs,
                              double fW, double fF)
     : matter(amatter), W(fW), F(fF), energy_mesh(fenergy_mesh) {
-  mfunname("HeedMatterDef::HeedMatterDef(...)");
   check_econd11(matter, == nullptr, mcerr);
   check_econd11(matter->qatom(), <= 0, mcerr);
   const long q = matter->qatom();
@@ -63,7 +62,6 @@ HeedMatterDef::HeedMatterDef(EnergyMesh* fenergy_mesh, GasDef* agas,
                              std::vector<MolecPhotoAbsCS>& fampacs, double fW,
                              double fF)
     : matter(agas), W(fW), F(fF), energy_mesh(fenergy_mesh) {
-  mfunname("HeedMatterDef::HeedMatterDef(...)");
   check_econd11(agas, == nullptr, mcerr);
   check_econd11(agas->qmolec(), <= 0, mcerr);
   const long qat = agas->qatom();
@@ -119,7 +117,6 @@ HeedMatterDef::HeedMatterDef(EnergyMesh* fenergy_mesh, GasDef* agas,
 }
 
 void HeedMatterDef::initialize() {
-  mfunname("void HeedMatterDef::initialize()");
   const double amean = matter->A_mean() / (gram / mole);
   const double rho = matter->density() / (gram / cm3);
   eldens_cm_3 = matter->Z_mean() / amean * Avogadro * rho;

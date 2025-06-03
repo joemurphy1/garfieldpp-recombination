@@ -19,8 +19,6 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
       molech(fqmolec, nullptr),
       weight_quan_molech(fqmolec),
       weight_mass_molech(fqmolec) {
-  mfunname("GasDef::GasDef(...many molecules...)");
-
   // Finding pointers to all molec. by notations
   for (long k = 0; k < fqmolec; ++k) {
     auto amd = MoleculeDefs::getMolecule(fmolec_not[k]);
@@ -107,7 +105,7 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
                const std::vector<double>& fweight_volume_molec,
                double fpressure, double ftemperature, int /*s1*/, int /*s2*/) {
   // s1 and s2 are to distinguish the constructor
-  mfunname("GasDef::GasDef(...many molecules... Waals)");
+
   std::vector<const MoleculeDef*> amolec(fqmolec);
   for (long n = 0; n < fqmolec; ++n) {
     amolec[n] = MoleculeDefs::getMolecule(fmolec_not[n]);
@@ -208,7 +206,6 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
 GasDef::GasDef(const std::string& fname, const std::string& fnotation,
                const GasDef& gd, double fpressure, double ftemperature,
                double fdensity) {
-  mfunname("GasDef::GasDef( another GasDef with different pres)");
   long fqmolec = gd.qmolec();
   std::vector<std::string> fmolec_not(fqmolec);
   std::vector<double> fweight_quan_molec(fqmolec);
@@ -222,7 +219,6 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
 
 // mean charge of molecule
 double GasDef::Z_mean_molec(void) const {
-  mfunname("double GasDef::Z_mean_molec(void) const ");
   double s = 0.0;
   for (long n = 0; n < qmolech; ++n) {
     s += molech[n]->Z_total() * weight_quan_molech[n];
@@ -235,7 +231,6 @@ void GasDef::print(std::ostream& file, int l) const {
 }
 
 std::ostream& operator<<(std::ostream& file, const GasDef& f) {
-  mfunname("std::ostream& operator << (std::ostream& file, const GasDef& f)");
   Ifile << "GasDef: \n";
   indn.n += 2;
   indn.n += 2;

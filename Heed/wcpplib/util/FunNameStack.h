@@ -13,9 +13,6 @@ It is provided "as is" without express or implied warranty.
 */
 #include <ostream>
 
-// Switch on/off initialization of function names.
-#define mfunname(string)
-
 #define check_econd1(condition, a1, stream) \
   if (condition) {                          \
     stream << "ERROR:\n";                   \

@@ -165,7 +165,6 @@ int manip_absvol::m_check_point_inside(const point& fpt,
 
 int manip_absvol::m_find_embed_vol(const point& fpt, const vec& fdir,
                                    manip_absvol_treeid* atid) const {
-  mfunname("int manip_absvol::m_find_embed_vol(...)");
   absvol* avol = Gavol();
   point pt = fpt;
   up_absref(&pt);

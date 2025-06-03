@@ -38,14 +38,12 @@ PairProd::PairProd(const std::string& file_name, double fw, double ffano)
 }
 
 double PairProd::get_eloss() const {
-  mfunname("double PairProd::get_eloss() const");
   return m_k * pran.ran(Garfield::RndmUniform()) + m_s;
 }
 
 #ifdef USE_GET_ELOSS_CUT
 
 double PairProd::get_eloss(const double e_cur) const {
-  mfunname("double PairProd::get_eloss(const double ecur) const");
   const double e_loss = m_k * pran.ran(Garfield::RndmUniform()) + m_s;
   constexpr double w_cut_ratio = 0.2;
   return e_cur - e_loss < w_cut_ratio * m_w ? 1.0e20 : eloss;
@@ -54,7 +52,6 @@ double PairProd::get_eloss(const double e_cur) const {
 #else
 
 double PairProd::get_eloss(const double e_cur) const {
-  mfunname("double PairProd::get_eloss(const double ecur) const");
   const double e_loss = m_k * pran.ran(Garfield::RndmUniform()) + m_s;
   constexpr double V_ratio = 0.5;
   const double v = V_ratio * m_w / e_cur;

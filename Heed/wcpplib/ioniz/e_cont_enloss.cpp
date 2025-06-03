@@ -26,7 +26,6 @@ double e_cont_enloss(double ratio_Z_to_A,  // do not forget:
                      double Ekin,  // in internal units
                      double Ecut,  // in internal units
                      double z) {
-  mfunname("double e_cont_enloss(...)");
   const double gamma_1 = Ekin / electron_mass_c2;
   if (gamma_1 <= 0.0) return 0.;
   const double gamma = gamma_1 + 1.;

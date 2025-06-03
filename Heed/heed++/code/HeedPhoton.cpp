@@ -35,14 +35,12 @@ HeedPhoton::HeedPhoton(manip_absvol* primvol, const point& pt, const vec& vel,
       s_sfer_photoel(0),
 #endif
       m_fm(fm) {
-  mfunname("HeedPhoton::HeedPhoton(...)");
   double length_vel = vel.length();
   check_econd11(fabs(length_vel - c_light) / (length_vel + c_light), > 1.0e-10,
                 mcerr);
 }
 
 void HeedPhoton::physics(std::vector<gparticle*>& /*secondaries*/) {
-  mfunname("void HeedPhoton::physics()");
   // Stop here if the photon has already been absorbed.
   if (m_photon_absorbed) return;
   if (m_nextpos.prange <= 0.0) return;
@@ -103,7 +101,6 @@ void HeedPhoton::physics(std::vector<gparticle*>& /*secondaries*/) {
 }
 
 void HeedPhoton::physics_after_new_speed(std::vector<gparticle*>& secondaries) {
-  mfunname("void HeedPhoton::physics_after_new_speed()");
   // Stop if the photon has not been absorbed.
   if (!m_photon_absorbed) return;
   // Stop if the delta electrons have already been generated.

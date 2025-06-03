@@ -25,8 +25,6 @@ using CLHEP::c_squared;
 mparticle::mparticle(manip_absvol* primvol, const point& pt, const vec& vel,
                      double ftime, double fmass)
     : gparticle(primvol, pt, vel, ftime), m_mass(fmass) {
-  mfunname("mparticle::mparticle(...)");
-
   const double mc2 = m_mass * c_squared;
   m_orig_gamma_1 = lorgamma_1(m_origin.speed / c_light);
   m_orig_ekin = m_orig_gamma_1 * mc2;
@@ -38,7 +36,6 @@ mparticle::mparticle(manip_absvol* primvol, const point& pt, const vec& vel,
 }
 
 void mparticle::check_consistency() const {
-  mfunname("void mparticle::check_consistency() const");
   check_econd11(vecerror, != 0, mcerr);
 
   double v0 = c_light * lorbeta(m_orig_gamma_1);
@@ -79,7 +76,6 @@ void mparticle::check_consistency() const {
 
 void mparticle::step(std::vector<gparticle*>& secondaries) {
   // Make step to nextpos and calculate new step to border
-  mfunname("void mparticle::step(...)");
   m_prevpos = m_currpos;
   m_prev_ekin = m_curr_ekin;
   m_prev_gamma_1 = m_curr_gamma_1;

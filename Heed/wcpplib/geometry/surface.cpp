@@ -27,7 +27,6 @@ absref_transmit splane::get_components() {
 
 int splane::check_point_inside(const point& fpt, const vec& dir,
                                double fprec) const {
-  mfunname("int splane::check_point_inside(const point&, const vec&, double)");
   if (dir == dv0) {
     // this is not useful
     if (fpt == pn.Gpiv()) return 1;
@@ -58,7 +57,6 @@ int splane::check_point_inside1(const point& fpt, int s_ext,
 
 int splane::range(const trajestep& fts, double* crange, point* cpt,
                   int* s_ext) const {
-  mfunname("int splane::range(...)");
   if (fts.s_range_cf == 0) {
     // straight line
     point pt = pn.cross(straight(fts.currpos, fts.dir));
@@ -193,7 +191,6 @@ absref_transmit ulsvolume::get_components() {
 }
 
 int ulsvolume::check_point_inside(const point& fpt, const vec& dir) const {
-  mfunname("ulsvolume::check_point_inside(const point&, const vec&)");
   check_econd11(qsurf, <= 0, mcerr);
   for (int n = 0; n < qsurf; n++) {
     if (!(surf[n].get()->check_point_inside(fpt, dir, prec))) {
@@ -310,7 +307,6 @@ void ulsvolume::ulsvolume_init(
 ulsvolume::ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf,
                      char* fname, double fprec)
     : qsurf(fsurf.size()), name(fname) {
-  mfunname("ulsvolume::ulsvolume(...)");
   check_econd12(qsurf, >, pqqsurf, mcerr);
   prec = fprec;
   for (int n = 0; n < qsurf; ++n) surf[n] = fsurf[n];
@@ -318,7 +314,6 @@ ulsvolume::ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf,
 
 ulsvolume::ulsvolume(ulsvolume& f)
     : absref(f), absvol(f), qsurf(f.qsurf), name(f.name) {
-  mfunname("ulsvolume::ulsvolume(...)");
   check_econd12(f.qsurf, >, pqqsurf, mcerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];
@@ -326,7 +321,6 @@ ulsvolume::ulsvolume(ulsvolume& f)
 
 ulsvolume::ulsvolume(const ulsvolume& f)
     : absref(f), absvol(f), qsurf(f.qsurf), name(f.name) {
-  mfunname("ulsvolume::ulsvolume(...)");
   check_econd12(f.qsurf, >, pqqsurf, mcerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];

@@ -30,7 +30,6 @@ absref_transmit box::get_components() {
 
 box::box()
     : m_dx(0), m_dy(0), m_dz(0), m_dxh(0), m_dyh(0), m_dzh(0), m_name("none") {
-  mfunname("box::box()");
   init_prec();
   init_planes();
 }
@@ -112,7 +111,6 @@ void box::init_prec() {
 }
 
 void box::init_planes() {
-  mfunname("void box::init_planes()");
   std::vector<std::shared_ptr<surface> > fsurf(6);
   fsurf[0] = std::make_shared<splane>(plane(point(m_dxh, 0, 0), vec(-1, 0, 0)),
                                       vec(-1, 0, 0));
@@ -130,7 +128,6 @@ void box::init_planes() {
 }
 
 int box::check_point_inside(const point& fpt, const vec& dir) const {
-  mfunname("int check_point_inside(const point& fpt, const vec& dir)");
   if (dir == dv0) {
     if (fabs(fpt.v.x) <= m_dxh && fabs(fpt.v.y) <= m_dyh &&
         fabs(fpt.v.z) <= m_dzh) {
@@ -196,7 +193,6 @@ void box::print(std::ostream& file, int l) const {
 }
 
 int box::range_ext(trajestep& fts, int s_ext) const {
-  mfunname("virtual int box::range_ext(trajestep& fts, int s_ext) const");
   if (s_ext == 0) {
     if (fabs(fts.currpos.v.x) > m_dxh + fts.mrange) return 0;
     if (fabs(fts.currpos.v.y) > m_dyh + fts.mrange) return 0;

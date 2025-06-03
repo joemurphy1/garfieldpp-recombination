@@ -8,7 +8,6 @@ namespace Heed {
 
 EnergyMesh::EnergyMesh(double femin, double femax, long fq)
     : q(fq), emin(femin), emax(femax) {
-  mfunname("EnergyMesh::EnergyMesh(double femin, double femax, long fq)");
   check_econd21(q, < 0 ||, > pqener - 1, mcerr);
 
   const double rk = pow(emax / emin, (1.0 / double(q)));
@@ -22,7 +21,6 @@ EnergyMesh::EnergyMesh(double femin, double femax, long fq)
 }
 
 EnergyMesh::EnergyMesh(const std::vector<double>& fec) : q(fec.size()) {
-  mfunname("EnergyMesh::EnergyMesh(std::vector<double> fec");
   check_econd21(q, < 0 ||, > pqener - 1, mcerr);
   check_econd11(q, != 1, mcerr);  // otherwise problems with emin/emax
   if (q <= 0) {

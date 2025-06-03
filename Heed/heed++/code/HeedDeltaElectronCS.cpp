@@ -40,8 +40,6 @@ HeedDeltaElectronCS::HeedDeltaElectronCS(HeedMatterDef* fhmd,
       mlambda(fmlambda),
       sruth(fsruth),
       mthetac(fmthetac) {
-  mfunname("HeedDeltaElectronCS::HeedDeltaElectronCS(...)");
-
   const long qe = hmd->energy_mesh->get_q();
   eLoss.resize(qe, 0.);
   beta.resize(qe, 0.);
@@ -231,7 +229,6 @@ HeedDeltaElectronCS::HeedDeltaElectronCS(HeedMatterDef* fhmd,
 }
 
 double HeedDeltaElectronCS::get_sigma(double energy, double nscat) const {
-  mfunname("double HeedDeltaElectronCS::get_sigma(...)");
   check_econd11(nscat, < 0, mcerr);
   // check_econd21(nscat , < 0 || , > eesls->get_qscat() , mcerr);
   // ^ not compatible with Poisson

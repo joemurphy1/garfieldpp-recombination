@@ -1,4 +1,5 @@
 #include "wcpplib/geometry/gparticle.h"
+
 #include <atomic>
 #include <limits>
 /*
@@ -44,7 +45,6 @@ std::atomic<long> gparticle::s_counter{0L};
 gparticle::gparticle(manip_absvol* primvol, const point& pt, const vec& vel,
                      double ftime)
     : m_prevpos(), m_nextpos() {
-  mfunname("gparticle::gparticle(...)");
   primvol->m_find_embed_vol(pt, vel, &m_origin.tid);
   m_origin.pt = pt;
   if (vel == dv0) {
@@ -70,7 +70,6 @@ gparticle::gparticle(manip_absvol* primvol, const point& pt, const vec& vel,
 
 void gparticle::step(std::vector<gparticle*>& secondaries) {
   // Make step to next point and calculate new step to border.
-  mfunname("void gparticle::step()");
   m_prevpos = m_currpos;
   m_currpos = m_nextpos;
   m_total_range_from_origin += m_currpos.prange;
@@ -166,7 +165,6 @@ void gparticle::turn(const double ctheta, const double stheta) {
 
 stvpoint gparticle::switch_new_vol() {
   // Generate next position in new volume.
-  mfunname("stvpoint gparticle::switch_new_vol(void)");
   manip_absvol_treeid tidl;
   manip_absvol* eidl = nullptr;
   stvpoint nextp = m_currpos;

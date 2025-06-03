@@ -29,8 +29,6 @@ VanDerWaals::VanDerWaals(double fPk, double fTk) : Pkh(fPk), Tkh(fTk) {
 }
 
 double VanDerWaals::volume_of_mole(double T, double p, int& s_not_single) {
-  mfunname("VanDerWaals::volume_of_mole(...)");
-
   double Tr = T / Tkh;
   double Pr = p / Pkh;
   Iprint2n(std::cout, Tr, Pr);
@@ -46,8 +44,6 @@ double VanDerWaals::volume_of_mole(double T, double p, int& s_not_single) {
 }
 
 std::ostream& operator<<(std::ostream& file, const VanDerWaals& f) {
-  mfunname(
-      "std::ostream& operator << (std::ostream& file, const VanDerWaals& f)");
   Ifile << "VanDerWaals:\n";
   indn.n += 2;
   Iprintn(file, f.Pk() / (CLHEP::atmosphere));
@@ -70,7 +66,6 @@ MoleculeDef::MoleculeDef(const std::string& fname, const std::string& fnotation,
       nameh(fname),
       notationh(fnotation),
       qatom_psh(fqatom_ps) {
-  mfunname("MoleculeDef::MoleculeDef(...)");
   m_vdw = std::move(fvdw);
   for (long n = 0; n < qatom(); n++) {
     Z_totalh += qatom_psh[n] * atom(n)->Z();

@@ -28,14 +28,12 @@ The file is provided "as is" without express or implied warranty.
 #include "wcpplib/util/FunNameStack.h"
 
 #define pvecerror(string)                                      \
-  mfunname(string);                                            \
   if (vecerror != 0) {                                         \
     mcerr << "vecerror is not zero, program is terminated\n"   \
           << " function detected error is " << string << '\n'; \
     spexit(mcerr);                                             \
   }
 #define pvecerrorp(string)                                     \
-  mfunname(string);                                            \
   if (vecerror != 0) {                                         \
     mcerr << "vecerror is not zero, program is terminated\n"   \
           << " function detected error is " << string << '\n'; \

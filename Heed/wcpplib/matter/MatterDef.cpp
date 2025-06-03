@@ -20,7 +20,6 @@ MatterDef::MatterDef(const std::string& fname, const std::string& fnotation,
       notationh(fnotation),
       temperatureh(ftemperature),
       densityh(fdensity) {
-  mfunname("MatterDef::MatterDef(...)");
   calc_I_eff();
 }
 
@@ -51,7 +50,6 @@ void MatterDef::print(std::ostream& file, int l) const {
 }
 
 std::ostream& operator<<(std::ostream& file, const MatterDef& f) {
-  mfunname("ostream& operator << (ostream& file, const MatterDef& f)");
   Ifile << "MatterDef: name=" << std::setw(10) << f.name()
         << " notation=" << std::setw(3) << f.notation() << '\n';
   indn.n += 2;

@@ -21,21 +21,13 @@ absref_transmit polyline::get_components() {
   return absref_transmit(qpt + qsl, aref);
 }
 
-polyline::polyline(polyline& pl) : absref(pl) {
-  mfunname("polyline::polyline(polyline &pl)");
-  polyline_init(pl.pt, pl.qpt);
-}
+polyline::polyline(polyline& pl) : absref(pl) { polyline_init(pl.pt, pl.qpt); }
 polyline::polyline(const polyline& pl) : absref(pl) {
-  mfunname("polyline::polyline(const polyline &pl)");
   polyline_init(pl.pt, pl.qpt);
 }
-polyline::polyline(const point* fpt, int fqpt) {
-  mfunname("polyline::polyline(const point* fpt, int fqpt)");
-  polyline_init(fpt, fqpt);
-}
+polyline::polyline(const point* fpt, int fqpt) { polyline_init(fpt, fqpt); }
 polyline::polyline(const point& fpt1, const point& fpt2) {
   // interval
-  mfunname("polyline::polyline(const point& fpt1, const point& fpt2)");
   point fpt[2];
   fpt[0] = fpt1;
   fpt[1] = fpt2;
@@ -43,14 +35,12 @@ polyline::polyline(const point& fpt1, const point& fpt2) {
 }
 
 polyline& polyline::operator=(const polyline& fpl) {
-  mfunname("polyline& polyline::operator=(const polyline& fpl)");
   polyline_del();
   polyline_init(fpl.pt, fpl.qpt);
   return *this;
 }
 
 void polyline::polyline_init(const point* fpt, int fqpt) {
-  pvecerror("void polyline::polyline_init(const point* fpt, int fqpt)");
   check_econd11(fqpt, < 0, mcerr) if (fqpt < 1) {
     qpt = 0;
     qsl = 0;
@@ -239,7 +229,6 @@ absref_transmit polyline_pl::get_components() {
 }
 
 polyline_pl::polyline_pl(polyline& pl) {
-  mfunname("polyline_pl::polyline_pl(     polyline& pl)");
   if (pl.Gqsl() < 2) {
     mcerr << "error in polyline_pl(polyline& pl): qsl=" << Gqsl();
     spexit(mcerr);
@@ -249,7 +238,6 @@ polyline_pl::polyline_pl(polyline& pl) {
 }
 
 polyline_pl::polyline_pl(const polyline& pl) {
-  mfunname("polyline_pl::polyline_pl(const polyline& pl");
   if (pl.Gqsl() < 2) {
     mcerr << "error in polyline_pl(polyline& pl): qsl=" << Gqsl();
     spexit(mcerr);
@@ -259,7 +247,6 @@ polyline_pl::polyline_pl(const polyline& pl) {
 }
 
 polyline_pl& polyline_pl::operator=(const polyline_pl& fpl) {
-  mfunname("polyline_pl& polyline_pl::operator=(const polyline_pl& fpl)");
   polyline_del();
   polyline_init(fpl.pt, fpl.qpt);
   pn = fpl.pn;
@@ -329,7 +316,6 @@ polygon::polygon(const straight* fsl, int fqsl, double prec)
 }
 
 polygon& polygon::operator=(const polygon& fpl) {
-  mfunname("polygon& polygon::operator=(const polygon& fpl)");
   polyline_del();
   polyline_init(fpl.pt, fpl.qpt);
   pn = fpl.pn;

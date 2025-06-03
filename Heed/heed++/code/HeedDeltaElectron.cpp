@@ -65,13 +65,9 @@ HeedDeltaElectron::HeedDeltaElectron(manip_absvol* primvol, const point& pt,
                                      bool fprint_listing)
     : eparticle(primvol, pt, vel, ftime, &electron_def, fm),
       parent_particle_number(fparent_particle_number),
-      m_particle_number(s_counter++) {
-  mfunname("HeedDeltaElectron::HeedDeltaElectron(...)");
-}
+      m_particle_number(s_counter++) {}
 
 void HeedDeltaElectron::physics_mrange(double& fmrange) {
-  mfunname("void HeedDeltaElectron::physics_mrange(double& fmrange)");
-
   m_mult_low_path_length = false;
   m_q_low_path_length = 0.0;
   m_path_length = false;
@@ -139,7 +135,6 @@ void HeedDeltaElectron::physics_mrange(double& fmrange) {
 
 void HeedDeltaElectron::physics_after_new_speed(
     std::vector<gparticle*>& /*secondaries*/) {
-  mfunname("void HeedDeltaElectron::physics_after_new_speed()");
   check_econd11(vecerror, != 0, mcerr);
   if (m_currpos.prange <= 0.0) {
     if (m_curr_ekin <= 0.0) {

@@ -61,7 +61,6 @@ trajestep::trajestep(const double fmax_range, const double frad_for_straight,
 }
 
 trajestep::trajestep(const trajestep& fts, double fmrange) {
-  mfunname("trajestep::trajestep(const trajestep& fts, double fmrange)");
   // Continue propagation from the end point of the old step.
   point fpos;
   vec fdir;

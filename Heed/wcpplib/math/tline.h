@@ -121,9 +121,6 @@ class EqualStepCoorMesh {
 template <class T>
 EqualStepCoorMesh<T>::EqualStepCoorMesh(long fq, T fxmin, T fxmax)
     : q(fq), xmin(fxmin), xmax(fxmax) {
-  mfunname(
-      "template<class T> EqualStepCoorMesh<T>::EqualStepCoorMesh<T>(long "
-      "fq, T fxmin, T fxmax)");
   check_econd11(q, < 0, mcerr);
   check_econd24(q, ==, 0, &&, xmin, <, xmax, mcerr);
   check_econd12(xmin, >, xmax, mcerr);
@@ -710,8 +707,6 @@ template <class T, class D, class M>
 T t_integ_step_ar(const M& mesh, const D& y,  // array of function values
                   T x1, T x2, int xpower)     // currently 0 or 1
 {
-  mfunname("double t_integ_step_ar(...)");
-
   check_econd21(xpower, != 0 &&, != 1, mcerr);
   check_econd12(x1, >, x2, mcerr);
   long qi = mesh.get_qi();
@@ -801,8 +796,6 @@ T t_integ_generic_step_ar(const M& mesh,
                           // This function should produce integral
                           // form x1 to x2.
                           T x1, T x2) {
-  mfunname("double t_integ_step_ar(...)");
-
   check_econd12(x1, >, x2, mcerr);
   long qi = mesh.get_qi();
   check_econd12(qi, <, 1, mcerr);
@@ -869,8 +862,6 @@ T t_find_x_for_already_integ_step_ar(const M& mesh,
                                      const D& y,  // array of function values
                                      T integ, int* s_err)  // for power = 0 only
 {
-  mfunname("double t_find_x_for_already_integ_step_ar(...)");
-
   *s_err = 0;
   // check_econd11(xpower , != 0 , mcerr);
   check_econd11(integ, < 0.0, mcerr);
@@ -932,7 +923,6 @@ long t_find_entire_x_for_already_integ_step_ar(
     const M& mesh, const D& y,  // array of function values
     T integ, int* s_err)        // for power = 0 only
 {
-  mfunname("double t_find_entire_x_for_already_integ_step_ar(...)");
   *s_err = 0;
   // check_econd11(xpower , != 0 , mcerr);
   check_econd11(integ, < 0.0, mcerr);
@@ -977,8 +967,6 @@ template <class T, class D, class M>
 T t_hispre_step_ar(const M& mesh, const D& y,  // array of function values
                    D& integ_y                  // return integrated array
 ) {
-  mfunname("double t_hispre_step_ar(...)");
-
   // check_econd11(xpower , != 0 , mcerr);
   long qi = mesh.get_qi();
   check_econd12(qi, <, 1, mcerr);
@@ -1011,7 +999,6 @@ T t_hispre_step_ar(const M& mesh, const D& y,  // array of function values
 
 template <class T, class D, class M>
 T t_hisran_step_ar(const M& mesh, const D& integ_y, T rannum) {
-  mfunname("double t_hisran_step_ar(...)");
   // check_econd11(xpower , != 0 , mcerr);
   long qi = mesh.get_qi();
   long s_same = apeq_mant(integ_y[qi - 1], 1.0, 1.0e-12);
@@ -1041,8 +1028,6 @@ T t_hisran_step_ar(const M& mesh, const D& integ_y, T rannum) {
 
 template <class T, class D, class M>
 T t_opposite_hisran_step_ar(const M& mesh, const D& integ_y, T x) {
-  mfunname("double t_opposite_hisran_step_ar(...)");
-
   // check_econd11(xpower , != 0 , mcerr);
   long qi = mesh.get_qi();
   long s_same = apeq_mant(integ_y[qi - 1], 1.0, 1.0e-12);
@@ -1072,8 +1057,6 @@ T t_opposite_hisran_step_ar(const M& mesh, const D& integ_y, T x) {
 
 template <class T, class D, class M>
 long t_entire_hisran_step_ar(const M& mesh, const D& integ_y, T rannum) {
-  mfunname("double t_entire_hisran_step_ar(...)");
-
   // check_econd11(xpower , != 0 , mcerr);
   long qi = mesh.get_qi();
   long s_same = apeq_mant(integ_y[qi - 1], 1.0, 1.0e-12);
@@ -1104,7 +1087,6 @@ This is mean of "step array".
 template <class T, class D, class M>
 T t_mean_step_ar(const M& mesh, const D& y,  // array of function values
                  T x1, T x2, int& s_err) {
-  mfunname("double t_mean_step_ar(...)");
   s_err = 0;
   T integ = t_integ_step_ar(mesh, y, x1, x2, 0);
   if (integ == 0) {
@@ -1117,7 +1099,6 @@ T t_mean_step_ar(const M& mesh, const D& y,  // array of function values
 
 template <class T>
 T t_value_straight_2point(T x1, T y1, T x2, T y2, T x, int s_ban_neg) {
-  mfunname("double t_value_straight_2point(...)");
   check_econd12(x1, ==, x2, mcerr);
 
   T a = (y2 - y1) / (x2 - x1);
@@ -1155,7 +1136,6 @@ T t_integ_straight_2point(T x1, T y1, T x2, T y2, T xl, T xr,
                           int s_ban_neg)
 // 0 - not include, 1 - include
 {
-  mfunname("double t_integ_straight_2point(...)");
   check_econd12(x1, ==, x2, mcerr);
 
   T a = (y2 - y1) / (x2 - x1);
@@ -1193,7 +1173,6 @@ T t_value_straight_point_ar(const M& mesh,
                             T x, int s_ban_neg, int s_extrap_left, T left_bond,
                             int s_extrap_right, T right_bond) {
   // 0 - not include, 1 - include
-  mfunname("double t_value_straight_point_ar(...)");
   double xmin = mesh.get_xmin();
   double xmax = mesh.get_xmax();
   if (x < left_bond) return 0.0;
@@ -1219,7 +1198,6 @@ T t_value_generic_point_ar(
                 T x),
     T x, int s_extrap_left, T left_bond, int s_extrap_right, T right_bond) {
   // 0 - not include, 1 - include
-  mfunname("double t_value_generic_point_ar(...)");
   double xmin = mesh.get_xmin();
   double xmax = mesh.get_xmax();
   if (x < left_bond) return 0.0;
@@ -1244,8 +1222,6 @@ T t_value_generic_point_ar(
 
 template <class T>
 T t_value_power_2point(T x1, T y1, T x2, T y2, T x) {
-  mfunname("double t_value_power_2point(...)");
-
   check_econd11(y1, <= 0.0, mcerr);
   check_econd11(y2, <= 0.0, mcerr);
   check_econd12(y1, ==, y2, mcerr);
@@ -1265,8 +1241,6 @@ T t_value_power_2point(T x1, T y1, T x2, T y2, T x) {
 
 template <class T>
 T t_value_exp_2point(T x1, T y1, T x2, T y2, T x) {
-  mfunname("double t_value_exp_2point(...)");
-
   check_econd11(y1, <= 0.0, mcerr);
   check_econd11(y2, <= 0.0, mcerr);
   check_econd12(y1, ==, y2, mcerr);
@@ -1285,8 +1259,6 @@ template <class T>
 T t_integ_power_2point(T x1, T y1, T x2, T y2, T xl, T xr)
 // 0 - not include, 1 - include
 {
-  mfunname("double t_integ_power_2point(...)");
-
   check_econd11(y1, <= 0.0, mcerr);
   check_econd11(y2, <= 0.0, mcerr);
   check_econd12(y1, ==, y2, mcerr);
@@ -1305,8 +1277,6 @@ T t_integ_straight_point_ar(const M& mesh,
                             int xpower,  // currently 0 or 1
                             int s_ban_neg, int s_extrap_left, T left_bond,
                             int s_extrap_right, T right_bond) {
-  mfunname("double t_integ_straight_point_ar(...)");
-
   check_econd21(xpower, != 0 &&, != 1, mcerr);
   check_econd12(x1, >, x2, mcerr);
   long qi = mesh.get_qi();
@@ -1382,7 +1352,6 @@ T t_mean_straight_point_ar(const M& mesh,
                            const D& y,  // array of function values
                            T x1, T x2, int s_extrap_left, T left_bond,
                            int s_extrap_right, T right_bond, int& s_err) {
-  mfunname("double t_mean_straight_point_ar(...)");
   s_err = 0;
   T integ = t_integ_straight_point_ar(mesh, y, x1, x2, 0, 1, s_extrap_left,
                                       left_bond, s_extrap_right, right_bond);
@@ -1407,8 +1376,6 @@ T t_integ_generic_point_ar(
     // GENERICFUN fun,
     T (*fun)(T xp1, T yp1, T xp2, T yp2, T xmin, T xmax, T x1, T x2), T x1,
     T x2, int s_extrap_left, T left_bond, int s_extrap_right, T right_bond) {
-  mfunname("double t_integ_generic_point_ar(...)");
-
   check_econd12(x1, >, x2, mcerr);
   long qi = mesh.get_qi();
   check_econd12(qi, <, 1, mcerr);
