@@ -28,14 +28,6 @@ namespace Heed {
 
 int vecerror = 0;
 
-void absref_transmit::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "absref_transmit::print(l=" << l << ") qaref=" << qaref
-        << " qaref_pointer=" << qaref_pointer << " qaref_other=" << qaref_other
-        << "\n";
-  file.flush();
-}
-
 absref* absref_transmit::get_other(int /*n*/) { return NULL; }
 
 // **** absref ****
@@ -159,11 +151,11 @@ vec vec::up_new(const basis* fabas_new) {
   // it is assumed that fabas_new is derivative from old
   pvecerrorp("vec vec::up_new((const basis *pbas)");
   vec r;
-  // check_econd11(fabas_new , ==NULL, mcerr);
+  // check_econd11(fabas_new , ==NULL, std::cerr);
   // not compiled in IRIX, reason is unkown
   if (fabas_new == NULL) {
-    mcerr << "fabas_new==NULL\n";
-    spexit(mcerr);
+    std::cerr << "fabas_new==NULL\n";
+    spexit(std::cerr);
   }
   vec ex = fabas_new->Gex();
   vec ey = fabas_new->Gey();
@@ -184,7 +176,7 @@ vec vec::turn_new(const vec& dir, double angle) {
     return *this;
   }
   double dirlen = dir.length();
-  check_econd11a(dirlen, == 0, "cannot turn around zero vector", mcerr);
+  check_econd11a(dirlen, == 0, "cannot turn around zero vector", std::cerr);
   vec u = dir / dirlen;  // unit vector
   vec constcomp = u * (*this) * u;
   vec ort1 = unit_vec(u || (*this));
@@ -230,14 +222,6 @@ void vec::random_sfer_vec() {
   double steta = sqrt(1.0 - cteta * cteta);
   *this = (*this) * steta;
   z = cteta;
-}
-
-std::ostream& operator<<(std::ostream& file, const vec& v) {
-  Ifile << "vector=" << std::setw(13) << v.x << std::setw(13) << v.y
-        << std::setw(13) << v.z;
-  file << '\n';
-  file.flush();
-  return file;
 }
 
 vec dex(1, 0, 0);
@@ -332,56 +316,34 @@ basis::basis(const vec& pex, const vec& pey, const vec& pez,
   pvecerror("basis::basis(vec &pex, vec &pey, vec &pez, char pname[12])");
   if (!check_perp(pex, pey, vprecision) || !check_perp(pex, pez, vprecision) ||
       !check_perp(pey, pez, vprecision)) {
-    mcerr << "ERROR in basis::basis(vec &pex, vec &pey, vec &pez) : \n"
-          << "the vectors are not perpendicular\n";
-    mcerr << " pex,pey,pez:\n";
-    mcerr << pex << pey << pez;
-    mcerr << "name=" << pname << '\n';
-    spexit(mcerr);
+    std::cerr << "ERROR in basis::basis(vec &pex, vec &pey, vec &pez) : \n"
+              << "the vectors are not perpendicular\n";
+    std::cerr << " pex,pey,pez:\n";
+    // std::cerr << pex << pey << pez;
+    std::cerr << "name=" << pname << '\n';
+    spexit(std::cerr);
   }
   if (!apeq(pex.length(), double(1.0)) || !apeq(pey.length(), double(1.0)) ||
       !apeq(pez.length(), double(1.0))) {
-    mcerr << "ERROR in basis::basis(vec &pex, vec &pey, vec &pez) : \n"
-          << "the vectors are not of unit length\n";
-    mcerr << " pex,pey,pez:\n";
-    mcerr << pex << pey << pez;
-    mcerr << "name=" << pname << '\n';
-    spexit(mcerr);
+    std::cerr << "ERROR in basis::basis(vec &pex, vec &pey, vec &pez) : \n"
+              << "the vectors are not of unit length\n";
+    std::cerr << " pex,pey,pez:\n";
+    // std::cerr << pex << pey << pez;
+    std::cerr << "name=" << pname << '\n';
+    spexit(std::cerr);
   }
   if (!apeq(pex || pey, pez, vprecision)) {
-    mcerr << "ERROR in basis::basis(vec &pex, vec &pey, vec &pez) : \n";
-    mcerr << "wrong direction of pez\n";
-    mcerr << " pex,pey,pez:\n";
-    mcerr << pex << pey << pez;
-    mcerr << "name=" << pname << '\n';
-    spexit(mcerr);
+    std::cerr << "ERROR in basis::basis(vec &pex, vec &pey, vec &pez) : \n";
+    std::cerr << "wrong direction of pez\n";
+    std::cerr << " pex,pey,pez:\n";
+    // std::cerr << pex << pey << pez;
+    std::cerr << "name=" << pname << '\n';
+    spexit(std::cerr);
   }
   name = pname;
   ex = pex;
   ey = pey;
   ez = pez;
-}
-
-void basis::print(std::ostream& file, int /*l*/) const { file << (*this); }
-
-std::ostream& operator<<(std::ostream& file, const basis& b) {
-  Ifile << "basis: name=" << b.name << '\n';
-  indn.n += 2;
-  int indnsave = indn.n;
-  Ifile << "ex: ";
-  indn.n = 0;
-  file << b.ex;
-  indn.n = indnsave;
-  Ifile << "ey: ";
-  indn.n = 0;
-  file << b.ey;
-  indn.n = indnsave;
-  Ifile << "ez: ";
-  indn.n = 0;
-  file << b.ez;
-  indn.n = indnsave;
-  indn.n -= 2;
-  return file;
 }
 
 // **** point ****
@@ -400,45 +362,7 @@ void point::up(const abssyscoor* fasc) {
   v.up(fasc);
 }
 
-void point::print(std::ostream& file, int /*l*/) const { file << (*this); }
-
-std::ostream& operator<<(std::ostream& file, const point& p) {
-  Ifile << "point:\n";
-  indn.n += 2;
-  file << p.v;
-  indn.n -= 2;
-  return file;
-}
-
 // **** system of coordinates ****
-
-void abssyscoor::print(std::ostream& file, int l) const {
-  if (l > 0) {
-    Ifile << "abssyscoor::print(l=" << l << "): name=" << name << '\n';
-    if (l > 1) {
-      indn.n += 2;
-      const point* apiv = Gapiv();
-      if (apiv != NULL) {
-        Ifile << "piv=" << noindent << (*apiv);
-      } else {
-        Ifile << "apiv=NULL\n";
-      }
-      const basis* abas = Gabas();
-      if (abas != NULL) {
-        Ifile << "bas=" << noindent << (*abas);
-      } else {
-        Ifile << "abas=NULL\n";
-      }
-      indn.n -= 2;
-    }
-    file.flush();
-  }
-}
-
-std::ostream& operator<<(std::ostream& file, const abssyscoor& f) {
-  f.print(file, 2);
-  return file;
-}
 
 absref absref::* fixsyscoor::aref[2] = {
     reinterpret_cast<absref absref::*>(
@@ -452,21 +376,5 @@ absref_transmit fixsyscoor::get_components() {
 
 void fixsyscoor::Ppiv(const point& fpiv) { piv = fpiv; }
 void fixsyscoor::Pbas(const basis& fbas) { bas = fbas; }
-
-void fixsyscoor::print(std::ostream& file, int l) const {
-  if (l > 0) {
-    Ifile << "fixsyscoor::print(l=" << l << ")\n";
-    if (l > 1) {
-      indn.n += 2;
-      abssyscoor::print(file, l);
-    }
-  }
-}
-
-std::ostream& operator<<(std::ostream& file, const fixsyscoor& f) {
-  Ifile << "fixsyscoor:\n";
-  f.abssyscoor::print(file, 2);
-  return file;
-}
 
 }  // namespace Heed

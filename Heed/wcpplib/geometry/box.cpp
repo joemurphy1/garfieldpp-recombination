@@ -22,9 +22,9 @@ The file is provided "as is" without express or implied warranty.
 namespace Heed {
 
 absref_transmit box::get_components() {
-  mcerr << "one should not call this function, since this object cannot be "
-           "modified\n";
-  spexit(mcerr);
+  std::cerr << "one should not call this function, since this object cannot be "
+               "modified\n";
+  spexit(std::cerr);
   return absref_transmit();
 }
 
@@ -173,25 +173,6 @@ int box::check_point_inside(const point& fpt, const vec& dir) const {
   return 1;
 }
 
-void box::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  char s[1000];
-  chname(s);
-  Ifile << "box::print(l=" << l << "): " << s << '\n';
-  indn.n += 2;
-  Ifile << " dx=" << m_dx << " dy=" << m_dy << " dz=" << m_dz
-        << " prec=" << prec << '\n';
-  Ifile << " dxh=" << m_dxh << " dyh=" << m_dyh << " dzh=" << m_dzh << '\n';
-  if (l >= 10) {
-    l--;
-    indn.n += 2;
-    m_ulsv.print(file, l);
-    indn.n -= 2;
-  }
-  absvol::print(file, l);
-  indn.n -= 2;
-}
-
 int box::range_ext(trajestep& fts, int s_ext) const {
   if (s_ext == 0) {
     if (fabs(fts.currpos.v.x) > m_dxh + fts.mrange) return 0;
@@ -222,20 +203,6 @@ void manip_box::chname(char* nm) const {
   strcat(nm, m_name.c_str());
 }
 
-void manip_box::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  char s[1000];
-  chname(s);
-  Ifile << "manip_box::print(l=" << l << "): " << s << '\n';
-  l = l - 1;
-  if (l > 0) {
-    indn.n += 2;
-    box::print(file, l);
-    indn.n -= 2;
-  }
-  file.flush();
-}
-
 // *****   sh_manip_box  ********
 
 // absvol* sh_manip_box::Gavol() const { return (box*)this; }
@@ -252,18 +219,4 @@ void sh_manip_box::chname(char* nm) const {
   strcat(nm, m_name.c_str());
 }
 
-void sh_manip_box::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  char s[1000];
-  chname(s);
-  Ifile << "sh_manip_box::print(l=" << l << "): " << s << '\n';
-  l = l - 1;
-  if (l > 0) {
-    indn.n += 2;
-    csys.print(file, l);
-    box::print(file, l);
-    indn.n -= 2;
-  }
-  file.flush();
-}
 }  // namespace Heed

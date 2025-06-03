@@ -30,7 +30,7 @@ void Cubic::find_zero(double_complex& z1, double_complex& z2,
     return;
   }
 
-  check_econd11a(da, == 0.0, "this is not cubic polynomial!", mcerr);
+  check_econd11a(da, == 0.0, "this is not cubic polynomial!", std::cerr);
   double a2 = db / da;
   double a1 = dc / da;
   double a0 = dd / da;

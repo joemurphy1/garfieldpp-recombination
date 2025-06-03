@@ -8,11 +8,11 @@ namespace Heed {
 
 double chispre(std::vector<double> &f, int s_allow_zero_f) {
   const size_t q = f.size();
-  check_econd11(q, <= 0, mcerr);
+  check_econd11(q, <= 0, std::cerr);
   double r = 0;
   for (size_t i = 0; i < q; ++i) {
     if (s_allow_zero_f == 0) {
-      check_econd11a(f[i], < 0.0, "i=" << i << '\n', mcerr);
+      check_econd11a(f[i], < 0.0, "i=" << i << '\n', std::cerr);
     } else {
       if (f[i] < 0.0) {
         std::cout << "Warning: f[i] < 0.0 in chispre\n";
@@ -23,7 +23,7 @@ double chispre(std::vector<double> &f, int s_allow_zero_f) {
     r += f[i];
     f[i] = r;
   }
-  check_econd11(r, <= 0, mcerr);
+  check_econd11(r, <= 0, std::cerr);
   const double scale = 1. / r;
   for (size_t i = 0; i < q; ++i) f[i] *= scale;
   return r;
@@ -31,8 +31,8 @@ double chispre(std::vector<double> &f, int s_allow_zero_f) {
 
 double chisran(double flat_random_number, const std::vector<double> &f) {
   const long q = f.size();
-  check_econd11(q, <= 0, mcerr);
-  check_econd21(flat_random_number, < 0.0 ||, > 1.0, mcerr);
+  check_econd11(q, <= 0, std::cerr);
+  check_econd21(flat_random_number, < 0.0 ||, > 1.0, std::cerr);
   if (flat_random_number == 0.0) {
     for (long n = 0; n < q; ++n) {
       if (f[n] > 0.0) return double(n);
@@ -66,8 +66,8 @@ double chisran(double flat_random_number, const std::vector<double> &f) {
       return a * (flat_random_number - yl) + b;
     }
   }
-  mcerr << "should never happen\n";
-  spexit(mcerr);
+  std::cerr << "should never happen\n";
+  spexit(std::cerr);
   return 0.0;
 }
 }  // namespace Heed

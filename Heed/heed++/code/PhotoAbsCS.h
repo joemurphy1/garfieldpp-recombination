@@ -1,9 +1,8 @@
 #ifndef PHOTOABSCS_H
 #define PHOTOABSCS_H
 
-#include <string>
-#include <ostream>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace Heed {
@@ -58,8 +57,6 @@ class PhotoAbsCS {
   /// Multiply by some factor. Can be useful for debugging and other purposes.
   virtual void scale(double fact) = 0;
 
-  virtual void print(std::ostream& file, int l) const;
-
  protected:
   std::string name;
   int number = 0;
@@ -98,8 +95,6 @@ class AveragePhotoAbsCS : public PhotoAbsCS {
   double get_integral_CS(double energy1, double energy2) const override;
 
   void scale(double fact) override;
-
-  void print(std::ostream& file, int l) const override;
 };
 
 /// Hydrogen: empirical fit of Kosarev & Podoliak.
@@ -114,8 +109,6 @@ class HydrogenPhotoAbsCS : public PhotoAbsCS {
   double get_CS(double energy) const override;
   double get_integral_CS(double energy1, double energy2) const override;
   void scale(double fact) override;
-
-  void print(std::ostream& file, int l) const override;
 
  private:
   double prefactor = 1.;
@@ -175,7 +168,6 @@ class SimpleTablePhotoAbsCS : public PhotoAbsCS {
   const std::vector<double>& get_arr_ener() const { return ener; }
   const std::vector<double>& get_arr_CS() const { return cs; }
   void scale(double fact) override;
-  void print(std::ostream& file, int l) const override;
 
  private:
   /// Filename (saved for printing).
@@ -205,7 +197,6 @@ class PhenoPhotoAbsCS : public PhotoAbsCS {
   double get_CS(double energy) const override;
   double get_integral_CS(double energy1, double energy2) const override;
   void scale(double fact) override;
-  void print(std::ostream& file, int l) const override;
 
  private:
   double power = 0.;
@@ -249,8 +240,6 @@ class AtomicSecondaryProducts {
                    const std::vector<double>& felectron_energy,
                    const std::vector<double>& fphoton_energy,
                    int s_all_rest = 0);
-
-  void print(std::ostream& file, int l) const;
 
  protected:
   // Probability of specific channel.
@@ -337,7 +326,6 @@ class AtomPhotoAbsCS {
   virtual void remove_shell(int nshell);
   /// Activate a sub-shell. Set s_ignore_shell flag to false.
   virtual void restore_shell(int nshell);
-  virtual void print(std::ostream& file, int l) const;
 
   AtomicSecondaryProducts* get_asp(int nshell);
 
@@ -357,7 +345,6 @@ class AtomPhotoAbsCS {
   /// Sampling of relaxation products for each shell.
   std::vector<AtomicSecondaryProducts> asp;
 };
-std::ostream& operator<<(std::ostream& file, const AtomPhotoAbsCS& f);
 
 /// Simple atomic photoabsorption cross-section
 /// (no difference between absorption and ionization).
@@ -390,7 +377,6 @@ class SimpleAtomPhotoAbsCS : public AtomPhotoAbsCS {
   virtual int get_main_shell_number(int nshell) const {
     return m_acs[nshell]->get_number();
   }
-  virtual void print(std::ostream& file, int l) const;
 
  protected:
   /// Filename (saved for printing).
@@ -423,7 +409,6 @@ class ExAtomPhotoAbsCS : public AtomPhotoAbsCS {
 
   // Width [MeV]
   void replace_shells_by_average(double fwidth, double fstep, long fmax_q_step);
-  virtual void print(std::ostream& file, int l) const;
 
   /// Default constructor.
   ExAtomPhotoAbsCS() : AtomPhotoAbsCS() {}
@@ -604,7 +589,6 @@ class MolecPhotoAbsCS {
                   double fF = standard_factor_Fano);
   /// Destructor
   ~MolecPhotoAbsCS() {}
-  void print(std::ostream& file, int l) const;
 
  private:
   /// Total number of atoms, NOT number of sorts, NOT qel in atom.
@@ -616,7 +600,6 @@ class MolecPhotoAbsCS {
   /// Fano factor.
   double F = standard_factor_Fano;
 };
-std::ostream& operator<<(std::ostream& file, const MolecPhotoAbsCS& f);
 }  // namespace Heed
 
 #endif

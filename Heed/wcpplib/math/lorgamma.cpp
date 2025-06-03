@@ -14,7 +14,7 @@ double lorgamma_1(double beta) {
   if (beta >= 1.0) {
     std::cout << "double lorgamma_1(double beta): ERROR: beta>=1.0, beta="
               << beta << "\n";
-    spexit(mcerr);
+    spexit(std::cerr);
   }
   beta *= beta;
   const double g2_1 = beta / (1. - beta);

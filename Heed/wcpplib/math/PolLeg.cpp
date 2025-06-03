@@ -16,8 +16,8 @@ It is provided "as is" without express or implied warranty.
 namespace Heed {
 
 double polleg(const int l, const double x) {
-  check_econd11(l, < 0, mcerr);
-  check_econd11a(l, > 6, "not implemented", mcerr);
+  check_econd11(l, < 0, std::cerr);
+  check_econd11a(l, > 6, "not implemented", std::cerr);
   switch (l) {
     case 0:
       return 1.0;

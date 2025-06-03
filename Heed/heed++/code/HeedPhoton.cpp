@@ -37,7 +37,7 @@ HeedPhoton::HeedPhoton(manip_absvol* primvol, const point& pt, const vec& vel,
       m_fm(fm) {
   double length_vel = vel.length();
   check_econd11(fabs(length_vel - c_light) / (length_vel + c_light), > 1.0e-10,
-                mcerr);
+                std::cerr);
 }
 
 void HeedPhoton::physics(std::vector<gparticle*>& /*secondaries*/) {

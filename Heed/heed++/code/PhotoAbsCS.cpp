@@ -97,22 +97,16 @@ PhotoAbsCS::PhotoAbsCS(const std::string& fname, int fZ, double fthreshold)
   if (i >= 1 && i <= 50) number = i;
 }
 
-void PhotoAbsCS::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "PhotoAbsCS: name=" << name << " Z = " << Z
-        << " threshold = " << threshold << std::endl;
-}
-
 //---------------------------------------------------------
 
 AveragePhotoAbsCS::AveragePhotoAbsCS(PhotoAbsCS* apacs, double fwidth,
                                      double fstep, long fmax_q_step)
     //    : real_pacs(apacs, do_clone),
     : width(fwidth), max_q_step(fmax_q_step), step(fstep) {
-  check_econd11(apacs, == nullptr, mcerr);
+  check_econd11(apacs, == nullptr, std::cerr);
   real_pacs.reset(apacs);
   // Check the parameters (step = 0.5 * width is bad but OK).
-  if (fwidth > 0.0) check_econd11(fstep, >= 0.6 * fwidth, mcerr);
+  if (fwidth > 0.0) check_econd11(fstep, >= 0.6 * fwidth, std::cerr);
   // Copy the parameters of the "real" cross-section.
   name = real_pacs->get_name();
   number = real_pacs->get_number();
@@ -147,15 +141,6 @@ double AveragePhotoAbsCS::get_integral_CS(double energy1,
 }
 
 void AveragePhotoAbsCS::scale(double fact) { real_pacs->scale(fact); }
-
-void AveragePhotoAbsCS::print(std::ostream& file, int l) const {
-  Ifile << "AveragePhotoAbsCS: width = " << width << " step=" << step
-        << " max_q_step=" << max_q_step << '\n';
-  indn.n += 2;
-  real_pacs->print(file, l);
-  indn.n -= 2;
-}
-
 //---------------------------------------------------------
 
 HydrogenPhotoAbsCS::HydrogenPhotoAbsCS() : PhotoAbsCS("H", 1, 15.43e-6) {
@@ -181,13 +166,6 @@ double HydrogenPhotoAbsCS::get_integral_CS(double e1, double e2) const {
 }
 
 void HydrogenPhotoAbsCS::scale(double fact) { prefactor = fact; }
-
-void HydrogenPhotoAbsCS::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "HydrogenPhotoAbsCS: name=" << name << " Z = " << Z
-        << " threshold = " << threshold << std::endl;
-}
-
 //---------------------------------------------------------
 
 SimpleTablePhotoAbsCS::SimpleTablePhotoAbsCS(const std::string& fname, int fZ,
@@ -196,8 +174,8 @@ SimpleTablePhotoAbsCS::SimpleTablePhotoAbsCS(const std::string& fname, int fZ,
     : PhotoAbsCS(fname, fZ, fthreshold), file_name(ffile_name) {
   std::ifstream file(file_name.c_str());
   if (!file) {
-    mcerr << "cannot open file " << file_name << std::endl;
-    spexit(mcerr);
+    std::cerr << "cannot open file " << file_name << std::endl;
+    spexit(std::cerr);
   }
   ener.reserve(20);
   cs.reserve(20);
@@ -207,13 +185,13 @@ SimpleTablePhotoAbsCS::SimpleTablePhotoAbsCS(const std::string& fname, int fZ,
     file >> x;
     if (!file.good()) break;
     // Make sure it is non-negative and in ascending order.
-    check_econd11(x, < 0.0, mcerr);
-    if (!ener.empty()) check_econd12(x, <, ener.back(), mcerr);
+    check_econd11(x, < 0.0, std::cerr);
+    if (!ener.empty()) check_econd12(x, <, ener.back(), std::cerr);
     // Read the cross-section.
     double y = 0.;
     file >> y;
     if (!file.good()) break;
-    check_econd11(y, < 0.0, mcerr);
+    check_econd11(y, < 0.0, std::cerr);
     // Add the point to the table.
     ener.push_back(x * 1.e-6);
     cs.push_back(y);
@@ -228,7 +206,7 @@ SimpleTablePhotoAbsCS::SimpleTablePhotoAbsCS(const std::string& fname, int fZ,
       file_name("none"),
       ener(fener),
       cs(fcs) {
-  check_econd12(ener.size(), !=, cs.size(), mcerr);
+  check_econd12(ener.size(), !=, cs.size(), std::cerr);
 }
 
 SimpleTablePhotoAbsCS::SimpleTablePhotoAbsCS(const std::string& fname, int fZ,
@@ -328,7 +306,7 @@ void SimpleTablePhotoAbsCS::remove_leading_tiny(double level) {
 double SimpleTablePhotoAbsCS::get_CS(double energy) const {
   long q = ener.size();
   if (q == 0) return 0.0;
-  check_econd11(q, == 1, mcerr);
+  check_econd11(q, == 1, std::cerr);
   if (energy < threshold) return 0.;
   if (energy <= ener[q - 1]) {
     PointCoorMesh<double, const std::vector<double> > pcm(q, &ener);
@@ -349,14 +327,14 @@ double SimpleTablePhotoAbsCS::get_integral_CS(double energy1,
                                               double energy2) const {
   const long q = ener.size();
   if (q == 0) return 0.0;
-  check_econd11(q, == 1, mcerr);
+  check_econd11(q, == 1, std::cerr);
   if (energy2 < threshold) return 0.0;
   if (energy1 < threshold) energy1 = threshold;
   double s = 0.0;
   double energy21 = ener[q - 1];
   if (energy1 < energy21) {
     if (energy21 > energy2) energy21 = energy2;
-    check_econd12(energy1, >, energy21, mcerr);
+    check_econd12(energy1, >, energy21, std::cerr);
     PointCoorMesh<double, const std::vector<double> > pcm(q, &ener);
     s = t_integ_generic_point_ar<
         double, std::vector<double>,
@@ -387,20 +365,6 @@ void SimpleTablePhotoAbsCS::scale(double fact) {
   for (long n = 0; n < q; ++n) cs[n] *= fact;
 }
 
-void SimpleTablePhotoAbsCS::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "SimpleTablePhotoAbsCS: name=" << name << " Z = " << Z << "\n";
-  Ifile << " threshold = " << threshold << " file_name=" << file_name << "\n";
-  if (l > 1) {
-    indn.n += 2;
-    const long q = ener.size();
-    for (long n = 0; n < q; ++n) {
-      Ifile << "n=" << n << " ener=" << ener[n] << " cs=" << cs[n] << "\n";
-    }
-    indn.n -= 2;
-  }
-}
-
 //---------------------------------------------------------
 
 PhenoPhotoAbsCS::PhenoPhotoAbsCS() : PhotoAbsCS("none", 0, 0.0), power(0.0) {}
@@ -409,7 +373,7 @@ PhenoPhotoAbsCS::PhenoPhotoAbsCS(const std::string& fname, int fZ,
                                  double fthreshold, double fpower)
     : PhotoAbsCS(fname, fZ, fthreshold), power(fpower) {
   check_econd11a(power, <= 2, " value not allowed, integral would be infinite",
-                 mcerr);
+                 std::cerr);
   const double a = power - 1.;
   factor = pow(threshold, a) * Thomas_sum_rule_const_Mb * Z * a;
 }
@@ -435,19 +399,12 @@ double PhenoPhotoAbsCS::get_integral_CS(double energy1, double energy2) const {
 
 void PhenoPhotoAbsCS::scale(double fact) { factor *= fact; }
 
-void PhenoPhotoAbsCS::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "PhenoPhotoAbsCS: name=" << name << " Z = " << Z << std::endl;
-  Ifile << " threshold = " << threshold << " power=" << power
-        << " factor=" << factor << std::endl;
-}
-
 //------------------------------------------------------------------------
 
 void AtomicSecondaryProducts::add_channel(
     double fchannel_prob_dens, const std::vector<double>& felectron_energy,
     const std::vector<double>& fphoton_energy, int s_all_rest) {
-  check_econd21(fchannel_prob_dens, < 0.0 ||, > 1.0, mcerr);
+  check_econd21(fchannel_prob_dens, < 0.0 ||, > 1.0, std::cerr);
   long q_old = channel_prob_dens.size();
   long q_new = q_old + 1;
   channel_prob_dens.resize(q_new);
@@ -458,7 +415,7 @@ void AtomicSecondaryProducts::add_channel(
     for (long n = 0; n < q_old; ++n) {
       s += channel_prob_dens[n];
     }
-    check_econd21(s, < 0.0 ||, > 1.0, mcerr);
+    check_econd21(s, < 0.0 ||, > 1.0, std::cerr);
     fchannel_prob_dens = 1.0 - s;
   }
   channel_prob_dens[q_old] = fchannel_prob_dens;
@@ -469,13 +426,13 @@ void AtomicSecondaryProducts::add_channel(
     s += channel_prob_dens[n];
   }
   if (s > 1.0) {
-    mcerr << "s > 1.0, s=" << s << '\n';
-    Iprintn(mcerr, q_new);
+    std::cerr << "s > 1.0, s=" << s << '\n';
+    Iprintn(std::cerr, q_new);
     for (long n = 0; n < q_new; ++n) {
-      mcerr << "n=" << n << " channel_prob_dens[n]=" << channel_prob_dens[n]
-            << '\n';
+      std::cerr << "n=" << n << " channel_prob_dens[n]=" << channel_prob_dens[n]
+                << '\n';
     }
-    spexit(mcerr);
+    spexit(std::cerr);
   }
 }
 
@@ -505,37 +462,6 @@ int AtomicSecondaryProducts::get_channel(
     }
   }
   return ir;
-}
-
-void AtomicSecondaryProducts::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "AtomicSecondaryProducts(l=" << l << "):\n";
-  const long q = channel_prob_dens.size();
-  Ifile << "number of channels=" << q << '\n';
-  indn.n += 2;
-  for (long n = 0; n < q; ++n) {
-    Ifile << "n_channel=" << n << " probability=" << channel_prob_dens[n]
-          << '\n';
-    indn.n += 2;
-    long qel = electron_energy[n].size();
-    Ifile << "number of electrons=" << qel << '\n';
-    indn.n += 2;
-    for (long nel = 0; nel < qel; ++nel) {
-      Ifile << "nel=" << nel << " electron_energy=" << electron_energy[n][nel]
-            << '\n';
-    }
-    indn.n -= 2;
-    long qph = photon_energy[n].size();
-    Ifile << "number of photons=" << qph << '\n';
-    indn.n += 2;
-    for (long nph = 0; nph < qph; ++nph) {
-      Ifile << "nph=" << nph << " photon_energy=" << photon_energy[n][nph]
-            << '\n';
-    }
-    indn.n -= 2;
-    indn.n -= 2;
-  }
-  indn.n -= 2;
 }
 
 AtomPhotoAbsCS::AtomPhotoAbsCS() : name("none"), Z(0), qshell(0) {}
@@ -578,44 +504,13 @@ double AtomPhotoAbsCS::get_integral_TICS(
 }
 
 void AtomPhotoAbsCS::remove_shell(int nshell) {
-  check_econd21(nshell, < 0 ||, >= qshell, mcerr);
+  check_econd21(nshell, < 0 ||, >= qshell, std::cerr);
   s_ignore_shell[nshell] = true;
 }
 
 void AtomPhotoAbsCS::restore_shell(int nshell) {
-  check_econd21(nshell, < 0 ||, >= qshell, mcerr);
+  check_econd21(nshell, < 0 ||, >= qshell, std::cerr);
   s_ignore_shell[nshell] = false;
-}
-
-void AtomPhotoAbsCS::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "AtomPhotoAbsCS(l=" << l << "): name=" << name << " Z = " << Z
-        << " qshell = " << qshell << std::endl;
-  Iprintn(std::cout, asp.size());
-  long q = asp.size();
-  if (q == 0) {
-    q = s_ignore_shell.size();
-    indn.n += 2;
-    for (long n = 0; n < q; ++n) {
-      Ifile << "n=" << n << " s_ignore_shell[n] = " << s_ignore_shell[n]
-            << '\n';
-    }
-    indn.n -= 2;
-  } else {
-    check_econd12(asp.size(), !=, s_ignore_shell.size(), mcerr);
-    indn.n += 2;
-    for (long n = 0; n < q; ++n) {
-      Ifile << "n=" << n << " s_ignore_shell[n] = " << s_ignore_shell[n]
-            << '\n';
-      asp[n].print(std::cout, l);
-    }
-    indn.n -= 2;
-  }
-}
-
-std::ostream& operator<<(std::ostream& file, const AtomPhotoAbsCS& f) {
-  f.print(file, 1);
-  return file;
 }
 
 double AtomPhotoAbsCS::get_I_min() const {
@@ -634,7 +529,7 @@ void AtomPhotoAbsCS::get_escape_particles(
   // They usually can be treated quite well.
   // The factor 0.5 is put there just as arbitrary check for full stupidity.
   const double thrShell = get_threshold(nshell);
-  check_econd12(energy, <, 0.5 * thrShell, mcerr);
+  check_econd12(energy, <, 0.5 * thrShell, std::cerr);
 
   el_energy.clear();
   ph_energy.clear();
@@ -679,7 +574,7 @@ void AtomPhotoAbsCS::get_escape_particles(
     el_energy[0] = en;
     long q = felectron_energy.size();
     for (long n = 0; n < q; ++n) {
-      check_econd21(felectron_energy[n], < 0 ||, > thrShell, mcerr);
+      check_econd21(felectron_energy[n], < 0 ||, > thrShell, std::cerr);
       el_energy[1 + n] = felectron_energy[n] - hdist;
       if (el_energy[1 + n] < 0) {
         hdist = -el_energy[1 + n];
@@ -691,7 +586,7 @@ void AtomPhotoAbsCS::get_escape_particles(
     ph_energy.resize(fphoton_energy.size());
     q = fphoton_energy.size();
     for (long n = 0; n < q; ++n) {
-      check_econd21(fphoton_energy[n], < 0 ||, > thrShell, mcerr);
+      check_econd21(fphoton_energy[n], < 0 ||, > thrShell, std::cerr);
       ph_energy[n] = fphoton_energy[n] - hdist;
       if (ph_energy[n] < 0) {
         hdist = -ph_energy[n];
@@ -742,7 +637,7 @@ void AtomPhotoAbsCS::get_escape_particles(
       }
     }
   }
-  check_econd11(n_chosen, < 0, mcerr);
+  check_econd11(n_chosen, < 0, std::cerr);
   double en1 = thrShell - hdist - 2 * get_threshold(n_chosen);
   if (en1 > 0.) {
     // Photo-electron
@@ -755,7 +650,7 @@ void AtomPhotoAbsCS::get_escape_particles(
     if (en2 > 0.) {
       el_energy.push_back(en2);
       el_energy.push_back(en2);
-      check_econd11(el_energy[2], < 0.0, mcerr);
+      check_econd11(el_energy[2], < 0.0, std::cerr);
     }
     return;
   }
@@ -766,14 +661,14 @@ void AtomPhotoAbsCS::get_escape_particles(
     el_energy.push_back(en1);
     // Filling initially ionized level from chosen
     // and emittance of Auger from outermost.
-    check_econd11(el_energy[1], < 0.0, mcerr);
+    check_econd11(el_energy[1], < 0.0, std::cerr);
     const double en2 = get_threshold(n_chosen) - 2 * thrMin;
     if (en2 > 0.) el_energy.push_back(en2);
   }
 }
 
 AtomicSecondaryProducts* AtomPhotoAbsCS::get_asp(int nshell) {
-  check_econd21(nshell, < 0 ||, >= qshell, mcerr);
+  check_econd21(nshell, < 0 ||, >= qshell, std::cerr);
   return &(asp[nshell]);
 }
 
@@ -782,17 +677,17 @@ SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS() : AtomPhotoAbsCS() {}
 SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
                                            const std::string& ffile_name)
     : file_name(ffile_name) {
-  check_econd11(fZ, < 1, mcerr);
+  check_econd11(fZ, < 1, std::cerr);
   std::ifstream file(file_name.c_str());
   if (!file) {
-    mcerr << "cannot open file " << file_name << std::endl;
-    spexit(mcerr);
+    std::cerr << "cannot open file " << file_name << std::endl;
+    spexit(std::cerr);
   }
   while (findmark(file, "#") == 1) {
     file >> Z;
     if (Z != fZ) continue;
     file >> qshell;
-    check_econd21(qshell, < 1 ||, > 10000, mcerr);
+    check_econd21(qshell, < 1 ||, > 10000, std::cerr);
     s_ignore_shell.resize(qshell, false);
     file >> name;
     m_acs.resize(qshell);
@@ -804,9 +699,9 @@ SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
       int Zshell = 0;
       std::string shell_name;
       file >> thr;
-      check_econd11(thr, <= 0.0, mcerr);
+      check_econd11(thr, <= 0.0, std::cerr);
       file >> Zshell;
-      check_econd11(Zshell, <= 0, mcerr);
+      check_econd11(Zshell, <= 0, std::cerr);
       sZshell += Zshell;
       file >> fl[nshell];
       findmark(file, "!");
@@ -814,7 +709,7 @@ SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
       m_acs[nshell].reset(
           new PhenoPhotoAbsCS(shell_name, Zshell, thr * 1.0e-6));
     }
-    check_econd12(sZshell, !=, Z, mcerr);
+    check_econd12(sZshell, !=, Z, std::cerr);
 
     int n_min = 0;
     double st = std::numeric_limits<double>::max();
@@ -825,7 +720,7 @@ SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
     }
     for (int nshell = 0; nshell < qshell; ++nshell) {
       if (fl[nshell] <= 0) continue;
-      check_econd12(nshell, ==, n_min, mcerr);
+      check_econd12(nshell, ==, n_min, std::cerr);
       std::vector<double> felectron_energy;
       std::vector<double> fphoton_energy;
       fphoton_energy.push_back(get_threshold(nshell) - get_threshold(n_min));
@@ -833,15 +728,16 @@ SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
     }
     return;
   }
-  mcerr << "there is no element Z=" << fZ << " in file " << file_name << '\n';
-  spexit(mcerr);
+  std::cerr << "there is no element Z=" << fZ << " in file " << file_name
+            << '\n';
+  spexit(std::cerr);
 }
 
 SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
                                            std::shared_ptr<PhotoAbsCS> facs) {
-  check_econd11(facs, == nullptr, mcerr);
-  check_econd11(fZ, <= 0, mcerr);
-  check_econd12(fZ, !=, facs->get_Z(), mcerr);
+  check_econd11(facs, == nullptr, std::cerr);
+  check_econd11(fZ, <= 0, std::cerr);
+  check_econd12(fZ, !=, facs->get_Z(), std::cerr);
   Z = fZ;
   qshell = 1;
   s_ignore_shell.resize(qshell, false);
@@ -851,7 +747,7 @@ SimpleAtomPhotoAbsCS::SimpleAtomPhotoAbsCS(int fZ,
 }
 
 double SimpleAtomPhotoAbsCS::get_threshold(int nshell) const {
-  check_econd21(nshell, < 0 ||, > qshell, mcerr);
+  check_econd21(nshell, < 0 ||, > qshell, std::cerr);
   return m_acs[nshell]->get_threshold();
 }
 
@@ -871,7 +767,6 @@ double SimpleAtomPhotoAbsCS::get_integral_ACS(double energy1,
     if (t < 0) {
       std::cout << "t < 0\n";
       Iprintn(std::cout, t);
-      print(std::cout, 4);
       spexit(std::cout);
     }
     s += t;
@@ -880,13 +775,13 @@ double SimpleAtomPhotoAbsCS::get_integral_ACS(double energy1,
 }
 
 double SimpleAtomPhotoAbsCS::get_ACS(int nshell, double energy) const {
-  check_econd21(nshell, < 0 ||, > qshell, mcerr);
+  check_econd21(nshell, < 0 ||, > qshell, std::cerr);
   return s_ignore_shell[nshell] ? 0. : m_acs[nshell]->get_CS(energy);
 }
 
 double SimpleAtomPhotoAbsCS::get_integral_ACS(int nshell, double en1,
                                               double en2) const {
-  check_econd21(nshell, < 0 ||, > qshell, mcerr);
+  check_econd21(nshell, < 0 ||, > qshell, std::cerr);
   return s_ignore_shell[nshell] ? 0. : m_acs[nshell]->get_integral_CS(en1, en2);
 }
 
@@ -908,29 +803,14 @@ double SimpleAtomPhotoAbsCS::get_integral_ICS(double energy1,
 }
 
 double SimpleAtomPhotoAbsCS::get_ICS(int nshell, double energy) const {
-  check_econd21(nshell, < 0 ||, > qshell, mcerr);
+  check_econd21(nshell, < 0 ||, > qshell, std::cerr);
   return s_ignore_shell[nshell] ? 0. : m_acs[nshell]->get_CS(energy);
 }
 
 double SimpleAtomPhotoAbsCS::get_integral_ICS(int nshell, double en1,
                                               double en2) const {
-  check_econd21(nshell, < 0 ||, > qshell, mcerr);
+  check_econd21(nshell, < 0 ||, > qshell, std::cerr);
   return s_ignore_shell[nshell] ? 0. : m_acs[nshell]->get_integral_CS(en1, en2);
-}
-
-void SimpleAtomPhotoAbsCS::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "SimpleAtomPhotoAbsCS(l=" << l << "): name=" << name << " Z = " << Z
-        << " qshell = " << qshell << " file_name=" << file_name << std::endl;
-  l--;
-  if (l <= 0) return;
-  indn.n += 2;
-  for (int n = 0; n < qshell; ++n) {
-    Ifile << "nshell=" << n << std::endl;
-    m_acs[n]->print(file, l);
-  }
-  AtomPhotoAbsCS::print(file, l);
-  indn.n -= 2;
 }
 
 //----------------------------------------------------------------------
@@ -944,11 +824,11 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
       simple_table_file_name(fsimple_table_file_name),
       BT_file_name("none"),
       minimal_threshold(fminimal_threshold) {
-  check_econd11(fZ, < 1, mcerr);
+  check_econd11(fZ, < 1, std::cerr);
   std::ifstream threshold_file(threshold_file_name.c_str());
   if (!threshold_file) {
-    mcerr << "cannot open file " << threshold_file_name << std::endl;
-    spexit(mcerr);
+    std::cerr << "cannot open file " << threshold_file_name << std::endl;
+    spexit(std::cerr);
   }
   std::vector<double> thr;
   std::vector<int> Zshell;
@@ -959,7 +839,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
     threshold_file >> Z;
     if (Z != fZ) continue;
     threshold_file >> qshell;
-    check_econd21(qshell, < 1 ||, > 10000, mcerr);
+    check_econd21(qshell, < 1 ||, > 10000, std::cerr);
     s_ignore_shell.resize(qshell, false);
     thr.resize(qshell, 0.0);
     Zshell.resize(qshell, 0);
@@ -973,16 +853,16 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
     int sZshell = 0;
     for (int nshell = 0; nshell < qshell; nshell++) {
       threshold_file >> thr[nshell];
-      check_econd11(thr[nshell], <= 0.0, mcerr);
+      check_econd11(thr[nshell], <= 0.0, std::cerr);
       thr[nshell] *= 1.0e-6;
       threshold_file >> Zshell[nshell];
-      check_econd11(Zshell[nshell], <= 0, mcerr);
+      check_econd11(Zshell[nshell], <= 0, std::cerr);
       sZshell += Zshell[nshell];
       threshold_file >> fl[nshell];
       findmark(threshold_file, "!");
       threshold_file >> shell_name[nshell];
     }
-    check_econd12(sZshell, !=, Z, mcerr);
+    check_econd12(sZshell, !=, Z, std::cerr);
     // currently the minimal shell is the last,
     // but to avoid this assumption, we check all.
     int n_min = 0;
@@ -995,7 +875,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
     }
     for (int nshell = 0; nshell < qshell; nshell++) {
       if (fl[nshell] <= 0) continue;
-      check_econd12(nshell, ==, n_min, mcerr);
+      check_econd12(nshell, ==, n_min, std::cerr);
       std::vector<double> felectron_energy;
       std::vector<double> fphoton_energy;
       fphoton_energy.push_back(thr[nshell] - thr[n_min]);
@@ -1005,9 +885,9 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ,
     break;
   }
   if (!foundZ) {
-    mcerr << "there is no element Z=" << fZ << " in file "
-          << threshold_file_name << std::endl;
-    spexit(mcerr);
+    std::cerr << "there is no element Z=" << fZ << " in file "
+              << threshold_file_name << std::endl;
+    spexit(std::cerr);
   }
   // Here it reads the PACS as an one shell curve:
   SimpleTablePhotoAbsCS stpacs(name, Z, 0.0, fsimple_table_file_name);
@@ -1176,51 +1056,51 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
       simple_table_file_name("none"),
       BT_file_name(fBT_file_name),
       minimal_threshold(fminimal_threshold) {
-  check_econd11(fZ, < 1, mcerr);
-  check_econd21(id, < 1 ||, > 2, mcerr);
+  check_econd11(fZ, < 1, std::cerr);
+  check_econd21(id, < 1 ||, > 2, std::cerr);
 
   name = fname;
   std::ifstream BT_file(BT_file_name.c_str());
   if (!BT_file) {
-    mcerr << "cannot open file " << BT_file_name << std::endl;
-    spexit(mcerr);
+    std::cerr << "cannot open file " << BT_file_name << std::endl;
+    spexit(std::cerr);
   }
   std::vector<double> thresh;
   std::vector<double> fl;
   Z = fZ;
   int i = findmark(BT_file, "NUCLEAR CHARGE =");
-  check_econd11a(i, != 1, "wrong file format", mcerr);
+  check_econd11a(i, != 1, "wrong file format", std::cerr);
   int Z_from_file;
   BT_file >> Z_from_file;
-  check_econd12(Z_from_file, !=, Z, mcerr);
+  check_econd12(Z_from_file, !=, Z, std::cerr);
   qshell = 0;
   while ((i = findmark(BT_file, "Z =")) == 1) {
     BT_file >> i;
-    check_econd11(i, != Z, mcerr);
+    check_econd11(i, != Z, std::cerr);
     std::string shellname;
     BT_file >> shellname;
     i = findmark(BT_file, "$");
-    check_econd11(i, != 1, mcerr);
+    check_econd11(i, != 1, std::cerr);
     long qen;
     BT_file >> qen;
-    check_econd11(qen, <= 0, mcerr);
+    check_econd11(qen, <= 0, std::cerr);
     std::vector<double> fener(qen, 0.0);
     std::vector<double> fcs(qen, 0.0);
     double thr = 0.0;
     BT_file >> thr;
-    check_econd11(thr, <= 0, mcerr);
+    check_econd11(thr, <= 0, std::cerr);
     thr *= 1.0e-3;  // pass from keV to MeV
     if (id == 2) {
       thresh.push_back(thr);
       fl.resize(fl.size() + 1);
       BT_file >> fl[qshell];
-      check_econd21(fl[qshell], < 0.0 ||, > 1.0, mcerr);
+      check_econd21(fl[qshell], < 0.0 ||, > 1.0, std::cerr);
     }
     long nen;
     for (nen = 0; nen < qen; nen++) {
       BT_file >> fener[nen] >> fcs[nen];
-      check_econd11(fener[nen], <= 0.0, mcerr);
-      check_econd11(fcs[nen], < 0.0, mcerr);
+      check_econd11(fener[nen], <= 0.0, std::cerr);
+      check_econd11(fcs[nen], < 0.0, std::cerr);
       fener[nen] *= 1.0e-3;  // pass from keV to MeV
     }
     qshell++;
@@ -1243,7 +1123,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
     asp.resize(qshell);
     for (int nshell = 0; nshell < qshell; ++nshell) {
       if (fl[nshell] > 0) {
-        check_econd12(nshell, ==, n_min, mcerr);
+        check_econd12(nshell, ==, n_min, std::cerr);
         std::vector<double> felectron_energy;
         std::vector<double> fphoton_energy;
         fphoton_energy.push_back(thresh[nshell] - thresh[n_min]);
@@ -1252,7 +1132,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
     }
   }
 
-  check_econd11(qshell, <= 0, mcerr);
+  check_econd11(qshell, <= 0, std::cerr);
   s_ignore_shell.resize(qshell, false);
   height_of_excitation = 0.0;
   exener[0] = exener[1] = 0.0;
@@ -1297,14 +1177,14 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
       simple_table_file_name("none"),
       BT_file_name(fFitBT_file_name),
       minimal_threshold(fminimal_threshold) {
-  check_econd11(fZ, < 1, mcerr);
-  check_econd21(id, < 1 ||, > 2, mcerr);
+  check_econd11(fZ, < 1, std::cerr);
+  check_econd21(id, < 1 ||, > 2, std::cerr);
   Z = fZ;
   name = fname;
   std::ifstream BT_file(fFitBT_file_name.c_str());
   if (!BT_file) {
-    mcerr << "cannot open file " << BT_file_name << std::endl;
-    spexit(mcerr);
+    std::cerr << "cannot open file " << BT_file_name << std::endl;
+    spexit(std::cerr);
   }
   std::vector<double> thresh;
   std::vector<double> fl;
@@ -1314,8 +1194,8 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
     BT_file >> iZ;
     if (iZ != Z) continue;
     BT_file >> qshell;
-    check_econd11(qshell, <= 0, mcerr);
-    check_econd11(qshell, > 1000, mcerr);
+    check_econd11(qshell, <= 0, std::cerr);
+    check_econd11(qshell, > 1000, std::cerr);
     m_acs.resize(qshell);
     if (id == 2) {
       thresh.resize(qshell);
@@ -1333,43 +1213,43 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
       double P;
       double sigma;
       if (BT_file.eof()) {
-        mcerr << "unexpected end of file " << BT_file_name << '\n';
-        spexit(mcerr);
+        std::cerr << "unexpected end of file " << BT_file_name << '\n';
+        spexit(std::cerr);
       }
       if (!BT_file.good()) {
-        mcerr << "bad format of file " << BT_file_name << '\n';
-        spexit(mcerr);
+        std::cerr << "bad format of file " << BT_file_name << '\n';
+        spexit(std::cerr);
       }
 #ifdef READ_FILE_WITH_PRINCIPAL_NUMBERS
       BT_file >> n_princ;
       if (!BT_file.good()) {
-        mcerr << "bad format of file " << BT_file_name << '\n';
-        spexit(mcerr);
+        std::cerr << "bad format of file " << BT_file_name << '\n';
+        spexit(std::cerr);
       }
-      check_econd21(n_princ, < 0 ||, > 10, mcerr);
+      check_econd21(n_princ, < 0 ||, > 10, std::cerr);
 #endif
       BT_file >> l >> threshold >> E0 >> sigma >> ya >> P >> yw;
-      check_econd11(l, < 0, mcerr);
-      check_econd11(l, > 20, mcerr);
+      check_econd11(l, < 0, std::cerr);
+      check_econd11(l, > 20, std::cerr);
       threshold *= 1.0e-6;
       E0 *= 1.0e-6;
 
       check_econd11a(threshold, <= 2.0e-6,
-                     "n_princ=" << n_princ << " l=" << l << '\n', mcerr);
-      check_econd11(E0, <= 0, mcerr);
+                     "n_princ=" << n_princ << " l=" << l << '\n', std::cerr);
+      check_econd11(E0, <= 0, std::cerr);
       double flu = 0.0;
       if (id == 2) {
         if (BT_file.eof()) {
-          mcerr << "unexpected end of file " << BT_file_name << '\n';
-          spexit(mcerr);
+          std::cerr << "unexpected end of file " << BT_file_name << '\n';
+          spexit(std::cerr);
         }
         if (!BT_file.good()) {
-          mcerr << "bad format of file " << BT_file_name << '\n';
-          spexit(mcerr);
+          std::cerr << "bad format of file " << BT_file_name << '\n';
+          spexit(std::cerr);
         }
         BT_file >> flu;
-        check_econd11(flu, < 0.0, mcerr);
-        check_econd11(flu, > 1.0, mcerr);
+        check_econd11(flu, < 0.0, std::cerr);
+        check_econd11(flu, > 1.0, std::cerr);
         thresh[nshell] = threshold;
         fl[nshell] = flu;
       }
@@ -1385,9 +1265,9 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(int fZ, const std::string& fname,
     }
     goto mark1;
   }
-  mcerr << "there is no element Z=" << fZ << " in file " << fFitBT_file_name
-        << std::endl;
-  spexit(mcerr);
+  std::cerr << "there is no element Z=" << fZ << " in file " << fFitBT_file_name
+            << std::endl;
+  spexit(std::cerr);
 mark1:
   if (id == 2) {
     // a copy of similar thing from subroutine above
@@ -1404,7 +1284,7 @@ mark1:
     asp.resize(qshell);
     for (int nshell = 0; nshell < qshell; ++nshell) {
       if (fl[nshell] > 0) {
-        check_econd12(nshell, ==, n_min, mcerr);
+        check_econd12(nshell, ==, n_min, std::cerr);
         std::vector<double> felectron_energy;
         std::vector<double> fphoton_energy;
         fphoton_energy.push_back(thresh[nshell] - thresh[n_min]);
@@ -1413,7 +1293,7 @@ mark1:
     }
   }
 
-  check_econd11(qshell, <= 0, mcerr);
+  check_econd11(qshell, <= 0, std::cerr);
   s_ignore_shell.resize(qshell, false);
   height_of_excitation = 0.0;
   exener[0] = exener[1] = 0.0;
@@ -1472,12 +1352,12 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(
       thrmin = m_acs[ns]->get_threshold();
     }
   }
-  check_econd11(nsmin, < 0, mcerr);
-  check_econd11(nsmin, != qshell - 1, mcerr);
+  check_econd11(nsmin, < 0, std::cerr);
+  check_econd11(nsmin, != qshell - 1, std::cerr);
 
   PhotoAbsCS* apacs = m_acs[nsmin].get();
   auto first_shell = dynamic_cast<SimpleTablePhotoAbsCS*>(apacs);
-  check_econd11(first_shell, == nullptr, mcerr);
+  check_econd11(first_shell, == nullptr, std::cerr);
 
   SimpleTablePhotoAbsCS stpacs(name, Z, 0.0, fsimple_table_file_name);
   stpacs.remove_leading_tiny(1.0e-10);
@@ -1523,7 +1403,7 @@ ExAtomPhotoAbsCS::ExAtomPhotoAbsCS(
 }
 
 double ExAtomPhotoAbsCS::get_threshold(int nshell) const {
-  check_econd21(nshell, < 0 ||, > qshell, mcerr);
+  check_econd21(nshell, < 0 ||, > qshell, std::cerr);
   double r = m_acs[nshell]->get_threshold();
   if (minimal_threshold > 0.0) {
     if (r < minimal_threshold) r = minimal_threshold;
@@ -1561,7 +1441,7 @@ double ExAtomPhotoAbsCS::get_integral_ICS(double energy1,
 }
 
 double ExAtomPhotoAbsCS::get_ICS(int nshell, double energy) const {
-  check_econd21(nshell, < 0 ||, > qshell, mcerr);
+  check_econd21(nshell, < 0 ||, > qshell, std::cerr);
   if (s_ignore_shell[nshell]) return 0.;
   double shift = 0.0;
   const double t = m_acs[nshell]->get_threshold();
@@ -1573,7 +1453,7 @@ double ExAtomPhotoAbsCS::get_ICS(int nshell, double energy) const {
 
 double ExAtomPhotoAbsCS::get_integral_ICS(int nshell, double energy1,
                                           double energy2) const {
-  check_econd21(nshell, < 0 ||, > qshell, mcerr);
+  check_econd21(nshell, < 0 ||, > qshell, std::cerr);
   if (s_ignore_shell[nshell]) return 0.;
   double shift = 0.0;
   const double t = m_acs[nshell]->get_threshold();
@@ -1616,7 +1496,7 @@ double ExAtomPhotoAbsCS::get_integral_ACS(double energy1,
 }
 
 double ExAtomPhotoAbsCS::get_ACS(int nshell, double energy) const {
-  check_econd21(nshell, < 0 ||, > qshell, mcerr);
+  check_econd21(nshell, < 0 ||, > qshell, std::cerr);
   if (s_ignore_shell[nshell]) return 0.;
   double shift = 0.0;
   const double t = m_acs[nshell]->get_threshold();
@@ -1632,7 +1512,7 @@ double ExAtomPhotoAbsCS::get_ACS(int nshell, double energy) const {
 
 double ExAtomPhotoAbsCS::get_integral_ACS(int nshell, double energy1,
                                           double energy2) const {
-  check_econd21(nshell, < 0 ||, > qshell, mcerr);
+  check_econd21(nshell, < 0 ||, > qshell, std::cerr);
   if (s_ignore_shell[nshell]) return 0.;
   double shift = 0.0;
   const double t = m_acs[nshell]->get_threshold();
@@ -1645,45 +1525,6 @@ double ExAtomPhotoAbsCS::get_integral_ACS(int nshell, double energy1,
     if (b[1] >= b[0]) s += height_of_excitation * (b[1] - b[0]);
   }
   return s;
-}
-
-void ExAtomPhotoAbsCS::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  Ifile << "ExAtomPhotoAbsCS(l=" << l << "): name=" << name << " Z = " << Z
-        << " qshell = " << qshell << std::endl;
-  indn.n += 2;
-  Ifile << "threshold_file_name=" << threshold_file_name << '\n';
-  Ifile << "simple_table_file_name=" << simple_table_file_name << '\n';
-  Ifile << "BT_file_name=" << BT_file_name << std::endl;
-  Ifile << "Thomas_sum_rule_const_Mb * Z = " << Thomas_sum_rule_const_Mb * Z
-        << '\n';
-  Ifile << "integ_abs_before_corr        = " << integ_abs_before_corr << '\n';
-  Ifile << "integ_abs_after_corr         = " << integ_abs_after_corr << '\n';
-  Ifile << "integ_ioniz_after_corr       = " << integ_ioniz_after_corr << '\n';
-  Ifile << "height_of_excitation=" << height_of_excitation
-        << " exener=" << exener[0] << ' ' << exener[1] << '\n';
-  Iprintn(file, minimal_threshold);
-  Ifile << "integrals by shells:\n";
-  Ifile << "nshell, int(acs), int(ics)\n";
-  for (long n = 0; n < qshell; n++) {
-    double ainteg =
-        get_integral_ACS(n, 0.0, std::numeric_limits<double>::max());
-    double iinteg =
-        get_integral_ICS(n, 0.0, std::numeric_limits<double>::max());
-    Ifile << n << "    " << ainteg << "    " << iinteg << '\n';
-  }
-
-  if (l > 1) {
-    l--;
-    indn.n += 2;
-    for (long n = 0; n < qshell; ++n) {
-      Ifile << "nshell=" << n << std::endl;
-      m_acs[n]->print(file, l);
-    }
-    AtomPhotoAbsCS::print(file, l);
-    indn.n -= 2;
-  }
-  indn.n -= 2;
 }
 
 void ExAtomPhotoAbsCS::replace_shells_by_average(double fwidth, double fstep,
@@ -1796,23 +1637,4 @@ size_t MolecPhotoAbsCS::get_total_Z() const {
   return s;
 }
 
-void MolecPhotoAbsCS::print(std::ostream& file, int l) const {
-  Ifile << "MolecPhotoAbsCS (l=" << l << "):\n";
-  Iprintn(file, qatom);
-  Iprintn(file, W);
-  Iprintn(file, F);
-  const long q = qatom_ps.size();
-  Ifile << "number of sorts of atoms is " << q << '\n';
-  indn.n += 2;
-  for (long n = 0; n < q; n++) {
-    Ifile << "n=" << n << " qatom_ps[n]=" << qatom_ps[n] << " atom:\n";
-    atom[n]->print(file, l);
-  }
-  indn.n -= 2;
-}
-
-std::ostream& operator<<(std::ostream& file, const MolecPhotoAbsCS& f) {
-  f.print(file, 1);
-  return file;
-}
 }  // namespace Heed

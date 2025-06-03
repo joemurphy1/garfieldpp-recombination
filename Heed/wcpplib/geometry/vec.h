@@ -27,17 +27,17 @@ The file is provided "as is" without express or implied warranty.
 #include "wcpplib/geometry/vfloat.h"
 #include "wcpplib/util/FunNameStack.h"
 
-#define pvecerror(string)                                      \
-  if (vecerror != 0) {                                         \
-    mcerr << "vecerror is not zero, program is terminated\n"   \
-          << " function detected error is " << string << '\n'; \
-    spexit(mcerr);                                             \
+#define pvecerror(string)                                          \
+  if (vecerror != 0) {                                             \
+    std::cerr << "vecerror is not zero, program is terminated\n"   \
+              << " function detected error is " << string << '\n'; \
+    spexit(std::cerr);                                             \
   }
-#define pvecerrorp(string)                                     \
-  if (vecerror != 0) {                                         \
-    mcerr << "vecerror is not zero, program is terminated\n"   \
-          << " function detected error is " << string << '\n'; \
-    spexit(mcerr);                                             \
+#define pvecerrorp(string)                                         \
+  if (vecerror != 0) {                                             \
+    std::cerr << "vecerror is not zero, program is terminated\n"   \
+              << " function detected error is " << string << '\n'; \
+    spexit(std::cerr);                                             \
   }
 // pvecerror is put after first line of function.
 // It makes up stack of functions names if FUNNAMESTACK is defined.
@@ -115,8 +115,6 @@ class absref_transmit {
   absref_transmit& operator=(const absref_transmit&) = default;
   /// Destructor.
   virtual ~absref_transmit() {}
-
-  virtual void print(std::ostream& file, int l) const;
 
   /// Number of vector objects which are the members of the class
   int qaref = 0;
@@ -277,8 +275,8 @@ class vec : public absref {
     // pvecerror("inline vec unit_vec(const vec &v)");
     const double len = v.length();
     if (len == 0) {
-      mcerr << "error in unit_vec: length(vec)=0\n";
-      spexit(mcerr);
+      std::cerr << "error in unit_vec: length(vec)=0\n";
+      spexit(std::cerr);
     }
     return vec(v.x / len, v.y / len, v.z / len);
   }
@@ -348,7 +346,6 @@ class vec : public absref {
     return vec(v.z, v.x, v.y);
   }  // don't change the vector itself
 };
-std::ostream& operator<<(std::ostream& file, const vec& v);
 
 extern vec dex;  // unit vector by x
 extern vec dey;  // unit vector by y
@@ -402,12 +399,8 @@ class basis : public absref {
   /// Direct definitions of basis by three perpendicular unit-length vectors.
   basis(const vec& pex, const vec& pey, const vec& pez,
         const std::string& pname);
-
-  friend std::ostream& operator<<(std::ostream& file, const basis& b);
-  virtual void print(std::ostream& file, int l) const;
   virtual ~basis() {}
 };
-extern std::ostream& operator<<(std::ostream& file, const basis& b);
 
 /// Point.
 
@@ -449,11 +442,8 @@ class point : public absref {
   friend bool apeq(const point& p1, const point& p2, double prec) {
     return apeq(p1.v, p2.v, prec);
   }
-  friend std::ostream& operator<<(std::ostream& file, const point& p);
-  virtual void print(std::ostream& file, int l) const;
   virtual ~point() {}
 };
-std::ostream& operator<<(std::ostream& file, const point& p);
 
 /// Coordinate system (centre, basis and mother coordinate system).
 /// Take care: c.abas must be equal to abas->ex.abas.
@@ -468,11 +458,9 @@ class abssyscoor {
   abssyscoor() = default;
   abssyscoor(char* fname) : name(fname) {}
   abssyscoor(const std::string& fname) : name(fname) {}
-  virtual void print(std::ostream& file, int l) const;
 
   virtual ~abssyscoor() {}
 };
-extern std::ostream& operator<<(std::ostream& file, const abssyscoor& s);
 
 class fixsyscoor : public absref, public abssyscoor {
  public:
@@ -495,7 +483,6 @@ class fixsyscoor : public absref, public abssyscoor {
       : abssyscoor(f),
         piv((f.Gapiv() != NULL) ? (*(f.Gapiv())) : point()),
         bas((f.Gabas() != NULL) ? (*(f.Gabas())) : basis()) {}
-  void print(std::ostream& file, int l) const override;
   virtual ~fixsyscoor() {}
 
  protected:
@@ -506,7 +493,6 @@ class fixsyscoor : public absref, public abssyscoor {
   point piv;
   basis bas;
 };
-extern std::ostream& operator<<(std::ostream& file, const fixsyscoor& s);
 }  // namespace Heed
 
 #endif

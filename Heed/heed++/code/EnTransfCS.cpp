@@ -270,7 +270,7 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
         }
         check_econd11a(ics, < 0,
                        "na=" << na << " ns=" << ns << " ne=" << ne << '\n',
-                       mcerr);
+                       std::cerr);
         const double tacs = hmd->ACS[ne];
         if (tacs <= 0.0) continue;
         cher[na][ns][ne] = chereC[ne] * awq * ics / tacs;
@@ -289,11 +289,12 @@ EnTransfCS::EnTransfCS(double fparticle_mass, double fgamma_1,
         const double r = pacs->get_integral_ACS(ns, e1, e2) * cR;
         // Here it must be ACS to satisfy sum rule for Rutherford
         check_econd11a(r, < 0.0, "na=" << na << " ns=" << ns << " ne=" << ne,
-                       mcerr);
+                       std::cerr);
         if (ec > ethr && ec < max_etransf) {
           fruth[na][ns][ne] = (s + 0.5 * r) * Rruth[ne];
           check_econd11a(fruth[na][ns][ne], < 0,
-                         "na=" << na << " ns=" << ns << " na=" << na, mcerr);
+                         "na=" << na << " ns=" << ns << " na=" << na,
+                         std::cerr);
         }
         s += r;
       }

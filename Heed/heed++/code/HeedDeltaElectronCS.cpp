@@ -229,8 +229,8 @@ HeedDeltaElectronCS::HeedDeltaElectronCS(HeedMatterDef* fhmd,
 }
 
 double HeedDeltaElectronCS::get_sigma(double energy, double nscat) const {
-  check_econd11(nscat, < 0, mcerr);
-  // check_econd21(nscat , < 0 || , > eesls->get_qscat() , mcerr);
+  check_econd11(nscat, < 0, std::cerr);
+  // check_econd21(nscat , < 0 || , > eesls->get_qscat() , std::cerr);
   // ^ not compatible with Poisson
   const long qe = ees->get_qe();
   double energyKeV = energy * 1000.0;

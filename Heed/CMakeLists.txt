@@ -42,7 +42,6 @@ add_library(Heed SHARED
             wcpplib/random/PointsRan.cpp
             wcpplib/random/chisran.cpp
             wcpplib/stream/findmark.cpp
-            wcpplib/stream/prstream.cpp
             wcpplib/util/FunNameStack.cpp)
 target_link_libraries(Heed PRIVATE GarfieldRandom)
 set_property(TARGET Heed PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)

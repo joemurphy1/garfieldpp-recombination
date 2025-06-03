@@ -24,20 +24,20 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
     auto amd = MoleculeDefs::getMolecule(fmolec_not[k]);
     check_econd11a(amd, == NULL,
                    "No molecule with such notation: " << fmolec_not[k] << '\n',
-                   mcerr) if (!amd) {
-      mcerr << "cannot find molecule with notation " << fmolec_not[k]
-            << "\nIn particular, check the sequence of initialization\n";
-      spexit(mcerr);
+                   std::cerr) if (!amd) {
+      std::cerr << "cannot find molecule with notation " << fmolec_not[k]
+                << "\nIn particular, check the sequence of initialization\n";
+      spexit(std::cerr);
     }
     molech[k] = amd;
   }
   double s = 0.0;
   for (long n = 0; n < fqmolec; ++n) {
     weight_quan_molech[n] = fweight_quan_molec[n];
-    check_econd11(weight_quan_molech[n], <= 0, mcerr);
+    check_econd11(weight_quan_molech[n], <= 0, std::cerr);
     s += weight_quan_molech[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < fqmolec; ++n) {
       weight_quan_molech[n] /= s;
@@ -50,7 +50,7 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
   for (long n = 0; n < fqmolec; ++n) {
     s += weight_mass_molech[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < fqmolec; ++n) {
       weight_mass_molech[n] /= s;
@@ -111,7 +111,7 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
     amolec[n] = MoleculeDefs::getMolecule(fmolec_not[n]);
     check_econd11a(amolec[n], == NULL,
                    "No molecule with such notation: " << fmolec_not[n] << '\n',
-                   mcerr)
+                   std::cerr)
     // Van der Waals correction currently not used.
     // VanDerWaals* aw = amolec[n]->vdw().get();
   }
@@ -122,7 +122,7 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
   for (long n = 0; n < fqmolec; ++n) {
     s += fweight_volume_molec[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   for (long n = 0; n < fqmolec; ++n) {
     fw[n] = fweight_volume_molec[n] / s;
   }
@@ -145,7 +145,7 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
           fw[n] * 1.0 /
           aw->volume_of_mole(ftemperature,  // relative to T_k
                              fpressure, s_not_single);
-      check_econd11(s_not_single, == 1, mcerr);
+      check_econd11(s_not_single, == 1, std::cerr);
       fweight_quan_molec[n] = number_of_moles;
       double ms = fweight_quan_molec[n] * amolec[n]->A_total();
       mass_t += ms;

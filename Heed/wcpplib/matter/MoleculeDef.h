@@ -36,7 +36,6 @@ class VanDerWaals {
   // Return number of moles in the unit volume
   double volume_of_mole(double T, double p, int& s_not_single);
 };
-std::ostream& operator<<(std::ostream& file, const VanDerWaals& f);
 
 /// Definition of molecule as a mixture of atoms.
 /// Only the basic information: the name, the notation,

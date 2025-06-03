@@ -138,7 +138,6 @@ class stvpoint {
   stvpoint(const stvpoint&) = default;
   /// Copy assignment operator
   stvpoint& operator=(const stvpoint&) = default;
-  void print(std::ostream& file, int l) const;
   absvol* volume() { return tid.G_lavol(); }
 };
 
@@ -195,9 +194,6 @@ class gparticle {
 
   /// Reset the counter.
   static void reset_counter() { s_counter = 0L; }
-
-  /// Print-out.
-  virtual void print(std::ostream& file, int l) const;
 
  protected:
   /// Assign prevpos = currpos and currpos = nextpos,

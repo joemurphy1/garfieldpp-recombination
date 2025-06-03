@@ -18,7 +18,7 @@ void spexit_action(std::ostream& file) {
   file << "spexit_action: the streams will be now flushed\n";
   file.flush();
   std::cout.flush();
-  mcerr.flush();
+  std::cerr.flush();
   file << "spexit_action: the exit(1) function is called\n";
   std::exit(1);
 }

@@ -28,15 +28,15 @@ HeedMatterDef::HeedMatterDef(EnergyMesh* fenergy_mesh, MatterDef* amatter,
                              const std::vector<AtomPhotoAbsCS*>& faapacs,
                              double fW, double fF)
     : matter(amatter), W(fW), F(fF), energy_mesh(fenergy_mesh) {
-  check_econd11(matter, == nullptr, mcerr);
-  check_econd11(matter->qatom(), <= 0, mcerr);
+  check_econd11(matter, == nullptr, std::cerr);
+  check_econd11(matter->qatom(), <= 0, std::cerr);
   const long q = matter->qatom();
   apacs.resize(q, nullptr);
   for (long n = 0; n < q; ++n) {
     apacs[n] = faapacs[n];
-    check_econd12(matter->atom(n)->Z(), !=, apacs[n]->get_Z(), mcerr);
+    check_econd12(matter->atom(n)->Z(), !=, apacs[n]->get_Z(), std::cerr);
   }
-  check_econd11(F, == 0.0, mcerr);
+  check_econd11(F, == 0.0, std::cerr);
   if (W == 0.0) {
 #ifdef CALC_W_USING_CHARGES
     double mean_I = 0.0;
@@ -62,21 +62,21 @@ HeedMatterDef::HeedMatterDef(EnergyMesh* fenergy_mesh, GasDef* agas,
                              std::vector<MolecPhotoAbsCS>& fampacs, double fW,
                              double fF)
     : matter(agas), W(fW), F(fF), energy_mesh(fenergy_mesh) {
-  check_econd11(agas, == nullptr, mcerr);
-  check_econd11(agas->qmolec(), <= 0, mcerr);
+  check_econd11(agas, == nullptr, std::cerr);
+  check_econd11(agas->qmolec(), <= 0, std::cerr);
   const long qat = agas->qatom();
   apacs.resize(qat, nullptr);
   const long qmol = agas->qmolec();
   long nat = 0;
   for (long nmol = 0; nmol < qmol; ++nmol) {
     check_econd12(agas->molec(nmol)->tqatom(), !=, fampacs[nmol].get_qatom(),
-                  mcerr);
+                  std::cerr);
     // number of different atoms in molecule
     const long qa = agas->molec(nmol)->qatom();
     for (long na = 0; na < qa; ++na) {
       apacs[nat] = fampacs[nmol].get_atom(na);
       check_econd12(apacs[nat]->get_Z(), !=, agas->molec(nmol)->atom(na)->Z(),
-                    mcerr);
+                    std::cerr);
       nat++;
     }
   }
@@ -177,7 +177,7 @@ void HeedMatterDef::initialize() {
       check_econd11a(ta, < 0,
                      "ACS: ne=" << ne << " e1=" << e1 << " e2=" << e2
                                 << " na=" << na << '\n',
-                     mcerr);
+                     std::cerr);
       const double ti =
           s_use_mixture_thresholds == 1
               ? apacs[na]->get_integral_TICS(e1, e2, min_ioniz_pot)
@@ -186,12 +186,12 @@ void HeedMatterDef::initialize() {
       check_econd11a(ti, < 0,
                      "ICS: ne=" << ne << " e1=" << e1 << " e2=" << e2
                                 << " na=" << na << '\n',
-                     mcerr);
+                     std::cerr);
     }
     ACS[ne] = sa;
-    check_econd11a(ACS[ne], < 0, "ne=" << ne << '\n', mcerr);
+    check_econd11a(ACS[ne], < 0, "ne=" << ne << '\n', std::cerr);
     ICS[ne] = si;
-    check_econd11a(ICS[ne], < 0, "ne=" << ne << '\n', mcerr);
+    check_econd11a(ICS[ne], < 0, "ne=" << ne << '\n', std::cerr);
 
     double ec = energy_mesh->get_ec(ne);
     double ec2 = ec * ec;
@@ -241,14 +241,14 @@ void HeedMatterDef::initialize() {
 void HeedMatterDef::replace_epsi12(const std::string& file_name) {
   std::ifstream file(file_name.c_str());
   if (!file) {
-    mcerr << "cannot open file " << file_name << std::endl;
-    spexit(mcerr);
+    std::cerr << "cannot open file " << file_name << std::endl;
+    spexit(std::cerr);
   } else {
     std::cout << "file " << file_name << " is opened" << std::endl;
   }
   long qe = 0;  // number of points in input mesh
   file >> qe;
-  check_econd11(qe, <= 2, mcerr);
+  check_econd11(qe, <= 2, std::cerr);
 
   std::vector<double> ener(qe);
   std::vector<double> eps1(qe);
@@ -256,9 +256,9 @@ void HeedMatterDef::replace_epsi12(const std::string& file_name) {
 
   for (long ne = 0; ne < qe; ++ne) {
     file >> ener[ne] >> eps1[ne] >> eps2[ne];
-    check_econd11(eps2[ne], < 0.0, mcerr);
+    check_econd11(eps2[ne], < 0.0, std::cerr);
     if (ne > 0) {
-      check_econd12(ener[ne], <, ener[ne - 1], mcerr);
+      check_econd12(ener[ne], <, ener[ne - 1], std::cerr);
     }
   }
 

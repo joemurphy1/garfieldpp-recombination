@@ -18,14 +18,14 @@ PairProd::PairProd(const std::string& file_name, double fw, double ffano)
     : m_w(fw), m_f(ffano) {
   std::ifstream file(file_name.c_str());
   if (!file) {
-    mcerr << "cannot open file " << file_name << std::endl;
-    spexit(mcerr);
+    std::cerr << "cannot open file " << file_name << std::endl;
+    spexit(std::cerr);
   }
   long q;
   file >> m_wtable >> m_i >> m_j >> m_ftable >> q;
   if (!file.good()) {
-    mcerr << "error at reading file" << std::endl;
-    spexit(mcerr);
+    std::cerr << "error at reading file" << std::endl;
+    spexit(std::cerr);
   }
   std::vector<double> xx(q);
   std::vector<double> yy(q);

@@ -135,7 +135,7 @@ void HeedDeltaElectron::physics_mrange(double& fmrange) {
 
 void HeedDeltaElectron::physics_after_new_speed(
     std::vector<gparticle*>& /*secondaries*/) {
-  check_econd11(vecerror, != 0, mcerr);
+  check_econd11(vecerror, != 0, std::cerr);
   if (m_currpos.prange <= 0.0) {
     if (m_curr_ekin <= 0.0) {
       // Get local volume.

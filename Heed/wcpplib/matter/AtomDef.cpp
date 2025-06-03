@@ -17,7 +17,7 @@ AtomDef::AtomDef(const std::string& fnameh, const std::string& fnotationh,
                  int fZh, double fAh)
     : nameh(fnameh), notationh(fnotationh), Zh(fZh), Ah(fAh) {
   static constexpr int max_poss_atom_z = 100;
-  check_econd21(fZh, < 1 ||, > max_poss_atom_z, mcerr);
+  check_econd21(fZh, < 1 ||, > max_poss_atom_z, std::cerr);
 }
 
 std::list<AtomDef> AtomDefs::atoms;
@@ -105,8 +105,8 @@ double AtomDefs::getA(int fZ) {
   for (const auto& atom : getAtoms()) {
     if (atom.Z() == fZ) return atom.A();
   }
-  mcerr << "Atom is not found, Z=" << fZ << '\n';
-  spexit(mcerr);
+  std::cerr << "Atom is not found, Z=" << fZ << '\n';
+  spexit(std::cerr);
   return 0.0;
 }
 
@@ -114,8 +114,8 @@ const AtomDef* AtomDefs::getAtom(int fZ) {
   for (const auto& atom : getAtoms()) {
     if (atom.Z() == fZ) return &atom;
   }
-  mcerr << "Atom is not found, Z=" << fZ << '\n';
-  spexit(mcerr);
+  std::cerr << "Atom is not found, Z=" << fZ << '\n';
+  spexit(std::cerr);
   return nullptr;
 }
 
@@ -126,26 +126,26 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
       atomh(fqatom, nullptr),
       weight_quanh(fqatom, 0.0),
       weight_massh(fqatom, 0.0) {
-  check_econd11(fqatom, <= 0, mcerr);
-  check_econd12(fqatom, >, fatom_not.size(), mcerr);
-  check_econd12(fqatom, >, fweight_quan.size(), mcerr);
+  check_econd11(fqatom, <= 0, std::cerr);
+  check_econd12(fqatom, >, fatom_not.size(), std::cerr);
+  check_econd12(fqatom, >, fweight_quan.size(), std::cerr);
 
   for (long n = 0; n < qatomh; ++n) {
     auto ad = AtomDefs::getAtom(fatom_not[n]);
     if (!ad) {
-      mcerr << "cannot find atom with notation " << fatom_not[n]
-            << "\nIn particular, check the sequence of initialization\n";
-      spexit(mcerr);
+      std::cerr << "cannot find atom with notation " << fatom_not[n]
+                << "\nIn particular, check the sequence of initialization\n";
+      spexit(std::cerr);
     }
     atomh[n] = ad;
   }
   double s = 0.0;
   for (long n = 0; n < qatomh; n++) {
     weight_quanh[n] = fweight_quan[n];
-    check_econd11(weight_quanh[n], <= 0, mcerr);
+    check_econd11(weight_quanh[n], <= 0, std::cerr);
     s += weight_quanh[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < qatomh; n++) {
       weight_quanh[n] /= s;
@@ -158,7 +158,7 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
   for (long n = 0; n < qatomh; n++) {
     s += weight_massh[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < qatomh; n++) {
       weight_massh[n] /= s;
@@ -180,26 +180,26 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
       atomh(fqatom, nullptr),
       weight_quanh(fqatom, 0.0),
       weight_massh(fqatom, 0.0) {
-  check_econd11(fqatom, <= 0, mcerr);
-  check_econd12(fqatom, >, fatom_not.size(), mcerr);
-  check_econd12(fqatom, >, fweight_quan.size(), mcerr);
+  check_econd11(fqatom, <= 0, std::cerr);
+  check_econd12(fqatom, >, fatom_not.size(), std::cerr);
+  check_econd12(fqatom, >, fweight_quan.size(), std::cerr);
 
   for (long n = 0; n < qatomh; ++n) {
     auto ad = AtomDefs::getAtom(fatom_not[n]);
     if (!ad) {
-      mcerr << "cannot find atom with notation " << fatom_not[n]
-            << "\nIn particular, check the sequence of initialization\n";
-      spexit(mcerr);
+      std::cerr << "cannot find atom with notation " << fatom_not[n]
+                << "\nIn particular, check the sequence of initialization\n";
+      spexit(std::cerr);
     }
     atomh[n] = ad;
   }
   double s = 0.0;
   for (long n = 0; n < qatomh; n++) {
     weight_quanh[n] = fweight_quan[n];
-    check_econd11(weight_quanh[n], <= 0, mcerr);
+    check_econd11(weight_quanh[n], <= 0, std::cerr);
     s += weight_quanh[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < qatomh; n++) {
       weight_quanh[n] /= s;
@@ -212,7 +212,7 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
   for (long n = 0; n < qatomh; n++) {
     s += weight_massh[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < qatomh; n++) {
       weight_massh[n] /= s;

@@ -154,11 +154,4 @@ double plane::distance(const point& fpt) const {
   return fabs(v * dir);  // dir is unit length vector
 }
 
-std::ostream& operator<<(std::ostream& file, const plane& pl) {
-  Ifile << "plane:\n";
-  indn.n += 2;
-  file << pl.piv << pl.dir;
-  indn.n -= 2;
-  return file;
-}
 }  // namespace Heed

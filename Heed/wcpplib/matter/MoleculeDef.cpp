@@ -35,27 +35,12 @@ double VanDerWaals::volume_of_mole(double T, double p, int& s_not_single) {
   Cubic cb(Pr, -1.0 / 3.0 * (Pr + 8 * Tr), 3, -1);
   double r[3];
   int q = cb.find_real_zero(r);
-  check_econd11(q, <= 0, mcerr);
+  check_econd11(q, <= 0, std::cerr);
   double x = r[q - 1];   // this is the relative volume taken by one mole
   double res = x * Vkh;  // this is the absolute volume taken by one mole
   Iprint2n(std::cout, x, res);
   s_not_single = q == 2 ? 1 : 0;
   return res;
-}
-
-std::ostream& operator<<(std::ostream& file, const VanDerWaals& f) {
-  Ifile << "VanDerWaals:\n";
-  indn.n += 2;
-  Iprintn(file, f.Pk() / (CLHEP::atmosphere));
-  Iprintn(file, f.Tk() / (CLHEP::kelvin));
-  Iprintn(file, f.Vk() / (cm3));
-  Ifile << "For comparison, the volume of a mole of ideal gas\n";
-  Ifile << "at the same conditions takes\n";
-  Iprintn(file, (k_Boltzmann * Avogadro * f.Tk() / f.Pk()) / (cm3 * mole));
-  Iprintn(file, f.a() / (CLHEP::atmosphere * cm3 * cm3));
-  Iprintn(file, f.b() / (cm3));
-  indn.n -= 2;
-  return file;
 }
 
 MoleculeDef::MoleculeDef(const std::string& fname, const std::string& fnotation,
@@ -71,7 +56,7 @@ MoleculeDef::MoleculeDef(const std::string& fname, const std::string& fnotation,
     Z_totalh += qatom_psh[n] * atom(n)->Z();
     A_totalh += qatom_psh[n] * atom(n)->A();
     tqatomh += qatom_psh[n];
-    check_econd11(qatom_psh[n], <= 0, mcerr);
+    check_econd11(qatom_psh[n], <= 0, std::cerr);
   }
 }
 

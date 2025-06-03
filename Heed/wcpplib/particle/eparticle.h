@@ -6,8 +6,7 @@
 
 // 1998 - 2004, I. Smirnov.
 
-namespace Heed
-{
+namespace Heed {
 
 /// Charged particle. Combination of features of massive geometrical
 /// particle and specification of concrete particle as one of types
@@ -22,7 +21,6 @@ class eparticle : public mparticle /*, public particle_type*/ {
             particle_def* fpardef, fieldmap* fm);
   /// Destructor
   virtual ~eparticle() {}
-  void print(std::ostream& file, int l) const override;
 
  protected:
   /// Calculate force components.

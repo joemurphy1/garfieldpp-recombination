@@ -64,19 +64,19 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
   double b1, b2;
   int s_ret = pcm.get_interval(bg, n1, b1, n2, b2);
   if (s_ret != 1) {
-    mcerr << "ERROR in void HeedParticle_BGM::physics()\n";
-    mcerr << "beta*gamma is outside range of cross-section table\n";
-    std::streamsize old_prec = mcerr.precision(15);
-    Iprint2n(mcerr, m_curr_gamma_1, bg);
-    mcerr.precision(old_prec);
-    Iprint2n(mcerr, n1, n2);
-    Iprint2n(mcerr, b1, b2);
-    Iprintn(mcerr, etcs->mesh);
-    mcerr << "This particle is:\n";
-    print(mcerr, 2);
-    mcerr << "This volume is:\n";
-    av->print(mcerr, 2);
-    spexit(mcerr);
+    std::cerr << "ERROR in void HeedParticle_BGM::physics()\n";
+    std::cerr << "beta*gamma is outside range of cross-section table\n";
+    std::streamsize old_prec = std::cerr.precision(15);
+    Iprint2n(std::cerr, m_curr_gamma_1, bg);
+    std::cerr.precision(old_prec);
+    Iprint2n(std::cerr, n1, n2);
+    Iprint2n(std::cerr, b1, b2);
+    Iprintn(std::cerr, etcs->mesh);
+    // std::cerr << "This particle is:\n";
+    // print(std::cerr, 2);
+    // std::cerr << "This volume is:\n";
+    // av->print(std::cerr, 2);
+    spexit(std::cerr);
     return;
   }
 

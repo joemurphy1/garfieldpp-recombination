@@ -174,16 +174,6 @@ int splane::range(const trajestep& fts, double* crange, point* cpt,
   return 0;
 }
 
-void splane::print(std::ostream& file, int l) const {
-  if (l > 0) {
-    Ifile << "splane:\n";
-    indn.n += 2;
-    file << pn;
-    Ifile << "dir_ins: " << noindent << dir_ins << '\n';
-    indn.n -= 2;
-  }
-}
-
 // **** ulsvolume ****
 absref_transmit ulsvolume::get_components() {
   for (int n = 0; n < qsurf; n++) adrsurf[n] = surf[n].get();
@@ -191,7 +181,7 @@ absref_transmit ulsvolume::get_components() {
 }
 
 int ulsvolume::check_point_inside(const point& fpt, const vec& dir) const {
-  check_econd11(qsurf, <= 0, mcerr);
+  check_econd11(qsurf, <= 0, std::cerr);
   for (int n = 0; n < qsurf; n++) {
     if (!(surf[n].get()->check_point_inside(fpt, dir, prec))) {
       return 0;
@@ -201,7 +191,7 @@ int ulsvolume::check_point_inside(const point& fpt, const vec& dir) const {
 }
 
 int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
-  check_econd11(qsurf, <= 0, mcerr);
+  check_econd11(qsurf, <= 0, std::cerr);
   constexpr int pqcrossurf = 4;
   double crange[pqcrossurf];
   point cpt[pqcrossurf];
@@ -221,10 +211,11 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
         } else if (fs_ext[m] == 0) {
           if (!(surf[n].get()->check_point_inside(fts.currpos, fts.dir,
                                                   prec))) {
-            mcerr << "\nshould never happen\n"
-                  << "It may happen if you  call this function with s_ext==1\n"
-                  << "for point outside the volume\n";
-            spexit(mcerr);
+            std::cerr
+                << "\nshould never happen\n"
+                << "It may happen if you  call this function with s_ext==1\n"
+                << "for point outside the volume\n";
+            spexit(std::cerr);
           }
         } else if (fs_ext[m] == 2)
           break;  // don't know what to do, safe to ignore
@@ -307,61 +298,26 @@ void ulsvolume::ulsvolume_init(
 ulsvolume::ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf,
                      char* fname, double fprec)
     : qsurf(fsurf.size()), name(fname) {
-  check_econd12(qsurf, >, pqqsurf, mcerr);
+  check_econd12(qsurf, >, pqqsurf, std::cerr);
   prec = fprec;
   for (int n = 0; n < qsurf; ++n) surf[n] = fsurf[n];
 }
 
 ulsvolume::ulsvolume(ulsvolume& f)
     : absref(f), absvol(f), qsurf(f.qsurf), name(f.name) {
-  check_econd12(f.qsurf, >, pqqsurf, mcerr);
+  check_econd12(f.qsurf, >, pqqsurf, std::cerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];
 }
 
 ulsvolume::ulsvolume(const ulsvolume& f)
     : absref(f), absvol(f), qsurf(f.qsurf), name(f.name) {
-  check_econd12(f.qsurf, >, pqqsurf, mcerr);
+  check_econd12(f.qsurf, >, pqqsurf, std::cerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];
 }
 
-void ulsvolume::print(std::ostream& file, int l) const {
-  char s[1000];
-  chname(s);
-  Ifile << "ulsvolume::print(l=" << l << "): " << s << '\n';
-  if (l > 0) {
-    indn.n += 2;
-    Ifile << "qsurf=" << qsurf << " prec=" << prec << '\n';
-    for (int n = 0; n < qsurf; ++n) {
-      Ifile << " nsurf=" << n << '\n';
-      surf[n].get()->print(file, l);
-    }
-    absvol::print(file, l);
-    indn.n -= 2;
-  }
-}
-
-/*
-manip_ulsvolume::manip_ulsvolume(manip_ulsvolume& f)
-    // TODO!
-    : absref(f), manip_absvol(f), ulsvolume((ulsvolume&)f) {}
-*/
-
 manip_ulsvolume::manip_ulsvolume(const manip_ulsvolume& f)
     : absref(f), manip_absvol(f), ulsvolume(f) {}
 
-void manip_ulsvolume::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  char s[1000];
-  chname(s);
-  Ifile << "manip_ulsvolume::print(l=" << l << "): " << s << '\n';
-  l = l - 1;
-  if (l > 0) {
-    indn.n += 2;
-    // If to call this it calls manip_ulsvolume::print again and loop...
-    ulsvolume::print(file, l - 1);
-    indn.n -= 2;
-  }
-}
 }  // namespace Heed

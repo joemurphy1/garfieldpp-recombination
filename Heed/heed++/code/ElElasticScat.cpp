@@ -32,19 +32,19 @@ double ElElasticScatDataStruct::CS(const double theta) const {
 ElElasticScat::ElElasticScat(const std::string& file_name) : atom(0) {
   std::ifstream file(file_name.c_str());
   if (!file) {
-    mcerr << "cannot open file " << file_name << std::endl;
-    spexit(mcerr);
+    std::cerr << "cannot open file " << file_name << std::endl;
+    spexit(std::cerr);
   }
   int i = findmark(file, "#");
-  check_econd11a(i, != 1, "cannot find sign #, wrong file format", mcerr);
+  check_econd11a(i, != 1, "cannot find sign #, wrong file format", std::cerr);
   file >> qe;
   energy_mesh.resize(qe);
   gamma_beta2.resize(qe);
   for (long ne = 0; ne < qe; ++ne) {
     file >> energy_mesh[ne];
     if (!file.good()) {
-      mcerr << "error at reading energy_mesh, ne=" << ne << '\n';
-      spexit(mcerr);
+      std::cerr << "error at reading energy_mesh, ne=" << ne << '\n';
+      spexit(std::cerr);
     }
     // energy mesh in keV
     const double rm = 0.001 * energy_mesh[ne] / electron_mass_c2;
@@ -55,15 +55,15 @@ ElElasticScat::ElElasticScat(const std::string& file_name) : atom(0) {
   while (findmark(file, "$") == 1) {
     long Z;
     file >> Z;
-    check_econd21(Z, < 1 ||, > 110, mcerr);
+    check_econd21(Z, < 1 ||, > 110, std::cerr);
     atom.emplace_back(ElElasticScatData(Z, qe));
     for (int nc = 0; nc < 4; ++nc) {
       for (long ne = 0; ne < qe; ++ne) {
         file >> atom.back().data[ne].A[nc];
         if (!file.good()) {
-          mcerr << "error at reading A, Z=" << Z << " nc=" << nc << " ne=" << ne
-                << '\n';
-          spexit(mcerr);
+          std::cerr << "error at reading A, Z=" << Z << " nc=" << nc
+                    << " ne=" << ne << '\n';
+          spexit(std::cerr);
         }
       }
     }
@@ -71,17 +71,17 @@ ElElasticScat::ElElasticScat(const std::string& file_name) : atom(0) {
       for (long ne = 0; ne < qe; ++ne) {
         file >> atom.back().data[ne].C[nc];
         if (!file.good()) {
-          mcerr << "error at reading C, Z=" << Z << " nc=" << nc << " ne=" << ne
-                << '\n';
-          spexit(mcerr);
+          std::cerr << "error at reading C, Z=" << Z << " nc=" << nc
+                    << " ne=" << ne << '\n';
+          spexit(std::cerr);
         }
       }
     }
     for (long ne = 0; ne < qe; ++ne) {
       file >> atom.back().data[ne].B;
       if (!file.good()) {
-        mcerr << "error at reading B, Z=" << Z << " ne=" << ne << '\n';
-        spexit(mcerr);
+        std::cerr << "error at reading B, Z=" << Z << " ne=" << ne << '\n';
+        spexit(std::cerr);
       }
     }
   }
@@ -103,7 +103,7 @@ double ElElasticScat::get_CS_for_presented_atom(long na, double energy,
       r = atom[na].data[ne].CS(angle);
       if (r >= 0.0) break;
     }
-    check_econd11(r, < 0.0, mcerr);
+    check_econd11(r, < 0.0, std::cerr);
     return r * coe * coe;
   }
   if (enKeV >= energy_mesh[qe - 1]) {
@@ -113,7 +113,7 @@ double ElElasticScat::get_CS_for_presented_atom(long na, double energy,
       r = atom[na].data[ne].CS(angle);
       if (r >= 0.0) break;
     }
-    check_econd11(r, < 0.0, mcerr);
+    check_econd11(r, < 0.0, std::cerr);
     return r * coe * coe;
   }
   long ne = 1;
@@ -143,8 +143,8 @@ double ElElasticScat::get_CS_for_presented_atom(long na, double energy,
     } else if (cs[1] >= 0.0) {
       r = cs[1];
     } else {
-      mcerr << "not implemented case\n";
-      spexit(mcerr);
+      std::cerr << "not implemented case\n";
+      spexit(std::cerr);
     }
   }
   return r * coe * coe;
@@ -169,8 +169,8 @@ double ElElasticScat::get_CS(long Z, double energy, double angle,
       na_right = na;
     }
   }
-  check_econd11a(Z_left, == -100, " have not found previous atom", mcerr);
-  check_econd11a(Z_right, == 10000, " have not found next atom", mcerr);
+  check_econd11a(Z_left, == -100, " have not found previous atom", std::cerr);
+  check_econd11a(Z_right, == 10000, " have not found next atom", std::cerr);
   const double f1 = get_CS_for_presented_atom(na_left, energy, angle);
   const double f2 = get_CS_for_presented_atom(na_right, energy, angle);
   const double z1 = atom[na_left].Z;
@@ -198,14 +198,14 @@ ElElasticScatLowSigma::ElElasticScatLowSigma(ElElasticScat* fees,
     : ees(fees) {
   std::ifstream file(file_name.c_str());
   if (!file) {
-    mcerr << "cannot open file " << file_name << std::endl;
-    spexit(mcerr);
+    std::cerr << "cannot open file " << file_name << std::endl;
+    spexit(std::cerr);
   }
   int i = findmark(file, "$");
-  check_econd11(i, != 1, mcerr);
+  check_econd11(i, != 1, std::cerr);
   file >> qat >> qscat;
-  check_econd11(qat, <= 0, mcerr);
-  check_econd11(qscat, <= 0, mcerr);
+  check_econd11(qat, <= 0, std::cerr);
+  check_econd11(qscat, <= 0, std::cerr);
   mean_coef.resize(qat);
   coef.resize(qat);
   for (long nat = 0; nat < qat; ++nat) {
@@ -213,17 +213,17 @@ ElElasticScatLowSigma::ElElasticScatLowSigma(ElElasticScat* fees,
     coef[nat].resize(ees->get_qe());
     long z;
     file >> z;
-    check_econd12(z, !=, nat + 1, mcerr);
+    check_econd12(z, !=, nat + 1, std::cerr);
     for (long ne = 0; ne < ees->get_qe(); ++ne) {
       long fne;
       double e;
       mean_coef[nat][ne] = 0.0;
       coef[nat][ne] = 0.0;
       file >> fne >> e >> mean_coef[nat][ne] >> coef[nat][ne];
-      check_econd12(fne, !=, ne, mcerr);
-      check_econd12(e, !=, ees->get_energy_mesh(ne), mcerr);
-      check_econd11(mean_coef[nat][ne], <= 0, mcerr);
-      check_econd11(coef[nat][ne], <= 0, mcerr);
+      check_econd12(fne, !=, ne, std::cerr);
+      check_econd12(e, !=, ees->get_energy_mesh(ne), std::cerr);
+      check_econd11(mean_coef[nat][ne], <= 0, std::cerr);
+      check_econd11(coef[nat][ne], <= 0, std::cerr);
     }
   }
 }
