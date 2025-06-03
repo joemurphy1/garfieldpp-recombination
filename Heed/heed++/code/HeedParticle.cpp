@@ -31,15 +31,10 @@ HeedParticle::HeedParticle(manip_absvol* primvol, const point& pt,
     : eparticle(primvol, pt, vel, ftime, fpardef, fm),
       m_coulomb_scattering(fcoulomb_scattering),
       m_loss_only(floss_only),
-      m_print_listing(fprint_listing),
       m_particle_number(s_counter++) {}
 
 void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
   mfunname("void HeedParticle::physics()");
-  if (m_print_listing) {
-    std::cout << "HeedParticle::physics is started\n";
-    Iprintn(std::cout, m_currpos.prange);
-  }
   // Get the step.
   if (m_currpos.prange <= 0.0) return;
   const double stp = m_currpos.prange / cm;
@@ -67,16 +62,12 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
       t_hisran_step_ar<double, std::vector<double>,
                        PointCoorMesh<double, const double*> >;
   const long qa = matter->qatom();
-  if (m_print_listing) Iprintn(std::cout, qa);
   for (long na = 0; na < qa; ++na) {
-    if (m_print_listing) Iprintn(std::cout, na);
     const long qs = hmd->apacs[na]->get_qshell();
     for (long ns = 0; ns < qs; ++ns) {
-      if (m_print_listing) Iprintn(std::cout, ns);
       if (etcs->quan[na][ns] <= 0.0) continue;
       // Sample the number of collisions for this shell.
       const long qt = Garfield::RndmPoisson(etcs->quan[na][ns] * stp);
-      if (m_print_listing) Iprintn(std::cout, qt);
       if (qt <= 0) continue;
       for (long nt = 0; nt < qt; ++nt) {
         // Sample the energy transfer in this collision.
@@ -85,12 +76,10 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
         // Convert to internal units.
         const double et = r * MeV;
         m_edep += et;
-        if (m_print_listing) Iprint2n(std::cout, nt, et);
         // Sample the position of the collision.
         const double arange = Garfield::RndmUniform() * range;
         point pt = m_prevpos.pt + dir * arange;
         if (m_loss_only) continue;
-        if (m_print_listing) std::cout << "generating new cluster\n";
         if (m_store_clusters) {
           m_clusterBank.emplace_back(HeedCluster(et, pt, na, ns));
         }
@@ -102,7 +91,6 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
         vel.down(&tempbas);  // direction is OK
         vel *= c_light;
         const double t = m_prevpos.time + arange * invSpeed;
-        if (m_print_listing) std::cout << "generating new virtual photon\n";
         HeedPhoton* hp = new HeedPhoton(m_currpos.tid.eid[0], pt, vel, t,
                                         m_particle_number, et, m_fm);
         if (!hp->alive()) {
@@ -130,10 +118,6 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
       double theta = sigma * Garfield::RndmGaussian();
       turn(cos(theta), sin(theta));
     }
-  }
-  if (m_print_listing) {
-    Iprintn(std::cout, m_edep);
-    std::cout << "Exiting HeedParticle::physics\n";
   }
 }
 
