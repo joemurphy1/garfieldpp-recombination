@@ -109,16 +109,11 @@ double straight::vecdistance(const straight& sl, int& type_of_cross,
   // ey is perpendicular to plane which have s1.dir and s2.dir,
   //                                                 ey=unit_vec(ez||s2.dir)
   // ex is vector product of ey and ez,               ex=ey||ez
-  // mcout<<bs;
   fixsyscoor scl(&s1.piv, &bs, "local");
-  // mcout<<scl;
   plane pn(point(0, 0, 0), vec(1, 0, 0));  // assumed to be in scl
                                            // This plane is defined by
-  // mcout<<pn;
   s2.up(&scl);
-  // mcout<<s2;
   pt[1] = pn.cross(s2);
-  // mcout<<pt;
   if (pt[1].v.y == 0) {
     pt[1].down(&scl);
     pt[0] = pt[1];
@@ -143,15 +138,13 @@ straight::straight(straight* sl, int qsl, const straight& sl_start, int anum,
                    double precision, double* dist,  // may be negative
                    point (*pt)[2], double& mean2dist) {
   pvecerror("void straight::straight(straight* sl, int qsl,...");
-  check_econd11(qsl, < 4, mcerr);
+  check_econd11(qsl, < 4, std::cerr);
   straight sl_finish = sl_start;
   int n;
   mean2dist = std::numeric_limits<double>::max();
   double mean2dist_prev = std::numeric_limits<double>::max();
   int type_of_cross;
   point* ptf = new point[qsl];
-  // mcout<<"straight::straight: starting, qsl="<<qsl
-  //     <<"\nsl_start="<<sl_start<<'\n';
   do {
     mean2dist_prev = mean2dist;
     mean2dist = 0;
@@ -159,19 +152,12 @@ straight::straight(straight* sl, int qsl, const straight& sl_start, int anum,
     for (n = 0; n < qsl; n++) {
       dist[n] = vecdistance(sl[n], type_of_cross, pt[n]);
       mean2dist += pow(dist[n], 2);
-      check_econd11(type_of_cross, > 1, mcerr);
+      check_econd11(type_of_cross, > 1, std::cerr);
       ptf[n] = pt[n][1];
     }
     mean2dist /= qsl;
     if (mean2dist > 0) mean2dist = sqrt(mean2dist);
     sl_finish = straight(ptf, qsl, anum);
-    // mcout<<"straight::straight: mean2dist_prev="<<mean2dist_prev
-    //	 <<" mean2dist="<<mean2dist<<'\n';
-    // for( n=0; n<qsl; n++)
-    //{
-    //  mcout<<"pt[n][0]="<<pt[n][0]<<'\n';
-    //  mcout<<"pt[n][1]="<<pt[n][1]<<'\n';
-    //}
   } while (mean2dist_prev < mean2dist ||
            (mean2dist != 0 && mean2dist_prev - mean2dist > precision));
   delete[] ptf;
@@ -201,8 +187,8 @@ point straight::vecdistance(const vec normal, const straight& slt) {
       "double straight::vecdistance(const vec normal, const straight& slt)");
   if (check_perp(normal, slt.Gdir(), 0.0) == 1) {
     // if it is perp.
-    mcout << "straight::vecdistance: normal=" << normal
-          << " slt.Gdir()=" << slt.Gdir();
+    // std::cout << "straight::vecdistance: normal=" << normal
+    //          << " slt.Gdir()=" << slt.Gdir();
     vecerror = 1;
     return point(0, 0, 0);
   }
@@ -217,8 +203,8 @@ point straight::vecdistance(const vec normal, const straight& slt) {
 straight::straight(const point* pt, int qpt, int anum) {
   // interpolates by xi2
   pvecerror("straight::straight(const point* pt, int qpt, int anum) ");
-  check_econd11(qpt, < 2, mcerr);
-  check_econd21(anum, < 0 ||, >= 3, mcerr);
+  check_econd11(qpt, < 2, std::cerr);
+  check_econd21(anum, < 0 ||, >= 3, std::cerr);
 
   if (qpt == 2) {
     *this = straight(pt[0], pt[1]);
@@ -289,22 +275,15 @@ straight::straight(const straight sl[4], point pt[2], double precision) {
       plane pn(sl[is], ptcurr[ip]);
       ptcurr[i] = pn.cross(sl[isc]);
       meandist += (ptcurr[i] - ptprev[i]).length2();
-      mcout << " i=" << i << " ptprev[i]=" << ptprev[i]
-            << " ptcurr[i]=" << ptcurr[i] << '\n';
+      // std::cout << " i=" << i << " ptprev[i]=" << ptprev[i]
+      //           << " ptcurr[i]=" << ptcurr[i] << '\n';
       ptprev[i] = ptcurr[i];
     }
     meandist /= 2.0;
     meandist = sqrt(meandist);
-    mcout << "meandist=" << meandist << '\n';
+    std::cout << "meandist=" << meandist << '\n';
   } while (meandist >= precision);
   *this = straight(ptcurr[0], ptcurr[1]);
 }
 
-std::ostream& operator<<(std::ostream& file, const straight& s) {
-  Ifile << "straight (line):\n";
-  indn.n += 2;
-  file << s.piv << s.dir;
-  indn.n -= 2;
-  return file;
-}
 }  // namespace Heed

@@ -16,20 +16,16 @@ namespace Heed {
 
 PairProd::PairProd(const std::string& file_name, double fw, double ffano)
     : m_w(fw), m_f(ffano) {
-  mfunnamep("PairProd::PairProd(const std::string&, double, double)");
-
   std::ifstream file(file_name.c_str());
   if (!file) {
-    funnw.ehdr(mcerr);
-    mcerr << "cannot open file " << file_name << std::endl;
-    spexit(mcerr);
+    std::cerr << "cannot open file " << file_name << std::endl;
+    spexit(std::cerr);
   }
   long q;
   file >> m_wtable >> m_i >> m_j >> m_ftable >> q;
   if (!file.good()) {
-    funnw.ehdr(mcerr);
-    mcerr << "error at reading file" << std::endl;
-    spexit(mcerr);
+    std::cerr << "error at reading file" << std::endl;
+    spexit(std::cerr);
   }
   std::vector<double> xx(q);
   std::vector<double> yy(q);
@@ -42,14 +38,12 @@ PairProd::PairProd(const std::string& file_name, double fw, double ffano)
 }
 
 double PairProd::get_eloss() const {
-  mfunname("double PairProd::get_eloss() const");
   return m_k * pran.ran(Garfield::RndmUniform()) + m_s;
 }
 
 #ifdef USE_GET_ELOSS_CUT
 
 double PairProd::get_eloss(const double e_cur) const {
-  mfunname("double PairProd::get_eloss(const double ecur) const");
   const double e_loss = m_k * pran.ran(Garfield::RndmUniform()) + m_s;
   constexpr double w_cut_ratio = 0.2;
   return e_cur - e_loss < w_cut_ratio * m_w ? 1.0e20 : eloss;
@@ -58,7 +52,6 @@ double PairProd::get_eloss(const double e_cur) const {
 #else
 
 double PairProd::get_eloss(const double e_cur) const {
-  mfunname("double PairProd::get_eloss(const double ecur) const");
   const double e_loss = m_k * pran.ran(Garfield::RndmUniform()) + m_s;
   constexpr double V_ratio = 0.5;
   const double v = V_ratio * m_w / e_cur;

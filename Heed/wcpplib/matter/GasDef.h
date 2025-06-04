@@ -108,10 +108,7 @@ class GasDef : public MatterDef {
   GasDef(const std::string& fname, const std::string& fnotation,
          const GasDef& gd, double fpressure, double ftemperature,
          double fdensity = -1.0);
-
-  void print(std::ostream& file, int l = 0) const;
 };
-std::ostream& operator<<(std::ostream& file, const GasDef& f);
 
 }  // namespace Heed
 

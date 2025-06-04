@@ -41,10 +41,7 @@ trajestep::trajestep(const double fmax_range, const double frad_for_straight,
   } else {
     dir = unit_vec(fdir);
     if (curved) {
-      check_econd11a(check_perp(dir, relcen, prec), != 1,
-                     "dir=" << dir << "relcen=" << relcen
-                            << "fcurrpos=" << fcurrpos << "fdir=" << fdir,
-                     mcerr);
+      check_econd11a(check_perp(dir, relcen, prec), != 1, "", std::cerr);
     }
     if (mrange < 0 || mrange > max_range) mrange = max_range;
     s_range_cf = curved;
@@ -61,7 +58,6 @@ trajestep::trajestep(const double fmax_range, const double frad_for_straight,
 }
 
 trajestep::trajestep(const trajestep& fts, double fmrange) {
-  mfunname("trajestep::trajestep(const trajestep& fts, double fmrange)");
   // Continue propagation from the end point of the old step.
   point fpos;
   vec fdir;
@@ -75,7 +71,7 @@ trajestep::trajestep(const trajestep& fts, double fmrange) {
 
 void trajestep::Gnextpoint(double frange, point& fpos, vec& fdir) const {
   pvecerror("int trajestep::Gnextpoint(double frange, point& fpos, vec& fdir)");
-  check_econd12(frange, >, mrange, mcerr);
+  check_econd12(frange, >, mrange, std::cerr);
   if (s_range_cf == 0) {
     // interpolation by straight line
     fpos = currpos + frange * dir;
@@ -102,7 +98,7 @@ void trajestep::Gnextpoint1(double frange, point& fpos, vec& fdir,
   pvecerror(
       "int trajestep::Gnextpoint(double frange, point& fpos, vec& fdir, "
       "vec& frelcen)");
-  check_econd12(frange, >, mrange, mcerr);
+  check_econd12(frange, >, mrange, std::cerr);
   if (s_range_cf == 0) {
     // interpolation by straight line
     fpos = currpos + frange * dir;
@@ -127,14 +123,4 @@ void trajestep::Gnextpoint1(double frange, point& fpos, vec& fdir,
   }
 }
 
-std::ostream& operator<<(std::ostream& file, const trajestep& f) {
-  Ifile << "trajestep: curved=" << f.curved << "\n";
-  indn.n += 2;
-  Ifile << "currpos:" << f.currpos << indn << "dir=" << f.dir << indn
-        << "relcen=" << f.relcen << indn << "s_range_cf=" << f.s_range_cf
-        << " s_prec=" << f.s_prec << " mrange=" << f.mrange << '\n'
-        << indn << "mpoint=" << f.mpoint;
-  indn.n -= 2;
-  return file;
-}
 }  // namespace Heed

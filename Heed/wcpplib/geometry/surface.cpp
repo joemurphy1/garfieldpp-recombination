@@ -27,7 +27,6 @@ absref_transmit splane::get_components() {
 
 int splane::check_point_inside(const point& fpt, const vec& dir,
                                double fprec) const {
-  mfunname("int splane::check_point_inside(const point&, const vec&, double)");
   if (dir == dv0) {
     // this is not useful
     if (fpt == pn.Gpiv()) return 1;
@@ -58,7 +57,6 @@ int splane::check_point_inside1(const point& fpt, int s_ext,
 
 int splane::range(const trajestep& fts, double* crange, point* cpt,
                   int* s_ext) const {
-  mfunname("int splane::range(...)");
   if (fts.s_range_cf == 0) {
     // straight line
     point pt = pn.cross(straight(fts.currpos, fts.dir));
@@ -176,16 +174,6 @@ int splane::range(const trajestep& fts, double* crange, point* cpt,
   return 0;
 }
 
-void splane::print(std::ostream& file, int l) const {
-  if (l > 0) {
-    Ifile << "splane:\n";
-    indn.n += 2;
-    file << pn;
-    Ifile << "dir_ins: " << noindent << dir_ins << '\n';
-    indn.n -= 2;
-  }
-}
-
 // **** ulsvolume ****
 absref_transmit ulsvolume::get_components() {
   for (int n = 0; n < qsurf; n++) adrsurf[n] = surf[n].get();
@@ -193,31 +181,17 @@ absref_transmit ulsvolume::get_components() {
 }
 
 int ulsvolume::check_point_inside(const point& fpt, const vec& dir) const {
-  mfunname("ulsvolume::check_point_inside(const point&, const vec&)");
-  check_econd11(qsurf, <= 0, mcerr);
+  check_econd11(qsurf, <= 0, std::cerr);
   for (int n = 0; n < qsurf; n++) {
     if (!(surf[n].get()->check_point_inside(fpt, dir, prec))) {
       return 0;
     }
   }
-#ifdef TRACE_find_embed_vol
-  indn.n++;
-  Imcout << "ulsvolume::check_point_inside: the point is in volume\n";
-  Imcout << "point:" << fpt;
-  print(mcout, 0);
-  indn.n--;
-#endif
   return 1;
 }
 
 int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
-  mfunnamep("int ulsvolume::range_ext(trajestep& fts, int s_ext) const");
-  check_econd11(qsurf, <= 0, mcerr);
-#ifdef DEBUG_ulsvolume_range_ext
-  mcout << "ulsvolume::range_ext, START, s_ext=" << s_ext << " qsurf=" << qsurf
-        << '\n';
-  mcout << fts;
-#endif
+  check_econd11(qsurf, <= 0, std::cerr);
   constexpr int pqcrossurf = 4;
   double crange[pqcrossurf];
   point cpt[pqcrossurf];
@@ -237,11 +211,11 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
         } else if (fs_ext[m] == 0) {
           if (!(surf[n].get()->check_point_inside(fts.currpos, fts.dir,
                                                   prec))) {
-            funnw.ehdr(mcerr);
-            mcerr << "\nshould never happen\n"
-                  << "It may happen if you  call this function with s_ext==1\n"
-                  << "for point outside the volume\n";
-            spexit(mcerr);
+            std::cerr
+                << "\nshould never happen\n"
+                << "It may happen if you  call this function with s_ext==1\n"
+                << "for point outside the volume\n";
+            spexit(std::cerr);
           }
         } else if (fs_ext[m] == 2)
           break;  // don't know what to do, safe to ignore
@@ -255,19 +229,9 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
   } else {       // for if(s_ext==1)
     int ss = 0;  // sign that there is cross with any of the surfaces
     for (n = 0; n < qsurf; n++) {
-#ifdef DEBUG_ulsvolume_range_ext
-      Iprintn(mcout, n);
-#endif
       int qc = surf[n].get()->range(fts, crange, cpt, fs_ext);
-#ifdef DEBUG_ulsvolume_range_ext
-      mcout << "ulsvolume::range_ext: qc=" << qc << "\n";
-      surf[n]->print(mcout, 1);
-#endif
       for (nc = 0; nc < qc; nc++)  // loop by crossing points
       {
-#ifdef DEBUG_ulsvolume_range_ext
-        mcout << "nc=" << nc << " fs_ext[nc]=" << fs_ext[nc] << '\n';
-#endif
         if (fs_ext[nc] == 0)  // thus ignoring exitted surfaces
         {
           s = 1;
@@ -276,24 +240,12 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
             if (m != n) {
               if (surf[m].get()->check_point_inside1(cpt[nc], fs_ext[nc],
                                                      prec) == 0) {
-#ifdef DEBUG_ulsvolume_range_ext
-                mcout << "m=" << m << '\n';
-                mcout << "Since the point is outside of the other surface, "
-                      << "it can not be border of volume\n";
-#endif
                 s = 0;
                 break;
               }
             }
           }
-#ifdef DEBUG_ulsvolume_range_ext
-          Iprintn(mcout, s);
-#endif
           if (s == 1) {
-#ifdef DEBUG_ulsvolume_range_ext
-            mcout << "The crossing point is inside all other surfaces, \n"
-                  << "so it is good crossing point\n";
-#endif
             ss = 1;
             fts.mrange = crange[nc];
             fts.mpoint = cpt[nc];
@@ -306,11 +258,6 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
     if (ss == 1) {
       fts.s_prec = 0;
     }
-#ifdef DEBUG_ulsvolume_range_ext
-    mcout << "ulsvolume::range_ext: at the end\n";
-    print(mcout, 1);
-    mcout << "ss=" << ss << '\n';
-#endif
     return ss;
   }
 }
@@ -351,64 +298,26 @@ void ulsvolume::ulsvolume_init(
 ulsvolume::ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf,
                      char* fname, double fprec)
     : qsurf(fsurf.size()), name(fname) {
-  mfunname("ulsvolume::ulsvolume(...)");
-  check_econd12(qsurf, >, pqqsurf, mcerr);
+  check_econd12(qsurf, >, pqqsurf, std::cerr);
   prec = fprec;
   for (int n = 0; n < qsurf; ++n) surf[n] = fsurf[n];
 }
 
 ulsvolume::ulsvolume(ulsvolume& f)
     : absref(f), absvol(f), qsurf(f.qsurf), name(f.name) {
-  mfunname("ulsvolume::ulsvolume(...)");
-  check_econd12(f.qsurf, >, pqqsurf, mcerr);
+  check_econd12(f.qsurf, >, pqqsurf, std::cerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];
 }
 
 ulsvolume::ulsvolume(const ulsvolume& f)
     : absref(f), absvol(f), qsurf(f.qsurf), name(f.name) {
-  mfunname("ulsvolume::ulsvolume(...)");
-  check_econd12(f.qsurf, >, pqqsurf, mcerr);
+  check_econd12(f.qsurf, >, pqqsurf, std::cerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];
 }
 
-void ulsvolume::print(std::ostream& file, int l) const {
-  char s[1000];
-  chname(s);
-  Ifile << "ulsvolume::print(l=" << l << "): " << s << '\n';
-  if (l > 0) {
-    indn.n += 2;
-    Ifile << "qsurf=" << qsurf << " prec=" << prec << '\n';
-    for (int n = 0; n < qsurf; ++n) {
-      Ifile << " nsurf=" << n << '\n';
-      surf[n].get()->print(file, l);
-    }
-    absvol::print(file, l);
-    indn.n -= 2;
-  }
-}
-
-/*
-manip_ulsvolume::manip_ulsvolume(manip_ulsvolume& f)
-    // TODO!
-    : absref(f), manip_absvol(f), ulsvolume((ulsvolume&)f) {}
-*/
-
 manip_ulsvolume::manip_ulsvolume(const manip_ulsvolume& f)
     : absref(f), manip_absvol(f), ulsvolume(f) {}
 
-void manip_ulsvolume::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  char s[1000];
-  chname(s);
-  Ifile << "manip_ulsvolume::print(l=" << l << "): " << s << '\n';
-  l = l - 1;
-  if (l > 0) {
-    indn.n += 2;
-    // If to call this it calls manip_ulsvolume::print again and loop...
-    ulsvolume::print(file, l - 1);
-    indn.n -= 2;
-  }
-}
 }  // namespace Heed

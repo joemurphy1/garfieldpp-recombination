@@ -104,91 +104,21 @@ It is provided "as is" without express or implied warranty.
 
 #include <iostream>
 
-// #ifndef mcout
-#define mcout std::cout /* change to ordinary default C++ stream */
-// #endif
-#define mcerr std::cerr
-
 namespace Heed {
 
-class indentation {
- public:
-  int n = 0;  // current number of blanks to print
-  int s_not = 1;
-};
-
-extern indentation indn;
-
-inline std::ostream& operator<<(std::ostream& file, indentation& ind) {
-  if (ind.s_not == 1)
-    ind.s_not = 0;
-  else
-    for (int n = 0; n < ind.n; n++) file << ' ';
-  return file;
-}
-
-std::ostream& noindent(std::ostream& f);
-std::ostream& yesindent(std::ostream& f);
-
-#define Ifile file << indn
-#define Imcout mcout << indn
-#define Iprint(file, name) \
-  file << indn << #name << "=" << noindent << name << yesindent;
-#define Iprintf(file, name)                                        \
-  {                                                                \
-    file << indn << #name << "=" << noindent << name << yesindent; \
-    file.flush();                                                  \
-  }
-#define Iprintn(file, name) \
-  file << indn << #name << "=" << noindent << name << '\n' << yesindent;
-#define Iprintnf(file, name)                                               \
-  {                                                                        \
-    file << indn << #name << "=" << noindent << name << '\n' << yesindent; \
-    file.flush();                                                          \
-  }
-#define Iprintan(file, name, addition)                                        \
-  file << indn << #name << "=" << noindent << name << ' ' << addition << '\n' \
-       << yesindent;
+#define Iprint(file, name) file << #name << "=" << name;
+#define Iprintn(file, name) file << #name << "=" << name << '\n';
 // addition is convenient as notation of units
 
-#define Iprint2(file, name1, name2)                                           \
-  file << indn << #name1 << "=" << noindent << name1 << ", " << #name2 << "=" \
-       << noindent << name2 << yesindent;
-#define Iprint2n(file, name1, name2)                                          \
-  file << indn << #name1 << "=" << noindent << name1 << ", " << #name2 << "=" \
-       << noindent << name2 << '\n'                                           \
-       << yesindent;
-#define Iprint2nf(file, name1, name2)                                    \
-  {                                                                      \
-    file << indn << #name1 << "=" << noindent << name1 << ", " << #name2 \
-         << "=" << noindent << name2 << '\n'                             \
-         << yesindent;                                                   \
-    file.flush();                                                        \
-  }
-#define Iprint3(file, name1, name2, name3)                                    \
-  file << indn << #name1 << "=" << noindent << name1 << ", " << #name2 << "=" \
-       << noindent << name2 << ", " << #name3 << "=" << noindent << name3     \
-       << yesindent;
-#define Iprint3n(file, name1, name2, name3)                                   \
-  file << indn << #name1 << "=" << noindent << name1 << ", " << #name2 << "=" \
-       << noindent << name2 << ", " << #name3 << "=" << noindent << name3     \
-       << '\n'                                                                \
-       << yesindent;
-#define Iprint3nf(file, name1, name2, name3)                              \
-  {                                                                       \
-    file << indn << #name1 << "=" << noindent << name1 << ", " << #name2  \
-         << "=" << noindent << name2 << ", " << #name3 << "=" << noindent \
-         << name3 << '\n'                                                 \
-         << yesindent;                                                    \
-    file.flush();                                                         \
-  }
-#define Iprint4n(file, name1, name2, name3, name4)                            \
-  file << indn << #name1 << "=" << noindent << name1 << ", " << #name2 << "=" \
-       << noindent << name2 << ", " << #name3 << "=" << noindent << name3     \
-       << ", " << #name4 << "=" << noindent << name4 << '\n'                  \
-       << yesindent;
+#define Iprint2n(file, name1, name2) \
+  file << #name1 << "=" << name1 << ", " << #name2 << "=" << name2 << '\n';
+#define Iprint3n(file, name1, name2, name3)                                \
+  file << #name1 << "=" << name1 << ", " << #name2 << "=" << name2 << ", " \
+       << #name3 << "=" << name3 << '\n';
+#define Iprint4n(file, name1, name2, name3, name4)                         \
+  file << #name1 << "=" << name1 << ", " << #name2 << "=" << name2 << ", " \
+       << #name3 << "=" << name3 << ", " << #name4 << "=" << name4 << '\n';
 
-extern int s_short_output;  // sign which allows to make output shorter
 // simultaneously for all classes. Useful for writing "persistence classes"
 // by standard <</>> operators.
 // If instead of this one tries to use special functions like

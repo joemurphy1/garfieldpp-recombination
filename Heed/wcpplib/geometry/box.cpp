@@ -3,8 +3,9 @@
 #include <array>
 #include <cmath>
 #include <memory>
-#include "wcpplib/geometry/surface.h"
+
 #include "wcpplib/geometry/polyline.h"
+#include "wcpplib/geometry/surface.h"
 #include "wcpplib/geometry/trajestep.h"
 /*
 Copyright (c) 2000 Igor B. Smirnov
@@ -21,17 +22,14 @@ The file is provided "as is" without express or implied warranty.
 namespace Heed {
 
 absref_transmit box::get_components() {
-  mfunnamep("box::get_components(...)");
-  funnw.ehdr(mcerr);
-  mcerr << "one should not call this function, since this object cannot be "
-           "modified\n";
-  spexit(mcerr);
+  std::cerr << "one should not call this function, since this object cannot be "
+               "modified\n";
+  spexit(std::cerr);
   return absref_transmit();
 }
 
 box::box()
     : m_dx(0), m_dy(0), m_dz(0), m_dxh(0), m_dyh(0), m_dzh(0), m_name("none") {
-  mfunname("box::box()");
   init_prec();
   init_planes();
 }
@@ -113,7 +111,6 @@ void box::init_prec() {
 }
 
 void box::init_planes() {
-  mfunname("void box::init_planes()");
   std::vector<std::shared_ptr<surface> > fsurf(6);
   fsurf[0] = std::make_shared<splane>(plane(point(m_dxh, 0, 0), vec(-1, 0, 0)),
                                       vec(-1, 0, 0));
@@ -131,12 +128,6 @@ void box::init_planes() {
 }
 
 int box::check_point_inside(const point& fpt, const vec& dir) const {
-  mfunname("int check_point_inside(const point& fpt, const vec& dir)");
-#ifdef TRACE_find_embed_vol
-  mcout << "box::check_point_inside: \n";
-  print(mcout, 1);
-  mcout << "fpt=" << fpt << "dir=" << dir;
-#endif
   if (dir == dv0) {
     if (fabs(fpt.v.x) <= m_dxh && fabs(fpt.v.y) <= m_dyh &&
         fabs(fpt.v.z) <= m_dzh) {
@@ -146,19 +137,10 @@ int box::check_point_inside(const point& fpt, const vec& dir) const {
   }
   if (fabs(fpt.v.x) <= m_dxh - prec && fabs(fpt.v.y) <= m_dyh - prec &&
       fabs(fpt.v.z) <= m_dzh - prec) {
-#ifdef TRACE_find_embed_vol
-    mcout << "cond 1, returning 1\n";
-#endif
     return 1;
   }
   if (fabs(fpt.v.x) > m_dxh + prec || fabs(fpt.v.y) > m_dyh + prec ||
       fabs(fpt.v.z) > m_dzh + prec) {
-#ifdef TRACE_find_embed_vol
-    if (fabs(fpt.v.x) > m_dxh + prec) mcout << "cond 2.1 satisfied\n";
-    if (fabs(fpt.v.y) > m_dyh + prec) mcout << "cond 2.2 satisfied\n";
-    if (fabs(fpt.v.z) > m_dzh + prec) mcout << "cond 2.3 satisfied\n";
-    mcout << "cond 2, returning 0\n";
-#endif
     return 0;
   }
   // What remains is point belonging to border.
@@ -169,9 +151,6 @@ int box::check_point_inside(const point& fpt, const vec& dir) const {
     if (dir.x == 0.0) return 0;
 #endif
     if ((fpt.v.x > 0 && dir.x > 0) || (fpt.v.x < 0 && dir.x < 0)) {
-#ifdef TRACE_find_embed_vol
-      mcout << "cond 3, returning 0\n";
-#endif
       return 0;
     }
   }
@@ -180,9 +159,6 @@ int box::check_point_inside(const point& fpt, const vec& dir) const {
     if (dir.y == 0.0) return 0;
 #endif
     if ((fpt.v.y > 0 && dir.y > 0) || (fpt.v.y < 0 && dir.y < 0)) {
-#ifdef TRACE_find_embed_vol
-      mcout << "cond 4, returning 0\n";
-#endif
       return 0;
     }
   }
@@ -191,39 +167,13 @@ int box::check_point_inside(const point& fpt, const vec& dir) const {
     if (dir.z == 0.0) return 0;
 #endif
     if ((fpt.v.z > 0 && dir.z > 0) || (fpt.v.z < 0 && dir.z < 0)) {
-#ifdef TRACE_find_embed_vol
-      mcout << "cond 5, returning 0\n";
-#endif
       return 0;
     }
   }
-#ifdef TRACE_find_embed_vol
-  mcout << "finish, returning 1\n";
-#endif
   return 1;
 }
 
-void box::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  char s[1000];
-  chname(s);
-  Ifile << "box::print(l=" << l << "): " << s << '\n';
-  indn.n += 2;
-  Ifile << " dx=" << m_dx << " dy=" << m_dy << " dz=" << m_dz
-        << " prec=" << prec << '\n';
-  Ifile << " dxh=" << m_dxh << " dyh=" << m_dyh << " dzh=" << m_dzh << '\n';
-  if (l >= 10) {
-    l--;
-    indn.n += 2;
-    m_ulsv.print(file, l);
-    indn.n -= 2;
-  }
-  absvol::print(file, l);
-  indn.n -= 2;
-}
-
 int box::range_ext(trajestep& fts, int s_ext) const {
-  mfunname("virtual int box::range_ext(trajestep& fts, int s_ext) const");
   if (s_ext == 0) {
     if (fabs(fts.currpos.v.x) > m_dxh + fts.mrange) return 0;
     if (fabs(fts.currpos.v.y) > m_dyh + fts.mrange) return 0;
@@ -253,20 +203,6 @@ void manip_box::chname(char* nm) const {
   strcat(nm, m_name.c_str());
 }
 
-void manip_box::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  char s[1000];
-  chname(s);
-  Ifile << "manip_box::print(l=" << l << "): " << s << '\n';
-  l = l - 1;
-  if (l > 0) {
-    indn.n += 2;
-    box::print(file, l);
-    indn.n -= 2;
-  }
-  file.flush();
-}
-
 // *****   sh_manip_box  ********
 
 // absvol* sh_manip_box::Gavol() const { return (box*)this; }
@@ -283,18 +219,4 @@ void sh_manip_box::chname(char* nm) const {
   strcat(nm, m_name.c_str());
 }
 
-void sh_manip_box::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  char s[1000];
-  chname(s);
-  Ifile << "sh_manip_box::print(l=" << l << "): " << s << '\n';
-  l = l - 1;
-  if (l > 0) {
-    indn.n += 2;
-    csys.print(file, l);
-    box::print(file, l);
-    indn.n -= 2;
-  }
-  file.flush();
-}
 }  // namespace Heed

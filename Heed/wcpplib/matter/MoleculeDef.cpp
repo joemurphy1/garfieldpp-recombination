@@ -29,37 +29,18 @@ VanDerWaals::VanDerWaals(double fPk, double fTk) : Pkh(fPk), Tkh(fTk) {
 }
 
 double VanDerWaals::volume_of_mole(double T, double p, int& s_not_single) {
-  mfunname("VanDerWaals::volume_of_mole(...)");
-
   double Tr = T / Tkh;
   double Pr = p / Pkh;
-  Iprint2n(mcout, Tr, Pr);
+  Iprint2n(std::cout, Tr, Pr);
   Cubic cb(Pr, -1.0 / 3.0 * (Pr + 8 * Tr), 3, -1);
   double r[3];
   int q = cb.find_real_zero(r);
-  check_econd11(q, <= 0, mcerr);
+  check_econd11(q, <= 0, std::cerr);
   double x = r[q - 1];   // this is the relative volume taken by one mole
   double res = x * Vkh;  // this is the absolute volume taken by one mole
-  Iprint2n(mcout, x, res);
+  Iprint2n(std::cout, x, res);
   s_not_single = q == 2 ? 1 : 0;
   return res;
-}
-
-std::ostream& operator<<(std::ostream& file, const VanDerWaals& f) {
-  mfunname(
-      "std::ostream& operator << (std::ostream& file, const VanDerWaals& f)");
-  Ifile << "VanDerWaals:\n";
-  indn.n += 2;
-  Iprintn(file, f.Pk() / (CLHEP::atmosphere));
-  Iprintn(file, f.Tk() / (CLHEP::kelvin));
-  Iprintn(file, f.Vk() / (cm3));
-  Ifile << "For comparison, the volume of a mole of ideal gas\n";
-  Ifile << "at the same conditions takes\n";
-  Iprintn(file, (k_Boltzmann * Avogadro * f.Tk() / f.Pk()) / (cm3 * mole));
-  Iprintn(file, f.a() / (CLHEP::atmosphere * cm3 * cm3));
-  Iprintn(file, f.b() / (cm3));
-  indn.n -= 2;
-  return file;
 }
 
 MoleculeDef::MoleculeDef(const std::string& fname, const std::string& fnotation,
@@ -70,13 +51,12 @@ MoleculeDef::MoleculeDef(const std::string& fname, const std::string& fnotation,
       nameh(fname),
       notationh(fnotation),
       qatom_psh(fqatom_ps) {
-  mfunname("MoleculeDef::MoleculeDef(...)");
   m_vdw = std::move(fvdw);
   for (long n = 0; n < qatom(); n++) {
     Z_totalh += qatom_psh[n] * atom(n)->Z();
     A_totalh += qatom_psh[n] * atom(n)->A();
     tqatomh += qatom_psh[n];
-    check_econd11(qatom_psh[n], <= 0, mcerr);
+    check_econd11(qatom_psh[n], <= 0, std::cerr);
   }
 }
 
@@ -103,51 +83,7 @@ MoleculeDef::MoleculeDef(const std::string& fname, const std::string& fnotation,
     : MoleculeDef(fname, fnotation, 3, {fatom_not1, fatom_not2, fatom_not3},
                   {fqatom_ps1, fqatom_ps2, fqatom_ps3}, fvdw) {}
 
-void MoleculeDef::print(std::ostream& file, int l) const {
-  if (l > 0) file << (*this);
-}
-
-std::ostream& operator<<(std::ostream& file, const MoleculeDef& f) {
-  mfunnamep("std::ostream& operator << (std::ostream&, const MoleculeDef&)");
-  constexpr double gpm = gram / mole;
-  Ifile << "MoleculeDef: name=" << std::setw(10) << f.name()
-        << " notation=" << std::setw(3) << f.notation() << '\n';
-  indn.n += 2;
-  Ifile << "Z_total()=" << std::setw(3) << f.Z_total()
-        << " A_total()/(gram/mole)=" << f.A_total() / gpm
-        << " tqatom()=" << f.tqatom() << '\n';
-  Iprintn(file, f.qatom());
-  indn.n += 2;
-  for (long n = 0; n < f.qatom(); n++) {
-    Ifile << "n=" << n << " atom(n)->notation=" << f.atom(n)->notation()
-          << " qatom_ps(n)=" << f.qatom_ps(n) << '\n';
-  }
-  indn.n -= 2;
-  f.AtomMixDef::print(file, 1);
-  VanDerWaals* at = f.vdw().get();
-  if (at) {
-    Ifile << "Density at the crucial conditions for ideal gas (for debug):\n";
-    double rydberg = k_Boltzmann * Avogadro;  // more precise
-    // mcout<<"rydberg/(joule/(kelvin*mole)) ="
-    //     << rydberg/(joule/(kelvin*mole))<<'\n';
-    // double sa = f.A_total();
-    Iprintn(mcout,
-            f.A_total() * at->Pk() / (rydberg * at->Tk()) / (gram / cm3));
-    Ifile << "For the Waals:\n";
-    Iprintn(mcout, f.A_total() / at->Vk() / (gram / cm3));
-  }
-  indn.n -= 2;
-  return file;
-}
-
 std::list<MoleculeDef> MoleculeDefs::molecules;
-
-void MoleculeDefs::printMolecules(std::ostream& file) {
-  Ifile << "MoleculeDefs::printMolecules:\n";
-  for (const auto& molecule : getMolecules()) {
-    file << molecule;
-  }
-}
 
 const MoleculeDef* MoleculeDefs::getMolecule(const std::string& fnotation) {
   for (const auto& molecule : getMolecules()) {

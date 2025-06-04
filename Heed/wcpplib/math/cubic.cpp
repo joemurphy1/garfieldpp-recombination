@@ -1,6 +1,8 @@
 #include "wcpplib/math/cubic.h"
+
+#include <limits>
+
 #include "wcpplib/util/FunNameStack.h"
-#include<limits>
 
 /*
 Copyright (c) 2005 Igor B. Smirnov
@@ -20,7 +22,6 @@ const Cubic::double_complex Cubic::iu(0, 1);
 
 void Cubic::find_zero(double_complex& z1, double_complex& z2,
                       double_complex& z3) const {
-  mfunname("void Cubic::find_zero(...) const");
   const Cubic& t = (*this);
   if (s_dxzero != 0) {
     z1 = dz1;
@@ -29,7 +30,7 @@ void Cubic::find_zero(double_complex& z1, double_complex& z2,
     return;
   }
 
-  check_econd11a(da, == 0.0, "this is not cubic polynomial!", mcerr);
+  check_econd11a(da, == 0.0, "this is not cubic polynomial!", std::cerr);
   double a2 = db / da;
   double a1 = dc / da;
   double a0 = dd / da;
@@ -70,7 +71,6 @@ void Cubic::find_zero(double_complex& z1, double_complex& z2,
 }
 
 int Cubic::find_real_zero(double z[3]) const {
-  mfunname("int Cubic::find_real_zero(double z[3]) const");
   double_complex zc1;
   double_complex zc2;
   double_complex zc3;

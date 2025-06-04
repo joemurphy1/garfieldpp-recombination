@@ -1,4 +1,5 @@
 #include "wcpplib/geometry/gparticle.h"
+
 #include <atomic>
 #include <limits>
 /*
@@ -15,36 +16,11 @@ The file is provided "as is" without express or implied warranty.
 
 namespace Heed {
 
-void stvpoint::print(std::ostream& file, int l) const {
-  if (l < 0) return;
-  Ifile << "stvpoint: sb=" << sb << " s_ent=" << s_ent << " prange=" << prange
-        << " time=" << time << '\n';
-  indn.n += 2;
-  Ifile << "position:\n" << pt << ptloc;
-  Ifile << "direction:\n" << dir << dirloc;
-  Ifile << "speed=" << speed << '\n';
-  if (tid.eid.empty()) {
-    Ifile << "point is outside universe\n";
-    file.flush();
-    indn.n -= 2;
-    return;
-  }
-  tid.print(file, 1);
-  char s[100];
-  if (sb == 2) {
-    next_eid->m_chname(s);
-    Ifile << "next volume name " << s << '\n';
-  }
-  indn.n -= 2;
-  file.flush();
-}
-
 std::atomic<long> gparticle::s_counter{0L};
 
 gparticle::gparticle(manip_absvol* primvol, const point& pt, const vec& vel,
                      double ftime)
     : m_prevpos(), m_nextpos() {
-  mfunname("gparticle::gparticle(...)");
   primvol->m_find_embed_vol(pt, vel, &m_origin.tid);
   m_origin.pt = pt;
   if (vel == dv0) {
@@ -70,7 +46,6 @@ gparticle::gparticle(manip_absvol* primvol, const point& pt, const vec& vel,
 
 void gparticle::step(std::vector<gparticle*>& secondaries) {
   // Make step to next point and calculate new step to border.
-  mfunname("void gparticle::step()");
   m_prevpos = m_currpos;
   m_currpos = m_nextpos;
   m_total_range_from_origin += m_currpos.prange;
@@ -78,7 +53,7 @@ void gparticle::step(std::vector<gparticle*>& secondaries) {
   if (m_currpos.prange == 0) {
     m_nzero_step++;
     check_econd12a(m_nzero_step, >, m_max_qzero_step,
-                   "too many zero steps, possible infinite loop\n", mcerr);
+                   "too many zero steps, possible infinite loop\n", std::cerr);
   } else {
     m_nzero_step = 0;
   }
@@ -166,7 +141,6 @@ void gparticle::turn(const double ctheta, const double stheta) {
 
 stvpoint gparticle::switch_new_vol() {
   // Generate next position in new volume.
-  mfunname("stvpoint gparticle::switch_new_vol(void)");
   manip_absvol_treeid tidl;
   manip_absvol* eidl = nullptr;
   stvpoint nextp = m_currpos;
@@ -204,38 +178,4 @@ stvpoint gparticle::switch_new_vol() {
   return stvpoint();
 }
 
-void gparticle::print(std::ostream& file, int l) const {
-  if (l < 0) return;
-  Ifile << "gparticle(l=" << l << "): alive=" << m_alive << " nstep=" << m_nstep
-        << " total_range_from_origin=" << m_total_range_from_origin
-        << " nzero_step=" << m_nzero_step << '\n';
-  if (l <= 1) return;
-  indn.n += 2;
-  if (l - 5 >= 0) {
-    Ifile << "origin point:\n";
-    indn.n += 2;
-    m_origin.print(file, l - 2);
-    indn.n -= 2;
-  }
-  if (l - 4 >= 0) {
-    Ifile << "previous point:\n";
-    indn.n += 2;
-    m_prevpos.print(file, l - 1);
-    indn.n -= 2;
-  }
-  if (l - 2 >= 0) {
-    Ifile << "current point:\n";
-    indn.n += 2;
-    m_currpos.print(file, l);
-    indn.n -= 2;
-  }
-  if (l - 3 >= 0) {
-    Ifile << "next point:\n";
-    indn.n += 2;
-    m_nextpos.print(file, l - 1);
-    indn.n -= 2;
-  }
-  indn.n -= 2;
-  file.flush();
-}
 }  // namespace Heed

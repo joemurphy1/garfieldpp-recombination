@@ -19,27 +19,25 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
       molech(fqmolec, nullptr),
       weight_quan_molech(fqmolec),
       weight_mass_molech(fqmolec) {
-  mfunname("GasDef::GasDef(...many molecules...)");
-
   // Finding pointers to all molec. by notations
   for (long k = 0; k < fqmolec; ++k) {
     auto amd = MoleculeDefs::getMolecule(fmolec_not[k]);
     check_econd11a(amd, == NULL,
                    "No molecule with such notation: " << fmolec_not[k] << '\n',
-                   mcerr) if (!amd) {
-      mcerr << "cannot find molecule with notation " << fmolec_not[k]
-            << "\nIn particular, check the sequence of initialization\n";
-      spexit(mcerr);
+                   std::cerr) if (!amd) {
+      std::cerr << "cannot find molecule with notation " << fmolec_not[k]
+                << "\nIn particular, check the sequence of initialization\n";
+      spexit(std::cerr);
     }
     molech[k] = amd;
   }
   double s = 0.0;
   for (long n = 0; n < fqmolec; ++n) {
     weight_quan_molech[n] = fweight_quan_molec[n];
-    check_econd11(weight_quan_molech[n], <= 0, mcerr);
+    check_econd11(weight_quan_molech[n], <= 0, std::cerr);
     s += weight_quan_molech[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < fqmolec; ++n) {
       weight_quan_molech[n] /= s;
@@ -52,7 +50,7 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
   for (long n = 0; n < fqmolec; ++n) {
     s += weight_mass_molech[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < fqmolec; ++n) {
       weight_mass_molech[n] /= s;
@@ -83,8 +81,6 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
       */
       fatom_not[qat] = molech[k]->atom(n)->notation();
       weight_qa[qat] = fweight_quan_molec[k] * molech[k]->qatom_ps(n);
-      // mcout << "qat=" << qat << " fatom_not[qat]=" << fatom_not[qat]
-      //      << " weight_qa[qat]=" << weight_qa[qat] << '\n';
       ++qat;
     }
   }
@@ -109,13 +105,13 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
                const std::vector<double>& fweight_volume_molec,
                double fpressure, double ftemperature, int /*s1*/, int /*s2*/) {
   // s1 and s2 are to distinguish the constructor
-  mfunname("GasDef::GasDef(...many molecules... Waals)");
+
   std::vector<const MoleculeDef*> amolec(fqmolec);
   for (long n = 0; n < fqmolec; ++n) {
     amolec[n] = MoleculeDefs::getMolecule(fmolec_not[n]);
     check_econd11a(amolec[n], == NULL,
                    "No molecule with such notation: " << fmolec_not[n] << '\n',
-                   mcerr)
+                   std::cerr)
     // Van der Waals correction currently not used.
     // VanDerWaals* aw = amolec[n]->vdw().get();
   }
@@ -126,7 +122,7 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
   for (long n = 0; n < fqmolec; ++n) {
     s += fweight_volume_molec[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   for (long n = 0; n < fqmolec; ++n) {
     fw[n] = fweight_volume_molec[n] / s;
   }
@@ -141,7 +137,6 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
       // ideal gas case
       fweight_quan_molec[n] = fw[n] * fpressure / (rydberg * ftemperature);
       double ms = fweight_quan_molec[n] * amolec[n]->A_total();
-      // Iprint2n(mcout, fweight_quan_molec[n], ms/gram);
       mass_t += ms;
     } else {
       // van der Waals gas case
@@ -150,10 +145,9 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
           fw[n] * 1.0 /
           aw->volume_of_mole(ftemperature,  // relative to T_k
                              fpressure, s_not_single);
-      check_econd11(s_not_single, == 1, mcerr);
+      check_econd11(s_not_single, == 1, std::cerr);
       fweight_quan_molec[n] = number_of_moles;
       double ms = fweight_quan_molec[n] * amolec[n]->A_total();
-      // Iprint2n(mcout, fweight_quan_molec[n], ms/gram);
       mass_t += ms;
     }
   }
@@ -212,7 +206,6 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
 GasDef::GasDef(const std::string& fname, const std::string& fnotation,
                const GasDef& gd, double fpressure, double ftemperature,
                double fdensity) {
-  mfunname("GasDef::GasDef( another GasDef with different pres)");
   long fqmolec = gd.qmolec();
   std::vector<std::string> fmolec_not(fqmolec);
   std::vector<double> fweight_quan_molec(fqmolec);
@@ -226,49 +219,11 @@ GasDef::GasDef(const std::string& fname, const std::string& fnotation,
 
 // mean charge of molecule
 double GasDef::Z_mean_molec(void) const {
-  mfunname("double GasDef::Z_mean_molec(void) const ");
   double s = 0.0;
   for (long n = 0; n < qmolech; ++n) {
     s += molech[n]->Z_total() * weight_quan_molech[n];
   }
   return s;
-}
-
-void GasDef::print(std::ostream& file, int l) const {
-  if (l > 0) file << (*this);
-}
-
-std::ostream& operator<<(std::ostream& file, const GasDef& f) {
-  mfunname("std::ostream& operator << (std::ostream& file, const GasDef& f)");
-  Ifile << "GasDef: \n";
-  indn.n += 2;
-  indn.n += 2;
-  file << ((MatterDef&)f);
-  indn.n -= 2;
-  constexpr double mm_rt_st_in_atmosphere = 760.;
-  // This corresponds to 133.322 pascal in one mm
-  //( 101325 pascal in one atmosphere )
-  const double patm = f.pressure() / CLHEP::atmosphere;
-  Ifile << "pressure/atmosphere=" << patm
-        << " pressure/atmosphere * mm_rt_st_in_atmosphere = "
-        << patm * mm_rt_st_in_atmosphere << '\n';
-  Ifile << "Z_mean_molec=" << f.Z_mean_molec() << '\n';
-
-  file << "qmolec()=" << f.qmolec() << '\n';
-  indn.n += 2;
-  for (long n = 0; n < f.qmolec(); ++n) {
-    Ifile << "n=" << n << " molec(n)->notation=" << f.molec(n)->notation()
-          << '\n';
-    indn.n += 2;
-    Ifile << "weight_quan_molec(n)=" << f.weight_quan_molec(n)
-          << " weight_mass_molec(n)=" << f.weight_mass_molec(n) << '\n';
-    Ifile << "Z_total=" << f.molec(n)->Z_total() << " A_total/(gram/mole)="
-          << f.molec(n)->A_total() / (CLHEP::gram / CLHEP::mole) << '\n';
-    indn.n -= 2;
-  }
-  indn.n -= 2;
-  indn.n -= 2;
-  return file;
 }
 
 }  // namespace Heed

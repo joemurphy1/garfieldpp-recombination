@@ -22,7 +22,7 @@ circumf::circumf() : piv(), dir(), rad(0) {}
 circumf::circumf(const point& fpiv, const vec& fdir, double frad)
     : piv(fpiv), dir(), rad(frad) {
   pvecerror("circumf(...)");
-  check_econd11(fdir.length(), == 0, mcerr);
+  check_econd11(fdir.length(), == 0, std::cerr);
   dir = unit_vec(fdir);
 }
 circumf::circumf(const circumf& f)
@@ -80,12 +80,4 @@ int circumf::cross(const plane& pn, point pt[2], double prec) const {
   return 2;
 }
 
-std::ostream& operator<<(std::ostream& file, const circumf& f) {
-  Ifile << "circumf(erence):\n";
-  indn.n += 2;
-  Ifile << "rad=" << f.rad << '\n';
-  file << f.piv << f.dir;
-  indn.n -= 2;
-  return file;
-}
 }  // namespace Heed

@@ -55,27 +55,6 @@ int operator==(manip_absvol_treeid& tid1, manip_absvol_treeid& tid2) {
   return 1;
 }
 
-void manip_absvol_treeid::print(std::ostream& file, int l) const {
-  if (l < 0) return;
-  if (eid.empty()) {
-    Ifile << "no volume defined\n";
-  } else {
-    // TODO!
-    /*
-    const int qeid = eid.size();
-    if (l > 0) {
-      for (int n = 0; n < qeid - 1; ++n) {
-        Ifile << "n=" << n;
-        eid[n]->print(file, 0);
-      }
-    }
-    Ifile << "n=" << qeid - 1;
-    eid.back()->print(file, 0);
-    */
-  }
-  file.flush();
-}
-
 // ******** absvol ********
 std::vector<manip_absvol*> absvol::Gamanip_embed() const {
   return std::vector<manip_absvol*>();
@@ -92,9 +71,9 @@ int absvol::find_embed_vol(const point& fpt, const vec& dir,
     if (i == 1) {
       // TODO!
       if (s < atid->eid.size()) break;
-      Imcout << "absvol::find_embed_vol:\n";
-      Imcout << "    Warning: contradiction between "
-             << " i==1 and s == fnamvol\n";
+      std::cout << "absvol::find_embed_vol:\n";
+      std::cout << "    Warning: contradiction between "
+                << " i==1 and s == fnamvol\n";
     }
   }
   return 1;
@@ -120,34 +99,6 @@ int absvol::range(trajestep& fts, int s_ext, int& sb,
   return 0;
 }
 
-void absvol::print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  char s[1000];
-  chname(s);
-  Ifile << "absvol::print(l=" << l << "): name=" << s << '\n';
-  --l;
-  if (l > 0) {
-    std::vector<manip_absvol*> embed = Gamanip_embed();
-    indn.n += 2;
-    const int qembed = embed.size();
-    if (qembed > 0) {
-      Ifile << "The following volumes are embraced, q=" << embed.size() << '\n';
-      indn.n += 2;
-      for (int n = 0; n < qembed; ++n) {
-        Ifile << "n=" << n << '\n';
-        indn.n += 2;
-        embed[n]->m_print(file, l);
-        indn.n -= 2;
-      }
-      indn.n -= 2;
-    } else {
-      Ifile << "None of embraced volumes\n";
-    }
-    indn.n -= 2;
-  }
-  file.flush();
-}
-
 // *********  manip_absvol  *********
 int manip_absvol::m_check_point_inside(const point& fpt,
                                        const vec& fdir) const {
@@ -165,7 +116,6 @@ int manip_absvol::m_check_point_inside(const point& fpt,
 
 int manip_absvol::m_find_embed_vol(const point& fpt, const vec& fdir,
                                    manip_absvol_treeid* atid) const {
-  mfunname("int manip_absvol::m_find_embed_vol(...)");
   absvol* avol = Gavol();
   point pt = fpt;
   up_absref(&pt);
@@ -177,14 +127,14 @@ int manip_absvol::m_find_embed_vol(const point& fpt, const vec& fdir,
   int iret = avol->find_embed_vol(pt, dir, atid);
   if (iret == 0) {
     if (atid->eid.size() < s) {
-      mcerr << "manip_absvol::m_find_embed_vol: should never happen\n";
+      std::cerr << "manip_absvol::m_find_embed_vol: should never happen\n";
       exit(1);
     }
     atid->eid.pop_back();
     return 0;
   }
   if (atid->eid.size() < s) {
-    mcerr << "manip_absvol::m_find_embed_vol: should never happen\n";
+    std::cerr << "manip_absvol::m_find_embed_vol: should never happen\n";
     exit(1);
   }
   return 1;
@@ -221,29 +171,6 @@ void manip_absvol::m_chname(char* nm) const {
   Gavol()->chname(&nm[6]);
 }
 
-void manip_absvol::m_print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  char s[1000];
-  m_chname(s);
-  Ifile << "manip_absvol::m_print(l=" << l << "): " << s << '\n';
-  --l;
-  if (l > 0) {
-    indn.n += 2;
-    const abssyscoor* asys = Gasc();
-    if (asys)
-      asys->print(file, l - 1);
-    else
-      mcout << "manip_absvol::m_print: system==NULL\n";
-    absvol* avol = Gavol();
-    if (avol)
-      avol->print(file, l - 1);
-    else
-      mcout << "manip_absvol::m_print: avol==NULL\n";
-    indn.n -= 2;
-  }
-  file.flush();
-}
-
 // *********  sh_manip_absvol  *********
 absref_transmit sh_manip_absvol::get_components() {
   aref_ptr[0] = &csys;
@@ -268,21 +195,4 @@ void sh_manip_absvol::m_chname(char* nm) const {
   Gavol()->chname(&nm[6]);
 }
 
-void sh_manip_absvol::m_print(std::ostream& file, int l) const {
-  if (l <= 0) return;
-  char s[1000];
-  m_chname(s);
-  Ifile << "sh_manip_absvol::m_print(l=" << l << "): " << s << '\n';
-  if (l > 1) {
-    indn.n += 2;
-    Ifile << "csys=" << noindent << csys;
-    absvol* avol = Gavol();
-    if (avol)
-      avol->print(file, l - 1);
-    else
-      mcout << "manip_absvol::m_print: avol==NULL\n";
-    indn.n -= 2;
-  }
-  file.flush();
-}
 }  // namespace Heed

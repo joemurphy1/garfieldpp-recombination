@@ -12,9 +12,9 @@ using CLHEP::c_squared;
 double lorgamma_1(double beta) {
   if (beta == 0.0) return 0.0;
   if (beta >= 1.0) {
-    mcout << "double lorgamma_1(double beta): ERROR: beta>=1.0, beta=" << beta
-          << "\n";
-    spexit(mcerr);
+    std::cout << "double lorgamma_1(double beta): ERROR: beta>=1.0, beta="
+              << beta << "\n";
+    spexit(std::cerr);
   }
   beta *= beta;
   const double g2_1 = beta / (1. - beta);

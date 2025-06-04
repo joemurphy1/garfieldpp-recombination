@@ -1,6 +1,5 @@
 #ifndef CIRCUMF_H
 #define CIRCUMF_H
-#include <ostream>
 #include "wcpplib/geometry/vec.h"
 
 /*
@@ -20,8 +19,7 @@ namespace Heed {
 class plane;
 
 /// Circumference, determined by point (center), normal vector, and radius.
-class circumf : public absref
-{
+class circumf : public absref {
  public:
   /// Default constructor.
   circumf();
@@ -53,8 +51,6 @@ class circumf : public absref
   // prec allow to switch to one point if it is almost one
   int cross(const plane& pn, point pt[2], double prec) const;
 
-  friend std::ostream& operator<<(std::ostream& file, const circumf& f);
-
  protected:
   /// Central point, pivot.
   point piv;
@@ -67,7 +63,6 @@ class circumf : public absref
   virtual absref_transmit get_components() override;
   static absref absref::* aref[2];
 };
-std::ostream& operator<<(std::ostream& file, const circumf& f);
 }  // namespace Heed
 
 #endif

@@ -42,14 +42,12 @@ add_library(Heed SHARED
             wcpplib/random/PointsRan.cpp
             wcpplib/random/chisran.cpp
             wcpplib/stream/findmark.cpp
-            wcpplib/stream/prstream.cpp
             wcpplib/util/FunNameStack.cpp)
 target_link_libraries(Heed PRIVATE GarfieldRandom)
 set_property(TARGET Heed PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(TARGET Heed PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET Heed PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 target_include_directories(Heed PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
-target_compile_definitions(Heed PRIVATE FUNNAMESTACK)
 add_library(Garfield::Heed ALIAS Heed)
 
 install(

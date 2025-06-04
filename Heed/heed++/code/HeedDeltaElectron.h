@@ -1,6 +1,7 @@
 #ifndef HEEDDELTAELECTRON_H
 #define HEEDDELTAELECTRON_H
 #include <vector>
+
 #include "heed++/code/HeedCondElectron.h"
 #include "wcpplib/particle/eparticle.h"
 
@@ -11,13 +12,14 @@ class PairProd;
 /// Definition of delta-electron which can be traced through the geometry.
 /// 2003, I. Smirnov
 
-class HeedDeltaElectron : public eparticle
-{
+class HeedDeltaElectron : public eparticle {
  public:
   /// Default constructor.
   HeedDeltaElectron() = default;
   /// Constructor.
-  HeedDeltaElectron(manip_absvol* primvol, const point& pt, const vec& vel, double ftime, long fparent_particle_number, fieldmap* fm, bool fs_print_listing = false);
+  HeedDeltaElectron(manip_absvol* primvol, const point& pt, const vec& vel,
+                    double ftime, long fparent_particle_number, fieldmap* fm,
+                    bool fs_print_listing = false);
   /// Destructor
   virtual ~HeedDeltaElectron() {}
 
@@ -32,9 +34,6 @@ class HeedDeltaElectron : public eparticle
 
  private:
   long m_particle_number;
-
-  /// Flag to print internal algorithms of a selected event.
-  bool m_print_listing = false;
 
   /// Physics-based step length (in internal units).
   /// Later mrange may be reduced by geometry.

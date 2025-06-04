@@ -15,8 +15,7 @@ The file is provided "as is" without express or implied warranty.
 #include "wcpplib/geometry/straight.h"
 #include "wcpplib/geometry/vec.h"
 
-namespace Heed
-{
+namespace Heed {
 
 class polyline;
 
@@ -78,10 +77,8 @@ class plane : public absref {
             int& qcrpll, double prec) const;
 
   double distance(const point& fpt) const;
-  friend std::ostream& operator<<(std::ostream& file, const plane& s);
 };
 
-std::ostream& operator<<(std::ostream& file, const plane& s);
 }  // namespace Heed
 
 #endif

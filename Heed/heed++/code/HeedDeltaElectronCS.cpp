@@ -1,17 +1,17 @@
 #include "heed++/code/HeedDeltaElectronCS.h"
+
 #include <cmath>
 #include <limits>
 
 #include "heed++/code/ElElasticScat.h"
+#include "heed++/code/EnergyMesh.h"
+#include "heed++/code/HeedMatterDef.h"
+#include "heed++/code/PairProd.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/ioniz/e_cont_enloss.h"
 #include "wcpplib/math/lorgamma.h"
-#include "heed++/code/ElElasticScat.h"
-#include "heed++/code/HeedMatterDef.h"
-#include "heed++/code/PairProd.h"
-#include "wcpplib/util/FunNameStack.h"
 #include "wcpplib/matter/MatterDef.h"
-#include "heed++/code/EnergyMesh.h"
+#include "wcpplib/util/FunNameStack.h"
 
 // 2003, I. Smirnov
 
@@ -40,8 +40,6 @@ HeedDeltaElectronCS::HeedDeltaElectronCS(HeedMatterDef* fhmd,
       mlambda(fmlambda),
       sruth(fsruth),
       mthetac(fmthetac) {
-  mfunname("HeedDeltaElectronCS::HeedDeltaElectronCS(...)");
-
   const long qe = hmd->energy_mesh->get_q();
   eLoss.resize(qe, 0.);
   beta.resize(qe, 0.);
@@ -64,7 +62,8 @@ HeedDeltaElectronCS::HeedDeltaElectronCS(HeedMatterDef* fhmd,
     momentum2[ne] =
         (en * en - electron_mass_c2 * electron_mass_c2) / (MeV * MeV);
     momentum[ne] = sqrt(momentum2[ne]);
-    const double dedx = e_cont_enloss(ZA, I_eff, rho, ec, std::numeric_limits<double>::max(), -1);
+    const double dedx = e_cont_enloss(ZA, I_eff, rho, ec,
+                                      std::numeric_limits<double>::max(), -1);
     if (smax < dedx) smax = dedx;
     eLoss[ne] = dedx / (MeV / cm);
   }
@@ -140,14 +139,10 @@ HeedDeltaElectronCS::HeedDeltaElectronCS(HeedMatterDef* fhmd,
     }
     rr = rr / (rho / (gram / cm3));
     rr = rr * 0.1;
-    // Iprintn(mcout, rr);
     double cor = 1.0;
     {
-      // b-k*(x-a)**2 = 0  =>  x= a +- sqrt(b/k)
-      // k = b / (x - a)**2
       double a = 2.5;
       double b = 4;
-      // k=1.0/4.0
       double x = 0.0;
       double k = b / ((x - a) * (x - a));
       x = ek * 1000.0;
@@ -234,9 +229,8 @@ HeedDeltaElectronCS::HeedDeltaElectronCS(HeedMatterDef* fhmd,
 }
 
 double HeedDeltaElectronCS::get_sigma(double energy, double nscat) const {
-  mfunname("double HeedDeltaElectronCS::get_sigma(...)");
-  check_econd11(nscat, < 0, mcerr);
-  // check_econd21(nscat , < 0 || , > eesls->get_qscat() , mcerr);
+  check_econd11(nscat, < 0, std::cerr);
+  // check_econd21(nscat , < 0 || , > eesls->get_qscat() , std::cerr);
   // ^ not compatible with Poisson
   const long qe = ees->get_qe();
   double energyKeV = energy * 1000.0;

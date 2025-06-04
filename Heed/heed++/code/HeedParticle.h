@@ -35,7 +35,6 @@ class HeedParticle : public eparticle {
  private:
   bool m_coulomb_scattering = false;
   bool m_loss_only = false;
-  bool m_print_listing = false;
   bool m_store_clusters = false;
 
   long m_particle_number = 0;

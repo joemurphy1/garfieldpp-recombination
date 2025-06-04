@@ -16,21 +16,8 @@ using CLHEP::mole;
 AtomDef::AtomDef(const std::string& fnameh, const std::string& fnotationh,
                  int fZh, double fAh)
     : nameh(fnameh), notationh(fnotationh), Zh(fZh), Ah(fAh) {
-  mfunname("AtomDef::AtomDef(...)");
   static constexpr int max_poss_atom_z = 100;
-  check_econd21(fZh, < 1 ||, > max_poss_atom_z, mcerr);
-}
-
-void AtomDef::print(std::ostream& file, int l) const {
-  if (l > 0) file << (*this);
-}
-
-std::ostream& operator<<(std::ostream& file, const AtomDef& f) {
-  Ifile << "AtomDef: name=" << std::setw(10) << f.name()
-        << " notation=" << std::setw(3) << f.notation();
-  Ifile << " Z()=" << std::setw(3) << f.Z()
-        << " A()/(gram/mole)=" << f.A() / (gram / mole) << '\n';
-  return file;
+  check_econd21(fZh, < 1 ||, > max_poss_atom_z, std::cerr);
 }
 
 std::list<AtomDef> AtomDefs::atoms;
@@ -107,11 +94,6 @@ const std::list<AtomDef>& AtomDefs::getAtoms() {
   return atoms;
 }
 
-void AtomDefs::printAtoms(std::ostream& file) {
-  Ifile << "AtomDefs::printAtoms:\n";
-  for (const auto& atom : getAtoms()) file << atom;
-}
-
 const AtomDef* AtomDefs::getAtom(const std::string& fnotation) {
   for (const auto& atom : getAtoms()) {
     if (atom.notation() == fnotation) return &atom;
@@ -120,24 +102,20 @@ const AtomDef* AtomDefs::getAtom(const std::string& fnotation) {
 }
 
 double AtomDefs::getA(int fZ) {
-  mfunnamep("double AtomDefs::getA(int fZ)");
   for (const auto& atom : getAtoms()) {
     if (atom.Z() == fZ) return atom.A();
   }
-  funnw.ehdr(mcerr);
-  mcerr << "Atom is not found, Z=" << fZ << '\n';
-  spexit(mcerr);
+  std::cerr << "Atom is not found, Z=" << fZ << '\n';
+  spexit(std::cerr);
   return 0.0;
 }
 
 const AtomDef* AtomDefs::getAtom(int fZ) {
-  mfunnamep("AtomDef* AtomDefs::getAtom(int fZ)");
   for (const auto& atom : getAtoms()) {
     if (atom.Z() == fZ) return &atom;
   }
-  funnw.ehdr(mcerr);
-  mcerr << "Atom is not found, Z=" << fZ << '\n';
-  spexit(mcerr);
+  std::cerr << "Atom is not found, Z=" << fZ << '\n';
+  spexit(std::cerr);
   return nullptr;
 }
 
@@ -148,28 +126,26 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
       atomh(fqatom, nullptr),
       weight_quanh(fqatom, 0.0),
       weight_massh(fqatom, 0.0) {
-  mfunnamep("AtomMixDef::AtomMixDef(...)");
-  check_econd11(fqatom, <= 0, mcerr);
-  check_econd12(fqatom, >, fatom_not.size(), mcerr);
-  check_econd12(fqatom, >, fweight_quan.size(), mcerr);
+  check_econd11(fqatom, <= 0, std::cerr);
+  check_econd12(fqatom, >, fatom_not.size(), std::cerr);
+  check_econd12(fqatom, >, fweight_quan.size(), std::cerr);
 
   for (long n = 0; n < qatomh; ++n) {
     auto ad = AtomDefs::getAtom(fatom_not[n]);
     if (!ad) {
-      funnw.ehdr(mcerr);
-      mcerr << "cannot find atom with notation " << fatom_not[n]
-            << "\nIn particular, check the sequence of initialization\n";
-      spexit(mcerr);
+      std::cerr << "cannot find atom with notation " << fatom_not[n]
+                << "\nIn particular, check the sequence of initialization\n";
+      spexit(std::cerr);
     }
     atomh[n] = ad;
   }
   double s = 0.0;
   for (long n = 0; n < qatomh; n++) {
     weight_quanh[n] = fweight_quan[n];
-    check_econd11(weight_quanh[n], <= 0, mcerr);
+    check_econd11(weight_quanh[n], <= 0, std::cerr);
     s += weight_quanh[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < qatomh; n++) {
       weight_quanh[n] /= s;
@@ -182,7 +158,7 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
   for (long n = 0; n < qatomh; n++) {
     s += weight_massh[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < qatomh; n++) {
       weight_massh[n] /= s;
@@ -204,28 +180,26 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
       atomh(fqatom, nullptr),
       weight_quanh(fqatom, 0.0),
       weight_massh(fqatom, 0.0) {
-  mfunnamep("AtomMixDef::AtomMixDef(...)");
-  check_econd11(fqatom, <= 0, mcerr);
-  check_econd12(fqatom, >, fatom_not.size(), mcerr);
-  check_econd12(fqatom, >, fweight_quan.size(), mcerr);
+  check_econd11(fqatom, <= 0, std::cerr);
+  check_econd12(fqatom, >, fatom_not.size(), std::cerr);
+  check_econd12(fqatom, >, fweight_quan.size(), std::cerr);
 
   for (long n = 0; n < qatomh; ++n) {
     auto ad = AtomDefs::getAtom(fatom_not[n]);
     if (!ad) {
-      funnw.ehdr(mcerr);
-      mcerr << "cannot find atom with notation " << fatom_not[n]
-            << "\nIn particular, check the sequence of initialization\n";
-      spexit(mcerr);
+      std::cerr << "cannot find atom with notation " << fatom_not[n]
+                << "\nIn particular, check the sequence of initialization\n";
+      spexit(std::cerr);
     }
     atomh[n] = ad;
   }
   double s = 0.0;
   for (long n = 0; n < qatomh; n++) {
     weight_quanh[n] = fweight_quan[n];
-    check_econd11(weight_quanh[n], <= 0, mcerr);
+    check_econd11(weight_quanh[n], <= 0, std::cerr);
     s += weight_quanh[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < qatomh; n++) {
       weight_quanh[n] /= s;
@@ -238,7 +212,7 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
   for (long n = 0; n < qatomh; n++) {
     s += weight_massh[n];
   }
-  check_econd11(s, <= 0, mcerr);
+  check_econd11(s, <= 0, std::cerr);
   if (s != 1.0) {
     for (long n = 0; n < qatomh; n++) {
       weight_massh[n] /= s;
@@ -253,35 +227,4 @@ AtomMixDef::AtomMixDef(unsigned long fqatom,
   NumberOfElectronsInGramh = mean_ratio_Z_to_Ah * (gram / mole) * Avogadro;
 }
 
-void AtomMixDef::print(std::ostream& file, int l) const {
-  if (l > 0) file << (*this);
-}
-
-std::ostream& operator<<(std::ostream& file, const AtomMixDef& f) {
-  mfunname("std::ostream& operator << (std::ostream&, const AtomMixDef&)");
-  Ifile << "AtomMixDef\n";
-  indn.n += 2;
-  constexpr double gpm = gram / mole;
-  Ifile << "Z_mean()=" << std::setw(3) << f.Z_mean()
-        << " A_mean()/(gram/mole)=" << f.A_mean() / gpm << '\n';
-  Ifile << "inv_A_mean()*(gram/mole)=" << f.inv_A_mean() * gpm << '\n';
-  Ifile << "mean_ratio_Z_to_A()*(gram/mole)=" << f.mean_ratio_Z_to_A() * gpm
-        << '\n';
-  Ifile << "NumberOfElectronsInGram()=" << f.NumberOfElectronsInGram() << '\n';
-  // Here above the mass unit is defined,
-  // therefore there is no need to divide by gram.
-  Iprintn(file, f.qatom());
-  indn.n += 2;
-  for (long n = 0; n < f.qatom(); n++) {
-    Ifile << "n=" << n << " atom(n)->notation=" << f.atom(n)->notation()
-          << "\n";
-    indn.n += 2;
-    Ifile << " weight_quan(n)=" << f.weight_quan(n)
-          << " weight_mass(n)=" << f.weight_mass(n) << '\n';
-    indn.n -= 2;
-  }
-  indn.n -= 2;
-  indn.n -= 2;
-  return file;
-}
 }  // namespace Heed

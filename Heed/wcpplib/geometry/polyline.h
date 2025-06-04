@@ -1,6 +1,7 @@
 #ifndef POLYLINE_H
 #define POLYLINE_H
 #include <cmath>
+
 #include "wcpplib/geometry/plane.h"
 #include "wcpplib/geometry/straight.h"
 #include "wcpplib/geometry/vec.h"
@@ -32,18 +33,18 @@ class polyline : public absref {
   int Gqpt() const { return qpt; }
   point Gpt(int n) const {
     if (n >= qpt) {
-      mcerr << "error in polyline:Gpt(int n): n>qpt: n=" << n << " qpt=" << qpt
-            << '\n';
-      spexit(mcerr);
+      std::cerr << "error in polyline:Gpt(int n): n>qpt: n=" << n
+                << " qpt=" << qpt << '\n';
+      spexit(std::cerr);
     }
     return pt[n];
   }
   int Gqsl() const { return qsl; }
   straight Gsl(int n) const {
     if (n >= qsl) {
-      mcerr << "error in polyline:Gpt(int n): n>qsl: n=" << n << " qsl=" << qsl
-            << '\n';
-      spexit(mcerr);
+      std::cerr << "error in polyline:Gpt(int n): n>qsl: n=" << n
+                << " qsl=" << qsl << '\n';
+      spexit(std::cerr);
     }
     return sl[n];
   }
@@ -104,15 +105,14 @@ class polyline : public absref {
   polyline& operator=(const polyline& fpl);
 
   ~polyline() { polyline_del(); }
-  friend int plane::cross(const polyline& pll, point* crpt, int& qcrpt, polyline* crpll, int& qcrpll, double prec) const;
-  friend std::ostream& operator<<(std::ostream& file, const polyline& p);
+  friend int plane::cross(const polyline& pll, point* crpt, int& qcrpt,
+                          polyline* crpll, int& qcrpll, double prec) const;
 };
 
 /// Draws straight line via 4 intervals.
 /// Returns 1 if line is drawn and 0 otherwise.
-int cross4pllines(const polyline pl[4], double precision, straight& sl, point ptc[4][2]);
-
-std::ostream& operator<<(std::ostream& file, const polyline& p);
+int cross4pllines(const polyline pl[4], double precision, straight& sl,
+                  point ptc[4][2]);
 
 /// Polyline in plane.
 
@@ -136,10 +136,7 @@ class polyline_pl : public polyline {
   polyline_pl(const polyline& pl);
 
   polyline_pl& operator=(const polyline_pl& fpl);
-  friend std::ostream& operator<<(std::ostream& file, const polyline_pl& p);
 };
-
-std::ostream& operator<<(std::ostream& file, const polyline_pl& p);
 
 /// Polygon in plane.
 
@@ -154,24 +151,25 @@ class polygon : public polyline_pl {
   point cross(const straight& fsl, double prec) const;
   // if no cross, returns vecerror=1.
 
-  int range(const point& fpt, const vec& dir, double& rng, point& fptenr, double prec) const;
+  int range(const point& fpt, const vec& dir, double& rng, point& fptenr,
+            double prec) const;
   polygon& operator=(const polygon& fpl);
   polygon() : polyline_pl(), s_convex(0) {}
   polygon(const polygon& plg) : polyline_pl((polyline_pl)plg) {
     s_convex = plg.s_convex;
   }
-  polygon(const polyline_pl& fpl, int fs_convex) : polyline_pl(fpl), s_convex(fs_convex)
-  {
+  polygon(const polyline_pl& fpl, int fs_convex)
+      : polyline_pl(fpl), s_convex(fs_convex) {
     if (fpl.Gqpt() < 4 || fpl.Gpt(0) != fpl.Gpt(qpt - 1)) {
-      mcerr << "ERROR in polygon::polygon(polyline_pl& fpl, int fs_convex)\n";
-      mcerr << "fpl.Gqpt() < 4 || fpl.Gpt(0)!=fpl.Gpt(qpt-1)\n";
-      spexit(mcerr);
+      std::cerr
+          << "ERROR in polygon::polygon(polyline_pl& fpl, int fs_convex)\n";
+      std::cerr << "fpl.Gqpt() < 4 || fpl.Gpt(0)!=fpl.Gpt(qpt-1)\n";
+      spexit(std::cerr);
     }
   }
   polygon(const straight* fsl, int fqsl, double prec);
   // Prec is used to find crossing points of straight lines
 };
-std::ostream& operator<<(std::ostream& file, const polygon& p);
 
 /// Rectangle
 
@@ -193,7 +191,6 @@ class rectangle : public polygon {
   static absref absref::* aref_rct[4];
   virtual absref_transmit get_components() override;
 };
-std::ostream& operator<<(std::ostream& file, const rectangle& f);
 
 /// Special quadrangle (for cathode strip shamber).
 /// Two lines are going from a point of origin.
@@ -251,12 +248,12 @@ class spquadr : public polygon {
     awidth = sq.awidth;
     return *this;
   }
-  spquadr(const point& fpiv, const straight& sl1, const straight& sl2, const vec& fdir1, const vec& fdir2, double prec);
-
-  friend std::ostream& operator<<(std::ostream& file, const spquadr& p);
+  spquadr(const point& fpiv, const straight& sl1, const straight& sl2,
+          const vec& fdir1, const vec& fdir2, double prec);
 
  private:
-  spquadr(const point& fpiv, const straight& /*sl1*/, const straight& /*sl2*/, const vec& fdir1, const vec& fdir2, polygon& fplgn)
+  spquadr(const point& fpiv, const straight& /*sl1*/, const straight& /*sl2*/,
+          const vec& fdir1, const vec& fdir2, polygon& fplgn)
       : polygon(fplgn),
         piv(fpiv),
         dir1(unit_vec(fdir1)),
@@ -265,7 +262,6 @@ class spquadr : public polygon {
   }
 };
 
-std::ostream& operator<<(std::ostream& file, const spquadr& p);
 }  // namespace Heed
 
 #endif

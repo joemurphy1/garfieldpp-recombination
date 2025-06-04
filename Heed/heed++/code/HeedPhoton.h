@@ -2,12 +2,12 @@
 #define HEEDPHOTON_H
 
 #include <vector>
+
 #include "wcpplib/geometry/gparticle.h"
 
 // #define SFER_PHOTOEL  // make direction of photoelectron absolutely random
 
-namespace Heed
-{
+namespace Heed {
 
 class fieldmap;
 /// Definition of the photon which can be emitted at atomic relaxation cascades
@@ -51,9 +51,6 @@ class HeedPhoton : public gparticle {
   void physics(std::vector<gparticle*>& secondaries) override;
 
  private:
-  /// Flag to print internal algorithms of a selected event
-  bool m_print_listing = false;
-
   fieldmap* m_fm = nullptr;
 };
 }  // namespace Heed

@@ -1,8 +1,8 @@
 #ifndef ATOM_DEF_H
 #define ATOM_DEF_H
+#include <list>
 #include <string>
 #include <vector>
-#include <list>
 
 namespace Heed {
 
@@ -26,7 +26,8 @@ class AtomDef {
   /// Default constructor
   AtomDef() = default;
   /// Constructor
-  AtomDef(const std::string& fnameh, const std::string& fnotationh, int fZh, double fAh);
+  AtomDef(const std::string& fnameh, const std::string& fnotationh, int fZh,
+          double fAh);
   /// Destructor
   ~AtomDef() = default;
 
@@ -34,16 +35,14 @@ class AtomDef {
   const std::string& notation() const { return notationh; }
   int Z() const { return Zh; }
   double A() const { return Ah; }
-
-  void print(std::ostream& file, int l = 0) const;
 };
-std::ostream& operator<<(std::ostream& file, const AtomDef& f);
 
 /// Library of atoms.
 
 class AtomDefs {
  public:
-  static void addAtom(const std::string& name, const std::string& notation, const int z, const double a);
+  static void addAtom(const std::string& name, const std::string& notation,
+                      const int z, const double a);
   static const std::list<AtomDef>& getAtoms();
 
   /// Return the address of atom with this name if it is registered in system,
@@ -55,9 +54,6 @@ class AtomDefs {
   /// Return the address of atom corresponding to a given Z.
   /// If the atom is not registered, the program is terminated. Be careful!
   static const AtomDef* getAtom(int fZ);
-
-  /// Print all registered atoms.
-  static void printAtoms(std::ostream& file);
 
  private:
   static std::list<AtomDef> atoms;
@@ -88,10 +84,11 @@ class AtomMixDef {
   /// Default constructor
   AtomMixDef() = default;
   /// Constructor from list of atoms and weights.
-  AtomMixDef(unsigned long fqatom, const std::vector<std::string>& fatom_not, const std::vector<double>& fweight_quan);
+  AtomMixDef(unsigned long fqatom, const std::vector<std::string>& fatom_not,
+             const std::vector<double>& fweight_quan);
   /// Constructor from list of atoms and number of atoms per molecule.
-  AtomMixDef(unsigned long fqatom, const std::vector<std::string>& fatom_not, const std::vector<long>& fweight_quan);
-  void print(std::ostream& file, int l) const;
+  AtomMixDef(unsigned long fqatom, const std::vector<std::string>& fatom_not,
+             const std::vector<long>& fweight_quan);
   long qatom() const { return qatomh; }
   const std::vector<const AtomDef*>& atom() const { return atomh; }
   const AtomDef* atom(long n) const { return atomh[n]; }
@@ -105,7 +102,6 @@ class AtomMixDef {
   double mean_ratio_Z_to_A() const { return mean_ratio_Z_to_Ah; }
   double NumberOfElectronsInGram() const { return NumberOfElectronsInGramh; }
 };
-std::ostream& operator<<(std::ostream& file, const AtomMixDef& f);
 }  // namespace Heed
 
 #endif

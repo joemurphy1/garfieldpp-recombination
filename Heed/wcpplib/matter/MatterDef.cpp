@@ -20,7 +20,6 @@ MatterDef::MatterDef(const std::string& fname, const std::string& fnotation,
       notationh(fnotation),
       temperatureh(ftemperature),
       densityh(fdensity) {
-  mfunname("MatterDef::MatterDef(...)");
   calc_I_eff();
 }
 
@@ -45,22 +44,5 @@ MatterDef::MatterDef(const std::string& fname, const std::string& fnotation,
     : MatterDef(fname, fnotation, 3, {fatom_not1, fatom_not2, fatom_not3},
                 {fweight_quan1, fweight_quan2, fweight_quan3}, fdensity,
                 ftemperature) {}
-
-void MatterDef::print(std::ostream& file, int l) const {
-  if (l > 0) file << (*this);
-}
-
-std::ostream& operator<<(std::ostream& file, const MatterDef& f) {
-  mfunname("ostream& operator << (ostream& file, const MatterDef& f)");
-  Ifile << "MatterDef: name=" << std::setw(10) << f.name()
-        << " notation=" << std::setw(3) << f.notation() << '\n';
-  indn.n += 2;
-  Ifile << "density/(gram/cm3)=" << f.density() / (CLHEP::gram / CLHEP::cm3)
-        << " temperature/kelvin=" << f.temperature() / CLHEP::kelvin
-        << " I_eff/eV=" << f.I_eff() / CLHEP::eV << '\n';
-  f.AtomMixDef::print(file, 1);
-  indn.n -= 2;
-  return file;
-}
 
 }  // namespace Heed

@@ -1,8 +1,10 @@
 #include "heed++/code/PhotoAbsCSLib.h"
-#include "heed++/code/PhysicalConstants.h"
-#include<vector>
+
 #include <iostream>
-#include<map>
+#include <map>
+#include <vector>
+
+#include "heed++/code/PhysicalConstants.h"
 // 2004, I. Smirnov
 
 namespace {
@@ -51,22 +53,16 @@ Heed::ExAtomPhotoAbsCS generate_Ar_PACS(const std::string& shelllist_dir,
   electron_energy[0] = 0.000050;
   electron_energy[1] = 0.000200;
   asp->add_channel(0.35, electron_energy, photon_energy, 1);
-  // mcout<<"L1:\n";
-  // asp->print(mcout, 2);
 
   asp = Argon_PACS_mod_esc.get_asp(2);
   electron_energy.resize(1);
   electron_energy[0] = 0.000200;
   asp->add_channel(1.0, electron_energy, photon_energy, 1);
-  // mcout<<"L2:\n";
-  // asp->print(mcout, 2);
 
   asp = Argon_PACS_mod_esc.get_asp(3);
   electron_energy.resize(1);
   electron_energy[0] = 0.000200;
   asp->add_channel(1.0, electron_energy, photon_energy, 1);
-  // mcout<<"L3:\n";
-  // asp->print(mcout, 2);
 
   return Argon_PACS_mod_esc;
 }

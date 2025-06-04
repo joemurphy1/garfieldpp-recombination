@@ -23,15 +23,4 @@ int eparticle::force(const point& pt, vec& f, vec& f_perp, double& mrange) {
   return 1;
 }
 
-void eparticle::print(std::ostream& file, int l) const {
-  if (l < 0) return;
-  Ifile << "eparticle: particle is ";
-  if (!m_pardef) {
-    file << "none";
-  } else {
-    file << m_pardef->notation;
-  }
-  file << '\n';
-  mparticle::print(file, l);
-}
 }  // namespace Heed

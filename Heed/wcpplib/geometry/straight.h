@@ -37,10 +37,11 @@ class straight : public absref {
 
  public:
   straight() : piv(), dir() {}
-  straight(const point& fpiv, const vec& fdir) : piv(fpiv), dir(unit_vec(fdir)) {}
+  straight(const point& fpiv, const vec& fdir)
+      : piv(fpiv), dir(unit_vec(fdir)) {}
   straight(const point& fp1, const point& fp2) : piv(fp1), dir() {
     pvecerror("straight::straight(const point& fp1, const point& fp2)");
-    check_econd12(fp1, ==, fp2, mcerr);
+    if (fp1 == fp2) spexit(std::cout);
     dir = unit_vec(fp2 - fp1);
   }
   straight(const plane pl1, const plane pl2);
@@ -137,11 +138,8 @@ class straight : public absref {
   point vecdistance(const vec normal, const straight& slt);
   // space position of cross of plane with normal, may be negative
   // not debugged
-
-  friend std::ostream& operator<<(std::ostream& file, const straight& s);
 };
 
-std::ostream& operator<<(std::ostream& file, const straight& s);
 }  // namespace Heed
 
 #endif
