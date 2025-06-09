@@ -323,6 +323,7 @@ bool ComponentComsol::Initialise(const std::string &mesh,
     if ((i + 1) % nPrint == 0) PrintProgress(double(i + 1) / nNodes);
   }
   PrintProgress(1.);
+  std::cout << std::string(72, ' ') << "\r"; 
   ffield.close();
   auto nMissing = std::count(used.begin(), used.end(), false);
   if (m_range.set) nMissing = nMissing - m_nodes.size() + nInRange;
