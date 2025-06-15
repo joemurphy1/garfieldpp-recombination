@@ -565,8 +565,10 @@ void AtomPhotoAbsCS::get_escape_particles(
   int is = 0;
   std::vector<double> felectron_energy;
   std::vector<double> fphoton_energy;
+  if (asp.size() == get_qshell()) {
+    is = asp[nshell].get_channel(felectron_energy, fphoton_energy);
+  } 
   int main_n = get_main_shell_number(nshell);
-
   if (is != 0) {
     // Generate photo-electron and just copy all what is proposed by
     // get_channel with corrections by hdist.
