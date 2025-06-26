@@ -11,7 +11,7 @@ The file is provided "as is" without express or implied warranty.
 #include "wcpplib/util/FunNameStack.h"
 
 #include <cstdlib>
-
+#include<iostream>
 namespace Heed {
 
 void spexit_action(std::ostream& file) {

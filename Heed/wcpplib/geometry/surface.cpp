@@ -3,6 +3,7 @@
 #include "wcpplib/geometry/circumf.h"
 #include "wcpplib/geometry/polyline.h"
 #include "wcpplib/geometry/trajestep.h"
+#include<iostream>
 /*
 Copyright (c) 2000 Igor B. Smirnov
 

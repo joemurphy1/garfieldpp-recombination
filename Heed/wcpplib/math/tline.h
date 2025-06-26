@@ -1,6 +1,6 @@
 #ifndef TLINE_H
 #define TLINE_H
-
+#include<iostream>
 /*
 Copyright (c) 2005 Igor B. Smirnov
 
@@ -100,7 +100,7 @@ long t_find_interval_end(double x, long q, const D& coor, long n_start) {
   if (n_start < 0 || n_start > q - 1) {
     std::cerr << " ERROR in t_find_interval_end(...):\n";
     std::cerr << "n_start < 0 || n_start > q-1\n";
-    Iprint2n(std::cout, n_start, q);
+    std::cerr << "n_start=" << n_start << ", q=" << q << '\n';
     spexit(std::cerr);
   }
 #ifndef TLINE_REDUCE_TO_RAW_ARR
@@ -207,7 +207,7 @@ PointCoorMesh<T, D>::PointCoorMesh(long fq, D* famesh)
   if (q <= 1) {
     std::cerr << "ERROR in PointCoorMesh<T,D>::PointCoorMesh<T,D>:\n"
               << "q <= 1\n";
-    Iprintn(std::cerr, q);
+    std::cerr << "q=" << q << '\n';
     spexit(std::cerr);
   }
 #ifndef TLINE_REDUCE_TO_RAW_ARR
@@ -224,7 +224,7 @@ PointCoorMesh<T, D>::PointCoorMesh(long fq, D* famesh)
   if (xmin > xmax) {
     std::cerr << "ERROR in PointCoorMesh<T,D>::PointCoorMesh<T,D>:\n"
               << "xmin > xmax\n";
-    Iprint2n(std::cerr, xmin, xmax);
+    std::cerr << "xmin=" << xmin << ", xmax=" << xmax << '\n';
     spexit(std::cerr);
   }
 }
@@ -258,7 +258,7 @@ int PointCoorMesh<T, D>::get_interval(T x, long& n1, T& b1, long& n2,
   if (n1 < 0 || n1 >= q || n2 < 0 || n2 >= q) {
     std::cerr << "ERROR in PointCoorMesh<T,D>::get_interval:\n"
               << "n1 < 0 || n1 >= q || n2 < 0 || n2 >= q\n";
-    Iprint2n(std::cerr, n1, n2);
+    std::cerr << "n1=" << n1 << ", n2=" << n2 << '\n';
     spexit(std::cerr);
   }
 #ifndef TLINE_REDUCE_TO_RAW_ARR
@@ -271,7 +271,7 @@ int PointCoorMesh<T, D>::get_interval(T x, long& n1, T& b1, long& n2,
   if (b1 < xmin || b1 > xmax || b2 < xmin || b2 > xmax) {
     std::cerr << "ERROR in PointCoorMesh<T,D>::get_interval:\n"
               << "b1 < xmin || b1 > xmax || b2 < xmin || b2 > xmax\n";
-    Iprint2n(std::cerr, b1, b2);
+    std::cerr << "b1=" << b1 << ", b2=" << b2 << '\n';
     spexit(std::cerr);
   }
   n_old = n1;
@@ -324,7 +324,7 @@ int PointCoorMesh<T, D>::get_interval_extrap(T x, long& n1, T& b1, long& n2,
     if (n1 < 0 || n1 >= q || n2 < 0 || n2 >= q) {
       std::cerr << "ERROR in PointCoorMesh<T,D>::get_interval:\n"
                 << "n1 < 0 || n1 >= q || n2 < 0 || n2 >= q\n";
-      Iprint2n(std::cerr, n1, n2);
+      std::cerr << "n1=" << n1 << ", n2=" << n2 << '\n';
       spexit(std::cerr);
     }
 #ifndef TLINE_REDUCE_TO_RAW_ARR
@@ -337,7 +337,7 @@ int PointCoorMesh<T, D>::get_interval_extrap(T x, long& n1, T& b1, long& n2,
     if (b1 < xmin || b1 > xmax || b2 < xmin || b2 > xmax) {
       std::cerr << "ERROR in PointCoorMesh<T,D>::get_interval:\n"
                 << "b1 < xmin || b1 > xmax || b2 < xmin || b2 > xmax\n";
-      Iprint2n(std::cerr, b1, b2);
+      std::cerr << "b1=" << b1 << ", b2=" << b2 << '\n';
       spexit(std::cerr);
     }
     n_old = n1;

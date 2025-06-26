@@ -23,6 +23,7 @@ appear in all copies and in supporting documentation.
 The file is provided "as is" without express or implied warranty.
 */
 #include <string>
+#include<iostream>
 
 #include "wcpplib/geometry/vfloat.h"
 #include "wcpplib/util/FunNameStack.h"

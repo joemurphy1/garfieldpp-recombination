@@ -2,6 +2,7 @@
 
 #include <iomanip>
 #include <numeric>
+#include<iostream>
 
 #include "Garfield/Random.hh"
 #include "heed++/code/BGMesh.h"
@@ -67,11 +68,11 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
     std::cerr << "ERROR in void HeedParticle_BGM::physics()\n";
     std::cerr << "beta*gamma is outside range of cross-section table\n";
     std::streamsize old_prec = std::cerr.precision(15);
-    Iprint2n(std::cerr, m_curr_gamma_1, bg);
+    std::cerr << "m_curr_gamma_1=" << m_curr_gamma_1 << ", bg=" << bg << '\n';
     std::cerr.precision(old_prec);
-    Iprint2n(std::cerr, n1, n2);
-    Iprint2n(std::cerr, b1, b2);
-    Iprintn(std::cerr, etcs->mesh);
+    std::cerr << "n1=" << n1 << ", n2=" << n2 << '\n';
+    std::cerr << "b1=" << b1 << ", b2=" << b2 << '\n';
+    std::cerr << "etcs->mesh=" << etcs->mesh << '\n';
     // std::cerr << "This particle is:\n";
     // print(std::cerr, 2);
     // std::cerr << "This volume is:\n";

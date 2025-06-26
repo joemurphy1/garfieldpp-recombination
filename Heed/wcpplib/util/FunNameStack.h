@@ -1,6 +1,5 @@
 #ifndef FUNNAMESTACK_H
 #define FUNNAMESTACK_H
-#include "wcpplib/stream/prstream.h"
 /*
 Copyright (c) 1999 I. B. Smirnov
 
@@ -12,6 +11,7 @@ appear in all copies and in supporting documentation.
 It is provided "as is" without express or implied warranty.
 */
 #include <ostream>
+#include <iosfwd>
 
 #define check_econd1(condition, a1, stream) \
   if (condition) {                          \

@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <memory>
+#include<iostream>
 
 #include "wcpplib/geometry/polyline.h"
 #include "wcpplib/geometry/surface.h"
