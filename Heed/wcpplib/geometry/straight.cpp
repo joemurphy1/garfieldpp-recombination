@@ -104,12 +104,12 @@ double straight::vecdistance(const straight& sl, int& type_of_cross,
     }
   }  // now we know that the lines are not parallel
 
-  basis bs(s1.dir, s2.dir, "local");
+  basis bs(s1.dir, s2.dir);
   // ez is parallel to s1.dir,                        ez=unit_vec(s1.dir)
   // ey is perpendicular to plane which have s1.dir and s2.dir,
   //                                                 ey=unit_vec(ez||s2.dir)
   // ex is vector product of ey and ez,               ex=ey||ez
-  fixsyscoor scl(&s1.piv, &bs, "local");
+  fixsyscoor scl(&s1.piv, &bs);
   plane pn(point(0, 0, 0), vec(1, 0, 0));  // assumed to be in scl
                                            // This plane is defined by
   s2.up(&scl);
@@ -192,8 +192,8 @@ point straight::vecdistance(const vec normal, const straight& slt) {
     vecerror = 1;
     return point(0, 0, 0);
   }
-  basis bash(dir, normal, "temprorary");
-  fixsyscoor sc(&piv, &bash, "temprorary");
+  basis bash(dir, normal);
+  fixsyscoor sc(&piv, &bash);
   straight slh = slt;
   slh.up(&sc);
   plane pn = plane(point(0, 0, 0), vec(1, 0, 0));

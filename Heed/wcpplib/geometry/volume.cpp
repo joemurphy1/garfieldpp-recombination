@@ -187,9 +187,8 @@ sh_manip_absvol::sh_manip_absvol(const sh_manip_absvol& f)
     : absref(f), manip_absvol(f), csys(f.csys) {}
 sh_manip_absvol::sh_manip_absvol(const abssyscoor& f) : csys(f) {}
 
-sh_manip_absvol::sh_manip_absvol(const point& fc, const basis& fbas,
-                                 const std::string& fname)
-    : csys(fc, fbas, fname) {}
+sh_manip_absvol::sh_manip_absvol(const point& fc, const basis& fbas)
+    : csys(fc, fbas) {}
 
 void sh_manip_absvol::m_chname(char* nm) const {
   strcpy(nm, "mvol->");

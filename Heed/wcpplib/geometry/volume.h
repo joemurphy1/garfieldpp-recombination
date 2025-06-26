@@ -172,7 +172,7 @@ class sh_manip_absvol : public manip_absvol {
   sh_manip_absvol(sh_manip_absvol& f);
   sh_manip_absvol(const sh_manip_absvol& f);
   sh_manip_absvol(const abssyscoor& f);
-  sh_manip_absvol(const point& fc, const basis& fbas, const std::string& fname);
+  sh_manip_absvol(const point& fc, const basis& fbas);
   virtual ~sh_manip_absvol() {}
 
   virtual void m_chname(char* nm) const;

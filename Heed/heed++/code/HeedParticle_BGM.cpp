@@ -84,7 +84,7 @@ void HeedParticle_BGM::physics(std::vector<gparticle*>& secondaries) {
   const double f2 = (bg - b1) * (b2 - b1);
   const double f1 = 1. - f2;
   const long qa = matter->qatom();
-  basis tempbas(m_currpos.dir, "tempbas");
+  basis tempbas(m_currpos.dir);
   // Shorthand.
   const auto sampleTransfer =
       t_hisran_step_ar<double, std::vector<double>,
