@@ -26,7 +26,6 @@ add_library(Heed SHARED
             wcpplib/geometry/trajestep.cpp
             wcpplib/geometry/vec.cpp
             wcpplib/geometry/volume.cpp
-            wcpplib/ioniz/bethe_bloch.cpp
             wcpplib/ioniz/e_cont_enloss.cpp
             wcpplib/math/PolLeg.cpp
             wcpplib/math/cubic.cpp
