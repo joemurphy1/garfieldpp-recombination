@@ -48,22 +48,6 @@ box::box(double fdx, double fdy, double fdz, const std::string& fname) {
   init_planes();
 }
 
-box::box(double fdx, double fdy, double fdz, double fprec,
-         const std::string& fname) {
-  pvecerror(
-      "box(double fdx, double fdy, double fdz, double fprec, const string "
-      "&fname)");
-  m_dx = fabs(fdx);
-  m_dy = fabs(fdy);
-  m_dz = fabs(fdz);
-  m_dxh = 0.5 * m_dx;
-  m_dyh = 0.5 * m_dy;
-  m_dzh = 0.5 * m_dz;
-  m_name = fname;
-  prec = fprec;
-  init_planes();
-}
-
 box::box(box& fb) : absref(fb), absvol(fb) {
   pvecerror("box(box& fb)");
   m_dx = fb.m_dx;

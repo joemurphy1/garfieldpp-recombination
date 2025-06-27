@@ -34,9 +34,6 @@ class box : public absvol {
   box();
   // Constructor, compute precision from mean of dimensions.
   box(double fdx, double fdy, double fdz, const std::string& fname);
-  /// Constructor with user-provided precision.
-  box(double fdx, double fdy, double fdz, double fprec,
-      const std::string& fname);
   box(box& fb);
   box(const box& fb);
   /// Destructor
@@ -54,20 +51,6 @@ class box : public absvol {
  protected:
   absref_transmit get_components() override;
 };
-
-/// Box "manipulator".
-
-class manip_box : public manip_absvol, public box {
- public:
-  /// Constructor
-  manip_box() : manip_absvol(), box() {}
-  manip_box(const box& f) : manip_absvol(), box(f) {}
-  /// Destructor
-  virtual ~manip_box() {}
-
-  absvol* Gavol() const override;
-};
-
 
 }  // namespace Heed
 #endif
