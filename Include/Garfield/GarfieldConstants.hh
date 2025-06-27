@@ -36,6 +36,7 @@ static const int StatusTooManySteps = -2;
 static const int StatusCalculationAbandoned = -3;
 static const int StatusLeftDriftMedium = -5;
 static const int StatusAttached = -7;
+static const int StatusRecombined = -9;
 static const int StatusSharpKink = -8;
 static const int StatusHitPlane = -11;
 static const int StatusBelowTransportCut = -16;

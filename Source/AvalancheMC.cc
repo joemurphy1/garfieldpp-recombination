@@ -12,6 +12,7 @@
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewDrift.hh"
+#include "Garfield/ComponentGrid.hh"
 
 namespace {
 
@@ -374,6 +375,28 @@ int AvalancheMC::DriftLine(
           break;
         }
       }
+      
+      if (m_useRecombination) {
+        const double alpha = 1.72e-15; //[cm3/ns]
+        double prec = 0.;
+        if (ptype == Particle::NegativeIon) {
+          const double rho = GetNegativeIonDensity(ptype, m0, x0, e0, b0);
+          prec = 1. - std::exp(-alpha * rho * (t1 - t0));
+        }
+        if (ptype == Particle::Ion) {
+          const double rho = GetIonDensity(ptype, m0, x0, e0, b0);
+          prec = 1. - std::exp(-alpha * rho * (t1 - t0));
+        }
+        if (RndmUniform() < prec) {
+          x1 = MidPoint(x0, x1);
+          t1 = 0.5 * (t0 + t1);
+          path.emplace_back(MakePoint(x1, t1));
+          status = StatusRecombined;
+          if (m_debug) std::cout << "    Recombined.\n";
+          break;
+        }
+      }
+
     } else {
       // Drift and diffusion. Determine the time step.
       double dt = 0.;
@@ -466,6 +489,26 @@ int AvalancheMC::DriftLine(
           path.emplace_back(MakePoint(x1, t0 + dt));
           status = StatusAttached;
           if (m_debug) std::cout << "    Attached.\n";
+          break;
+        }
+      }
+      if (m_useRecombination) {
+        const double alpha = 1.72e-15; //[cm3/ns]
+        double prec = 0.;
+        if (ptype == Particle::NegativeIon) {
+          const double rho = GetNegativeIonDensity(ptype, m0, x0, e0, b0);
+          prec = 1. - std::exp(-alpha * rho * dt);
+        }
+        if (ptype == Particle::Ion) {
+          const double rho = GetIonDensity(ptype, m0, x0, e0, b0);
+          prec = 1. - std::exp(-alpha * rho * dt);
+        }
+        if (RndmUniform() < prec) {
+          x1 = MidPoint(x0, x1);
+          dt *= 0.5;
+          path.emplace_back(MakePoint(x1, t0 + dt));
+          status = StatusRecombined;
+          if (m_debug) std::cout << "    Recombined.\n";
           break;
         }
       }
@@ -881,6 +924,38 @@ double AvalancheMC::GetAttachment(const Particle ptype, Medium* medium,
     medium->HoleAttachment(e[0], e[1], e[2], b[0], b[1], b[2], eta);
   }
   return eta;
+}
+
+double AvalancheMC::GetIonDensity(const Particle ptype, Medium* medium,
+                                    const std::array<double, 3>& x,
+                                    const std::array<double, 3>& e,
+                                    const std::array<double, 3>& b) const {
+  double rho = 0.;
+  if (m_useDensityMap) {
+    const auto nComponents = m_sensor->GetNumberOfComponents();
+    for (size_t i = 0; i < nComponents; ++i) {
+      auto cmp = m_sensor->GetComponent(i);
+      if (!cmp->HasIonMap()) continue;
+      rho = cmp->GetIonDensity(x[0], x[1], x[2]);
+    }
+  }
+  return rho;
+}
+
+double AvalancheMC::GetNegativeIonDensity(const Particle ptype, Medium* medium,
+                                          const std::array<double, 3>& x,
+                                          const std::array<double, 3>& e,
+                                          const std::array<double, 3>& b) const {
+  double rho = 0.;
+  if (m_useDensityMap) {
+    const auto nComponents = m_sensor->GetNumberOfComponents();
+    for (size_t i = 0; i < nComponents; ++i) {
+      auto cmp = m_sensor->GetComponent(i);
+      if (!cmp->HasNegativeIonMap()) continue;
+      rho = cmp->GetNegativeIonDensity(x[0], x[1], x[2]);
+    }
+  }
+  return rho;
 }
 
 double AvalancheMC::GetTownsend(const Particle ptype, Medium* medium,

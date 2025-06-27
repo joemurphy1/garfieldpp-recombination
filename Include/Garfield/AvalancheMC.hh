@@ -13,6 +13,7 @@ namespace Garfield {
 class Sensor;
 class ViewDrift;
 class Medium;
+class ComponentGrid;
 /// Calculate drift lines and avalanches based on macroscopic transport
 /// coefficients, using Monte Carlo integration.
 class AvalancheMC {
@@ -153,17 +154,14 @@ class AvalancheMC {
     m_doEquilibration = on;
   }
 
-  /// Switch on diffusion (default: enabled).
-  void EnableDiffusion() { m_useDiffusion = true; }
-  /// Switch off diffusion.
-  void DisableDiffusion() { m_useDiffusion = false; }
-
-  /// Switch on attachment (default: enabled).
-  void EnableAttachment() { m_useAttachment = true; }
-  /// Switch off attachment and multiplication.
-  void DisableAttachment() { m_useAttachment = false; }
-  /// Switch multiplication on/off.
-  void EnableMultiplication(const bool on) { m_useMultiplication = on; }
+  /// Switch diffusion on/off (default: enabled).
+  void EnableDiffusion(const bool on = true) { m_useDiffusion = on; }
+  /// Switch attachment on/off (default: enabled).
+  void EnableAttachment(const bool on = true) { m_useAttachment = on; }
+  /// Switch recombination on/off (default: disabled).
+  void EnableRecombination(const bool on = true) { m_useRecombination = on; }
+  /// Switch multiplication on/off (default: enabled).
+  void EnableMultiplication(const bool on = true) { m_useMultiplication = on; }
 
   /// Retrieve the Townsend coefficient from the component.
   void EnableTownsendMap(const bool on = true) { m_useTownsendMap = on; }
@@ -173,6 +171,8 @@ class AvalancheMC {
   void EnableMobilityMap(const bool on = true) { m_useMobilityMap = on; }
   /// Retrieve the drift velocity from the component.
   void EnableVelocityMap(const bool on = true) { m_useVelocityMap = on; }
+  /// Retrieve the densities from the component.
+  void EnableDensityMap(const bool on = true) { m_useDensityMap = on; }
 
   /** Set a maximum avalanche size (ignore further multiplication
       once this size has been reached). */
@@ -280,6 +280,7 @@ class AvalancheMC {
   bool m_doRKF = false;
   bool m_useDiffusion = true;
   bool m_useAttachment = true;
+  bool m_useRecombination = true;
   bool m_useMultiplication = true;
   /// Scaling factor for electron signals.
   double m_scaleE = 1.;
@@ -296,6 +297,8 @@ class AvalancheMC {
   bool m_useMobilityMap = false;
   /// Take the drift velocities from the component.
   bool m_useVelocityMap = false;
+  /// Take the densities from the component.
+  bool m_useDensityMap = false;
 
   bool m_debug = false;
 
@@ -330,6 +333,16 @@ class AvalancheMC {
                        const std::array<double, 3>& x,
                        const std::array<double, 3>& e,
                        const std::array<double, 3>& b) const;
+  /// Compute the ion density.
+  double GetIonDensity(const Particle particle, Medium* medium,
+                       const std::array<double, 3>& x,
+                       const std::array<double, 3>& e,
+                       const std::array<double, 3>& b) const;
+  /// Compute the negative ion density.
+  double GetNegativeIonDensity(const Particle particle, Medium* medium,
+                               const std::array<double, 3>& x,
+                               const std::array<double, 3>& e,
+                               const std::array<double, 3>& b) const;
   /// Compute the Townsend coefficient.
   double GetTownsend(const Particle particle, Medium* medium,
                      const std::array<double, 3>& x,
