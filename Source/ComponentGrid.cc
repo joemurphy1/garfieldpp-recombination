@@ -91,6 +91,31 @@ void ComponentGrid::ElectricField(const double x, const double y,
   ElectricField(x, y, z, ex, ey, ez, v, m, status);
 }
 
+void ComponentGrid::SetUniformElectricField(const double ex, const double ey,
+                                            const double ez) {
+  if (!m_hasMesh) {
+    std::cerr << m_className << "::SetUniformElectricField: Mesh not set.\n";
+    return;
+  }
+
+  // Initialiser les champs
+  Initialise(m_efields);
+
+  m_hasPotential = false;
+  m_active.assign(m_nX[0], std::vector<std::vector<bool>>(
+                               m_nX[1], std::vector<bool>(m_nX[2], true)));
+
+  for (unsigned int i = 0; i < m_nX[0]; ++i) {
+    for (unsigned int j = 0; j < m_nX[1]; ++j) {
+      for (unsigned int k = 0; k < m_nX[2]; ++k) {
+        m_efields[i][j][k].fx = ex;
+        m_efields[i][j][k].fy = ey;
+        m_efields[i][j][k].fz = ez;
+      }
+    }
+  }
+}
+
 void ComponentGrid::WeightingField(const double x, const double y,
                                    const double z, double& wx, double& wy,
                                    double& wz, const std::string& /*label*/) {

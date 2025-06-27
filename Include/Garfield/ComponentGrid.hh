@@ -37,6 +37,8 @@ class ComponentGrid : public Component {
   /// Use cylindrical coordinates.
   void SetCylindricalCoordinates();
 
+  void SetUniformElectricField(double ex, double ey, double ez);
+
   /** Import electric field and potential values from a file.
    * The file is supposed to contain one line for each grid point starting with
    *   - either two or three floating point numbers,
