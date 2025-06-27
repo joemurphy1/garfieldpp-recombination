@@ -30,7 +30,6 @@ add_library(Heed SHARED
             wcpplib/math/PolLeg.cpp
             wcpplib/math/cubic.cpp
             wcpplib/math/kinem.cpp
-            wcpplib/math/linexi2.cpp
             wcpplib/math/lorgamma.cpp
             wcpplib/matter/AtomDef.cpp
             wcpplib/matter/GasDef.cpp
