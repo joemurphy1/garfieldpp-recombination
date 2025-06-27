@@ -3,7 +3,6 @@
 #define G_HEED_CHAMBER_H
 
 #include "heed++/code/EnTransfCS.h"
-#include "heed++/code/HeedCondElectron.h"
 #include "heed++/code/HeedDeltaElectronCS.h"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/geometry/box.h"
