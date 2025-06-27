@@ -68,23 +68,6 @@ class manip_box : public manip_absvol, public box {
   absvol* Gavol() const override;
 };
 
-// *****   sh_manip_box  ********
-
-class sh_manip_box : public sh_manip_absvol, public box {
- public:
-  /// Constructor
-  sh_manip_box() : sh_manip_absvol(), box() {}
-  sh_manip_box(const box& f) : sh_manip_absvol(), box(f) {}
-  sh_manip_box(const abssyscoor& fcsys, const box& fbx)
-      : sh_manip_absvol(fcsys), box(fbx) {}
-  /// Destructor
-  virtual ~sh_manip_box() {}
-
-  absvol* Gavol() const override;
-
- protected:
-  absref_transmit get_components() override;
-};
 
 }  // namespace Heed
 #endif

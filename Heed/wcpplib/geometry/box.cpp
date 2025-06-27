@@ -191,19 +191,4 @@ int box::range_ext(trajestep& fts, int s_ext) const {
 
 void box::income(gparticle* /*gp*/) {}
 
-// *****   manip_box  ********
-
-absvol* manip_box::Gavol() const { return (box*)this; }
-
-// *****   sh_manip_box  ********
-
-// absvol* sh_manip_box::Gavol() const { return (box*)this; }
-absvol* sh_manip_box::Gavol() const {
-  return dynamic_cast<box*>(const_cast<sh_manip_box*>(this));
-}
-
-absref_transmit sh_manip_box::get_components() {
-  return sh_manip_absvol::get_components();
-}
-
 }  // namespace Heed
