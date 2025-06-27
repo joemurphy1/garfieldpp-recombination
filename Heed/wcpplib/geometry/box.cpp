@@ -30,12 +30,12 @@ absref_transmit box::get_components() {
 }
 
 box::box()
-    : m_dx(0), m_dy(0), m_dz(0), m_dxh(0), m_dyh(0), m_dzh(0), m_name("none") {
+    : m_dx(0), m_dy(0), m_dz(0), m_dxh(0), m_dyh(0), m_dzh(0){
   init_prec();
   init_planes();
 }
 
-box::box(double fdx, double fdy, double fdz, const std::string& fname) {
+box::box(double fdx, double fdy, double fdz) {
   pvecerror("box(double fdx, double fdy, double fdz, const string &fname)");
   m_dx = fabs(fdx);
   m_dy = fabs(fdy);
@@ -43,7 +43,6 @@ box::box(double fdx, double fdy, double fdz, const std::string& fname) {
   m_dxh = 0.5 * m_dx;
   m_dyh = 0.5 * m_dy;
   m_dzh = 0.5 * m_dz;
-  m_name = fname;
   init_prec();
   init_planes();
 }
@@ -57,7 +56,6 @@ box::box(box& fb) : absref(fb), absvol(fb) {
   m_dyh = 0.5 * m_dy;
   m_dzh = 0.5 * m_dz;
   prec = fb.prec;
-  m_name = fb.m_name;
   init_planes();
 }
 
@@ -69,7 +67,6 @@ box::box(const box& fb) : absref(fb), absvol(fb) {
   m_dxh = 0.5 * m_dx;
   m_dyh = 0.5 * m_dy;
   m_dzh = 0.5 * m_dz;
-  m_name = fb.m_name;
   prec = fb.prec;
   init_planes();
 }

@@ -20,7 +20,7 @@ class HeedChamber : public Heed::sh_manip_absvol,
               const Heed::HeedDeltaElectronCS& hdecs)
       : Heed::sh_manip_absvol(fcsys),
         Heed::box(dx * Heed::CLHEP::cm, dy * Heed::CLHEP::cm,
-                  dz * Heed::CLHEP::cm, "chamber"),
+                  dz * Heed::CLHEP::cm),
         Heed::EnTransfCS(etcs),
         Heed::HeedDeltaElectronCS(hdecs) {
     s_sensitive = true;

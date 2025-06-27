@@ -1,8 +1,5 @@
 #ifndef BOX_H
 #define BOX_H
-
-#include <string>
-
 #include "wcpplib/geometry/surface.h"
 #include "wcpplib/geometry/volume.h"
 /*
@@ -27,13 +24,12 @@ class box : public absvol {
   double m_dx, m_dy, m_dz;     ///< Lengths of sides
   double m_dxh, m_dyh, m_dzh;  ///< Half-lengths of sides
   ulsvolume m_ulsv;
-  std::string m_name;
 
  public:
   /// Default constructor.
   box();
   // Constructor, compute precision from mean of dimensions.
-  box(double fdx, double fdy, double fdz, const std::string& fname);
+  box(double fdx, double fdy, double fdz);
   box(box& fb);
   box(const box& fb);
   /// Destructor
