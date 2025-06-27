@@ -1501,6 +1501,10 @@ void ComponentGrid::Reset() {
   m_hMobility.clear();
   m_eVelocity.clear();
   m_hVelocity.clear();
+  m_nIons.clear();
+  m_nNegativeIons.clear();
+  m_nElectrons.clear();
+  m_nHoles.clear();
 
   m_wdfields.clear();
   m_wdtimes.clear();
@@ -1603,10 +1607,145 @@ bool ComponentGrid::LoadHoleVelocity(const std::string& fname,
   }
   return true;
 }
+void ComponentGrid::AddParticle(
+    const double x, const double y, const double z, const double w,
+    std::vector<std::vector<std::vector<double>>>& grid) {
+
+  if (!m_hasMesh) {
+    std::cerr << m_className << "::AddParticle: Mesh not set.\n";
+    return;
+  }
+
+  // Check if the point is inside the mesh boundaries.
+  if (x < m_xMin[0] || x > m_xMax[0] ||
+      y < m_xMin[1] || y > m_xMax[1] ||
+      z < m_xMin[2] || z > m_xMax[2]) return;
+
+  // Initialize the grid if needed.
+  if (grid.empty()) {
+    grid.resize(m_nX[0],
+                std::vector<std::vector<double>>(m_nX[1],
+                                                 std::vector<double>(m_nX[2], 0.)));
+  }
+
+  // Get voxel indices.
+  const unsigned int i = std::round((x - m_xMin[0]) * m_sX[0]);
+  const unsigned int j = std::round((y - m_xMin[1]) * m_sX[1]);
+  const unsigned int k = std::round((z - m_xMin[2]) * m_sX[2]);
+
+  if (i >= m_nX[0] || j >= m_nX[1] || k >= m_nX[2]) return;
+
+  grid[i][j][k] += w;
+}
+
+void ComponentGrid::AddIon(const double x, const double y, const double z,
+                           const double w) {
+  AddParticle(x, y, z, w, m_nIons);
+}
+
+void ComponentGrid::AddNegativeIon(const double x, const double y, const double z,
+                                   const double w) {
+  AddParticle(x, y, z, w, m_nNegativeIons);
+}
+
+void ComponentGrid::AddElectron(const double x, const double y, const double z,
+                                const double w) {
+  AddParticle(x, y, z, w, m_nElectrons);
+}
+
+void ComponentGrid::AddHole(const double x, const double y, const double z,
+                            const double w) {
+  AddParticle(x, y, z, w, m_nHoles);
+}
+
+double ComponentGrid::GetDensity(
+    const double xi, const double yi, const double zi,
+    const std::vector<std::vector<std::vector<double>>>& field) const {
+
+  if (!m_hasMesh) {
+    std::cerr << m_className << "::GetDensity: Mesh is not set.\n";
+    return false;
+  }
+
+  if (field.empty()) {
+    std::cerr << m_className << "::GetDensity: Field is empty.\n";
+    return false;
+  }
+
+  std::array<bool, 3> mirrored = {false, false, false};
+  std::array<double, 3> xx = {xi, yi, zi};
+  double theta = 0.;
+  if (m_coordinates == Coordinates::Cylindrical) {
+    if (fabs(xi) > Small || fabs(yi) > Small) {
+      theta = atan2(yi, xi);
+      xx[0] = sqrt(xi * xi + yi * yi);
+      xx[1] = theta;
+    }
+  }
+
+  for (size_t i = 0; i < 3; ++i) {
+    xx[i] = Reduce(xx[i], m_xMin[i], m_xMax[i],
+                   m_periodic[i], m_mirrorPeriodic[i], mirrored[i]);
+    if (xx[i] < m_xMin[i] || xx[i] > m_xMax[i]) return false;
+  }
+
+  const double sx = (xx[0] - m_xMin[0]) * m_sX[0];
+  const double sy = (xx[1] - m_xMin[1]) * m_sX[1];
+  const double sz = (xx[2] - m_xMin[2]) * m_sX[2];
+  const unsigned int i0 = static_cast<unsigned int>(std::floor(sx));
+  const unsigned int j0 = static_cast<unsigned int>(std::floor(sy));
+  const unsigned int k0 = static_cast<unsigned int>(std::floor(sz));
+  const double ux = sx - i0;
+  const double uy = sy - j0;
+  const double uz = sz - k0;
+  const unsigned int i1 = std::min(i0 + 1, m_nX[0] - 1);
+  const unsigned int j1 = std::min(j0 + 1, m_nX[1] - 1);
+  const unsigned int k1 = std::min(k0 + 1, m_nX[2] - 1);
+  const double vx = 1. - ux;
+  const double vy = 1. - uy;
+  const double vz = 1. - uz;
+
+  const double f000 = field[i0][j0][k0];
+  const double f100 = field[i1][j0][k0];
+  const double f010 = field[i0][j1][k0];
+  const double f110 = field[i1][j1][k0];
+  const double f001 = field[i0][j0][k1];
+  const double f101 = field[i1][j0][k1];
+  const double f011 = field[i0][j1][k1];
+  const double f111 = field[i1][j1][k1];
+
+  double val = ((f000 * vx + f100 * ux) * vy +
+                (f010 * vx + f110 * ux) * uy) * vz +
+               ((f001 * vx + f101 * ux) * vy +
+                (f011 * vx + f111 * ux) * uy) * uz;
+  val *= (m_sX[0] * m_sX[1] * m_sX[2]);  // Convert to density.
+
+  return val;
+}
+
+double ComponentGrid::GetIonDensity(const double x, const double y,
+                                    const double z) {
+  return GetDensity(x, y, z, m_nIons);
+}
+
+double ComponentGrid::GetNegativeIonDensity(const double x, const double y,
+                                            const double z) {
+  return GetDensity(x, y, z, m_nNegativeIons);
+}
+
+double ComponentGrid::GetElectronDensity(const double x, const double y,
+                                         const double z) {
+  return GetDensity(x, y, z, m_nElectrons);
+}
+
+double ComponentGrid::GetHoleDensity(const double x, const double y,
+                                     const double z) {
+  return GetDensity(x, y, z, m_nHoles);
+}
 
 bool ComponentGrid::ElectronVelocity(const double x, const double y,
-                                     const double z, double& vx, double& vy,
-                                     double& vz) {
+                                       const double z, double& vx, double& vy,
+                                       double& vz) {
   if (m_eVelocity.empty()) {
     PrintNotReady(m_className + "::ElectronVelocity");
     return false;

@@ -136,6 +136,23 @@ class ComponentGrid : public Component {
   bool LoadHoleVelocity(const std::string& fname, const std::string& fmt,
                         const double scaleX = 1., const double scaleV = 1.e-9);
 
+  void AddIon(const double x, const double y, const double z,
+              const double w = 1.0);
+  void AddNegativeIon(const double x, const double y, const double z,
+                      const double w = 1.0);
+  void AddElectron(const double x, const double y, const double z,
+                   const double w = 1.0);
+  void AddHole(const double x, const double y, const double z,
+               const double w = 1.0);
+  double GetIonDensity(
+    const double x, const double y, const double z) override;
+  double GetNegativeIonDensity(
+    const double x, const double y, const double z) override;
+  double GetElectronDensity(
+    const double x, const double y, const double z) override;
+  double GetHoleDensity(
+    const double x, const double y, const double z) override;
+
   void Clear() override { Reset(); }
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,
@@ -187,6 +204,18 @@ class ComponentGrid : public Component {
   bool HasVelocityMap() const override {
     return !(m_eVelocity.empty() && m_hVelocity.empty());
   }
+  bool HasIonMap() const override {
+    return !(m_nIons.empty());
+  }
+  bool HasNegativeIonMap() const override {
+    return !(m_nNegativeIons.empty());
+  }
+  bool HasElectronMap() const override {
+    return !(m_nElectrons.empty());
+  }
+  bool HasHoleMap() const override {
+    return !(m_nHoles.empty());
+  }
   bool ElectronVelocity(const double x, const double y, const double z,
                         double& vx, double& vy, double& vz) override;
   bool HoleVelocity(const double x, const double y, const double z, double& vx,
@@ -220,6 +249,11 @@ class ComponentGrid : public Component {
   /// Velocity maps for electrons and holes.
   std::vector<std::vector<std::vector<Node> > > m_eVelocity;
   std::vector<std::vector<std::vector<Node> > > m_hVelocity;
+  /// Maps for ions, negative ions, electrons and holes.
+  std::vector<std::vector<std::vector<double> > > m_nIons;
+  std::vector<std::vector<std::vector<double> > > m_nNegativeIons;
+  std::vector<std::vector<std::vector<double> > > m_nElectrons;
+  std::vector<std::vector<std::vector<double> > > m_nHoles;
   /// Active medium flag.
   std::vector<std::vector<std::vector<bool> > > m_active;
 
@@ -264,6 +298,11 @@ class ComponentGrid : public Component {
   bool GetData(const double x, const double y, const double z,
                const std::vector<std::vector<std::vector<double> > >& table,
                double& value);
+  double GetDensity(
+      const double x, const double y, const double z,
+      const std::vector<std::vector<std::vector<double>>>& field) const;
+  void AddParticle(double x, double y, double z, double w,
+                 std::vector<std::vector<std::vector<double>>>& grid);
 
   /// Reduce a coordinate to the basic cell (in case of periodicity).
   double Reduce(const double xin, const double xmin, const double xmax,

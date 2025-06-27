@@ -401,6 +401,14 @@ class GARFIELD_CLASS_NAME(Component) {
   virtual bool HasMobilityMap() const { return false; }
   /// Does the component have velocity maps?
   virtual bool HasVelocityMap() const { return false; }
+  /// Does the component have ion maps?
+  virtual bool HasIonMap() const { return false; }
+  /// Does the component have negative ion maps?
+  virtual bool HasNegativeIonMap() const { return false; }
+  /// Does the component have electron maps?
+  virtual bool HasElectronMap() const { return false; }
+  /// Does the component have hole maps?
+  virtual bool HasHoleMap() const { return false; }
 
   /// Get the electron attachment coefficient.
   virtual bool ElectronAttachment(const double /*x*/, const double /*y*/,
@@ -413,6 +421,23 @@ class GARFIELD_CLASS_NAME(Component) {
                               const double /*z*/, double& eta) {
     eta = 0;
     return false;
+  }
+
+  virtual double GetIonDensity(const double /*x*/, const double /*y*/,
+                               const double /*z*/) {
+    return 0.;
+  }
+  virtual double GetNegativeIonDensity(const double /*x*/, const double /*y*/,
+                                       const double /*z*/) {
+    return 0.;
+  }
+  virtual double GetElectronDensity(const double /*x*/, const double /*y*/,
+                                    const double /*z*/) {
+    return 0.;
+  }
+  virtual double GetHoleDensity(const double /*x*/, const double /*y*/,
+                                const double /*z*/) {
+    return 0.;
   }
 
   // Get the electron mobility coefficient.
