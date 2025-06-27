@@ -9,21 +9,12 @@
 #include "wcpplib/math/kinem.h"
 
 #include <cmath>
+#include<iostream>
 
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/util/FunNameStack.h"
 
 namespace Heed {
-
-double cos_theta_two_part(const double Ep0, const double Ep1, const double Mp,
-                          const double Mt) {
-  const double Mp2 = Mp * Mp;
-  const double d0 = Ep0 * Ep0 - Mp2;
-  check_econd11(d0, <= 0, std::cerr);
-  const double d1 = Ep1 * Ep1 - Mp2;
-  check_econd11(d1, <= 0, std::cerr);
-  return (-Ep0 * Mt + Ep0 * Ep1 + Mt * Ep1 - Mp2) / sqrt(d0 * d1);
-}
 
 void theta_two_part(const double Ep0, const double Ep1, const double Mp,
                     const double Mt, double& theta_p, double& theta_t) {

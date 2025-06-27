@@ -1,4 +1,5 @@
 #include <iomanip>
+#include<iostream>
 #ifdef VISUAL_STUDIO
 #define _USE_MATH_DEFINES
 // see comment in math.h:
@@ -238,20 +239,10 @@ absref absref::* basis::aref[3] = {
 
 absref_transmit basis::get_components() { return absref_transmit(3, aref); }
 
-basis basis::switch_xyz() const {
-  pvecerror("basis basis::switch_xyz(void)");
-  return basis(ez, ex, ey, name);
-}
+basis::basis() : ex(1, 0, 0), ey(0, 1, 0), ez(0, 0, 1) {}
 
-basis::basis() : ex(1, 0, 0), ey(0, 1, 0), ez(0, 0, 1) { name = "primary_bas"; }
-
-basis::basis(const std::string& pname) : ex(1, 0, 0), ey(0, 1, 0), ez(0, 0, 1) {
-  name = pname;
-}
-
-basis::basis(const vec& p, const std::string& pname) {
+basis::basis(const vec& p) {
   pvecerror("basis::basis(vec &p)");
-  name = pname;
   // vec dex(1, 0, 0);
   // vec dey(0, 1, 0);
   // vec dez(0, 0, 1);
@@ -277,9 +268,8 @@ basis::basis(const vec& p, const std::string& pname) {
   }
 }
 
-basis::basis(const vec& p, const vec& c, const std::string& pname) {
+basis::basis(const vec& p, const vec& c) {
   pvecerror("basis::basis(vec &p, vec &c, char pname[12])");
-  name = pname;
 
   if (p.length() == 0 || c.length() == 0) {
     vecerror = 1;
@@ -305,14 +295,7 @@ basis::basis(const vec& p, const vec& c, const std::string& pname) {
   }
 }
 
-// the same basis with other name, useful for later turning
-basis::basis(const basis& pb, const std::string& pname)
-    : ex(pb.ex), ey(pb.ey), ez(pb.ez) {
-  name = pname;
-}
-
-basis::basis(const vec& pex, const vec& pey, const vec& pez,
-             const std::string& pname) {
+basis::basis(const vec& pex, const vec& pey, const vec& pez) {
   pvecerror("basis::basis(vec &pex, vec &pey, vec &pez, char pname[12])");
   if (!check_perp(pex, pey, vprecision) || !check_perp(pex, pez, vprecision) ||
       !check_perp(pey, pez, vprecision)) {
@@ -320,7 +303,6 @@ basis::basis(const vec& pex, const vec& pey, const vec& pez,
               << "the vectors are not perpendicular\n";
     std::cerr << " pex,pey,pez:\n";
     // std::cerr << pex << pey << pez;
-    std::cerr << "name=" << pname << '\n';
     spexit(std::cerr);
   }
   if (!apeq(pex.length(), double(1.0)) || !apeq(pey.length(), double(1.0)) ||
@@ -329,7 +311,6 @@ basis::basis(const vec& pex, const vec& pey, const vec& pez,
               << "the vectors are not of unit length\n";
     std::cerr << " pex,pey,pez:\n";
     // std::cerr << pex << pey << pez;
-    std::cerr << "name=" << pname << '\n';
     spexit(std::cerr);
   }
   if (!apeq(pex || pey, pez, vprecision)) {
@@ -337,10 +318,8 @@ basis::basis(const vec& pex, const vec& pey, const vec& pez,
     std::cerr << "wrong direction of pez\n";
     std::cerr << " pex,pey,pez:\n";
     // std::cerr << pex << pey << pez;
-    std::cerr << "name=" << pname << '\n';
     spexit(std::cerr);
   }
-  name = pname;
   ex = pex;
   ey = pey;
   ez = pez;

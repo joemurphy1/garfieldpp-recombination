@@ -8,6 +8,7 @@
 #include "wcpplib/math/PolLeg.h"
 #include "wcpplib/math/lorgamma.h"
 #include "wcpplib/stream/findmark.h"
+#include<iostream>
 
 // 2003, I. Smirnov
 
