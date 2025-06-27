@@ -496,11 +496,11 @@ int AvalancheMC::DriftLine(
         const double alpha = 1.72e-15; //[cm3/ns]
         double prec = 0.;
         if (ptype == Particle::NegativeIon) {
-          const double rho = GetNegativeIonDensity(ptype, m0, x0, e0, b0);
+          const double rho = GetIonDensity(ptype, m0, x0, e0, b0);
           prec = 1. - std::exp(-alpha * rho * dt);
         }
         if (ptype == Particle::Ion) {
-          const double rho = GetIonDensity(ptype, m0, x0, e0, b0);
+          const double rho = GetNegativeIonDensity(ptype, m0, x0, e0, b0);
           prec = 1. - std::exp(-alpha * rho * dt);
         }
         if (RndmUniform() < prec) {
