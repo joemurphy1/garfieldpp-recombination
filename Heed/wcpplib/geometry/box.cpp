@@ -125,7 +125,7 @@ void box::init_planes() {
                                       vec(0, 0, -1));
   fsurf[5] = std::make_shared<splane>(plane(point(0, 0, -m_dzh), vec(0, 0, +1)),
                                       vec(0, 0, +1));
-  m_ulsv.ulsvolume_init(fsurf, "ulsv of box", prec);
+  m_ulsv.ulsvolume_init(fsurf, prec);
 }
 
 int box::check_point_inside(const point& fpt, const vec& dir) const {

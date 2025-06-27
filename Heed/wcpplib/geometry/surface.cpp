@@ -283,10 +283,8 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
 */
 
 void ulsvolume::ulsvolume_init(
-    const std::vector<std::shared_ptr<surface> >& fsurf,
-    const std::string& fname, double fprec) {
+    const std::vector<std::shared_ptr<surface> >& fsurf, double fprec) {
   prec = fprec;
-  name = fname;
   if (qsurf > 0) {
     for (int n = 0; n < qsurf; ++n) surf[n].reset();
   }
@@ -296,29 +294,25 @@ void ulsvolume::ulsvolume_init(
   }
 }
 
-ulsvolume::ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf,
-                     char* fname, double fprec)
-    : qsurf(fsurf.size()), name(fname) {
+ulsvolume::ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf, double fprec)
+    : qsurf(fsurf.size()){
   check_econd12(qsurf, >, pqqsurf, std::cerr);
   prec = fprec;
   for (int n = 0; n < qsurf; ++n) surf[n] = fsurf[n];
 }
 
 ulsvolume::ulsvolume(ulsvolume& f)
-    : absref(f), absvol(f), qsurf(f.qsurf), name(f.name) {
+    : absref(f), absvol(f), qsurf(f.qsurf){
   check_econd12(f.qsurf, >, pqqsurf, std::cerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];
 }
 
 ulsvolume::ulsvolume(const ulsvolume& f)
-    : absref(f), absvol(f), qsurf(f.qsurf), name(f.name) {
+    : absref(f), absvol(f), qsurf(f.qsurf){
   check_econd12(f.qsurf, >, pqqsurf, std::cerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];
 }
-
-manip_ulsvolume::manip_ulsvolume(const manip_ulsvolume& f)
-    : absref(f), manip_absvol(f), ulsvolume(f) {}
 
 }  // namespace Heed
