@@ -172,10 +172,6 @@ class ulsvolume : public absvol {
                       const std::string& fname, double fprec);
 
   void income(gparticle* /*gp*/) override {}
-  void chname(char* nm) const override {
-    strcpy(nm, "ulsvolume: ");
-    strcat(nm, name.c_str());
-  }
 };
 
 class manip_ulsvolume : public manip_absvol, public ulsvolume {
@@ -187,10 +183,6 @@ class manip_ulsvolume : public manip_absvol, public ulsvolume {
   virtual ~manip_ulsvolume() {}
 
   virtual absvol* Gavol() const { return (ulsvolume*)this; }
-  virtual void chname(char* nm) const {
-    strcpy(nm, "manip_ulsvolume: ");
-    strcat(nm, name.c_str());
-  }
 };
 }  // namespace Heed
 

@@ -50,7 +50,6 @@ class box : public absvol {
   /// Range till exit from given volume or to entry only.
   int range_ext(trajestep& fts, int s_ext) const override;
   void income(gparticle* gp) override;
-  void chname(char* nm) const override;
 
  protected:
   absref_transmit get_components() override;
@@ -67,7 +66,6 @@ class manip_box : public manip_absvol, public box {
   virtual ~manip_box() {}
 
   absvol* Gavol() const override;
-  void chname(char* nm) const override;
 };
 
 // *****   sh_manip_box  ********
@@ -83,7 +81,6 @@ class sh_manip_box : public sh_manip_absvol, public box {
   virtual ~sh_manip_box() {}
 
   absvol* Gavol() const override;
-  void chname(char* nm) const override;
 
  protected:
   absref_transmit get_components() override;

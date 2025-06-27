@@ -167,11 +167,6 @@ int manip_absvol::m_range_ext(trajestep& fts, int s_ext) const {
   return s;
 }
 
-void manip_absvol::m_chname(char* nm) const {
-  strcpy(nm, "mvol->");
-  Gavol()->chname(&nm[6]);
-}
-
 // *********  sh_manip_absvol  *********
 absref_transmit sh_manip_absvol::get_components() {
   aref_ptr[0] = &csys;
@@ -189,10 +184,5 @@ sh_manip_absvol::sh_manip_absvol(const abssyscoor& f) : csys(f) {}
 
 sh_manip_absvol::sh_manip_absvol(const point& fc, const basis& fbas)
     : csys(fc, fbas) {}
-
-void sh_manip_absvol::m_chname(char* nm) const {
-  strcpy(nm, "mvol->");
-  Gavol()->chname(&nm[6]);
-}
 
 }  // namespace Heed

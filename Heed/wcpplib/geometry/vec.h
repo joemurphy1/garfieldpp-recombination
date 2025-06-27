@@ -342,9 +342,6 @@ class vec : public absref {
     // if(a >= 0.5*M_PI - prec && a =< 0.5*M_PI + prec ) return 1;
     return 0;
   }
-  friend inline vec switch_xyz(const vec& v) {
-    return vec(v.z, v.x, v.y);
-  }  // don't change the vector itself
 };
 
 extern vec dex;  // unit vector by x
@@ -367,9 +364,6 @@ class basis : public absref {
   vec Gex() const { return ex; }
   vec Gey() const { return ey; }
   vec Gez() const { return ez; }
-
-  /// Change ex=ez; ey=ex; ez=ey.
-  basis switch_xyz() const;
 
   /// Nominal basis.
   basis();

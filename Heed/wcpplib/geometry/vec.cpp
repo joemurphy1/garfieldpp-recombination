@@ -239,11 +239,6 @@ absref absref::* basis::aref[3] = {
 
 absref_transmit basis::get_components() { return absref_transmit(3, aref); }
 
-basis basis::switch_xyz() const {
-  pvecerror("basis basis::switch_xyz(void)");
-  return basis(ez, ex, ey);
-}
-
 basis::basis() : ex(1, 0, 0), ey(0, 1, 0), ez(0, 0, 1) {}
 
 basis::basis(const vec& p) {

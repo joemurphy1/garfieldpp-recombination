@@ -190,19 +190,10 @@ int box::range_ext(trajestep& fts, int s_ext) const {
 }
 
 void box::income(gparticle* /*gp*/) {}
-void box::chname(char* nm) const {
-  strcpy(nm, "box: ");
-  strcat(nm, m_name.c_str());
-}
 
 // *****   manip_box  ********
 
 absvol* manip_box::Gavol() const { return (box*)this; }
-
-void manip_box::chname(char* nm) const {
-  strcpy(nm, "manip_box: ");
-  strcat(nm, m_name.c_str());
-}
 
 // *****   sh_manip_box  ********
 
@@ -213,11 +204,6 @@ absvol* sh_manip_box::Gavol() const {
 
 absref_transmit sh_manip_box::get_components() {
   return sh_manip_absvol::get_components();
-}
-
-void sh_manip_box::chname(char* nm) const {
-  strcpy(nm, "sh_manip_box: ");
-  strcat(nm, m_name.c_str());
 }
 
 }  // namespace Heed
