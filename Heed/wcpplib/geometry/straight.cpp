@@ -134,35 +134,6 @@ double straight::distance(const straight& sl, int& type_of_cross,
   return fabs(vecdistance(sl, type_of_cross, pt));
 }
 
-straight::straight(straight* sl, int qsl, const straight& sl_start, int anum,
-                   double precision, double* dist,  // may be negative
-                   point (*pt)[2], double& mean2dist) {
-  pvecerror("void straight::straight(straight* sl, int qsl,...");
-  check_econd11(qsl, < 4, std::cerr);
-  straight sl_finish = sl_start;
-  int n;
-  mean2dist = std::numeric_limits<double>::max();
-  double mean2dist_prev = std::numeric_limits<double>::max();
-  int type_of_cross;
-  point* ptf = new point[qsl];
-  do {
-    mean2dist_prev = mean2dist;
-    mean2dist = 0;
-    *this = sl_finish;
-    for (n = 0; n < qsl; n++) {
-      dist[n] = vecdistance(sl[n], type_of_cross, pt[n]);
-      mean2dist += pow(dist[n], 2);
-      check_econd11(type_of_cross, > 1, std::cerr);
-      ptf[n] = pt[n][1];
-    }
-    mean2dist /= qsl;
-    if (mean2dist > 0) mean2dist = sqrt(mean2dist);
-    sl_finish = straight(ptf, qsl, anum);
-  } while (mean2dist_prev < mean2dist ||
-           (mean2dist != 0 && mean2dist_prev - mean2dist > precision));
-  delete[] ptf;
-}
-
 double straight::distance(const point& fpt) const {
   pvecerror("double straight::distance(point& fpt)");
   if (fpt == piv) return 0.0;
