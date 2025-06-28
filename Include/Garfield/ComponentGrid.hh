@@ -156,6 +156,7 @@ class ComponentGrid : public Component {
     const double x, const double y, const double z) override;
 
   void Clear() override { Reset(); }
+  void ClearParticles();
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,
                      int& status) override;

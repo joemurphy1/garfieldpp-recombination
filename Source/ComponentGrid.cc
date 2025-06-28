@@ -1549,6 +1549,13 @@ void ComponentGrid::Reset() {
   m_wFieldOffset.fill(0.);
 }
 
+void ComponentGrid::ClearParticles() {
+  m_nIons.clear();
+  m_nNegativeIons.clear();
+  m_nElectrons.clear();
+  m_nHoles.clear();
+}
+
 void ComponentGrid::UpdatePeriodicity() {
   // Check for conflicts.
   for (size_t i = 0; i < 3; ++i) {
