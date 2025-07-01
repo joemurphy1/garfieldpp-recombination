@@ -146,15 +146,6 @@ class ComponentGrid : public Component {
                    const double w = 1.0);
   void AddHole(const double x, const double y, const double z,
                const double w = 1.0);
-  double GetIonDensity(
-    const double x, const double y, const double z) override;
-  double GetNegativeIonDensity(
-    const double x, const double y, const double z) override;
-  double GetElectronDensity(
-    const double x, const double y, const double z) override;
-  double GetHoleDensity(
-    const double x, const double y, const double z) override;
-
   void Clear() override { Reset(); }
   void ClearParticles();
   void ElectricField(const double x, const double y, const double z, double& ex,
@@ -203,26 +194,38 @@ class ComponentGrid : public Component {
                         double& mu) override;
   bool HoleMobility(const double x, const double y, const double z,
                     double& mu) override;
-
-  bool HasVelocityMap() const override {
-    return !(m_eVelocity.empty() && m_hVelocity.empty());
-  }
-  bool HasIonMap() const override {
-    return !(m_nIons.empty());
-  }
-  bool HasNegativeIonMap() const override {
-    return !(m_nNegativeIons.empty());
-  }
-  bool HasElectronMap() const override {
-    return !(m_nElectrons.empty());
-  }
-  bool HasHoleMap() const override {
-    return !(m_nHoles.empty());
-  }
   bool ElectronVelocity(const double x, const double y, const double z,
                         double& vx, double& vy, double& vz) override;
   bool HoleVelocity(const double x, const double y, const double z, double& vx,
                     double& vy, double& vz) override;
+  bool HasVelocityMap() const override {
+    return !(m_eVelocity.empty() && m_hVelocity.empty());
+  }
+  bool IonDensity(const double x, const double y, const double z,
+                  double& rho) override;
+  bool HasIonDensityMap() const override {
+    return !(m_ionDensity.empty());
+  }
+  bool NegativeIonDensity(const double x, const double y, const double z,
+                          double& rho) override;
+  bool HasNegativeIonDensityMap() const override {
+    return !(m_negativeIonDensity.empty());
+  }
+  bool ElectronDensity(const double x, const double y, const double z,
+                       double& rho) override;
+  bool HasElectronDensityMap() const override {
+    return !(m_electronDensity.empty());
+  }
+  bool HoleDensity(const double x, const double y, const double z,
+                   double& rho) override;
+  bool HasHoleDensityMap() const override {
+    return !(m_holeDensity.empty());
+  }
+  bool ChargeDensity(const double x, const double y, const double z,
+                     double& q);
+  bool HasChargeDensityMap() const override {
+    return !(m_chargeDensity.empty());
+  }
 
  private:
   enum class Format { Unknown, XY, XZ, XYZ, IJ, IK, IJK, YXZ };
@@ -253,10 +256,12 @@ class ComponentGrid : public Component {
   std::vector<std::vector<std::vector<Node> > > m_eVelocity;
   std::vector<std::vector<std::vector<Node> > > m_hVelocity;
   /// Maps for ions, negative ions, electrons and holes.
-  std::vector<std::vector<std::vector<double> > > m_nIons;
-  std::vector<std::vector<std::vector<double> > > m_nNegativeIons;
-  std::vector<std::vector<std::vector<double> > > m_nElectrons;
-  std::vector<std::vector<std::vector<double> > > m_nHoles;
+  std::vector<std::vector<std::vector<double> > > m_ionDensity;
+  std::vector<std::vector<std::vector<double> > > m_negativeIonDensity;
+  std::vector<std::vector<std::vector<double> > > m_electronDensity;
+  std::vector<std::vector<std::vector<double> > > m_holeDensity;
+  /// Charge density map
+  std::vector<std::vector<std::vector<double> > > m_chargeDensity;
   /// Active medium flag.
   std::vector<std::vector<std::vector<bool> > > m_active;
 
@@ -301,9 +306,7 @@ class ComponentGrid : public Component {
   bool GetData(const double x, const double y, const double z,
                const std::vector<std::vector<std::vector<double> > >& table,
                double& value);
-  double GetDensity(
-      const double x, const double y, const double z,
-      const std::vector<std::vector<std::vector<double>>>& field) const;
+  
   void AddParticle(double x, double y, double z, double w,
                  std::vector<std::vector<std::vector<double>>>& grid);
 

@@ -334,15 +334,9 @@ class AvalancheMC {
                        const std::array<double, 3>& e,
                        const std::array<double, 3>& b) const;
   /// Compute the ion density.
-  double GetIonDensity(const Particle particle, Medium* medium,
-                       const std::array<double, 3>& x,
-                       const std::array<double, 3>& e,
-                       const std::array<double, 3>& b) const;
+  double GetIonDensity(const std::array<double, 3>& x) const;
   /// Compute the negative ion density.
-  double GetNegativeIonDensity(const Particle particle, Medium* medium,
-                               const std::array<double, 3>& x,
-                               const std::array<double, 3>& e,
-                               const std::array<double, 3>& b) const;
+  double GetNegativeIonDensity(const std::array<double, 3>& x) const;
   /// Compute the Townsend coefficient.
   double GetTownsend(const Particle particle, Medium* medium,
                      const std::array<double, 3>& x,

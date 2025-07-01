@@ -401,14 +401,16 @@ class GARFIELD_CLASS_NAME(Component) {
   virtual bool HasMobilityMap() const { return false; }
   /// Does the component have velocity maps?
   virtual bool HasVelocityMap() const { return false; }
-  /// Does the component have ion maps?
-  virtual bool HasIonMap() const { return false; }
-  /// Does the component have negative ion maps?
-  virtual bool HasNegativeIonMap() const { return false; }
+  /// Does the component have ion density maps?
+  virtual bool HasIonDensityMap() const { return false; }
+  /// Does the component have negative ion density maps?
+  virtual bool HasNegativeIonDensityMap() const { return false; }
   /// Does the component have electron maps?
-  virtual bool HasElectronMap() const { return false; }
+  virtual bool HasElectronDensityMap() const { return false; }
   /// Does the component have hole maps?
-  virtual bool HasHoleMap() const { return false; }
+  virtual bool HasHoleDensityMap() const { return false; }
+  /// Does the component have a charge density map?
+  virtual bool HasChargeDensityMap() const { return false; }
 
   /// Get the electron attachment coefficient.
   virtual bool ElectronAttachment(const double /*x*/, const double /*y*/,
@@ -423,21 +425,25 @@ class GARFIELD_CLASS_NAME(Component) {
     return false;
   }
 
-  virtual double GetIonDensity(const double /*x*/, const double /*y*/,
-                               const double /*z*/) {
-    return 0.;
+  virtual bool IonDensity(const double /*x*/, const double /*y*/,
+                           const double /*z*/, double& rho) {
+    rho = 0.;
+    return false;
   }
-  virtual double GetNegativeIonDensity(const double /*x*/, const double /*y*/,
-                                       const double /*z*/) {
-    return 0.;
+  virtual bool NegativeIonDensity(const double /*x*/, const double /*y*/,
+                                       const double /*z*/, double& rho) {
+    rho = 0.;
+    return false;
   }
-  virtual double GetElectronDensity(const double /*x*/, const double /*y*/,
-                                    const double /*z*/) {
-    return 0.;
+  virtual bool ElectronDensity(const double /*x*/, const double /*y*/,
+                                    const double /*z*/, double& rho) {
+    rho = 0.;
+    return false;
   }
-  virtual double GetHoleDensity(const double /*x*/, const double /*y*/,
-                                const double /*z*/) {
-    return 0.;
+  virtual bool HoleDensity(const double /*x*/, const double /*y*/,
+                                const double /*z*/, double& rho) {
+    rho = 0.;
+    return false;
   }
 
   // Get the electron mobility coefficient.

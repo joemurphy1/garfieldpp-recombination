@@ -380,11 +380,11 @@ int AvalancheMC::DriftLine(
         const double alpha = 1.72e-15; //[cm3/ns]
         double prec = 0.;
         if (ptype == Particle::NegativeIon) {
-          const double rho = GetNegativeIonDensity(ptype, m0, x0, e0, b0);
+          const double rho = GetNegativeIonDensity(x0);
           prec = 1. - std::exp(-alpha * rho * (t1 - t0));
         }
         if (ptype == Particle::Ion) {
-          const double rho = GetIonDensity(ptype, m0, x0, e0, b0);
+          const double rho = GetIonDensity(x0);
           prec = 1. - std::exp(-alpha * rho * (t1 - t0));
         }
         if (RndmUniform() < prec) {
@@ -496,11 +496,11 @@ int AvalancheMC::DriftLine(
         const double alpha = 1.72e-15; //[cm3/ns]
         double prec = 0.;
         if (ptype == Particle::NegativeIon) {
-          const double rho = GetIonDensity(ptype, m0, x0, e0, b0);
+          const double rho = GetIonDensity(x0);
           prec = 1. - std::exp(-alpha * rho * dt);
         }
         if (ptype == Particle::Ion) {
-          const double rho = GetNegativeIonDensity(ptype, m0, x0, e0, b0);
+          const double rho = GetNegativeIonDensity(x0);
           prec = 1. - std::exp(-alpha * rho * dt);
         }
         if (RndmUniform() < prec) {
@@ -926,33 +926,27 @@ double AvalancheMC::GetAttachment(const Particle ptype, Medium* medium,
   return eta;
 }
 
-double AvalancheMC::GetIonDensity(const Particle ptype, Medium* medium,
-                                    const std::array<double, 3>& x,
-                                    const std::array<double, 3>& e,
-                                    const std::array<double, 3>& b) const {
+double AvalancheMC::GetIonDensity(const std::array<double, 3>& x) const {
   double rho = 0.;
   if (m_useDensityMap) {
     const auto nComponents = m_sensor->GetNumberOfComponents();
     for (size_t i = 0; i < nComponents; ++i) {
       auto cmp = m_sensor->GetComponent(i);
-      if (!cmp->HasIonMap()) continue;
-      rho = cmp->GetIonDensity(x[0], x[1], x[2]);
+      if (!cmp->HasIonDensityMap()) continue;
+      cmp->IonDensity(x[0], x[1], x[2], rho);
     }
   }
   return rho;
 }
 
-double AvalancheMC::GetNegativeIonDensity(const Particle ptype, Medium* medium,
-                                          const std::array<double, 3>& x,
-                                          const std::array<double, 3>& e,
-                                          const std::array<double, 3>& b) const {
+double AvalancheMC::GetNegativeIonDensity(const std::array<double, 3>& x) const {
   double rho = 0.;
   if (m_useDensityMap) {
     const auto nComponents = m_sensor->GetNumberOfComponents();
     for (size_t i = 0; i < nComponents; ++i) {
       auto cmp = m_sensor->GetComponent(i);
-      if (!cmp->HasNegativeIonMap()) continue;
-      rho = cmp->GetNegativeIonDensity(x[0], x[1], x[2]);
+      if (!cmp->HasNegativeIonDensityMap()) continue;
+      cmp->NegativeIonDensity(x[0], x[1], x[2], rho);
     }
   }
   return rho;
