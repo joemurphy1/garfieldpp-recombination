@@ -2323,6 +2323,11 @@ void AvalancheMicroscopic::Set2dGrid(const double zmin, const double zmax,
     m_rGrid.push_back(0 + i * m_rStepSize);
   }
 
+  m_grid.resize(m_zSteps + 1);
+  for (int iz = 0; iz <= m_zSteps; iz++){
+    m_grid[iz].resize(m_rSteps + 1);
+  }
+
   if (m_debug) {
     std::cout << m_className << "::Set2dGrid: Grid created:\n"
               << "       z range = (" << zmin << "," << zmax << ").\n"
@@ -2367,6 +2372,7 @@ bool AvalancheMicroscopic::SnapTo2dGrid(const double x, const double y, const do
   Medium* medium = m_sensor->GetMedium(x, y, z);
   m_sensor->ElectricField(x,y,z,ex,ey,ez,medium,status);
 
+
   // determine if against (ok) or with e field (not ok):
   int against = (step > 0 && ez < 0) ||
                 (step < 0 && ez > 0);
@@ -2375,7 +2381,6 @@ bool AvalancheMicroscopic::SnapTo2dGrid(const double x, const double y, const do
     if (m_debug)
       std::cerr << m_className
                 << "::SnapTo2dGrid: snap along e-field, continue.\n";
-    return true;
   }
   
   
@@ -2388,7 +2393,7 @@ bool AvalancheMicroscopic::SnapTo2dGrid(const double x, const double y, const do
       std::cerr << m_className << "::SnapTo2dGrid: no electrons to snap";
     return false;
   }
-
+  //segfault here
   m_grid[iZ][iR].nElectron += n;
 
   // no support for positive ions
