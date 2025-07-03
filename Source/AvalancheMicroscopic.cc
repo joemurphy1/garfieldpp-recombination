@@ -2293,4 +2293,41 @@ void AvalancheMicroscopic::SetRunModeOptions(MPRunMode mode, int device) {
   m_runMode = mode;
   m_cudaDevice = device;
 }
+
+void AvalancheMicroscopic::Set2dGrid(const double zmin, const double zmax,
+                                         const int zsteps, const double rmax,
+                                         const int rsteps) {
+  m_isgridset = true;                             
+                                      
+  if (zmin >= zmax || zsteps <= 0 || 0 >= rmax || rsteps <= 0) {
+    std::cerr << m_className
+              << "::Set2dGrid: Error. Grid is not properly defined.\n";
+    return;
+  }
+
+  // set z grid
+  m_zSteps = zsteps;
+  m_zStepSize = (zmax - zmin) / zsteps;
+  // m_zGrid.resize(zsteps + 1);
+  for (int i = 0; i < zsteps + 1;
+       i++) {  //< put one more to include the last point on the grid
+    m_zGrid.push_back(zmin + i * m_zStepSize);
+  }
+
+  // set r grid
+  m_rSteps = rsteps;
+  m_rStepSize = rmax / rsteps;
+  // m_rGrid.resize(rsteps + 1);
+  for (int i = 0; i < rsteps + 1;
+       i++) {  //< put one more to include the last point on the grid
+    m_rGrid.push_back(0 + i * m_rStepSize);
+  }
+
+  if (m_debug) {
+    std::cout << m_className << "::Set2dGrid: Grid created:\n"
+              << "       z range = (" << zmin << "," << zmax << ").\n"
+              << "       r range = (" << 0 << "," << rmax << ").\n";  }
+}
+
+
 }  // namespace Garfield

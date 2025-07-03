@@ -286,6 +286,9 @@ class AvalancheMicroscopic {
   void EnableDebugging() { m_debug = true; }
   void DisableDebugging() { m_debug = false; }
 
+  // Set 2D grid for space charge calculation
+  void Set2dGrid(double zmin, double zmax, int zsteps, double rmax, int rsteps);
+
   // class to store CPU/GPU benchmark comparisons
   struct Statistics {
     std::vector<double> gpu_stack_process_time;
@@ -395,6 +398,57 @@ class AvalancheMicroscopic {
   bool m_hasTimeWindow = false;
   double m_tMin = 0.;
   double m_tMax = 0.;
+
+  std::vector<double> m_zGrid;  ///< Grid points of z-coordinate.
+  int m_zSteps = 0;             ///< Number of grid points.
+  double m_zStepSize = 0.;      /// Distance between the grid points.
+
+  std::vector<double> m_rGrid;  ///< Grid points of r-coordinate.
+  int m_rSteps = 0.;            ///< Number of grid points
+  double m_rStepSize = 0.;      /// Distance between the grid points.
+
+  bool m_isgridset = false;  ///< Keeps track if the grid has been defined.
+
+  struct GridNode {
+    long nElectron = 0;  ///< electrons on node
+    double nPosIon = 0;  ///< pos ion on node (smeared values allowed)
+    double nNegIon = 0;  ///< neg ion on node (smeared values allowed)
+    // holder memories for stepping in time:
+    long nElectronHolder = 0;  ///< at t+dt
+    double nPosIonHolder = 0;  ///< at t+dt
+    double nNegIonHolder = 0;  ///< at t+dt
+
+    double townsend = 0;    ///< townsend at this node 1/cm
+    double attachment = 0;  ///< attachment at this node 1/cm
+    /// Magnitude of velocity of the node (not negative) cm/ns
+    double velocity = 0.;
+    /// Diffusion along E.
+    double dSigmaL = 0;
+    /// Diffusion transverse to E (radial, phi dir is net 0).
+    double dSigmaT = 0;
+
+    double Wv = 0;  ///< flux drift cm/ns
+    double Wr = 0;  ///< bulk drift cm/ns
+    /// Ionization rate from TOF experiment 1/ns -> 1/cm
+    double townsendPT = 0;
+    /// Attachment rate from TOF experiment 1/ns -> 1/cm
+    double attachmentPT = 0;
+    /// Space-charge electric field in R direction (can be negative)
+    double eFieldR = 0;
+    /// Space-charge electric field in Z direction (can be negative)
+    double eFieldZ = 0;
+
+    double time = 0.;  ///< Node clock.
+
+    bool anode = false;  ///< init the anode
+    /// LayerIndex in ParallelPlate convention != gas gap index
+    int layerIndex = 0;
+    /// Gas gap index: -1 if not gas gap; starts with 0, 1, ...
+    int gasGapIndex = 0;
+    bool isGasGap = true;
+  };
+
+  std::vector<std::vector<GridNode>> m_grid;  ///< grid with nodes on it
 
   // User procedures
   void (*m_userHandleStep)(double x, double y, double z, double t, double e,
