@@ -2329,5 +2329,85 @@ void AvalancheMicroscopic::Set2dGrid(const double zmin, const double zmax,
               << "       r range = (" << 0 << "," << rmax << ").\n";  }
 }
 
+bool AvalancheMicroscopic::SnapTo2dGrid(const double x, const double y, const double z, const long n){
+  if (!m_isgridset) {
+    std::cerr << m_className << "::SnapTo2dGrid: Grid is not defined.\n";
+    return false;
+  }
+
+  // r is defined with respect to the zero of the coordinate system
+  double r = std::sqrt(x*x + z*z);
+  int iZ = (int)std::round((y - m_zGrid.front()) / m_zStepSize);
+  int iR = (int)std::round(r / m_rStepSize);
+
+  if (m_debug) {
+    std::cout << m_className << "::SnapTo2dGrid: iz = " << iZ << ", ir = " << iR
+              << ".\n";
+  }
+
+  if (iZ < 0 || iZ > m_zSteps || iR < 0 || iR > m_rSteps) {
+    if (m_debug) {
+      std::cerr << m_className
+                << "::SnapTo2dGrid: Point is outside the grid.\n";
+    }
+    return false;
+  }
+
+  // When snapping the electron to the grid the distance traveled can yield
+  // additional electrons or get attached. (depends on if against E field or
+  // along ...). e-field is along y (micro)
+  // currently this is reported to the user with no action taken.
+  
+  // offset between snapped grid position and position in "real" space
+  double step = m_zGrid[iZ] - y;
+
+  //get E field in z direction
+  double ex,ey,ez;
+  int status;
+  Medium* medium = m_sensor->GetMedium(x, y, z);
+  m_sensor->ElectricField(x,y,z,ex,ey,ez,medium,status);
+
+  // determine if against (ok) or with e field (not ok):
+  int against = (step > 0 && ez < 0) ||
+                (step < 0 && ez > 0);
+  
+  if (!against) {
+    if (m_debug)
+      std::cerr << m_className
+                << "::SnapTo2dGrid: snap along e-field, continue.\n";
+    return true;
+  }
+  
+  
+
+  int nEOut;
+  int nPosOut;
+  GetAvalancheSize(nEOut,nPosOut);
+  if (nEOut == 0) {
+    if (m_debug)
+      std::cerr << m_className << "::SnapTo2dGrid: no electrons to snap";
+    return false;
+  }
+
+  m_grid[iZ][iR].nElectron += n;
+
+  // no support for positive ions
+  //m_grid[iZ][iR].nPosIon += nPosOut;
+
+  // no support for negative ions
+  //m_grid[iZ][iR].nNegIon += nNegOut;
+  
+  m_nElectrons += nEOut;
+  m_nIons += (long)nPosOut;
+
+  if (m_debug) {
+    std::cout << m_className << "::SnapTo2dGrid: e- from " << n << " to "
+              << nEOut << " p+: " << nPosOut
+              << "    Snapped to (z, r) = (" << y << " -> " << m_zGrid[iZ]
+              << ", " << r << " -> " << m_rGrid[iR] << ").\n";
+  }
+  return true;
+
+}
 
 }  // namespace Garfield

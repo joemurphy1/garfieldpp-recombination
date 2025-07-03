@@ -468,6 +468,10 @@ class AvalancheMicroscopic {
   // Switch on/off debugging messages
   bool m_debug = false;
 
+  // for use in space charge calculations
+  // n is number of electrons at (x,y,z)
+  bool SnapTo2dGrid(const double x, const double y, const double z, const long n);
+
   bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
   int TransportElectron(
       const Seed& seed, const bool signal, 
