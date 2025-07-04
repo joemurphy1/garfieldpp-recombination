@@ -2416,20 +2416,20 @@ bool AvalancheMicroscopic::SnapTo2dGrid(const double x, const double y, const do
 
 }
 
-bool AvalancheMicroscopic::AddFieldFromChargeAt(int iz, int ir, int fz,
-                                                    int fr, double N,
+bool AvalancheMicroscopic::AddFieldFromChargeAt(double zi, double ri, double zf,
+                                                    double rf, double N,
                                                     double &eFieldZ,
                                                     double &eFieldR){
   // for grid indices iz,ir,fz,fr                                             
   // charge of interest at f, point of interest at i
-  if (fz == iz and fr == ir) return false;  //< field on itself is not included
+  if (std::abs(zi - zf) / m_zStepSize < 1.e-3 &&
+      std::abs(ri - rf) / m_rStepSize < 1.e-3) {
+    return false;  //< field on itself is not included
+  }
 
-  double zi = m_zGrid[iz];
-  double ri = m_rGrid[ir];
-  double zf = m_zGrid[fz];
   double intermediateEz = 0., intermediateEr = 0.;
 
-  if (fr == 0) {
+  if (std::abs(rf) / m_rStepSize < 0.5) {
     // Coulomb ball of radius dr / 2
     const double d = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
     const double f = TwoPi / (d * d * d);
@@ -2438,61 +2438,13 @@ bool AvalancheMicroscopic::AddFieldFromChargeAt(int iz, int ir, int fz,
   } 
   else {  //< rf != 0
     // charged ring
-    GetFreeChargedRing(iz, ir, fz, fr, intermediateEz, intermediateEr);
+    GetFreeChargedRing(zi, ri, zf, rf, intermediateEz, intermediateEr);
   }
   eFieldZ += intermediateEz * N;
   eFieldR += intermediateEr * N;
   return true;                                                  
 }
 
-bool AvalancheMicroscopic::AddFieldFromChargeAt(int iz, int ir, double zf,
-                                                double rf, double N,
-                                                double &eFieldZ,
-                                                double &eFieldR) {
-  // charge of interest at f, point of interest at i
-  double zi = m_zGrid[iz];
-  double ri = m_rGrid[ir];
-  if (std::abs(zi - zf) / m_zStepSize < 1.e-3 &&
-      std::abs(ri - rf) / m_rStepSize < 1.e-3) {
-    return false;  //< field on itself is not included
-  }
-  double intermediateEz = 0, intermediateEr = 0;
-
-  if (std::abs(rf) / m_rStepSize < 0.5) {
-    // Coulomb ball of radius dr / 2
-    const double d = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
-    const double f = TwoPi / (d * d * d);
-    intermediateEr = f * ri;
-    intermediateEz = f * (zi - zf);
-  } else {  //< rf != 0
-    // charged ring
-    GetFreeChargedRing(zi, ri, zf, rf, intermediateEz, intermediateEr);
-  }
-  eFieldZ += intermediateEz * N;
-  eFieldR += intermediateEr * N;
-  return true;
-}
-
-void AvalancheMicroscopic::GetFreeChargedRing(int iz, int ir, int fz,
-                                              int fr, double &eFieldZ,
-                                              double &eFieldR) {
-  // Calculate the electric field at point (zi, ri)
-  // from charged ring at (zf, rf)
-
-  // precondition
-  if (iz == fz && ir == fr) {
-    eFieldZ = 0;
-    eFieldR = 0;
-    return;
-  }
-
-  // transform to coordinates and get the field
-  double ri = m_rGrid[ir];
-  double rf = m_rGrid[fr];
-  double zi = m_zGrid[iz];
-  double zf = m_zGrid[fz];
-  GetFreeChargedRing(zi, ri, zf, rf, eFieldZ, eFieldR);
-}
 void AvalancheMicroscopic::GetFreeChargedRing(double zi, double ri,
                                               double zf, double rf,
                                               double &eFieldZ,
@@ -2622,37 +2574,85 @@ bool AvalancheMicroscopic::AvalancheTimeStepSC(double & tmin, double & timestep)
   return true;
 }
 
-void AvalancheMicroscopic::GetLocalFieldGrid(const int iz, const int ir,
-                                             double &eFieldZ, double &eFieldR,
-                                             const std::string &fieldOption){
-  // calculate space-charge (local field) at iz/ir
+void AvalancheMicroscopic::GetLocalField(const double zi, const double ri,
+                                             double &eFieldZ, double &eFieldR){
+  // calculate space-charge (local field) at zi/ri
   eFieldZ = 0;
   eFieldR = 0;
-  // HS: use enum instead of string.
-  if (fieldOption == "coulomb") {
-    if (!m_bImportElliptic) {
-      throw std::runtime_error("::GetLocalFieldGrid: Elliptic values not imported.");
-    }
 
-    // loop over all cells with particles (except itself) and add fields
-    for (int fz = 0; fz <= m_zSteps; fz++) {
-      for (int fr = 0; fr <= m_rSteps; fr++) {
-        // add electric field from charge at f at position i
-        double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
-                   m_grid[fz][fr].nNegIon; // < ions are not implemented (these should be 0)
-        if (std::abs(N) < 1.) continue;  //< N too small to consider
-        AddFieldFromChargeAt(iz, ir, fz, fr, N, eFieldZ, eFieldR);
-      }
-    }
-    // Multiply by prefactor (final field units V/cm)
-    constexpr double prefactor = ElementaryCharge / (TwoPi * FourPiEpsilon0);
-    eFieldZ *= prefactor;
-    eFieldR *= prefactor;
-  } else {
-    // default
-    eFieldZ = 0;
-    eFieldR = 0;
+  if (!m_bImportElliptic) {
+    throw std::runtime_error("::GetLocalFieldGrid: Elliptic values not imported.");
   }
+  // Multiply by prefactor (final field units V/cm)
+  constexpr double prefactor = ElementaryCharge / (TwoPi * FourPiEpsilon0);
+
+  // loop over all cells with particles (except itself) and add field to each grid point
+  for (int fz = 0; fz <= m_zSteps; fz++) {
+    for (int fr = 0; fr <= m_rSteps; fr++) {
+      // get physical coords
+      double rf = m_rGrid[fr];
+      double zf = m_zGrid[fz];
+
+      // find electric field at pos i from charge at f
+      double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
+                  m_grid[fz][fr].nNegIon; // < ions are not implemented (these will be 0)
+      if (std::abs(N) < 1.) continue;  //< N too small to consider
+      AddFieldFromChargeAt(zi, ri, zf, rf, N, eFieldZ, eFieldR);
+      eFieldZ *= prefactor;
+      eFieldR *= prefactor;
+
+      // Load the fields into the grid for use in interpolation
+      m_grid[fz][fr].eFieldZ = eFieldZ;
+      m_grid[fz][fr].eFieldR = eFieldR;
+    }
+  }
+  InterpolateField(zi,ri,eFieldZ,eFieldR);
+
 }
 
+void AvalancheMicroscopic::InterpolateField(const double zi, const double ri,
+                                             double &eFieldZ, double &eFieldR){
+  // Gives the field at physical coords zi,ri from interpolation of nearest
+  // node fields.                                           
+
+  eFieldZ = 0;
+  eFieldR = 0;
+
+  // Find surrounding 4 nodes (bl = bottom left, tr = top right)
+  // there's probably a more elegant way of doing this
+  int bl_z = std::floor(zi/m_zStepSize);
+  int bl_r = std::floor(ri/m_rStepSize);
+  int br_z = std::ceil(zi/m_zStepSize);
+  int br_r = std::floor(ri/m_rStepSize);
+  int tl_z = std::floor(zi/m_zStepSize);
+  int tl_r = std::ceil(ri/m_rStepSize);
+  int tr_z = std::ceil(zi/m_zStepSize);
+  int tr_r = std::ceil(ri/m_rStepSize);
+  
+  double x1 = m_zStepSize*bl_z;
+  double y1 = m_rStepSize*bl_r;
+  double x2 = m_zStepSize*tr_z;
+  double y2 = m_rStepSize*tr_r;
+
+  // with reference to https://en.wikipedia.org/wiki/Bilinear_interpolation#Repeated_linear_interpolation
+  double pf = 1/((x2-x1)*(y2-y1));
+  // Begin with z field
+  double f_Q11 = m_grid[bl_z][bl_r].eFieldZ;
+  double f_Q12 = m_grid[tl_z][tl_r].eFieldZ;
+  double f_Q21 = m_grid[br_z][br_r].eFieldZ;  
+  double f_Q22 = m_grid[tr_z][tr_r].eFieldZ;
+  
+  eFieldZ = pf*(f_Q11*(x2-zi)*(y2-ri)+f_Q12*(x2-zi)*(ri-y1)+
+                f_Q21*(zi-x1)*(y2-ri)+f_Q22*(zi-x1)*(ri-y1));
+
+  // Now r field
+  f_Q11 = m_grid[bl_z][bl_r].eFieldR;
+  f_Q12 = m_grid[tl_z][tl_r].eFieldR;
+  f_Q21 = m_grid[br_z][br_r].eFieldR; 
+  f_Q22 = m_grid[tr_z][tr_r].eFieldR;  
+  
+  eFieldR = pf*(f_Q11*(x2-zi)*(y2-ri)+f_Q12*(x2-zi)*(ri-y1)+
+                f_Q21*(zi-x1)*(y2-ri)+f_Q22*(zi-x1)*(ri-y1));  
+
+}
 }  // namespace Garfield

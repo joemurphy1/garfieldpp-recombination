@@ -488,8 +488,8 @@ class AvalancheMicroscopic {
   // Switch on/off debugging messages
   bool m_debug = false;
 
-  bool AddFieldFromChargeAt(int iz, int ir, int fz,
-                            int fr, double N,
+  bool AddFieldFromChargeAt(double zi, double ri, double zf,
+                            double rf, double N,
                             double &eFieldZ,
                             double &eFieldR);
 
@@ -497,20 +497,14 @@ class AvalancheMicroscopic {
 
   void ImportEllipticIntegralValues(const std::string &filename); 
 
-  void GetFreeChargedRing(int iz, int ir, int fz,int fr,double &eFieldZ,
-                          double &eFieldR);
-
   void GetFreeChargedRing(double zi, double ri,double zf, double rf,
                           double &eFieldZ,double &eFieldR); 
-
-  bool AddFieldFromChargeAt(int iz, int ir, double zf,
-                            double rf, double N,
-                            double &eFieldZ,
-                            double &eFieldR);   
                             
-  void GetLocalFieldGrid(const int iz, const int ir,
-                         double &eFieldZ, double &eFieldR,
-                         const std::string &fieldOption = "coulomb");                          
+  void GetLocalField(const double zi, const double ri,
+                         double &eFieldZ, double &eFieldR);  
+                         
+  void InterpolateField(const double zi, const double ri,
+                        double &eFieldZ, double &eFieldR);                       
 
   bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
   int TransportElectron(
