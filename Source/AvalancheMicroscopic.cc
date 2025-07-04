@@ -2602,12 +2602,17 @@ bool AvalancheMicroscopic::AvalancheTimeStepSC(double & tmin, double & timestep)
     SetTimeWindow(tmin, tmin + timestep);
     ResumeAvalanche();
       
-    std::cout << "snapping...\n";
     for (const auto& electron : GetElectrons()) {
       const double xf = electron.path.back().x;
       const double yf = electron.path.back().y;
       const double zf = electron.path.back().z;
-      SnapTo2dGrid(xf,yf,zf,1);
+      const int status = electron.status;
+      if (status==0){
+        SnapTo2dGrid(xf,yf,zf,1);
+      }
+      else{
+        continue;
+      }
     }      
   }
   else{
