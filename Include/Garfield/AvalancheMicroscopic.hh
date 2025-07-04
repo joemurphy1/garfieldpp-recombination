@@ -254,6 +254,10 @@ class AvalancheMicroscopic {
   /// Continue the avalanche simulation from the current set of electrons.
   bool ResumeAvalanche();
 
+  // Continue the avalanche from current set of electrons,
+  // within a time window, with space charge effects
+  bool AvalancheTimeStepSC(double & tmin, double & timestep);
+
   /// Set a callback function to be called at every step.
   void SetUserHandleStep(void (*f)(double x, double y, double z, double t,
                                    double e, double dx, double dy, double dz,

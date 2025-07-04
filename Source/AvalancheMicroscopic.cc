@@ -2333,6 +2333,7 @@ void AvalancheMicroscopic::Set2dGrid(const double zmin, const double zmax,
     m_rGrid.push_back(0 + i * m_rStepSize);
   }
 
+  // Setup the size of the grid
   m_grid.resize(m_zSteps + 1);
   for (int iz = 0; iz <= m_zSteps; iz++){
     m_grid[iz].resize(m_rSteps + 1);
@@ -2592,6 +2593,28 @@ void AvalancheMicroscopic::ImportEllipticIntegralValues(
 
   ellipticStream.close();
   m_bImportElliptic = true;
+}
+
+bool AvalancheMicroscopic::AvalancheTimeStepSC(double & tmin, double & timestep){
+
+  // Make sure we have electrons
+  if (!GetElectrons().empty()){
+    SetTimeWindow(tmin, tmin + timestep);
+    ResumeAvalanche();
+      
+    std::cout << "snapping...\n";
+    for (const auto& electron : GetElectrons()) {
+      const double xf = electron.path.back().x;
+      const double yf = electron.path.back().y;
+      const double zf = electron.path.back().z;
+      SnapTo2dGrid(xf,yf,zf,1);
+    }      
+  }
+  else{
+    return false;
+  }
+  tmin += timestep;
+  return true;
 }
 
 }  // namespace Garfield
