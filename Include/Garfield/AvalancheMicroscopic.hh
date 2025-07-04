@@ -506,7 +506,11 @@ class AvalancheMicroscopic {
   bool AddFieldFromChargeAt(int iz, int ir, double zf,
                             double rf, double N,
                             double &eFieldZ,
-                            double &eFieldR);                                         
+                            double &eFieldR);   
+                            
+  void GetLocalFieldGrid(const int iz, const int ir,
+                         double &eFieldZ, double &eFieldR,
+                         const std::string &fieldOption = "coulomb");                          
 
   bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
   int TransportElectron(

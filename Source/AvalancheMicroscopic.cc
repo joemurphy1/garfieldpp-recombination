@@ -2622,4 +2622,37 @@ bool AvalancheMicroscopic::AvalancheTimeStepSC(double & tmin, double & timestep)
   return true;
 }
 
+void AvalancheMicroscopic::GetLocalFieldGrid(const int iz, const int ir,
+                                             double &eFieldZ, double &eFieldR,
+                                             const std::string &fieldOption){
+  // calculate space-charge (local field) at iz/ir
+  eFieldZ = 0;
+  eFieldR = 0;
+  // HS: use enum instead of string.
+  if (fieldOption == "coulomb") {
+    if (!m_bImportElliptic) {
+      throw std::runtime_error("::GetLocalFieldGrid: Elliptic values not imported.");
+    }
+
+    // loop over all cells with particles (except itself) and add fields
+    for (int fz = 0; fz <= m_zSteps; fz++) {
+      for (int fr = 0; fr <= m_rSteps; fr++) {
+        // add electric field from charge at f at position i
+        double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
+                   m_grid[fz][fr].nNegIon; // < ions are not implemented (these should be 0)
+        if (std::abs(N) < 1.) continue;  //< N too small to consider
+        AddFieldFromChargeAt(iz, ir, fz, fr, N, eFieldZ, eFieldR);
+      }
+    }
+    // Multiply by prefactor (final field units V/cm)
+    constexpr double prefactor = ElementaryCharge / (TwoPi * FourPiEpsilon0);
+    eFieldZ *= prefactor;
+    eFieldR *= prefactor;
+  } else {
+    // default
+    eFieldZ = 0;
+    eFieldR = 0;
+  }
+}
+
 }  // namespace Garfield
