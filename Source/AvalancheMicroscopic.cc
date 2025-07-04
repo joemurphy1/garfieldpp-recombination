@@ -5,6 +5,8 @@
 #include <chrono>
 #include <cmath>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <string>
 
 #include "Garfield/FundamentalConstants.hh"
@@ -152,6 +154,14 @@ AvalancheMicroscopic::AvalancheMicroscopic(Sensor* sensor) : m_sensor(sensor) {
   m_electrons.reserve(10000);
   m_holes.reserve(10000);
   m_photons.reserve(1000);
+
+  if (m_bSpaceCharge){
+    m_vEElliptic.reserve(20000);
+    m_vKElliptic.reserve(20000);
+    m_vXElliptic.reserve(20000);
+    m_zGrid.reserve(5000);
+    m_rGrid.reserve(1000);
+  }
 }
 
 void AvalancheMicroscopic::SetSensor(Sensor* s) {
@@ -2372,7 +2382,6 @@ bool AvalancheMicroscopic::SnapTo2dGrid(const double x, const double y, const do
   Medium* medium = m_sensor->GetMedium(x, y, z);
   m_sensor->ElectricField(x,y,z,ex,ey,ez,medium,status);
 
-
   // determine if against (ok) or with e field (not ok):
   int against = (step > 0 && ez < 0) ||
                 (step < 0 && ez > 0);
@@ -2384,16 +2393,11 @@ bool AvalancheMicroscopic::SnapTo2dGrid(const double x, const double y, const do
   }
   
   
-
-  int nEOut;
-  int nPosOut;
-  GetAvalancheSize(nEOut,nPosOut);
-  if (nEOut == 0) {
+  if (n == 0) {
     if (m_debug)
       std::cerr << m_className << "::SnapTo2dGrid: no electrons to snap";
     return false;
   }
-  //segfault here
   m_grid[iZ][iR].nElectron += n;
 
   // no support for positive ions
@@ -2401,18 +2405,193 @@ bool AvalancheMicroscopic::SnapTo2dGrid(const double x, const double y, const do
 
   // no support for negative ions
   //m_grid[iZ][iR].nNegIon += nNegOut;
-  
-  m_nElectrons += nEOut;
-  m_nIons += (long)nPosOut;
 
   if (m_debug) {
-    std::cout << m_className << "::SnapTo2dGrid: e- from " << n << " to "
-              << nEOut << " p+: " << nPosOut
-              << "    Snapped to (z, r) = (" << y << " -> " << m_zGrid[iZ]
-              << ", " << r << " -> " << m_rGrid[iR] << ").\n";
+    std::cout << m_className << "::SnapTo2dGrid: " << n << " e- Snapped to (z, r) = ("
+                             << y << " -> " << m_zGrid[iZ]
+                             << ", " << r << " -> " << m_rGrid[iR] << ").\n";
   }
   return true;
 
+}
+
+bool AvalancheMicroscopic::AddFieldFromChargeAt(int iz, int ir, int fz,
+                                                    int fr, double N,
+                                                    double &eFieldZ,
+                                                    double &eFieldR){
+  // for grid indices iz,ir,fz,fr                                             
+  // charge of interest at f, point of interest at i
+  if (fz == iz and fr == ir) return false;  //< field on itself is not included
+
+  double zi = m_zGrid[iz];
+  double ri = m_rGrid[ir];
+  double zf = m_zGrid[fz];
+  double intermediateEz = 0., intermediateEr = 0.;
+
+  if (fr == 0) {
+    // Coulomb ball of radius dr / 2
+    const double d = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
+    const double f = TwoPi / (d * d * d);
+    intermediateEr = f * ri;
+    intermediateEz = f * (zi - zf);
+  } 
+  else {  //< rf != 0
+    // charged ring
+    GetFreeChargedRing(iz, ir, fz, fr, intermediateEz, intermediateEr);
+  }
+  eFieldZ += intermediateEz * N;
+  eFieldR += intermediateEr * N;
+  return true;                                                  
+}
+
+bool AvalancheMicroscopic::AddFieldFromChargeAt(int iz, int ir, double zf,
+                                                double rf, double N,
+                                                double &eFieldZ,
+                                                double &eFieldR) {
+  // charge of interest at f, point of interest at i
+  double zi = m_zGrid[iz];
+  double ri = m_rGrid[ir];
+  if (std::abs(zi - zf) / m_zStepSize < 1.e-3 &&
+      std::abs(ri - rf) / m_rStepSize < 1.e-3) {
+    return false;  //< field on itself is not included
+  }
+  double intermediateEz = 0, intermediateEr = 0;
+
+  if (std::abs(rf) / m_rStepSize < 0.5) {
+    // Coulomb ball of radius dr / 2
+    const double d = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
+    const double f = TwoPi / (d * d * d);
+    intermediateEr = f * ri;
+    intermediateEz = f * (zi - zf);
+  } else {  //< rf != 0
+    // charged ring
+    GetFreeChargedRing(zi, ri, zf, rf, intermediateEz, intermediateEr);
+  }
+  eFieldZ += intermediateEz * N;
+  eFieldR += intermediateEr * N;
+  return true;
+}
+
+void AvalancheMicroscopic::GetFreeChargedRing(int iz, int ir, int fz,
+                                              int fr, double &eFieldZ,
+                                              double &eFieldR) {
+  // Calculate the electric field at point (zi, ri)
+  // from charged ring at (zf, rf)
+
+  // precondition
+  if (iz == fz && ir == fr) {
+    eFieldZ = 0;
+    eFieldR = 0;
+    return;
+  }
+
+  // transform to coordinates and get the field
+  double ri = m_rGrid[ir];
+  double rf = m_rGrid[fr];
+  double zi = m_zGrid[iz];
+  double zf = m_zGrid[fz];
+  GetFreeChargedRing(zi, ri, zf, rf, eFieldZ, eFieldR);
+}
+void AvalancheMicroscopic::GetFreeChargedRing(double zi, double ri,
+                                              double zf, double rf,
+                                              double &eFieldZ,
+                                              double &eFieldR) {
+  // Calculate the electric field at point (zi, ri)
+  // from charged ring at (zf, rf).
+
+  // precondition
+  if (zi == zf && ri == rf) {
+    eFieldZ = 0;
+    eFieldR = 0;
+    return;
+  }
+
+  double dz = zi - zf;  //< I double-checked that's the right sign
+
+  // parameters (see Lippmann Diss.)
+  const double a2 = (ri + rf) * (ri + rf) + dz * dz;
+  const double b2 = (ri - rf) * (ri - rf) + dz * dz;
+  const double b = std::sqrt(b2);
+  const double c2 = ri * ri - rf * rf - dz * dz;
+  // parameter for elliptic integrals
+  const double x =
+      -4 * ri * rf / b2;  //< x < 0, i.e. never near x = 1 (singularity)
+
+  // calculation of elliptic integrals and fields (up to prefactor)
+  double EllE, EllK;
+  GetEllipticIntegrals(x, EllK, EllE);
+  eFieldZ = EllE * 4. * dz / (a2 * b);
+  eFieldR = c2 * EllE + a2 * EllK;
+  // if ri = 0?
+  if (ri < Small) {
+    eFieldR = 0;
+  } else {
+    eFieldR *= 2. / (ri * a2 * b);
+  }
+}
+
+void AvalancheMicroscopic::GetEllipticIntegrals(double x, double &K,
+                                                    double &E) {
+  // from x = 0 to 10 it is in steps of 1e-3. From 10 to 1e4 in steps of 1. Then
+  // in steps of 1000 until 1e7.
+  int arg;
+  double invStep;
+  if (-x < 1.e1) {
+    invStep = 1000.;
+    arg = (int)(-x * invStep);
+  } else if (-x < 1.e4) {
+    invStep = 1.;
+    arg = (int)(-x - 10) + 10000;
+  } else if (-x < 1.e7) {
+    invStep = 0.001;
+    arg = (int)((-x - 1.e4) * invStep) + 19990;
+  } else {
+    // not included in list.
+    if (m_debug)
+      std::cerr << m_className
+                << "::GetEllipticIntegrals: Value not included in list.\n";
+    K = m_vKElliptic.back();
+    E = m_vEElliptic.back();
+    return;
+  }
+
+  // Linear interpolation:
+  const double f = (-x - m_vXElliptic.at(arg)) * invStep;
+  K = (1. - f) * m_vKElliptic.at(arg) + f * m_vKElliptic.at(arg + 1);
+  E = (1. - f) * m_vEElliptic.at(arg) + f * m_vEElliptic.at(arg + 1);
+}   
+
+void AvalancheMicroscopic::ImportEllipticIntegralValues(
+    const std::string &filename) {
+  // reads values of the elliptic functions
+  // it has a very special form to find the values rapidly (not given for a
+  // completely non uniform grid) from x = 0 to 10 it is in steps of 1e-3. From
+  // 10 to 1e4 in steps of 1. Then in steps of 1000 until 1e7.
+
+  m_vXElliptic.resize(0);
+  m_vKElliptic.resize(0);
+  m_vEElliptic.resize(0);
+
+  std::ifstream ellipticStream(filename);
+
+  if (!ellipticStream) {
+    std::cerr << m_className
+              << "::ImportEllipticIntegralValues: Could not open file.\n";
+  }
+
+  for (std::string line; std::getline(ellipticStream, line);) {
+    std::istringstream iss(line);
+    double value = 0.;
+    iss >> value;
+    m_vXElliptic.push_back(value);
+    iss >> value;
+    m_vKElliptic.push_back(value);
+    iss >> value;
+    m_vEElliptic.push_back(value);
+  }
+
+  ellipticStream.close();
+  m_bImportElliptic = true;
 }
 
 }  // namespace Garfield

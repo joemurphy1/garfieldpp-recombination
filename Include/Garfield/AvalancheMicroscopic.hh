@@ -33,6 +33,9 @@ class AvalancheMicroscopic {
   /// Set the sensor.
   void SetSensor(Sensor* sensor);
 
+  void EnableSpaceChargeEffect(const bool on = true){
+    m_bSpaceCharge = on;
+  }
   /// Switch on drift line plotting.
   void EnablePlotting(ViewDrift* view, const std::size_t nColl = 100);
   /// Switch off drift line plotting.
@@ -413,6 +416,15 @@ class AvalancheMicroscopic {
 
   bool m_isgridset = false;  ///< Keeps track if the grid has been defined.
 
+  bool m_bSpaceCharge = false;
+
+  bool m_bImportElliptic = false;
+
+  // Elliptic integral vectors
+  std::vector<double> m_vXElliptic;
+  std::vector<double> m_vKElliptic;
+  std::vector<double> m_vEElliptic;
+
   struct GridNode {
     long nElectron = 0;  ///< electrons on node
     double nPosIon = 0;  ///< pos ion on node (smeared values allowed)
@@ -471,6 +483,26 @@ class AvalancheMicroscopic {
 
   // Switch on/off debugging messages
   bool m_debug = false;
+
+  bool AddFieldFromChargeAt(int iz, int ir, int fz,
+                            int fr, double N,
+                            double &eFieldZ,
+                            double &eFieldR);
+
+  void GetEllipticIntegrals(double x, double &K, double &E);
+
+  void ImportEllipticIntegralValues(const std::string &filename); 
+
+  void GetFreeChargedRing(int iz, int ir, int fz,int fr,double &eFieldZ,
+                          double &eFieldR);
+
+  void GetFreeChargedRing(double zi, double ri,double zf, double rf,
+                          double &eFieldZ,double &eFieldR); 
+
+  bool AddFieldFromChargeAt(int iz, int ir, double zf,
+                            double rf, double N,
+                            double &eFieldZ,
+                            double &eFieldR);                                         
 
   bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
   int TransportElectron(
