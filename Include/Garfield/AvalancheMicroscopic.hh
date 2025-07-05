@@ -35,6 +35,7 @@ class AvalancheMicroscopic {
 
   void EnableSpaceChargeEffect(const bool on = true){
     m_bSpaceCharge = on;
+    SetupSpaceCharge();
   }
   /// Switch on drift line plotting.
   void EnablePlotting(ViewDrift* view, const std::size_t nColl = 100);
@@ -507,7 +508,12 @@ class AvalancheMicroscopic {
                         double &eFieldZ, double &eFieldR);    
                         
   void CylindricalFieldToCartesian(double &eFieldR, double &eFieldX, double &eFieldY, 
-                                   double x, double y);                      
+                                   double x, double y);  
+                                   
+  void GetTotalField(double x, double y, double z, double &ex, 
+                     double &ey,double &ez, Medium *& medium, int &status);    
+                     
+  void SetupSpaceCharge();                   
 
   bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
   int TransportElectron(
@@ -536,7 +542,7 @@ class AvalancheMicroscopic {
   void CreatePenningElectron(const double x, const double y, const double z,
                              const double t, const size_t w, 
                              const double ds, const double dt, const double ep,
-                             const int level, std::vector<Seed>& stack) const;
+                             const int level, std::vector<Seed>& stack);
   void PlotCollision(const int cstype, const size_t did, const double x,
                      const double y, const double z, size_t& nCollPlot) const;
   void CallUserHandles(

@@ -154,14 +154,6 @@ AvalancheMicroscopic::AvalancheMicroscopic(Sensor* sensor) : m_sensor(sensor) {
   m_electrons.reserve(10000);
   m_holes.reserve(10000);
   m_photons.reserve(1000);
-
-  if (m_bSpaceCharge){
-    m_vEElliptic.reserve(20000);
-    m_vKElliptic.reserve(20000);
-    m_vXElliptic.reserve(20000);
-    m_zGrid.reserve(5000);
-    m_rGrid.reserve(1000);
-  }
 }
 
 void AvalancheMicroscopic::SetSensor(Sensor* s) {
@@ -822,7 +814,7 @@ int AvalancheMicroscopic::TransportElectron(
   double ex = 0., ey = 0., ez = 0.;
   Medium* medium = nullptr;
   int status = 0;
-  m_sensor->ElectricField(x, y, z, ex, ey, ez, medium, status);
+  GetTotalField(x, y, z, ex, ey, ez, medium, status);
   // Sign change for electrons.
   const bool hole = (seed.type == Particle::Hole);
   if (!hole) {
@@ -972,16 +964,16 @@ int AvalancheMicroscopic::TransportElectron(
           const double h2 = h * h;
           Medium* med0 = nullptr;
           int stat0 = 0;
-          m_sensor->ElectricField(r0[0] + h * vr[0] * 0.5 + 0.125 * h2 * k1[0],
-                                  r0[1] + h * vr[1] * 0.5 + 0.125 * h2 * k1[1],
-                                  r0[2] + h * vr[2] * 0.5 + 0.125 * h2 * k1[2],
-                                  ex0, ey0, ez0, med0, stat0);                        
+          GetTotalField(r0[0] + h * vr[0] * 0.5 + 0.125 * h2 * k1[0],
+                        r0[1] + h * vr[1] * 0.5 + 0.125 * h2 * k1[1],
+                        r0[2] + h * vr[2] * 0.5 + 0.125 * h2 * k1[2],
+                        ex0, ey0, ez0, med0, stat0);                        
 
           std::array<double, 3> k2 = {c3 * ex0, c3 * ey0, c3 * ez0};  // k3 = k2
-          m_sensor->ElectricField(r0[0] + h * vr[0] + h2 * k2[0] * 0.5,
-                                  r0[1] + h * vr[1] + h2 * k2[1] * 0.5,
-                                  r0[2] + h * vr[2] + h2 * k2[2] * 0.5, ex0,
-                                  ey0, ez0, med0, stat0);
+          GetTotalField(r0[0] + h * vr[0] + h2 * k2[0] * 0.5,
+                        r0[1] + h * vr[1] + h2 * k2[1] * 0.5,
+                        r0[2] + h * vr[2] + h2 * k2[2] * 0.5, ex0,
+                        ey0, ez0, med0, stat0);
           std::array<double, 3> k4 = {c3 * ex0, c3 * ey0, c3 * ez0};
 
           // Check error tolerance
@@ -1101,7 +1093,7 @@ int AvalancheMicroscopic::TransportElectron(
     double t1 = t + dt;
 
     // Get the electric field and medium at the proposed new position.
-    m_sensor->ElectricField(x1, y1, z1, ex, ey, ez, medium, status);
+    GetTotalField(x1, y1, z1, ex, ey, ez, medium, status);
 
     if (!hole) {
       ex = -ex;
@@ -1284,7 +1276,7 @@ int AvalancheMicroscopic::TransportElectronBfield(
   double ex = 0., ey = 0., ez = 0.;
   Medium* medium = nullptr;
   int status = 0;
-  m_sensor->ElectricField(x, y, z, ex, ey, ez, medium, status);
+  GetTotalField(x, y, z, ex, ey, ez, medium, status);
   // Sign change for electrons.
   const bool hole = (seed.type == Particle::Hole);
   if (!hole) {
@@ -1484,7 +1476,7 @@ int AvalancheMicroscopic::TransportElectronBfield(
     double z1 = z + dz;
     double t1 = t + dt;
     // Get the electric field and medium at the proposed new position.
-    m_sensor->ElectricField(x1, y1, z1, ex, ey, ez, medium, status);
+    GetTotalField(x1, y1, z1, ex, ey, ez, medium, status);
     if (!hole) {
       ex = -ex;
       ey = -ey;
@@ -1666,7 +1658,7 @@ int AvalancheMicroscopic::TransportElectronSc(
   double ex = 0., ey = 0., ez = 0.;
   Medium* medium = nullptr;
   int status = 0;
-  m_sensor->ElectricField(x, y, z, ex, ey, ez, medium, status);
+  GetTotalField(x, y, z, ex, ey, ez, medium, status);
   // Sign change for electrons.
   const bool hole = (seed.type == Particle::Hole);
   if (!hole) {
@@ -1825,7 +1817,7 @@ int AvalancheMicroscopic::TransportElectronSc(
     double z1 = z + dz;
     double t1 = t + dt;
     // Get the electric field and medium at the proposed new position.
-    m_sensor->ElectricField(x1, y1, z1, ex, ey, ez, medium, status);
+    GetTotalField(x1, y1, z1, ex, ey, ez, medium, status);
     if (!hole) {
       ex = -ex;
       ey = -ey;
@@ -1983,7 +1975,7 @@ int AvalancheMicroscopic::TransportElectronSc(
 void AvalancheMicroscopic::CreatePenningElectron(
     const double x, const double y, const double z, const double t,
     const size_t w, const double ds, const double dt, const double ep,
-    const int level, std::vector<Seed>& stack) const {
+    const int level, std::vector<Seed>& stack){
 
   // Penning ionisation
   double xp = x, yp = y, zp = z;
@@ -1999,7 +1991,7 @@ void AvalancheMicroscopic::CreatePenningElectron(
   double fx = 0., fy = 0., fz = 0.;
   Medium* medium = nullptr;
   int status = 0;
-  m_sensor->ElectricField(xp, yp, zp, fx, fy, fz, medium, status);
+  GetTotalField(xp, yp, zp, fx, fy, fz, medium, status);
   // Check if this location is inside a drift medium/area.
   if (status != 0 || !m_sensor->IsInArea(xp, yp, zp)) return;
   // Make sure we haven't jumped across a wire.
@@ -2381,7 +2373,7 @@ bool AvalancheMicroscopic::SnapTo2dGrid(const double x, const double y, const do
   double ex,ey,ez;
   int status;
   Medium* medium = m_sensor->GetMedium(x, y, z);
-  m_sensor->ElectricField(x,y,z,ex,ey,ez,medium,status);
+  GetTotalField(x,y,z,ex,ey,ez,medium,status);
 
   // determine if against (ok) or with e field (not ok):
   int against = (step > 0 && ez < 0) ||
@@ -2599,7 +2591,6 @@ void AvalancheMicroscopic::GetLocalField(const double xi, const double yi, const
       // find electric field at pos i from charge at f
       double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
                   m_grid[fz][fr].nNegIon; // < ions are not implemented (these will be 0)
-      if (std::abs(N) < 1.) continue;  //< N too small to consider
       AddFieldFromChargeAt(zi, ri, zf, rf, N, eFieldZ, eFieldR);
       eFieldZ *= prefactor;
       eFieldR *= prefactor;
@@ -2666,9 +2657,18 @@ void AvalancheMicroscopic::CylindricalFieldToCartesian(double &eFieldR, double &
   // E_x = E_rCos(phi)
   // E_y = E_rSin(phi)
   // phi = arctan(y/x)
-  double cosphi = 1/std::sqrt(1+(y/x)*(y/x));
+  double cosphi;
   double sinphi;
-  if (x/y > 0){
+  if (x == 0.){
+    cosphi = 1.;
+  }
+  else{
+    cosphi = 1/std::sqrt(1+(y/x)*(y/x));
+  }
+  if (y == 0.){
+    sinphi = 0.;
+  }
+  if (x/y > 0.){
     sinphi = 1/std::sqrt(1+(x/y)*(x/y));                                                      
   }
   else{
@@ -2676,5 +2676,32 @@ void AvalancheMicroscopic::CylindricalFieldToCartesian(double &eFieldR, double &
   }
   eFieldX = eFieldR*cosphi;
   eFieldY = eFieldR*sinphi;
+}
+
+void AvalancheMicroscopic::GetTotalField(double x, double y, double z, double &ex, 
+                                         double &ey,double &ez, Medium *& medium, int &status){
+  m_sensor->ElectricField(x, y, z, ex, ey, ez, medium, status);                                        
+  if (m_bSpaceCharge){
+    double ex_sc,ey_sc,ez_sc;
+    GetLocalField(x,y,z,ex_sc,ey_sc,ez_sc);
+    ex += ex_sc;
+    ey += ey_sc;
+    ez += ez_sc;
+  }                                           
+}
+
+void AvalancheMicroscopic::SetupSpaceCharge(){
+
+  m_vEElliptic.reserve(20000);
+  m_vKElliptic.reserve(20000);
+  m_vXElliptic.reserve(20000);
+  m_zGrid.reserve(5000);
+  m_rGrid.reserve(1000);
+
+  // Import the elliptic integral values
+  const std::string path = std::getenv("GARFIELD_INSTALL");
+  ImportEllipticIntegralValues(path +
+                              "/share/Garfield/Data/elliptic_integrals.txt");
+
 }
 }  // namespace Garfield
