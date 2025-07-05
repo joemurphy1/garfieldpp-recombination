@@ -2607,49 +2607,101 @@ void AvalancheMicroscopic::GetLocalField(const double xi, const double yi, const
 
 void AvalancheMicroscopic::InterpolateField(const double zi, const double ri,
                                              double &eFieldZ, double &eFieldR){
-  // Gives the field at physical coords zi,ri from interpolation of nearest
-  // node fields.                                           
 
   eFieldZ = 0;
-  eFieldR = 0;
+  eFieldR = 0;                                            
 
-  // Find surrounding 4 nodes (bl = bottom left, tr = top right)
-  // TODO: edge cases...?
-  // there's probably a more elegant way of doing this
-  int bl_z = std::floor(zi/m_zStepSize);
-  int bl_r = std::floor(ri/m_rStepSize);
-  int br_z = std::ceil(zi/m_zStepSize);
-  int br_r = std::floor(ri/m_rStepSize);
-  int tl_z = std::floor(zi/m_zStepSize);
-  int tl_r = std::ceil(ri/m_rStepSize);
-  int tr_z = std::ceil(zi/m_zStepSize);
-  int tr_r = std::ceil(ri/m_rStepSize);
-  
-  double x1 = m_zStepSize*bl_z;
-  double y1 = m_rStepSize*bl_r;
-  double x2 = m_zStepSize*tr_z;
-  double y2 = m_rStepSize*tr_r;
+  double z_max = m_zGrid.back();
+  double z_min = m_zGrid.front();
+  double r_max = m_rGrid.back();
+  if (ri < 0 || ri > r_max || zi < z_min || zi > z_max) {
+    if (m_debug) std::cerr << m_className
+                           << "::InterpolateField: point outside of grid:\nri: " 
+                           << ri << " zi: " << zi << "\n";
+    return;
+  }
 
+
+  // Compute grid indices of lower left grid point
+  int i = std::floor((zi - z_min) / m_zStepSize);
+  int j = std::floor(ri / m_rStepSize);
+
+  // let the 4 grid points be at (p0,q0),(p1,q0),(p0,q1),(p1,q1)
+  double p0 = m_zGrid[i];
+  double p1 = p0 + m_zStepSize;
+  double q0 = m_rGrid[j];
+  double q1 = q0 + m_rStepSize;
+
+  bool onRGrid = std::fmod(ri, m_rStepSize) < 1e-8;
+  bool onZGrid = std::fmod(zi, m_zStepSize) < 1e-8;
+
+  // if point is on a grid node:
+  if (onRGrid && onRGrid) {
+    eFieldR = m_grid[i][j].eFieldR;
+    eFieldZ = m_grid[i][j].eFieldZ;
+    return;
+  }
+  // Linear interpolation case (instead of bilinear)
+  // With reference to https://en.wikipedia.org/wiki/Linear_interpolation  
+  // if point is on a vertical grid line
+  if (onZGrid && !onRGrid) {
+    double x0 = q0;
+    double x1 = q1;
+    double pf = (1/(x1-x0)); // < Is this ever NAN?
+
+    // Begin with R field:
+    double y0 = m_grid[i][j].eFieldR;
+    double y1 = m_grid[i][j+1].eFieldR;
+    eFieldR = pf*(y0*(x1-ri) + y1*(ri-x0));
+
+    // Now with Z field:
+    y0 = m_grid[i][j].eFieldZ;
+    y1 = m_grid[i][j+1].eFieldZ;
+    eFieldZ = pf*(y0*(x1-ri) + y1*(ri-x0));
+    return;
+  }
+  // point is on a horizontal grid line:
+  if (!onZGrid && onRGrid) {
+    double x0 = p0;
+    double x1 = p1;
+    double pf = (1/(x1-x0)); // < Is this ever NAN?
+
+    // Begin with R field:
+    double y0 = m_grid[i][j].eFieldR;
+    double y1 = m_grid[i+1][j].eFieldR;
+    eFieldR = pf*(y0*(x1-ri) + y1*(ri-x0));
+
+    // Now with Z field:
+    y0 = m_grid[i][j].eFieldZ;
+    y1 = m_grid[i+1][j].eFieldZ;
+    eFieldZ = pf*(y0*(x1-ri) + y1*(ri-x0));
+  }
+  // Normal case - point inside a grid cell - bilinear interpolation
   // with reference to https://en.wikipedia.org/wiki/Bilinear_interpolation#Repeated_linear_interpolation
+  double x1 = p0;
+  double x2 = p1;
+  double y1 = q0;
+  double y2 = q1;
+
   double pf = 1/((x2-x1)*(y2-y1));
   // Begin with z field
-  double f_Q11 = m_grid[bl_z][bl_r].eFieldZ;
-  double f_Q12 = m_grid[tl_z][tl_r].eFieldZ;
-  double f_Q21 = m_grid[br_z][br_r].eFieldZ;  
-  double f_Q22 = m_grid[tr_z][tr_r].eFieldZ;
+  double f_Q11 = m_grid[i][j].eFieldZ;
+  double f_Q12 = m_grid[i][j+1].eFieldZ;
+  double f_Q21 = m_grid[i+1][j].eFieldZ;  
+  double f_Q22 = m_grid[i+1][j+1].eFieldZ;
   
   eFieldZ = pf*(f_Q11*(x2-zi)*(y2-ri)+f_Q12*(x2-zi)*(ri-y1)+
                 f_Q21*(zi-x1)*(y2-ri)+f_Q22*(zi-x1)*(ri-y1));
 
   // Now r field
-  f_Q11 = m_grid[bl_z][bl_r].eFieldR;
-  f_Q12 = m_grid[tl_z][tl_r].eFieldR;
-  f_Q21 = m_grid[br_z][br_r].eFieldR; 
-  f_Q22 = m_grid[tr_z][tr_r].eFieldR;  
+  f_Q11 = m_grid[i][j].eFieldR;
+  f_Q12 = m_grid[i][j+1].eFieldR;
+  f_Q21 = m_grid[i+1][j].eFieldR; 
+  f_Q22 = m_grid[i+1][j+1].eFieldR;  
   
   eFieldR = pf*(f_Q11*(x2-zi)*(y2-ri)+f_Q12*(x2-zi)*(ri-y1)+
-                f_Q21*(zi-x1)*(y2-ri)+f_Q22*(zi-x1)*(ri-y1));  
-
+                f_Q21*(zi-x1)*(y2-ri)+f_Q22*(zi-x1)*(ri-y1));
+  return;
 }
 
 void AvalancheMicroscopic::CylindricalFieldToCartesian(double &eFieldR, double &eFieldX, double &eFieldY, 
