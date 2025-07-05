@@ -500,11 +500,14 @@ class AvalancheMicroscopic {
   void GetFreeChargedRing(double zi, double ri,double zf, double rf,
                           double &eFieldZ,double &eFieldR); 
                             
-  void GetLocalField(const double zi, const double ri,
-                         double &eFieldZ, double &eFieldR);  
+  void GetLocalField(const double xi, const double yi, const double zi,
+                     double &eFieldX, double &eFieldY, double &eFieldZ);  
                          
   void InterpolateField(const double zi, const double ri,
-                        double &eFieldZ, double &eFieldR);                       
+                        double &eFieldZ, double &eFieldR);    
+                        
+  void CylindricalFieldToCartesian(double &eFieldR, double &eFieldX, double &eFieldY, 
+                                   double x, double y);                      
 
   bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
   int TransportElectron(

@@ -975,7 +975,7 @@ int AvalancheMicroscopic::TransportElectron(
           m_sensor->ElectricField(r0[0] + h * vr[0] * 0.5 + 0.125 * h2 * k1[0],
                                   r0[1] + h * vr[1] * 0.5 + 0.125 * h2 * k1[1],
                                   r0[2] + h * vr[2] * 0.5 + 0.125 * h2 * k1[2],
-                                  ex0, ey0, ez0, med0, stat0);
+                                  ex0, ey0, ez0, med0, stat0);                        
 
           std::array<double, 3> k2 = {c3 * ex0, c3 * ey0, c3 * ez0};  // k3 = k2
           m_sensor->ElectricField(r0[0] + h * vr[0] + h2 * k2[0] * 0.5,
@@ -2574,14 +2574,17 @@ bool AvalancheMicroscopic::AvalancheTimeStepSC(double & tmin, double & timestep)
   return true;
 }
 
-void AvalancheMicroscopic::GetLocalField(const double zi, const double ri,
-                                             double &eFieldZ, double &eFieldR){
-  // calculate space-charge (local field) at zi/ri
+void AvalancheMicroscopic::GetLocalField(const double xi, const double yi, const double zi,
+                                             double &eFieldX, double &eFieldY, double &eFieldZ){
+  // calculate space-charge field (local field) at (xi,yi,zi)
+
+  const double ri = std::sqrt(xi*xi+yi*yi);
+
   eFieldZ = 0;
-  eFieldR = 0;
+  double eFieldR = 0;
 
   if (!m_bImportElliptic) {
-    throw std::runtime_error("::GetLocalFieldGrid: Elliptic values not imported.");
+    throw std::runtime_error("::GetLocalField: Elliptic values not imported.");
   }
   // Multiply by prefactor (final field units V/cm)
   constexpr double prefactor = ElementaryCharge / (TwoPi * FourPiEpsilon0);
@@ -2607,6 +2610,7 @@ void AvalancheMicroscopic::GetLocalField(const double zi, const double ri,
     }
   }
   InterpolateField(zi,ri,eFieldZ,eFieldR);
+  CylindricalFieldToCartesian(eFieldR, eFieldX, eFieldY,xi,yi);
 
 }
 
@@ -2619,6 +2623,7 @@ void AvalancheMicroscopic::InterpolateField(const double zi, const double ri,
   eFieldR = 0;
 
   // Find surrounding 4 nodes (bl = bottom left, tr = top right)
+  // TODO: edge cases...?
   // there's probably a more elegant way of doing this
   int bl_z = std::floor(zi/m_zStepSize);
   int bl_r = std::floor(ri/m_rStepSize);
@@ -2654,5 +2659,22 @@ void AvalancheMicroscopic::InterpolateField(const double zi, const double ri,
   eFieldR = pf*(f_Q11*(x2-zi)*(y2-ri)+f_Q12*(x2-zi)*(ri-y1)+
                 f_Q21*(zi-x1)*(y2-ri)+f_Q22*(zi-x1)*(ri-y1));  
 
+}
+
+void AvalancheMicroscopic::CylindricalFieldToCartesian(double &eFieldR, double &eFieldX, double &eFieldY, 
+                                                       double x, double y){
+  // E_x = E_rCos(phi)
+  // E_y = E_rSin(phi)
+  // phi = arctan(y/x)
+  double cosphi = 1/std::sqrt(1+(y/x)*(y/x));
+  double sinphi;
+  if (x/y > 0){
+    sinphi = 1/std::sqrt(1+(x/y)*(x/y));                                                      
+  }
+  else{
+    sinphi = -1/std::sqrt(1+(x/y)*(x/y));
+  }
+  eFieldX = eFieldR*cosphi;
+  eFieldY = eFieldR*sinphi;
 }
 }  // namespace Garfield
