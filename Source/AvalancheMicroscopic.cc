@@ -2597,7 +2597,7 @@ void AvalancheMicroscopic::GetLocalField(const double xi, const double yi, const
       double rf = m_rGrid[fr];
       double zf = m_zGrid[fz];
 
-      // find electric field at pos i from charge at f
+      // N is number of elementary charges
       double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
                   m_grid[fz][fr].nNegIon; // < ions are not implemented (these will be 0)
       AddFieldFromChargeAt(zi, ri, zf, rf, N, eFieldZ, eFieldR);
@@ -2611,7 +2611,6 @@ void AvalancheMicroscopic::GetLocalField(const double xi, const double yi, const
   }
   InterpolateField(zi,ri,eFieldZ,eFieldR);
   CylindricalFieldToCartesian(eFieldR, eFieldX, eFieldY,xi,yi);
-
 }
 
 void AvalancheMicroscopic::InterpolateField(const double zi, const double ri,
@@ -2748,7 +2747,7 @@ void AvalancheMicroscopic::GetTotalField(double x, double y, double z, double &e
     ex += ex_sc;
     ey += ey_sc;
     ez += ez_sc;
-  }                                           
+  }
 }
 
 void AvalancheMicroscopic::SetupSpaceCharge(){

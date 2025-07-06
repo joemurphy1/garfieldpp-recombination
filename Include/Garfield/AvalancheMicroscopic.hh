@@ -297,10 +297,6 @@ class AvalancheMicroscopic {
   // Set 2D grid for space charge calculation
   void Set2dGrid(double zmin, double zmax, int zsteps, double rmax, int rsteps);
 
-  // for use in space charge calculations
-  // n is number of electrons at (x,y,z)
-  bool SnapTo2dGrid(const double x, const double y, const double z, const long n);
-
   // class to store CPU/GPU benchmark comparisons
   struct Statistics {
     std::vector<double> gpu_stack_process_time;
@@ -513,7 +509,11 @@ class AvalancheMicroscopic {
   void GetTotalField(double x, double y, double z, double &ex, 
                      double &ey,double &ez, Medium *& medium, int &status);    
                      
-  void SetupSpaceCharge();                   
+  void SetupSpaceCharge();
+  
+  // for use in space charge calculations
+  // n is number of electrons at (x,y,z)
+  bool SnapTo2dGrid(const double x, const double y, const double z, const long n);
 
   bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
   int TransportElectron(
