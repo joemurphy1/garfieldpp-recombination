@@ -2545,6 +2545,15 @@ bool AvalancheMicroscopic::AvalancheTimeStepSC(double & tmin, double & timestep)
   if (!GetElectrons().empty()){
     SetTimeWindow(tmin, tmin + timestep);
     ResumeAvalanche();
+
+    // Clear grid of existing electrons
+    for (int z_idx = 0; z_idx <= m_zSteps; z_idx++) {
+      for (int r_idx = 0; r_idx <= m_rSteps; r_idx++) {
+        m_grid[z_idx][r_idx].nElectron = 0;
+        m_grid[z_idx][r_idx].nNegIon = 0;
+        m_grid[z_idx][r_idx].nPosIon = 0;
+      }
+    }
       
     for (const auto& electron : GetElectrons()) {
       const double xf = electron.path.back().x;
