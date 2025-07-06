@@ -2544,7 +2544,6 @@ bool AvalancheMicroscopic::AvalancheTimeStepSC(double & tmin, double & timestep)
   // Make sure we have electrons
   if (!GetElectrons().empty()){
     SetTimeWindow(tmin, tmin + timestep);
-    ResumeAvalanche();
 
     // Clear grid of existing electrons
     for (int z_idx = 0; z_idx <= m_zSteps; z_idx++) {
@@ -2566,7 +2565,8 @@ bool AvalancheMicroscopic::AvalancheTimeStepSC(double & tmin, double & timestep)
       else{
         continue;
       }
-    }      
+    }
+    ResumeAvalanche();      
   }
   else{
     return false;
