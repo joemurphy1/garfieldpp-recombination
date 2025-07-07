@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <memory>
+#include<iostream>
 
 #include "wcpplib/geometry/polyline.h"
 #include "wcpplib/geometry/surface.h"
@@ -29,12 +30,12 @@ absref_transmit box::get_components() {
 }
 
 box::box()
-    : m_dx(0), m_dy(0), m_dz(0), m_dxh(0), m_dyh(0), m_dzh(0), m_name("none") {
+    : m_dx(0), m_dy(0), m_dz(0), m_dxh(0), m_dyh(0), m_dzh(0){
   init_prec();
   init_planes();
 }
 
-box::box(double fdx, double fdy, double fdz, const std::string& fname) {
+box::box(double fdx, double fdy, double fdz) {
   pvecerror("box(double fdx, double fdy, double fdz, const string &fname)");
   m_dx = fabs(fdx);
   m_dy = fabs(fdy);
@@ -42,24 +43,7 @@ box::box(double fdx, double fdy, double fdz, const std::string& fname) {
   m_dxh = 0.5 * m_dx;
   m_dyh = 0.5 * m_dy;
   m_dzh = 0.5 * m_dz;
-  m_name = fname;
   init_prec();
-  init_planes();
-}
-
-box::box(double fdx, double fdy, double fdz, double fprec,
-         const std::string& fname) {
-  pvecerror(
-      "box(double fdx, double fdy, double fdz, double fprec, const string "
-      "&fname)");
-  m_dx = fabs(fdx);
-  m_dy = fabs(fdy);
-  m_dz = fabs(fdz);
-  m_dxh = 0.5 * m_dx;
-  m_dyh = 0.5 * m_dy;
-  m_dzh = 0.5 * m_dz;
-  m_name = fname;
-  prec = fprec;
   init_planes();
 }
 
@@ -72,7 +56,6 @@ box::box(box& fb) : absref(fb), absvol(fb) {
   m_dyh = 0.5 * m_dy;
   m_dzh = 0.5 * m_dz;
   prec = fb.prec;
-  m_name = fb.m_name;
   init_planes();
 }
 
@@ -84,7 +67,6 @@ box::box(const box& fb) : absref(fb), absvol(fb) {
   m_dxh = 0.5 * m_dx;
   m_dyh = 0.5 * m_dy;
   m_dzh = 0.5 * m_dz;
-  m_name = fb.m_name;
   prec = fb.prec;
   init_planes();
 }
@@ -124,7 +106,7 @@ void box::init_planes() {
                                       vec(0, 0, -1));
   fsurf[5] = std::make_shared<splane>(plane(point(0, 0, -m_dzh), vec(0, 0, +1)),
                                       vec(0, 0, +1));
-  m_ulsv.ulsvolume_init(fsurf, "ulsv of box", prec);
+  m_ulsv.ulsvolume_init(fsurf, prec);
 }
 
 int box::check_point_inside(const point& fpt, const vec& dir) const {
@@ -189,34 +171,5 @@ int box::range_ext(trajestep& fts, int s_ext) const {
 }
 
 void box::income(gparticle* /*gp*/) {}
-void box::chname(char* nm) const {
-  strcpy(nm, "box: ");
-  strcat(nm, m_name.c_str());
-}
-
-// *****   manip_box  ********
-
-absvol* manip_box::Gavol() const { return (box*)this; }
-
-void manip_box::chname(char* nm) const {
-  strcpy(nm, "manip_box: ");
-  strcat(nm, m_name.c_str());
-}
-
-// *****   sh_manip_box  ********
-
-// absvol* sh_manip_box::Gavol() const { return (box*)this; }
-absvol* sh_manip_box::Gavol() const {
-  return dynamic_cast<box*>(const_cast<sh_manip_box*>(this));
-}
-
-absref_transmit sh_manip_box::get_components() {
-  return sh_manip_absvol::get_components();
-}
-
-void sh_manip_box::chname(char* nm) const {
-  strcpy(nm, "sh_manip_box: ");
-  strcat(nm, m_name.c_str());
-}
 
 }  // namespace Heed

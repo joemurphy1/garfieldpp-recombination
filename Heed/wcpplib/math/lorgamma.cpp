@@ -1,6 +1,7 @@
 #include "wcpplib/math/lorgamma.h"
 
 #include <cmath>
+#include<iostream>
 
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/util/FunNameStack.h"

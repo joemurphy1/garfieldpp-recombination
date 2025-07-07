@@ -47,35 +47,6 @@ class straight : public absref {
   straight(const plane pl1, const plane pl2);
   // different parallel     vecerror=2
   // the same planes        vecerror=3
-  straight(const point* pt, int qpt, int anum);  // interpolates by xi2
-  // residuals are calculated in planes normal to axis which is measured.
-  // This axis is given by anum. 0 - x, 1 - y, 2 - z.
-  // Unless I've mistaken, the line should necessary be directed
-  // toward increasing of this axis.
-  straight(const straight sl[4], point pt[2], double prec);
-  // Draws line via four lines by interpolation.
-  // pt[2] are starting points for two intermidiate layers
-  straight(straight* sl,  // array of lines via which it need to draw
-                          // this line
-           int qsl,       // number of lines in array
-           const straight& sl_start,  // first approximation
-           int anum,                  // prolong axis : 0 - x, 1 - y, 2 - z.
-           double precision,          // wanted precision
-           double* dist,              // array of distances,
-           // they may be negative as in vecdistance
-           // For vecdistance this is this line
-           point (*pt)[2],  // points,  pt[][0] is point on this line
-           // pt[][1] is point on line sl.
-           double& mean2dist);  // mean square distance
-  // The constructor draws straight line via qsl lines by xi-2 method
-  // residuals are calculated in planes normal to axis which is measured.
-  // This axis is given by anum. 0 - x, 1 - y, 2 - z.
-  // The algorithm finds closest points in sl[] to this line and
-  // draws new this line by call of
-  // straight(const point* pt, int qpt, int anum);  // interpolates by xi2
-  // This is being done in loop while
-  //  while(mean2dist_prev<mean2dist ||
-  //	  (mean2dist != 0 && mean2dist_prev-mean2dist>precision) );
 
   /// Copy assignment operator.
   straight& operator=(const straight& fsl) {
@@ -135,9 +106,6 @@ class straight : public absref {
   double distance(const point& fpt, point& fcpt) const;
   // calculates closest point on the line
 
-  point vecdistance(const vec normal, const straight& slt);
-  // space position of cross of plane with normal, may be negative
-  // not debugged
 };
 
 }  // namespace Heed
