@@ -2411,8 +2411,7 @@ bool AvalancheMicroscopic::SnapTo2dGrid(const double x, const double y, const do
 bool AvalancheMicroscopic::AddFieldFromChargeAt(double zi, double ri, double zf,
                                                     double rf, double N,
                                                     double &eFieldZ,
-                                                    double &eFieldR){
-  // for grid indices iz,ir,fz,fr                                             
+                                                    double &eFieldR){                                         
   // charge of interest at f, point of interest at i
   if (std::abs(zi - zf) / m_zStepSize < 1.e-3 &&
       std::abs(ri - rf) / m_rStepSize < 1.e-3) {
@@ -2445,10 +2444,9 @@ void AvalancheMicroscopic::GetFreeChargedRing(double zi, double ri,
   // from charged ring at (zf, rf).
 
   // precondition
-  if (zi == zf && ri == rf) {
-    eFieldZ = 0;
-    eFieldR = 0;
-    return;
+  if (std::abs(zi - zf) / m_zStepSize < 1.e-3 &&
+      std::abs(ri - rf) / m_rStepSize < 1.e-3) {
+    return;  //< field on itself is not included
   }
 
   double dz = zi - zf;  //< I double-checked that's the right sign
@@ -2541,38 +2539,40 @@ void AvalancheMicroscopic::ImportEllipticIntegralValues(
 
 bool AvalancheMicroscopic::AvalancheTimeStepSC(double & tmin, double & timestep){
 
-  // Make sure we have electrons
-  if (!GetElectrons().empty()){
-    SetTimeWindow(tmin, tmin + timestep);
+  // Clear grid of existing electrons
+  for (int z_idx = 0; z_idx <= m_zSteps; z_idx++) {
+    for (int r_idx = 0; r_idx <= m_rSteps; r_idx++) {
+      m_grid[z_idx][r_idx].nElectron = 0;
+      m_grid[z_idx][r_idx].nNegIon = 0;
+      m_grid[z_idx][r_idx].nPosIon = 0;
+    }
+  }
 
-    // Clear grid of existing electrons
-    for (int z_idx = 0; z_idx <= m_zSteps; z_idx++) {
-      for (int r_idx = 0; r_idx <= m_rSteps; r_idx++) {
-        m_grid[z_idx][r_idx].nElectron = 0;
-        m_grid[z_idx][r_idx].nNegIon = 0;
-        m_grid[z_idx][r_idx].nPosIon = 0;
-      }
+  bool electrons_remaining = false;
+  for (const auto& electron : GetElectrons()) {
+    // get electron positions
+    const double xf = electron.path.back().x;
+    const double yf = electron.path.back().y;
+    const double zf = electron.path.back().z;
+    const int status = electron.status;
+    // if still in a drift medium or at the end of timestep:
+    if (status==0 || status == -17){
+      electrons_remaining = true;
+      SnapTo2dGrid(xf,yf,zf,1);
     }
-      
-    for (const auto& electron : GetElectrons()) {
-      const double xf = electron.path.back().x;
-      const double yf = electron.path.back().y;
-      const double zf = electron.path.back().z;
-      const int status = electron.status;
-      if (status==0){
-        SnapTo2dGrid(xf,yf,zf,1);
-      }
-      else{
-        continue;
-      }
+    else{
+      continue;
     }
-    ResumeAvalanche();      
+  }
+  if (electrons_remaining){
+    SetTimeWindow(tmin, tmin + timestep);
+    ResumeAvalanche();  
+    tmin += timestep;
+    return true; 
   }
   else{
     return false;
   }
-  tmin += timestep;
-  return true;
 }
 
 void AvalancheMicroscopic::GetLocalField(const double xi, const double yi, const double zi,
