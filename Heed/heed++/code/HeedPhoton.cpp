@@ -1,7 +1,6 @@
 #include "heed++/code/HeedPhoton.h"
 
 #include <algorithm>
-#include<iostream>
 
 #include "Garfield/Random.hh"
 #include "heed++/code/EnTransfCS.h"

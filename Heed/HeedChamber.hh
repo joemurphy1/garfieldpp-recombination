@@ -3,6 +3,7 @@
 #define G_HEED_CHAMBER_H
 
 #include "heed++/code/EnTransfCS.h"
+#include "heed++/code/HeedCondElectron.h"
 #include "heed++/code/HeedDeltaElectronCS.h"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/geometry/box.h"
@@ -19,7 +20,7 @@ class HeedChamber : public Heed::sh_manip_absvol,
               const Heed::HeedDeltaElectronCS& hdecs)
       : Heed::sh_manip_absvol(fcsys),
         Heed::box(dx * Heed::CLHEP::cm, dy * Heed::CLHEP::cm,
-                  dz * Heed::CLHEP::cm),
+                  dz * Heed::CLHEP::cm, "chamber"),
         Heed::EnTransfCS(etcs),
         Heed::HeedDeltaElectronCS(hdecs) {
     s_sensitive = true;

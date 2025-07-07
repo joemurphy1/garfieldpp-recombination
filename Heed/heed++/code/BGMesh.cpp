@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <cstddef>
-#include<iostream>
 
 #include "wcpplib/util/FunNameStack.h"
 

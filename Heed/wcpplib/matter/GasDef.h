@@ -3,8 +3,6 @@
 
 #include "wcpplib/matter/MatterDef.h"
 #include "wcpplib/matter/MoleculeDef.h"
-#include <vector>
-#include <string>
 
 namespace Heed {
 

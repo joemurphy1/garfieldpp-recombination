@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <limits>
-#include<iostream>
 
 #include "heed++/code/ElElasticScat.h"
 #include "heed++/code/EnergyMesh.h"

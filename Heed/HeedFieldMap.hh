@@ -2,12 +2,12 @@
 #define G_HEED_FIELDMAP_H
 #include <limits>
 #include "Garfield/Medium.hh"
+#include "Garfield/Sensor.hh"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/particle/fieldmap.h"
 
 namespace Garfield {
 
-class Sensor;
 /// Retrieve electric and magnetic field from Sensor.
 
 class HeedFieldMap : public Heed::fieldmap {

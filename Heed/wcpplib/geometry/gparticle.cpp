@@ -128,7 +128,7 @@ stvpoint gparticle::calc_step_to_bord() {
 
 void gparticle::turn(const double ctheta, const double stheta) {
   vec dir = m_currpos.dir;
-  basis temp(dir);
+  basis temp(dir, "temp");
   vec vturn;
   vturn.random_round_vec();
   vturn = vturn * stheta;

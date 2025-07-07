@@ -22,7 +22,7 @@ and notices about any modifications of the original text
 appear in all copies and in supporting documentation.
 The file is provided "as is" without express or implied warranty.
 */
-#include<iostream>
+#include <string>
 
 #include "wcpplib/geometry/vfloat.h"
 #include "wcpplib/util/FunNameStack.h"
@@ -342,6 +342,9 @@ class vec : public absref {
     // if(a >= 0.5*M_PI - prec && a =< 0.5*M_PI + prec ) return 1;
     return 0;
   }
+  friend inline vec switch_xyz(const vec& v) {
+    return vec(v.z, v.x, v.y);
+  }  // don't change the vector itself
 };
 
 extern vec dex;  // unit vector by x
@@ -361,19 +364,27 @@ class basis : public absref {
   static absref absref::* aref[3];
 
  public:
+  std::string name;
+
+ public:
   vec Gex() const { return ex; }
   vec Gey() const { return ey; }
   vec Gez() const { return ez; }
 
+  /// Change ex=ez; ey=ex; ez=ey.
+  basis switch_xyz() const;
+
   /// Nominal basis.
   basis();
+  /// Nominal basis.
+  basis(const std::string& pname);
   /// Longitudinal basis.
   /// z-axis is parallel to p.
   /// y-axis is vector product of z_new and z_old
   /// x-axis is vector product of y_new and z_new
   /// If p is parallel to z_old, the copy of old basis is created.
   /// If p is anti-parallel to z_old, the inverted copy of old basis is created.
-  basis(const vec& p);
+  basis(const vec& p, const std::string& fname);
 
   /// More sophisticated basis.
   /// ez is parallel to p,                             ez=unit_vec(p)
@@ -381,9 +392,13 @@ class basis : public absref {
   /// ex is vector product of y and z,                 ex=ey||ez
   /// If p is parallel to c, or p is anti-parallel to c, vecerror=1
   /// if(length(p)==0||length(c)==0)) vecerror=1;
-  basis(const vec& p, const vec& c);
+  basis(const vec& p, const vec& c, const std::string& pname);
+
+  /// Same basis with other name, useful for later turning.
+  basis(const basis& pb, const std::string& pname);
   /// Direct definitions of basis by three perpendicular unit-length vectors.
-  basis(const vec& pex, const vec& pey, const vec& pez);
+  basis(const vec& pex, const vec& pey, const vec& pez,
+        const std::string& pname);
   virtual ~basis() {}
 };
 
@@ -437,9 +452,13 @@ class point : public absref {
 /// baz may be zero or pointer to unit basis.
 class abssyscoor {
  public:
+  std::string name = "none";
   virtual const point* Gapiv() const = 0;
   virtual const basis* Gabas() const = 0;
   abssyscoor() = default;
+  abssyscoor(char* fname) : name(fname) {}
+  abssyscoor(const std::string& fname) : name(fname) {}
+
   virtual ~abssyscoor() {}
 };
 
@@ -451,10 +470,13 @@ class fixsyscoor : public absref, public abssyscoor {
   void Pbas(const basis& fbas);
   // nominal system
   fixsyscoor() = default;
-  fixsyscoor(const point& fpiv, const basis& fbas)
-      : abssyscoor(), piv(fpiv), bas(fbas) {}
-  fixsyscoor(const point* const fapiv, const basis* const fabas)
-      : abssyscoor(),
+  fixsyscoor(char* fname) : abssyscoor(fname) {}
+  fixsyscoor(const std::string& fname) : abssyscoor(fname) {}
+  fixsyscoor(const point& fpiv, const basis& fbas, const std::string& fname)
+      : abssyscoor(fname), piv(fpiv), bas(fbas) {}
+  fixsyscoor(const point* const fapiv, const basis* const fabas,
+             const std::string& fname)
+      : abssyscoor(fname),
         piv((fapiv != NULL) ? (*fapiv) : point()),
         bas((fabas != NULL) ? (*fabas) : basis()) {}
   fixsyscoor(const abssyscoor& f)

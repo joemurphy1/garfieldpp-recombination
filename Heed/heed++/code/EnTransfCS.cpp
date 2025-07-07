@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include <fstream>
-#include<iostream>
+
 #include "heed++/code/EnergyMesh.h"
 #include "heed++/code/HeedMatterDef.h"
 #include "heed++/code/PhysicalConstants.h"

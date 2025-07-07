@@ -2,8 +2,6 @@
 #define MATTER_DEF_H
 
 #include "wcpplib/matter/AtomDef.h"
-#include <string>
-#include <vector>
 
 namespace Heed {
 

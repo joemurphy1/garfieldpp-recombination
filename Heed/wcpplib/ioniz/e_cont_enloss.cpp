@@ -12,6 +12,7 @@ namespace Heed {
 
 using CLHEP::Avogadro;
 using CLHEP::classic_electr_radius;
+using CLHEP::cm2;
 using CLHEP::cm3;
 using CLHEP::electron_mass_c2;
 using CLHEP::GeV;

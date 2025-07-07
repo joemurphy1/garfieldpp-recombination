@@ -48,7 +48,7 @@ void HeedParticle::physics(std::vector<gparticle*>& secondaries) {
   EnergyMesh* emesh = hmd->energy_mesh;
   const double* aetemp = emesh->get_ae();
   PointCoorMesh<double, const double*> pcm(emesh->get_q() + 1, &(aetemp));
-  basis tempbas(m_currpos.dir);
+  basis tempbas(m_currpos.dir, "tempbas");
   // Particle mass and energy.
   const double mp = m_mass * c_squared;
   const double ep = mp + m_curr_ekin;

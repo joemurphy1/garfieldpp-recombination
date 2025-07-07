@@ -4,7 +4,7 @@ Garfield++ is a toolkit for the detailed simulation of detectors which use gases
 
 Garfield++ shares functionality with [Garfield](http://cern.ch/garfield). The main differences are the more up-to-date treatment of electron transport in gases, the inclusion of semiconductor detectors and the user interface, which is derived from ROOT.
 
-[More...](http://garfieldpp.docs.cern.ch/)
+[More...](http://garfieldpp.web.cern.ch/garfieldpp/about)
 
 ## Building the project
 

@@ -2,6 +2,7 @@
 #define SURFACE_H
 #include <array>
 #include <memory>
+#include <string>
 
 #include "wcpplib/geometry/polyline.h"
 #include "wcpplib/geometry/volume.h"
@@ -142,6 +143,7 @@ class ulsvolume : public absvol {
   static constexpr int pqqsurf = 10;
   int qsurf = 0;
   std::array<std::shared_ptr<surface>, pqqsurf> surf;
+  std::string name = "non-initialized ulsvolume";
 
  protected:
   // Array of raw pointers used used in get_components.
@@ -153,7 +155,8 @@ class ulsvolume : public absvol {
   /// Default constructor.
   ulsvolume() {}
   /// Constructor from surfaces.
-  ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf,double fprec);
+  ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf, char* fname,
+            double fprec);
   ulsvolume(ulsvolume& f);
   ulsvolume(const ulsvolume& fv);
   /// Destructor
@@ -165,12 +168,30 @@ class ulsvolume : public absvol {
   // If no cross, returns 0 and does not change fts
   // If there is cross, returns 1 and assign fts.mrange and fts.mpoint
 
-  void ulsvolume_init(const std::vector<std::shared_ptr<surface> >& fsurf, double fprec);
+  void ulsvolume_init(const std::vector<std::shared_ptr<surface> >& fsurf,
+                      const std::string& fname, double fprec);
 
   void income(gparticle* /*gp*/) override {}
+  void chname(char* nm) const override {
+    strcpy(nm, "ulsvolume: ");
+    strcat(nm, name.c_str());
+  }
 };
 
+class manip_ulsvolume : public manip_absvol, public ulsvolume {
+ public:
+  manip_ulsvolume() : manip_absvol(), ulsvolume() {}
+  manip_ulsvolume(const manip_ulsvolume& f);
+  manip_ulsvolume(const ulsvolume& f) : manip_absvol(), ulsvolume(f) {}
+  /// Destructor
+  virtual ~manip_ulsvolume() {}
 
+  virtual absvol* Gavol() const { return (ulsvolume*)this; }
+  virtual void chname(char* nm) const {
+    strcpy(nm, "manip_ulsvolume: ");
+    strcat(nm, name.c_str());
+  }
+};
 }  // namespace Heed
 
 #endif

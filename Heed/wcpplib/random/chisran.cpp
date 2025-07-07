@@ -1,7 +1,6 @@
 #include "wcpplib/random/chisran.h"
 
 #include "wcpplib/util/FunNameStack.h"
-#include<iostream>
 
 // I. B. Smirnov, 2003.
 
@@ -17,7 +16,7 @@ double chispre(std::vector<double> &f, int s_allow_zero_f) {
     } else {
       if (f[i] < 0.0) {
         std::cout << "Warning: f[i] < 0.0 in chispre\n";
-        std::cout << "i=" << i << ", f[i]=" << f[i] << '\n';
+        Iprint2n(std::cout, i, f[i]);
         f[i] = 0.0;
       }
     }

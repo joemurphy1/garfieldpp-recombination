@@ -25,6 +25,8 @@ It is provided "as is" without express or implied warranty.
 
 namespace Heed {
 
+inline long left_round(double f) { return f >= 0 ? long(f) : -long(-f) - 1; }
+
 template <class T>
 inline T tabs(const T& x) {
   return x >= 0 ? x : -x;

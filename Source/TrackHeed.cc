@@ -854,7 +854,8 @@ bool TrackHeed::Initialise(Medium* medium, const bool verbose) {
     std::cout << "    Min. ionization potential:   " << minI << " eV\n";
   }
 
-  Heed::fixsyscoor primSys(Heed::point(0., 0., 0.), Heed::basis());
+  Heed::fixsyscoor primSys(Heed::point(0., 0., 0.), Heed::basis("primary"),
+                           "primary");
   m_chamber.reset(new HeedChamber(primSys, m_lX, m_lY, m_lZ,
                                   *m_transferCs.get(), *m_deltaCs.get()));
   m_fieldMap->SetSensor(m_sensor);

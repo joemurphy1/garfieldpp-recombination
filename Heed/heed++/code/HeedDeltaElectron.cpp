@@ -8,7 +8,6 @@
 #include "heed++/code/PairProd.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/math/lorgamma.h"
-#include<iostream>
 // 2003, I. Smirnov
 
 #define USE_ADJUSTED_W

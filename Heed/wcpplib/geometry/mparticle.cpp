@@ -1,7 +1,6 @@
 #include "wcpplib/geometry/mparticle.h"
 
 #include <limits>
-#include<iostream>
 
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/geometry/vfloat.h"

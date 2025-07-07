@@ -3,7 +3,6 @@
 #include "wcpplib/geometry/circumf.h"
 #include "wcpplib/geometry/polyline.h"
 #include "wcpplib/geometry/trajestep.h"
-#include<iostream>
 /*
 Copyright (c) 2000 Igor B. Smirnov
 
@@ -283,8 +282,10 @@ int ulsvolume::range_ext(trajestep& fts, int s_ext) const {
 */
 
 void ulsvolume::ulsvolume_init(
-    const std::vector<std::shared_ptr<surface> >& fsurf, double fprec) {
+    const std::vector<std::shared_ptr<surface> >& fsurf,
+    const std::string& fname, double fprec) {
   prec = fprec;
+  name = fname;
   if (qsurf > 0) {
     for (int n = 0; n < qsurf; ++n) surf[n].reset();
   }
@@ -294,25 +295,29 @@ void ulsvolume::ulsvolume_init(
   }
 }
 
-ulsvolume::ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf, double fprec)
-    : qsurf(fsurf.size()){
+ulsvolume::ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf,
+                     char* fname, double fprec)
+    : qsurf(fsurf.size()), name(fname) {
   check_econd12(qsurf, >, pqqsurf, std::cerr);
   prec = fprec;
   for (int n = 0; n < qsurf; ++n) surf[n] = fsurf[n];
 }
 
 ulsvolume::ulsvolume(ulsvolume& f)
-    : absref(f), absvol(f), qsurf(f.qsurf){
+    : absref(f), absvol(f), qsurf(f.qsurf), name(f.name) {
   check_econd12(f.qsurf, >, pqqsurf, std::cerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];
 }
 
 ulsvolume::ulsvolume(const ulsvolume& f)
-    : absref(f), absvol(f), qsurf(f.qsurf){
+    : absref(f), absvol(f), qsurf(f.qsurf), name(f.name) {
   check_econd12(f.qsurf, >, pqqsurf, std::cerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];
 }
+
+manip_ulsvolume::manip_ulsvolume(const manip_ulsvolume& f)
+    : absref(f), manip_absvol(f), ulsvolume(f) {}
 
 }  // namespace Heed
