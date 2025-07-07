@@ -1,6 +1,7 @@
 #include "wcpplib/matter/MoleculeDef.h"
 
 #include <iomanip>
+#include<iostream>
 
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/math/cubic.h"
@@ -31,14 +32,14 @@ VanDerWaals::VanDerWaals(double fPk, double fTk) : Pkh(fPk), Tkh(fTk) {
 double VanDerWaals::volume_of_mole(double T, double p, int& s_not_single) {
   double Tr = T / Tkh;
   double Pr = p / Pkh;
-  Iprint2n(std::cout, Tr, Pr);
+  std::cout << "Tr=" << Tr << ", Pr=" << Pr << '\n';
   Cubic cb(Pr, -1.0 / 3.0 * (Pr + 8 * Tr), 3, -1);
   double r[3];
   int q = cb.find_real_zero(r);
   check_econd11(q, <= 0, std::cerr);
   double x = r[q - 1];   // this is the relative volume taken by one mole
   double res = x * Vkh;  // this is the absolute volume taken by one mole
-  Iprint2n(std::cout, x, res);
+  std::cout << "x=" << x << ", res=" << res << '\n';
   s_not_single = q == 2 ? 1 : 0;
   return res;
 }

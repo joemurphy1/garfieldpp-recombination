@@ -1,6 +1,5 @@
 #ifndef VOLUME_H
 #define VOLUME_H
-#include <cstring>
 #include <vector>
 
 #include "wcpplib/geometry/trajestep.h"
@@ -114,7 +113,6 @@ class absvol : virtual public absref {
   virtual int range_ext(trajestep& fts, int s_ext) const = 0;
 
   virtual void income(gparticle*) {}
-  virtual void chname(char* nm) const { strcpy(nm, "absvol"); }
   virtual std::vector<manip_absvol*> Gamanip_embed() const;
 };
 
@@ -150,7 +148,6 @@ class manip_absvol : virtual public absref {
     const abssyscoor* asc = Gasc();
     if (asc) f->up(asc);
   }
-  void m_chname(char* nm) const;
   virtual ~manip_absvol() {}
 };
 
@@ -172,10 +169,8 @@ class sh_manip_absvol : public manip_absvol {
   sh_manip_absvol(sh_manip_absvol& f);
   sh_manip_absvol(const sh_manip_absvol& f);
   sh_manip_absvol(const abssyscoor& f);
-  sh_manip_absvol(const point& fc, const basis& fbas, const std::string& fname);
+  sh_manip_absvol(const point& fc, const basis& fbas);
   virtual ~sh_manip_absvol() {}
-
-  virtual void m_chname(char* nm) const;
 };
 
 }  // namespace Heed

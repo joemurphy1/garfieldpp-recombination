@@ -6,6 +6,7 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include<iostream>
 
 #include "Garfield/Random.hh"
 #include "heed++/code/PhysicalConstants.h"
@@ -427,7 +428,7 @@ void AtomicSecondaryProducts::add_channel(
   }
   if (s > 1.0) {
     std::cerr << "s > 1.0, s=" << s << '\n';
-    Iprintn(std::cerr, q_new);
+    std::cerr << "q_new=" << q_new << '\n';
     for (long n = 0; n < q_new; ++n) {
       std::cerr << "n=" << n << " channel_prob_dens[n]=" << channel_prob_dens[n]
                 << '\n';
@@ -768,7 +769,7 @@ double SimpleAtomPhotoAbsCS::get_integral_ACS(double energy1,
     const double t = m_acs[n]->get_integral_CS(energy1, energy2);
     if (t < 0) {
       std::cout << "t < 0\n";
-      Iprintn(std::cout, t);
+      std::cout << "t=" << t << '\n';
       spexit(std::cout);
     }
     s += t;

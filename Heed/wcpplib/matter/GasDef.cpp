@@ -1,7 +1,9 @@
 #include "wcpplib/matter/GasDef.h"
 
 #include <iomanip>
+#include<iostream>
 
+#include "wcpplib/matter/MoleculeDef.h"
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/util/FunNameStack.h"
 

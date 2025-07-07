@@ -4,6 +4,7 @@
 #include <climits>
 #include <cmath>
 #include <fstream>
+#include<iostream>
 
 #include "Garfield/Random.hh"
 #include "wcpplib/util/FunNameStack.h"
