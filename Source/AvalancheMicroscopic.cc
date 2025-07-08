@@ -5,8 +5,6 @@
 #include <chrono>
 #include <cmath>
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <string>
 
 #include "Garfield/FundamentalConstants.hh"
@@ -814,7 +812,7 @@ int AvalancheMicroscopic::TransportElectron(
   double ex = 0., ey = 0., ez = 0.;
   Medium* medium = nullptr;
   int status = 0;
-  GetTotalField(x, y, z, ex, ey, ez, medium, status);
+  m_sensor->ElectricField(x, y, z, ex, ey, ez, medium, status);
   // Sign change for electrons.
   const bool hole = (seed.type == Particle::Hole);
   if (!hole) {
@@ -964,16 +962,16 @@ int AvalancheMicroscopic::TransportElectron(
           const double h2 = h * h;
           Medium* med0 = nullptr;
           int stat0 = 0;
-          GetTotalField(r0[0] + h * vr[0] * 0.5 + 0.125 * h2 * k1[0],
-                        r0[1] + h * vr[1] * 0.5 + 0.125 * h2 * k1[1],
-                        r0[2] + h * vr[2] * 0.5 + 0.125 * h2 * k1[2],
-                        ex0, ey0, ez0, med0, stat0);                        
+          m_sensor->ElectricField(r0[0] + h * vr[0] * 0.5 + 0.125 * h2 * k1[0],
+                                  r0[1] + h * vr[1] * 0.5 + 0.125 * h2 * k1[1],
+                                  r0[2] + h * vr[2] * 0.5 + 0.125 * h2 * k1[2],
+                                  ex0, ey0, ez0, med0, stat0);
 
           std::array<double, 3> k2 = {c3 * ex0, c3 * ey0, c3 * ez0};  // k3 = k2
-          GetTotalField(r0[0] + h * vr[0] + h2 * k2[0] * 0.5,
-                        r0[1] + h * vr[1] + h2 * k2[1] * 0.5,
-                        r0[2] + h * vr[2] + h2 * k2[2] * 0.5, ex0,
-                        ey0, ez0, med0, stat0);
+          m_sensor->ElectricField(r0[0] + h * vr[0] + h2 * k2[0] * 0.5,
+                                  r0[1] + h * vr[1] + h2 * k2[1] * 0.5,
+                                  r0[2] + h * vr[2] + h2 * k2[2] * 0.5, ex0,
+                                  ey0, ez0, med0, stat0);
           std::array<double, 3> k4 = {c3 * ex0, c3 * ey0, c3 * ez0};
 
           // Check error tolerance
@@ -1093,7 +1091,7 @@ int AvalancheMicroscopic::TransportElectron(
     double t1 = t + dt;
 
     // Get the electric field and medium at the proposed new position.
-    GetTotalField(x1, y1, z1, ex, ey, ez, medium, status);
+    m_sensor->ElectricField(x1, y1, z1, ex, ey, ez, medium, status);
 
     if (!hole) {
       ex = -ex;
@@ -1276,7 +1274,7 @@ int AvalancheMicroscopic::TransportElectronBfield(
   double ex = 0., ey = 0., ez = 0.;
   Medium* medium = nullptr;
   int status = 0;
-  GetTotalField(x, y, z, ex, ey, ez, medium, status);
+  m_sensor->ElectricField(x, y, z, ex, ey, ez, medium, status);
   // Sign change for electrons.
   const bool hole = (seed.type == Particle::Hole);
   if (!hole) {
@@ -1476,7 +1474,7 @@ int AvalancheMicroscopic::TransportElectronBfield(
     double z1 = z + dz;
     double t1 = t + dt;
     // Get the electric field and medium at the proposed new position.
-    GetTotalField(x1, y1, z1, ex, ey, ez, medium, status);
+    m_sensor->ElectricField(x1, y1, z1, ex, ey, ez, medium, status);
     if (!hole) {
       ex = -ex;
       ey = -ey;
@@ -1658,7 +1656,7 @@ int AvalancheMicroscopic::TransportElectronSc(
   double ex = 0., ey = 0., ez = 0.;
   Medium* medium = nullptr;
   int status = 0;
-  GetTotalField(x, y, z, ex, ey, ez, medium, status);
+  m_sensor->ElectricField(x, y, z, ex, ey, ez, medium, status);
   // Sign change for electrons.
   const bool hole = (seed.type == Particle::Hole);
   if (!hole) {
@@ -1817,7 +1815,7 @@ int AvalancheMicroscopic::TransportElectronSc(
     double z1 = z + dz;
     double t1 = t + dt;
     // Get the electric field and medium at the proposed new position.
-    GetTotalField(x1, y1, z1, ex, ey, ez, medium, status);
+    m_sensor->ElectricField(x1, y1, z1, ex, ey, ez, medium, status);
     if (!hole) {
       ex = -ex;
       ey = -ey;
@@ -1975,7 +1973,7 @@ int AvalancheMicroscopic::TransportElectronSc(
 void AvalancheMicroscopic::CreatePenningElectron(
     const double x, const double y, const double z, const double t,
     const size_t w, const double ds, const double dt, const double ep,
-    const int level, std::vector<Seed>& stack){
+    const int level, std::vector<Seed>& stack) const {
 
   // Penning ionisation
   double xp = x, yp = y, zp = z;
@@ -1991,7 +1989,7 @@ void AvalancheMicroscopic::CreatePenningElectron(
   double fx = 0., fy = 0., fz = 0.;
   Medium* medium = nullptr;
   int status = 0;
-  GetTotalField(xp, yp, zp, fx, fy, fz, medium, status);
+  m_sensor->ElectricField(xp, yp, zp, fx, fy, fz, medium, status);
   // Check if this location is inside a drift medium/area.
   if (status != 0 || !m_sensor->IsInArea(xp, yp, zp)) return;
   // Make sure we haven't jumped across a wire.
@@ -2294,474 +2292,5 @@ void AvalancheMicroscopic::Terminate(double x0, double y0, double z0, double t0,
 void AvalancheMicroscopic::SetRunModeOptions(MPRunMode mode, int device) {
   m_runMode = mode;
   m_cudaDevice = device;
-}
-
-void AvalancheMicroscopic::Set2dGrid(const double zmin, const double zmax,
-                                         const int zsteps, const double rmax,
-                                         const int rsteps) {
-  m_isgridset = true;                             
-                                      
-  if (zmin >= zmax || zsteps <= 0 || 0 >= rmax || rsteps <= 0) {
-    std::cerr << m_className
-              << "::Set2dGrid: Error. Grid is not properly defined.\n";
-    return;
-  }
-
-  // set z grid
-  m_zSteps = zsteps;
-  m_zStepSize = (zmax - zmin) / zsteps;
-  // m_zGrid.resize(zsteps + 1);
-  for (int i = 0; i < zsteps + 1;
-       i++) {  //< put one more to include the last point on the grid
-    m_zGrid.push_back(zmin + i * m_zStepSize);
-  }
-
-  // set r grid
-  m_rSteps = rsteps;
-  m_rStepSize = rmax / rsteps;
-  // m_rGrid.resize(rsteps + 1);
-  for (int i = 0; i < rsteps + 1;
-       i++) {  //< put one more to include the last point on the grid
-    m_rGrid.push_back(0 + i * m_rStepSize);
-  }
-
-  // Setup the size of the grid
-  m_grid.resize(m_zSteps + 1);
-  for (int iz = 0; iz <= m_zSteps; iz++){
-    m_grid[iz].resize(m_rSteps + 1);
-  }
-
-  if (m_debug) {
-    std::cout << m_className << "::Set2dGrid: Grid created:\n"
-              << "       z range = (" << zmin << "," << zmax << ").\n"
-              << "       r range = (" << 0 << "," << rmax << ").\n";  }
-}
-
-bool AvalancheMicroscopic::SnapTo2dGrid(const double x, const double y, const double z, const long n){
-  if (!m_isgridset) {
-    std::cerr << m_className << "::SnapTo2dGrid: Grid is not defined.\n";
-    return false;
-  }
-
-  // r is defined with respect to the zero of the coordinate system
-  double r = std::sqrt(x*x + z*z);
-  int iZ = (int)std::round((y - m_zGrid.front()) / m_zStepSize);
-  int iR = (int)std::round(r / m_rStepSize);
-
-  if (m_debug) {
-    std::cout << m_className << "::SnapTo2dGrid: iz = " << iZ << ", ir = " << iR
-              << ".\n";
-  }
-
-  if (iZ < 0 || iZ > m_zSteps || iR < 0 || iR > m_rSteps) {
-    if (m_debug) {
-      std::cerr << m_className
-                << "::SnapTo2dGrid: Point is outside the grid.\n";
-    }
-    return false;
-  }
-
-  // When snapping the electron to the grid the distance traveled can yield
-  // additional electrons or get attached. (depends on if against E field or
-  // along ...). e-field is along y (micro)
-  // currently this is reported to the user with no action taken.
-  
-  // offset between snapped grid position and position in "real" space
-  double step = m_zGrid[iZ] - y;
-
-  //get E field in z direction
-  double ex,ey,ez;
-  int status;
-  Medium* medium = m_sensor->GetMedium(x, y, z);
-  GetTotalField(x,y,z,ex,ey,ez,medium,status);
-
-  // determine if against (ok) or with e field (not ok):
-  int against = (step > 0 && ez < 0) ||
-                (step < 0 && ez > 0);
-  
-  if (!against) {
-    if (m_debug)
-      std::cerr << m_className
-                << "::SnapTo2dGrid: snap along e-field, continue.\n";
-  }
-  
-  
-  if (n == 0) {
-    if (m_debug)
-      std::cerr << m_className << "::SnapTo2dGrid: no electrons to snap";
-    return false;
-  }
-  m_grid[iZ][iR].nElectron += n;
-
-  // no support for positive ions
-  //m_grid[iZ][iR].nPosIon += nPosOut;
-
-  // no support for negative ions
-  //m_grid[iZ][iR].nNegIon += nNegOut;
-
-  if (m_debug) {
-    std::cout << m_className << "::SnapTo2dGrid: " << n << " e- Snapped to (z, r) = ("
-                             << y << " -> " << m_zGrid[iZ]
-                             << ", " << r << " -> " << m_rGrid[iR] << ").\n";
-  }
-  return true;
-
-}
-
-bool AvalancheMicroscopic::AddFieldFromChargeAt(double zi, double ri, double zf,
-                                                    double rf, double N,
-                                                    double &eFieldZ,
-                                                    double &eFieldR){                                         
-  // charge of interest at f, point of interest at i
-  if (std::abs(zi - zf) / m_zStepSize < 1.e-3 &&
-      std::abs(ri - rf) / m_rStepSize < 1.e-3) {
-    return false;  //< field on itself is not included
-  }
-
-  double intermediateEz = 0., intermediateEr = 0.;
-
-  if (std::abs(rf) / m_rStepSize < 0.5) {
-    // Coulomb ball of radius dr / 2
-    const double d = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
-    const double f = TwoPi / (d * d * d);
-    intermediateEr = f * ri;
-    intermediateEz = f * (zi - zf);
-  } 
-  else {  //< rf != 0
-    // charged ring
-    GetFreeChargedRing(zi, ri, zf, rf, intermediateEz, intermediateEr);
-  }
-  eFieldZ += intermediateEz * N;
-  eFieldR += intermediateEr * N;
-  return true;                                                  
-}
-
-void AvalancheMicroscopic::GetFreeChargedRing(double zi, double ri,
-                                              double zf, double rf,
-                                              double &eFieldZ,
-                                              double &eFieldR) {
-  // Calculate the electric field at point (zi, ri)
-  // from charged ring at (zf, rf).
-
-  // precondition
-  if (std::abs(zi - zf) / m_zStepSize < 1.e-3 &&
-      std::abs(ri - rf) / m_rStepSize < 1.e-3) {
-    return;  //< field on itself is not included
-  }
-
-  double dz = zi - zf;  //< I double-checked that's the right sign
-
-  // parameters (see Lippmann Diss.)
-  const double a2 = (ri + rf) * (ri + rf) + dz * dz;
-  const double b2 = (ri - rf) * (ri - rf) + dz * dz;
-  const double b = std::sqrt(b2);
-  const double c2 = ri * ri - rf * rf - dz * dz;
-  // parameter for elliptic integrals
-  const double x =
-      -4 * ri * rf / b2;  //< x < 0, i.e. never near x = 1 (singularity)
-
-  // calculation of elliptic integrals and fields (up to prefactor)
-  double EllE, EllK;
-  GetEllipticIntegrals(x, EllK, EllE);
-  eFieldZ = EllE * 4. * dz / (a2 * b);
-  eFieldR = c2 * EllE + a2 * EllK;
-  // if ri = 0?
-  if (ri < Small) {
-    eFieldR = 0;
-  } else {
-    eFieldR *= 2. / (ri * a2 * b);
-  }
-}
-
-void AvalancheMicroscopic::GetEllipticIntegrals(double x, double &K,
-                                                    double &E) {
-  // from x = 0 to 10 it is in steps of 1e-3. From 10 to 1e4 in steps of 1. Then
-  // in steps of 1000 until 1e7.
-  int arg;
-  double invStep;
-  if (-x < 1.e1) {
-    invStep = 1000.;
-    arg = (int)(-x * invStep);
-  } else if (-x < 1.e4) {
-    invStep = 1.;
-    arg = (int)(-x - 10) + 10000;
-  } else if (-x < 1.e7) {
-    invStep = 0.001;
-    arg = (int)((-x - 1.e4) * invStep) + 19990;
-  } else {
-    // not included in list.
-    if (m_debug)
-      std::cerr << m_className
-                << "::GetEllipticIntegrals: Value not included in list.\n";
-    K = m_vKElliptic.back();
-    E = m_vEElliptic.back();
-    return;
-  }
-
-  // Linear interpolation:
-  const double f = (-x - m_vXElliptic.at(arg)) * invStep;
-  K = (1. - f) * m_vKElliptic.at(arg) + f * m_vKElliptic.at(arg + 1);
-  E = (1. - f) * m_vEElliptic.at(arg) + f * m_vEElliptic.at(arg + 1);
-}   
-
-void AvalancheMicroscopic::ImportEllipticIntegralValues(
-    const std::string &filename) {
-  // reads values of the elliptic functions
-  // it has a very special form to find the values rapidly (not given for a
-  // completely non uniform grid) from x = 0 to 10 it is in steps of 1e-3. From
-  // 10 to 1e4 in steps of 1. Then in steps of 1000 until 1e7.
-
-  m_vXElliptic.resize(0);
-  m_vKElliptic.resize(0);
-  m_vEElliptic.resize(0);
-
-  std::ifstream ellipticStream(filename);
-
-  if (!ellipticStream) {
-    std::cerr << m_className
-              << "::ImportEllipticIntegralValues: Could not open file.\n";
-  }
-
-  for (std::string line; std::getline(ellipticStream, line);) {
-    std::istringstream iss(line);
-    double value = 0.;
-    iss >> value;
-    m_vXElliptic.push_back(value);
-    iss >> value;
-    m_vKElliptic.push_back(value);
-    iss >> value;
-    m_vEElliptic.push_back(value);
-  }
-
-  ellipticStream.close();
-  m_bImportElliptic = true;
-}
-
-bool AvalancheMicroscopic::AvalancheTimeStepSC(double & tmin, double & timestep){
-
-  // Clear grid of existing electrons
-  for (int z_idx = 0; z_idx <= m_zSteps; z_idx++) {
-    for (int r_idx = 0; r_idx <= m_rSteps; r_idx++) {
-      m_grid[z_idx][r_idx].nElectron = 0;
-      m_grid[z_idx][r_idx].nNegIon = 0;
-      m_grid[z_idx][r_idx].nPosIon = 0;
-    }
-  }
-
-  bool electrons_remaining = false;
-  for (const auto& electron : GetElectrons()) {
-    // get electron positions
-    const double xf = electron.path.back().x;
-    const double yf = electron.path.back().y;
-    const double zf = electron.path.back().z;
-    const int status = electron.status;
-    // if still in a drift medium or at the end of timestep:
-    if (status==0 || status == -17){
-      electrons_remaining = true;
-      SnapTo2dGrid(xf,yf,zf,1);
-    }
-    else{
-      continue;
-    }
-  }
-  if (electrons_remaining){
-    SetTimeWindow(tmin, tmin + timestep);
-    ResumeAvalanche();  
-    tmin += timestep;
-    return true; 
-  }
-  else{
-    return false;
-  }
-}
-
-void AvalancheMicroscopic::GetLocalField(const double xi, const double yi, const double zi,
-                                             double &eFieldX, double &eFieldY, double &eFieldZ){
-  // calculate space-charge field (local field) at (xi,yi,zi)
-
-  const double ri = std::sqrt(xi*xi+yi*yi);
-
-  eFieldZ = 0;
-  double eFieldR = 0;
-
-  if (!m_bImportElliptic) {
-    throw std::runtime_error("::GetLocalField: Elliptic values not imported.");
-  }
-  // Multiply by prefactor (final field units V/cm)
-  constexpr double prefactor = ElementaryCharge / (TwoPi * FourPiEpsilon0);
-
-  // loop over all cells with particles (except itself) and add field to each grid point
-  for (int fz = 0; fz <= m_zSteps; fz++) {
-    for (int fr = 0; fr <= m_rSteps; fr++) {
-      // get physical coords
-      double rf = m_rGrid[fr];
-      double zf = m_zGrid[fz];
-
-      // N is number of elementary charges
-      double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
-                  m_grid[fz][fr].nNegIon; // < ions are not implemented (these will be 0)
-      AddFieldFromChargeAt(zi, ri, zf, rf, N, eFieldZ, eFieldR);
-      eFieldZ *= prefactor;
-      eFieldR *= prefactor;
-
-      // Load the fields into the grid for use in interpolation
-      m_grid[fz][fr].eFieldZ = eFieldZ;
-      m_grid[fz][fr].eFieldR = eFieldR;
-    }
-  }
-  InterpolateField(zi,ri,eFieldZ,eFieldR);
-  CylindricalFieldToCartesian(eFieldR, eFieldX, eFieldY,xi,yi);
-}
-
-void AvalancheMicroscopic::InterpolateField(const double zi, const double ri,
-                                             double &eFieldZ, double &eFieldR){
-
-  eFieldZ = 0;
-  eFieldR = 0;                                            
-
-  double z_max = m_zGrid.back();
-  double z_min = m_zGrid.front();
-  double r_max = m_rGrid.back();
-  if (ri < 0 || ri > r_max || zi < z_min || zi > z_max) {
-    if (m_debug) std::cerr << m_className
-                           << "::InterpolateField: point outside of grid:\nri: " 
-                           << ri << " zi: " << zi << "\n";
-    return;
-  }
-
-
-  // Compute grid indices of lower left grid point
-  int i = std::floor((zi - z_min) / m_zStepSize);
-  int j = std::floor(ri / m_rStepSize);
-
-  // let the 4 grid points be at (p0,q0),(p1,q0),(p0,q1),(p1,q1)
-  double p0 = m_zGrid[i];
-  double p1 = p0 + m_zStepSize;
-  double q0 = m_rGrid[j];
-  double q1 = q0 + m_rStepSize;
-
-  bool onRGrid = std::fmod(ri, m_rStepSize) < 1e-8;
-  bool onZGrid = std::fmod(zi, m_zStepSize) < 1e-8;
-
-  // if point is on a grid node:
-  if (onRGrid && onRGrid) {
-    eFieldR = m_grid[i][j].eFieldR;
-    eFieldZ = m_grid[i][j].eFieldZ;
-    return;
-  }
-  // Linear interpolation case (instead of bilinear)
-  // With reference to https://en.wikipedia.org/wiki/Linear_interpolation  
-  // if point is on a vertical grid line
-  if (onZGrid && !onRGrid) {
-    double x0 = q0;
-    double x1 = q1;
-    double pf = (1/(x1-x0)); // < Is this ever NAN?
-
-    // Begin with R field:
-    double y0 = m_grid[i][j].eFieldR;
-    double y1 = m_grid[i][j+1].eFieldR;
-    eFieldR = pf*(y0*(x1-ri) + y1*(ri-x0));
-
-    // Now with Z field:
-    y0 = m_grid[i][j].eFieldZ;
-    y1 = m_grid[i][j+1].eFieldZ;
-    eFieldZ = pf*(y0*(x1-ri) + y1*(ri-x0));
-    return;
-  }
-  // point is on a horizontal grid line:
-  if (!onZGrid && onRGrid) {
-    double x0 = p0;
-    double x1 = p1;
-    double pf = (1/(x1-x0)); // < Is this ever NAN?
-
-    // Begin with R field:
-    double y0 = m_grid[i][j].eFieldR;
-    double y1 = m_grid[i+1][j].eFieldR;
-    eFieldR = pf*(y0*(x1-ri) + y1*(ri-x0));
-
-    // Now with Z field:
-    y0 = m_grid[i][j].eFieldZ;
-    y1 = m_grid[i+1][j].eFieldZ;
-    eFieldZ = pf*(y0*(x1-ri) + y1*(ri-x0));
-  }
-  // Normal case - point inside a grid cell - bilinear interpolation
-  // with reference to https://en.wikipedia.org/wiki/Bilinear_interpolation#Repeated_linear_interpolation
-  double x1 = p0;
-  double x2 = p1;
-  double y1 = q0;
-  double y2 = q1;
-
-  double pf = 1/((x2-x1)*(y2-y1));
-  // Begin with z field
-  double f_Q11 = m_grid[i][j].eFieldZ;
-  double f_Q12 = m_grid[i][j+1].eFieldZ;
-  double f_Q21 = m_grid[i+1][j].eFieldZ;  
-  double f_Q22 = m_grid[i+1][j+1].eFieldZ;
-  
-  eFieldZ = pf*(f_Q11*(x2-zi)*(y2-ri)+f_Q12*(x2-zi)*(ri-y1)+
-                f_Q21*(zi-x1)*(y2-ri)+f_Q22*(zi-x1)*(ri-y1));
-
-  // Now r field
-  f_Q11 = m_grid[i][j].eFieldR;
-  f_Q12 = m_grid[i][j+1].eFieldR;
-  f_Q21 = m_grid[i+1][j].eFieldR; 
-  f_Q22 = m_grid[i+1][j+1].eFieldR;  
-  
-  eFieldR = pf*(f_Q11*(x2-zi)*(y2-ri)+f_Q12*(x2-zi)*(ri-y1)+
-                f_Q21*(zi-x1)*(y2-ri)+f_Q22*(zi-x1)*(ri-y1));
-  return;
-}
-
-void AvalancheMicroscopic::CylindricalFieldToCartesian(double &eFieldR, double &eFieldX, double &eFieldY, 
-                                                       double x, double y){
-  // E_x = E_rCos(phi)
-  // E_y = E_rSin(phi)
-  // phi = arctan(y/x)
-  double cosphi;
-  double sinphi;
-  if (x == 0.){
-    cosphi = 1.;
-  }
-  else{
-    cosphi = 1/std::sqrt(1+(y/x)*(y/x));
-  }
-  if (y == 0.){
-    sinphi = 0.;
-  }
-  if (x/y > 0.){
-    sinphi = 1/std::sqrt(1+(x/y)*(x/y));                                                      
-  }
-  else{
-    sinphi = -1/std::sqrt(1+(x/y)*(x/y));
-  }
-  eFieldX = eFieldR*cosphi;
-  eFieldY = eFieldR*sinphi;
-}
-
-void AvalancheMicroscopic::GetTotalField(double x, double y, double z, double &ex, 
-                                         double &ey,double &ez, Medium *& medium, int &status){
-  m_sensor->ElectricField(x, y, z, ex, ey, ez, medium, status);                                        
-  if (m_bSpaceCharge){
-    double ex_sc,ey_sc,ez_sc;
-    GetLocalField(x,y,z,ex_sc,ey_sc,ez_sc);
-    ex += ex_sc;
-    ey += ey_sc;
-    ez += ez_sc;
-  }
-}
-
-void AvalancheMicroscopic::SetupSpaceCharge(){
-
-  m_vEElliptic.reserve(20000);
-  m_vKElliptic.reserve(20000);
-  m_vXElliptic.reserve(20000);
-  m_zGrid.reserve(5000);
-  m_rGrid.reserve(1000);
-
-  // Import the elliptic integral values
-  const std::string path = std::getenv("GARFIELD_INSTALL");
-  ImportEllipticIntegralValues(path +
-                              "/share/Garfield/Data/elliptic_integrals.txt");
-
 }
 }  // namespace Garfield

@@ -158,6 +158,14 @@ void ComponentParallelPlate::ElectricField(const double x, const double y,
 
   ey = constEFieldLayer(im);
 
+  if (m_bSpaceCharge){
+    double ex_sc,ey_sc,ez_sc;
+    avalsc.SendFieldToPP(x,y,z,ex_sc,ey_sc,ez_sc);
+    ex += ex_sc;
+    ey += ey_sc;
+    ez += ez_sc;
+  }
+
   m = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
 
   if (!m) {

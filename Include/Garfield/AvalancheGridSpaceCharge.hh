@@ -23,6 +23,8 @@ class AvalancheGridSpaceCharge {
   /// Destructor
   ~AvalancheGridSpaceCharge() = default;
 
+  enum ParticleType {electron, negIon, posIon};
+
   /// Reset the charges.
   void Reset();
 
@@ -130,6 +132,11 @@ class AvalancheGridSpaceCharge {
   ///  evaluated!
   void ExportGrid(const std::string &filename);
 
+  /// Clears grid of all particles
+  void ClearGrid();
+
+  void SendFieldToPP(double x,double y,double z,double &eFieldX,double &eFieldY,double &eFieldZ);
+
  private:
   struct GridNode {
     long nElectron = 0;  ///< electrons on node
@@ -180,9 +187,6 @@ class AvalancheGridSpaceCharge {
   // Prepare grid and place stored electrons from AvalancheMicroscopic import
   void PrepareElectronsFromMicroscopicAvalanche();
 
-  // Assign electron to the closest grid point
-  bool SnapTo2dGrid(double x, double y, double z, long n = 1, int gasLayer = 0);
-
   // Prepare the mesh with the ComponentParallelPlate
   void Prepare2dMesh();
 
@@ -199,7 +203,7 @@ class AvalancheGridSpaceCharge {
 
   // Calculate the field from all the contributions to the bin of interest. May
   // need much more functionalities/tables.
-  void GetLocalField(int iz, int ir, double &eFieldZ, double &eFieldR,
+  void GetLocalField(double zi, double ri, double &eFieldZ, double &eFieldR,
                      const std::string &fieldOption, int gasGap);
 
   // Calculate the field of charged ring in vacuum using coulomb potentials and
@@ -221,7 +225,7 @@ class AvalancheGridSpaceCharge {
   // Get field at (zi, ri) from N charges at (zf, rf) either as a ring or a
   // coulomb ball (rf = 0) if i and f are too close it is considered as self
   // interaction and not included
-  bool AddFieldFromChargeAt(int iz, int ir, double zf, double rf, double N,
+  bool AddFieldFromChargeAt(double zi, double ri, double zf, double rf, double N,
                             double &eFieldZ, double &eFieldR);
 
   // Get swarm parameters at electric field magnitude
@@ -248,6 +252,13 @@ class AvalancheGridSpaceCharge {
                ? std::distance(m_vIndexGasGaps.begin(), it)
                : -1;
   }
+
+  // Assign electron to the closest grid point
+  bool SnapTo2dGrid(double x, double y, double z, long n = 1, int gasLayer = 0, 
+                    bool transport_along_field = true, ParticleType particle_type = electron);
+
+  void GetCartesianLocalField(double &eFieldR, double &eFieldX, double &eFieldY, 
+                              double x, double y);              
 
  private:
   std::string m_className = "AvalancheGridSpaceCharge";
