@@ -45,6 +45,12 @@ class AvalancheGridSpaceCharge {
     m_bSpaceCharge = option;
   }
 
+  /// For use if the transport is not done by stepping on the grid
+  /// E.g. if it is done by AvalancheMicroscopic
+  void TransportOffGrid(const bool option = true){
+    m_bTransportOffGrid = option;
+  }
+
   /// Enable adaptive time stepping (default on)
   void EnableAdaptiveTimeStepping(const bool option = true) {
     m_bAdaptiveTime = option;
@@ -255,7 +261,7 @@ class AvalancheGridSpaceCharge {
 
   // Assign electron to the closest grid point
   bool SnapTo2dGrid(double x, double y, double z, long n = 1, int gasLayer = 0, 
-                    bool transport_along_field = true, ParticleType particle_type = electron);
+                   ParticleType particle_type = electron);
 
   void GetCartesianLocalField(double &eFieldR, double &eFieldX, double &eFieldY, 
                               double x, double y);              
@@ -273,6 +279,8 @@ class AvalancheGridSpaceCharge {
   bool m_bPreparedImportAvalanche = false;
   long m_lNCrit = 1e8;
   bool m_bSpaceCharge = true;
+
+  bool m_bTransportOffGrid = false;
 
   float m_fStreamerK = 0.95;
   bool m_bStopAtK = false;

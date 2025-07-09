@@ -161,9 +161,17 @@ class ComponentParallelPlate : public Component {
     m_bSpaceCharge = option;
   }
 
+  void SetAvalancheGridSpaceChargeObject(AvalancheGridSpaceCharge *avalsc = nullptr){
+    if (avalsc == nullptr){
+      std::cerr << m_className << "::SetAvalancheGridSpaceChargeObject: AvalancheGridSpaceCharge object not set. \n";
+      return;
+    }
+    m_AvalancheGridSpaceChargeObject = avalsc;
+  }
+
  private:
 
-  AvalancheGridSpaceCharge avalsc;
+  AvalancheGridSpaceCharge *m_AvalancheGridSpaceChargeObject = nullptr;
 
   double m_precision = 1.e-12;
   static constexpr double m_Vw = 1.;
