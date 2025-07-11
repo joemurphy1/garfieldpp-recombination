@@ -102,7 +102,12 @@ class AvalancheGridSpaceCharge {
   void AddElectrons(AvalancheMicroscopic *avmc);
 
   /// Set n electrons onto the grid
-  void AddElectron(double x, double y, double z, double t = 0, int n = 1);
+  void AddElectron(double x, double y, double z, double t = 0, int n = 1, ParticleType particle_type = electron);
+
+  /// Set n positive ions onto the grid
+  void AddIon(double x, double y, double z, double t = 0, int n = 1){
+    AddElectron(x,y,z,t,n,posIon);
+  };
 
   /// After calling AddElectron, add more electrons on the same
   /// transversal line (y-freedom).
