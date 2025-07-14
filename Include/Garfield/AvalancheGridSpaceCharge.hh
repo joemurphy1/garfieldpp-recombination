@@ -105,10 +105,21 @@ class AvalancheGridSpaceCharge {
   void AddElectron(double x, double y, double z, double t = 0, int n = 1, ParticleType particle_type = electron);
 
   /// Set n positive ions onto the grid
-  void AddIon(double x, double y, double z, double t = 0, int n = 1){
+  void AddPositiveIon(double x, double y, double z, double t = 0, int n = 1){
     AddElectron(x,y,z,t,n,posIon);
   };
 
+  void AddNegativeIon(double x, double y, double z, double t = 0, int n = 1){
+    AddElectron(x,y,z,t,n,negIon);
+  }
+
+  bool RemoveElectron(double x, double y, double z, ParticleType particle_type = electron);
+
+  void RemoveIon(double x, double y, double z){
+    RemoveElectron(x,y,z,negIon);
+  }
+
+  void RecalculateField();
   /// After calling AddElectron, add more electrons on the same
   /// transversal line (y-freedom).
   void AddExtraElectron(double y, int n = 1);
@@ -145,6 +156,8 @@ class AvalancheGridSpaceCharge {
 
   /// Clears grid of all particles
   void ClearGrid();
+
+  void AddFieldToGrid();
 
   void SendFieldToPP(double x,double y,double z,double &eFieldX,double &eFieldY,double &eFieldZ);
 
@@ -271,6 +284,9 @@ class AvalancheGridSpaceCharge {
   void GetCartesianLocalField(double &eFieldR, double &eFieldX, double &eFieldY, 
                               double x, double y);              
 
+  void InterpolateField(const double zi, const double ri,
+                        double &eFieldZ, double &eFieldR);
+
  private:
   std::string m_className = "AvalancheGridSpaceCharge";
 
@@ -286,6 +302,11 @@ class AvalancheGridSpaceCharge {
   bool m_bSpaceCharge = true;
 
   bool m_bTransportOffGrid = false;
+  // used to check if any e- have been added
+  bool m_bElectronAdded = false;
+
+  //used to check if field should be recalculated
+  bool m_bRecalculateField = true;
 
   float m_fStreamerK = 0.95;
   bool m_bStopAtK = false;

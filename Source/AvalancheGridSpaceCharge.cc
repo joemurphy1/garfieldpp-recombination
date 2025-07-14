@@ -326,6 +326,7 @@ void AvalancheGridSpaceCharge::AddElectrons(AvalancheMicroscopic *avmc) {
 void AvalancheGridSpaceCharge::AddElectron(const double x, const double y,
                                            const double z, const double t,
                                            const int n, ParticleType particle_type) {
+  m_bElectronAdded = true;                                      
   int gasGap = 0;
   // check if avalanche electron in a gas gap
   if (m_pp) {
@@ -374,6 +375,7 @@ void AvalancheGridSpaceCharge::AddElectron(const double x, const double y,
     std::cerr << m_className
               << "::AddElectron: Electron added at (t, x, y, z) =  (" << t
               << ", " << x << ", " << y << ", " << z << ").\n";
+  m_bRecalculateField = true;  
 }
 
 void AvalancheGridSpaceCharge::AddExtraElectron(double y, int n) {
@@ -1528,8 +1530,8 @@ bool AvalancheGridSpaceCharge::AddFieldFromChargeAt(double zi, double ri, double
                                                     double &eFieldZ,
                                                     double &eFieldR) {
   // charge of interest at f, point of interest at i                                                 
-  if (std::abs(zi - zf) / m_zStepSize < 1.e-3 &&
-      std::abs(ri - rf) / m_rStepSize < 1.e-3) {
+  if (std::fabs(zi - zf) / m_zStepSize < 0.05 &&
+      std::fabs(ri - rf) / m_rStepSize < 0.05) {
     return false;  //< field on itself is not included
   }
   double intermediateEz = 0, intermediateEr = 0;
@@ -1685,12 +1687,27 @@ void AvalancheGridSpaceCharge::ClearGrid(){
 void AvalancheGridSpaceCharge::SendFieldToPP(double x,double y,double z,double &eFieldX,double &eFieldY,double &eFieldZ){
 
   // GetLocalField assumes electrons propagate along Z. In our geometry they propagate along y.
+
+  int gasGap = m_vIndexGasGaps[0];
+
   double eFieldR = 0;
   eFieldY = 0;
-  double r = std::sqrt(x*x+z*z);
-  // assume single gas gap
-  GetLocalField(y, r, eFieldY, eFieldR, "coulomb", m_vIndexGasGaps[0]);
-  GetCartesianLocalField(eFieldR,eFieldX,eFieldZ,x,z);
+  if (m_bElectronAdded){
+    double r =  std::sqrt((x - m_vCoNGasLayer[gasGap][0]) * (x - m_vCoNGasLayer[gasGap][0])
+                      + (z - m_vCoNGasLayer[gasGap][2]) * (z - m_vCoNGasLayer[gasGap][2]));
+    // assume single gas gap
+
+    if (m_bRecalculateField){
+      AddFieldToGrid();   
+    }
+    InterpolateField(y,r,eFieldY,eFieldR);
+    GetCartesianLocalField(eFieldR,eFieldX,eFieldZ,x,z);
+  }
+  else{
+    eFieldX = 0;
+    eFieldY = 0;
+    eFieldZ = 0;
+  }
   return;
 }
 
@@ -1720,5 +1737,179 @@ void AvalancheGridSpaceCharge::GetCartesianLocalField(double &eFieldR, double &e
   eFieldX = eFieldR*cosphi;
   eFieldY = eFieldR*sinphi;
 }
+
+bool AvalancheGridSpaceCharge::RemoveElectron(double x, double y, double z, ParticleType particle_type){
+  // remove electron at nearest grid point
+  if (!m_isgridset) {
+    std::cerr << m_className << "::RemoveElectron: Grid is not defined.\n";
+    return false;
+  }
+
+  int gasGap = 0;
+  if (m_pp) {
+    int ind;
+    double eps = -1;
+    if (!m_pp->getLayer(y, ind, eps) && eps != 1.) {
+      std::cerr << m_className
+                << "RemoveElectron: Electron is not in a gas gap.";
+      return false;
+    }
+    gasGap = GetGasGapNumber(ind);
+  }
+
+  // y in micro is z in grid space-charge
+  double r =
+      std::sqrt((x - m_vCoNGasLayer[gasGap][0]) * (x - m_vCoNGasLayer[gasGap][0])
+              + (z - m_vCoNGasLayer[gasGap][2]) * (z - m_vCoNGasLayer[gasGap][2]));
+  int iZ = (int)std::round((y - m_zGrid.front()) / m_zStepSize);
+  int iR = (int)std::round(r / m_rStepSize);
+
+  if (m_bDebug) {
+    std::cout << m_className << "::RemoveElectron: iz = " << iZ << ", ir = " << iR
+              << ".\n";
+  }
+
+  if (iZ < 0 || iZ > m_zSteps || iR < 0 || iR > m_rSteps) {
+    if (m_bDebug) {
+      std::cerr << m_className
+                << "::RemoveElectron: Point is outside the grid.\n";
+    }
+    return false;
+  }
+
+  switch (particle_type){
+    case electron:
+      m_grid[iZ][iR].nElectron--;
+      break;
+    case negIon:
+      m_grid[iZ][iR].nNegIon--;
+      break;
+    case posIon:
+      m_grid[iZ][iR].nPosIon--;
+      break;
+  }
+  m_bRecalculateField = true; 
+  return true;
+}
+
+void AvalancheGridSpaceCharge::InterpolateField(const double zi, const double ri,
+                                                double &eFieldZ, double &eFieldR){
+
+  eFieldZ = 0;
+  eFieldR = 0;                                            
+
+  double z_max = m_zGrid.back();
+  double z_min = m_zGrid.front();
+  double r_max = m_rGrid.back();
+  if (ri < 0 || ri > r_max || zi < z_min || zi > z_max) {
+    if (m_bDebug) std::cerr << m_className
+                           << "::InterpolateField: point outside of grid:\nri: " 
+                           << ri << " zi: " << zi << "\n";
+    return;
+  }
+
+
+  // Compute grid indices of lower left grid point
+  int i = std::floor((zi - z_min) / m_zStepSize);
+  int j = std::floor(ri / m_rStepSize);
+
+  // let the 4 grid points be at (p0,q0),(p1,q0),(p0,q1),(p1,q1)
+  double p0 = m_zGrid[i];
+  double p1 = p0 + m_zStepSize;
+  double q0 = m_rGrid[j];
+  double q1 = q0 + m_rStepSize;
+
+  bool onRGrid = std::fmod(ri, m_rStepSize) < 1e-8;
+  bool onZGrid = std::fmod(zi, m_zStepSize) < 1e-8;
+
+  // if point is on a grid node:
+  if (onRGrid && onRGrid) {
+    eFieldR = m_grid[i][j].eFieldR;
+    eFieldZ = m_grid[i][j].eFieldZ;
+    return;
+  }
+  // Linear interpolation case (instead of bilinear)
+  // With reference to https://en.wikipedia.org/wiki/Linear_interpolation  
+  // if point is on a vertical grid line
+  if (onZGrid && !onRGrid) {
+    double x0 = q0;
+    double x1 = q1;
+    double pf = (1/(x1-x0)); // < Is this ever NAN?
+
+    // Begin with R field:
+    double y0 = m_grid[i][j].eFieldR;
+    double y1 = m_grid[i][j+1].eFieldR;
+    eFieldR = pf*(y0*(x1-ri) + y1*(ri-x0));
+
+    // Now with Z field:
+    y0 = m_grid[i][j].eFieldZ;
+    y1 = m_grid[i][j+1].eFieldZ;
+    eFieldZ = pf*(y0*(x1-ri) + y1*(ri-x0));
+    return;
+  }
+  // point is on a horizontal grid line:
+  if (!onZGrid && onRGrid) {
+    double x0 = p0;
+    double x1 = p1;
+    double pf = (1/(x1-x0)); // < Is this ever NAN?
+
+    // Begin with R field:
+    double y0 = m_grid[i][j].eFieldR;
+    double y1 = m_grid[i+1][j].eFieldR;
+    eFieldR = pf*(y0*(x1-ri) + y1*(ri-x0));
+
+    // Now with Z field:
+    y0 = m_grid[i][j].eFieldZ;
+    y1 = m_grid[i+1][j].eFieldZ;
+    eFieldZ = pf*(y0*(x1-ri) + y1*(ri-x0));
+  }
+  // Normal case - point inside a grid cell - bilinear interpolation
+  // with reference to https://en.wikipedia.org/wiki/Bilinear_interpolation#Repeated_linear_interpolation
+  double x1 = p0;
+  double x2 = p1;
+  double y1 = q0;
+  double y2 = q1;
+
+  double pf = 1/((x2-x1)*(y2-y1));
+  // Begin with z field
+  double f_Q11 = m_grid[i][j].eFieldZ;
+  double f_Q12 = m_grid[i][j+1].eFieldZ;
+  double f_Q21 = m_grid[i+1][j].eFieldZ;  
+  double f_Q22 = m_grid[i+1][j+1].eFieldZ;
+  
+  eFieldZ = pf*(f_Q11*(x2-zi)*(y2-ri)+f_Q12*(x2-zi)*(ri-y1)+
+                f_Q21*(zi-x1)*(y2-ri)+f_Q22*(zi-x1)*(ri-y1));
+
+  // Now r field
+  f_Q11 = m_grid[i][j].eFieldR;
+  f_Q12 = m_grid[i][j+1].eFieldR;
+  f_Q21 = m_grid[i+1][j].eFieldR; 
+  f_Q22 = m_grid[i+1][j+1].eFieldR;  
+  
+  eFieldR = pf*(f_Q11*(x2-zi)*(y2-ri)+f_Q12*(x2-zi)*(ri-y1)+
+                f_Q21*(zi-x1)*(y2-ri)+f_Q22*(zi-x1)*(ri-y1));
+  return;
+}
+
+void AvalancheGridSpaceCharge::AddFieldToGrid(){
+  // get field at grid points
+  double eFieldZ = 0;
+  double eFieldR = 0;   
+  double zi,ri;                
+  int gasGap = m_vIndexGasGaps[0]; 
+
+  for (int iZ=0;iZ<=m_zSteps;iZ++){
+    zi = m_zGrid[iZ];
+    for (int iR=0;iR<=m_rSteps;iR++){
+      ri = m_rGrid[iR];
+      GetLocalField(zi, ri, eFieldZ, eFieldR, "coulomb", gasGap);
+      m_grid[iZ][iR].eFieldZ = eFieldZ;
+      m_grid[iZ][iR].eFieldR = eFieldR;
+    }
+  }      
+  m_bRecalculateField = false;                
+  return;                                    
+}
+
 
 }  // namespace Garfield
