@@ -119,7 +119,6 @@ class AvalancheGridSpaceCharge {
     RemoveElectron(x,y,z,negIon);
   }
 
-  void RecalculateField();
   /// After calling AddElectron, add more electrons on the same
   /// transversal line (y-freedom).
   void AddExtraElectron(double y, int n = 1);
@@ -157,7 +156,7 @@ class AvalancheGridSpaceCharge {
   /// Clears grid of all particles
   void ClearGrid();
 
-  void AddFieldToGrid();
+  void UpdateFieldOnGrid();
 
   void SendFieldToPP(double x,double y,double z,double &eFieldX,double &eFieldY,double &eFieldZ);
 
@@ -227,7 +226,7 @@ class AvalancheGridSpaceCharge {
 
   // Calculate the field from all the contributions to the bin of interest. May
   // need much more functionalities/tables.
-  void GetLocalField(double zi, double ri, double &eFieldZ, double &eFieldR,
+  void GetLocalField(int iz, int ir, double &eFieldZ, double &eFieldR,
                      const std::string &fieldOption, int gasGap);
 
   // Calculate the field of charged ring in vacuum using coulomb potentials and
@@ -249,7 +248,7 @@ class AvalancheGridSpaceCharge {
   // Get field at (zi, ri) from N charges at (zf, rf) either as a ring or a
   // coulomb ball (rf = 0) if i and f are too close it is considered as self
   // interaction and not included
-  bool AddFieldFromChargeAt(double zi, double ri, double zf, double rf, double N,
+  bool AddFieldFromChargeAt(int iz, int ir, double zf, double rf, double N,
                             double &eFieldZ, double &eFieldR);
 
   // Get swarm parameters at electric field magnitude

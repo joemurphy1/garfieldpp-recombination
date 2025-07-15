@@ -375,7 +375,6 @@ void AvalancheGridSpaceCharge::AddElectron(const double x, const double y,
     std::cerr << m_className
               << "::AddElectron: Electron added at (t, x, y, z) =  (" << t
               << ", " << x << ", " << y << ", " << z << ").\n";
-  m_bRecalculateField = true;  
 }
 
 void AvalancheGridSpaceCharge::AddExtraElectron(double y, int n) {
@@ -1382,13 +1381,11 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nElectron, double nPosIon,
   }
 }
 
-void AvalancheGridSpaceCharge::GetLocalField(const double zi, const double ri,
+void AvalancheGridSpaceCharge::GetLocalField(const int iz, const int ir,
                                              double &eFieldZ, double &eFieldR,
                                              const std::string &fieldOption,
                                              int gasGap) {
   // calculate space-charge (local field) at iz/ir
-  eFieldZ = 0;
-  eFieldR = 0;
 
   double zf,rf;
 
@@ -1400,17 +1397,15 @@ void AvalancheGridSpaceCharge::GetLocalField(const double zi, const double ri,
 
     // loop over all cells with particles (except itself) and add fields
     for (int fz = 0; fz <= m_zSteps; fz++) {
-      zf = m_zGrid[fz];
       // continue if not in gas gap; only add field from charges in same gas gap
       int k = m_grid[fz][0].gasGapIndex;
       if (k == -1 || k != gasGap) continue;
       for (int fr = 0; fr <= m_rSteps; fr++) {
-        rf = m_rGrid[fr];
         // add electric field from charge at f at position i
         double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
                    m_grid[fz][fr].nNegIon;
         if (std::abs(N) < 1.) continue;  //< N too small to consider 
-        AddFieldFromChargeAt(zi, ri, zf, rf, N, eFieldZ, eFieldR);
+        AddFieldFromChargeAt(iz, ir, fz, fr, N, eFieldZ, eFieldR);
       }
     }
     // Multiply by prefactor (final field units V/cm)
@@ -1463,19 +1458,19 @@ void AvalancheGridSpaceCharge::GetLocalField(const double zi, const double ri,
         if (std::abs(N) < 1.0) continue;  //< N too small to consider
 
         // direct charge interaction, delta_Q = 1 (except itself)
-        AddFieldFromChargeAt(zi, ri, zf, rf, N, eFieldZ, eFieldR);
+        AddFieldFromChargeAt(iz, ir, zf, rf, N, eFieldZ, eFieldR);
 
         // mirror charge interaction
         for (int i = 0; i < m_iFieldApprox; i++) {
           if (i == 0) {
             // 2a, alpha12 = delta_Q
             double zf0 = zf + 2. * (zTop - zf);
-            AddFieldFromChargeAt(zi, ri, zf0, rf, N * alpha12, eFieldZ,
+            AddFieldFromChargeAt(iz, ir, zf0, rf, N * alpha12, eFieldZ,
                                  eFieldR);
 
             // -2a', alpha12 = delta_Q
             zf0 = zf + 2. * (zBottom - zf);
-            AddFieldFromChargeAt(zi, ri, zf0, rf, N * alpha12, eFieldZ,
+            AddFieldFromChargeAt(iz, ir, zf0, rf, N * alpha12, eFieldZ,
                                  eFieldR);
           } else if (i == 1) {
             // TODO: higher order mirror charges
@@ -1516,22 +1511,25 @@ bool AvalancheGridSpaceCharge::AddFieldFromChargeAt(int iz, int ir, int fz,
     const double f = TwoPi / (d * d * d);
     intermediateEr = f * ri;
     intermediateEz = f * (zi - zf);
+    
   } else {  //< rf != 0
     // charged ring
     GetFreeChargedRing(iz, ir, fz, fr, intermediateEz, intermediateEr);
   }
-  eFieldZ += intermediateEz * N;
-  eFieldR += intermediateEr * N;
+  eFieldZ = eFieldZ + intermediateEz * N;
+  eFieldR = eFieldR + intermediateEr * N;
   return true;
 }
 
-bool AvalancheGridSpaceCharge::AddFieldFromChargeAt(double zi, double ri, double zf,
+bool AvalancheGridSpaceCharge::AddFieldFromChargeAt(int iz, int ir, double zf,
                                                     double rf, double N,
                                                     double &eFieldZ,
                                                     double &eFieldR) {
-  // charge of interest at f, point of interest at i                                                 
-  if (std::fabs(zi - zf) / m_zStepSize < 0.05 &&
-      std::fabs(ri - rf) / m_rStepSize < 0.05) {
+  // charge of interest at f, point of interest at i           
+  double zi = m_zGrid[iz];
+  double ri = m_rGrid[ir];                                      
+  if (std::fabs(zi - zf) / m_zStepSize < 1.e-3 &&
+      std::fabs(ri - rf) / m_rStepSize < 1.e-3) {
     return false;  //< field on itself is not included
   }
   double intermediateEz = 0, intermediateEr = 0;
@@ -1698,7 +1696,7 @@ void AvalancheGridSpaceCharge::SendFieldToPP(double x,double y,double z,double &
     // assume single gas gap
 
     if (m_bRecalculateField){
-      AddFieldToGrid();   
+      UpdateFieldOnGrid();   
     }
     InterpolateField(y,r,eFieldY,eFieldR);
     GetCartesianLocalField(eFieldR,eFieldX,eFieldZ,x,z);
@@ -1788,7 +1786,6 @@ bool AvalancheGridSpaceCharge::RemoveElectron(double x, double y, double z, Part
       m_grid[iZ][iR].nPosIon--;
       break;
   }
-  m_bRecalculateField = true; 
   return true;
 }
 
@@ -1891,18 +1888,15 @@ void AvalancheGridSpaceCharge::InterpolateField(const double zi, const double ri
   return;
 }
 
-void AvalancheGridSpaceCharge::AddFieldToGrid(){
+void AvalancheGridSpaceCharge::UpdateFieldOnGrid(){
   // get field at grid points
   double eFieldZ = 0;
   double eFieldR = 0;   
-  double zi,ri;                
   int gasGap = m_vIndexGasGaps[0]; 
 
   for (int iZ=0;iZ<=m_zSteps;iZ++){
-    zi = m_zGrid[iZ];
     for (int iR=0;iR<=m_rSteps;iR++){
-      ri = m_rGrid[iR];
-      GetLocalField(zi, ri, eFieldZ, eFieldR, "coulomb", gasGap);
+      GetLocalField(iZ, iR, eFieldZ, eFieldR, "coulomb", gasGap);
       m_grid[iZ][iR].eFieldZ = eFieldZ;
       m_grid[iZ][iR].eFieldR = eFieldR;
     }
