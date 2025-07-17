@@ -160,6 +160,11 @@ class AvalancheGridSpaceCharge {
 
   void SendFieldToPP(double x,double y,double z,double &eFieldX,double &eFieldY,double &eFieldZ);
 
+  void UpdateMeanPosition(double x, double y, double z){
+    m_vMeanPos = {x,y,z};
+    m_bMeanPosSet = true;
+  }
+
  private:
   struct GridNode {
     long nElectron = 0;  ///< electrons on node
@@ -307,6 +312,8 @@ class AvalancheGridSpaceCharge {
   //used to check if field should be recalculated
   bool m_bRecalculateField = true;
 
+  bool m_bMeanPosSet = false;
+
   float m_fStreamerK = 0.95;
   bool m_bStopAtK = false;
   bool m_bFieldK = false;
@@ -367,6 +374,8 @@ class AvalancheGridSpaceCharge {
   std::vector<std::vector<double>> m_vCoNGasLayer{};
   /// Example point (y-coord) in each gas gap
   std::vector<double> m_vYPointInGasGap{};
+
+  std::vector<double> m_vMeanPos; /// < Mean position of electrons, used in off-grid spacecharge
 
   /// Uniform background field in z direction, can be negative.
   std::vector<double> m_ezBkg = {0};

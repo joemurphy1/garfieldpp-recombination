@@ -326,7 +326,11 @@ void AvalancheGridSpaceCharge::AddElectrons(AvalancheMicroscopic *avmc) {
 void AvalancheGridSpaceCharge::AddElectron(const double x, const double y,
                                            const double z, const double t,
                                            const int n, ParticleType particle_type) {
-  m_bElectronAdded = true;                                      
+  m_bElectronAdded = true;    
+  if (!m_bMeanPosSet) {
+    m_vMeanPos = {x,y,z};
+    m_bMeanPosSet = true;
+  }                                  
   int gasGap = 0;
   // check if avalanche electron in a gas gap
   if (m_pp) {
@@ -612,10 +616,16 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
   // HS: why make a copy?
   auto CoN = m_vCoNGasLayer[gasLayer];
   // y in micro is z in grid space-charge
-  double r =
-      std::sqrt((x - CoN[0]) * (x - CoN[0]) + (z - CoN[2]) * (z - CoN[2]));
-  int iZ = (int)std::round((y - m_zGrid.front()) / m_zStepSize);
-  int iR = (int)std::round(r / m_rStepSize);
+  int iR,iZ;
+  double r;
+  if (m_bTransportOffGrid){
+    r = std::sqrt((x - m_vMeanPos[0]) * (x - m_vMeanPos[0]) + (z - m_vMeanPos[2]) * (z - m_vMeanPos[2])); 
+  }
+  else{
+    r = std::sqrt((x - m_vCoNGasLayer[gasLayer][0]) * (x - m_vCoNGasLayer[gasLayer][0]) + (z - m_vCoNGasLayer[gasLayer][2]) * (z - m_vCoNGasLayer[gasLayer][2]));
+  }
+  iR = (int)std::round(r / m_rStepSize);
+  iZ = (int)std::round((y - m_zGrid.front()) / m_zStepSize);
 
   if (m_bDebug) {
     std::cout << m_className << "::SnapTo2dGrid: iz = " << iZ << ", ir = " << iR
@@ -1686,13 +1696,11 @@ void AvalancheGridSpaceCharge::SendFieldToPP(double x,double y,double z,double &
 
   // GetLocalField assumes electrons propagate along Z. In our geometry they propagate along y.
 
-  int gasGap = m_vIndexGasGaps[0];
-
   double eFieldR = 0;
   eFieldY = 0;
   if (m_bElectronAdded){
-    double r =  std::sqrt((x - m_vCoNGasLayer[gasGap][0]) * (x - m_vCoNGasLayer[gasGap][0])
-                      + (z - m_vCoNGasLayer[gasGap][2]) * (z - m_vCoNGasLayer[gasGap][2]));
+    double r =  std::sqrt((x - m_vMeanPos[0]) * (x - m_vMeanPos[0])
+                      + (z - m_vMeanPos[2]) * (z - m_vMeanPos[2]));
     // assume single gas gap
 
     if (m_bRecalculateField){
@@ -1743,22 +1751,11 @@ bool AvalancheGridSpaceCharge::RemoveElectron(double x, double y, double z, Part
     return false;
   }
 
-  int gasGap = 0;
-  if (m_pp) {
-    int ind;
-    double eps = -1;
-    if (!m_pp->getLayer(y, ind, eps) && eps != 1.) {
-      std::cerr << m_className
-                << "RemoveElectron: Electron is not in a gas gap.";
-      return false;
-    }
-    gasGap = GetGasGapNumber(ind);
-  }
 
   // y in micro is z in grid space-charge
   double r =
-      std::sqrt((x - m_vCoNGasLayer[gasGap][0]) * (x - m_vCoNGasLayer[gasGap][0])
-              + (z - m_vCoNGasLayer[gasGap][2]) * (z - m_vCoNGasLayer[gasGap][2]));
+      std::sqrt((x - m_vMeanPos[0]) * (x - m_vMeanPos[0])
+              + (z - m_vMeanPos[2]) * (z - m_vMeanPos[2]));
   int iZ = (int)std::round((y - m_zGrid.front()) / m_zStepSize);
   int iR = (int)std::round(r / m_rStepSize);
 
