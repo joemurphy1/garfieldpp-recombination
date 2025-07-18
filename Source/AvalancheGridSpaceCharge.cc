@@ -1856,6 +1856,7 @@ void AvalancheGridSpaceCharge::InterpolateField(const double zi, const double ri
     y0 = m_grid[i][j].eFieldZ;
     y1 = m_grid[i+1][j].eFieldZ;
     eFieldZ = pf*(y0*(x1-ri) + y1*(ri-x0));
+    return;
   }
   // Normal case - point inside a grid cell - bilinear interpolation
   // with reference to https://en.wikipedia.org/wiki/Bilinear_interpolation#Repeated_linear_interpolation
