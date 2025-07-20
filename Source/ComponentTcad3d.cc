@@ -204,6 +204,8 @@ void ComponentTcad3d::FillTree() {
   const size_t nElements = m_elements.size();
   for (size_t i = 0; i < nElements; ++i) {
     const Element& element = m_elements[i];
+    // Skip points and line segments.
+    if (element.type == 0 || element.type == 1) continue;
     const double bb[6] = {element.bbMin[0], element.bbMin[1], element.bbMin[2],
                           element.bbMax[0], element.bbMax[1], element.bbMax[2]};
     m_tree->InsertMeshElement(bb, i);
