@@ -508,6 +508,63 @@ bool ComponentGrid::SaveElectricField(Component* cmp,
   return true;
 }
 
+
+bool ComponentGrid::SaveElectricField(Component* cmp) {
+  if (!cmp) {
+    std::cerr << m_className << "::SaveElectricField: Null pointer.\n";
+    return false;
+  }
+  if (!m_hasMesh) {
+    std::cerr << m_className << "::SaveElectricField: Mesh not set.\n";
+    return false;
+  }
+  
+  Initialise(m_efields);
+  
+  std::cout << m_className << "::SaveElectricField:\n"
+            << "    Saving field/potential.\n"
+            << "    Be patient...\n";
+  PrintProgress(0.);
+
+
+  const unsigned int nValues = m_nX[0] * m_nX[1] * m_nX[2];
+  const unsigned int nPrint =
+      std::pow(10, static_cast<unsigned int>(
+                       std::max(std::floor(std::log10(nValues)) - 1, 1.)));
+  unsigned int nLines = 0;
+  Medium* medium = nullptr;
+  int status = 0;
+  const double dx = (m_xMax[0] - m_xMin[0]) / std::max(m_nX[0] - 1., 1.);
+  const double dy = (m_xMax[1] - m_xMin[1]) / std::max(m_nX[1] - 1., 1.);
+  const double dz = (m_xMax[2] - m_xMin[2]) / std::max(m_nX[2] - 1., 1.);
+  for (unsigned int i = 0; i < m_nX[0]; ++i) {
+    const double x = m_xMin[0] + i * dx;
+    for (unsigned int j = 0; j < m_nX[1]; ++j) {
+      const double y = m_xMin[1] + j * dy;
+      for (unsigned int k = 0; k < m_nX[2]; ++k) {
+        const double z = m_xMin[2] + k * dz;
+        double ex = 0., ey = 0., ez = 0., v = 0.;
+        if (m_coordinates == Coordinates::Cylindrical) {
+          const double ct = cos(y);
+          const double st = sin(y);
+          cmp->ElectricField(x * ct, x * st, z, ex, ey, ez, v, medium, status);
+        } else {
+          cmp->ElectricField(x, y, z, ex, ey, ez, v, medium, status);
+        }
+        m_efields[i][j][k].fx = ex;
+        m_efields[i][j][k].fy = ey;
+        m_efields[i][j][k].fz = ez;
+        m_efields[i][j][k].v = v;
+        
+        ++nLines;
+        if (nLines % nPrint == 0) PrintProgress(double(nLines) / nValues);
+      }
+    }
+  }
+  std::cout << std::endl << m_className << "::SaveElectricField: Done.\n";
+  return true;
+}
+
 bool ComponentGrid::SaveWeightingField(Component* cmp, const std::string& id,
                                        const std::string& filename,
                                        const std::string& format) {

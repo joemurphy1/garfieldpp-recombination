@@ -8,7 +8,7 @@
 #include "Garfield/Component.hh"
 
 namespace Garfield {
-
+ 
 /// Component for interpolating field maps on a regular mesh.
 
 class ComponentGrid : public Component {
@@ -89,6 +89,12 @@ class ComponentGrid : public Component {
    */
   bool SaveElectricField(Component* cmp, const std::string& filename,
                          const std::string& fmt);
+  
+  /** Export the electric field and potential of a component.
+   * \param cmp Component object for which to export the field/potential
+   */
+  bool SaveElectricField(Component* cmp);
+  
   /** Export the weighting field and potential of a component to a text file.
    * \param cmp Component object for which to export the field/potential
    * \param id identifier of the weighting field
