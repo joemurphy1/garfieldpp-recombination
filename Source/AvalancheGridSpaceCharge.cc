@@ -1694,20 +1694,19 @@ void AvalancheGridSpaceCharge::ClearGrid(){
 
 void AvalancheGridSpaceCharge::SendFieldToPP(double x,double y,double z,double &eFieldX,double &eFieldY,double &eFieldZ){
 
-  // GetLocalField assumes electrons propagate along Z. In our geometry they propagate along y.
+  // InterpolateField assumes electrons propagate along Z. In our geometry they propagate along y.
 
   double eFieldR = 0;
   eFieldY = 0;
   if (m_bElectronAdded){
     double r =  std::sqrt((x - m_vMeanPos[0]) * (x - m_vMeanPos[0])
                       + (z - m_vMeanPos[2]) * (z - m_vMeanPos[2]));
-    // assume single gas gap
 
     if (m_bRecalculateField){
       UpdateFieldOnGrid();   
     }
     InterpolateField(y,r,eFieldY,eFieldR);
-    GetCartesianLocalField(eFieldR,eFieldX,eFieldZ,x,z);
+    GetCartesianLocalField(eFieldR,eFieldX,eFieldZ,(x - m_vMeanPos[0]),(z - m_vMeanPos[2]));
   }
   else{
     eFieldX = 0;
@@ -1720,26 +1719,9 @@ void AvalancheGridSpaceCharge::SendFieldToPP(double x,double y,double z,double &
 
 void AvalancheGridSpaceCharge::GetCartesianLocalField(double &eFieldR, double &eFieldX, double &eFieldY, 
                                                       double x, double y){
-  // E_x = E_rCos(phi)
-  // E_y = E_rSin(phi)
-  // phi = arctan(y/x)
-  double cosphi;
-  double sinphi;
-  if (x <= 1e-4){
-    cosphi = 1.;
-  }
-  else{
-    cosphi = 1/std::sqrt(1+(y/x)*(y/x));
-  }
-  if (y <= 1e-4){
-    sinphi = 0.;
-  }
-  else if (std::abs(x/y) > 0.){
-    sinphi = 1/std::sqrt(1+(x/y)*(x/y));                                                      
-  }
-  else{
-    sinphi = -1/std::sqrt(1+(x/y)*(x/y));
-  }
+  // get cartesian field
+  double cosphi = std::cos(std::atan2(y,x));
+  double sinphi = std::sin(std::atan2(y,x));
   eFieldX = eFieldR*cosphi;
   eFieldY = eFieldR*sinphi;
 }
@@ -1807,17 +1789,28 @@ void AvalancheGridSpaceCharge::InterpolateField(const double zi, const double ri
   int i = std::floor((zi - z_min) / m_zStepSize);
   int j = std::floor(ri / m_rStepSize);
 
+  bool onRGrid = false;
+  bool onZGrid = false;
+  if (std::fmod((j+1)*m_rStepSize, ri) < 1.e-8){
+    onRGrid =true;
+    j++;
+  }
+  else if (std::fmod(ri, m_rStepSize) < 1e-8) onRGrid = true;
+
+  if (std::fmod((i+1)*m_zStepSize, zi - z_min) < 1.e-8){
+    onZGrid =true;
+    i++;
+  } 
+  else if (std::fmod(zi-z_min, m_zStepSize) < 1.e-8) onZGrid = true;
+
   // let the 4 grid points be at (p0,q0),(p1,q0),(p0,q1),(p1,q1)
   double p0 = m_zGrid[i];
-  double p1 = p0 + m_zStepSize;
+  double p1 = m_zGrid[i+1];
   double q0 = m_rGrid[j];
-  double q1 = q0 + m_rStepSize;
-
-  bool onRGrid = std::fmod(ri, m_rStepSize) < 1e-8;
-  bool onZGrid = std::fmod(zi, m_zStepSize) < 1e-8;
+  double q1 = m_rGrid[j+1]; 
 
   // if point is on a grid node:
-  if (onRGrid && onRGrid) {
+  if (onRGrid && onZGrid) {
     eFieldR = m_grid[i][j].eFieldR;
     eFieldZ = m_grid[i][j].eFieldZ;
     return;
@@ -1828,7 +1821,7 @@ void AvalancheGridSpaceCharge::InterpolateField(const double zi, const double ri
   if (onZGrid && !onRGrid) {
     double x0 = q0;
     double x1 = q1;
-    double pf = (1/(x1-x0)); // < Is this ever NAN?
+    double pf = (1/(x1-x0));
 
     // Begin with R field:
     double y0 = m_grid[i][j].eFieldR;
@@ -1845,17 +1838,17 @@ void AvalancheGridSpaceCharge::InterpolateField(const double zi, const double ri
   if (!onZGrid && onRGrid) {
     double x0 = p0;
     double x1 = p1;
-    double pf = (1/(x1-x0)); // < Is this ever NAN?
+    double pf = (1/(x1-x0));
 
     // Begin with R field:
     double y0 = m_grid[i][j].eFieldR;
     double y1 = m_grid[i+1][j].eFieldR;
-    eFieldR = pf*(y0*(x1-ri) + y1*(ri-x0));
+    eFieldR = pf*(y0*(x1-zi) + y1*(zi-x0));
 
     // Now with Z field:
     y0 = m_grid[i][j].eFieldZ;
     y1 = m_grid[i+1][j].eFieldZ;
-    eFieldZ = pf*(y0*(x1-ri) + y1*(ri-x0));
+    eFieldZ = pf*(y0*(x1-zi) + y1*(zi-x0));
     return;
   }
   // Normal case - point inside a grid cell - bilinear interpolation
