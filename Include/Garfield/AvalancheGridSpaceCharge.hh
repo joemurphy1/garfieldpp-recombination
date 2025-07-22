@@ -377,6 +377,8 @@ class AvalancheGridSpaceCharge {
 
   std::vector<double> m_vMeanPos; /// < Mean position of electrons, used in off-grid spacecharge
 
+  std::vector<std::array<int,2>> m_vActiveNodeIndices;
+
   /// Uniform background field in z direction, can be negative.
   std::vector<double> m_ezBkg = {0};
   /// Which gas gaps are saturated if saturation is on

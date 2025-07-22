@@ -694,6 +694,13 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
       return false;
     }
   }
+  else{
+    bool already_in_list = false;
+    for (const std::array<int,2> indices : m_vActiveNodeIndices){
+      if (indices[0] == iZ && indices[1] == iR) already_in_list = true;
+    }
+    if (!already_in_list) m_vActiveNodeIndices.push_back({iZ,iR});
+  }
 
   m_grid[iZ][iR].nElectron += nEOut;
   m_grid[iZ][iR].nPosIon += nPosOut;
@@ -1404,18 +1411,27 @@ void AvalancheGridSpaceCharge::GetLocalField(const int iz, const int ir,
     if (!m_bImportElliptic) {
       throw std::runtime_error("::GetLocalField Elliptic values not imported.");
     }
-
-    // loop over all cells with particles (except itself) and add fields
-    for (int fz = 0; fz <= m_zSteps; fz++) {
-      // continue if not in gas gap; only add field from charges in same gas gap
-      int k = m_grid[fz][0].gasGapIndex;
-      if (k == -1 || k != gasGap) continue;
-      for (int fr = 0; fr <= m_rSteps; fr++) {
-        // add electric field from charge at f at position i
-        double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
-                   m_grid[fz][fr].nNegIon;
+    if (m_bTransportOffGrid){
+      for (const std::array<int,2> indices : m_vActiveNodeIndices){
+        double N = -m_grid[indices[0]][indices[1]].nElectron + m_grid[indices[0]][indices[1]].nPosIon -
+                    m_grid[indices[0]][indices[1]].nNegIon;
         if (std::abs(N) < 1.) continue;  //< N too small to consider 
-        AddFieldFromChargeAt(iz, ir, fz, fr, N, eFieldZ, eFieldR);
+        AddFieldFromChargeAt(iz, ir, indices[0], indices[1], N, eFieldZ, eFieldR);
+      }
+    }
+    else{
+      // loop over all cells with particles (except itself) and add fields
+      for (int fz = 0; fz <= m_zSteps; fz++) {
+        // continue if not in gas gap; only add field from charges in same gas gap
+        int k = m_grid[fz][0].gasGapIndex;
+        if (k == -1 || k != gasGap) continue;
+        for (int fr = 0; fr <= m_rSteps; fr++) {
+          // add electric field from charge at f at position i
+          double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
+                    m_grid[fz][fr].nNegIon;
+          if (std::abs(N) < 1.) continue;  //< N too small to consider 
+          AddFieldFromChargeAt(iz, ir, fz, fr, N, eFieldZ, eFieldR);
+        }
       }
     }
     // Multiply by prefactor (final field units V/cm)
@@ -1690,6 +1706,7 @@ void AvalancheGridSpaceCharge::ClearGrid(){
       m_grid[z_idx][r_idx].nPosIon = 0;
     }
   }
+  m_vActiveNodeIndices.resize(0);
 }
 
 void AvalancheGridSpaceCharge::SendFieldToPP(double x,double y,double z,double &eFieldX,double &eFieldY,double &eFieldZ){
