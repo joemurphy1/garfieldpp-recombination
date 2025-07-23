@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <functional>
+#include <utility>
 
 #include "Garfield/FundamentalConstants.hh"
 
@@ -31,16 +32,10 @@ inline double RndmUniformPos() {
   return r;
 }
 
-/// Draw a Gaussian random variate with mean zero and standard deviation one.
-inline double RndmGaussian() {
-  static bool cached = false;
-  static double u = 0.;
-  if (cached) {
-    cached = false;
-    return u;
-  }
+/// Draw two Gaussian random variates with mean zero and standard deviation one.
+inline std::pair<double, double> RndmGaussians() {
   // Box-Muller algorithm
-  u = 2. * RndmUniform() - 1.;
+  double u = 2. * RndmUniform() - 1.;
   double v = 2. * RndmUniform() - 1.;
   double r2 = u * u + v * v;
   while (r2 > 1.) {
@@ -49,9 +44,22 @@ inline double RndmGaussian() {
     r2 = u * u + v * v;
   }
   const double p = sqrt(-2. * log(r2) / r2);
-  u *= p;
-  cached = true;
-  return v * p;
+  return std::make_pair(u * p, v * p);
+}
+
+/// Draw a Gaussian random variate with mean zero and standard deviation one.
+inline double RndmGaussian() {
+  const auto r = RndmGaussians();
+  return r.first;
+}
+
+/// Draw two Gaussian random variates with mean mu and standard deviation sigma.
+inline std::pair<double, double> RndmGaussians(const double mu, 
+                                               const double sigma) {
+  auto r = RndmGaussians();
+  r.first = mu + sigma * r.first;
+  r.second = mu + sigma * r.second;
+  return r;
 }
 
 /// Draw a Gaussian random variate with mean mu and standard deviation sigma.

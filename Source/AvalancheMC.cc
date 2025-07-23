@@ -965,9 +965,9 @@ void AvalancheMC::AddDiffusion(const double step, const double dl,
                                const double dt, std::array<double, 3>& x,
                                const std::array<double, 3>& v) const {
   // Draw a random diffusion direction in the particle frame.
+  const auto rt = RndmGaussians(0., dt);
   const std::array<double, 3> d = {step * RndmGaussian(0., dl),
-                                   step * RndmGaussian(0., dt),
-                                   step * RndmGaussian(0., dt)};
+                                   step * rt.first, step * rt.second};
   if (m_debug) {
     std::cout << m_className << "::AddDiffusion: Adding diffusion step "
               << PrintVec(d) << "\n";
@@ -1051,10 +1051,9 @@ bool AvalancheMC::ComputeGainLoss(
       for (int j = 0; j < nDiv; ++j) {
         if (ne > 100) {
           // Gaussian approximation.
-          const int gain =
-              int(ne * p + RndmGaussian() * sqrt(ne * p * (1. - p)));
-          const int loss =
-              int(ne * q + RndmGaussian() * sqrt(ne * q * (1. - q)));
+          const auto r = RndmGaussians();
+          const int gain = int(ne * p + r.first * sqrt(ne * p * (1. - p)));
+          const int loss = int(ne * q + r.second * sqrt(ne * q * (1. - q)));
           ne += gain - loss;
           ni += gain;
         } else {
