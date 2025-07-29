@@ -720,7 +720,7 @@ bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale) {
   
   if(m_efields.empty()) Initialise(m_efields);
   
-  std::cout << m_className << "::CopyElectricField:\n"
+  if(m_debug) std::cout << m_className << "::CopyElectricField:\n"
             << "    Copying field/potential.\n";
   
   std::vector<std::vector<std::vector<Node> > > efieldsCopy;
@@ -737,7 +737,7 @@ bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale) {
       }
   }
   
-  std::cout << std::endl << m_className << "::CopyElectricField: Done.\n";
+  if(m_debug) std::cout << std::endl << m_className << "::CopyElectricField: Done.\n";
   return true;
 }
 
