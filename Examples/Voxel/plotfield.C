@@ -4,14 +4,12 @@
 
 #include "Garfield/ComponentVoxel.hh"
 #include "Garfield/MediumSilicon.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
 int main(int argc, char *argv[]) {
-  plottingEngine.SetDefaultStyle();
   TApplication app("app", &argc, argv);
 
   // Define the medium.

@@ -7,7 +7,6 @@
 
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/MediumSilicon.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/RandomEngineRoot.hh"
 #include "Garfield/Sensor.hh"
@@ -20,7 +19,6 @@ int main(int argc, char* argv[]) {
   Random::SetEngine(randomEngine);
 
   TApplication app("app", &argc, argv);
-  SetDefaultStyle();
 
   // Histograms
   TH1::StatOverflows(true);

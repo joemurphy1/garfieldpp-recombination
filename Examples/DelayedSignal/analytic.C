@@ -6,14 +6,12 @@
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentUser.hh"
 #include "Garfield/MediumSilicon.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewSignal.hh"
 
 using namespace Garfield;
 
 int main(int argc, char* argv[]) {
-  plottingEngine.SetDefaultStyle();
   TApplication app("app", &argc, argv);
 
   // Define the medium.

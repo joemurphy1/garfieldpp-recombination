@@ -15,7 +15,6 @@
 #include "Garfield/ComponentParallelPlate.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
 #include "Garfield/ViewSignal.hh"
@@ -26,7 +25,6 @@ using namespace Garfield;
 
 int main(int argc, char *argv[]) {
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   const bool debug = true;
   constexpr bool plotSignal = true;

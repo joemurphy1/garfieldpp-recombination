@@ -5,14 +5,12 @@
 #include <TROOT.h>
 
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/TrackDegrade.hh"
 
 using namespace Garfield;
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   MediumMagboltz gas("ar");
 

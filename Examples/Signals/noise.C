@@ -10,7 +10,6 @@
 
 #include "Garfield/ComponentUser.hh"
 #include "Garfield/FundamentalConstants.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/Shaper.hh"
 #include "Garfield/Utilities.hh"
@@ -41,7 +40,6 @@ bool readTransferFunction(Sensor& sensor) {
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   constexpr double q = 1. / ElementaryCharge;
 

@@ -5,14 +5,12 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumSilicon.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/ViewField.hh"
 
 using namespace Garfield;
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   MediumSilicon si;
 

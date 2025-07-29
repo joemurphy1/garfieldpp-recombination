@@ -15,7 +15,6 @@
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentParallelPlate.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
 #include "Garfield/ViewSignal.hh"
@@ -28,7 +27,6 @@ int main(int argc, char *argv[]) {
   LOG("Start MRPC Double Gap RPC Space Charge Example")
 
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   double voltage = 2 * -9000.;
 

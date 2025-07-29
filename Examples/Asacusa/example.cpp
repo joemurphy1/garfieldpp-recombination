@@ -1,5 +1,6 @@
 #include <TApplication.h>
 #include <TCanvas.h>
+#include <TStyle.h>
 
 #include <cmath>
 #include <iostream>
@@ -7,7 +8,6 @@
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
 #include "Garfield/ViewDrift.hh"
@@ -17,7 +17,6 @@ using namespace Garfield;
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   // Set the gas mixture.
   MediumMagboltz gas("ar", 90., "c4h10", 10.);

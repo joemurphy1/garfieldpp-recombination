@@ -11,8 +11,8 @@
 
 #include "Garfield/Component.hh"
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
+#include "Garfield/PlottingEngine.hh"
 
 namespace {
 
@@ -66,8 +66,9 @@ std::string Fmt(const double x) {
 
 namespace Garfield {
 
-ViewBase::ViewBase(const std::string& name) : m_className(name) {
-  plottingEngine.SetDefaultStyle();
+ViewBase::ViewBase(const std::string& name) : m_className(name)
+{
+  static PlottingEngine style;
 }
 
 TPad* ViewBase::GetCanvas() {
