@@ -565,6 +565,44 @@ bool ComponentGrid::SaveElectricField(Component* cmp) {
   return true;
 }
 
+bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale) {
+  if (!cmp) {
+    std::cerr << m_className << "::SaveElectricField: Null pointer.\n";
+    return false;
+  }
+  if (!m_hasMesh) {
+    std::cerr << m_className << "::SaveElectricField: Taking mesh from input\n";
+    
+    unsigned int nx, ny, nz;
+    double xmin, xmax, ymin;
+    double ymax, zmin, zmax;
+    cmp->GetMesh(nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax);
+    SetMesh(nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax);
+  }
+  
+  if(m_efields.empty()) Initialise(m_efields);
+  
+  std::cout << m_className << "::CopyElectricField:\n"
+            << "    Copying field/potential.\n";
+  
+  std::vector<std::vector<std::vector<Node> > > efieldsCopy;
+  cmp->GetFieldOnGrid(efieldsCopy);
+  
+  for (size_t i = 0; i < m_nX[0]; ++i) {
+      for (size_t j = 0; j < m_nX[1]; ++j) {
+          for (size_t k = 0; k < m_nX[2]; ++k) {
+            m_efields[i][j][k].fx += efieldsCopy[i][j][k].fx * scale;
+            m_efields[i][j][k].fy += efieldsCopy[i][j][k].fy * scale;
+            m_efields[i][j][k].fz += efieldsCopy[i][j][k].fz * scale;
+            m_efields[i][j][k].v += efieldsCopy[i][j][k].v * scale;
+          }
+      }
+  }
+  
+  std::cout << std::endl << m_className << "::CopyElectricField: Done.\n";
+  return true;
+}
+
 bool ComponentGrid::SaveWeightingField(Component* cmp, const std::string& id,
                                        const std::string& filename,
                                        const std::string& format) {

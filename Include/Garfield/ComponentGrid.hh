@@ -197,6 +197,17 @@ class ComponentGrid : public Component {
                         double& vx, double& vy, double& vz) override;
   bool HoleVelocity(const double x, const double y, const double z, double& vx,
                     double& vy, double& vz) override;
+  struct Node {
+    double fx, fy, fz;  ///< Field
+    double v;           ///< Potential
+  };
+  /// Get  field values on all nodes
+  void GetFieldOnGrid(std::vector<std::vector<
+                      std::vector<ComponentGrid::Node> > >& efields){
+    efields = m_efields;
+  };
+  /// Add the field values of cmp to current grid.
+  bool AddElectricField(ComponentGrid* cmp, const double scale = 1.);
 
  private:
   enum class Format { Unknown, XY, XZ, XYZ, IJ, IK, IJK, YXZ };
@@ -204,10 +215,6 @@ class ComponentGrid : public Component {
   Coordinates m_coordinates = Coordinates::Cartesian;
 
   Medium* m_medium = nullptr;
-  struct Node {
-    double fx, fy, fz;  ///< Field
-    double v;           ///< Potential
-  };
 
   /// Electric field values and potentials.
   std::vector<std::vector<std::vector<Node> > > m_efields;
