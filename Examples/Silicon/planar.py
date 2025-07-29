@@ -4,7 +4,6 @@ import Garfield
 si = ROOT.Garfield.MediumSilicon()
 si.SetTemperature(293.)
 
-ROOT.Garfield.plottingEngine.SetDefaultStyle()
 cM = ROOT.TCanvas('cM', '', 600, 600)
 si.PlotVelocity("eh", cM)
 

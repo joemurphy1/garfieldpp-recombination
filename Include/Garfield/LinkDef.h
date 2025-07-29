@@ -7,7 +7,7 @@
 
 #pragma link C++ namespace Garfield;
 
-#pragma link C++ global Garfield::plottingEngine;
+#pragma link C++ global Garfield::PlottingEngine;
 
 #pragma link C++ class Garfield::AvalancheMicroscopic;
 #pragma link C++ class Garfield::AvalancheMC;
