@@ -374,7 +374,7 @@ void AvalancheGridSpaceCharge::AddElectron(const double x, const double y,
   if (m_vCoNGasLayer.size() == 0) {
     std::cerr << m_className << "::AddElectron: Could not determine center.\n";
   }
-  Prepare2dMesh();
+  if (!m_bTransportOffGrid) Prepare2dMesh();
   if (SnapTo2dGrid(x, y, z, n, gasGap, particle_type) && m_bDebug)
     std::cerr << m_className
               << "::AddElectron: Electron added at (t, x, y, z) =  (" << t
@@ -763,37 +763,35 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
   int status;
   Medium *m = nullptr;
   // iterate through the gas gaps
-  if (!m_bTransportOffGrid){
-    for (int k = 0; k < n; k++) {
-      m_sensor->ElectricField(0, m_vYPointInGasGap[k], 0, e[0], e[1], e[2], v, m,
-                              status);
+  for (int k = 0; k < n; k++) {
+    m_sensor->ElectricField(0, m_vYPointInGasGap[k], 0, e[0], e[1], e[2], v, m,
+                            status);
 
-      if (status != 0) {
-        std::cerr
-            << m_className
-            << "::Prepare2dMesh: Cannot estimate background field for gas gap "
-            << k + 1 << ".\n";
-      }
-
-      // one expects (ComponentParallelPlate) that the electric field is pointing
-      // along y-axis
-      //  i.e. Z-axis in our coordinate system.
-      m_ezBkg[k] = e[1];
-      GetSwarmParameters(std::abs(e[1]), alpha[k], eta[k], drift[k], dSigmaL[k],
-                        dSigmaT[k], wv[k], wr[k], alphaPT[k], etaPT[k], k);
-
-      // print-out to double-check the swarm parameters
-      std::cout << m_className << "::Prepare2dMesh:\n"
-                << "  Gas gap " << k + 1 << "\n"
-                << "     Ez: " << m_ezBkg[k] << " (V/cm)\n"
-                << "     alphaSST: " << alpha[k] << " (1/cm)\n"
-                << "     alphaPT:  " << alphaPT[k] << " (1/cm)\n"
-                << "     etaSST: " << eta[k] << " (1/cm)\n"
-                << "     etaPT:  " << etaPT[k] << " (1/cm)\n"
-                << "     drift velocity (Wv): " << drift[k] << " (cm/ns)\n"
-                << "     Wr (!= Wv): " << wr[k] << " (cm/ns).\n";
+    if (status != 0) {
+      std::cerr
+          << m_className
+          << "::Prepare2dMesh: Cannot estimate background field for gas gap "
+          << k + 1 << ".\n";
     }
-  }  
+
+    // one expects (ComponentParallelPlate) that the electric field is pointing
+    // along y-axis
+    //  i.e. Z-axis in our coordinate system.
+    m_ezBkg[k] = e[1];
+    GetSwarmParameters(std::abs(e[1]), alpha[k], eta[k], drift[k], dSigmaL[k],
+                      dSigmaT[k], wv[k], wr[k], alphaPT[k], etaPT[k], k);
+
+    // print-out to double-check the swarm parameters
+    std::cout << m_className << "::Prepare2dMesh:\n"
+              << "  Gas gap " << k + 1 << "\n"
+              << "     Ez: " << m_ezBkg[k] << " (V/cm)\n"
+              << "     alphaSST: " << alpha[k] << " (1/cm)\n"
+              << "     alphaPT:  " << alphaPT[k] << " (1/cm)\n"
+              << "     etaSST: " << eta[k] << " (1/cm)\n"
+              << "     etaPT:  " << etaPT[k] << " (1/cm)\n"
+              << "     drift velocity (Wv): " << drift[k] << " (cm/ns)\n"
+              << "     Wr (!= Wv): " << wr[k] << " (cm/ns).\n";
+  } 
   // Set up mesh
   m_grid.resize(m_zSteps + 1);
   m_zGasGapBoundaries.resize(n);
