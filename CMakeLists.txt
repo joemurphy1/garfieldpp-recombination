@@ -7,7 +7,7 @@ project(Garfield VERSION 0.3
                  HOMEPAGE_URL "https://garfieldpp.web.cern.ch/garfieldpp/"
                  LANGUAGES Fortran CXX)
 
-option(GARFIELD_WITH_CUDA "Build CUDA code if possible" OFF)
+option(GARFIELD_WITH_CUDA "Build CUDA code if possible" ON)
 option(GARFIELD_CUDA_USE_FLOAT "Use float with CUDA code (for some performances issues on some hardware) default:double" FALSE)
 option(GARFIELD_WITH_DEGRADE "Build Degrade." ON)
 option(GARFIELD_WITH_EXAMPLES "Build Garfield++ examples" ON)

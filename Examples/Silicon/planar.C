@@ -13,7 +13,6 @@
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/ComponentUser.hh"
 #include "Garfield/MediumSilicon.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
@@ -30,7 +29,6 @@ int main(int argc, char* argv[]) {
   si.SetTemperature(293.);
 
   // Make a plot of the drift velocities.
-  plottingEngine.SetDefaultStyle();
   constexpr bool plotVelocity = true;
   if (plotVelocity) {
     si.PlotVelocity("eh", new TCanvas("cM", "", 600, 600));

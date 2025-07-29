@@ -6,7 +6,6 @@
 
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackSrim.hh"
 
@@ -15,7 +14,6 @@ using namespace Garfield;
 int main(int argc, char* argv[]) {
   // Application
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   // Define the medium.
   MediumMagboltz gas("ar");

@@ -14,7 +14,6 @@
 #include "Garfield/AvalancheGridSpaceCharge.hh"
 #include "Garfield/ComponentParallelPlate.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewSignal.hh"
 
@@ -24,7 +23,6 @@ int main(int argc, char *argv[]) {
   std::cout << "Start RPC Space Charge Example\n";
 
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   double voltage = 9000;
 

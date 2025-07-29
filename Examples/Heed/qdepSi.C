@@ -10,7 +10,6 @@
 
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/MediumSilicon.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
 
@@ -18,7 +17,6 @@ using namespace Garfield;
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   MediumSilicon si;
 
