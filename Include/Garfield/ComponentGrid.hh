@@ -90,6 +90,9 @@ class ComponentGrid : public Component {
   bool SaveElectricField(Component* cmp, const std::string& filename,
                          const std::string& fmt);
   
+  bool SaveElectricFieldROOT(Component* cmp, const std::string& filename,
+                         const std::string& fmt);
+
   /** Export the electric field and potential of a component.
    * \param cmp Component object for which to export the field/potential
    */

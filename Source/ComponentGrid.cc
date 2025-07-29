@@ -10,6 +10,8 @@
 #include <limits>
 #include <set>
 #include <sstream>
+#include <TFile.h>
+#include <TTree.h>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
@@ -508,6 +510,142 @@ bool ComponentGrid::SaveElectricField(Component* cmp,
   return true;
 }
 
+bool ComponentGrid::SaveElectricFieldROOT(Component* cmp,
+                                      const std::string& filename,
+                                      const std::string& format) {
+  if (!cmp) {
+    std::cerr << m_className << "::SaveElectricField: Null pointer.\n";
+    return false;
+  }
+  if (!m_hasMesh) {
+    std::cerr << m_className << "::SaveElectricField: Mesh not set.\n";
+    return false;
+  }
+  const auto fmt = GetFormat(format);
+  if (fmt == Format::Unknown) {
+    std::cerr << m_className << "::SaveElectricField:\n"
+              << "    Unknown format (" << format << ").\n";
+    return false;
+  }
+  std::ofstream outfile;
+  outfile.open(filename, std::ios::out);
+  if (!outfile) {
+    std::cerr << m_className << "::SaveElectricField:\n"
+              << "    Could not open file " << filename << ".\n";
+    return false;
+  }
+  std::cout << m_className << "::SaveElectricField:\n"
+            << "    Exporting field/potential to " << filename << ".\n"
+            << "    Be patient...\n";
+  
+  TFile f(filename.c_str(), "RECREATE");
+  
+  // Header metadata tree
+  TTree header("header", "Grid metadata");
+  double xmin = m_xMin[0], xmax = m_xMax[0];
+  double ymin = m_xMin[1], ymax = m_xMax[1];
+  double zmin = m_xMin[2], zmax = m_xMax[2];
+  int nx = m_nX[0], ny = m_nX[1], nz = m_nX[2];
+
+  header.Branch("xmin", &xmin);
+  header.Branch("xmax", &xmax);
+  header.Branch("nx", &nx);
+  header.Branch("ymin", &ymin);
+  header.Branch("ymax", &ymax);
+  header.Branch("ny", &ny);
+  header.Branch("zmin", &zmin);
+  header.Branch("zmax", &zmax);
+  header.Branch("nz", &nz);
+  header.Fill();
+  
+  PrintProgress(0.);
+  TTree tree("field", "Electric Field Grid");
+
+  double x, y, z, ex, ey, ez, er, et, v;
+  int iS, jS , kS;
+  
+  if (fmt == Format::XY) {
+    tree.Branch("x", &x);
+    tree.Branch("y", &y);
+  } else if (fmt == Format::XZ) {
+    tree.Branch("x", &x);
+    tree.Branch("z", &z);
+  } else if (fmt == Format::XYZ) {
+    tree.Branch("x", &x);
+    tree.Branch("y", &y);
+    tree.Branch("z", &z);
+  } else if (fmt == Format::IJ) {
+    tree.Branch("i", &iS);
+    tree.Branch("j", &jS);
+  } else if (fmt == Format::IK) {
+    tree.Branch("i", &iS);
+    tree.Branch("k", &kS);
+  } else if (fmt == Format::IJK) {
+    tree.Branch("i", &iS);
+    tree.Branch("j", &jS);
+    tree.Branch("k", &kS);
+  } else if (fmt == Format::YXZ) {
+    tree.Branch("x", &x);
+    tree.Branch("y", &y);
+    tree.Branch("z", &z);
+  }
+  if (m_coordinates == Coordinates::Cylindrical) {
+    tree.Branch("er", &er);
+    tree.Branch("et", &et);
+    tree.Branch("ez", &ez);
+    tree.Branch("v", &v);
+  } else {
+    tree.Branch("ex", &ex);
+    tree.Branch("ey", &ey);
+    tree.Branch("ez", &ez);
+    tree.Branch("v", &v);
+  }
+  
+  const unsigned int nValues = m_nX[0] * m_nX[1] * m_nX[2];
+  const unsigned int nPrint =
+      std::pow(10, static_cast<unsigned int>(
+                       std::max(std::floor(std::log10(nValues)) - 1, 1.)));
+  unsigned int nLines = 0;
+  Medium* medium = nullptr;
+  int status = 0;
+  const double dx = (m_xMax[0] - m_xMin[0]) / std::max(m_nX[0] - 1., 1.);
+  const double dy = (m_xMax[1] - m_xMin[1]) / std::max(m_nX[1] - 1., 1.);
+  const double dz = (m_xMax[2] - m_xMin[2]) / std::max(m_nX[2] - 1., 1.);
+  for (unsigned int i = 0; i < m_nX[0]; ++i) {
+    iS = i;
+    x = m_xMin[0] + i * dx;
+    for (unsigned int j = 0; j < m_nX[1]; ++j) {
+      jS = j;
+      y = m_xMin[1] + j * dy;
+      for (unsigned int k = 0; k < m_nX[2]; ++k) {
+        kS = k;
+        z = m_xMin[2] + k * dz;
+        if (m_coordinates == Coordinates::Cylindrical) {
+          const double ct = cos(y);
+          const double st = sin(y);
+          ex = 0.; ey = 0.; ez = 0.; v = 0.;
+          cmp->ElectricField(x * ct, x * st, z, ex, ey, ez, v, medium, status);
+          er = +ex * ct + ey * st;
+          et = -ex * st + ey * ct;
+          outfile << er << "  " << et << "  " << ez << "  " << v << "\n";
+        } else {
+          ex = 0.; ey = 0.; ez = 0.; v = 0.;
+          cmp->ElectricField(x, y, z, ex, ey, ez, v, medium, status);
+          outfile << ex << "  " << ey << "  " << ez << "  " << v << "\n";
+        }
+        tree.Fill();
+        ++nLines;
+        if (nLines % nPrint == 0) PrintProgress(double(nLines) / nValues);
+      }
+    }
+  }
+  header.Write();
+  tree.Write();
+  f.Close();
+  std::cout << std::endl << m_className << "::SaveElectricField: Done.\n";
+  return true;
+}
+
 
 bool ComponentGrid::SaveElectricField(Component* cmp) {
   if (!cmp) {
@@ -708,6 +846,38 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
   unsigned int nx = 0, ny = 0, nz = 0;
   bool cylindrical = (m_coordinates == Coordinates::Cylindrical);
   // Parse the comment lines in the file.
+  
+  bool isRoot = (filename.find(".root") != std::string::npos);
+  
+  if (isRoot) {
+    
+    TFile file(filename.c_str(), "READ");
+    if (file.IsZombie()) {
+      std::cerr << m_className << "::LoadElectricField: Could not open ROOT file " << filename << "\n";
+      return false;
+    }
+    
+    TTree* header = (TTree*)file.Get("header");
+    if (!header) {
+      std::cerr << m_className << "::LoadElectricField: Tree 'header' not found.\n";
+      return false;
+    }
+    
+    header->SetBranchAddress("xmin", &xmin);
+    header->SetBranchAddress("xmax", &xmax);
+    header->SetBranchAddress("ymin", &ymin);
+    header->SetBranchAddress("ymax", &ymax);
+    header->SetBranchAddress("zmin", &zmin);
+    header->SetBranchAddress("zmax", &zmax);
+    header->SetBranchAddress("nx", &nx);
+    header->SetBranchAddress("ny", &ny);
+    header->SetBranchAddress("nz", &nz);
+    
+    header->GetEntry(0);
+    
+    return SetMesh(nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax);
+  }
+    
   std::ifstream infile(filename);
   if (!infile) {
     std::cerr << m_className << "::LoadMesh:\n"
@@ -1038,6 +1208,7 @@ bool ComponentGrid::LoadData(
     const bool withFlag, const double scaleX, const double scaleF,
     const double scaleP,
     std::vector<std::vector<std::vector<Node> > >& fields) {
+  
   if (!m_hasMesh) {
     if (!LoadMesh(filename, format, scaleX)) {
       std::cerr << m_className << "::LoadData: Mesh not set.\n";
@@ -1068,228 +1239,395 @@ bool ComponentGrid::LoadData(
     return false;
   }
 
-  std::string line;
-  unsigned int nLines = 0;
-  bool bad = false;
-  // Read the file line by line.
-  while (std::getline(infile, line)) {
-    ++nLines;
-    // Strip white space from beginning of line.
-    ltrim(line);
-    // Skip empty lines.
-    if (line.empty()) continue;
-    // Skip comments.
-    if (IsComment(line)) continue;
+  bool isRoot = (filename.find(".root") != std::string::npos);
+  
+  if (!isRoot) {
+    std::string line;
+    unsigned int nLines = 0;
+    bool bad = false;
+    // Read the file line by line.
+    while (std::getline(infile, line)) {
+      ++nLines;
+      // Strip white space from beginning of line.
+      ltrim(line);
+      // Skip empty lines.
+      if (line.empty()) continue;
+      // Skip comments.
+      if (IsComment(line)) continue;
+      unsigned int i = 0;
+      unsigned int j = 0;
+      unsigned int k = 0;
+      double fx = 0.;
+      double fy = 0.;
+      double fz = 0.;
+      double p = 0.;
+      std::istringstream data(line);
+      if (fmt == Format::XY) {
+        double x, y;
+        data >> x >> y;
+        if (data.fail()) {
+          PrintError(m_className + "::LoadData", nLines, "coordinates");
+          bad = true;
+          break;
+        }
+        x *= scaleX;
+        y *= scaleX;
+        if (m_nX[0] > 1) {
+          const double u = std::round((x - m_xMin[0]) * m_sX[0]);
+          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          if (i >= m_nX[0]) i = m_nX[0] - 1;
+        }
+        if (m_nX[1] > 1) {
+          const double v = std::round((y - m_xMin[1]) * m_sX[1]);
+          j = v < 0. ? 0 : static_cast<unsigned int>(v);
+          if (j >= m_nX[1]) j = m_nX[1] - 1;
+        }
+      } else if (fmt == Format::XZ) {
+        double x, z;
+        data >> x >> z;
+        if (data.fail()) {
+          PrintError(m_className + "::LoadData", nLines, "coordinates");
+          bad = true;
+          break;
+        }
+        x *= scaleX;
+        z *= scaleX;
+        if (m_nX[0] > 1) {
+          const double u = std::round((x - m_xMin[0]) * m_sX[0]);
+          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          if (i >= m_nX[0]) i = m_nX[0] - 1;
+        }
+        if (m_nX[2] > 1) {
+          const double v = std::round((z - m_xMin[2]) * m_sX[2]);
+          k = v < 0. ? 0 : static_cast<unsigned int>(v);
+          if (j >= m_nX[1]) j = m_nX[1] - 1;
+        }
+      } else if (fmt == Format::XYZ) {
+        double x, y, z;
+        data >> x >> y >> z;
+        if (data.fail()) {
+          PrintError(m_className + "::LoadData", nLines, "coordinates");
+          bad = true;
+          break;
+        }
+        x *= scaleX;
+        y *= scaleX;
+        z *= scaleX;
+        if (m_nX[0] > 1) {
+          const double u = std::round((x - m_xMin[0]) * m_sX[0]);
+          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          if (i >= m_nX[0]) i = m_nX[0] - 1;
+        }
+        if (m_nX[1] > 1) {
+          const double v = std::round((y - m_xMin[1]) * m_sX[1]);
+          j = v < 0. ? 0 : static_cast<unsigned int>(v);
+          if (j >= m_nX[1]) j = m_nX[1] - 1;
+        }
+        if (m_nX[2] > 1) {
+          const double w = std::round((z - m_xMin[2]) * m_sX[2]);
+          k = w < 0. ? 0 : static_cast<unsigned int>(w);
+          if (k >= m_nX[2]) k = m_nX[2] - 1;
+        }
+      } else if (fmt == Format::IJ) {
+        data >> i >> j;
+        if (data.fail()) {
+          PrintError(m_className + "::LoadData", nLines, "indices");
+          bad = true;
+          break;
+        }
+      } else if (fmt == Format::IJK) {
+        data >> i >> j >> k;
+        if (data.fail()) {
+          PrintError(m_className + "::LoadData", nLines, "indices");
+          bad = true;
+          break;
+        }
+      } else if (fmt == Format::YXZ) {
+        double x, y, z;
+        data >> y >> x >> z;
+        if (data.fail()) {
+          PrintError(m_className + "::LoadData", nLines, "coordinates");
+          bad = true;
+          break;
+        }
+        x *= scaleX;
+        y *= scaleX;
+        z *= scaleX;
+        if (m_nX[0] > 1) {
+          const double u = std::round((x - m_xMin[0]) * m_sX[0]);
+          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          if (i >= m_nX[0]) i = m_nX[0] - 1;
+        }
+        if (m_nX[1] > 1) {
+          const double v = std::round((y - m_xMin[1]) * m_sX[1]);
+          j = v < 0. ? 0 : static_cast<unsigned int>(v);
+          if (j >= m_nX[1]) j = m_nX[1] - 1;
+        }
+        if (m_nX[2] > 1) {
+          const double w = std::round((z - m_xMin[2]) * m_sX[2]);
+          k = w < 0. ? 0 : static_cast<unsigned int>(w);
+          if (k >= m_nX[2]) k = m_nX[2] - 1;
+        }
+      }
+      // Check the indices.
+      if (i >= m_nX[0] || j >= m_nX[1] || k >= m_nX[2]) {
+        std::cerr << m_className << "::LoadData:\n"
+        << "    Error reading line " << nLines << ".\n"
+        << "    Index (" << i << ", " << j << ", " << k
+        << ") out of range.\n";
+        continue;
+      }
+      if (isSet[i][j][k]) {
+        std::cerr << m_className << "::LoadData:\n"
+        << "    Error reading line " << nLines << ".\n"
+        << "    Node (" << i << ", " << j << ", " << k
+        << ") has already been set.\n";
+        continue;
+      }
+      // Get the field values.
+      if (fmt == Format::XY || fmt == Format::IJ) {
+        // Two-dimensional map.
+        fz = 0.;
+        data >> fx >> fy;
+      } else if (fmt == Format::XZ || fmt == Format::IK) {
+        // Two-dimensional map.
+        fy = 0.;
+        data >> fx >> fz;
+      } else if (fmt == Format::YXZ) {
+        data >> fy >> fx >> fz;
+      } else {
+        data >> fx >> fy >> fz;
+      }
+      if (data.fail()) {
+        PrintError(m_className + "::LoadData", nLines, "field components");
+        bad = true;
+        break;
+      }
+      fx *= scaleF;
+      fy *= scaleF;
+      fz *= scaleF;
+      if (withPotential) {
+        data >> p;
+        if (data.fail()) {
+          PrintError(m_className + "::LoadData", nLines, "potential");
+          bad = true;
+          break;
+        }
+        p *= scaleP;
+        if (m_pMin > m_pMax) {
+          // First value.
+          m_pMin = p;
+          m_pMax = p;
+        } else {
+          if (p < m_pMin) m_pMin = p;
+          if (p > m_pMax) m_pMax = p;
+        }
+      }
+      int flag = 0;
+      if (withFlag) {
+        data >> flag;
+        if (data.fail()) {
+          PrintError(m_className + "::LoadData", nLines, "region");
+          bad = true;
+          break;
+        }
+      }
+      const bool isActive = flag == 0 ? false : true;
+      if (fmt == Format::XY || fmt == Format::IJ) {
+        // Two-dimensional map.
+        for (unsigned int kk = 0; kk < m_nX[2]; ++kk) {
+          fields[i][j][kk].fx = fx;
+          fields[i][j][kk].fy = fy;
+          fields[i][j][kk].fz = fz;
+          fields[i][j][kk].v = p;
+          if (withFlag) m_active[i][j][kk] = isActive;
+          isSet[i][j][kk] = true;
+        }
+      } else if (fmt == Format::XZ || fmt == Format::IK) {
+        // Two-dimensional map.
+        for (unsigned int jj = 0; jj < m_nX[1]; ++jj) {
+          fields[i][jj][k].fx = fx;
+          fields[i][jj][k].fy = fy;
+          fields[i][jj][k].fz = fz;
+          fields[i][jj][k].v = p;
+          if (withFlag) m_active[i][jj][k] = isActive;
+          isSet[i][jj][k] = true;
+        }
+      } else {
+        fields[i][j][k].fx = fx;
+        fields[i][j][k].fy = fy;
+        fields[i][j][k].fz = fz;
+        fields[i][j][k].v = p;
+        isSet[i][j][k] = true;
+      }
+      ++nValues;
+    }
+    infile.close();
+    if (bad) return false;
+  } else {
+    
+    TFile file(filename.c_str(), "READ");
+    if (file.IsZombie()) {
+      std::cerr << m_className << "::LoadElectricField: Could not open ROOT file " << filename << "\n";
+      return false;
+    }
+    
+    TTree* tree = (TTree*)file.Get("field");
+    if (!tree) {
+      std::cerr << m_className << "::LoadElectricField: Tree 'field' not found.\n";
+      return false;
+    }
+    
+    double x, y, z, ex, ey, ez, er, et, p;
+    int iS, jS, kS;
+    
+    if (fmt == Format::XY) {
+      tree->SetBranchAddress("x", &x);
+      tree->SetBranchAddress("y", &y);
+    } else if (fmt == Format::XZ) {
+      tree->SetBranchAddress("x", &x);
+      tree->SetBranchAddress("z", &z);
+    } else if (fmt == Format::XYZ ||
+               fmt == Format::YXZ) {
+      tree->SetBranchAddress("x", &x);
+      tree->SetBranchAddress("y", &y);
+      tree->SetBranchAddress("z", &z);
+    } else if (fmt == Format::IJ) {
+      tree->SetBranchAddress("i", &iS);
+      tree->SetBranchAddress("j", &jS);
+    } else if (fmt == Format::IK) {
+      tree->SetBranchAddress("i", &iS);
+      tree->SetBranchAddress("k", &kS);
+    } else if (fmt == Format::IJK) {
+      tree->SetBranchAddress("i", &iS);
+      tree->SetBranchAddress("j", &jS);
+      tree->SetBranchAddress("k", &kS);
+    }
+    
+    if (m_coordinates == Coordinates::Cylindrical) {
+      tree->SetBranchAddress("er", &er);
+      tree->SetBranchAddress("et", &et);
+      tree->SetBranchAddress("ez", &ez);
+    } else {
+      tree->SetBranchAddress("ex", &ex);
+      tree->SetBranchAddress("ey", &ey);
+    }
+    tree->SetBranchAddress("ez", &ez);
+    tree->SetBranchAddress("v", &p);
+    
     unsigned int i = 0;
     unsigned int j = 0;
     unsigned int k = 0;
-    double fx = 0.;
-    double fy = 0.;
-    double fz = 0.;
-    double p = 0.;
-    std::istringstream data(line);
-    if (fmt == Format::XY) {
-      double x, y;
-      data >> x >> y;
-      if (data.fail()) {
-        PrintError(m_className + "::LoadData", nLines, "coordinates");
-        bad = true;
-        break;
+    
+    const Long64_t nEntries = tree->GetEntries();
+    for (Long64_t iEntries = 0; iEntries < nEntries; ++iEntries) {
+      tree->GetEntry(iEntries);
+      if (fmt == Format::XY) {
+        x *= scaleX;
+        y *= scaleX;
+        if (m_nX[0] > 1) {
+          const double u = std::round((x - m_xMin[0]) * m_sX[0]);
+          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          if (i >= m_nX[0]) i = m_nX[0] - 1;
+        }
+        if (m_nX[1] > 1) {
+          const double v = std::round((y - m_xMin[1]) * m_sX[1]);
+          j = v < 0. ? 0 : static_cast<unsigned int>(v);
+          if (j >= m_nX[1]) j = m_nX[1] - 1;
+        }
+      } else if (fmt == Format::XZ) {
+        x *= scaleX;
+        z *= scaleX;
+        if (m_nX[0] > 1) {
+          const double u = std::round((x - m_xMin[0]) * m_sX[0]);
+          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          if (i >= m_nX[0]) i = m_nX[0] - 1;
+        }
+        if (m_nX[2] > 1) {
+          const double v = std::round((z - m_xMin[2]) * m_sX[2]);
+          k = v < 0. ? 0 : static_cast<unsigned int>(v);
+          if (j >= m_nX[1]) j = m_nX[1] - 1;
+        }
+      } else if (fmt == Format::XYZ || fmt == Format::YXZ) {
+        x *= scaleX;
+        y *= scaleX;
+        z *= scaleX;
+        if (m_nX[0] > 1) {
+          const double u = std::round((x - m_xMin[0]) * m_sX[0]);
+          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          if (i >= m_nX[0]) i = m_nX[0] - 1;
+        }
+        if (m_nX[1] > 1) {
+          const double v = std::round((y - m_xMin[1]) * m_sX[1]);
+          j = v < 0. ? 0 : static_cast<unsigned int>(v);
+          if (j >= m_nX[1]) j = m_nX[1] - 1;
+        }
+        if (m_nX[2] > 1) {
+          const double w = std::round((z - m_xMin[2]) * m_sX[2]);
+          k = w < 0. ? 0 : static_cast<unsigned int>(w);
+          if (k >= m_nX[2]) k = m_nX[2] - 1;
+        }
       }
-      x *= scaleX;
-      y *= scaleX;
-      if (m_nX[0] > 1) {
-        const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-        i = u < 0. ? 0 : static_cast<unsigned int>(u);
-        if (i >= m_nX[0]) i = m_nX[0] - 1;
+      // Check the indices.
+      if (i >= m_nX[0] || j >= m_nX[1] || k >= m_nX[2]) {
+        std::cerr << m_className << "::LoadData:\n"
+        << "    Error reading entry " << iEntries << ".\n"
+        << "    Index (" << i << ", " << j << ", " << k
+        << ") out of range.\n";
+        continue;
       }
-      if (m_nX[1] > 1) {
-        const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-        j = v < 0. ? 0 : static_cast<unsigned int>(v);
-        if (j >= m_nX[1]) j = m_nX[1] - 1;
+      if (isSet[i][j][k]) {
+        std::cerr << m_className << "::LoadData:\n"
+        << "    Error reading entry " << iEntries << ".\n"
+        << "    Node (" << i << ", " << j << ", " << k
+        << ") has already been set.\n";
+        continue;
       }
-    } else if (fmt == Format::XZ) {
-      double x, z;
-      data >> x >> z;
-      if (data.fail()) {
-        PrintError(m_className + "::LoadData", nLines, "coordinates");
-        bad = true;
-        break;
+      ex *= scaleF;
+      ey *= scaleF;
+      ez *= scaleF;
+      
+      if (withPotential) {
+        p *= scaleP;
+        if (m_pMin > m_pMax) {
+          // First value.
+          m_pMin = p;
+          m_pMax = p;
+        } else {
+          if (p < m_pMin) m_pMin = p;
+          if (p > m_pMax) m_pMax = p;
+        }
       }
-      x *= scaleX;
-      z *= scaleX;
-      if (m_nX[0] > 1) {
-        const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-        i = u < 0. ? 0 : static_cast<unsigned int>(u);
-        if (i >= m_nX[0]) i = m_nX[0] - 1;
-      }
-      if (m_nX[2] > 1) {
-        const double v = std::round((z - m_xMin[2]) * m_sX[2]);
-        k = v < 0. ? 0 : static_cast<unsigned int>(v);
-        if (j >= m_nX[1]) j = m_nX[1] - 1;
-      }
-    } else if (fmt == Format::XYZ) {
-      double x, y, z;
-      data >> x >> y >> z;
-      if (data.fail()) {
-        PrintError(m_className + "::LoadData", nLines, "coordinates");
-        bad = true;
-        break;
-      }
-      x *= scaleX;
-      y *= scaleX;
-      z *= scaleX;
-      if (m_nX[0] > 1) {
-        const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-        i = u < 0. ? 0 : static_cast<unsigned int>(u);
-        if (i >= m_nX[0]) i = m_nX[0] - 1;
-      }
-      if (m_nX[1] > 1) {
-        const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-        j = v < 0. ? 0 : static_cast<unsigned int>(v);
-        if (j >= m_nX[1]) j = m_nX[1] - 1;
-      }
-      if (m_nX[2] > 1) {
-        const double w = std::round((z - m_xMin[2]) * m_sX[2]);
-        k = w < 0. ? 0 : static_cast<unsigned int>(w);
-        if (k >= m_nX[2]) k = m_nX[2] - 1;
-      }
-    } else if (fmt == Format::IJ) {
-      data >> i >> j;
-      if (data.fail()) {
-        PrintError(m_className + "::LoadData", nLines, "indices");
-        bad = true;
-        break;
-      }
-    } else if (fmt == Format::IJK) {
-      data >> i >> j >> k;
-      if (data.fail()) {
-        PrintError(m_className + "::LoadData", nLines, "indices");
-        bad = true;
-        break;
-      }
-    } else if (fmt == Format::YXZ) {
-      double x, y, z;
-      data >> y >> x >> z;
-      if (data.fail()) {
-        PrintError(m_className + "::LoadData", nLines, "coordinates");
-        bad = true;
-        break;
-      }
-      x *= scaleX;
-      y *= scaleX;
-      z *= scaleX;
-      if (m_nX[0] > 1) {
-        const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-        i = u < 0. ? 0 : static_cast<unsigned int>(u);
-        if (i >= m_nX[0]) i = m_nX[0] - 1;
-      }
-      if (m_nX[1] > 1) {
-        const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-        j = v < 0. ? 0 : static_cast<unsigned int>(v);
-        if (j >= m_nX[1]) j = m_nX[1] - 1;
-      }
-      if (m_nX[2] > 1) {
-        const double w = std::round((z - m_xMin[2]) * m_sX[2]);
-        k = w < 0. ? 0 : static_cast<unsigned int>(w);
-        if (k >= m_nX[2]) k = m_nX[2] - 1;
-      }
-    }
-    // Check the indices.
-    if (i >= m_nX[0] || j >= m_nX[1] || k >= m_nX[2]) {
-      std::cerr << m_className << "::LoadData:\n"
-                << "    Error reading line " << nLines << ".\n"
-                << "    Index (" << i << ", " << j << ", " << k
-                << ") out of range.\n";
-      continue;
-    }
-    if (isSet[i][j][k]) {
-      std::cerr << m_className << "::LoadData:\n"
-                << "    Error reading line " << nLines << ".\n"
-                << "    Node (" << i << ", " << j << ", " << k
-                << ") has already been set.\n";
-      continue;
-    }
-    // Get the field values.
-    if (fmt == Format::XY || fmt == Format::IJ) {
-      // Two-dimensional map.
-      fz = 0.;
-      data >> fx >> fy;
-    } else if (fmt == Format::XZ || fmt == Format::IK) {
-      // Two-dimensional map.
-      fy = 0.;
-      data >> fx >> fz;
-    } else if (fmt == Format::YXZ) {
-      data >> fy >> fx >> fz;
-    } else {
-      data >> fx >> fy >> fz;
-    }
-    if (data.fail()) {
-      PrintError(m_className + "::LoadData", nLines, "field components");
-      bad = true;
-      break;
-    }
-    fx *= scaleF;
-    fy *= scaleF;
-    fz *= scaleF;
-    if (withPotential) {
-      data >> p;
-      if (data.fail()) {
-        PrintError(m_className + "::LoadData", nLines, "potential");
-        bad = true;
-        break;
-      }
-      p *= scaleP;
-      if (m_pMin > m_pMax) {
-        // First value.
-        m_pMin = p;
-        m_pMax = p;
+       // TO-DO: flag option
+      if (fmt == Format::XY || fmt == Format::IJ) {
+        // Two-dimensional map.
+        for (unsigned int kk = 0; kk < m_nX[2]; ++kk) {
+          fields[i][j][kk].fx = ex;
+          fields[i][j][kk].fy = ey;
+          fields[i][j][kk].fz = ez;
+          fields[i][j][kk].v = p;
+          isSet[i][j][kk] = true;
+        }
+      } else if (fmt == Format::XZ || fmt == Format::IK) {
+        // Two-dimensional map.
+        for (unsigned int jj = 0; jj < m_nX[1]; ++jj) {
+          fields[i][jj][k].fx = ex;
+          fields[i][jj][k].fy = ey;
+          fields[i][jj][k].fz = ez;
+          fields[i][jj][k].v = p;
+          isSet[i][jj][k] = true;
+        }
       } else {
-        if (p < m_pMin) m_pMin = p;
-        if (p > m_pMax) m_pMax = p;
+        fields[i][j][k].fx = ex;
+        fields[i][j][k].fy = ey;
+        fields[i][j][k].fz = ex;
+        fields[i][j][k].v = p;
+        isSet[i][j][k] = true;
       }
+      ++nValues;
     }
-    int flag = 0;
-    if (withFlag) {
-      data >> flag;
-      if (data.fail()) {
-        PrintError(m_className + "::LoadData", nLines, "region");
-        bad = true;
-        break;
-      }
-    }
-    const bool isActive = flag == 0 ? false : true;
-    if (fmt == Format::XY || fmt == Format::IJ) {
-      // Two-dimensional map.
-      for (unsigned int kk = 0; kk < m_nX[2]; ++kk) {
-        fields[i][j][kk].fx = fx;
-        fields[i][j][kk].fy = fy;
-        fields[i][j][kk].fz = fz;
-        fields[i][j][kk].v = p;
-        if (withFlag) m_active[i][j][kk] = isActive;
-        isSet[i][j][kk] = true;
-      }
-    } else if (fmt == Format::XZ || fmt == Format::IK) {
-      // Two-dimensional map.
-      for (unsigned int jj = 0; jj < m_nX[1]; ++jj) {
-        fields[i][jj][k].fx = fx;
-        fields[i][jj][k].fy = fy;
-        fields[i][jj][k].fz = fz;
-        fields[i][jj][k].v = p;
-        if (withFlag) m_active[i][jj][k] = isActive;
-        isSet[i][jj][k] = true;
-      }
-    } else {
-      fields[i][j][k].fx = fx;
-      fields[i][j][k].fy = fy;
-      fields[i][j][k].fz = fz;
-      fields[i][j][k].v = p;
-      isSet[i][j][k] = true;
-    }
-    ++nValues;
+    file.Close();
   }
-  infile.close();
-  if (bad) return false;
   std::cout << m_className << "::LoadData:\n"
             << "    Read " << nValues << " values from " << filename << ".\n";
   unsigned int nExpected = m_nX[0];
