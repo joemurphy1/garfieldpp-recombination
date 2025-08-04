@@ -318,6 +318,22 @@ Include/Garfield/Utilities.hh
 )
 set_target_properties(Garfield PROPERTIES PUBLIC_HEADER "${GARFIELD_PUBLIC_HEADERS}")
 
+target_link_libraries(Garfield PUBLIC ROOT::Geom
+                                      ROOT::Gdml
+                                      ROOT::Graf3d
+                                      GSL::gsl
+                                      Garfield::Heed
+                                      Magboltz::Magboltz
+                                      $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Degrade::Degrade>
+                                      $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
+                                      $<$<BOOL:${GARFIELD_WITH_CUDA}>:GarfieldGPU>
+)
+target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU>)
+target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
+                                    PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
+                                    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
+
+
 #--- Create ROOT dictionary ---------------------------------------------------
 root_generate_dictionary(GarfieldDict "${GARFIELD_PUBLIC_HEADERS}" LINKDEF "${CMAKE_CURRENT_SOURCE_DIR}/Include/Garfield/LinkDef.h" MODULE Garfield)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libGarfieldDict_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
@@ -356,20 +372,7 @@ target_sources(Garfield PRIVATE ${nebem_sources})
 # Add Heed
 add_subdirectory(Heed)
 
-target_link_libraries(Garfield PUBLIC ROOT::Geom
-                                      ROOT::Gdml
-                                      ROOT::Graf3d
-                                      GSL::gsl
-                                      Garfield::Heed
-                                      Magboltz::Magboltz
-                                      $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Degrade::Degrade>
-                                      $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
-                                      $<$<BOOL:${GARFIELD_WITH_CUDA}>:GarfieldGPU>
-)
-target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU>)
-target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
-                                    PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
-                                    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
+
 
 #--- Install the header files -------------------------------------------------
 install(TARGETS Garfield GarfieldRandom EXPORT "${PROJECT_NAME}Targets"
