@@ -1,9 +1,9 @@
 #include "Garfield/AvalancheGridSpaceCharge.hh"
+#include "Garfield/EllipticIntegrals.hh"
 
 #include <fstream>
 #include <iostream>
 #include <numeric>
-#include <sstream>
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentParallelPlate.hh"
@@ -179,18 +179,11 @@ void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn,
 namespace Garfield {
 
 AvalancheGridSpaceCharge::AvalancheGridSpaceCharge(Sensor *sensor) {
-  m_vEElliptic.reserve(20000);
-  m_vKElliptic.reserve(20000);
-  m_vXElliptic.reserve(20000);
   m_zGrid.reserve(5000);
   m_rGrid.reserve(1000);
 
   SetSensor(sensor);
 
-  // Import the elliptic integral values
-  const std::string path = std::getenv("GARFIELD_INSTALL");
-  ImportEllipticIntegralValues(path +
-                               "/share/Garfield/Data/elliptic_integrals.txt");
 }
 
 void AvalancheGridSpaceCharge::Reset() {
@@ -555,39 +548,6 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   if (m_bDebug) {
     std::cout << m_className << "::ExportGrid: Grids exported.\n";
   }
-}
-
-void AvalancheGridSpaceCharge::ImportEllipticIntegralValues(
-    const std::string &filename) {
-  // reads values of the elliptic functions
-  // it has a very special form to find the values rapidly (not given for a
-  // completely non uniform grid) from x = 0 to 10 it is in steps of 1e-3. From
-  // 10 to 1e4 in steps of 1. Then in steps of 1000 until 1e7.
-
-  m_vXElliptic.resize(0);
-  m_vKElliptic.resize(0);
-  m_vEElliptic.resize(0);
-
-  std::ifstream ellipticStream(filename);
-
-  if (!ellipticStream) {
-    std::cerr << m_className
-              << "::ImportEllipticIntegralValues: Could not open file.\n";
-  }
-
-  for (std::string line; std::getline(ellipticStream, line);) {
-    std::istringstream iss(line);
-    double value = 0.;
-    iss >> value;
-    m_vXElliptic.push_back(value);
-    iss >> value;
-    m_vKElliptic.push_back(value);
-    iss >> value;
-    m_vEElliptic.push_back(value);
-  }
-
-  ellipticStream.close();
-  m_bImportElliptic = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1346,9 +1306,9 @@ void AvalancheGridSpaceCharge::GetLocalField(const int iz, const int ir,
   eFieldR = 0;
   // HS: use enum instead of string.
   if (fieldOption == "coulomb") {
-    if (!m_bImportElliptic) {
-      throw std::runtime_error("::GetLocalField Elliptic values not imported.");
-    }
+    //if (!m_bImportElliptic) {
+    //  throw std::runtime_error("::GetLocalField Elliptic values not imported.");
+    //}
 
     // loop over all cells with particles (except itself) and add fields
     for (int fz = 0; fz <= m_zSteps; fz++) {
@@ -1370,9 +1330,6 @@ void AvalancheGridSpaceCharge::GetLocalField(const int iz, const int ir,
   } else if (fieldOption == "mirror") {
     // assume symmetric single layer rpc with equal permittivity resistive
     // layers.
-    if (!m_bImportElliptic) {
-      throw std::runtime_error("::GetLocalField Elliptic values not imported.");
-    }
 
     if (m_vIndexGasGaps.size() > 1) {
       throw std::runtime_error(
@@ -1583,8 +1540,8 @@ void AvalancheGridSpaceCharge::GetEllipticIntegrals(double x, double &K,
                                                     double &E) {
   // from x = 0 to 10 it is in steps of 1e-3. From 10 to 1e4 in steps of 1. Then
   // in steps of 1000 until 1e7.
-  int arg;
-  double invStep;
+  int arg{0};
+  double invStep{0.};
   if (-x < 1.e1) {
     invStep = 1000.;
     arg = (int)(-x * invStep);
@@ -1599,15 +1556,15 @@ void AvalancheGridSpaceCharge::GetEllipticIntegrals(double x, double &K,
     if (m_bDebug)
       std::cerr << m_className
                 << "::GetEllipticIntegrals: Value not included in list.\n";
-    K = m_vKElliptic.back();
-    E = m_vEElliptic.back();
+    K = (m_elliptic.back())[static_cast<std::size_t>(Elliptic::K)];
+    E = (m_elliptic.back())[static_cast<std::size_t>(Elliptic::E)];
     return;
   }
 
   // Linear interpolation:
-  const double f = (-x - m_vXElliptic.at(arg)) * invStep;
-  K = (1. - f) * m_vKElliptic.at(arg) + f * m_vKElliptic.at(arg + 1);
-  E = (1. - f) * m_vEElliptic.at(arg) + f * m_vEElliptic.at(arg + 1);
+  const double f = (-x - m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::X)]) * invStep;
+  K = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::K)] + f * m_elliptic.at(arg+1)[static_cast<std::size_t>(Elliptic::K)];
+  E = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::E)] + f * m_elliptic.at(arg+1)[static_cast<std::size_t>(Elliptic::E)];
 }
 
 double AvalancheGridSpaceCharge::GetMeanDistance() {
