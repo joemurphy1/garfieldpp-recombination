@@ -10,9 +10,9 @@ project(Garfield VERSION 0.3
 option(GARFIELD_WITH_CUDA "Build CUDA code if possible" OFF)
 option(GARFIELD_CUDA_USE_FLOAT "Use float with CUDA code (for some performances issues on some hardware) default:double" FALSE)
 option(GARFIELD_WITH_DEGRADE "Build Degrade." ON)
-option(GARFIELD_WITH_EXAMPLES "Build Garfield++ examples" ON)
+option(GARFIELD_WITH_EXAMPLES "Build Garfield++ examples" OFF)
 option(GARFIELD_WITH_DOC "Whether or not to create doxygen doc target." OFF)
-option(GARFIELD_WITH_TESTS "Build Garfield++ tests" ON)
+option(GARFIELD_WITH_TESTS "Build Garfield++ tests" OFF)
 
 
 # Setting the default build type to be Release.
@@ -145,6 +145,7 @@ add_library(Garfield SHARED
             Source/ComponentAnsys121.cc
             Source/ComponentAnsys123.cc
             Source/ComponentCST.cc
+	    Source/ComponentChargedRing.cc
             Source/ComponentComsol.cc
             Source/ComponentConstant.cc
             Source/ComponentElmer.cc

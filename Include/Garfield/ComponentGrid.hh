@@ -212,6 +212,9 @@ class ComponentGrid : public Component {
   /// Add the field values of cmp to current grid.
   bool AddElectricField(ComponentGrid* cmp, const double scale = 1.);
 
+  /// Add the field values of cmp to current grid.
+  bool AddElectricField(Component* cmp, const double scale = 1.);
+
  private:
   enum class Format { Unknown, XY, XZ, XYZ, IJ, IK, IJK, YXZ };
   enum class Coordinates { Cartesian, Cylindrical };

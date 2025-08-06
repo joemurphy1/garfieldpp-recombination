@@ -741,6 +741,43 @@ bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale) {
   return true;
 }
 
+bool ComponentGrid::AddElectricField(Component* cmp, const double scale) {
+  if (!cmp) {
+    std::cerr << m_className << "::SaveElectricField: Null pointer.\n";
+    return false;
+  }
+  
+  if(m_efields.empty()) Initialise(m_efields);
+  
+  double spacing;
+  std::array<double, 3> coords;
+  std::array<size_t,3> indices;
+  double ex,ey,ez,v;
+  Garfield::Medium * m;
+  int stat;
+  
+  for (size_t i = 0; i < m_nX[0]; ++i) {
+      for (size_t j = 0; j < m_nX[1]; ++j) {
+          for (size_t k = 0; k < m_nX[2]; ++k) {
+            indices = {i,j,k};
+            for (int l = 0; l<3; ++l){
+              spacing = (m_xMax[l] - m_xMin[l]) / std::max(m_nX[l] - 1., 1.);
+              coords[l] = m_xMin[l] + indices[l]*spacing;
+            }
+            cmp->ElectricField(coords[0],coords[1],coords[2],ex,ey,ez,v,m,stat);
+
+            m_efields[i][j][k].fx = ex * scale;
+            m_efields[i][j][k].fy = ey * scale;
+            m_efields[i][j][k].fz = ez * scale;
+            m_efields[i][j][k].v = v * scale;
+          }
+      }
+  }
+  
+  if(m_debug) std::cout << std::endl << m_className << "::CopyElectricField: Done.\n";
+  return true;
+}
+
 bool ComponentGrid::SaveWeightingField(Component* cmp, const std::string& id,
                                        const std::string& filename,
                                        const std::string& format) {
