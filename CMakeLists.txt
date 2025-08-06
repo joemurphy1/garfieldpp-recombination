@@ -252,6 +252,7 @@ else()
                            Include/Garfield/LinkDef.h)
 endif()
 target_sources(Garfield PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/GarfieldDict.cxx)
+target_link_libraries(Garfield PUBLIC ROOT::Tree ROOT::RIO)
 
 #--- Install pcm file in case of ROOT 6 ---------------------------------------
 if(ROOT_VERSION VERSION_GREATER 6.06)
