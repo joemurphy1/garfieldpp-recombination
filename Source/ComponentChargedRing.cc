@@ -136,33 +136,6 @@ void ComponentChargedRing::ImportEllipticIntegralValues(const std::string &filen
   // completely non uniform grid) from x = 0 to 10 it is in steps of 1e-3. From
   // 10 to 1e4 in steps of 1. Then in steps of 1000 until 1e7.
 
-  m_vEElliptic.reserve(20000);
-  m_vKElliptic.reserve(20000);
-  m_vXElliptic.reserve(20000);
-
-  m_vXElliptic.resize(0);
-  m_vKElliptic.resize(0);
-  m_vEElliptic.resize(0);
-
-  std::ifstream ellipticStream(filename);
-
-  if (!ellipticStream) {
-    std::cerr << m_className
-              << "::ImportEllipticIntegralValues: Could not open file.\n";
-  }
-
-  for (std::string line; std::getline(ellipticStream, line);) {
-    std::istringstream iss(line);
-    double value = 0.;
-    iss >> value;
-    m_vXElliptic.push_back(value);
-    iss >> value;
-    m_vKElliptic.push_back(value);
-    iss >> value;
-    m_vEElliptic.push_back(value);
-  }
-
-  ellipticStream.close();
   m_bImportElliptic = true;
 }
 
@@ -171,17 +144,9 @@ void ComponentChargedRing::GetEllipticIntegrals(double x, double &K,
   // from x = 0 to 10 it is in steps of 1e-3. From 10 to 1e4 in steps of 1. Then
   // in steps of 1000 until 1e7.
 
-  
 
-  if (!m_bImportElliptic) {
-    // Import the elliptic integral values
-    const std::string path = std::getenv("GARFIELD_INSTALL");
-    std::string filename = path + "/share/Garfield/Data/elliptic_integrals.txt";
-    ImportEllipticIntegralValues(filename);
-  }
-
-  int arg;
-  double invStep;
+  int arg{0};
+  double invStep{0.};
   if (-x < 1.e1) {
     invStep = 1000.;
     arg = (int)(-x * invStep);
@@ -196,15 +161,17 @@ void ComponentChargedRing::GetEllipticIntegrals(double x, double &K,
     if (m_bDebug)
       std::cerr << m_className
                 << "::GetEllipticIntegrals: Value not included in list.\n";
-    K = m_vKElliptic.back();
-    E = m_vEElliptic.back();
+
+
+    K = (m_elliptic.back())[static_cast<std::size_t>(Elliptic::K)];
+    E = (m_elliptic.back())[static_cast<std::size_t>(Elliptic::E)];
     return;
   }
 
   // Linear interpolation:
-  const double f = (-x - m_vXElliptic.at(arg)) * invStep;
-  K = (1. - f) * m_vKElliptic.at(arg) + f * m_vKElliptic.at(arg + 1);
-  E = (1. - f) * m_vEElliptic.at(arg) + f * m_vEElliptic.at(arg + 1);
+  const double f = (-x - m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::X)]) * invStep;
+  K = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::K)] + f * m_elliptic.at(arg+1)[static_cast<std::size_t>(Elliptic::K)];
+  E = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::E)] + f * m_elliptic.at(arg+1)[static_cast<std::size_t>(Elliptic::E)];
 }
 
 bool ComponentChargedRing::AddChargedRing(const double x, const double y, const double z, const int N){

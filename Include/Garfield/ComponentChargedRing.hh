@@ -119,9 +119,14 @@ class ComponentChargedRing : public Component {
 
   bool m_bImportElliptic = false;
 
-  std::vector<double> m_vXElliptic;
-  std::vector<double> m_vKElliptic;
-  std::vector<double> m_vEElliptic;
+  enum class Elliptic : std::size_t
+  {
+    X,
+    K,
+    E
+  };
+  static const constexpr std::size_t elliptic_size{29981};
+  static const std::array<std::array<double,3>, elliptic_size> m_elliptic;
 
   // Gets elliptic integrals via list
   void GetEllipticIntegrals(double x, double &K, double &E);
