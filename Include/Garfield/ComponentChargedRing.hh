@@ -88,6 +88,10 @@ class ComponentChargedRing : public Component {
     m_vRings.clear();
   }
 
+  void GetNumberOfRings(int & n_rings){
+    n_rings = m_vRings.size();
+  }
+
  private:
 
   // Active area.

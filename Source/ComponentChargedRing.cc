@@ -48,10 +48,12 @@ void ComponentChargedRing::ElectricField(const double x, const double y,
   // assume cylindrical axis is y rather than z
   double r = std::sqrt((x-m_centre[0])*(x-m_centre[0]) + (z-m_centre[1])*(z-m_centre[1]));
   double eFieldR = 0;
-  double eX_temp, eY_temp, eZ_temp, eR_temp;
+  double eY_temp;
+  double eR_temp;
+  ey = 0;
+  
 
   for (ComponentChargedRing::Ring & ring:m_vRings){
-    eX_temp = eY_temp = eZ_temp = ex = ey = ez = eR_temp = 0;
     GetChargedRingField(ring, r, y, eY_temp,eR_temp);
     eFieldR += eR_temp;
     ey += eY_temp;
@@ -232,17 +234,16 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y, const 
 void ComponentChargedRing::GetChargedRingField(const ComponentChargedRing::Ring & ring, const double r, const double z, double & eFieldZ, double & eFieldR){
     
 
-    if (ring.r < m_dSpacingTolerance) {
-        GetCoulombBallField(ring, r, z, eFieldZ, eFieldR);
+    // reject if the field is being calculated on the ring
+    double self_field_tolerance = 0.00001;
+    if (std::abs(r-ring.r) < self_field_tolerance && std::abs(z-ring.z) < self_field_tolerance) {
+        eFieldZ = 0;
+        eFieldR = 0;
         return;
     }
 
-    // reject if the field is being calculated on the ring
-    // does this cause spiking?
-    double tolerance = 1.e-12;
-    if (std::abs(r-ring.r) < tolerance && std::abs(z-ring.z) < tolerance) {
-        eFieldZ = 0;
-        eFieldR = 0;
+    if (ring.r < m_dSpacingTolerance) {
+        GetCoulombBallField(ring, r, z, eFieldZ, eFieldR);
         return;
     }
 
