@@ -125,7 +125,6 @@ void ComponentChargedRing::Reset() {
   m_medium = nullptr;
   m_bCentreSet = false;
   ClearActiveRings();
-  m_bToleranceSet = false;
 }
 
 
@@ -168,17 +167,17 @@ void ComponentChargedRing::GetEllipticIntegrals(double x, double &K,
     return;
   }
 
+  if (arg + 1 > m_elliptic.size()) {
+    std::cerr << m_className << "::GetEllipticIntegrals: value out of range\n";
+    return;
+  }
   // Linear interpolation:
-  const double f = (-x - m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::X)]) * invStep;
-  K = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::K)] + f * m_elliptic.at(arg+1)[static_cast<std::size_t>(Elliptic::K)];
-  E = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::E)] + f * m_elliptic.at(arg+1)[static_cast<std::size_t>(Elliptic::E)];
+  const double f = (-x - m_elliptic[arg][static_cast<std::size_t>(Elliptic::X)]) * invStep;
+  K = (1. - f) * m_elliptic[arg][static_cast<std::size_t>(Elliptic::K)] + f * m_elliptic[arg+1][static_cast<std::size_t>(Elliptic::K)];
+  E = (1. - f) * m_elliptic[arg][static_cast<std::size_t>(Elliptic::E)] + f * m_elliptic[arg+1][static_cast<std::size_t>(Elliptic::E)];
 }
 
 bool ComponentChargedRing::AddChargedRing(const double x, const double y, const double z, const int N){
-    if (!m_bToleranceSet){
-        std::cerr << m_className << "::AddChargedRing: Tolerance not set.\n";
-        return false;
-    }
 
     // assume cylindrical axis is y rather than z
     double r = std::sqrt((x-m_centre[0])*(x-m_centre[0]) + (z-m_centre[1])*(z-m_centre[1]));
@@ -193,53 +192,71 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y, const 
     }
     if (!in_list) {
       m_vRings.push_back(ring);
-      if (m_bDebug) std::cout << m_className << "::AddChargedRing: Added ring of charge " << N << " at z = " << ring.z << ".\n";
+      if (m_bDebug) std::cout << m_className << "::AddChargedRing: Added ring of charge " << N << " at r = "<< ring.r << ", z = " << ring.z << ".\n";
     }
     return true;  
 }
 
 void ComponentChargedRing::GetChargedRingField(const ComponentChargedRing::Ring & ring, const double r, const double z, double & eFieldZ, double & eFieldR){
     
+    // field called exactly on a ring
+    // This will cause the interpolation spiking but should almost never happen
+    // as the field will rarely be called exactly on the charge
+    // except when plotting.
+    if (r == ring.r && z == ring.z){
+      eFieldZ = 0;
+      eFieldR = 0;
+      return;
+    }  
 
-    // reject if the field is being calculated on the ring
-    double self_field_tolerance = 0.00001;
-    if (std::abs(r-ring.r) < self_field_tolerance && std::abs(z-ring.z) < self_field_tolerance) {
-        eFieldZ = 0;
-        eFieldR = 0;
+    double offsetR = (r > ring.r ? 1.01 : -1.01) * m_dSelfFieldTolerance;
+    double offsetZ = (z > ring.z ? 1.01 : -1.01) * m_dSelfFieldTolerance;
+
+    if (ring.r > m_dSpacingTolerance){
+      //charged ring
+      if (std::abs(r - ring.r) > m_dSelfFieldTolerance || std::abs(z - ring.z) > m_dSelfFieldTolerance){
+
+        // case of no divergence
+
+        double dz = z - ring.z;  //< I double-checked that's the right sign
+
+        // parameters (see Lippmann Diss.)
+        const double a2 = (r + ring.r) * (r + ring.r) + dz * dz;
+        const double b2 = (r - ring.r) * (r - ring.r) + dz * dz;
+        const double b = std::sqrt(b2);
+        const double c2 = r * r - ring.r * ring.r - dz * dz;
+        // parameter for elliptic integrals
+        const double x =
+            -4 * r * ring.r / b2;  //< x < 0, i.e. never near x = 1 (singularity)
+
+        // calculation of elliptic integrals and fields (up to prefactor)
+        double EllE, EllK;
+        GetEllipticIntegrals(x, EllK, EllE);
+        eFieldZ = EllE * 4. * dz / (a2 * b);
+        eFieldR = c2 * EllE + a2 * EllK;
+        // if ri = 0?
+        if (r < Small) {
+            eFieldR = 0;
+        } else {
+            eFieldR *= 2. / (r * a2 * b);
+        }
+    
+        eFieldR *= ring.charge/(TwoPi * FourPiEpsilon0);
+        eFieldZ *= ring.charge/(TwoPi * FourPiEpsilon0);
         return;
+      }
+      GetChargedRingField(ring, ring.r + offsetR, ring.z + offsetZ, eFieldZ, eFieldR);
+      return;
     }
-
-    if (ring.r < m_dSpacingTolerance) {
-        GetCoulombBallField(ring, r, z, eFieldZ, eFieldR);
-        return;
+  
+    // coulomb ball
+    if (std::abs(r - ring.r) > m_dSelfFieldTolerance || std::abs(z - ring.z) > m_dSelfFieldTolerance){
+      GetCoulombBallField(ring, r, z, eFieldZ, eFieldR);
+      return;
     }
-
-    double dz = z - ring.z;  //< I double-checked that's the right sign
-
-    // parameters (see Lippmann Diss.)
-    const double a2 = (r + ring.r) * (r + ring.r) + dz * dz;
-    const double b2 = (r - ring.r) * (r - ring.r) + dz * dz;
-    const double b = std::sqrt(b2);
-    const double c2 = r * r - ring.r * ring.r - dz * dz;
-    // parameter for elliptic integrals
-    const double x =
-        -4 * r * ring.r / b2;  //< x < 0, i.e. never near x = 1 (singularity)
-
-    // calculation of elliptic integrals and fields (up to prefactor)
-    double EllE, EllK;
-    GetEllipticIntegrals(x, EllK, EllE);
-    eFieldZ = EllE * 4. * dz / (a2 * b);
-    eFieldR = c2 * EllE + a2 * EllK;
-    // if ri = 0?
-    if (r < Small) {
-        eFieldR = 0;
-    } else {
-        eFieldR *= 2. / (r * a2 * b);
-    }
- 
-    eFieldR *= ring.charge/(TwoPi * FourPiEpsilon0);
-    eFieldZ *= ring.charge/(TwoPi * FourPiEpsilon0);
-
+    GetCoulombBallField(ring, ring.r + offsetR, ring.z + offsetZ, eFieldZ, eFieldR);
+    return;
+    
 }
 
 void ComponentChargedRing::GetCoulombBallField(const ComponentChargedRing::Ring & ring, const double r, const double z, double & eFieldZ, double & eFieldR){

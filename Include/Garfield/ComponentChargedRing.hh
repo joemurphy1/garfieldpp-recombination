@@ -61,9 +61,13 @@ class ComponentChargedRing : public Component {
   bool AddChargedRing(const double x, const double y, const double z, const int N);
 
   // function to set the tolerance below which two rings are considered the same.
-  void SetSpacingTolerance(const double spacing_tolerance = 0.){
+  void SetSpacingTolerance(const double spacing_tolerance){
     m_dSpacingTolerance = spacing_tolerance;
-    m_bToleranceSet = true;
+  }
+
+  // function to set the tolerance below which the self field is rejected
+  void SetSelfFieldTolerance(const double self_field_tolerance){
+    m_dSelfFieldTolerance = self_field_tolerance;
   }
 
   struct Ring{
@@ -138,9 +142,9 @@ class ComponentChargedRing : public Component {
 
   std::vector<Ring> m_vRings;
 
-  double m_dSpacingTolerance;
-
-  bool m_bToleranceSet = false;
+  double m_dSelfFieldTolerance = 0.00001; //this is a decent value with minimal 'strangeness' in the field
+  double m_dSpacingTolerance = 2.1*m_dSelfFieldTolerance; // > twice SFT to avoid divergence catching converting balls to rings
+  
   bool m_bCentreSet = false;
 
   void GetCoulombBallField(const Ring & ring, const double r, const double z, double & eFieldZ, double & eFieldR);
