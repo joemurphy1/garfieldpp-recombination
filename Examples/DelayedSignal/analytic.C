@@ -3,6 +3,8 @@
 #include <TH1F.h>
 #include <TROOT.h>
 
+#include <cmath>
+
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentUser.hh"
 #include "Garfield/MediumSilicon.hh"
@@ -68,7 +70,7 @@ int main(int argc, char* argv[]) {
                     const double t, double& wx, double& wy, double& wz) {
     wx = wz = 0.;
     wy = y < d0 ? ((d - d0) / (d * d0)) : (-1. / d);
-    wy *= exp(-t / tau) / tau;
+    wy *= std::exp(-t / tau) / tau;
   };
   // cmp.SetDelayedWeightingField(dwfield, "front");
   cmp.SetDelayedWeightingField(
@@ -78,7 +80,7 @@ int main(int argc, char* argv[]) {
 
   auto dwpot = [](const double /*x*/, const double y, const double /*z*/,
                   const double t) {
-    return y * ((d - d0) / (d * d0)) * (exp(-t / tau) - 1.);
+    return y * ((d - d0) / (d * d0)) * (std::exp(-t / tau) - 1.);
   };
   // cmp.SetDelayedWeightingPotential(dwpot, "front");
   cmp.SetDelayedWeightingPotential(

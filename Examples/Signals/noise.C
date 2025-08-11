@@ -4,6 +4,7 @@
 #include <TROOT.h>
 #include <TSystem.h>
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -58,7 +59,7 @@ int main(int argc, char* argv[]) {
   // sensor.SetTransferFunction(shaper);
   auto fT = [](const double t) {
     constexpr double tau = 25.;
-    return (t / tau) * exp(1 - t / tau);
+    return (t / tau) * std::exp(1 - t / tau);
   };
   sensor.SetTransferFunction(fT);
   // if (!readTransferFunction(sensor)) return 0;
