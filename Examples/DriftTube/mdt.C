@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
       constexpr bool drawaxis = false;
       driftView.Plot(twod, drawaxis);
     }
-    // sensor.ConvoluteSignals();
+    sensor.ConvoluteSignals();
     int nt = 0;
     if (!sensor.ComputeThresholdCrossings(-2., "s", nt)) continue;
     if (plotSignal) sensor.PlotSignal("s", cS);
