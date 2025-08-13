@@ -336,7 +336,7 @@ target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
 
 #--- Create ROOT dictionary ---------------------------------------------------
 root_generate_dictionary(GarfieldDict "${GARFIELD_PUBLIC_HEADERS}" LINKDEF "${CMAKE_CURRENT_SOURCE_DIR}/Include/Garfield/LinkDef.h" MODULE Garfield)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libGarfieldDict_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libGarfield_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
 
 #--- If you cannot create symbolic links turn FALSE the library version -------
 option(BUILD_WITH_VERSION_NUMBER
