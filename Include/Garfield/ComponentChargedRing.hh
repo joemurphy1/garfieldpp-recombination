@@ -96,6 +96,10 @@ class ComponentChargedRing : public Component {
     n_rings = m_vRings.size();
   }
 
+  void GetRings(std::vector<Ring>& ring_vector){
+    ring_vector = m_vRings;
+  }
+
  private:
 
   // Active area.
@@ -117,11 +121,6 @@ class ComponentChargedRing : public Component {
     return true;
   }
 
-
-  // Import elliptic integral values
-  void ImportEllipticIntegralValues(const std::string &filename);
-
-  bool m_bImportElliptic = false;
 
   enum class Elliptic : std::size_t
   {
