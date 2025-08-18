@@ -1530,6 +1530,7 @@ void ComponentGrid::Reset() {
   m_negativeIonDensity.clear();
   m_electronDensity.clear();
   m_holeDensity.clear();
+  m_chargeDensity.clear();
 
   m_wdfields.clear();
   m_wdtimes.clear();
@@ -1549,12 +1550,26 @@ void ComponentGrid::Reset() {
   m_wFieldOffset.fill(0.);
 }
 
-void ComponentGrid::ClearParticles() {
+void ComponentGrid::ClearFields() {
+  m_efields.clear();
+  m_bfields.clear();
+  m_wfields.clear();
+  m_eAttachment.clear();
+  m_hAttachment.clear();
+  m_eMobility.clear();
+  m_hMobility.clear();
+  m_eVelocity.clear();
+  m_hVelocity.clear();
   m_ionDensity.clear();
   m_negativeIonDensity.clear();
   m_electronDensity.clear();
   m_holeDensity.clear();
   m_chargeDensity.clear();
+
+  m_wdfields.clear();
+  m_wdtimes.clear();
+
+  m_wFieldOffset.fill(0.);
 }
 
 void ComponentGrid::UpdatePeriodicity() {

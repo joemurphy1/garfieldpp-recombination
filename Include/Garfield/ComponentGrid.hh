@@ -147,7 +147,7 @@ class ComponentGrid : public Component {
   void AddHole(const double x, const double y, const double z,
                const double w = 1.0);
   void Clear() override { Reset(); }
-  void ClearParticles();
+  void ClearFields();
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,
                      int& status) override;
