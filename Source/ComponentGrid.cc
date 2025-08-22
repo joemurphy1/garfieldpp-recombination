@@ -703,13 +703,16 @@ bool ComponentGrid::SaveElectricField(Component* cmp) {
   return true;
 }
 
-bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale) {
+bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale,
+                                     const double xShift,
+                                     const double yShift,
+                                     const double zShift) {
   if (!cmp) {
-    std::cerr << m_className << "::SaveElectricField: Null pointer.\n";
+    std::cerr << m_className << "::AddElectricField: Null pointer.\n";
     return false;
   }
   if (!m_hasMesh) {
-    std::cerr << m_className << "::SaveElectricField: Taking mesh from input\n";
+    std::cerr << m_className << "::AddElectricField: Taking mesh from input\n";
     
     unsigned int nx, ny, nz;
     double xmin, xmax, ymin;
@@ -720,7 +723,7 @@ bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale) {
   
   if(m_efields.empty()) Initialise(m_efields);
   
-  if(m_debug) std::cout << m_className << "::CopyElectricField:\n"
+  if(m_debug) std::cout << m_className << "::AddElectricField:\n"
             << "    Copying field/potential.\n";
   
   std::vector<std::vector<std::vector<Node> > > efieldsCopy;
@@ -729,21 +732,33 @@ bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale) {
   for (size_t i = 0; i < m_nX[0]; ++i) {
       for (size_t j = 0; j < m_nX[1]; ++j) {
           for (size_t k = 0; k < m_nX[2]; ++k) {
-            m_efields[i][j][k].fx += efieldsCopy[i][j][k].fx * scale;
-            m_efields[i][j][k].fy += efieldsCopy[i][j][k].fy * scale;
-            m_efields[i][j][k].fz += efieldsCopy[i][j][k].fz * scale;
-            m_efields[i][j][k].v += efieldsCopy[i][j][k].v * scale;
+            
+            const double dx = (m_xMax[0] - m_xMin[0]) / std::max(m_nX[0] - 1., 1.);
+            const double dy = (m_xMax[1] - m_xMin[1]) / std::max(m_nX[1] - 1., 1.);
+            const double dz = (m_xMax[2] - m_xMin[2]) / std::max(m_nX[2] - 1., 1.);
+            const double x = m_xMin[0] + i * dx - xShift;
+            const double y = m_xMin[1] + j * dy - yShift;
+            const double z = m_xMin[2] + k * dz - zShift;
+            
+            unsigned int iCopy, jCopy, kCopy;
+            const bool inArea = cmp->GetNodeIndex(x, y, z, iCopy, jCopy, kCopy);
+            if(!inArea) continue;
+            
+            m_efields[i][j][k].fx += efieldsCopy[iCopy][jCopy][kCopy].fx * scale;
+            m_efields[i][j][k].fy += efieldsCopy[iCopy][jCopy][kCopy].fy * scale;
+            m_efields[i][j][k].fz += efieldsCopy[iCopy][jCopy][kCopy].fz * scale;
+            m_efields[i][j][k].v += efieldsCopy[iCopy][jCopy][kCopy].v * scale;
           }
       }
   }
   
-  if(m_debug) std::cout << std::endl << m_className << "::CopyElectricField: Done.\n";
+  if(m_debug) std::cout << std::endl << m_className << "::AddElectricField: Done.\n";
   return true;
 }
 
 bool ComponentGrid::AddElectricField(Component* cmp, const double scale) {
   if (!cmp) {
-    std::cerr << m_className << "::SaveElectricField: Null pointer.\n";
+    std::cerr << m_className << "::AddElectricField: Null pointer.\n";
     return false;
   }
   
@@ -774,7 +789,7 @@ bool ComponentGrid::AddElectricField(Component* cmp, const double scale) {
       }
   }
   
-  if(m_debug) std::cout << std::endl << m_className << "::CopyElectricField: Done.\n";
+  if(m_debug) std::cout << std::endl << m_className << "::AddElectricField: Done.\n";
   return true;
 }
 
@@ -1350,6 +1365,7 @@ bool ComponentGrid::LoadData(
         x *= scaleX;
         y *= scaleX;
         z *= scaleX;
+        
         if (m_nX[0] > 1) {
           const double u = std::round((x - m_xMin[0]) * m_sX[0]);
           i = u < 0. ? 0 : static_cast<unsigned int>(u);

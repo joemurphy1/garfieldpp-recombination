@@ -210,10 +210,36 @@ class ComponentGrid : public Component {
     efields = m_efields;
   };
   /// Add the field values of cmp to current grid.
-  bool AddElectricField(ComponentGrid* cmp, const double scale = 1.);
-
+  bool AddElectricField(ComponentGrid* cmp, const double scale = 1.,
+                        const double xShift = 0.,
+                        const double yShift = 0.,
+                        const double zShift = 0.);
+  
   /// Add the field values of cmp to current grid.
-  bool AddElectricField(Component* cmp, const double scale = 1.);
+  bool AddElectricField(Component* cmp, const double scale);
+  
+  bool GetNodeIndex(double x, const double y, const double z, unsigned int& i, unsigned int& j, unsigned int& k){
+    
+    if(x < m_xMin[0] || y < m_xMin[1] || z < m_xMin[2]) return false;
+    if(x > m_xMax[0] || y > m_xMax[1] || z > m_xMax[2]) return false;
+      
+    if (m_nX[0] > 1) {
+      const double u = std::round((x - m_xMin[0]) * m_sX[0]);
+      i = u < 0. ? 0 : static_cast<unsigned int>(u);
+      if (i >= m_nX[0]) i = m_nX[0] - 1;
+    }
+    if (m_nX[1] > 1) {
+      const double v = std::round((y - m_xMin[1]) * m_sX[1]);
+      j = v < 0. ? 0 : static_cast<unsigned int>(v);
+      if (j >= m_nX[1]) j = m_nX[1] - 1;
+    }
+    if (m_nX[2] > 1) {
+      const double w = std::round((z - m_xMin[2]) * m_sX[2]);
+      k = w < 0. ? 0 : static_cast<unsigned int>(w);
+      if (k >= m_nX[2]) k = m_nX[2] - 1;
+    }
+    return true;
+  };
 
  private:
   enum class Format { Unknown, XY, XZ, XYZ, IJ, IK, IJK, YXZ };
