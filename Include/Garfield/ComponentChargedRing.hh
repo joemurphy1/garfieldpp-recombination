@@ -2,8 +2,8 @@
 #define G_COMPONENT_CONSTANT_H
 
 #include <array>
-#include <string>
 #include <cmath>
+#include <string>
 
 #include "Garfield/Component.hh"
 
@@ -58,53 +58,46 @@ class ComponentChargedRing : public Component {
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
                       double& ymax, double& zmax) override;
 
-  bool AddChargedRing(const double x, const double y, const double z, const int N);
+  bool AddChargedRing(const double x, const double y, const double z,
+                      const int N);
 
-  // function to set the tolerance below which two rings are considered the same.
-  void SetSpacingTolerance(const double spacing_tolerance){
+  // function to set the tolerance below which two rings are considered the
+  // same.
+  void SetSpacingTolerance(const double spacing_tolerance) {
     m_dSpacingTolerance = spacing_tolerance;
   }
 
   // function to set the tolerance below which the self field is rejected
-  void SetSelfFieldTolerance(const double self_field_tolerance){
+  void SetSelfFieldTolerance(const double self_field_tolerance) {
     m_dSelfFieldTolerance = self_field_tolerance;
   }
 
-  struct Ring{
-    double z,r,charge; // charge in coulombs
-    Ring(double z_,double r_,double charge_){
-        z = z_;
-        r = r_;
-        charge = charge_;
+  struct Ring {
+    double z, r, charge;  // charge in coulombs
+    Ring(double z_, double r_, double charge_) {
+      z = z_;
+      r = r_;
+      charge = charge_;
     }
   };
 
-  void UpdateCentre(double x, double y){
-    m_centre = {x,y};
+  void UpdateCentre(double x, double y) {
+    m_centre = {x, y};
     m_bCentreSet = true;
   }
 
-  void EnableDebugging(){
-    m_bDebug = true;
-  }
+  void EnableDebugging() { m_bDebug = true; }
 
-  void ClearActiveRings(){
-    m_vRings.clear();
-  }
+  void ClearActiveRings() { m_vRings.clear(); }
 
-  void GetNumberOfRings(int & n_rings){
-    n_rings = m_vRings.size();
-  }
-  
+  void GetNumberOfRings(int& n_rings) { n_rings = m_vRings.size(); }
+
   // Gets elliptic integrals via list
-  void GetEllipticIntegrals(double x, double &K, double &E);
+  void GetEllipticIntegrals(double x, double& K, double& E);
 
-  void GetRings(std::vector<Ring>& ring_vector){
-    ring_vector = m_vRings;
-  }
+  void GetRings(std::vector<Ring>& ring_vector) { ring_vector = m_vRings; }
 
  private:
-
   // Active area.
   std::array<double, 3> m_xmin = {{0., 0., 0.}};
   std::array<double, 3> m_xmax = {{0., 0., 0.}};
@@ -124,40 +117,39 @@ class ComponentChargedRing : public Component {
     return true;
   }
 
-
-  enum class Elliptic : std::size_t
-  {
-    X,
-    K,
-    E
-  };
+  enum class Elliptic : std::size_t { X, K, E };
   static const constexpr std::size_t elliptic_size{29981};
-  static const std::array<std::array<double,3>, elliptic_size> m_elliptic;
+  static const std::array<std::array<double, 3>, elliptic_size> m_elliptic;
 
   bool m_bDebug = false;
 
   // centre of cylindrical symmetry (x,y)
-  std::array<double,3> m_centre = {0.,0.};
+  std::array<double, 3> m_centre = {0., 0.};
 
   std::vector<Ring> m_vRings;
 
-  double m_dSelfFieldTolerance = 0.00001; //this is a decent value with minimal 'strangeness' in the field
-  double m_dSpacingTolerance = 2.1*m_dSelfFieldTolerance; // > twice SFT to avoid divergence catching converting balls to rings
-  
+  double m_dSelfFieldTolerance = 0.00001;  // this is a decent value with
+                                           // minimal 'strangeness' in the field
+  double m_dSpacingTolerance =
+      2.1 * m_dSelfFieldTolerance;  // > twice SFT to avoid divergence catching
+                                    // converting balls to rings
+
   bool m_bCentreSet = false;
 
-  void GetCoulombBallField(const Ring & ring, const double r, const double z, double & eFieldZ, double & eFieldR);
+  void GetCoulombBallField(const Ring& ring, const double r, const double z,
+                           double& eFieldZ, double& eFieldR);
 
-  void GetChargedRingField(const Ring & ring, const double r, const double z, double & eFieldZ, double & eFieldR);
+  void GetChargedRingField(const Ring& ring, const double r, const double z,
+                           double& eFieldZ, double& eFieldR);
 
-  void GetCartesianLocalField(double &eFieldR, double &eFieldX, double &eFieldY, double x, double y){
+  void GetCartesianLocalField(double& eFieldR, double& eFieldX, double& eFieldY,
+                              double x, double y) {
     // get cartesian field
-    double cosphi = std::cos(std::atan2(y,x));
-    double sinphi = std::sin(std::atan2(y,x));
-    eFieldX = eFieldR*cosphi;
-    eFieldY = eFieldR*sinphi;
+    double cosphi = std::cos(std::atan2(y, x));
+    double sinphi = std::sin(std::atan2(y, x));
+    eFieldX = eFieldR * cosphi;
+    eFieldY = eFieldR * sinphi;
   }
-
 };
 }  // namespace Garfield
 #endif
