@@ -95,6 +95,9 @@ class ComponentChargedRing : public Component {
   void GetNumberOfRings(int & n_rings){
     n_rings = m_vRings.size();
   }
+  
+  // Gets elliptic integrals via list
+  void GetEllipticIntegrals(double x, double &K, double &E);
 
   void GetRings(std::vector<Ring>& ring_vector){
     ring_vector = m_vRings;
@@ -130,9 +133,6 @@ class ComponentChargedRing : public Component {
   };
   static const constexpr std::size_t elliptic_size{29981};
   static const std::array<std::array<double,3>, elliptic_size> m_elliptic;
-
-  // Gets elliptic integrals via list
-  void GetEllipticIntegrals(double x, double &K, double &E);
 
   bool m_bDebug = false;
 
