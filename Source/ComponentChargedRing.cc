@@ -85,6 +85,7 @@ void ComponentChargedRing::ElectricField(const double x, const double y,
   }
 
   ElectricField(x,y,z,ex,ey,ez,m,status);
+  v = 0.;
 }
 
 bool ComponentChargedRing::GetBoundingBox(double& xmin, double& ymin, double& zmin,
@@ -180,19 +181,17 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y, const 
     ComponentChargedRing::Ring ring(y,r,N*ElementaryCharge);
     bool in_list = false;
     bool remove_ring = false;
-    int remove_index;
-    for (int i = 0; i < m_vRings.size();){
-      ComponentChargedRing::Ring & existing_ring = m_vRings[i];
+    int remove_index = 0;
+    for (auto& existing_ring : m_vRings){
       if (std::abs(existing_ring.z - ring.z) < m_dSpacingTolerance && std::abs(existing_ring.r - ring.r) < m_dSpacingTolerance){
           in_list = true; 
           existing_ring.charge += ring.charge;
           if (std::abs(existing_ring.charge) < ElementaryCharge){
             remove_ring = true;
-            remove_index = i;
           }
           break;   
       }
-      ++i;
+      ++remove_index;
     }
     if (!in_list) {
       m_vRings.push_back(ring);
@@ -280,6 +279,8 @@ void ComponentChargedRing::GetCoulombBallField(const ComponentChargedRing::Ring 
 
 bool ComponentChargedRing::GetVoltageRange(double& vmin, double& vmax) {
   if (m_bDebug) std::cout << "GetVoltageRange not implemented.\n";
+  vmin = 0.;
+  vmax = vmin;
   return false;
 }
 
@@ -290,15 +291,17 @@ void ComponentChargedRing::UpdatePeriodicity() {
   }
 }
 
-double ComponentChargedRing::WeightingPotential(const double x, const double y, const double z,
-                            const std::string& label) {
+double ComponentChargedRing::WeightingPotential(const double /*x*/, const double /*y*/, const double /*z*/,
+                                                const std::string& /*label*/) {
   if (m_bDebug) std::cout << "WeightingPotential not implemented.\n";
+  return 0.;
 }
 
 
-void ComponentChargedRing::WeightingField(const double x, const double y, const double z,
-                      double& wx, double& wy, double& wz,
-                      const std::string& label){
+void ComponentChargedRing::WeightingField(const double /*x*/, const double /*y*/, const double /*z*/,
+                                          double& wx, double& wy, double& wz,
+                                          const std::string& /*label*/){
+  wx = 0.; wy = 0.; wz = 0.;
   if (m_bDebug) std::cout << "WeightingField not implemented.\n";
 }
 
