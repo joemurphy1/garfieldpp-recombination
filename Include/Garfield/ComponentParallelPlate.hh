@@ -8,7 +8,6 @@
 
 #include "Garfield/Component.hh"
 #include "Garfield/ComponentGrid.hh"
-#include "Garfield/AvalancheGridSpaceCharge.hh"
 
 namespace Garfield {
 
@@ -157,22 +156,7 @@ class ComponentParallelPlate : public Component {
     m_getPotentialInPlate = false;
   }
 
-  void EnableSpaceCharge(bool option = true){
-    m_bSpaceCharge = option;
-  }
-
-  void SetAvalancheGridSpaceChargeObject(AvalancheGridSpaceCharge *avalsc = nullptr){
-    if (avalsc == nullptr){
-      std::cerr << m_className << "::SetAvalancheGridSpaceChargeObject: AvalancheGridSpaceCharge object not set. \n";
-      return;
-    }
-    m_AvalancheGridSpaceChargeObject = avalsc;
-  }
-
  private:
-
-  AvalancheGridSpaceCharge *m_AvalancheGridSpaceChargeObject = nullptr;
-
   double m_precision = 1.e-12;
   static constexpr double m_Vw = 1.;
   /// Voltage difference between the parallel plates.
@@ -213,8 +197,6 @@ class ComponentParallelPlate : public Component {
   double m_currentPosition = -1;
 
   Medium *m_medium = nullptr;
-
-  bool m_bSpaceCharge = false;
 
   /// Structure that captures the information of the electrodes under study
   struct Electrode {

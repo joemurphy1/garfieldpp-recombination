@@ -5,7 +5,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <array>
 
 namespace Garfield {
 class Sensor;
@@ -23,8 +22,6 @@ class AvalancheGridSpaceCharge {
   AvalancheGridSpaceCharge(Sensor *sensor);
   /// Destructor
   ~AvalancheGridSpaceCharge() = default;
-
-  enum ParticleType {electron, negIon, posIon};
 
   /// Reset the charges.
   void Reset();
@@ -44,12 +41,6 @@ class AvalancheGridSpaceCharge {
   /// Enable space charge calculations (default on)
   void EnableSpaceChargeEffect(const bool option = true) {
     m_bSpaceCharge = option;
-  }
-
-  /// For use if the transport is not done by stepping on the grid
-  /// E.g. if it is done by AvalancheMicroscopic
-  void TransportOffGrid(const bool option = true){
-    m_bTransportOffGrid = option;
   }
 
   /// Enable adaptive time stepping (default on)
@@ -103,22 +94,7 @@ class AvalancheGridSpaceCharge {
   void AddElectrons(AvalancheMicroscopic *avmc);
 
   /// Set n electrons onto the grid
-  void AddElectron(double x, double y, double z, double t = 0, int n = 1, ParticleType particle_type = electron);
-
-  /// Set n positive ions onto the grid
-  void AddPositiveIon(double x, double y, double z, double t = 0, int n = 1){
-    AddElectron(x,y,z,t,n,posIon);
-  };
-
-  void AddNegativeIon(double x, double y, double z, double t = 0, int n = 1){
-    AddElectron(x,y,z,t,n,negIon);
-  }
-
-  bool RemoveElectron(double x, double y, double z, ParticleType particle_type = electron);
-
-  void RemoveIon(double x, double y, double z){
-    RemoveElectron(x,y,z,negIon);
-  }
+  void AddElectron(double x, double y, double z, double t = 0, int n = 1);
 
   /// After calling AddElectron, add more electrons on the same
   /// transversal line (y-freedom).
@@ -153,18 +129,6 @@ class AvalancheGridSpaceCharge {
   ///  Take care: only where electrons are located is the space-charge field
   ///  evaluated!
   void ExportGrid(const std::string &filename);
-
-  /// Clears grid of all particles
-  void ClearGrid();
-
-  void UpdateFieldOnGrid();
-
-  void SendFieldToPP(double x,double y,double z,double &eFieldX,double &eFieldY,double &eFieldZ);
-
-  void UpdateMeanPosition(double x, double y, double z){
-    m_vMeanPos = {x,y,z};
-    m_bMeanPosSet = true;
-  }
 
  private:
   struct GridNode {
@@ -215,6 +179,9 @@ class AvalancheGridSpaceCharge {
 
   // Prepare grid and place stored electrons from AvalancheMicroscopic import
   void PrepareElectronsFromMicroscopicAvalanche();
+
+  // Assign electron to the closest grid point
+  bool SnapTo2dGrid(double x, double y, double z, long n = 1, int gasLayer = 0);
 
   // Prepare the mesh with the ComponentParallelPlate
   void Prepare2dMesh();
@@ -282,16 +249,6 @@ class AvalancheGridSpaceCharge {
                : -1;
   }
 
-  // Assign electron to the closest grid point
-  bool SnapTo2dGrid(double x, double y, double z, long n = 1, int gasLayer = 0, 
-                   ParticleType particle_type = electron);
-
-  void GetCartesianLocalField(double &eFieldR, double &eFieldX, double &eFieldY, 
-                              double x, double y);              
-
-  void InterpolateField(const double zi, const double ri,
-                        double &eFieldZ, double &eFieldR);
-
  private:
   std::string m_className = "AvalancheGridSpaceCharge";
 
@@ -305,15 +262,6 @@ class AvalancheGridSpaceCharge {
   bool m_bPreparedImportAvalanche = false;
   long m_lNCrit = 1e8;
   bool m_bSpaceCharge = true;
-
-  bool m_bTransportOffGrid = false;
-  // used to check if any e- have been added
-  bool m_bElectronAdded = false;
-
-  //used to check if field should be recalculated
-  bool m_bRecalculateField = true;
-
-  bool m_bMeanPosSet = false;
 
   float m_fStreamerK = 0.95;
   bool m_bStopAtK = false;
@@ -375,10 +323,6 @@ class AvalancheGridSpaceCharge {
   std::vector<std::vector<double>> m_vCoNGasLayer{};
   /// Example point (y-coord) in each gas gap
   std::vector<double> m_vYPointInGasGap{};
-
-  std::vector<double> m_vMeanPos; /// < Mean position of electrons, used in off-grid spacecharge
-
-  std::vector<std::array<int,2>> m_vActiveNodeIndices;
 
   /// Uniform background field in z direction, can be negative.
   std::vector<double> m_ezBkg = {0};
