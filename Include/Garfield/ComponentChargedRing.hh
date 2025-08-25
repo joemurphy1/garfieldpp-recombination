@@ -58,22 +58,23 @@ class ComponentChargedRing : public Component {
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
                       double& ymax, double& zmax) override;
 
+  /// Add a ring of charge N*e at x,y,z                    
   bool AddChargedRing(const double x, const double y, const double z,
-                      const int N);
+                      const double N);
 
-  // function to set the tolerance below which two rings are considered the
-  // same.
+  /// function to set the tolerance below which two rings are considered the
+  /// same.
   void SetSpacingTolerance(const double spacing_tolerance) {
     m_dSpacingTolerance = spacing_tolerance;
   }
 
-  // function to set the tolerance below which the self field is rejected
+  /// function to set the tolerance below which divergences are caught
   void SetSelfFieldTolerance(const double self_field_tolerance) {
     m_dSelfFieldTolerance = self_field_tolerance;
   }
 
   struct Ring {
-    double z, r, charge;  // charge in coulombs
+    double z, r, charge;
     Ring(double z_, double r_, double charge_) {
       z = z_;
       r = r_;
@@ -81,6 +82,7 @@ class ComponentChargedRing : public Component {
     }
   };
 
+  /// Set the axis of symmetry
   void UpdateCentre(double x, double y) {
     m_centre = {x, y};
     m_bCentreSet = true;
@@ -92,18 +94,18 @@ class ComponentChargedRing : public Component {
 
   void GetNumberOfRings(int& n_rings) { n_rings = m_vRings.size(); }
 
-  // Gets elliptic integrals via list
+  /// Gets elliptic integrals via list
   void GetEllipticIntegrals(double x, double& K, double& E);
 
   void GetRings(std::vector<Ring>& ring_vector) { ring_vector = m_vRings; }
 
  private:
-  // Active area.
+  /// Active area.
   std::array<double, 3> m_xmin = {{0., 0., 0.}};
   std::array<double, 3> m_xmax = {{0., 0., 0.}};
-  // Did we specify the active area explicitly?
+  /// Did we specify the active area explicitly?
   bool m_hasArea = false;
-  // Medium in the active area.
+  /// Medium in the active area.
   Medium* m_medium = nullptr;
 
   void Reset() override;
@@ -123,7 +125,7 @@ class ComponentChargedRing : public Component {
 
   bool m_bDebug = false;
 
-  // centre of cylindrical symmetry (x,y)
+  /// centre of cylindrical symmetry (x,y)
   std::array<double, 3> m_centre = {0., 0.};
 
   std::vector<Ring> m_vRings;
@@ -131,8 +133,7 @@ class ComponentChargedRing : public Component {
   double m_dSelfFieldTolerance = 0.00001;  // this is a decent value with
                                            // minimal 'strangeness' in the field
   double m_dSpacingTolerance =
-      2.1 * m_dSelfFieldTolerance;  // > twice SFT to avoid divergence catching
-                                    // converting balls to rings
+      2.1 * m_dSelfFieldTolerance;  
 
   bool m_bCentreSet = false;
 
@@ -142,9 +143,9 @@ class ComponentChargedRing : public Component {
   void GetChargedRingField(const Ring& ring, const double r, const double z,
                            double& eFieldZ, double& eFieldR);
 
+  /// Convert field from cylindrical coords to cartesian.                          
   void GetCartesianLocalField(double& eFieldR, double& eFieldX, double& eFieldY,
                               double x, double y) {
-    // get cartesian field
     double cosphi = std::cos(std::atan2(y, x));
     double sinphi = std::sin(std::atan2(y, x));
     eFieldX = eFieldR * cosphi;

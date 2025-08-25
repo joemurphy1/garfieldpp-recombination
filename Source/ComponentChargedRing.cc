@@ -162,7 +162,7 @@ void ComponentChargedRing::GetEllipticIntegrals(double x, double& K,
   E = ell_arg[2] + f * (ell_arg1[2] - ell_arg[2]);
 }
 bool ComponentChargedRing::AddChargedRing(const double x, const double y,
-                                          const double z, const int N) {
+                                          const double z, const double N) {
   // assume cylindrical axis is y rather than z
   double dx = x - m_centre[0];
   double dz = z - m_centre[1];
