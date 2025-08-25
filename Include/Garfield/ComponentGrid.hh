@@ -4,11 +4,12 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "Garfield/Component.hh"
 
 namespace Garfield {
-
+ 
 /// Component for interpolating field maps on a regular mesh.
 
 class ComponentGrid : public Component {
@@ -89,6 +90,15 @@ class ComponentGrid : public Component {
    */
   bool SaveElectricField(Component* cmp, const std::string& filename,
                          const std::string& fmt);
+  
+  bool SaveElectricFieldROOT(Component* cmp, const std::string& filename,
+                         const std::string& fmt);
+
+  /** Export the electric field and potential of a component.
+   * \param cmp Component object for which to export the field/potential
+   */
+  bool SaveElectricField(Component* cmp);
+  
   /** Export the weighting field and potential of a component to a text file.
    * \param cmp Component object for which to export the field/potential
    * \param id identifier of the weighting field
@@ -191,6 +201,46 @@ class ComponentGrid : public Component {
                         double& vx, double& vy, double& vz) override;
   bool HoleVelocity(const double x, const double y, const double z, double& vx,
                     double& vy, double& vz) override;
+  struct Node {
+    double fx, fy, fz;  ///< Field
+    double v;           ///< Potential
+  };
+  /// Get  field values on all nodes
+  void GetFieldOnGrid(std::vector<std::vector<
+                      std::vector<ComponentGrid::Node> > >& efields){
+    efields = m_efields;
+  };
+  /// Add the field values of cmp to current grid.
+  bool AddElectricField(ComponentGrid* cmp, const double scale = 1.,
+                        const double xShift = 0.,
+                        const double yShift = 0.,
+                        const double zShift = 0.);
+  
+  /// Add the field values of cmp to current grid.
+  bool AddElectricField(Component* cmp, const double scale);
+  
+  bool GetNodeIndex(double x, const double y, const double z, unsigned int& i, unsigned int& j, unsigned int& k){
+    
+    if(x < m_xMin[0] || y < m_xMin[1] || z < m_xMin[2]) return false;
+    if(x > m_xMax[0] || y > m_xMax[1] || z > m_xMax[2]) return false;
+      
+    if (m_nX[0] > 1) {
+      const double u = std::round((x - m_xMin[0]) * m_sX[0]);
+      i = u < 0. ? 0 : static_cast<unsigned int>(u);
+      if (i >= m_nX[0]) i = m_nX[0] - 1;
+    }
+    if (m_nX[1] > 1) {
+      const double v = std::round((y - m_xMin[1]) * m_sX[1]);
+      j = v < 0. ? 0 : static_cast<unsigned int>(v);
+      if (j >= m_nX[1]) j = m_nX[1] - 1;
+    }
+    if (m_nX[2] > 1) {
+      const double w = std::round((z - m_xMin[2]) * m_sX[2]);
+      k = w < 0. ? 0 : static_cast<unsigned int>(w);
+      if (k >= m_nX[2]) k = m_nX[2] - 1;
+    }
+    return true;
+  };
 
  private:
   enum class Format { Unknown, XY, XZ, XYZ, IJ, IK, IJK, YXZ };
@@ -198,10 +248,6 @@ class ComponentGrid : public Component {
   Coordinates m_coordinates = Coordinates::Cartesian;
 
   Medium* m_medium = nullptr;
-  struct Node {
-    double fx, fy, fz;  ///< Field
-    double v;           ///< Potential
-  };
 
   /// Electric field values and potentials.
   std::vector<std::vector<std::vector<Node> > > m_efields;

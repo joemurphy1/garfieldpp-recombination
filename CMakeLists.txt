@@ -145,6 +145,7 @@ add_library(Garfield SHARED
             Source/ComponentAnsys121.cc
             Source/ComponentAnsys123.cc
             Source/ComponentCST.cc
+	    Source/ComponentChargedRing.cc
             Source/ComponentComsol.cc
             Source/ComponentConstant.cc
             Source/ComponentElmer.cc
@@ -228,6 +229,7 @@ set_property(TARGET Garfield PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET Garfield PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 add_library(Garfield::Garfield ALIAS Garfield)
 
+# Creating the main Garfield library
 set(GARFIELD_PUBLIC_HEADERS
 Include/Garfield/AvalancheGrid.hh
 Include/Garfield/ComponentFieldMap.hh
@@ -315,8 +317,10 @@ Include/Garfield/MediumConductor.hh
 Include/Garfield/QuadTree.hh
 Include/Garfield/SolidTube.hh
 Include/Garfield/Utilities.hh
+Include/Garfield/ComponentChargedRing.hh
 )
 set_target_properties(Garfield PROPERTIES PUBLIC_HEADER "${GARFIELD_PUBLIC_HEADERS}")
+target_link_libraries(Garfield PUBLIC ROOT::Tree ROOT::RIO)
 
 target_link_libraries(Garfield PUBLIC ROOT::Geom
                                       ROOT::Gdml
