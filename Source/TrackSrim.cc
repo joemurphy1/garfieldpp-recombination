@@ -962,12 +962,11 @@ bool TrackSrim::NewTrack(const double x0, const double y0, const double z0,
         m_useLongStraggle ? Interpolate(ekin, m_ekin, m_longstraggle) : 0.;
     // Draw scattering distances
     const double scale = sqrt(step / prange);
-    const double sigt1 = RndmGaussian(0., scale * strlat);
-    const double sigt2 = RndmGaussian(0., scale * strlat);
+    const auto sigt = RndmGaussians(0., scale * strlat);
     const double sigl = RndmGaussian(0., scale * strlon);
     if (m_debug) {
       printf("    Sigma longitudinal: %g cm\n", sigl);
-      printf("    Sigma transverse: %g, %g cm\n", sigt1, sigt2);
+      printf("    Sigma transverse: %g, %g cm\n", sigt.first, sigt.second);
     }
     // Rotation angles to bring z-axis in line
     double theta, phi;
@@ -990,9 +989,9 @@ bool TrackSrim::NewTrack(const double x0, const double y0, const double z0,
     const double ct = cos(theta);
     const double sp = sin(phi);
     const double st = sin(theta);
-    x[0] += +cp * sigt1 - sp * st * sigt2 + sp * ct * sigl;
-    x[1] += +ct * sigt2 + st * sigl;
-    x[2] += -sp * sigt1 - cp * st * sigt2 + cp * ct * sigl;
+    x[0] += +cp * sigt.first - sp * st * sigt.second + sp * ct * sigl;
+    x[1] += +ct * sigt.second + st * sigl;
+    x[2] += -sp * sigt.first - cp * st * sigt.second + cp * ct * sigl;
     medium = GetMedium(x);
     if (!medium) break;
     // Update the W value (unless it is set explicitly).
@@ -1292,16 +1291,16 @@ double TrackSrim::RndmEnergyLoss(const double ekin, const double de,
     if (m_debug) std::cout << "    Vavilov imposed.\n";
     if (rkappa > 0.01 && rkappa < 12) {
       const double xvav = RndmVavilov(rkappa, beta2);
-      rndde += xi * (xvav + log(rkappa) + beta2 + (1 - Gamma));
+      rndde += xi * (xvav + log(rkappa) + beta2 + 1. - Gamma);
     }
   } else if (m_model == 3) {
     // Gaussian model
     if (m_debug) std::cout << "    Gaussian imposed.\n";
-    rndde += RndmGaussian(0., sqrt(xi * emax * (1 - 0.5 * beta2)));
+    rndde += RndmGaussian(0., sqrt(xi * emax * (1. - 0.5 * beta2)));
   } else if (rkappa < 0.05) {
     // Combined model: for low kappa, use the landau distribution.
     if (m_debug) std::cout << "    Landau automatic.\n";
-    const double xlmean = -(log(rkappa) + beta2 + (1 - Gamma));
+    const double xlmean = -(log(rkappa) + beta2 + 1. - Gamma);
     const double par[] = {0.50884,    1.26116, 0.0346688,  1.46314,
                           0.15088e-2, 1.00324, -0.13049e-3};
     const double xlmax = par[0] + par[1] * xlmean + par[2] * xlmean * xlmean +
@@ -1317,11 +1316,11 @@ double TrackSrim::RndmEnergyLoss(const double ekin, const double de,
     // For medium kappa, use the Vavilov distribution.
     if (m_debug) std::cout << "    Vavilov fast automatic.\n";
     const double xvav = RndmVavilov(rkappa, beta2);
-    rndde += xi * (xvav + log(rkappa) + beta2 + (1 - Gamma));
+    rndde += xi * (xvav + log(rkappa) + beta2 + 1. - Gamma);
   } else {
     // And for large kappa, use the Gaussian values.
     if (m_debug) std::cout << "    Gaussian automatic.\n";
-    rndde = RndmGaussian(de, sqrt(xi * emax * (1 - 0.5 * beta2)));
+    rndde = RndmGaussian(de, sqrt(xi * emax * (1. - 0.5 * beta2)));
   }
   // Debugging output
   if (m_debug) {

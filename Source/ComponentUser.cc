@@ -3,6 +3,7 @@
 #include <TInterpreter.h>
 #include <TROOT.h>
 
+#include <algorithm>
 #include <iostream>
 
 #include "Garfield/Medium.hh"

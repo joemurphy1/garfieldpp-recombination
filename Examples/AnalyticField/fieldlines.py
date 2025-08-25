@@ -1,7 +1,7 @@
 import ROOT
 import Garfield
 
-ROOT.Garfield.plottingEngine.SetPalette(ROOT.kGreyScale)
+ROOT.Garfield.PlottingEngine.SetPalette(ROOT.kGreyScale)
 
 # Gas mixture.
 gas = ROOT.Garfield.MediumMagboltz("ne", 85.72, "co2", 9.52, "n2", 4.76)

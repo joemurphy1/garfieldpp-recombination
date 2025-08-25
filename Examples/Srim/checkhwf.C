@@ -3,8 +3,6 @@
 #include <TH1F.h>
 
 #include <iostream>
-
-#include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
 
 using namespace Garfield;
@@ -12,7 +10,6 @@ using namespace Garfield;
 int main(int argc, char *argv[]) {
   // Application
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   // Run a couple of tests
 

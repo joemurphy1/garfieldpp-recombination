@@ -13,7 +13,6 @@
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/MediumSilicon.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/Utilities.hh"
 
@@ -21,7 +20,6 @@ using namespace Garfield;
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   MediumMagboltz gas("ar", 90., "co2", 10.);
   // Parallel plate chamber.

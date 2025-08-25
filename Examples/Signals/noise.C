@@ -4,13 +4,13 @@
 #include <TROOT.h>
 #include <TSystem.h>
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
 #include "Garfield/ComponentUser.hh"
 #include "Garfield/FundamentalConstants.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/Shaper.hh"
 #include "Garfield/Utilities.hh"
@@ -41,7 +41,6 @@ bool readTransferFunction(Sensor& sensor) {
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   constexpr double q = 1. / ElementaryCharge;
 
@@ -60,7 +59,7 @@ int main(int argc, char* argv[]) {
   // sensor.SetTransferFunction(shaper);
   auto fT = [](const double t) {
     constexpr double tau = 25.;
-    return (t / tau) * exp(1 - t / tau);
+    return (t / tau) * std::exp(1 - t / tau);
   };
   sensor.SetTransferFunction(fT);
   // if (!readTransferFunction(sensor)) return 0;

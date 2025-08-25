@@ -6,6 +6,8 @@
 #include <TLegend.h>
 #include <TPaveLabel.h>
 
+#include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include "Garfield/GarfieldConstants.hh"
@@ -25,7 +27,7 @@ void ViewSignal::SetSensor(Sensor* s) {
 }
 
 void ViewSignal::SetRangeX(const double xmin, const double xmax) {
-  if (fabs(xmax - xmin) < Small) {
+  if (std::fabs(xmax - xmin) < Small) {
     std::cerr << m_className << "::SetRangeX: Invalid range.\n";
     return;
   }
@@ -35,7 +37,7 @@ void ViewSignal::SetRangeX(const double xmin, const double xmax) {
 }
 
 void ViewSignal::SetRangeY(const double ymin, const double ymax) {
-  if (fabs(ymax - ymin) < Small) {
+  if (std::fabs(ymax - ymin) < Small) {
     std::cerr << m_className << "::SetRangeY: Invalid range.\n";
     return;
   }

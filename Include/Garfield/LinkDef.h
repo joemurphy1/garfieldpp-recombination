@@ -7,7 +7,7 @@
 
 #pragma link C++ namespace Garfield;
 
-#pragma link C++ global Garfield::plottingEngine;
+#pragma link C++ global Garfield::PlottingEngine;
 
 #pragma link C++ class Garfield::AvalancheMicroscopic;
 #pragma link C++ class Garfield::AvalancheMC;
@@ -71,9 +71,6 @@
 #pragma link C++ class Garfield::TrackBichsel;
 
 #pragma link C++ function Garfield::RndmUniform();
-#pragma link C++ function Garfield::SetDefaultStyle();
-#pragma link C++ function Garfield::SetSerif();
-#pragma link C++ function Garfield::SetSansSerif();
 
 #pragma link C++ enum Garfield::Particle;
 

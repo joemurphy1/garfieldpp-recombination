@@ -1,7 +1,8 @@
 #ifndef G_PLOTTING_ENGINE_H
 #define G_PLOTTING_ENGINE_H
+#include <memory>
 
-#include <TStyle.h>
+class TStyle;
 
 namespace Garfield {
 
@@ -12,27 +13,21 @@ class PlottingEngine {
   /// Default constructor.
   PlottingEngine();
   /// Destructor
-  ~PlottingEngine() = default;
+  ~PlottingEngine();
 
   /// Use serif font.
-  void SetSerif() { m_serif = true; }
+  static void SetSerif();
   /// Use sans-serif font.
-  void SetSansSerif() { m_serif = false; }
+  static void SetSansSerif();
 
   /// Set the colour palette.
-  void SetPalette(int ncol) { m_palette = ncol; }
-
-  /// Apply the default Garfield ROOT style.
-  void SetDefaultStyle();
+  static void SetPalette(const int ncol);
 
  private:
-  std::string m_className = "PlottingEngine";
-
-  bool m_serif = false;
-  int m_palette = 0;
-
-  TStyle m_garfieldStyle;
+  static void SetFont(const int font);
+  static std::unique_ptr<TStyle> m_style;
 };
+
 }  // namespace Garfield
 
 #endif

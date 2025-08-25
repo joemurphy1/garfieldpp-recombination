@@ -7,7 +7,7 @@ project(Garfield VERSION 0.3
                  HOMEPAGE_URL "https://garfieldpp.web.cern.ch/garfieldpp/"
                  LANGUAGES Fortran CXX)
 
-option(GARFIELD_WITH_CUDA "Build CUDA code if possible" OFF)
+option(GARFIELD_WITH_CUDA "Build CUDA code if possible" ON)
 option(GARFIELD_CUDA_USE_FLOAT "Use float with CUDA code (for some performances issues on some hardware) default:double" FALSE)
 option(GARFIELD_WITH_DEGRADE "Build Degrade." ON)
 option(GARFIELD_WITH_EXAMPLES "Build Garfield++ examples" ON)
@@ -229,38 +229,118 @@ set_property(TARGET Garfield PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET Garfield PROPERTY CXX_STANDARD ${GARFIELD_CXX_STANDARD})
 add_library(Garfield::Garfield ALIAS Garfield)
 
-#--- Create ROOT dictionary ---------------------------------------------------
-if(ROOT_VERSION VERSION_LESS 6.17)
-  file(
-    GLOB garfield_header
-    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/Include
-    Include/Garfield/*.hh)
-  root_generate_dictionary(
-    GarfieldDict
-    ${garfield_header}
-    LINKDEF
-    Include/Garfield/LinkDef.h
-    OPTIONS
-    -I${CMAKE_CURRENT_SOURCE_DIR}/Include
-    -I${PROJECT_SOURCE_DIR}/Heed)
-else()
-  file(
-    GLOB garfield_header
-    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/Include
-    Include/Garfield/*.hh)
-  include_directories(Include Heed)
-  root_generate_dictionary(GarfieldDict ${garfield_header} LINKDEF
-                           Include/Garfield/LinkDef.h)
-endif()
-target_sources(Garfield PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/GarfieldDict.cxx)
+# Creating the main Garfield library
+set(GARFIELD_PUBLIC_HEADERS
+Include/Garfield/AvalancheGrid.hh
+Include/Garfield/ComponentFieldMap.hh
+Include/Garfield/MediumDiamond.hh
+Include/Garfield/Random.hh
+Include/Garfield/SolidWire.hh
+Include/Garfield/Vector.hh
+Include/Garfield/AvalancheGridSpaceCharge.hh
+Include/Garfield/ComponentGrid.hh
+Include/Garfield/FundamentalConstants.hh
+Include/Garfield/MediumGaAs.hh
+Include/Garfield/RandomEngine.hh
+Include/Garfield/TGeoTet.hh
+Include/Garfield/ViewBase.hh
+Include/Garfield/AvalancheMC.hh
+Include/Garfield/ComponentNeBem2d.hh
+Include/Garfield/GarfieldConstants.hh
+Include/Garfield/MediumGaN.hh
+Include/Garfield/RandomEngineRoot.hh
+Include/Garfield/TetrahedralTree.hh
+Include/Garfield/ViewCell.hh
+Include/Garfield/AvalancheMicroscopic.hh
+Include/Garfield/ComponentNeBem3d.hh
+Include/Garfield/Geometry.hh
+Include/Garfield/MediumGas.hh
+Include/Garfield/RandomEngineSTL.hh
+Include/Garfield/Track.hh
+Include/Garfield/ViewDrift.hh
+Include/Garfield/Component.hh
+Include/Garfield/ComponentNeBem3dMap.hh
+Include/Garfield/GeometryRoot.hh
+Include/Garfield/MediumMagboltz.hh
+Include/Garfield/Sensor.hh
+Include/Garfield/TrackBichsel.hh
+Include/Garfield/ViewFEMesh.hh
+Include/Garfield/ComponentAnalyticField.hh
+Include/Garfield/ComponentParallelPlate.hh
+Include/Garfield/GeometrySimple.hh
+Include/Garfield/MediumPlastic.hh
+Include/Garfield/Shaper.hh
+Include/Garfield/TrackDegrade.hh
+Include/Garfield/ViewField.hh
+Include/Garfield/ComponentAnsys121.hh
+Include/Garfield/ComponentTcad2d.hh
+Include/Garfield/HelperMacros.hh
+Include/Garfield/MediumSilicon.hh
+Include/Garfield/Solid.hh
+Include/Garfield/TrackElectron.hh
+Include/Garfield/ViewGeometry.hh
+Include/Garfield/ComponentAnsys123.hh
+Include/Garfield/ComponentTcad3d.hh
+Include/Garfield/KDTree.hh
+Include/Garfield/MultiProcessInterface.hh
+Include/Garfield/SolidBox.hh
+Include/Garfield/TrackHeed.hh
+Include/Garfield/ViewIsochrons.hh
+Include/Garfield/ComponentCST.hh
+Include/Garfield/ComponentTcadBase.hh
+Include/Garfield/Numerics.hh
+Include/Garfield/SolidExtrusion.hh
+Include/Garfield/TrackPAI.hh
+Include/Garfield/ViewMedium.hh
+Include/Garfield/ComponentComsol.hh
+Include/Garfield/ComponentUser.hh
+Include/Garfield/MagboltzInterface.hh
+Include/Garfield/OpticalData.hh
+Include/Garfield/SolidHole.hh
+Include/Garfield/TrackSimple.hh
+Include/Garfield/ViewSignal.hh
+Include/Garfield/ComponentConstant.hh
+Include/Garfield/ComponentVoxel.hh
+Include/Garfield/Medium.hh
+Include/Garfield/PlottingEngine.hh
+Include/Garfield/SolidRidge.hh
+Include/Garfield/TrackSrim.hh
+Include/Garfield/ComponentElmer.hh
+Include/Garfield/DegradeInterface.hh
+Include/Garfield/MediumCdTe.hh
+Include/Garfield/Polygon.hh
+Include/Garfield/SolidSphere.hh
+Include/Garfield/TrackTrim.hh
+Include/Garfield/ComponentElmer2d.hh
+Include/Garfield/DriftLineRKF.hh
+Include/Garfield/MediumConductor.hh
+Include/Garfield/QuadTree.hh
+Include/Garfield/SolidTube.hh
+Include/Garfield/Utilities.hh
+Include/Garfield/ComponentChargedRing.hh
+)
+set_target_properties(Garfield PROPERTIES PUBLIC_HEADER "${GARFIELD_PUBLIC_HEADERS}")
 target_link_libraries(Garfield PUBLIC ROOT::Tree ROOT::RIO)
 
-#--- Install pcm file in case of ROOT 6 ---------------------------------------
-if(ROOT_VERSION VERSION_GREATER 6.06)
-  install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/libGarfieldDict_rdict.pcm
-    DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
-endif()
+target_link_libraries(Garfield PUBLIC ROOT::Geom
+                                      ROOT::Gdml
+                                      ROOT::Graf3d
+                                      GSL::gsl
+                                      Garfield::Heed
+                                      Magboltz::Magboltz
+                                      $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Degrade::Degrade>
+                                      $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
+                                      $<$<BOOL:${GARFIELD_WITH_CUDA}>:GarfieldGPU>
+)
+target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU>)
+target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
+                                    PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
+                                    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
+
+
+#--- Create ROOT dictionary ---------------------------------------------------
+root_generate_dictionary(GarfieldDict "${GARFIELD_PUBLIC_HEADERS}" LINKDEF "${CMAKE_CURRENT_SOURCE_DIR}/Include/Garfield/LinkDef.h" MODULE Garfield)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libGarfield_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
 
 #--- If you cannot create symbolic links turn FALSE the library version -------
 option(BUILD_WITH_VERSION_NUMBER
@@ -296,33 +376,15 @@ target_sources(Garfield PRIVATE ${nebem_sources})
 # Add Heed
 add_subdirectory(Heed)
 
-target_link_libraries(Garfield PUBLIC ROOT::Geom
-                                      ROOT::Gdml
-                                      ROOT::Graf3d
-                                      GSL::gsl
-                                      Garfield::Heed
-                                      Magboltz::Magboltz
-                                      $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Degrade::Degrade>
-                                      $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
-                                      $<$<BOOL:${GARFIELD_WITH_CUDA}>:GarfieldGPU>
-)
-target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU>)
-target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
-                                    PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
-                                    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
+
 
 #--- Install the header files -------------------------------------------------
-install(
-  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Include/
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  REGEX LinkDef EXCLUDE)
-
-install(
-  TARGETS Garfield GarfieldRandom
-  EXPORT "${PROJECT_NAME}Targets"
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS Garfield GarfieldRandom EXPORT "${PROJECT_NAME}Targets"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/Garfield"
+        )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Data
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Garfield/)

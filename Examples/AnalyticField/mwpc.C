@@ -7,7 +7,6 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/ViewCell.hh"
 #include "Garfield/ViewField.hh"
 
@@ -15,7 +14,6 @@ using namespace Garfield;
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   MediumMagboltz gas("ar", 90., "ch4", 10.);
 

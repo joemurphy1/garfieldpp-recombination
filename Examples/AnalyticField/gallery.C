@@ -7,7 +7,6 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewCell.hh"
 #include "Garfield/ViewField.hh"
@@ -158,7 +157,6 @@ void circle(ComponentAnalyticField* cmp, double& xmin, double& xmax,
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  SetDefaultStyle();
 
   // Setup the gas.
   MediumMagboltz gas("ne", 85.72, "co2", 9.52, "n2", 4.76);

@@ -2889,8 +2889,8 @@ int WriteElements(void) {
   if (!OptElementFiles) return 0;
 
   for (int prim = 1; prim <= NbPrimitives; ++prim) {
-    char primstr[10];
-    snprintf(primstr, 10, "%d", prim);
+    char primstr[11];
+    snprintf(primstr, 11, "%d", prim);
     char OutElem[256];
     strcpy(OutElem, MeshOutDir);
     strcat(OutElem, "/Elements/ElemOnPrim");
@@ -3000,8 +3000,8 @@ void WriteGnuplotOutput() {
   fprintf(fgnuMesh, "\nsplot \\\n");
 
   for (int prim = 1; prim <= NbPrimitives; ++prim) {
-    char primstr[10];
-    snprintf(primstr, 10, "%d", prim);
+    char primstr[11];
+    snprintf(primstr, 11, "%d", prim);
     if (OptGnuplotPrimitives) {
       char gpPrim[256];
       strcpy(gpPrim, MeshOutDir);

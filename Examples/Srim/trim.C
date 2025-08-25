@@ -6,7 +6,6 @@
 
 #include "Garfield/ComponentConstant.hh"
 #include "Garfield/MediumSilicon.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackTrim.hh"
 #include "Garfield/ViewDrift.hh"
@@ -16,7 +15,6 @@ using namespace Garfield;
 int main(int argc, char* argv[]) {
   // Application
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   // Define the medium.
   MediumSilicon si;
