@@ -1,5 +1,11 @@
 //
 // Created by Dario Stocco (stoccod@ethz.ch) on 02.08.2023.
+// Updated by Thomas Szwarcer on 26.08.2025.
+//
+// Note that ComponentChargedRing should not be added as a component to Sensor, 
+// as the electric field is handled internally by AvalancheGridSpaceCharge.
+// ComponentParallelPlate is added to Sensor as a component because 
+// AvalancheGridSpaceCharge looks for a parallel plate to get the background field.
 //
 #include <TApplication.h>
 #include <TCanvas.h>
@@ -14,6 +20,7 @@
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewSignal.hh"
+#include "Garfield/ComponentChargedRing.hh"
 
 using namespace Garfield;
 
@@ -42,7 +49,17 @@ int main(int argc, char *argv[]) {
   double e_pet = 3.5;
   double e_gas = 1.;
   std::vector<double> eps = {e_pet, e_bakelite, e_gas, e_bakelite, e_pet};
-  // ComponentParallelPlate
+
+  // We add a charged ring system for each gas gap
+  // So just one in this case.
+  ComponentChargedRing ring1;
+  std::vector<ComponentChargedRing*> ring_systems = {&ring1}; 
+  for (auto & ring_system:ring_systems){
+    ring_system->SetMedium(&gas);
+    ring_system->SetArea(-0.02, 0., -0.02, 0.02, d_pet + d_bakelite + d_gas, 0.02);
+  }
+
+  
   ComponentParallelPlate cmp;
   cmp.Setup(int(layers.size()), eps, layers, voltage, {});
   std::string label = "readout";
@@ -61,12 +78,21 @@ int main(int argc, char *argv[]) {
   avalsc.EnableDiffusion(true);
   avalsc.EnableStickyAnode(true);
   avalsc.EnableAdaptiveTimeStepping(true);
+  avalsc.SetRingSystems(ring_systems);
   avalsc.SetStopAtK(true);
   // Disable space charge calculation.
-  avalsc.EnableSpaceChargeEffect(false);
+  avalsc.EnableSpaceChargeEffect(true);
+  std::string fieldOption = "mirror";
+  avalsc.SetFieldCalculation(fieldOption);
   // Set the grid.
   avalsc.Set2dGrid(y_mid - 0.5 * d_gas + 1.e-8, y_mid + 0.5 * d_gas - 1.e-8,
                    400, 0.05, 100);
+  // Extend ring area in mirror ring case.
+  if (fieldOption == "mirror"){
+    for (auto & ring_system:ring_systems){
+      ring_system->SetArea(-0.02, -(d_pet + d_bakelite + d_gas), -0.02, 0.02, 2 * (d_pet + d_bakelite + d_gas), 0.02);
+    }      
+  }           
 
   // Place 1000 electrons in the middle of the gas gap.
   avalsc.AddElectron(0., y_mid, 0., 0., 1000.);
@@ -79,8 +105,9 @@ int main(int argc, char *argv[]) {
   TCanvas *c_signal = new TCanvas(label.c_str(), label.c_str(), 600, 600);
   signal_view->SetCanvas(c_signal);
   signal_view->PlotSignal(label);
-  gSystem->ProcessEvents();
+  gSystem->ProcessEvents(); 
 
   app.Run(true);
+
   return 0;
 }

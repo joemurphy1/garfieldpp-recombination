@@ -10,6 +10,7 @@ namespace Garfield {
 class Sensor;
 class AvalancheMicroscopic;
 class ComponentParallelPlate;
+class ComponentChargedRing;
 
 /// Propagates avalanches with the 2d (axi-symmetric) space-charge routine from
 /// Lippmann, Riegler (2004) in uniform background fields. Different options to
@@ -130,6 +131,11 @@ class AvalancheGridSpaceCharge {
   ///  evaluated!
   void ExportGrid(const std::string &filename);
 
+  void SetRingSystems(std::vector<Garfield::ComponentChargedRing*> ring_systems){
+    m_vRingSystems = ring_systems;
+    m_bRingSystemsSet = true;
+  }
+
  private:
   struct GridNode {
     long nElectron{0};   ///< electrons on node
@@ -199,33 +205,6 @@ class AvalancheGridSpaceCharge {
   void DistributeCharges(long nElectron, double nPosIon, double nNegIon, int iz,
                          int ir, double stepZ, double stepR, int gasGap);
 
-  // Calculate the field from all the contributions to the bin of interest. May
-  // need much more functionalities/tables.
-  void GetLocalField(int iz, int ir, double &eFieldZ, double &eFieldR,
-                     const std::string &fieldOption, int gasGap);
-
-  // Calculate the field of charged ring in vacuum using coulomb potentials and
-  // indices
-  void GetFreeChargedRing(int iz, int ir, int fz, int fr, double &eFieldZ,
-                          double &eFieldR);
-
-  // Calculate the field of charged ring in vacuum using coulomb potentials and
-  // coordinates
-  void GetFreeChargedRing(double zi, double ri, double zf, double rf,
-                          double &eFieldZ, double &eFieldR);
-
-  // Get field at (zi, ri) from N charges at (zf, rf) either as a ring or a
-  // coulomb ball (rf = 0) if i and f are too close it is considered as self
-  // interaction and not included
-  bool AddFieldFromChargeAt(int iz, int ir, int fz, int fr, double N,
-                            double &eFieldZ, double &eFieldR);
-
-  // Get field at (zi, ri) from N charges at (zf, rf) either as a ring or a
-  // coulomb ball (rf = 0) if i and f are too close it is considered as self
-  // interaction and not included
-  bool AddFieldFromChargeAt(int iz, int ir, double zf, double rf, double N,
-                            double &eFieldZ, double &eFieldR);
-
   // Get swarm parameters at electric field magnitude
   void GetSwarmParameters(double MagEField, double &alpha, double &eta,
                           double &drift, double &dSigmaL, double &dSigmaT,
@@ -235,12 +214,6 @@ class AvalancheGridSpaceCharge {
   // Change from 2dGrid to Global coordinates
   void GetGlobalCoordinates(double r, double z, double phi, double &xg,
                             double &yg, double &zg, int gasGap);
-
-  // Import elliptic integral values
-  void ImportEllipticIntegralValues(const std::string &filename);
-
-  // Gets elliptic integrals via list
-  void GetEllipticIntegrals(double x, double &K, double &E);
 
   // Get from index the gas gap number, else -1
   int GetGasGapNumber(int layerIndex);
@@ -265,7 +238,6 @@ class AvalancheGridSpaceCharge {
   long m_lElectronsK{0};
 
   bool m_bAdaptiveTime{true};
-  bool m_bImportElliptic{false};
   /// Flag if TOF parameters should be used, else Magboltz
   /// drift and SST spatial coefficients
   bool m_bUseTOF{true};
@@ -300,6 +272,9 @@ class AvalancheGridSpaceCharge {
   /// Tracking if the charges are still in the drift gap.
   bool m_run{true};
 
+  // indices with charges on them
+  std::vector<std::array<int,2>> m_vActiveNodeIndices;
+
   std::vector<std::vector<int>>
       m_zGasGapBoundaries;  ///< [k] -> {izLeft, ..., izRight}
 
@@ -326,9 +301,14 @@ class AvalancheGridSpaceCharge {
   std::vector<int> m_vSaturatedGaps;
 
   std::string m_sFieldOption{"coulomb"};
-  enum class Elliptic : std::size_t { X, K, E };
-  static const constexpr std::size_t elliptic_size{29981};
-  static const std::array<std::array<double, 3>, elliptic_size> m_elliptic;
+  /// Vector of ComponentChargedRing pointers
+  /// Used to have multiple ring systems, e.g.
+  /// One per gas gap.
+  std::vector<ComponentChargedRing*> m_vRingSystems;
+
+  /// True if the user has set a ring system with 
+  /// SetRingSystems()
+  bool m_bRingSystemsSet{false};
 };
 
 }  // namespace Garfield
