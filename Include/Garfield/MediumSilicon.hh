@@ -311,10 +311,14 @@ class MediumSilicon : public Medium {
   double m_fbDosMaxV, m_fbDosMaxC;
 
   // Optical data
-  std::string m_opticalDataFile = "OpticalData_Si.txt";
-  std::vector<double> m_egamma;
-  std::vector<double> m_eps1;
-  std::vector<double> m_eps2;
+  enum class optical_data: std::size_t
+  {
+    Egamma=0,
+    Eps1,
+    Eps2,
+  };
+  static constexpr std::size_t m_optical_data_size{1127};
+  static const std::array<std::array<double,4>,m_optical_data_size> m_optical_data;
 
   bool Update();
   void UpdateLatticeMobility();
@@ -333,8 +337,6 @@ class MediumSilicon : public Medium {
 
   double HoleMobility(const double e) const;
   double HoleAlpha(const double e) const;
-
-  bool LoadOpticalData(const std::string& filename);
 
   bool ElectronScatteringRates();
   bool HoleScatteringRates();

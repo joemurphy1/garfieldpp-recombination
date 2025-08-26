@@ -11,16 +11,7 @@
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Utilities.hh"
-
-namespace {
-bool IsComment(const std::string& line) {
-  if (line.empty()) return false;
-  if (line[0] == '#') return true;
-  if (line.size() > 1 && (line[0] == '/' && line[1] == '/')) return true;
-  return false;
-}
-
-}  // namespace
+#include "Garfield/SiOpticalData.hh"
 
 namespace Garfield {
 
@@ -977,17 +968,8 @@ bool MediumSilicon::GetOpticalDataRange(double& emin, double& emax,
     std::cerr << m_className << "::GetOpticalDataRange: Index out of range.\n";
   }
 
-  // Make sure the optical data table has been loaded.
-  if (m_egamma.empty()) {
-    if (!LoadOpticalData(m_opticalDataFile)) {
-      std::cerr << m_className << "::GetOpticalDataRange:\n"
-                << "    Optical data table could not be loaded.\n";
-      return false;
-    }
-  }
-
-  emin = m_egamma.front();
-  emax = m_egamma.back();
+  emin = m_optical_data.front()[static_cast<std::size_t>(optical_data::Egamma)];
+  emax = m_optical_data.back()[static_cast<std::size_t>(optical_data::Egamma)];
   if (m_debug) {
     std::cout << m_className << "::GetOpticalDataRange:\n"
               << "    " << emin << " < E [eV] < " << emax << "\n";
@@ -1002,18 +984,9 @@ bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
     return false;
   }
 
-  // Make sure the optical data table has been loaded.
-  if (m_egamma.empty()) {
-    if (!LoadOpticalData(m_opticalDataFile)) {
-      std::cerr << m_className << "::GetDielectricFunction:\n";
-      std::cerr << "    Optical data table could not be loaded.\n";
-      return false;
-    }
-  }
-
   // Make sure the requested energy is within the range of the table.
-  const double emin = m_egamma.front();
-  const double emax = m_egamma.back();
+  const double emin = m_optical_data.front()[static_cast<std::size_t>(optical_data::Egamma)];
+  const double emax = m_optical_data.back()[static_cast<std::size_t>(optical_data::Egamma)];
   if (e < emin || e > emax) {
     std::cerr << m_className << "::GetDielectricFunction:\n"
               << "    Requested energy (" << e << " eV) "
@@ -1024,23 +997,25 @@ bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
   }
 
   // Locate the requested energy in the table.
-  const auto begin = m_egamma.cbegin();
-  const auto it1 = std::upper_bound(begin, m_egamma.cend(), e);
-  if (it1 == begin) {
-    eps1 = m_eps1.front();
-    eps2 = m_eps2.front();
+  const auto begin = m_optical_data.cbegin();
+  auto compare = [](const std::array<double,4>& x,const std::array<double,4>& y) { return x[static_cast<std::size_t>(optical_data::Egamma)] < y[static_cast<std::size_t>(optical_data::Egamma)]; };
+  const auto it1 = std::upper_bound(m_optical_data.cbegin(), m_optical_data.cend(), std::array<double,4>{e,0,0,0},compare);
+  if (it1 == begin)
+  {
+    eps1 = m_optical_data.front()[static_cast<std::size_t>(optical_data::Eps1)];
+    eps2 = m_optical_data.front()[static_cast<std::size_t>(optical_data::Eps2)];
     return true;
   }
   const auto it0 = std::prev(it1);
 
   // Interpolate the real part of dielectric function.
-  const double x0 = *it0;
-  const double x1 = *it1;
-  const double lnx0 = log(*it0);
-  const double lnx1 = log(*it1);
+  const double x0 = it0->operator[](static_cast<std::size_t>(optical_data::Egamma));
+  const double x1 = it1->operator[](static_cast<std::size_t>(optical_data::Egamma));
+  const double lnx0 = log(x0);
+  const double lnx1 = log(x1);
   const double lnx = log(e);
-  const double y0 = m_eps1[it0 - begin];
-  const double y1 = m_eps1[it1 - begin];
+  const double y0 = it0->operator[](static_cast<std::size_t>(optical_data::Eps1));
+  const double y1 = it1->operator[](static_cast<std::size_t>(optical_data::Eps1));
   if (y0 <= 0. || y1 <= 0.) {
     // Use linear interpolation if one of the values is negative.
     eps1 = y0 + (e - x0) * (y1 - y0) / (x1 - x0);
@@ -1054,8 +1029,8 @@ bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
 
   // Interpolate the imaginary part of dielectric function,
   // using log-log interpolation.
-  const double lnz0 = log(m_eps2[it0 - begin]);
-  const double lnz1 = log(m_eps2[it1 - begin]);
+  const double lnz0 = log(it0->operator[](static_cast<std::size_t>(optical_data::Eps2)));
+  const double lnz1 = log(it1->operator[](static_cast<std::size_t>(optical_data::Eps2)));
   eps2 = lnz0 + (lnx - lnx0) * (lnz1 - lnz0) / (lnx1 - lnx0);
   eps2 = exp(eps2);
   return true;
@@ -1430,87 +1405,6 @@ double MediumSilicon::HoleAlpha(const double emag) const {
   }
   std::cerr << m_className << "::HoleAlpha: Unknown model. Program bug!\n";
   return 0.;
-}
-
-bool MediumSilicon::LoadOpticalData(const std::string& filename) {
-  // Clear the optical data table.
-  m_egamma.clear();
-  m_eps1.clear();
-  m_eps2.clear();
-
-  std::string path = "";
-  auto installdir = std::getenv("GARFIELD_INSTALL");
-  if (!installdir) {
-    std::cerr << m_className << "::LoadOpticalData:\n"
-              << "    Environment variable GARFIELD_INSTALL not set.\n";
-    return false;
-  }
-  path = std::string(installdir) + "/share/Garfield/Data/" + filename;
-
-  // Open the file.
-  std::ifstream infile(path);
-  // Make sure the file could actually be opened.
-  if (!infile) {
-    std::cerr << m_className << "::LoadOpticalData:\n"
-              << "    Error opening file " << filename << ".\n";
-    return false;
-  }
-
-  double lastEnergy = -1.;
-  // Read the file line by line.
-  bool ok = true;
-  for (std::string line; std::getline(infile, line);) {
-    // Strip white space from the beginning of the line.
-    ltrim(line);
-    // Skip comments.
-    if (line.empty() || IsComment(line)) continue;
-    auto words = tokenize(line);
-    if (words.size() < 4) continue;
-    const double energy = std::stod(words[0]);
-    const double eps1 = std::stod(words[1]);
-    const double eps2 = std::stod(words[2]);
-    // const double loss = std::stod(words[3]);
-    // Make sure the values make sense.
-    // The table has to be in ascending order
-    //  with respect to the photon energy.
-    if (energy <= lastEnergy) {
-      std::cerr << m_className << "::LoadOpticalData:\n"
-                << "    Table is not in monotonically increasing order."
-                << "    Line: " << line << "\n";
-      ok = false;
-      break;
-    }
-    // The imaginary part of the dielectric function has to be positive.
-    if (eps2 < 0.) {
-      std::cerr << m_className << "::LoadOpticalData:\n"
-                << "    Negative value of the loss function at " << energy
-                << " eV.\n";
-      ok = false;
-      break;
-    }
-    // Ignore negative photon energies.
-    if (energy <= 0.) continue;
-    // Add the values to the list.
-    m_egamma.push_back(energy);
-    m_eps1.push_back(eps1);
-    m_eps2.push_back(eps2);
-    lastEnergy = energy;
-  }
-  infile.close();
-  if (!ok) return false;
-
-  if (m_egamma.empty()) {
-    std::cerr << m_className << "::LoadOpticalData:\n"
-              << "    Import of data from file " << path << "failed.\n"
-              << "    No valid data found.\n";
-    return false;
-  }
-
-  if (m_debug) {
-    std::cout << m_className << "::LoadOpticalData:\n    Read "
-              << m_egamma.size() << " values from file " << path << ".\n";
-  }
-  return true;
 }
 
 bool MediumSilicon::ElectronScatteringRates() {
