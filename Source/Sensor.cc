@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include "Garfield/Component.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"

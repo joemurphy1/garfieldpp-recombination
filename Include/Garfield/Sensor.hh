@@ -4,11 +4,10 @@
 #include <array>
 #include <functional>
 #include <mutex>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include "Garfield/Component.hh"
 
 class TPad;
 
@@ -16,6 +15,8 @@ namespace Garfield {
 
 class SensorGPU;
 class Shaper;
+class Component;
+class Medium;
 
 /// Sensor
 class Sensor {

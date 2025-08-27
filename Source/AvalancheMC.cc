@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 
+#include "Garfield/Component.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
@@ -35,9 +36,9 @@ Garfield::AvalancheMC::Point MakePoint(const double x, const double y,
   return p;
 }
 
-Garfield::AvalancheMC::Seed MakeSeed(
-    const Garfield::AvalancheMC::Point point, 
-    const Garfield::Particle particle, const size_t w) {
+Garfield::AvalancheMC::Seed MakeSeed(const Garfield::AvalancheMC::Point point,
+                                     const Garfield::Particle particle,
+                                     const size_t w) {
   Garfield::AvalancheMC::Seed seed;
   seed.pt = point;
   seed.type = particle;
@@ -222,28 +223,24 @@ void AvalancheMC::GetElectronEndpoint(const size_t i, double& x0, double& y0,
   status = m_electrons[i].status;
 }
 
-bool AvalancheMC::DriftElectron(const double x, const double y,
-                                const double z, const double t,
-                                const size_t w) {
+bool AvalancheMC::DriftElectron(const double x, const double y, const double z,
+                                const double t, const size_t w) {
   std::vector<Seed> stack;
-  stack.emplace_back(
-      MakeSeed(MakePoint(x, y, z, t), Particle::Electron, w));
+  stack.emplace_back(MakeSeed(MakePoint(x, y, z, t), Particle::Electron, w));
   return TransportParticles(stack, true, false, false);
 }
 
 bool AvalancheMC::DriftHole(const double x, const double y, const double z,
                             const double t, const size_t w) {
   std::vector<Seed> stack;
-  stack.emplace_back(
-      MakeSeed(MakePoint(x, y, z, t), Particle::Hole, w));
+  stack.emplace_back(MakeSeed(MakePoint(x, y, z, t), Particle::Hole, w));
   return TransportParticles(stack, false, true, false);
 }
 
 bool AvalancheMC::DriftIon(const double x, const double y, const double z,
                            const double t, const size_t w) {
   std::vector<Seed> stack;
-  stack.emplace_back(
-      MakeSeed(MakePoint(x, y, z, t), Particle::Ion, w));
+  stack.emplace_back(MakeSeed(MakePoint(x, y, z, t), Particle::Ion, w));
   return TransportParticles(stack, false, true, false);
 }
 
@@ -251,14 +248,13 @@ bool AvalancheMC::DriftNegativeIon(const double x, const double y,
                                    const double z, const double t,
                                    const size_t w) {
   std::vector<Seed> stack;
-  stack.emplace_back(
-      MakeSeed(MakePoint(x, y, z, t), Particle::NegativeIon, w));
+  stack.emplace_back(MakeSeed(MakePoint(x, y, z, t), Particle::NegativeIon, w));
   return TransportParticles(stack, false, true, false);
 }
 
-int AvalancheMC::DriftLine(
-    const Seed& seed, std::vector<Point>& path,
-    std::vector<Seed>& stack, const bool aval, const bool signal) const {
+int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
+                           std::vector<Seed>& stack, const bool aval,
+                           const bool signal) const {
   std::array<double, 3> x0 = {seed.pt.x, seed.pt.y, seed.pt.z};
   double t0 = seed.pt.t;
   // Make sure the starting point is inside an active region.
@@ -557,7 +553,8 @@ int AvalancheMC::DriftLine(
   if (m_viewer && !path.empty()) {
     const size_t nP = path.size();
     // Register the new drift line and get its ID.
-    const size_t id = m_viewer->NewDriftLine(ptype, nP, seed.pt.x, seed.pt.y, seed.pt.z);
+    const size_t id =
+        m_viewer->NewDriftLine(ptype, nP, seed.pt.x, seed.pt.y, seed.pt.z);
     // Set the points along the trajectory.
     for (size_t i = 0; i < nP; ++i) {
       m_viewer->SetDriftLinePoint(id, i, path[i].x, path[i].y, path[i].z);
@@ -570,17 +567,15 @@ bool AvalancheMC::AvalancheElectron(const double x, const double y,
                                     const double z, const double t,
                                     const bool holes, const size_t w) {
   std::vector<Seed> stack;
-  stack.emplace_back(
-      MakeSeed(MakePoint(x, y, z, t), Particle::Electron, w));
+  stack.emplace_back(MakeSeed(MakePoint(x, y, z, t), Particle::Electron, w));
   return TransportParticles(stack, true, holes, m_useMultiplication);
 }
 
-bool AvalancheMC::AvalancheHole(const double x, const double y,
-                                const double z, const double t,
-                                const bool electrons, const size_t w) {
+bool AvalancheMC::AvalancheHole(const double x, const double y, const double z,
+                                const double t, const bool electrons,
+                                const size_t w) {
   std::vector<Seed> stack;
-  stack.emplace_back(
-      MakeSeed(MakePoint(x, y, z, t), Particle::Hole, w));
+  stack.emplace_back(MakeSeed(MakePoint(x, y, z, t), Particle::Hole, w));
   return TransportParticles(stack, electrons, true, m_useMultiplication);
 }
 
@@ -588,10 +583,8 @@ bool AvalancheMC::AvalancheElectronHole(const double x, const double y,
                                         const double z, const double t,
                                         const size_t w) {
   std::vector<Seed> stack;
-  stack.emplace_back(
-      MakeSeed(MakePoint(x, y, z, t), Particle::Electron, w));
-  stack.emplace_back(
-      MakeSeed(MakePoint(x, y, z, t), Particle::Hole, w));
+  stack.emplace_back(MakeSeed(MakePoint(x, y, z, t), Particle::Electron, w));
+  stack.emplace_back(MakeSeed(MakePoint(x, y, z, t), Particle::Hole, w));
   return TransportParticles(stack, true, true, m_useMultiplication);
 }
 
@@ -656,9 +649,8 @@ bool AvalancheMC::ResumeAvalanche(const bool electrons, const bool holes) {
   return TransportParticles(stack, electrons, holes, m_useMultiplication);
 }
 
-bool AvalancheMC::TransportParticles(
-    std::vector<Seed>& stack, const bool withE,
-    const bool withH, const bool aval) {
+bool AvalancheMC::TransportParticles(std::vector<Seed>& stack, const bool withE,
+                                     const bool withH, const bool aval) {
   // -----------------------------------------------------------------------
   //   DLCMCA - Subroutine that computes a drift line using a Monte-Carlo
   //            technique to take account of diffusion and of avalanche
@@ -706,8 +698,7 @@ bool AvalancheMC::TransportParticles(
         continue;
       }
       std::vector<Point> path;
-      const int status = DriftLine(seed, path,
-                                   secondaries, aval, signal);
+      const int status = DriftLine(seed, path, secondaries, aval, signal);
       if (path.empty()) continue;
       EndPoint p;
       p.status = status;
@@ -909,8 +900,7 @@ double AvalancheMC::GetTownsend(const Particle ptype, Medium* medium,
   return alpha;
 }
 
-void AvalancheMC::StepRKF(const Particle ptype,
-                          const std::array<double, 3>& x0,
+void AvalancheMC::StepRKF(const Particle ptype, const std::array<double, 3>& x0,
                           const std::array<double, 3>& v0, const double dt,
                           std::array<double, 3>& xf, std::array<double, 3>& vf,
                           int& status) const {
@@ -966,8 +956,8 @@ void AvalancheMC::AddDiffusion(const double step, const double dl,
                                const std::array<double, 3>& v) const {
   // Draw a random diffusion direction in the particle frame.
   const auto rt = RndmGaussians(0., dt);
-  const std::array<double, 3> d = {step * RndmGaussian(0., dl),
-                                   step * rt.first, step * rt.second};
+  const std::array<double, 3> d = {step * RndmGaussian(0., dl), step * rt.first,
+                                   step * rt.second};
   if (m_debug) {
     std::cout << m_className << "::AddDiffusion: Adding diffusion step "
               << PrintVec(d) << "\n";
@@ -1017,9 +1007,10 @@ void AvalancheMC::Terminate(const std::array<double, 3>& x0, const double t0,
   }
 }
 
-bool AvalancheMC::ComputeGainLoss(
-    const Particle ptype, const size_t w, std::vector<Point>& path, 
-    int& status, std::vector<Seed>& stack, const bool sc) const {
+bool AvalancheMC::ComputeGainLoss(const Particle ptype, const size_t w,
+                                  std::vector<Point>& path, int& status,
+                                  std::vector<Seed>& stack,
+                                  const bool sc) const {
   std::vector<double> alps;
   std::vector<double> etas;
   // Compute the integrated Townsend and attachment coefficients.
@@ -1364,7 +1355,7 @@ void AvalancheMC::PrintError(const std::string& fcn, const std::string& par,
                              const std::array<double, 3>& x) const {
   const std::string ehi = ptype == Particle::Electron ? "electron"
                           : ptype == Particle::Hole   ? "hole"
-                                                         : "ion";
+                                                      : "ion";
   std::cerr << m_className + "::" + fcn + ": Error calculating " + ehi + " "
             << par + " at " + PrintVec(x) << ".\n";
 }
