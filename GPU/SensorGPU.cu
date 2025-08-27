@@ -1,5 +1,6 @@
-#include "Sensor.cc"
+#include "SensorGPU.h"
 #undef __GPUCOMPILE__
+#include "GPUFunctions.h"
 
 #include "GPUInterface.hh"
 #include "TetrahedralTreeGPU.h"
@@ -26,6 +27,51 @@ namespace Garfield {
       return __longlong_as_double(old);
   }
   #endif
+
+
+
+
+__DEVICE__
+void SensorGPU::ElectricField(const double x, const double y,
+                                                const double z, double &ex,
+                                                double &ey, double &ez,
+                                                MediumGPU *
+                                                    &medium,
+                                                int &status) const {
+  ex = ey = ez = 0.;
+  status = -10;
+  medium = nullptr;
+  double fx = 0., fy = 0., fz = 0.;
+  MediumGPU *med = nullptr;
+  int stat = 0;
+// Add up electric field contributions from all components.
+  for (int ic = 0; ic < m_numComponents; ic++) {
+    ComponentGPU *component{m_components[ic]};
+    component->ElectricField(x, y, z, fx, fy, fz, med, stat);
+    if (status != 0) {
+      status = stat;
+      medium = med;
+    }
+    if (stat == 0) {
+      ex += fx;
+      ey += fy;
+      ez += fz;
+    }
+  }
+}
+
+
+__DEVICE__
+bool SensorGPU::IsInArea(const double x, const double y,
+                                           const double z) const {
+
+
+  if (x >= m_xMinUser && x <= m_xMaxUser && y >= m_yMinUser &&
+      y <= m_yMaxUser && z >= m_zMinUser && z <= m_zMaxUser) {
+    return true;
+  }
+  return false;
+}
 
 
 double Sensor::CreateGPUTransferObject(SensorGPU*& sensor_gpu) {
