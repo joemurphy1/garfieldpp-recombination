@@ -1,13 +1,72 @@
-#ifndef G_ComponentGPU_H
-#define G_ComponentGPU_H
+#ifndef G_COMPONENT_GPU_H
+#define G_COMPONENT_GPU_H
 
 #ifndef __GPUCOMPILE__
 #error GPU HEADER INCLUDED WITHOUT SETTING __GPUCOMPILE__
 #endif
 
+#include "Garfield/HelperMacros.hh"
 #include "TetrahedralTreeGPU.h"
 #include "MediumGPU.h"
-#include "Garfield/Component.hh"
+
+namespace Garfield
+{
+
+class ComponentGPU
+{
+public:
+  ComponentGPU() = default;
+  ~ComponentGPU() = default;
+  __device__ void ElectricField(const cuda_t xin, const cuda_t yin, const cuda_t zin, cuda_t& ex, cuda_t& ey, cuda_t& ez, MediumGPU*& m, int& status);
+
+  /// Simple periodicity in x, y, z.
+  bool m_periodic[3] = {false, false, false};
+  /// Mirror periodicity in x, y, z.
+  bool m_mirrorPeriodic[3] = {false, false, false};
+  /// Axial periodicity in x, y, z.
+  bool m_axiallyPeriodic[3] = {false, false, false};
+  /// Rotation symmetry around x-axis, y-axis, z-axis.
+  bool m_rotationSymmetric[3] = {false, false, false};
+  /// Triangle symmetric in the xy, xz, and yz plane.
+  bool m_triangleSymmetric[3] = {false, false, false};
+  /// Triangle symmetric octant of imported map (0 < phi < Pi/4 --> octant 1).
+  int m_triangleSymmetricOct = 0;
+  /// Octants where |x| >= |y|
+  const int m_triangleOctRules[4] = {1, 4, 5, 8};
+  bool m_outsideCone = false;
 
 
+
+// include parts from derived class due to big performance hit from using
+// virtual methods
+// TODO GPU TN: It isn't clear to me that we actually need (at least) the Ansys
+// include - all the code is protected by an ifndef __GPUCOMPILE__, whereas it
+// will be defined when these includes are made
+//#include "Garfield/ComponentAnsys123.hh"
+#include "Garfield/ComponentFieldMap.hh"
+
+  friend class ComponentAnsys123;
+  friend class ComponentComsol;
+  friend class ComponentElmer;
+  friend class ComponentFieldMap;
+  friend class Component;
+
+  // enum to mimic polymorphism
+  enum class ComponentType
+  {
+    Component = 0,
+    ComponentFieldMap,
+    ComponentAnsys123,
+    ComponentComsol,
+    ComponentElmer
+  };
+
+  ComponentType m_ComponentType{ComponentType::Component};
+protected:
+  /// Ready for use?
+  bool m_ready = false;
+private:
+};
+
+}
 #endif
