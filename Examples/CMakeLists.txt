@@ -40,6 +40,8 @@ add_subdirectory(GemMovie)
 add_subdirectory(Grid)
 # --- Heed
 add_subdirectory(Heed)
+# --- MicroscopicSpaceCharge
+add_subdirectory(MicroscopicSpaceCharge)
 # --- neBEM
 add_subdirectory(neBEM)
 # --- Paschen
