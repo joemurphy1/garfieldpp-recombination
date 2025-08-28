@@ -292,23 +292,5 @@ void ComponentChargedRing::UpdatePeriodicity() {
   }
 }
 
-double ComponentChargedRing::WeightingPotential(const double /*x*/,
-                                                const double /*y*/,
-                                                const double /*z*/,
-                                                const std::string& /*label*/) {
-  if (m_bDebug) std::cout << "WeightingPotential not implemented.\n";
-  return 0.;
-}
-
-void ComponentChargedRing::WeightingField(const double /*x*/,
-                                          const double /*y*/,
-                                          const double /*z*/, double& wx,
-                                          double& wy, double& wz,
-                                          const std::string& /*label*/) {
-  wx = 0.;
-  wy = 0.;
-  wz = 0.;
-  if (m_bDebug) std::cout << "WeightingField not implemented.\n";
-}
 
 }  // namespace Garfield

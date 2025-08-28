@@ -1,5 +1,5 @@
-#ifndef G_COMPONENT_CONSTANT_H
-#define G_COMPONENT_CONSTANT_H
+#ifndef G_COMPONENT_CHARGED_RING_H
+#define G_COMPONENT_CHARGED_RING_H
 
 #include <array>
 #include <cmath>
@@ -17,19 +17,6 @@ class ComponentChargedRing : public Component {
   ComponentChargedRing();
   /// Destructor
   ~ComponentChargedRing() {}
-
-  /// Set the components of the electric field [V / cm].
-  void SetElectricField(const double ex, const double ey, const double ez);
-  /// Specify the potential at a given point.
-  void SetPotential(const double x, const double y, const double z,
-                    const double v = 0.);
-
-  /// Set the components of the weighting field [1 / cm].
-  void SetWeightingField(const double wx, const double wy, const double wz,
-                         const std::string label);
-  /// Specify the weighting potential at a given point.
-  void SetWeightingPotential(const double x, const double y, const double z,
-                             const double v = 0.);
 
   /// Set the limits of the active area explicitly
   /// (instead of using a Geometry object).
@@ -49,12 +36,7 @@ class ComponentChargedRing : public Component {
 
   using Component::ElectricField;
   bool GetVoltageRange(double& vmin, double& vmax) override;
-  void WeightingField(const double x, const double y, const double z,
-                      double& wx, double& wy, double& wz,
-                      const std::string& label) override;
-  double WeightingPotential(const double x, const double y, const double z,
-                            const std::string& label) override;
-
+  
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
                       double& ymax, double& zmax) override;
 
