@@ -76,9 +76,6 @@ class ComponentChargedRing : public Component {
 
   void GetNumberOfRings(int& n_rings) { n_rings = m_vRings.size(); }
 
-  /// Gets elliptic integrals via list
-  void GetEllipticIntegrals(double x, double& K, double& E);
-
   void GetRings(std::vector<Ring>& ring_vector) { ring_vector = m_vRings; }
 
  private:
@@ -92,6 +89,9 @@ class ComponentChargedRing : public Component {
 
   void Reset() override;
   void UpdatePeriodicity() override;
+  
+  /// Gets elliptic integrals via list
+  void GetEllipticIntegrals(double x, double& K, double& E);
 
   bool InArea(const double x, const double y, const double z) {
     if (x < m_xmin[0] || x > m_xmax[0] || y < m_xmin[1] || y > m_xmax[1] ||
