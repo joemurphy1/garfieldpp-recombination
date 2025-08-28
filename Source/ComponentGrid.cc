@@ -2475,7 +2475,7 @@ ComponentGrid::Format ComponentGrid::GetFormat(std::string format) {
   return Format::Unknown;
 }
 
-ComponentGrid::GetNodeIndex(double x, const double y, const double z, unsigned int& i, unsigned int& j, unsigned int& k){
+bool ComponentGrid::GetNodeIndex(double x, const double y, const double z, unsigned int& i, unsigned int& j, unsigned int& k){
   
   if(x < m_xMin[0] || y < m_xMin[1] || z < m_xMin[2]) return false;
   if(x > m_xMax[0] || y > m_xMax[1] || z > m_xMax[2]) return false;
