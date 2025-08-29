@@ -60,6 +60,8 @@ class ComponentChargedRing : public Component {
     Ring(double z_, double r_, double charge_) {
       z = z_;
       r = r_;
+      // This is charge / (2Pi * 4PiEpsilon0) which allows for more
+      // efficient field calculation
       charge = charge_;
     }
   };
