@@ -181,6 +181,7 @@ int main(int argc, char* argv[]) {
 
   // Variables used in adaptive timestepping
   int current_ion_count = 0;
+  int current_electron_count = 0;
   int num_new_ions;
 
 
@@ -211,9 +212,12 @@ int main(int argc, char* argv[]) {
         num_new_ions = particle_counts[1] - current_ion_count;
         std::cout << num_new_ions << " new ions created in the last timestep\n";
 
-        double ratio = num_new_ions/(double)current_ion_count;
+        double ratio = num_new_ions/(double)current_electron_count;
 
         // Adaptive time step tolerance
+        // This limits the number of ionisations that can happen without the corresponding
+        // rings being added to the simulation.
+        // Smaller number means shorter dt.
         double tolerance = 0.2;
 
         // Prevent very short time windows when there are not many electrons
@@ -232,6 +236,7 @@ int main(int argc, char* argv[]) {
         timestep = 0.05;
     }
     current_ion_count = particle_counts[1];
+    current_electron_count = particle_counts[0];
 
     // Update the symmetry axis of the rings
     if (n_particles > 0) rings.UpdateCentre(mean_pos[0], mean_pos[2]);
@@ -264,7 +269,7 @@ int main(int argc, char* argv[]) {
             << " electrons\n           " << particle_counts[1]
             << " positive ions\n           " << particle_counts[2]
             << " negative ions\n";
-            
+  
   if (plotDrift) {
     TCanvas* cd = new TCanvas();
     driftView.SetCanvas(cd);
