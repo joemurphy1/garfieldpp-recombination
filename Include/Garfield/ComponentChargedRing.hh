@@ -76,9 +76,9 @@ class ComponentChargedRing : public Component {
 
   void ClearActiveRings() { m_vRings.clear(); }
 
-  void GetNumberOfRings(int& n_rings) { n_rings = m_vRings.size(); }
+  std::size_t GetNumberOfRings() const { return m_vRings.size(); }
 
-  void GetRings(std::vector<Ring>& ring_vector) { ring_vector = m_vRings; }
+  const std::vector<Ring>& GetRings() const { return m_vRings; }
 
  private:
   /// Active area.

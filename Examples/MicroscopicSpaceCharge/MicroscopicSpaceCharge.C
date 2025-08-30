@@ -241,8 +241,8 @@ int main(int argc, char* argv[]) {
     // Update the symmetry axis of the rings
     if (n_particles > 0) rings.UpdateCentre(mean_pos[0], mean_pos[2]);
 
-    int nr;
-    rings.GetNumberOfRings(nr);
+    size_t nr;
+    nr = rings.GetNumberOfRings();
     std::cout << nr << " rings in the simulation.\n";
 
     if (particle_counts[0] > 0){
