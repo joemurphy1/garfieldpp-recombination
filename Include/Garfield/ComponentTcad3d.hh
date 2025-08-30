@@ -2,7 +2,6 @@
 #define G_COMPONENT_TCAD_3D_H
 
 #include <array>
-#include <iostream>
 #include <memory>
 
 #include "Garfield/ComponentTcadBase.hh"
@@ -60,26 +59,7 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
                      std::array<double, nMaxVertices>& w) const;
   bool InElement(const double x, const double y, const double z,
                  const Element& element,
-                 std::array<double, nMaxVertices>& w) const {
-    if (x < element.bbMin[0] || x > element.bbMax[0] || y < element.bbMin[1] ||
-        y > element.bbMax[1] || z < element.bbMin[2] || z > element.bbMax[2]) {
-      return false;
-    }
-    bool inside = false;
-    switch (element.type) {
-      case 2:
-        if (InTriangle(x, y, z, element, w)) inside = true;
-        break;
-      case 5:
-        if (InTetrahedron(x, y, z, element, w)) inside = true;
-        break;
-      default:
-        std::cerr << m_className << "::InElement:\n"
-                  << "    Invalid element type (" << element.type << ").\n";
-        break;
-    }
-    return inside;
-  }
+                 std::array<double, nMaxVertices>& w) const;
   bool InTetrahedron(const double x, const double y, const double z,
                      const Element& element,
                      std::array<double, nMaxVertices>& w) const;

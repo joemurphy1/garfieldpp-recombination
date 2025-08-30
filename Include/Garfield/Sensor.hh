@@ -1,54 +1,31 @@
-// Include this header if we're compiling with the GPU or this is the first time
-// without
-#if defined(__GPUCOMPILE__) || !defined(G_SENSOR_H)
-
-#if !defined(__GPUCOMPILE__) && !defined(G_SENSOR_H)
+#ifndef G_SENSOR_H
 #define G_SENSOR_H
-#endif
 
-#include "Garfield/HelperMacros.hh"
-
-#ifdef __GPUCOMPILE__
-
-#else
 #include <array>
 #include <functional>
 #include <mutex>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include "Garfield/Component.hh"
-#endif
 
 class TPad;
 
 namespace Garfield {
 
-#if defined(__GPUCONST__)
-#undef __GPUCONST__
-#endif
-
-// setup class names depending on if this is compiling the GPU static version or
-// not
-#ifdef __GPUCOMPILE__
-#define __GPUCONST__ const
-#else
-#define __GPUCONST__
 class SensorGPU;
 class Shaper;
-#endif
+class Component;
+class Medium;
 
-/// %Sensor
-
-class GARFIELD_CLASS_NAME(Sensor) {
+/// Sensor
+class Sensor {
  public:
   /// Default constructor.
-  GARFIELD_CLASS_NAME(Sensor)() = default;
+  Sensor() = default;
   /// Destructor.
-  ~GARFIELD_CLASS_NAME(Sensor)() = default;
+  ~Sensor() = default;
 
-#ifndef __GPUCOMPILE__
   /// Constructor from a single component.
   Sensor(Component* comp);
   /// Add a component.
@@ -77,15 +54,10 @@ class GARFIELD_CLASS_NAME(Sensor) {
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& medium,
                      int& status);
-#endif
   /// Get the drift field at (x, y, z).
-  __DEVICE__
   void ElectricField(const double x, const double y, const double z, double& ex,
-                     double& ey, double& ez,
-                     GARFIELD_CLASS_NAME(Medium) * &medium,
-                     int& status) __GPUCONST__;
+                     double& ey, double& ez, Medium*& medium, int& status);
 
-#ifndef __GPUCOMPILE__
   /// Get the magnetic field at (x, y, z).
   void MagneticField(const double x, const double y, const double z, double& bx,
                      double& by, double& bz, int& status);
@@ -117,12 +89,9 @@ class GARFIELD_CLASS_NAME(Sensor) {
   /// Return the current user area.
   bool GetArea(double& xmin, double& ymin, double& zmin, double& xmax,
                double& ymax, double& zmax);
-#endif
   /// Check if a point is inside the user area.
-  __DEVICE__
-  bool IsInArea(const double x, const double y, const double z) __GPUCONST__;
+  bool IsInArea(const double x, const double y, const double z);
 
-#ifndef __GPUCOMPILE__
   /// Check if a point is inside an active medium and inside the user area.
   bool IsInside(const double x, const double y, const double z);
 
@@ -133,17 +102,7 @@ class GARFIELD_CLASS_NAME(Sensor) {
   void NewSignal() { ++m_nEvents; }
   /// Reset signals and induced charges of all electrodes.
   void ClearSignal();
-#else
-  /// Add the signal on the GPU
-  __device__ void AddSignal(const double q, const double t0, const double t1,
-                            const double x0, const double y0, const double z0,
-                            const double x1, const double y1, const double z1,
-                            const bool integrateWeightingField,
-                            const bool useWeightingPotential,
-                            const int particle_idx);
-#endif
 
-#ifndef __GPUCOMPILE__
   /** Set the time window and binning for the signal calculation.
    * \param tstart start time [ns]
    * \param tstep bin width [ns]
@@ -350,18 +309,10 @@ class GARFIELD_CLASS_NAME(Sensor) {
   std::string m_className = "Sensor";
   /// Mutex.
   std::mutex m_mutex;
-#endif
 
   /// Components
-#ifdef __GPUCOMPILE__
-  ComponentGPU** m_components = nullptr;
-  size_t m_numComponents;
-  friend class Sensor;
-#else
   std::vector<std::tuple<Component*, bool, bool> > m_components;
-#endif
 
-#ifndef __GPUCOMPILE__
   struct Electrode {
     Component* comp;
     std::string label;
@@ -376,23 +327,13 @@ class GARFIELD_CLASS_NAME(Sensor) {
   };
   /// Electrodes
   std::vector<Electrode> m_electrodes;
-#else
-  struct ElectrodeGPU {
-    ComponentGPU* comp;
-    int label;
-    double* signal;
-  };
-
-  ElectrodeGPU* m_electrodes = nullptr;
-  size_t m_numElectrodes;
-#endif
 
   // Time window for signals
   double m_tStart = 0.;
   double m_tStep = 10.;
   unsigned int m_nTimeBins = 200;
   unsigned int m_nEvents = 0;
-#ifndef __GPUCOMPILE__
+
   bool m_delayedSignal = false;
   std::vector<double> m_delayedSignalTimes;
   unsigned int m_nAvgDelayedSignal = 0;
@@ -412,14 +353,12 @@ class GARFIELD_CLASS_NAME(Sensor) {
 
   std::vector<std::pair<double, bool> > m_thresholdCrossings;
   double m_thresholdLevel = 0.;
-#endif
 
   // User bounding box
   double m_xMinUser = 0., m_yMinUser = 0., m_zMinUser = 0.;
   double m_xMaxUser = 0., m_yMaxUser = 0., m_zMaxUser = 0.;
   bool m_hasUserArea = false;
 
-#ifndef __GPUCOMPILE__
   // Switch on/off debugging messages
   bool m_debug = false;
 
@@ -443,13 +382,7 @@ class GARFIELD_CLASS_NAME(Sensor) {
       if (delayed) electrode.delayedIonSignal[bin] += signal;
     }
   }
-#else
-  __device__ void FillBin(ElectrodeGPU& electrode, const unsigned int bin,
-                          const double signal, const bool electron,
-                          const bool delayed, const int particle_idx);
-#endif
 
-#ifndef __GPUCOMPILE__
   void IntegrateSignal(Electrode& electrode);
   void ConvoluteSignal(Electrode& electrode, const std::vector<double>& tab);
   bool ConvoluteSignalFFT();
@@ -461,9 +394,7 @@ class GARFIELD_CLASS_NAME(Sensor) {
   double InterpolateTransferFunctionTable(const double t) const;
   void MakeTransferFunctionTable(std::vector<double>& tab);
   void FFT(std::vector<double>& data, const bool inverse, const int nn);
-#endif
 };
-}  // namespace Garfield
 
-#undef SENSORCLASS
+}  // namespace Garfield
 #endif

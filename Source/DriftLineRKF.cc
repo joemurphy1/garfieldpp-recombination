@@ -6,6 +6,7 @@
 #include <iostream>
 #include <numeric>
 
+#include "Garfield/Component.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Numerics.hh"
