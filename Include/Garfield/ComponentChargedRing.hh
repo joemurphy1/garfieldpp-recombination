@@ -93,7 +93,7 @@ class ComponentChargedRing : public Component {
   void UpdatePeriodicity() override;
   
   /// Gets elliptic integrals via list
-  void GetEllipticIntegrals(double x, double& K, double& E);
+  void GetEllipticIntegrals(double x, double& K, double& E) const;
 
   bool InArea(const double x, const double y, const double z) {
     if (x < m_xmin[0] || x > m_xmax[0] || y < m_xmin[1] || y > m_xmax[1] ||
@@ -110,31 +110,22 @@ class ComponentChargedRing : public Component {
   bool m_bDebug = false;
 
   /// centre of cylindrical symmetry (x,y)
-  std::array<double, 3> m_centre = {0., 0.};
+  std::array<double, 2> m_centre = {0., 0.};
 
   std::vector<Ring> m_vRings;
 
   double m_dSelfFieldTolerance = 0.00001;  // this is a decent value with
                                            // minimal 'strangeness' in the field
-  double m_dSpacingTolerance =
-      2.1 * m_dSelfFieldTolerance;  
+  double m_dSpacingTolerance = 2.1 * m_dSelfFieldTolerance;
 
   bool m_bCentreSet = false;
 
-  void GetCoulombBallField(const Ring& ring, const double r, const double z,
-                           double& eFieldZ, double& eFieldR);
+  static void GetCoulombBallField(const Ring& ring, 
+                                  const double r, const double z,
+                                  double& eFieldZ, double& eFieldR);
+  void GetChargedRingField(const Ring& ring, double r, double z,
+                           double& eFieldZ, double& eFieldR) const;
 
-  void GetChargedRingField(const Ring& ring, const double r, const double z,
-                           double& eFieldZ, double& eFieldR);
-
-  /// Convert field from cylindrical coords to cartesian.                          
-  void GetCartesianLocalField(double& eFieldR, double& eFieldX, double& eFieldY,
-                              double x, double y) {
-    double cosphi = std::cos(std::atan2(y, x));
-    double sinphi = std::sin(std::atan2(y, x));
-    eFieldX = eFieldR * cosphi;
-    eFieldY = eFieldR * sinphi;
-  }
 };
 }  // namespace Garfield
 #endif

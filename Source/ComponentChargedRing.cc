@@ -12,9 +12,22 @@
 #include "Garfield/Medium.hh"
 #include "Garfield/Utilities.hh"
 
+namespace {
+
+/// Convert field from cylindrical to Cartesian coordinates.
+void GetCartesianLocalField(const double eFieldR, 
+                            double& eFieldX, double& eFieldY,
+                            const double x, const double y) {
+  const double phi = std::atan2(y, x);
+  eFieldX = eFieldR * std::cos(phi);
+  eFieldY = eFieldR * std::sin(phi);
+}
+
+}
+
 namespace Garfield {
 
-ComponentChargedRing::ComponentChargedRing() : Component("Charged ring") {}
+ComponentChargedRing::ComponentChargedRing() : Component("ChargedRing") {}
 
 Medium* ComponentChargedRing::GetMedium(const double x, const double y,
                                         const double z) {
@@ -52,7 +65,7 @@ void ComponentChargedRing::ElectricField(const double x, const double y,
   double eR_temp;
   ey = 0;
 
-  for (ComponentChargedRing::Ring& ring : m_vRings) {
+  for (const auto& ring : m_vRings) {
     GetChargedRingField(ring, r, y, eY_temp, eR_temp);
     eFieldR += eR_temp;
     ey += eY_temp;
@@ -125,7 +138,7 @@ void ComponentChargedRing::Reset() {
 }
 
 void ComponentChargedRing::GetEllipticIntegrals(double x, double& K,
-                                                double& E) {
+                                                double& E) const {
   // from x = 0 to 10 it is in steps of 1e-3. From 10 to 1e4 in steps of 1. Then
   // in steps of 1000 until 1e7.
 
@@ -168,7 +181,8 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y,
   double dz = z - m_centre[1];
   double r = std::sqrt(dx * dx + dz * dz);
 
-  ComponentChargedRing::Ring ring(y, r, N * ElementaryCharge / (TwoPi * FourPiEpsilon0));
+  constexpr double q = ElementaryCharge / (TwoPi * FourPiEpsilon0);
+  ComponentChargedRing::Ring ring(y, r, N * q);
   bool in_list = false;
   bool remove_ring = false;
   int remove_index = 0;
@@ -178,7 +192,7 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y,
       in_list = true;
       existing_ring.charge += ring.charge;
       // factor of 0.1 allows for the smearing of charge
-      if (std::abs(existing_ring.charge) < 0.1 * ElementaryCharge / (TwoPi * FourPiEpsilon0) ) {
+      if (std::abs(existing_ring.charge) < 0.1 * q) {
         remove_ring = true;
       }
       break;
@@ -202,8 +216,8 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y,
   return true;
 }
 void ComponentChargedRing::GetChargedRingField(
-    const ComponentChargedRing::Ring& ring, double r, double z, double& eFieldZ,
-    double& eFieldR) {
+    const ComponentChargedRing::Ring& ring, double r, double z, 
+    double& eFieldZ, double& eFieldR) const {
   // field called exactly on a ring
   // This will cause the interpolation spiking but should almost never happen
   // as the field will rarely be called exactly on the charge
@@ -239,8 +253,8 @@ void ComponentChargedRing::GetChargedRingField(
     const double c2 = r2 - rr2 - dz2; // 2
 
     // parameter for elliptic integrals
-    const double x =
-        2. * two_rrr / b2;  //< x < 0, i.e. never near x = 1 (singularity)
+    //< x < 0, i.e. never near x = 1 (singularity)
+    const double x = 2. * two_rrr / b2;  
 
     // calculation of elliptic integrals and fields (up to prefactor)
     double EllE, EllK;
@@ -273,7 +287,7 @@ void ComponentChargedRing::GetCoulombBallField(
     const ComponentChargedRing::Ring& ring, const double r, const double z,
     double& eFieldZ, double& eFieldR) {
   const double d = std::sqrt((z - ring.z) * (z - ring.z) + r * r);
-  const double f = 1 / (d * d * d);
+  const double f = 1. / (d * d * d);
   eFieldR = f * r;
   eFieldZ = f * (z - ring.z);
 
