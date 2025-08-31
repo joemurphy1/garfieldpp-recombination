@@ -7,8 +7,8 @@
 
 #pragma link C++ namespace Garfield;
 
-#pragma link C++ global Garfield::PlottingEngine;
-
+#pragma link C++ class Garfield::AvalancheGrid;
+#pragma link C++ class Garfield::AvalancheGridSpaceCharge;
 #pragma link C++ class Garfield::AvalancheMicroscopic;
 #pragma link C++ class Garfield::AvalancheMC;
 #pragma link C++ class Garfield::DriftLineRKF;
@@ -45,6 +45,7 @@
 #pragma link C++ class Garfield::ComponentComsol;
 #pragma link C++ class Garfield::ComponentElmer;
 #pragma link C++ class Garfield::ComponentElmer2d;
+#pragma link C++ class Garfield::ComponentChargedRing;
 #pragma link C++ class Garfield::ComponentConstant;
 #pragma link C++ class Garfield::ComponentGrid;
 #pragma link C++ class Garfield::ComponentNeBem2d;
