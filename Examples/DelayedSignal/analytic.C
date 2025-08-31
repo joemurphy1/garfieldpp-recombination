@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
   AvalancheMC drift(&sensor);
   // drift.UseWeightingPotential(false);
   drift.SetTimeSteps(0.1);
-  drift.DisableDiffusion();
+  drift.EnableDiffusion(false);
 
   drift.DriftElectron(0, 150.e-4, 0, 0);
   drift.DriftHole(0, 150.e-4, 0, 0);

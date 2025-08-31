@@ -93,6 +93,31 @@ void ComponentGrid::ElectricField(const double x, const double y,
   ElectricField(x, y, z, ex, ey, ez, v, m, status);
 }
 
+void ComponentGrid::SetUniformElectricField(const double ex, const double ey,
+                                            const double ez) {
+  if (!m_hasMesh) {
+    std::cerr << m_className << "::SetUniformElectricField: Mesh not set.\n";
+    return;
+  }
+
+  // Initialiser les champs
+  Initialise(m_efields);
+
+  m_hasPotential = false;
+  m_active.assign(m_nX[0], std::vector<std::vector<bool>>(
+                               m_nX[1], std::vector<bool>(m_nX[2], true)));
+
+  for (unsigned int i = 0; i < m_nX[0]; ++i) {
+    for (unsigned int j = 0; j < m_nX[1]; ++j) {
+      for (unsigned int k = 0; k < m_nX[2]; ++k) {
+        m_efields[i][j][k].fx = ex;
+        m_efields[i][j][k].fy = ey;
+        m_efields[i][j][k].fz = ez;
+      }
+    }
+  }
+}
+
 void ComponentGrid::WeightingField(const double x, const double y,
                                    const double z, double& wx, double& wy,
                                    double& wz, const std::string& /*label*/) {
@@ -1987,6 +2012,11 @@ void ComponentGrid::Reset() {
   m_hMobility.clear();
   m_eVelocity.clear();
   m_hVelocity.clear();
+  m_ionDensity.clear();
+  m_negativeIonDensity.clear();
+  m_electronDensity.clear();
+  m_holeDensity.clear();
+  m_chargeDensity.clear();
 
   m_wdfields.clear();
   m_wdtimes.clear();
@@ -2002,6 +2032,28 @@ void ComponentGrid::Reset() {
 
   m_hasMesh = false;
   m_hasPotential = false;
+
+  m_wFieldOffset.fill(0.);
+}
+
+void ComponentGrid::ClearFields() {
+  m_efields.clear();
+  m_bfields.clear();
+  m_wfields.clear();
+  m_eAttachment.clear();
+  m_hAttachment.clear();
+  m_eMobility.clear();
+  m_hMobility.clear();
+  m_eVelocity.clear();
+  m_hVelocity.clear();
+  m_ionDensity.clear();
+  m_negativeIonDensity.clear();
+  m_electronDensity.clear();
+  m_holeDensity.clear();
+  m_chargeDensity.clear();
+
+  m_wdfields.clear();
+  m_wdtimes.clear();
 
   m_wFieldOffset.fill(0.);
 }
@@ -2089,10 +2141,64 @@ bool ComponentGrid::LoadHoleVelocity(const std::string& fname,
   }
   return true;
 }
+void ComponentGrid::AddParticle(
+    const double x, const double y, const double z, const double w,
+    std::vector<std::vector<std::vector<double>>>& grid) {
+
+  if (!m_hasMesh) {
+    std::cerr << m_className << "::AddParticle: Mesh not set.\n";
+    return;
+  }
+
+  // Check if the point is inside the mesh boundaries.
+  if (x < m_xMin[0] || x > m_xMax[0] ||
+      y < m_xMin[1] || y > m_xMax[1] ||
+      z < m_xMin[2] || z > m_xMax[2]) return;
+
+  // Initialize the grid if needed.
+  if (grid.empty()) {
+    grid.resize(m_nX[0],
+                std::vector<std::vector<double>>(m_nX[1],
+                                                 std::vector<double>(m_nX[2], 0.)));
+  }
+
+  // Get voxel indices.
+  const unsigned int i = std::round((x - m_xMin[0]) * m_sX[0]);
+  const unsigned int j = std::round((y - m_xMin[1]) * m_sX[1]);
+  const unsigned int k = std::round((z - m_xMin[2]) * m_sX[2]);
+
+  if (i >= m_nX[0] || j >= m_nX[1] || k >= m_nX[2]) return;
+
+  grid[i][j][k] += (w * m_sX[0] * m_sX[1] * m_sX[2]);
+}
+
+void ComponentGrid::AddIon(const double x, const double y, const double z,
+                           const double w) {
+  AddParticle(x, y, z, w, m_ionDensity); // Add to ion density
+  AddParticle(x, y, z, w, m_chargeDensity); // Add to charge density
+}
+
+void ComponentGrid::AddNegativeIon(const double x, const double y, const double z,
+                                   const double w) {
+  AddParticle(x, y, z, w, m_negativeIonDensity); // Add to negative ion density
+  AddParticle(x, y, z, -w, m_chargeDensity); // Add to charge density
+}
+
+void ComponentGrid::AddElectron(const double x, const double y, const double z,
+                                const double w) {
+  AddParticle(x, y, z, w, m_electronDensity); // Add to electron density
+  AddParticle(x, y, z, -w, m_chargeDensity); // Add to charge density
+}
+
+void ComponentGrid::AddHole(const double x, const double y, const double z,
+                            const double w) {
+  AddParticle(x, y, z, w, m_holeDensity); // Add to hole density
+  AddParticle(x, y, z, w, m_chargeDensity); // Add to charge density
+}
 
 bool ComponentGrid::ElectronVelocity(const double x, const double y,
-                                     const double z, double& vx, double& vy,
-                                     double& vz) {
+                                       const double z, double& vx, double& vy,
+                                       double& vz) {
   if (m_eVelocity.empty()) {
     PrintNotReady(m_className + "::ElectronVelocity");
     return false;
@@ -2453,6 +2559,56 @@ bool ComponentGrid::HoleMobility(const double x, const double y, const double z,
     return false;
   }
   return GetData(x, y, z, m_hMobility, mu);
+}
+
+bool ComponentGrid::IonDensity(const double x, const double y, const double z,
+                               double& rho) {
+  // Make sure the map has been loaded.
+  if (m_ionDensity.empty()) {
+    PrintNotReady(m_className + "::IonDensity");
+    return false;
+  }
+  return GetData(x, y, z, m_ionDensity, rho);
+}
+
+bool ComponentGrid::NegativeIonDensity(const double x, const double y, const double z,
+                                       double& rho) {
+  // Make sure the map has been loaded.
+  if (m_negativeIonDensity.empty()) {
+    PrintNotReady(m_className + "::NegativeIonDensity");
+    return false;
+  }
+  return GetData(x, y, z, m_negativeIonDensity, rho);
+}
+
+bool ComponentGrid::ElectronDensity(const double x, const double y,
+                                    const double z, double& rho) {
+  // Make sure the map has been loaded.
+  if (m_electronDensity.empty()) {
+    PrintNotReady(m_className + "::ElectronDensity");
+    return false;
+  }
+  return GetData(x, y, z, m_electronDensity, rho);
+}
+
+bool ComponentGrid::HoleDensity(const double x, const double y, const double z,
+                                double& rho) {
+  // Make sure the map has been loaded.
+  if (m_holeDensity.empty()) {
+    PrintNotReady(m_className + "::HoleDensity");
+    return false;
+  }
+  return GetData(x, y, z, m_holeDensity, rho);
+}
+
+bool ComponentGrid::ChargeDensity(const double x, const double y, const double z,
+                                     double& q) {
+  // Make sure the map has been loaded.
+  if (m_chargeDensity.empty()) {
+    PrintNotReady(m_className + "::ChargeDensity");
+    return false;
+  }
+  return GetData(x, y, z, m_chargeDensity, q);
 }
 
 ComponentGrid::Format ComponentGrid::GetFormat(std::string format) {

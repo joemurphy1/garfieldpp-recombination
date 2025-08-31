@@ -369,6 +369,16 @@ class Component {
   virtual bool HasMobilityMap() const { return false; }
   /// Does the component have velocity maps?
   virtual bool HasVelocityMap() const { return false; }
+  /// Does the component have ion density maps?
+  virtual bool HasIonDensityMap() const { return false; }
+  /// Does the component have negative ion density maps?
+  virtual bool HasNegativeIonDensityMap() const { return false; }
+  /// Does the component have electron maps?
+  virtual bool HasElectronDensityMap() const { return false; }
+  /// Does the component have hole maps?
+  virtual bool HasHoleDensityMap() const { return false; }
+  /// Does the component have a charge density map?
+  virtual bool HasChargeDensityMap() const { return false; }
 
   /// Get the electron attachment coefficient.
   virtual bool ElectronAttachment(const double /*x*/, const double /*y*/,
@@ -380,6 +390,27 @@ class Component {
   virtual bool HoleAttachment(const double /*x*/, const double /*y*/,
                               const double /*z*/, double& eta) {
     eta = 0;
+    return false;
+  }
+
+  virtual bool IonDensity(const double /*x*/, const double /*y*/,
+                           const double /*z*/, double& rho) {
+    rho = 0.;
+    return false;
+  }
+  virtual bool NegativeIonDensity(const double /*x*/, const double /*y*/,
+                                       const double /*z*/, double& rho) {
+    rho = 0.;
+    return false;
+  }
+  virtual bool ElectronDensity(const double /*x*/, const double /*y*/,
+                                    const double /*z*/, double& rho) {
+    rho = 0.;
+    return false;
+  }
+  virtual bool HoleDensity(const double /*x*/, const double /*y*/,
+                                const double /*z*/, double& rho) {
+    rho = 0.;
     return false;
   }
 

@@ -38,6 +38,8 @@ class ComponentGrid : public Component {
   /// Use cylindrical coordinates.
   void SetCylindricalCoordinates();
 
+  void SetUniformElectricField(double ex, double ey, double ez);
+
   /** Import electric field and potential values from a file.
    * The file is supposed to contain one line for each grid point starting with
    *   - either two or three floating point numbers,
@@ -92,7 +94,7 @@ class ComponentGrid : public Component {
                          const std::string& fmt);
   
   bool SaveElectricFieldROOT(Component* cmp, const std::string& filename,
-                         const std::string& fmt);
+                             const std::string& fmt);
 
   /** Export the electric field and potential of a component.
    * \param cmp Component object for which to export the field/potential
@@ -146,7 +148,16 @@ class ComponentGrid : public Component {
   bool LoadHoleVelocity(const std::string& fname, const std::string& fmt,
                         const double scaleX = 1., const double scaleV = 1.e-9);
 
+  void AddIon(const double x, const double y, const double z,
+              const double w = 1.0);
+  void AddNegativeIon(const double x, const double y, const double z,
+                      const double w = 1.0);
+  void AddElectron(const double x, const double y, const double z,
+                   const double w = 1.0);
+  void AddHole(const double x, const double y, const double z,
+               const double w = 1.0);
   void Clear() override { Reset(); }
+  void ClearFields();
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,
                      int& status) override;
@@ -193,7 +204,6 @@ class ComponentGrid : public Component {
                         double& mu) override;
   bool HoleMobility(const double x, const double y, const double z,
                     double& mu) override;
-
   bool HasVelocityMap() const override {
     return !(m_eVelocity.empty() && m_hVelocity.empty());
   }
@@ -201,13 +211,32 @@ class ComponentGrid : public Component {
                         double& vx, double& vy, double& vz) override;
   bool HoleVelocity(const double x, const double y, const double z, double& vx,
                     double& vy, double& vz) override;
+  bool HasIonDensityMap() const override { return !(m_ionDensity.empty()); }
+  bool IonDensity(const double x, const double y, const double z,
+                  double& rho) override;
+  bool HasNegativeIonDensityMap() const override {
+    return !(m_negativeIonDensity.empty());
+  }
+  bool NegativeIonDensity(const double x, const double y, const double z,
+                          double& rho) override;
+  bool HasElectronDensityMap() const override {
+    return !(m_electronDensity.empty());
+  }
+  bool ElectronDensity(const double x, const double y, const double z,
+                       double& rho) override;
+  bool HasHoleDensityMap() const override { return !(m_holeDensity.empty()); }
+  bool HoleDensity(const double x, const double y, const double z,
+                   double& rho) override;
+  bool HasChargeDensityMap() const override { return !(m_chargeDensity.empty()); }
+  bool ChargeDensity(const double x, const double y, const double z,
+                     double& q);
   struct Node {
     double fx, fy, fz;  ///< Field
     double v;           ///< Potential
   };
-  /// Get  field values on all nodes
+  /// Get field values on all nodes
   void GetFieldOnGrid(std::vector<std::vector<
-                      std::vector<ComponentGrid::Node> > >& efields){
+                      std::vector<ComponentGrid::Node> > >& efields) {
     efields = m_efields;
   };
   /// Add the field values of cmp to current grid.
@@ -246,6 +275,13 @@ class ComponentGrid : public Component {
   /// Velocity maps for electrons and holes.
   std::vector<std::vector<std::vector<Node> > > m_eVelocity;
   std::vector<std::vector<std::vector<Node> > > m_hVelocity;
+  /// Maps for ions, negative ions, electrons and holes.
+  std::vector<std::vector<std::vector<double> > > m_ionDensity;
+  std::vector<std::vector<std::vector<double> > > m_negativeIonDensity;
+  std::vector<std::vector<std::vector<double> > > m_electronDensity;
+  std::vector<std::vector<std::vector<double> > > m_holeDensity;
+  /// Charge density map
+  std::vector<std::vector<std::vector<double> > > m_chargeDensity;
   /// Active medium flag.
   std::vector<std::vector<std::vector<bool> > > m_active;
 
@@ -290,6 +326,9 @@ class ComponentGrid : public Component {
   bool GetData(const double x, const double y, const double z,
                const std::vector<std::vector<std::vector<double> > >& table,
                double& value);
+  
+  void AddParticle(double x, double y, double z, double w,
+                 std::vector<std::vector<std::vector<double>>>& grid);
 
   /// Reduce a coordinate to the basic cell (in case of periodicity).
   double Reduce(const double xin, const double xmin, const double xmax,
