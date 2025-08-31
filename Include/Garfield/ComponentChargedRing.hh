@@ -1,5 +1,5 @@
-#ifndef G_COMPONENT_CONSTANT_H
-#define G_COMPONENT_CONSTANT_H
+#ifndef G_COMPONENT_CHARGED_RING_H
+#define G_COMPONENT_CHARGED_RING_H
 
 #include <array>
 #include <cmath>
@@ -17,19 +17,6 @@ class ComponentChargedRing : public Component {
   ComponentChargedRing();
   /// Destructor
   ~ComponentChargedRing() {}
-
-  /// Set the components of the electric field [V / cm].
-  void SetElectricField(const double ex, const double ey, const double ez);
-  /// Specify the potential at a given point.
-  void SetPotential(const double x, const double y, const double z,
-                    const double v = 0.);
-
-  /// Set the components of the weighting field [1 / cm].
-  void SetWeightingField(const double wx, const double wy, const double wz,
-                         const std::string label);
-  /// Specify the weighting potential at a given point.
-  void SetWeightingPotential(const double x, const double y, const double z,
-                             const double v = 0.);
 
   /// Set the limits of the active area explicitly
   /// (instead of using a Geometry object).
@@ -49,12 +36,7 @@ class ComponentChargedRing : public Component {
 
   using Component::ElectricField;
   bool GetVoltageRange(double& vmin, double& vmax) override;
-  void WeightingField(const double x, const double y, const double z,
-                      double& wx, double& wy, double& wz,
-                      const std::string& label) override;
-  double WeightingPotential(const double x, const double y, const double z,
-                            const std::string& label) override;
-
+  
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
                       double& ymax, double& zmax) override;
 
@@ -78,6 +60,8 @@ class ComponentChargedRing : public Component {
     Ring(double z_, double r_, double charge_) {
       z = z_;
       r = r_;
+      // This is charge / (2Pi * 4PiEpsilon0) which allows for more
+      // efficient field calculation
       charge = charge_;
     }
   };
@@ -92,12 +76,9 @@ class ComponentChargedRing : public Component {
 
   void ClearActiveRings() { m_vRings.clear(); }
 
-  void GetNumberOfRings(int& n_rings) { n_rings = m_vRings.size(); }
+  std::size_t GetNumberOfRings() const { return m_vRings.size(); }
 
-  /// Gets elliptic integrals via list
-  void GetEllipticIntegrals(double x, double& K, double& E);
-
-  void GetRings(std::vector<Ring>& ring_vector) { ring_vector = m_vRings; }
+  const std::vector<Ring>& GetRings() const { return m_vRings; }
 
  private:
   /// Active area.
@@ -110,6 +91,9 @@ class ComponentChargedRing : public Component {
 
   void Reset() override;
   void UpdatePeriodicity() override;
+  
+  /// Gets elliptic integrals via list
+  void GetEllipticIntegrals(double x, double& K, double& E);
 
   bool InArea(const double x, const double y, const double z) {
     if (x < m_xmin[0] || x > m_xmax[0] || y < m_xmin[1] || y > m_xmax[1] ||

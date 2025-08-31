@@ -155,8 +155,8 @@ void ComponentChargedRing::GetEllipticIntegrals(double x, double& K,
     return;
   }
   // Linear interpolation:
-  const std::array<double, 3> ell_arg = m_elliptic[arg];
-  const std::array<double, 3> ell_arg1 = m_elliptic[arg + 1];
+  const std::array<double, 3> & ell_arg = m_elliptic[arg];
+  const std::array<double, 3> & ell_arg1 = m_elliptic[arg + 1];
   const double f = (x - ell_arg[0]) * invStep;
   K = ell_arg[1] + f * (ell_arg1[1] - ell_arg[1]);
   E = ell_arg[2] + f * (ell_arg1[2] - ell_arg[2]);
@@ -168,7 +168,7 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y,
   double dz = z - m_centre[1];
   double r = std::sqrt(dx * dx + dz * dz);
 
-  ComponentChargedRing::Ring ring(y, r, N * ElementaryCharge);
+  ComponentChargedRing::Ring ring(y, r, N * ElementaryCharge / (TwoPi * FourPiEpsilon0));
   bool in_list = false;
   bool remove_ring = false;
   int remove_index = 0;
@@ -177,7 +177,8 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y,
         std::abs(existing_ring.r - ring.r) < m_dSpacingTolerance) {
       in_list = true;
       existing_ring.charge += ring.charge;
-      if (std::abs(existing_ring.charge) < ElementaryCharge) {
+      // factor of 0.1 allows for the smearing of charge
+      if (std::abs(existing_ring.charge) < 0.1 * ElementaryCharge / (TwoPi * FourPiEpsilon0) ) {
         remove_ring = true;
       }
       break;
@@ -227,28 +228,30 @@ void ComponentChargedRing::GetChargedRingField(
 
     double dz = z - ring_z;  //< I double-checked that's the right sign
 
-    // parameters (see Lippmann Diss.)
-    double rplus = r + ring_r;
-    double rminus = r - ring_r;
-    const double a2 = rplus * rplus + dz * dz;
-    const double b2 = rminus * rminus + dz * dz;
-    const double b = std::sqrt(b2);
-    const double c2 = r * r - ring_r * ring_r - dz * dz;
+    double dz2 = dz * dz;// 1
+    double r2 = r * r; // 1
+    double rr2 = ring_r * ring_r; // 1
+    double two_rrr = 2. * r * ring_r; // 2
+    const double intermediate = r2 + rr2 + dz2; // 2
+    const double a2 = intermediate + two_rrr; // 1
+    const double b2 = intermediate - two_rrr; // 1
+    const double b = std::sqrt(b2); // 1
+    const double c2 = r2 - rr2 - dz2; // 2
+
     // parameter for elliptic integrals
     const double x =
-        4. * r * ring_r / b2;  //< x < 0, i.e. never near x = 1 (singularity)
+        2. * two_rrr / b2;  //< x < 0, i.e. never near x = 1 (singularity)
 
     // calculation of elliptic integrals and fields (up to prefactor)
     double EllE, EllK;
     GetEllipticIntegrals(x, EllK, EllE);
-    double recip_a2b = 1. / (a2 * b);
-    double charge_factor = ring.charge / (TwoPi * FourPiEpsilon0);
-    eFieldZ = EllE * 4. * dz * recip_a2b * charge_factor;
+    double charge_over_a2b = 2. * ring.charge / (a2 * b);
+    eFieldZ = EllE * 2. * dz * charge_over_a2b;
     // if ri = 0?
     if (r < Small) {
       eFieldR = 0.;
     } else {
-      eFieldR = (c2 * EllE + a2 * EllK) * 2. * recip_a2b * charge_factor / r;
+      eFieldR = (c2 * EllE + a2 * EllK) * charge_over_a2b / r;
     }
     return;
   }
@@ -274,8 +277,8 @@ void ComponentChargedRing::GetCoulombBallField(
   eFieldR = f * r;
   eFieldZ = f * (z - ring.z);
 
-  eFieldR *= ring.charge / FourPiEpsilon0;
-  eFieldZ *= ring.charge / FourPiEpsilon0;
+  eFieldR *= ring.charge * TwoPi;
+  eFieldZ *= ring.charge * TwoPi;
 }
 
 bool ComponentChargedRing::GetVoltageRange(double& vmin, double& vmax) {
@@ -292,23 +295,5 @@ void ComponentChargedRing::UpdatePeriodicity() {
   }
 }
 
-double ComponentChargedRing::WeightingPotential(const double /*x*/,
-                                                const double /*y*/,
-                                                const double /*z*/,
-                                                const std::string& /*label*/) {
-  if (m_bDebug) std::cout << "WeightingPotential not implemented.\n";
-  return 0.;
-}
-
-void ComponentChargedRing::WeightingField(const double /*x*/,
-                                          const double /*y*/,
-                                          const double /*z*/, double& wx,
-                                          double& wy, double& wz,
-                                          const std::string& /*label*/) {
-  wx = 0.;
-  wy = 0.;
-  wz = 0.;
-  if (m_bDebug) std::cout << "WeightingField not implemented.\n";
-}
 
 }  // namespace Garfield
