@@ -222,6 +222,8 @@ class AvalancheGridSpaceCharge {
 
   void SetRingSystems();
 
+  void SetRingSystems();
+
  private:
   std::string m_className{"AvalancheGridSpaceCharge"};
 
@@ -302,6 +304,7 @@ class AvalancheGridSpaceCharge {
   std::vector<int> m_vSaturatedGaps;
 
   std::string m_sFieldOption{"coulomb"};
+
   /// Vector of ComponentChargedRing objects
   /// We might need multiple ring systems, e.g.
   /// One per gas gap.
