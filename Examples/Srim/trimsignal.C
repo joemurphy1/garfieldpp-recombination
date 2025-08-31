@@ -67,10 +67,8 @@ int main(int argc, char* argv[]) {
     // from the cluster position.
     // Scale the induced current by the number of electron/ion pairs
     // in the cluster.
-    drift.SetElectronSignalScalingFactor(cluster.n);
-    drift.DriftElectron(cluster.x, cluster.y, cluster.z, cluster.t);
-    drift.SetHoleSignalScalingFactor(cluster.n);
-    drift.DriftHole(cluster.x, cluster.y, cluster.z, cluster.t);
+    drift.DriftElectron(cluster.x, cluster.y, cluster.z, cluster.t, cluster.n);
+    drift.DriftHole(cluster.x, cluster.y, cluster.z, cluster.t, cluster.n);
   }
   driftView.SetArea(-2.e-4, 0., 2.e-4, 100.e-4);
   driftView.Plot(true);
