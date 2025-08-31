@@ -118,7 +118,8 @@ docs:
     - pacman -Syu --noconfirm
     - pacman -S --noconfirm doxygen texlive-bin texlive-basic texlive-latex texlive-latexextra texlive-luatex texlive-fontutils texlive-latexrecommended texlive-bibtexextra texlive-plaingeneric otf-latinmodern-math otf-latin-modern cmake gcc-fortran root cern-vdt biber
     - luaotfload-tool -f
-    - luaotfload-tool --list="*"
+    - luaotfload-tool --list="*" --fields="names"
+    - luaotfload-tool --find "Latin Modern Roman"
   script:
     - cmake -E rm -rf ./build
     - cmake -E make_directory ./build
