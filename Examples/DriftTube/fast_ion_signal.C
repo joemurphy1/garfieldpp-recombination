@@ -69,16 +69,15 @@ int main(int argc, char* argv[]) {
     const double time = IonTiming(r);
     const size_t nc = cluster.electrons.size();
     for (size_t i = 0; i < nc; ++i) {
+      // Average ion creation point.
+      constexpr double xIon = 0.00253;
       // Draw the avalanche size from a Polya distribution.
       constexpr double gain = 1190;
       constexpr double theta = 0.2654;
-      double np = gain * RndmPolya(theta);
       // Scale the effect of the ion induced signal by the avalanche size.
-      drift.SetIonSignalScalingFactor(np);
-      // Average ion creation point.
-      constexpr double xIon = 0.00253;
+      double np = gain * RndmPolya(theta);
       // Drift one highly charged ion to estimate the signal.
-      drift.DriftIon(xIon, 0., 0., time);
+      drift.DriftIon(xIon, 0., 0., time, np);
     }
   }
   ViewSignal signalView(&sensor);
