@@ -1,47 +1,27 @@
-// Include this header if we're compiling with the GPU or this is the first time
-// without
-#if defined(__GPUCOMPILE__) || !defined(G_COMPONENT_H)
-
-#if !defined(__GPUCOMPILE__) && !defined(G_COMPONENT_H)
+#ifndef G_COMPONENT_H
 #define G_COMPONENT_H
-#endif
-
-#include "Garfield/HelperMacros.hh"
-
-#ifdef __GPUCOMPILE__
-#else
 
 #include <array>
+#include <cstdint>
 #include <string>
 #include <vector>
 
-#endif
-
 namespace Garfield {
 
-// setup class names depending on if this is compiling the GPU static version or
-// not
-#if !defined(__GPUCOMPILE__)
 class ComponentGPU;
 class Geometry;
 class Medium;
-#endif
 
 /// Abstract base class for components.
-class GARFIELD_CLASS_NAME(Component) {
+class Component {
  public:
-#ifdef __GPUCOMPILE__
-  GARFIELD_CLASS_NAME(Component)() = default;
-#else
   /// Default constructor.
-  GARFIELD_CLASS_NAME(Component)() = delete;
+  Component() = delete;
   /// Constructor
-  GARFIELD_CLASS_NAME(Component)(const std::string& name);
-#endif
+  Component(const std::string& name);
   /// Destructor
-  virtual ~GARFIELD_CLASS_NAME(Component)() {};
+  virtual ~Component() = default;
 
-#ifndef __GPUCOMPILE__
   /// Define the geometry.
   virtual void SetGeometry(Geometry* geo);
   /// Reset.
@@ -50,23 +30,23 @@ class GARFIELD_CLASS_NAME(Component) {
   /// Get the medium at a given location (x, y, z).
   virtual Medium* GetMedium(const double x, const double y, const double z);
 
-/** Calculate the drift field at given point.
- *
- * \param x,y,z coordinates [cm].
- * \param ex,ey,ez components of the electric field [V/cm].
- * \param m pointer to the medium at this location.
- * \param status status flag
- *
- * Status flags:
- *
- *             0: Inside an active medium
- *           > 0: Inside a wire of type X
- *     -4 ... -1: On the side of a plane where no wires are
- *            -5: Inside the mesh but not in an active medium
- *            -6: Outside the mesh
- *           -10: Unknown potential type (should not occur)
- *         other: Other cases (should not occur)
- */
+  /** Calculate the drift field at given point.
+   *
+   * \param x,y,z coordinates [cm].
+   * \param ex,ey,ez components of the electric field [V/cm].
+   * \param m pointer to the medium at this location.
+   * \param status status flag
+   *
+   * Status flags:
+   *
+   *             0: Inside an active medium
+   *           > 0: Inside a wire of type X
+   *     -4 ... -1: On the side of a plane where no wires are
+   *            -5: Inside the mesh but not in an active medium
+   *            -6: Outside the mesh
+   *           -10: Unknown potential type (should not occur)
+   *         other: Other cases (should not occur)
+   */
   virtual void ElectricField(const double x, const double y, const double z,
                              double& ex, double& ey, double& ez, Medium*& m,
                              int& status) = 0;
@@ -74,13 +54,7 @@ class GARFIELD_CLASS_NAME(Component) {
   virtual void ElectricField(const double x, const double y, const double z,
                              double& ex, double& ey, double& ez, double& v,
                              Medium*& m, int& status) = 0;
-#else
-  __device__ void ElectricField(const cuda_t xin, const cuda_t yin,
-                                const cuda_t zin, cuda_t& ex, cuda_t& ey,
-                                cuda_t& ez, MediumGPU*& m, int& status);
-#endif
 
-#ifndef __GPUCOMPILE__
   /// Calculate the drift field [V/cm] at (x, y, z).
   std::array<double, 3> ElectricField(const double x, const double y,
                                       const double z);
@@ -106,9 +80,8 @@ class GARFIELD_CLASS_NAME(Component) {
   virtual double WeightingPotential(const double x, const double y,
                                     const double z, const std::string& label);
 
-  /** Return the time steps at which the delayed weighting potential/field
-   * are stored/evaluated.
-   */
+  /// Return the time steps at which the delayed weighting potential/field are
+  /// stored/evaluated.
   virtual const std::vector<double>& DelayedSignalTimes(
       const std::string& /*label*/) {
     return m_wdtimes;
@@ -125,8 +98,8 @@ class GARFIELD_CLASS_NAME(Component) {
                                      double& wy, double& wz,
                                      const std::string& label);
 
-  /** Calculate the delayed weighting potential at a given point and time
-   * and for a given electrode.
+  /** Calculate the delayed weighting potential at a given point and time and
+   * for a given electrode.
    * \param x,y,z coordinates [cm].
    * \param t time [ns].
    * \param label name of the electrode
@@ -135,9 +108,8 @@ class GARFIELD_CLASS_NAME(Component) {
                                            const double z, const double t,
                                            const std::string& label);
 
-  /** Calculate the delayed weighting potentials at a given point and
-   * for a given electrode, for a set of pre-defined times.
-   */
+  /// Calculate the delayed weighting potentials at a given point and for a
+  /// given electrode, for a set of pre-defined times.
   virtual void DelayedWeightingPotentials(const double x, const double y,
                                           const double z,
                                           const std::string& label,
@@ -222,8 +194,8 @@ class GARFIELD_CLASS_NAME(Component) {
       const double dy1, const double dz1, const double dx2, const double dy2,
       const double dz2, const unsigned int nU = 20, const unsigned int nV = 20);
 
-  /// Integrate the normal component of the weighting field
-  /// over a parallelogram.
+  /// Integrate the normal component of the weighting field over a
+  /// parallelogram.
   double IntegrateWeightingFluxParallelogram(
       const std::string& label, const double x0, const double y0,
       const double z0, const double dx1, const double dy1, const double dz1,
@@ -231,28 +203,28 @@ class GARFIELD_CLASS_NAME(Component) {
       const unsigned int nU = 20, const unsigned int nV = 20);
 
   /** Integrate the electric field flux through a line from
-    * (x0,y0,z0) to (x1,y1,z1) along a direction (xp,yp,zp).
-    * \param x0,y0,z0 coordinates of the starting point
-    * \param x1,y1,z1 coordinates of the end point
-    * \param xp,yp,zp normal vector
-    * \param nI number of intervals for the integration
-    * \param isign include both negative and positive contributions (0)
-                   or only contributions with a given polarity (+1,-1)
-    */
+   * (x0,y0,z0) to (x1,y1,z1) along a direction (xp,yp,zp).
+   * \param x0,y0,z0 coordinates of the starting point
+   * \param x1,y1,z1 coordinates of the end point
+   * \param xp,yp,zp normal vector
+   * \param nI number of intervals for the integration
+   * \param isign include both negative and positive contributions (0) or only
+   * contributions with a given polarity (+1,-1)
+   */
   double IntegrateFluxLine(const double x0, const double y0, const double z0,
                            const double x1, const double y1, const double z1,
                            const double xp, const double yp, const double zp,
                            const unsigned int nI, const int isign = 0);
 
   /** Determine whether the line between two points crosses a wire.
-    * \param x0,y0,z0 first point [cm].
-    * \param x1,y1,z1 second point [cm]
-    * \param xc,yc,zc point [cm] where the line crosses the wire or the
-             coordinates of the wire centre.
-    * \param centre flag whether to return the coordinates of the line-wire
-    *        crossing point or of the wire centre.
-    * \param rc radius [cm] of the wire.
-    */
+   * \param x0,y0,z0 first point [cm].
+   * \param x1,y1,z1 second point [cm]
+   * \param xc,yc,zc point [cm] where the line crosses the wire or the
+   * coordinates of the wire centre.
+   * \param centre flag whether to return the coordinates of the line-wire
+   * crossing point or of the wire centre.
+   * \param rc radius [cm] of the wire.
+   */
   virtual bool CrossedWire(const double x0, const double y0, const double z0,
                            const double x1, const double y1, const double z1,
                            double& xc, double& yc, double& zc,
@@ -266,8 +238,7 @@ class GARFIELD_CLASS_NAME(Component) {
   virtual bool InTrapRadius(const double q0, const double x0, const double y0,
                             const double z0, double& xw, double& yw,
                             double& rw);
-  /** Determine whether the line between two points crosses a plane.
-   */
+  /// Determine whether the line between two points crosses a plane.
   virtual bool CrossedPlane(const double x0, const double y0, const double z0,
                             const double x1, const double y1, const double z1,
                             double& xc, double& yc, double& zc);
@@ -359,28 +330,25 @@ class GARFIELD_CLASS_NAME(Component) {
     roty = m_rotationSymmetric[1];
     rotz = m_rotationSymmetric[2];
   }
-  
+
   /// Enable triangular periodicity in the \f$xy\f$ plane.
-  void EnableTriangleSymmetricXY(const bool on = true,
-                                 const bool oct = 2) {
+  void EnableTriangleSymmetricXY(const bool on = true, const bool oct = 2) {
     m_triangleSymmetric[0] = on;
     m_triangleSymmetricOct = oct;
     m_mirrorPeriodic[0] = on;
     m_mirrorPeriodic[1] = on;
   }
   /// Enable triangular periodicity in the \f$xz\f$ plane.
-  void EnableTriangleSymmetricXZ(const bool on = true,
-                                 const bool oct = 2) {
+  void EnableTriangleSymmetricXZ(const bool on = true, const bool oct = 2) {
     m_triangleSymmetric[1] = on;
     m_triangleSymmetricOct = oct;
     m_mirrorPeriodic[0] = on;
     m_mirrorPeriodic[2] = on;
   }
   /// Enable triangular periodicity in the \f$yz\f$ plane.
-  void EnableTriangleSymmetricYZ(const bool on = true,
-                                 const bool oct = 2) {
+  void EnableTriangleSymmetricYZ(const bool on = true, const bool oct = 2) {
     m_triangleSymmetric[2] = on;
-     m_triangleSymmetricOct = oct;
+    m_triangleSymmetricOct = oct;
     m_mirrorPeriodic[1] = on;
     m_mirrorPeriodic[2] = on;
   }
@@ -493,36 +461,18 @@ class GARFIELD_CLASS_NAME(Component) {
 
  protected:
   /// Class name.
-  std::string m_className = "Component";
+  std::string m_className{"Component"};
 
   /// Pointer to the geometry.
-  Geometry* m_geometry = nullptr;
+  Geometry* m_geometry{nullptr};
 
   /// Constant magnetic field.
   std::array<double, 3> m_b0 = {{0., 0., 0.}};
-#endif
   /// Ready for use?
-  bool m_ready = false;
+  bool m_ready{false};
 
-#ifdef __GPUCOMPILE__
-  /// Simple periodicity in x, y, z.
-  bool m_periodic[3] = {false, false, false};
-  /// Mirror periodicity in x, y, z.
-  bool m_mirrorPeriodic[3] = {false, false, false};
-  /// Axial periodicity in x, y, z.
-  bool m_axiallyPeriodic[3] = {false, false, false};
-  /// Rotation symmetry around x-axis, y-axis, z-axis.
-  bool m_rotationSymmetric[3] = {false, false, false};
-  /// Triangle symmetric in the xy, xz, and yz plane.
-  bool m_triangleSymmetric[3] = {false, false, false};
-  /// Triangle symmetric octant of imported map (0 < phi < Pi/4 --> octant 1).
-  int m_triangleSymmetricOct = 0;
-  /// Octants where |x| >= |y|
-  const int m_triangleOctRules[4] = {1, 4, 5, 8};
-  bool m_outsideCone = false;
-#else
   /// Switch on/off debugging messages
-  bool m_debug = false;
+  bool m_debug{false};
 
   /// Simple periodicity in x, y, z.
   std::array<bool, 3> m_periodic = {{false, false, false}};
@@ -539,9 +489,6 @@ class GARFIELD_CLASS_NAME(Component) {
   /// Octants where |x| >= |y|
   const std::array<int, 4> m_triangleOctRules = {1, 4, 5, 8};
   bool m_outsideCone = false;
-#endif
-
-#ifndef __GPUCOMPILE__
   /// Time steps at which the delayed weighting potentials/fields are stored.
   std::vector<double> m_wdtimes;
 
@@ -558,35 +505,7 @@ class GARFIELD_CLASS_NAME(Component) {
                                     const double dz2, const unsigned int nU,
                                     const unsigned int nV, const bool wfield,
                                     const std::string& label);
-#else
-
-// include parts from derived class due to big performance hit from using
-// virtual methods
-// TODO GPU TN: It isn't clear to me that we actually need (at least) the Ansys
-// include - all the code is protected by an ifndef __GPUCOMPILE__, whereas it
-// will be defined when these includes are made
-#include "ComponentAnsys123.hh"
-#include "ComponentFieldMap.hh"
-
-  friend class ComponentAnsys123;
-  friend class ComponentComsol;
-  friend class ComponentElmer;
-  friend class ComponentFieldMap;
-  friend class Component;
-
-  // enum to mimic polymorphism
-  enum class ComponentType {
-    Component = 0,
-    ComponentFieldMap,
-    ComponentAnsys123,
-    ComponentComsol,
-    ComponentElmer
-  };
-
-  ComponentType m_ComponentType{ComponentType::Component};
-
-#endif
 };
-}  // namespace Garfield
 
+}  // namespace Garfield
 #endif

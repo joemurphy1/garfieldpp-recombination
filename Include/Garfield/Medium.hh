@@ -1,55 +1,29 @@
-// Include this header if we're compiling with the GPU or this is the first time
-// without
-#if defined(__GPUCOMPILE__) || !defined(G_MEDIUM_H)
-
-#if !defined(__GPUCOMPILE__) && !defined(G_MEDIUM_H)
+#ifndef G_MEDIUM_H
 #define G_MEDIUM_H
-#endif
-
-#ifdef __GPUCOMPILE__
-#include "GPUInterface.hh"
-#else
 
 #include <string>
 #include <vector>
 
 #include "Garfield/FundamentalConstants.hh"
-#endif
-
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/HelperMacros.hh"
 
 class TPad;
 
 namespace Garfield {
 
-// setup class names depending on if this is compiling the GPU static version or
-// not
-#ifdef __GPUCOMPILE__
-#else
 class MediumGPU;
-#endif
 
 /// Abstract base class for components.
-
-class GARFIELD_CLASS_NAME(Medium) {
+class Medium {
  public:
-#ifdef __GPUCOMPILE__
   /// Constructor
-  GARFIELD_CLASS_NAME(Medium)() = default;
+  Medium();
   /// Destructor
-  ~GARFIELD_CLASS_NAME(Medium)() {};
-#else
-  /// Constructor
-  GARFIELD_CLASS_NAME(Medium)();
-  /// Destructor
-  virtual ~GARFIELD_CLASS_NAME(Medium)();
-#endif
+  virtual ~Medium();
 
   /// Return the id number of the class instance.
-  __DEVICE__ int GetId() const { return m_id; }
+  int GetId() const { return m_id; }
 
-#ifndef __GPUCOMPILE__
   /// Get the medium name/identifier.
   const std::string& GetName() const { return m_name; }
   /// Is this medium a gas?
@@ -100,14 +74,12 @@ class GARFIELD_CLASS_NAME(Medium) {
   virtual void EnablePrimaryIonisation(const bool on = true) {
     m_ionisable = on;
   }
-#endif
 
   /// Is charge carrier transport enabled in this medium?
-  __DEVICE__ bool IsDriftable() const { return m_driftable; }
+  bool IsDriftable() const { return m_driftable; }
   /// Does the medium have electron scattering rates?
-  __DEVICE__ bool IsMicroscopic() const { return m_microscopic; }
+  bool IsMicroscopic() const { return m_microscopic; }
 
-#ifndef __GPUCOMPILE__
   /// Is charge deposition by charged particles/photon enabled in this medium?
   bool IsIonisable() const { return m_ionisable; }
 
@@ -195,18 +167,7 @@ class GARFIELD_CLASS_NAME(Medium) {
 
   /// Null-collision rate [ns-1]
   virtual double GetElectronNullCollisionRate(const int band = 0);
-#endif
 
-#ifdef __GPUCOMPILE__
-
-  __device__ cuda_t GetElectronCollisionRate(const cuda_t e, const int band);
-
-  __device__ bool ElectronCollision(const cuda_t e, int& type, int& level,
-                                    cuda_t& e1, cuda_t& dx, cuda_t& dy,
-                                    cuda_t& dz, Particle* secondaries_type,
-                                    cuda_t* secondaries_energy,
-                                    int& num_secondaries, int& ndxc, int& band);
-#else
   /// Collision rate [ns-1] for given electron energy
   virtual double GetElectronCollisionRate(const double e, const int band = 0);
   struct Secondary {
@@ -220,9 +181,7 @@ class GARFIELD_CLASS_NAME(Medium) {
                                  double& e1, double& dx, double& dy, double& dz,
                                  std::vector<Secondary>& secondaries,
                                  int& band);
-#endif
 
-#ifndef __GPUCOMPILE__
   // Transport parameters for holes
   /// Drift velocity [cm / ns]
   virtual bool HoleVelocity(const double ex, const double ey, const double ez,
@@ -666,7 +625,6 @@ class GARFIELD_CLASS_NAME(Medium) {
   double m_a = 0.;
   // Number density [cm-3]
   double m_density = 0.;
-#endif
 
   // Id number
   int m_id;
@@ -675,8 +633,6 @@ class GARFIELD_CLASS_NAME(Medium) {
   bool m_driftable = false;
   bool m_microscopic = false;
   bool m_ionisable = false;
-
-#ifndef __GPUCOMPILE__
 
   // W value
   double m_w = 0.;
@@ -769,8 +725,8 @@ class GARFIELD_CLASS_NAME(Medium) {
       const double ex, const double ey, const double ez, const double bx,
       const double by, const double bz,
       const std::vector<std::vector<std::vector<double> > >& velWv,
-      const std::vector<std::vector<std::vector<double> > >& velWr,
-      double& wv, double& wr) const;
+      const std::vector<std::vector<std::vector<double> > >& velWr, double& wv,
+      double& wr) const;
   static void Langevin(const double ex, const double ey, const double ez,
                        double bx, double by, double bz, const double mu,
                        double& vx, double& vy, double& vz);
@@ -843,21 +799,7 @@ class GARFIELD_CLASS_NAME(Medium) {
   void Init(const size_t nE, const size_t nB, const size_t nA, const size_t nT,
             std::vector<std::vector<std::vector<std::vector<double> > > >& tab,
             const double val);
-
-#else
-
-#include "MediumMagboltz.hh"
-
-  friend class MediumGas;
-  friend class MediumMagboltz;
-
-  // enum to mimic polymorphism
-  enum class MediumType { Medium = 0, MediumGas, MediumMagboltz };
-
-  MediumType m_MediumType{MediumType::Medium};
-
-#endif
 };
-}  // namespace Garfield
 
+}  // namespace Garfield
 #endif

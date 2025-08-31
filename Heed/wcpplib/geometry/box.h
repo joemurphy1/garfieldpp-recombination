@@ -1,8 +1,5 @@
 #ifndef BOX_H
 #define BOX_H
-
-#include <string>
-
 #include "wcpplib/geometry/surface.h"
 #include "wcpplib/geometry/volume.h"
 /*
@@ -27,16 +24,12 @@ class box : public absvol {
   double m_dx, m_dy, m_dz;     ///< Lengths of sides
   double m_dxh, m_dyh, m_dzh;  ///< Half-lengths of sides
   ulsvolume m_ulsv;
-  std::string m_name;
 
  public:
   /// Default constructor.
   box();
   // Constructor, compute precision from mean of dimensions.
-  box(double fdx, double fdy, double fdz, const std::string& fname);
-  /// Constructor with user-provided precision.
-  box(double fdx, double fdy, double fdz, double fprec,
-      const std::string& fname);
+  box(double fdx, double fdy, double fdz);
   box(box& fb);
   box(const box& fb);
   /// Destructor
@@ -50,40 +43,6 @@ class box : public absvol {
   /// Range till exit from given volume or to entry only.
   int range_ext(trajestep& fts, int s_ext) const override;
   void income(gparticle* gp) override;
-  void chname(char* nm) const override;
-
- protected:
-  absref_transmit get_components() override;
-};
-
-/// Box "manipulator".
-
-class manip_box : public manip_absvol, public box {
- public:
-  /// Constructor
-  manip_box() : manip_absvol(), box() {}
-  manip_box(const box& f) : manip_absvol(), box(f) {}
-  /// Destructor
-  virtual ~manip_box() {}
-
-  absvol* Gavol() const override;
-  void chname(char* nm) const override;
-};
-
-// *****   sh_manip_box  ********
-
-class sh_manip_box : public sh_manip_absvol, public box {
- public:
-  /// Constructor
-  sh_manip_box() : sh_manip_absvol(), box() {}
-  sh_manip_box(const box& f) : sh_manip_absvol(), box(f) {}
-  sh_manip_box(const abssyscoor& fcsys, const box& fbx)
-      : sh_manip_absvol(fcsys), box(fbx) {}
-  /// Destructor
-  virtual ~sh_manip_box() {}
-
-  absvol* Gavol() const override;
-  void chname(char* nm) const override;
 
  protected:
   absref_transmit get_components() override;

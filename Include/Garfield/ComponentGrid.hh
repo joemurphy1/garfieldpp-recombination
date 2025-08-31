@@ -4,11 +4,12 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "Garfield/Component.hh"
 
 namespace Garfield {
-
+ 
 /// Component for interpolating field maps on a regular mesh.
 
 class ComponentGrid : public Component {
@@ -91,6 +92,15 @@ class ComponentGrid : public Component {
    */
   bool SaveElectricField(Component* cmp, const std::string& filename,
                          const std::string& fmt);
+  
+  bool SaveElectricFieldROOT(Component* cmp, const std::string& filename,
+                             const std::string& fmt);
+
+  /** Export the electric field and potential of a component.
+   * \param cmp Component object for which to export the field/potential
+   */
+  bool SaveElectricField(Component* cmp);
+  
   /** Export the weighting field and potential of a component to a text file.
    * \param cmp Component object for which to export the field/potential
    * \param id identifier of the weighting field
@@ -194,38 +204,52 @@ class ComponentGrid : public Component {
                         double& mu) override;
   bool HoleMobility(const double x, const double y, const double z,
                     double& mu) override;
+  bool HasVelocityMap() const override {
+    return !(m_eVelocity.empty() && m_hVelocity.empty());
+  }
   bool ElectronVelocity(const double x, const double y, const double z,
                         double& vx, double& vy, double& vz) override;
   bool HoleVelocity(const double x, const double y, const double z, double& vx,
                     double& vy, double& vz) override;
-  bool HasVelocityMap() const override {
-    return !(m_eVelocity.empty() && m_hVelocity.empty());
-  }
+  bool HasIonDensityMap() const override { return !(m_ionDensity.empty()); }
   bool IonDensity(const double x, const double y, const double z,
                   double& rho) override;
-  bool HasIonDensityMap() const override {
-    return !(m_ionDensity.empty());
-  }
-  bool NegativeIonDensity(const double x, const double y, const double z,
-                          double& rho) override;
   bool HasNegativeIonDensityMap() const override {
     return !(m_negativeIonDensity.empty());
   }
-  bool ElectronDensity(const double x, const double y, const double z,
-                       double& rho) override;
+  bool NegativeIonDensity(const double x, const double y, const double z,
+                          double& rho) override;
   bool HasElectronDensityMap() const override {
     return !(m_electronDensity.empty());
   }
+  bool ElectronDensity(const double x, const double y, const double z,
+                       double& rho) override;
+  bool HasHoleDensityMap() const override { return !(m_holeDensity.empty()); }
   bool HoleDensity(const double x, const double y, const double z,
                    double& rho) override;
-  bool HasHoleDensityMap() const override {
-    return !(m_holeDensity.empty());
-  }
+  bool HasChargeDensityMap() const override { return !(m_chargeDensity.empty()); }
   bool ChargeDensity(const double x, const double y, const double z,
                      double& q);
-  bool HasChargeDensityMap() const override {
-    return !(m_chargeDensity.empty());
-  }
+  struct Node {
+    double fx, fy, fz;  ///< Field
+    double v;           ///< Potential
+  };
+  /// Get field values on all nodes
+  void GetFieldOnGrid(std::vector<std::vector<
+                      std::vector<ComponentGrid::Node> > >& efields) {
+    efields = m_efields;
+  };
+  /// Add the field values of cmp to current grid.
+  bool AddElectricField(ComponentGrid* cmp, const double scale = 1.,
+                        const double xShift = 0.,
+                        const double yShift = 0.,
+                        const double zShift = 0.);
+  
+  /// Add the field values of cmp to current grid.
+  bool AddElectricField(Component* cmp, const double scale);
+  
+  /// Gives the closest node index (i, j, k) to coordinate (x, y, z).
+  bool GetNodeIndex(double x, const double y, const double z, unsigned int& i, unsigned int& j, unsigned int& k);
 
  private:
   enum class Format { Unknown, XY, XZ, XYZ, IJ, IK, IJK, YXZ };
@@ -233,10 +257,6 @@ class ComponentGrid : public Component {
   Coordinates m_coordinates = Coordinates::Cartesian;
 
   Medium* m_medium = nullptr;
-  struct Node {
-    double fx, fy, fz;  ///< Field
-    double v;           ///< Potential
-  };
 
   /// Electric field values and potentials.
   std::vector<std::vector<std::vector<Node> > > m_efields;

@@ -4,8 +4,6 @@ import os
 import math
 import ctypes
 
-ROOT.Garfield.plottingEngine.SetDefaultStyle()
-
 q = 1. / ROOT.Garfield.ElementaryCharge
 
 # Make a dummy component.

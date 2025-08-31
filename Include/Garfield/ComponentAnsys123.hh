@@ -1,10 +1,5 @@
-#if defined(__GPUCOMPILE__) || !defined(G_COMPONENT_ANSYS123_H)
-
-#if !defined(__GPUCOMPILE__) && !defined(G_COMPONENT_ANSYS123_H)
+#ifndef G_COMPONENT_ANSYS123_H
 #define G_COMPONENT_ANSYS123_H
-#endif
-
-#ifndef __GPUCOMPILE__
 
 #include "Garfield/ComponentFieldMap.hh"
 
@@ -12,13 +7,12 @@ namespace Garfield {
 
 /// Component for importing and interpolating three-dimensional ANSYS field
 /// maps.
-
 class ComponentAnsys123 : public ComponentFieldMap {
  public:
   /// Constructor
   ComponentAnsys123();
   /// Destructor
-  ~ComponentAnsys123() {}
+  ~ComponentAnsys123() = default;
 
   /** Import a field map.
    * \param elist name of the file containing the list of elements
@@ -46,6 +40,6 @@ class ComponentAnsys123 : public ComponentFieldMap {
  private:
   bool LoadPotentials(const std::string prnsol, std::vector<double>& pot);
 };
+
 }  // namespace Garfield
-#endif
 #endif

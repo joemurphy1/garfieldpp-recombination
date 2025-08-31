@@ -3,13 +3,11 @@
 #include <TROOT.h>
 
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Plotting.hh"
 
 using namespace Garfield;
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   // Load a gas file which includes excitation and ionisation rates.
   MediumMagboltz gas;

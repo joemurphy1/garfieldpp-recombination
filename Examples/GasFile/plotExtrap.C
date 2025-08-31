@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Plotting.hh"
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TGraph.h"
@@ -12,7 +11,6 @@ using namespace Garfield;
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  SetDefaultStyle();
 
   // Read the gasfiles.
   MediumGas gas_0007mbar, gas_1013mbar;

@@ -20,7 +20,6 @@
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GeometrySimple.hh"
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/Plotting.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/SolidTube.hh"
@@ -30,7 +29,6 @@ using namespace Garfield;
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  plottingEngine.SetDefaultStyle();
 
   // Make a gas medium.
   MediumMagboltz gas("Ar", 70., "CO2", 30.);

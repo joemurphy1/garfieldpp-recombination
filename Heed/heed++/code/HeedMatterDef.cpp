@@ -3,7 +3,7 @@
 #include <cmath>
 #include <fstream>
 #include <limits>
-
+#include<iostream>
 #include "heed++/code/EnergyMesh.h"
 #include "heed++/code/PhotoAbsCS.h"
 #include "heed++/code/PhysicalConstants.h"
