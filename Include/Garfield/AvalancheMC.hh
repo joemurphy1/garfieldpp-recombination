@@ -13,7 +13,6 @@ namespace Garfield {
 class Sensor;
 class ViewDrift;
 class Medium;
-class ComponentGrid;
 /// Calculate drift lines and avalanches based on macroscopic transport
 /// coefficients, using Monte Carlo integration.
 class AvalancheMC {
@@ -159,7 +158,10 @@ class AvalancheMC {
   /// Switch attachment on/off (default: enabled).
   void EnableAttachment(const bool on = true) { m_useAttachment = on; }
   /// Switch recombination on/off (default: disabled).
-  void EnableRecombination(const bool on = true) { m_useRecombination = on; }
+  void EnableRecombination(const bool on = true, double alpha = 0.) {
+    m_useRecombination = on;
+    m_alphaRecombination = alpha;
+  }
   /// Switch multiplication on/off (default: enabled).
   void EnableMultiplication(const bool on = true) { m_useMultiplication = on; }
 
@@ -299,6 +301,9 @@ class AvalancheMC {
   bool m_useVelocityMap = false;
   /// Take the densities from the component.
   bool m_useDensityMap = false;
+
+  /// Recombination coefficient in cm3/ns.
+  double m_alphaRecombination = 0.; 
 
   bool m_debug = false;
 

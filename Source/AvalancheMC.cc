@@ -12,7 +12,6 @@
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewDrift.hh"
-#include "Garfield/ComponentGrid.hh"
 
 namespace {
 
@@ -377,15 +376,14 @@ int AvalancheMC::DriftLine(
       }
       
       if (m_useRecombination) {
-        const double alpha = 1.72e-15; //[cm3/ns]
         double prec = 0.;
         if (ptype == Particle::NegativeIon) {
           const double rho = GetNegativeIonDensity(x0);
-          prec = 1. - std::exp(-alpha * rho * (t1 - t0));
+          prec = 1. - std::exp(-m_alphaRecombination * rho * (t1 - t0));
         }
         if (ptype == Particle::Ion) {
           const double rho = GetIonDensity(x0);
-          prec = 1. - std::exp(-alpha * rho * (t1 - t0));
+          prec = 1. - std::exp(-m_alphaRecombination * rho * (t1 - t0));
         }
         if (RndmUniform() < prec) {
           x1 = MidPoint(x0, x1);
@@ -493,15 +491,14 @@ int AvalancheMC::DriftLine(
         }
       }
       if (m_useRecombination) {
-        const double alpha = 1.72e-15; //[cm3/ns]
         double prec = 0.;
         if (ptype == Particle::NegativeIon) {
           const double rho = GetIonDensity(x0);
-          prec = 1. - std::exp(-alpha * rho * dt);
+          prec = 1. - std::exp(-m_alphaRecombination * rho * dt);
         }
         if (ptype == Particle::Ion) {
           const double rho = GetNegativeIonDensity(x0);
-          prec = 1. - std::exp(-alpha * rho * dt);
+          prec = 1. - std::exp(-m_alphaRecombination * rho * dt);
         }
         if (RndmUniform() < prec) {
           x1 = MidPoint(x0, x1);
