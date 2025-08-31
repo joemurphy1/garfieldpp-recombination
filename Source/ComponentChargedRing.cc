@@ -12,9 +12,22 @@
 #include "Garfield/Medium.hh"
 #include "Garfield/Utilities.hh"
 
+namespace {
+
+/// Convert field from cylindrical to Cartesian coordinates.
+void GetCartesianLocalField(const double eFieldR, 
+                            double& eFieldX, double& eFieldY,
+                            const double x, const double y) {
+  const double phi = std::atan2(y, x);
+  eFieldX = eFieldR * std::cos(phi);
+  eFieldY = eFieldR * std::sin(phi);
+}
+
+}
+
 namespace Garfield {
 
-ComponentChargedRing::ComponentChargedRing() : Component("Charged ring") {}
+ComponentChargedRing::ComponentChargedRing() : Component("ChargedRing") {}
 
 Medium* ComponentChargedRing::GetMedium(const double x, const double y,
                                         const double z) {
@@ -168,7 +181,8 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y,
   double dz = z - m_centre[1];
   double r = std::sqrt(dx * dx + dz * dz);
 
-  ComponentChargedRing::Ring ring(y, r, N * ElementaryCharge / (TwoPi * FourPiEpsilon0));
+  constexpr double q = ElementaryCharge / (TwoPi * FourPiEpsilon0);
+  ComponentChargedRing::Ring ring(y, r, N * q);
   bool in_list = false;
   bool remove_ring = false;
   int remove_index = 0;
@@ -178,7 +192,7 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y,
       in_list = true;
       existing_ring.charge += ring.charge;
       // factor of 0.1 allows for the smearing of charge
-      if (std::abs(existing_ring.charge) < 0.1 * ElementaryCharge / (TwoPi * FourPiEpsilon0) ) {
+      if (std::abs(existing_ring.charge) < 0.1 * q) {
         remove_ring = true;
       }
       break;
@@ -239,8 +253,8 @@ void ComponentChargedRing::GetChargedRingField(
     const double c2 = r2 - rr2 - dz2; // 2
 
     // parameter for elliptic integrals
-    const double x =
-        2. * two_rrr / b2;  //< x < 0, i.e. never near x = 1 (singularity)
+    //< x < 0, i.e. never near x = 1 (singularity)
+    const double x = 2. * two_rrr / b2;  
 
     // calculation of elliptic integrals and fields (up to prefactor)
     double EllE, EllK;
@@ -273,7 +287,7 @@ void ComponentChargedRing::GetCoulombBallField(
     const ComponentChargedRing::Ring& ring, const double r, const double z,
     double& eFieldZ, double& eFieldR) {
   const double d = std::sqrt((z - ring.z) * (z - ring.z) + r * r);
-  const double f = 1 / (d * d * d);
+  const double f = 1. / (d * d * d);
   eFieldR = f * r;
   eFieldZ = f * (z - ring.z);
 
