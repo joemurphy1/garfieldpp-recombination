@@ -17,7 +17,6 @@
 #include "Garfield/Sensor.hh"
 #include "Garfield/TrackHeed.hh"
 #include "Garfield/ViewSignal.hh"
-#include "Garfield/ComponentChargedRing.hh"
 
 using namespace Garfield;
 
@@ -52,14 +51,6 @@ int main(int argc, char *argv[]) {
   std::vector<double> eps = {e_pet, e_bakelite, e_gas, e_bakelite,
                              e_gas, e_bakelite, e_pet};
 
-  // We add one independent ring system per gas gap                           
-  ComponentChargedRing ring1,ring2;
-  std::vector<ComponentChargedRing*> ring_systems = {&ring1,&ring2};
-  for (auto ring_system:ring_systems){
-    ring_system->SetMedium(&gas);
-    ring_system->SetArea(-0.02,0.,-0.02,0.02,d_pet + d_bakelite + d_gas+d_bakelite+d_gas+d_bakelite+d_pet,0.02);
-  }
-
   // ComponentParallelPlate
   ComponentParallelPlate cmp;
   cmp.Setup(int(layers.size()), eps, layers, voltage, {});
@@ -80,13 +71,10 @@ int main(int argc, char *argv[]) {
   avalsc.EnableStickyAnode(true);
   avalsc.EnableAdaptiveTimeStepping(true);
   avalsc.SetStopAtK(true);
-  avalsc.EnableSpaceChargeEffect(true);
-  avalsc.SetRingSystems(ring_systems);
-
   avalsc.Set2dGrid(y_mid - (d_bakelite / 2 + d_gas) + 1.e-8,
                    y_mid + (d_bakelite / 2 + d_gas) - 1.e-8, 3 * 400, 0.05,
                    100);
-
+  avalsc.EnableSpaceChargeEffect(true);
   // Mixed Method: AvalancheMicroscopic
   AvalancheMicroscopic avalmicro(&sens);
   avalmicro.SetTimeWindow(0., 0.5);

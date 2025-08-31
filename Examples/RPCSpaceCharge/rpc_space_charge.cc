@@ -20,7 +20,6 @@
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewSignal.hh"
-#include "Garfield/ComponentChargedRing.hh"
 
 using namespace Garfield;
 
@@ -49,16 +48,6 @@ int main(int argc, char *argv[]) {
   double e_pet = 3.5;
   double e_gas = 1.;
   std::vector<double> eps = {e_pet, e_bakelite, e_gas, e_bakelite, e_pet};
-
-  // We add a charged ring system for each gas gap
-  // So just one in this case.
-  ComponentChargedRing ring1;
-  std::vector<ComponentChargedRing*> ring_systems = {&ring1}; 
-  for (auto & ring_system:ring_systems){
-    ring_system->SetMedium(&gas);
-    ring_system->SetArea(-0.02, 0., -0.02, 0.02, d_pet + d_bakelite + d_gas, 0.02);
-  }
-
   
   ComponentParallelPlate cmp;
   cmp.Setup(int(layers.size()), eps, layers, voltage, {});
@@ -78,22 +67,13 @@ int main(int argc, char *argv[]) {
   avalsc.EnableDiffusion(true);
   avalsc.EnableStickyAnode(true);
   avalsc.EnableAdaptiveTimeStepping(true);
-  avalsc.SetRingSystems(ring_systems);
   avalsc.SetStopAtK(true);
-  // Disable space charge calculation.
-  avalsc.EnableSpaceChargeEffect(true);
   std::string fieldOption = "mirror";
   avalsc.SetFieldCalculation(fieldOption);
   // Set the grid.
   avalsc.Set2dGrid(y_mid - 0.5 * d_gas + 1.e-8, y_mid + 0.5 * d_gas - 1.e-8,
                    400, 0.05, 100);
-  // Extend ring area in mirror ring case.
-  if (fieldOption == "mirror"){
-    for (auto & ring_system:ring_systems){
-      ring_system->SetArea(-0.02, -(d_pet + d_bakelite + d_gas), -0.02, 0.02, 2 * (d_pet + d_bakelite + d_gas), 0.02);
-    }      
-  }           
-
+  avalsc.EnableSpaceChargeEffect(true);
   // Place 1000 electrons in the middle of the gas gap.
   avalsc.AddElectron(0., y_mid, 0., 0., 1000.);
   avalsc.StartGridAvalanche();

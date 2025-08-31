@@ -8,7 +8,6 @@
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentParallelPlate.hh"
-#include "Garfield/ComponentChargedRing.hh"
 #include "Garfield/EllipticIntegrals.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
@@ -915,12 +914,10 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
               << "\n";
   }
 
-  if (!m_bRingSystemsSet) throw std::runtime_error("::TransportTimeStep: Ring systems not set. These can be set using SetRingSystems().\n");
-
   if (m_bSpaceCharge && m_nTotElectron > 1e5) {
     // clear existing rings
-    for (auto ringsystem:m_vRingSystems){
-      ringsystem->ClearActiveRings();
+    for (auto & ringsystem:m_vRingSystems){
+      ringsystem.ClearActiveRings();
     }
     
     // for each gas gap (and therefore ring system) 
@@ -955,7 +952,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       num_in_gap[gasGapIndex] += num_on_node;
 
       // add the ring to the correct system: need the index of the gasgap
-      m_vRingSystems[gasGapIndex]->AddChargedRing(rf,zf,0.,N); // Direct charge interaction
+      m_vRingSystems[gasGapIndex].AddChargedRing(rf,zf,0.,N); // Direct charge interaction
 
       if (m_sFieldOption == "mirror") {
         // assume symmetric single layer rpc with equal permittivity resistive
@@ -985,11 +982,11 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
           if (i == 0) {
             // 2a, alpha12 = delta_Q
             double zf0 = zf + 2. * (zTop - zf);
-            m_vRingSystems[gasGapIndex]->AddChargedRing(rf, zf0, 0., N * alpha12);
+            m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf0, 0., N * alpha12);
 
             // -2a', alpha12 = delta_Q
             zf0 = zf + 2. * (zBottom - zf);
-            m_vRingSystems[gasGapIndex]->AddChargedRing(rf, zf0, 0., N * alpha12);
+            m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf0, 0., N * alpha12);
           } else if (i == 1) {
             // TODO: higher order mirror charges
           } else {
@@ -1004,12 +1001,12 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
     for (int i=0; i<num_gaps;++i){
       if (num_in_gap[i] < 0.5) {
-        m_vRingSystems[i]->UpdateCentre(0.,0.);
+        m_vRingSystems[i].UpdateCentre(0.,0.);
         continue;
       }
       meanR[i] /= num_in_gap[i];
       meanZ[i] /= num_in_gap[i];
-      m_vRingSystems[i]->UpdateCentre(meanR[i],0.); // as we are in 2D, we set phi = 0.
+      m_vRingSystems[i].UpdateCentre(meanR[i],0.); // as we are in 2D, we set phi = 0.
     }
   }
 
@@ -1048,7 +1045,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
         // update space charge field on each node
         int gasGapIndex = m_grid[iz][ir].gasGapIndex;
-        m_vRingSystems[gasGapIndex]->ElectricField(ri,zi,0.,nd.eFieldR,nd.eFieldZ,dummy,m,stat);
+        m_vRingSystems[gasGapIndex].ElectricField(ri,zi,0.,nd.eFieldR,nd.eFieldZ,dummy,m,stat);
         
         
         // check if local field reaches background field values.
@@ -1452,6 +1449,34 @@ double AvalancheGridSpaceCharge::GetMeanDistance() {
     }
   }
   return z / (double)nofElectrons;
+}
+
+void AvalancheGridSpaceCharge::SetRingSystems() {
+  // We add a charged ring system for each gas gap
+  if (!m_pp) std::cerr << m_className
+                       << "::SetRingSystems: parallel plate improperly defined.\n";
+  m_pp->IndexOfGasGaps(m_vIndexGasGaps);
+  size_t n_gas_gaps = m_vIndexGasGaps.size();
+  Medium *m;
+
+  double horizontal_max = m_rGrid.back();
+  double horizontal_min = -1.*horizontal_max;
+  double vertical_min = m_zGrid.front();
+  double vertical_max = m_zGrid.back();
+
+  int layer_index;
+  double y_bottom,y_top;
+
+  for (size_t i = 0; i < n_gas_gaps; ++i) {
+    m_vRingSystems.emplace_back();
+    layer_index = m_vIndexGasGaps[i];
+    m_pp->getZBoundFromLayer(layer_index, y_bottom, y_top);
+    m = m_pp->GetMedium(0, 0.5 * (y_top - y_bottom) + y_bottom, 0);
+    m_vRingSystems[i].SetMedium(m);
+    m_vRingSystems[i].SetArea(horizontal_min, vertical_min, horizontal_min,
+                              horizontal_max, vertical_max, horizontal_max);
+    if (m_bDebug) m_vRingSystems[i].EnableDebugging();
+  }
 }
 
 }  // namespace Garfield

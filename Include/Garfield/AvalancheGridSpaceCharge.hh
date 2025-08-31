@@ -6,11 +6,12 @@
 #include <utility>
 #include <vector>
 
+#include "Garfield/ComponentChargedRing.hh"
+
 namespace Garfield {
 class Sensor;
 class AvalancheMicroscopic;
 class ComponentParallelPlate;
-class ComponentChargedRing;
 
 /// Propagates avalanches with the 2d (axi-symmetric) space-charge routine from
 /// Lippmann, Riegler (2004) in uniform background fields. Different options to
@@ -42,6 +43,12 @@ class AvalancheGridSpaceCharge {
   /// Enable space charge calculations (default on)
   void EnableSpaceChargeEffect(const bool option = true) {
     m_bSpaceCharge = option;
+    if (option) {
+      if (!m_isgridset) {
+        throw std::runtime_error(m_className + "::EnableSpaceChargeEffect: use Set2dGrid() before enabling space charge.");
+      }
+      SetRingSystems();
+    }
   }
 
   /// Enable adaptive time stepping (default on)
@@ -131,11 +138,6 @@ class AvalancheGridSpaceCharge {
   ///  evaluated!
   void ExportGrid(const std::string &filename);
 
-  void SetRingSystems(std::vector<Garfield::ComponentChargedRing*> ring_systems){
-    m_vRingSystems = ring_systems;
-    m_bRingSystemsSet = true;
-  }
-
  private:
   struct GridNode {
     long nElectron{0};   ///< electrons on node
@@ -217,6 +219,8 @@ class AvalancheGridSpaceCharge {
 
   // Get from index the gas gap number, else -1
   int GetGasGapNumber(int layerIndex);
+
+  void SetRingSystems();
 
  private:
   std::string m_className{"AvalancheGridSpaceCharge"};
@@ -301,14 +305,10 @@ class AvalancheGridSpaceCharge {
   std::vector<int> m_vSaturatedGaps;
 
   std::string m_sFieldOption{"coulomb"};
-  /// Vector of ComponentChargedRing pointers
-  /// Used to have multiple ring systems, e.g.
+  /// Vector of ComponentChargedRing objects
+  /// We might need multiple ring systems, e.g.
   /// One per gas gap.
-  std::vector<ComponentChargedRing*> m_vRingSystems;
-
-  /// True if the user has set a ring system with 
-  /// SetRingSystems()
-  bool m_bRingSystemsSet{false};
+  std::vector<ComponentChargedRing> m_vRingSystems;
 };
 
 }  // namespace Garfield
