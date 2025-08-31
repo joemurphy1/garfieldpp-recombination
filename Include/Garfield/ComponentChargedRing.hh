@@ -93,7 +93,7 @@ class ComponentChargedRing : public Component {
   void UpdatePeriodicity() override;
   
   /// Gets elliptic integrals via list
-  void GetEllipticIntegrals(double x, double& K, double& E);
+  void GetEllipticIntegrals(double x, double& K, double& E) const;
 
   bool InArea(const double x, const double y, const double z) {
     if (x < m_xmin[0] || x > m_xmax[0] || y < m_xmin[1] || y > m_xmax[1] ||
@@ -120,11 +120,11 @@ class ComponentChargedRing : public Component {
 
   bool m_bCentreSet = false;
 
-  void GetCoulombBallField(const Ring& ring, const double r, const double z,
-                           double& eFieldZ, double& eFieldR);
-
-  void GetChargedRingField(const Ring& ring, const double r, const double z,
-                           double& eFieldZ, double& eFieldR);
+  static void GetCoulombBallField(const Ring& ring, 
+                                  const double r, const double z,
+                                  double& eFieldZ, double& eFieldR);
+  void GetChargedRingField(const Ring& ring, double r, double z,
+                           double& eFieldZ, double& eFieldR) const;
 
 };
 }  // namespace Garfield

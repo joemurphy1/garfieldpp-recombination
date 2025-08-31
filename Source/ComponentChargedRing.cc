@@ -65,7 +65,7 @@ void ComponentChargedRing::ElectricField(const double x, const double y,
   double eR_temp;
   ey = 0;
 
-  for (ComponentChargedRing::Ring& ring : m_vRings) {
+  for (const auto& ring : m_vRings) {
     GetChargedRingField(ring, r, y, eY_temp, eR_temp);
     eFieldR += eR_temp;
     ey += eY_temp;
@@ -138,7 +138,7 @@ void ComponentChargedRing::Reset() {
 }
 
 void ComponentChargedRing::GetEllipticIntegrals(double x, double& K,
-                                                double& E) {
+                                                double& E) const {
   // from x = 0 to 10 it is in steps of 1e-3. From 10 to 1e4 in steps of 1. Then
   // in steps of 1000 until 1e7.
 
@@ -216,8 +216,8 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y,
   return true;
 }
 void ComponentChargedRing::GetChargedRingField(
-    const ComponentChargedRing::Ring& ring, double r, double z, double& eFieldZ,
-    double& eFieldR) {
+    const ComponentChargedRing::Ring& ring, double r, double z, 
+    double& eFieldZ, double& eFieldR) const {
   // field called exactly on a ring
   // This will cause the interpolation spiking but should almost never happen
   // as the field will rarely be called exactly on the charge
