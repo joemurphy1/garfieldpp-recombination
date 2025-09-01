@@ -92,7 +92,7 @@ void GarfieldG4FastSimulationModel::DoIt(const G4FastTrack& fastTrack,
       fastTrack.GetPrimaryTrack()->GetParticleDefinition()->GetParticleName();
 
   fastStep.KillPrimaryTrack();
-  fastStep.SetPrimaryTrackPathLength(0.0);
+  fastStep.ProposePrimaryTrackPathLength(0.0);
 
   if (particleName == "kaon+") {
     particleName = "K+";
@@ -107,7 +107,7 @@ void GarfieldG4FastSimulationModel::DoIt(const G4FastTrack& fastTrack,
                          localpos.z() / CLHEP::cm, localdir.x(), localdir.y(),
                          localdir.z());
 
-  fastStep.SetTotalEnergyDeposited(fGarfieldPhysics->GetEnergyDeposit_MeV());
+  fastStep.ProposeTotalEnergyDeposited(fGarfieldPhysics->GetEnergyDeposit_MeV());
 
   if (!fGarfieldPhysics->GetCreateSecondariesInGeant4()) return;
   const auto& secondaryParticles = fGarfieldPhysics->GetSecondaryParticles();
