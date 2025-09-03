@@ -21,6 +21,7 @@ constexpr unsigned int nCharName = 25;
 constexpr unsigned int nCharDescr = 50;
 constexpr unsigned int nMaxLevels = 960;
 constexpr unsigned int nMaxComponents = 6;
+constexpr std::size_t MaxNumberGas{6};
 
 extern "C" {
 

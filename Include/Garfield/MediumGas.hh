@@ -1,12 +1,5 @@
-#if defined(__GPUCOMPILE__) || !defined(G_MEDIUM_GAS_H)
-
-#if !defined(__GPUCOMPILE__) && !defined(G_MEDIUM_GAS_H)
+#ifndef G_MEDIUM_GAS_H
 #define G_MEDIUM_GAS_H
-#endif
-
-#ifdef __GPUCOMPILE__
-
-#else
 
 #include <array>
 #include <bitset>
@@ -15,13 +8,9 @@
 
 #include "Garfield/Medium.hh"
 
-#endif
-
-#ifndef __GPUCOMPILE__
 namespace Garfield {
 
 /// Base class for gas media.
-
 class MediumGas : public Medium {
  public:
   /// Constructor
@@ -169,11 +158,8 @@ class MediumGas : public Medium {
   virtual double CreateGPUTransferObject(MediumGPU*& med_gpu) override;
 
  protected:
-#endif
-
   static constexpr unsigned int m_nMaxGases = 6;
 
-#ifndef __GPUCOMPILE__
   // Gas mixture
   std::array<std::string, m_nMaxGases> m_gas;
   std::array<double, m_nMaxGases> m_fraction;
@@ -267,7 +253,6 @@ class MediumGas : public Medium {
   static int GetGasNumberGasFile(const std::string& input);
   static const std::vector<std::string> GetAliases(const std::string& gas);
 };
-}
+}  // namespace Garfield
 
-#endif
 #endif
