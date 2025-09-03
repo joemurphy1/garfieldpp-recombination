@@ -7,7 +7,6 @@
 
 #include "GPUInterface.hh"
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/HelperMacros.hh"
 #include "Garfield/MagboltzInterface.hh"
 
 namespace Garfield {
@@ -19,11 +18,11 @@ class MediumGPU {
   /// Destructor
   ~MediumGPU() {};
   /// Return the id number of the class instance.
-  __DEVICE__ int GetId() const { return m_id; }
+  __device__ int GetId() const { return m_id; }
   /// Is charge carrier transport enabled in this medium?
-  __DEVICE__ bool IsDriftable() const { return m_driftable; }
+  __device__ bool IsDriftable() const { return m_driftable; }
   /// Does the medium have electron scattering rates?
-  __DEVICE__ bool IsMicroscopic() const { return m_microscopic; }
+  __device__ bool IsMicroscopic() const { return m_microscopic; }
   __device__ cuda_t GetElectronCollisionRate(const cuda_t e, const int band);
 
   __device__ bool ElectronCollision(const cuda_t e, int& type, int& level,

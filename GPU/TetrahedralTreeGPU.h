@@ -6,7 +6,6 @@
 #endif
 
 #include "GPUInterface.hh"
-#include "Garfield/HelperMacros.hh"
 #include "Garfield/TetrahedralTree.hh"
 #include "Garfield/Vector.hh"
 

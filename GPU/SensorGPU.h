@@ -6,7 +6,6 @@
 #endif
 
 #include "ComponentGPU.h"
-#include "Garfield/HelperMacros.hh"
 #include "MediumGPU.h"
 
 namespace Garfield {
@@ -18,11 +17,11 @@ class SensorGPU {
   /// Destructor.
   ~SensorGPU() = default;
   /// Get the drift field at (x, y, z).
-  __DEVICE__ void ElectricField(const double x, const double y, const double z,
+  __device__ void ElectricField(const double x, const double y, const double z,
                                 double& ex, double& ey, double& ez,
                                 MediumGPU*& medium, int& status) const;
   /// Check if a point is inside the user area.
-  __DEVICE__ bool IsInArea(const double x, const double y,
+  __device__ bool IsInArea(const double x, const double y,
                            const double z) const;
   /// Add the signal on the GPU
   __device__ void AddSignal(const double q, const double t0, const double t1,

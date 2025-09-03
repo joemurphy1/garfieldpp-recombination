@@ -11,11 +11,11 @@
 
 #if !defined(__GPUCOMPILE__)
 class TetrahedralTreeGPU;
+#include <utility>
+#include <vector>
 #endif
 
 #include <cstddef>
-#include <utility>
-#include <vector>
 
 namespace Garfield {
 

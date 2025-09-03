@@ -25,10 +25,10 @@ __device__ double atomicAdd(double* address, double val) {
 }
 #endif
 
-__DEVICE__
-void SensorGPU::ElectricField(const double x, const double y, const double z,
-                              double& ex, double& ey, double& ez,
-                              MediumGPU*& medium, int& status) const {
+__device__ void SensorGPU::ElectricField(const double x, const double y,
+                                         const double z, double& ex, double& ey,
+                                         double& ez, MediumGPU*& medium,
+                                         int& status) const {
   ex = ey = ez = 0.;
   status = -10;
   medium = nullptr;
@@ -51,8 +51,8 @@ void SensorGPU::ElectricField(const double x, const double y, const double z,
   }
 }
 
-__DEVICE__
-bool SensorGPU::IsInArea(const double x, const double y, const double z) const {
+__device__ bool SensorGPU::IsInArea(const double x, const double y,
+                                    const double z) const {
   if (x >= m_xMinUser && x <= m_xMaxUser && y >= m_yMinUser &&
       y <= m_yMaxUser && z >= m_zMinUser && z <= m_zMaxUser) {
     return true;
