@@ -1,5 +1,8 @@
 #include "Garfield/ComponentGrid.hh"
 
+#include <TFile.h>
+#include <TTree.h>
+
 #include <algorithm>
 #include <array>
 #include <bitset>
@@ -10,8 +13,6 @@
 #include <limits>
 #include <set>
 #include <sstream>
-#include <TFile.h>
-#include <TTree.h>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
@@ -386,7 +387,7 @@ bool ComponentGrid::LoadElectricField(const std::string& fname,
                                       const double scaleP) {
   m_efields.clear();
   m_hasPotential = false;
-  m_active.assign(m_nX[0], std::vector<std::vector<bool> >(
+  m_active.assign(m_nX[0], std::vector<std::vector<bool>>(
                                m_nX[1], std::vector<bool>(m_nX[2], true)));
   // Read the file.
   m_pMin = withP ? +1. : 0.;
@@ -417,7 +418,7 @@ bool ComponentGrid::LoadWeightingField(const std::string& fname,
                                        const bool withP, const double scaleX,
                                        const double scaleE,
                                        const double scaleP) {
-  std::vector<std::vector<std::vector<Node> > > wfield;
+  std::vector<std::vector<std::vector<Node>>> wfield;
   // Read the file.
   if (!LoadData(fname, fmt, withP, false, scaleX, scaleE, scaleP, wfield)) {
     return false;
@@ -536,8 +537,8 @@ bool ComponentGrid::SaveElectricField(Component* cmp,
 }
 
 bool ComponentGrid::SaveElectricFieldROOT(Component* cmp,
-                                      const std::string& filename,
-                                      const std::string& format) {
+                                          const std::string& filename,
+                                          const std::string& format) {
   if (!cmp) {
     std::cerr << m_className << "::SaveElectricField: Null pointer.\n";
     return false;
@@ -562,9 +563,9 @@ bool ComponentGrid::SaveElectricFieldROOT(Component* cmp,
   std::cout << m_className << "::SaveElectricField:\n"
             << "    Exporting field/potential to " << filename << ".\n"
             << "    Be patient...\n";
-  
+
   TFile f(filename.c_str(), "RECREATE");
-  
+
   // Header metadata tree
   TTree header("header", "Grid metadata");
   double xmin = m_xMin[0], xmax = m_xMax[0];
@@ -582,13 +583,13 @@ bool ComponentGrid::SaveElectricFieldROOT(Component* cmp,
   header.Branch("zmax", &zmax);
   header.Branch("nz", &nz);
   header.Fill();
-  
+
   PrintProgress(0.);
   TTree tree("field", "Electric Field Grid");
 
   double x, y, z, ex, ey, ez, er, et, v;
-  int iS, jS , kS;
-  
+  int iS, jS, kS;
+
   if (fmt == Format::XY) {
     tree.Branch("x", &x);
     tree.Branch("y", &y);
@@ -625,7 +626,7 @@ bool ComponentGrid::SaveElectricFieldROOT(Component* cmp,
     tree.Branch("ez", &ez);
     tree.Branch("v", &v);
   }
-  
+
   const unsigned int nValues = m_nX[0] * m_nX[1] * m_nX[2];
   const unsigned int nPrint =
       std::pow(10, static_cast<unsigned int>(
@@ -648,13 +649,19 @@ bool ComponentGrid::SaveElectricFieldROOT(Component* cmp,
         if (m_coordinates == Coordinates::Cylindrical) {
           const double ct = cos(y);
           const double st = sin(y);
-          ex = 0.; ey = 0.; ez = 0.; v = 0.;
+          ex = 0.;
+          ey = 0.;
+          ez = 0.;
+          v = 0.;
           cmp->ElectricField(x * ct, x * st, z, ex, ey, ez, v, medium, status);
           er = +ex * ct + ey * st;
           et = -ex * st + ey * ct;
           outfile << er << "  " << et << "  " << ez << "  " << v << "\n";
         } else {
-          ex = 0.; ey = 0.; ez = 0.; v = 0.;
+          ex = 0.;
+          ey = 0.;
+          ez = 0.;
+          v = 0.;
           cmp->ElectricField(x, y, z, ex, ey, ez, v, medium, status);
           outfile << ex << "  " << ey << "  " << ez << "  " << v << "\n";
         }
@@ -671,7 +678,6 @@ bool ComponentGrid::SaveElectricFieldROOT(Component* cmp,
   return true;
 }
 
-
 bool ComponentGrid::SaveElectricField(Component* cmp) {
   if (!cmp) {
     std::cerr << m_className << "::SaveElectricField: Null pointer.\n";
@@ -681,14 +687,13 @@ bool ComponentGrid::SaveElectricField(Component* cmp) {
     std::cerr << m_className << "::SaveElectricField: Mesh not set.\n";
     return false;
   }
-  
+
   Initialise(m_efields);
-  
+
   std::cout << m_className << "::SaveElectricField:\n"
             << "    Saving field/potential.\n"
             << "    Be patient...\n";
   PrintProgress(0.);
-
 
   const unsigned int nValues = m_nX[0] * m_nX[1] * m_nX[2];
   const unsigned int nPrint =
@@ -718,7 +723,7 @@ bool ComponentGrid::SaveElectricField(Component* cmp) {
         m_efields[i][j][k].fy = ey;
         m_efields[i][j][k].fz = ez;
         m_efields[i][j][k].v = v;
-        
+
         ++nLines;
         if (nLines % nPrint == 0) PrintProgress(double(nLines) / nValues);
       }
@@ -729,8 +734,7 @@ bool ComponentGrid::SaveElectricField(Component* cmp) {
 }
 
 bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale,
-                                     const double xShift,
-                                     const double yShift,
+                                     const double xShift, const double yShift,
                                      const double zShift) {
   if (!cmp) {
     std::cerr << m_className << "::AddElectricField: Null pointer.\n";
@@ -738,46 +742,47 @@ bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale,
   }
   if (!m_hasMesh) {
     std::cerr << m_className << "::AddElectricField: Taking mesh from input\n";
-    
+
     unsigned int nx, ny, nz;
     double xmin, xmax, ymin;
     double ymax, zmin, zmax;
     cmp->GetMesh(nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax);
     SetMesh(nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax);
   }
-  
-  if(m_efields.empty()) Initialise(m_efields);
-  
-  if(m_debug) std::cout << m_className << "::AddElectricField:\n"
-            << "    Copying field/potential.\n";
-  
-  std::vector<std::vector<std::vector<Node> > > efieldsCopy;
+
+  if (m_efields.empty()) Initialise(m_efields);
+
+  if (m_debug)
+    std::cout << m_className << "::AddElectricField:\n"
+              << "    Copying field/potential.\n";
+
+  std::vector<std::vector<std::vector<Node>>> efieldsCopy;
   cmp->GetFieldOnGrid(efieldsCopy);
-  
+
   for (size_t i = 0; i < m_nX[0]; ++i) {
-      for (size_t j = 0; j < m_nX[1]; ++j) {
-          for (size_t k = 0; k < m_nX[2]; ++k) {
-            
-            const double dx = (m_xMax[0] - m_xMin[0]) / std::max(m_nX[0] - 1., 1.);
-            const double dy = (m_xMax[1] - m_xMin[1]) / std::max(m_nX[1] - 1., 1.);
-            const double dz = (m_xMax[2] - m_xMin[2]) / std::max(m_nX[2] - 1., 1.);
-            const double x = m_xMin[0] + i * dx - xShift;
-            const double y = m_xMin[1] + j * dy - yShift;
-            const double z = m_xMin[2] + k * dz - zShift;
-            
-            unsigned int iCopy, jCopy, kCopy;
-            const bool inArea = cmp->GetNodeIndex(x, y, z, iCopy, jCopy, kCopy);
-            if(!inArea) continue;
-            
-            m_efields[i][j][k].fx += efieldsCopy[iCopy][jCopy][kCopy].fx * scale;
-            m_efields[i][j][k].fy += efieldsCopy[iCopy][jCopy][kCopy].fy * scale;
-            m_efields[i][j][k].fz += efieldsCopy[iCopy][jCopy][kCopy].fz * scale;
-            m_efields[i][j][k].v += efieldsCopy[iCopy][jCopy][kCopy].v * scale;
-          }
+    for (size_t j = 0; j < m_nX[1]; ++j) {
+      for (size_t k = 0; k < m_nX[2]; ++k) {
+        const double dx = (m_xMax[0] - m_xMin[0]) / std::max(m_nX[0] - 1., 1.);
+        const double dy = (m_xMax[1] - m_xMin[1]) / std::max(m_nX[1] - 1., 1.);
+        const double dz = (m_xMax[2] - m_xMin[2]) / std::max(m_nX[2] - 1., 1.);
+        const double x = m_xMin[0] + i * dx - xShift;
+        const double y = m_xMin[1] + j * dy - yShift;
+        const double z = m_xMin[2] + k * dz - zShift;
+
+        unsigned int iCopy, jCopy, kCopy;
+        const bool inArea = cmp->GetNodeIndex(x, y, z, iCopy, jCopy, kCopy);
+        if (!inArea) continue;
+
+        m_efields[i][j][k].fx += efieldsCopy[iCopy][jCopy][kCopy].fx * scale;
+        m_efields[i][j][k].fy += efieldsCopy[iCopy][jCopy][kCopy].fy * scale;
+        m_efields[i][j][k].fz += efieldsCopy[iCopy][jCopy][kCopy].fz * scale;
+        m_efields[i][j][k].v += efieldsCopy[iCopy][jCopy][kCopy].v * scale;
       }
+    }
   }
-  
-  if(m_debug) std::cout << std::endl << m_className << "::AddElectricField: Done.\n";
+
+  if (m_debug)
+    std::cout << std::endl << m_className << "::AddElectricField: Done.\n";
   return true;
 }
 
@@ -786,35 +791,37 @@ bool ComponentGrid::AddElectricField(Component* cmp, const double scale) {
     std::cerr << m_className << "::AddElectricField: Null pointer.\n";
     return false;
   }
-  
-  if(m_efields.empty()) Initialise(m_efields);
-  
+
+  if (m_efields.empty()) Initialise(m_efields);
+
   double spacing;
   std::array<double, 3> coords;
-  std::array<size_t,3> indices;
-  double ex,ey,ez,v;
-  Garfield::Medium * m;
+  std::array<size_t, 3> indices;
+  double ex, ey, ez, v;
+  Garfield::Medium* m;
   int stat;
-  
-  for (size_t i = 0; i < m_nX[0]; ++i) {
-      for (size_t j = 0; j < m_nX[1]; ++j) {
-          for (size_t k = 0; k < m_nX[2]; ++k) {
-            indices = {i,j,k};
-            for (int l = 0; l<3; ++l){
-              spacing = (m_xMax[l] - m_xMin[l]) / std::max(m_nX[l] - 1., 1.);
-              coords[l] = m_xMin[l] + indices[l]*spacing;
-            }
-            cmp->ElectricField(coords[0],coords[1],coords[2],ex,ey,ez,v,m,stat);
 
-            m_efields[i][j][k].fx = ex * scale;
-            m_efields[i][j][k].fy = ey * scale;
-            m_efields[i][j][k].fz = ez * scale;
-            m_efields[i][j][k].v = v * scale;
-          }
+  for (size_t i = 0; i < m_nX[0]; ++i) {
+    for (size_t j = 0; j < m_nX[1]; ++j) {
+      for (size_t k = 0; k < m_nX[2]; ++k) {
+        indices = {i, j, k};
+        for (int l = 0; l < 3; ++l) {
+          spacing = (m_xMax[l] - m_xMin[l]) / std::max(m_nX[l] - 1., 1.);
+          coords[l] = m_xMin[l] + indices[l] * spacing;
+        }
+        cmp->ElectricField(coords[0], coords[1], coords[2], ex, ey, ez, v, m,
+                           stat);
+
+        m_efields[i][j][k].fx = ex * scale;
+        m_efields[i][j][k].fy = ey * scale;
+        m_efields[i][j][k].fz = ez * scale;
+        m_efields[i][j][k].v = v * scale;
       }
+    }
   }
-  
-  if(m_debug) std::cout << std::endl << m_className << "::AddElectricField: Done.\n";
+
+  if (m_debug)
+    std::cout << std::endl << m_className << "::AddElectricField: Done.\n";
   return true;
 }
 
@@ -923,23 +930,25 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
   unsigned int nx = 0, ny = 0, nz = 0;
   bool cylindrical = (m_coordinates == Coordinates::Cylindrical);
   // Parse the comment lines in the file.
-  
+
   bool isRoot = (filename.find(".root") != std::string::npos);
-  
+
   if (isRoot) {
-    
     TFile file(filename.c_str(), "READ");
     if (file.IsZombie()) {
-      std::cerr << m_className << "::LoadElectricField: Could not open ROOT file " << filename << "\n";
+      std::cerr << m_className
+                << "::LoadElectricField: Could not open ROOT file " << filename
+                << "\n";
       return false;
     }
-    
+
     TTree* header = (TTree*)file.Get("header");
     if (!header) {
-      std::cerr << m_className << "::LoadElectricField: Tree 'header' not found.\n";
+      std::cerr << m_className
+                << "::LoadElectricField: Tree 'header' not found.\n";
       return false;
     }
-    
+
     header->SetBranchAddress("xmin", &xmin);
     header->SetBranchAddress("xmax", &xmax);
     header->SetBranchAddress("ymin", &ymin);
@@ -949,12 +958,12 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
     header->SetBranchAddress("nx", &nx);
     header->SetBranchAddress("ny", &ny);
     header->SetBranchAddress("nz", &nz);
-    
+
     header->GetEntry(0);
-    
+
     return SetMesh(nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax);
   }
-    
+
   std::ifstream infile(filename);
   if (!infile) {
     std::cerr << m_className << "::LoadMesh:\n"
@@ -1283,9 +1292,7 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
 bool ComponentGrid::LoadData(
     const std::string& filename, std::string format, const bool withPotential,
     const bool withFlag, const double scaleX, const double scaleF,
-    const double scaleP,
-    std::vector<std::vector<std::vector<Node> > >& fields) {
-  
+    const double scaleP, std::vector<std::vector<std::vector<Node>>>& fields) {
   if (!m_hasMesh) {
     if (!LoadMesh(filename, format, scaleX)) {
       std::cerr << m_className << "::LoadData: Mesh not set.\n";
@@ -1305,8 +1312,8 @@ bool ComponentGrid::LoadData(
 
   unsigned int nValues = 0;
   // Keep track of which elements have been read.
-  std::vector<std::vector<std::vector<bool> > > isSet(
-      m_nX[0], std::vector<std::vector<bool> >(
+  std::vector<std::vector<std::vector<bool>>> isSet(
+      m_nX[0], std::vector<std::vector<bool>>(
                    m_nX[1], std::vector<bool>(m_nX[2], false)));
 
   std::ifstream infile(filename);
@@ -1317,7 +1324,7 @@ bool ComponentGrid::LoadData(
   }
 
   bool isRoot = (filename.find(".root") != std::string::npos);
-  
+
   if (!isRoot) {
     std::string line;
     unsigned int nLines = 0;
@@ -1390,7 +1397,7 @@ bool ComponentGrid::LoadData(
         x *= scaleX;
         y *= scaleX;
         z *= scaleX;
-        
+
         if (m_nX[0] > 1) {
           const double u = std::round((x - m_xMin[0]) * m_sX[0]);
           i = u < 0. ? 0 : static_cast<unsigned int>(u);
@@ -1450,16 +1457,16 @@ bool ComponentGrid::LoadData(
       // Check the indices.
       if (i >= m_nX[0] || j >= m_nX[1] || k >= m_nX[2]) {
         std::cerr << m_className << "::LoadData:\n"
-        << "    Error reading line " << nLines << ".\n"
-        << "    Index (" << i << ", " << j << ", " << k
-        << ") out of range.\n";
+                  << "    Error reading line " << nLines << ".\n"
+                  << "    Index (" << i << ", " << j << ", " << k
+                  << ") out of range.\n";
         continue;
       }
       if (isSet[i][j][k]) {
         std::cerr << m_className << "::LoadData:\n"
-        << "    Error reading line " << nLines << ".\n"
-        << "    Node (" << i << ", " << j << ", " << k
-        << ") has already been set.\n";
+                  << "    Error reading line " << nLines << ".\n"
+                  << "    Node (" << i << ", " << j << ", " << k
+                  << ") has already been set.\n";
         continue;
       }
       // Get the field values.
@@ -1543,30 +1550,31 @@ bool ComponentGrid::LoadData(
     infile.close();
     if (bad) return false;
   } else {
-    
     TFile file(filename.c_str(), "READ");
     if (file.IsZombie()) {
-      std::cerr << m_className << "::LoadElectricField: Could not open ROOT file " << filename << "\n";
+      std::cerr << m_className
+                << "::LoadElectricField: Could not open ROOT file " << filename
+                << "\n";
       return false;
     }
-    
+
     TTree* tree = (TTree*)file.Get("field");
     if (!tree) {
-      std::cerr << m_className << "::LoadElectricField: Tree 'field' not found.\n";
+      std::cerr << m_className
+                << "::LoadElectricField: Tree 'field' not found.\n";
       return false;
     }
-    
+
     double x, y, z, ex, ey, ez, er, et, p;
     int iS, jS, kS;
-    
+
     if (fmt == Format::XY) {
       tree->SetBranchAddress("x", &x);
       tree->SetBranchAddress("y", &y);
     } else if (fmt == Format::XZ) {
       tree->SetBranchAddress("x", &x);
       tree->SetBranchAddress("z", &z);
-    } else if (fmt == Format::XYZ ||
-               fmt == Format::YXZ) {
+    } else if (fmt == Format::XYZ || fmt == Format::YXZ) {
       tree->SetBranchAddress("x", &x);
       tree->SetBranchAddress("y", &y);
       tree->SetBranchAddress("z", &z);
@@ -1581,7 +1589,7 @@ bool ComponentGrid::LoadData(
       tree->SetBranchAddress("j", &jS);
       tree->SetBranchAddress("k", &kS);
     }
-    
+
     if (m_coordinates == Coordinates::Cylindrical) {
       tree->SetBranchAddress("er", &er);
       tree->SetBranchAddress("et", &et);
@@ -1592,11 +1600,11 @@ bool ComponentGrid::LoadData(
     }
     tree->SetBranchAddress("ez", &ez);
     tree->SetBranchAddress("v", &p);
-    
+
     unsigned int i = 0;
     unsigned int j = 0;
     unsigned int k = 0;
-    
+
     const Long64_t nEntries = tree->GetEntries();
     for (Long64_t iEntries = 0; iEntries < nEntries; ++iEntries) {
       tree->GetEntry(iEntries);
@@ -1649,22 +1657,22 @@ bool ComponentGrid::LoadData(
       // Check the indices.
       if (i >= m_nX[0] || j >= m_nX[1] || k >= m_nX[2]) {
         std::cerr << m_className << "::LoadData:\n"
-        << "    Error reading entry " << iEntries << ".\n"
-        << "    Index (" << i << ", " << j << ", " << k
-        << ") out of range.\n";
+                  << "    Error reading entry " << iEntries << ".\n"
+                  << "    Index (" << i << ", " << j << ", " << k
+                  << ") out of range.\n";
         continue;
       }
       if (isSet[i][j][k]) {
         std::cerr << m_className << "::LoadData:\n"
-        << "    Error reading entry " << iEntries << ".\n"
-        << "    Node (" << i << ", " << j << ", " << k
-        << ") has already been set.\n";
+                  << "    Error reading entry " << iEntries << ".\n"
+                  << "    Node (" << i << ", " << j << ", " << k
+                  << ") has already been set.\n";
         continue;
       }
       ex *= scaleF;
       ey *= scaleF;
       ez *= scaleF;
-      
+
       if (withPotential) {
         p *= scaleP;
         if (m_pMin > m_pMax) {
@@ -1676,7 +1684,7 @@ bool ComponentGrid::LoadData(
           if (p > m_pMax) m_pMax = p;
         }
       }
-       // TO-DO: flag option
+      // TO-DO: flag option
       if (fmt == Format::XY || fmt == Format::IJ) {
         // Two-dimensional map.
         for (unsigned int kk = 0; kk < m_nX[2]; ++kk) {
@@ -1830,7 +1838,7 @@ void ComponentGrid::SetMedium(Medium* m) {
 
 bool ComponentGrid::GetField(
     const double xi, const double yi, const double zi,
-    const std::vector<std::vector<std::vector<Node> > >& field, double& fx,
+    const std::vector<std::vector<std::vector<Node>>>& field, double& fx,
     double& fy, double& fz, double& p, bool& active) {
   if (!m_hasMesh) {
     std::cerr << m_className << "::GetField: Mesh is not set.\n";
@@ -2105,7 +2113,7 @@ double ComponentGrid::Reduce(const double xin, const double xmin,
 }
 
 void ComponentGrid::Initialise(
-    std::vector<std::vector<std::vector<Node> > >& fields) {
+    std::vector<std::vector<std::vector<Node>>>& fields) {
   fields.resize(m_nX[0]);
   for (unsigned int i = 0; i < m_nX[0]; ++i) {
     fields[i].resize(m_nX[1]);
@@ -2144,22 +2152,20 @@ bool ComponentGrid::LoadHoleVelocity(const std::string& fname,
 void ComponentGrid::AddParticle(
     const double x, const double y, const double z, const double w,
     std::vector<std::vector<std::vector<double>>>& grid) {
-
   if (!m_hasMesh) {
     std::cerr << m_className << "::AddParticle: Mesh not set.\n";
     return;
   }
 
   // Check if the point is inside the mesh boundaries.
-  if (x < m_xMin[0] || x > m_xMax[0] ||
-      y < m_xMin[1] || y > m_xMax[1] ||
-      z < m_xMin[2] || z > m_xMax[2]) return;
+  if (x < m_xMin[0] || x > m_xMax[0] || y < m_xMin[1] || y > m_xMax[1] ||
+      z < m_xMin[2] || z > m_xMax[2])
+    return;
 
   // Initialize the grid if needed.
   if (grid.empty()) {
-    grid.resize(m_nX[0],
-                std::vector<std::vector<double>>(m_nX[1],
-                                                 std::vector<double>(m_nX[2], 0.)));
+    grid.resize(m_nX[0], std::vector<std::vector<double>>(
+                             m_nX[1], std::vector<double>(m_nX[2], 0.)));
   }
 
   // Get voxel indices.
@@ -2174,31 +2180,31 @@ void ComponentGrid::AddParticle(
 
 void ComponentGrid::AddIon(const double x, const double y, const double z,
                            const double w) {
-  AddParticle(x, y, z, w, m_ionDensity); // Add to ion density
-  AddParticle(x, y, z, w, m_chargeDensity); // Add to charge density
+  AddParticle(x, y, z, w, m_ionDensity);     // Add to ion density
+  AddParticle(x, y, z, w, m_chargeDensity);  // Add to charge density
 }
 
-void ComponentGrid::AddNegativeIon(const double x, const double y, const double z,
-                                   const double w) {
-  AddParticle(x, y, z, w, m_negativeIonDensity); // Add to negative ion density
-  AddParticle(x, y, z, -w, m_chargeDensity); // Add to charge density
+void ComponentGrid::AddNegativeIon(const double x, const double y,
+                                   const double z, const double w) {
+  AddParticle(x, y, z, w, m_negativeIonDensity);  // Add to negative ion density
+  AddParticle(x, y, z, -w, m_chargeDensity);      // Add to charge density
 }
 
 void ComponentGrid::AddElectron(const double x, const double y, const double z,
                                 const double w) {
-  AddParticle(x, y, z, w, m_electronDensity); // Add to electron density
-  AddParticle(x, y, z, -w, m_chargeDensity); // Add to charge density
+  AddParticle(x, y, z, w, m_electronDensity);  // Add to electron density
+  AddParticle(x, y, z, -w, m_chargeDensity);   // Add to charge density
 }
 
 void ComponentGrid::AddHole(const double x, const double y, const double z,
                             const double w) {
-  AddParticle(x, y, z, w, m_holeDensity); // Add to hole density
-  AddParticle(x, y, z, w, m_chargeDensity); // Add to charge density
+  AddParticle(x, y, z, w, m_holeDensity);    // Add to hole density
+  AddParticle(x, y, z, w, m_chargeDensity);  // Add to charge density
 }
 
 bool ComponentGrid::ElectronVelocity(const double x, const double y,
-                                       const double z, double& vx, double& vy,
-                                       double& vz) {
+                                     const double z, double& vx, double& vy,
+                                     double& vz) {
   if (m_eVelocity.empty()) {
     PrintNotReady(m_className + "::ElectronVelocity");
     return false;
@@ -2235,10 +2241,10 @@ bool ComponentGrid::LoadHoleAttachment(const std::string& fname,
   return LoadData(fname, fmt, scaleX, m_hAttachment, col);
 }
 
-bool ComponentGrid::LoadData(
-    const std::string& filename, std::string format, const double scaleX,
-    std::vector<std::vector<std::vector<double> > >& tab,
-    const unsigned int col) {
+bool ComponentGrid::LoadData(const std::string& filename, std::string format,
+                             const double scaleX,
+                             std::vector<std::vector<std::vector<double>>>& tab,
+                             const unsigned int col) {
   if (!m_hasMesh) {
     if (!LoadMesh(filename, format, scaleX)) {
       std::cerr << m_className << "::LoadData: Mesh not set.\n";
@@ -2271,13 +2277,13 @@ bool ComponentGrid::LoadData(
   }
 
   // Set up the grid.
-  tab.assign(m_nX[0], std::vector<std::vector<double> >(
+  tab.assign(m_nX[0], std::vector<std::vector<double>>(
                           m_nX[1], std::vector<double>(m_nX[2], 0.)));
 
   unsigned int nValues = 0;
   // Keep track of which elements have been read.
-  std::vector<std::vector<std::vector<bool> > > isSet(
-      m_nX[0], std::vector<std::vector<bool> >(
+  std::vector<std::vector<std::vector<bool>>> isSet(
+      m_nX[0], std::vector<std::vector<bool>>(
                    m_nX[1], std::vector<bool>(m_nX[2], false)));
 
   std::ifstream infile(filename);
@@ -2459,7 +2465,7 @@ bool ComponentGrid::LoadData(
 
 bool ComponentGrid::GetData(
     const double xi, const double yi, const double zi,
-    const std::vector<std::vector<std::vector<double> > >& tab, double& val) {
+    const std::vector<std::vector<std::vector<double>>>& tab, double& val) {
   if (!m_hasMesh) {
     std::cerr << m_className << "::GetData: Mesh is not set.\n";
     return false;
@@ -2571,8 +2577,8 @@ bool ComponentGrid::IonDensity(const double x, const double y, const double z,
   return GetData(x, y, z, m_ionDensity, rho);
 }
 
-bool ComponentGrid::NegativeIonDensity(const double x, const double y, const double z,
-                                       double& rho) {
+bool ComponentGrid::NegativeIonDensity(const double x, const double y,
+                                       const double z, double& rho) {
   // Make sure the map has been loaded.
   if (m_negativeIonDensity.empty()) {
     PrintNotReady(m_className + "::NegativeIonDensity");
@@ -2601,8 +2607,8 @@ bool ComponentGrid::HoleDensity(const double x, const double y, const double z,
   return GetData(x, y, z, m_holeDensity, rho);
 }
 
-bool ComponentGrid::ChargeDensity(const double x, const double y, const double z,
-                                     double& q) {
+bool ComponentGrid::ChargeDensity(const double x, const double y,
+                                  const double z, double& q) {
   // Make sure the map has been loaded.
   if (m_chargeDensity.empty()) {
     PrintNotReady(m_className + "::ChargeDensity");
@@ -2631,11 +2637,12 @@ ComponentGrid::Format ComponentGrid::GetFormat(std::string format) {
   return Format::Unknown;
 }
 
-bool ComponentGrid::GetNodeIndex(double x, const double y, const double z, unsigned int& i, unsigned int& j, unsigned int& k){
-  
-  if(x < m_xMin[0] || y < m_xMin[1] || z < m_xMin[2]) return false;
-  if(x > m_xMax[0] || y > m_xMax[1] || z > m_xMax[2]) return false;
-    
+bool ComponentGrid::GetNodeIndex(double x, const double y, const double z,
+                                 unsigned int& i, unsigned int& j,
+                                 unsigned int& k) {
+  if (x < m_xMin[0] || y < m_xMin[1] || z < m_xMin[2]) return false;
+  if (x > m_xMax[0] || y > m_xMax[1] || z > m_xMax[2]) return false;
+
   if (m_nX[0] > 1) {
     const double u = std::round((x - m_xMin[0]) * m_sX[0]);
     i = u < 0. ? 0 : static_cast<unsigned int>(u);

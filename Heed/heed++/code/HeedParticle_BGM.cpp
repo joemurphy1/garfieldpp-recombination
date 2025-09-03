@@ -1,8 +1,8 @@
 #include "heed++/code/HeedParticle_BGM.h"
 
 #include <iomanip>
+#include <iostream>
 #include <numeric>
-#include<iostream>
 
 #include "Garfield/Random.hh"
 #include "heed++/code/BGMesh.h"

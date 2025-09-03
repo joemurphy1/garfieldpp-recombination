@@ -1,5 +1,7 @@
 #include "wcpplib/math/PolLeg.h"
-#include<iostream>
+
+#include <iostream>
+
 #include "wcpplib/util/FunNameStack.h"
 
 /*

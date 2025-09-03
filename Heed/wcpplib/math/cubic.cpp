@@ -1,7 +1,7 @@
 #include "wcpplib/math/cubic.h"
 
+#include <iostream>
 #include <limits>
-#include<iostream>
 
 #include "wcpplib/util/FunNameStack.h"
 

@@ -1,10 +1,11 @@
 #ifndef GAS_DEF_H
 #define GAS_DEF_H
 
+#include <string>
+#include <vector>
+
 #include "wcpplib/matter/MatterDef.h"
 #include "wcpplib/matter/MoleculeDef.h"
-#include <vector>
-#include <string>
 
 namespace Heed {
 

@@ -105,7 +105,6 @@ class straight : public absref {
   double distance(const point& fpt) const;
   double distance(const point& fpt, point& fcpt) const;
   // calculates closest point on the line
-
 };
 
 }  // namespace Heed

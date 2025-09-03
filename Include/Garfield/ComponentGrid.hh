@@ -2,14 +2,14 @@
 #define G_COMPONENT_GRID_H
 
 #include <array>
+#include <cmath>
 #include <string>
 #include <vector>
-#include <cmath>
 
 #include "Garfield/Component.hh"
 
 namespace Garfield {
- 
+
 /// Component for interpolating field maps on a regular mesh.
 
 class ComponentGrid : public Component {
@@ -92,7 +92,7 @@ class ComponentGrid : public Component {
    */
   bool SaveElectricField(Component* cmp, const std::string& filename,
                          const std::string& fmt);
-  
+
   bool SaveElectricFieldROOT(Component* cmp, const std::string& filename,
                              const std::string& fmt);
 
@@ -100,7 +100,7 @@ class ComponentGrid : public Component {
    * \param cmp Component object for which to export the field/potential
    */
   bool SaveElectricField(Component* cmp);
-  
+
   /** Export the weighting field and potential of a component to a text file.
    * \param cmp Component object for which to export the field/potential
    * \param id identifier of the weighting field
@@ -227,29 +227,30 @@ class ComponentGrid : public Component {
   bool HasHoleDensityMap() const override { return !(m_holeDensity.empty()); }
   bool HoleDensity(const double x, const double y, const double z,
                    double& rho) override;
-  bool HasChargeDensityMap() const override { return !(m_chargeDensity.empty()); }
-  bool ChargeDensity(const double x, const double y, const double z,
-                     double& q);
+  bool HasChargeDensityMap() const override {
+    return !(m_chargeDensity.empty());
+  }
+  bool ChargeDensity(const double x, const double y, const double z, double& q);
   struct Node {
     double fx, fy, fz;  ///< Field
     double v;           ///< Potential
   };
   /// Get field values on all nodes
-  void GetFieldOnGrid(std::vector<std::vector<
-                      std::vector<ComponentGrid::Node> > >& efields) {
+  void GetFieldOnGrid(
+      std::vector<std::vector<std::vector<ComponentGrid::Node>>>& efields) {
     efields = m_efields;
   };
   /// Add the field values of cmp to current grid.
   bool AddElectricField(ComponentGrid* cmp, const double scale = 1.,
-                        const double xShift = 0.,
-                        const double yShift = 0.,
+                        const double xShift = 0., const double yShift = 0.,
                         const double zShift = 0.);
-  
+
   /// Add the field values of cmp to current grid.
   bool AddElectricField(Component* cmp, const double scale);
-  
+
   /// Gives the closest node index (i, j, k) to coordinate (x, y, z).
-  bool GetNodeIndex(double x, const double y, const double z, unsigned int& i, unsigned int& j, unsigned int& k);
+  bool GetNodeIndex(double x, const double y, const double z, unsigned int& i,
+                    unsigned int& j, unsigned int& k);
 
  private:
   enum class Format { Unknown, XY, XZ, XYZ, IJ, IK, IJK, YXZ };
@@ -259,31 +260,31 @@ class ComponentGrid : public Component {
   Medium* m_medium = nullptr;
 
   /// Electric field values and potentials.
-  std::vector<std::vector<std::vector<Node> > > m_efields;
+  std::vector<std::vector<std::vector<Node>>> m_efields;
   /// Magnetic field values.
-  std::vector<std::vector<std::vector<Node> > > m_bfields;
+  std::vector<std::vector<std::vector<Node>>> m_bfields;
   /// Prompt weighting field values and potentials.
-  std::vector<std::vector<std::vector<Node> > > m_wfields;
+  std::vector<std::vector<std::vector<Node>>> m_wfields;
   /// Delayed weighting field values and potentials.
-  std::vector<std::vector<std::vector<std::vector<Node> > > > m_wdfields;
+  std::vector<std::vector<std::vector<std::vector<Node>>>> m_wdfields;
   /// Attachment maps for electrons and holes.
-  std::vector<std::vector<std::vector<double> > > m_eAttachment;
-  std::vector<std::vector<std::vector<double> > > m_hAttachment;
+  std::vector<std::vector<std::vector<double>>> m_eAttachment;
+  std::vector<std::vector<std::vector<double>>> m_hAttachment;
   /// Mobility maps for electrons and holes.
-  std::vector<std::vector<std::vector<double> > > m_eMobility;
-  std::vector<std::vector<std::vector<double> > > m_hMobility;
+  std::vector<std::vector<std::vector<double>>> m_eMobility;
+  std::vector<std::vector<std::vector<double>>> m_hMobility;
   /// Velocity maps for electrons and holes.
-  std::vector<std::vector<std::vector<Node> > > m_eVelocity;
-  std::vector<std::vector<std::vector<Node> > > m_hVelocity;
+  std::vector<std::vector<std::vector<Node>>> m_eVelocity;
+  std::vector<std::vector<std::vector<Node>>> m_hVelocity;
   /// Maps for ions, negative ions, electrons and holes.
-  std::vector<std::vector<std::vector<double> > > m_ionDensity;
-  std::vector<std::vector<std::vector<double> > > m_negativeIonDensity;
-  std::vector<std::vector<std::vector<double> > > m_electronDensity;
-  std::vector<std::vector<std::vector<double> > > m_holeDensity;
+  std::vector<std::vector<std::vector<double>>> m_ionDensity;
+  std::vector<std::vector<std::vector<double>>> m_negativeIonDensity;
+  std::vector<std::vector<std::vector<double>>> m_electronDensity;
+  std::vector<std::vector<std::vector<double>>> m_holeDensity;
   /// Charge density map
-  std::vector<std::vector<std::vector<double> > > m_chargeDensity;
+  std::vector<std::vector<std::vector<double>>> m_chargeDensity;
   /// Active medium flag.
-  std::vector<std::vector<std::vector<bool> > > m_active;
+  std::vector<std::vector<std::vector<bool>>> m_active;
 
   // Dimensions of the mesh
   std::array<unsigned int, 3> m_nX = {{1, 1, 1}};
@@ -308,11 +309,11 @@ class ComponentGrid : public Component {
   bool LoadData(const std::string& filename, std::string format,
                 const bool withPotential, const bool withFlag,
                 const double scaleX, const double scaleF, const double scaleP,
-                std::vector<std::vector<std::vector<Node> > >& field);
+                std::vector<std::vector<std::vector<Node>>>& field);
   /// Load scalar data (e. g. attachment coefficients) from file.
   bool LoadData(const std::string& filename, std::string format,
                 const double scaleX,
-                std::vector<std::vector<std::vector<double> > >& tab,
+                std::vector<std::vector<std::vector<double>>>& tab,
                 const unsigned int col);
 
   void Reset() override;
@@ -320,22 +321,22 @@ class ComponentGrid : public Component {
 
   /// Interpolation of the field and potential at a given point.
   bool GetField(const double x, const double y, const double z,
-                const std::vector<std::vector<std::vector<Node> > >& field,
+                const std::vector<std::vector<std::vector<Node>>>& field,
                 double& fx, double& fy, double& fz, double& p, bool& active);
   /// Interpolation in a table of scalars.
   bool GetData(const double x, const double y, const double z,
-               const std::vector<std::vector<std::vector<double> > >& table,
+               const std::vector<std::vector<std::vector<double>>>& table,
                double& value);
-  
+
   void AddParticle(double x, double y, double z, double w,
-                 std::vector<std::vector<std::vector<double>>>& grid);
+                   std::vector<std::vector<std::vector<double>>>& grid);
 
   /// Reduce a coordinate to the basic cell (in case of periodicity).
   double Reduce(const double xin, const double xmin, const double xmax,
                 const bool simplePeriodic, const bool mirrorPeriodic,
                 bool& isMirrored) const;
   /// Set the dimensions of a table according to the mesh.
-  void Initialise(std::vector<std::vector<std::vector<Node> > >& fields);
+  void Initialise(std::vector<std::vector<std::vector<Node>>>& fields);
   /// Decode a format string.
   Format GetFormat(std::string fmt);
 };

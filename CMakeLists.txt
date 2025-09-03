@@ -145,7 +145,7 @@ add_library(Garfield SHARED
             Source/ComponentAnsys121.cc
             Source/ComponentAnsys123.cc
             Source/ComponentCST.cc
-	    Source/ComponentChargedRing.cc
+            Source/ComponentChargedRing.cc
             Source/ComponentComsol.cc
             Source/ComponentConstant.cc
             Source/ComponentElmer.cc
@@ -330,13 +330,11 @@ target_link_libraries(Garfield PUBLIC ROOT::Geom
                                       Magboltz::Magboltz
                                       $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Degrade::Degrade>
                                       $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
-                                      $<$<BOOL:${GARFIELD_WITH_CUDA}>:GarfieldGPU>
-)
+                                      $<$<BOOL:${GARFIELD_WITH_CUDA}>:GarfieldGPU>)
 target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU>)
 target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
                                     PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
                                     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
-
 
 #--- Create ROOT dictionary ---------------------------------------------------
 root_generate_dictionary(GarfieldDict "${GARFIELD_PUBLIC_HEADERS}" LINKDEF "${CMAKE_CURRENT_SOURCE_DIR}/Include/Garfield/LinkDef.h" MODULE Garfield)
@@ -376,15 +374,12 @@ target_sources(Garfield PRIVATE ${nebem_sources})
 # Add Heed
 add_subdirectory(Heed)
 
-
-
 #--- Install the header files -------------------------------------------------
 install(TARGETS Garfield GarfieldRandom EXPORT "${PROJECT_NAME}Targets"
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/Garfield"
-        )
+        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/Garfield")
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Data
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Garfield/)

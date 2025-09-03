@@ -3,10 +3,10 @@
 #include <cmath>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
-#include<iostream>
 
 #include "Garfield/Random.hh"
 #include "heed++/code/PhysicalConstants.h"
@@ -568,7 +568,7 @@ void AtomPhotoAbsCS::get_escape_particles(
   std::vector<double> fphoton_energy;
   if (asp.size() == get_qshell()) {
     is = asp[nshell].get_channel(felectron_energy, fphoton_energy);
-  } 
+  }
   int main_n = get_main_shell_number(nshell);
   if (is != 0) {
     // Generate photo-electron and just copy all what is proposed by

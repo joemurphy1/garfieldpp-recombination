@@ -1,6 +1,7 @@
 #ifndef G_HEED_FIELDMAP_H
 #define G_HEED_FIELDMAP_H
 #include <limits>
+
 #include "Garfield/Medium.hh"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/particle/fieldmap.h"
@@ -60,8 +61,7 @@ class HeedFieldMap : public Heed::fieldmap {
     }
   }
 
-  bool inside(const Heed::point& pt) const override
-  {
+  bool inside(const Heed::point& pt) const override {
     const double x = pt.v.x * conv + m_x;
     const double y = pt.v.y * conv + m_y;
     const double z = pt.v.z * conv + m_z;

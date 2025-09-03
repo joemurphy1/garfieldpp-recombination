@@ -186,9 +186,9 @@ class AvalancheMicroscopic {
   };
 
   struct Seed {
-    Point pt;      ///< Starting point.
-    Particle type; ///< Particle type.
-    size_t w = 1;  ///< Multiplicity.
+    Point pt;       ///< Starting point.
+    Particle type;  ///< Particle type.
+    size_t w = 1;   ///< Multiplicity.
   };
 
   const std::vector<Electron>& GetElectrons() const { return m_electrons; }
@@ -415,49 +415,48 @@ class AvalancheMicroscopic {
   bool m_debug = false;
 
   bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
-  int TransportElectron(
-      const Seed& seed, const bool signal, 
-      std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-      std::vector<Point>& path, std::vector<Seed>& stack);
-  int TransportElectronBfield(
-      const Seed& seed, const bool signal,
-      std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-      std::vector<Point>& path, std::vector<Seed>& stack);
-  int TransportElectronSc(
-      const Seed& seed, const bool signal,
-      std::vector<double>& ts, std::vector<std::array<double, 3> >& xs,
-      std::vector<Point>& path, std::vector<Seed>& stack);
+  int TransportElectron(const Seed& seed, const bool signal,
+                        std::vector<double>& ts,
+                        std::vector<std::array<double, 3> >& xs,
+                        std::vector<Point>& path, std::vector<Seed>& stack);
+  int TransportElectronBfield(const Seed& seed, const bool signal,
+                              std::vector<double>& ts,
+                              std::vector<std::array<double, 3> >& xs,
+                              std::vector<Point>& path,
+                              std::vector<Seed>& stack);
+  int TransportElectronSc(const Seed& seed, const bool signal,
+                          std::vector<double>& ts,
+                          std::vector<std::array<double, 3> >& xs,
+                          std::vector<Point>& path, std::vector<Seed>& stack);
   void TransportPhoton(const double x, const double y, const double z,
                        const double t, const double e, const size_t w,
                        std::vector<Seed>& stack);
 
-  bool transportParticleStack(
-      const bool aval, std::vector<Seed>& stack,
-      std::vector<Seed>& newParticles, const bool signal,
-      const bool useBfield, const bool sc);
+  bool transportParticleStack(const bool aval, std::vector<Seed>& stack,
+                              std::vector<Seed>& newParticles,
+                              const bool signal, const bool useBfield,
+                              const bool sc);
   void Terminate(double x0, double y0, double z0, double t0, double& x1,
                  double& y1, double& z1, double& t1) const;
 
   void CreatePenningElectron(const double x, const double y, const double z,
-                             const double t, const size_t w, 
-                             const double ds, const double dt, const double ep,
-                             const int level, std::vector<Seed>& stack) const;
+                             const double t, const size_t w, const double ds,
+                             const double dt, const double ep, const int level,
+                             std::vector<Seed>& stack) const;
   void PlotCollision(const int cstype, const size_t did, const double x,
                      const double y, const double z, size_t& nCollPlot) const;
-  void CallUserHandles(
-      const int cstype, const double x, const double y, const double z, 
-      const double t, const int level, Medium* medium, 
-      const double en1, const double en, 
-      const double kx, const double ky, const double kz,
-      const double kx1, const double ky1, const double kz1) const;
+  void CallUserHandles(const int cstype, const double x, const double y,
+                       const double z, const double t, const int level,
+                       Medium* medium, const double en1, const double en,
+                       const double kx, const double ky, const double kz,
+                       const double kx1, const double ky1,
+                       const double kz1) const;
   void FillDistanceHistogram(const int cstype, const double x, const double y,
                              const double z, double& xLast, double& yLast,
                              double& zLast) const;
 
  public:
-  std::vector<Seed> GetStackOld() {
-    return m_stackStoreCPU;
-  }
+  std::vector<Seed> GetStackOld() { return m_stackStoreCPU; }
   std::vector<Electron> GetStackOldGPU() { return m_stackStoreGPU; }
 
   friend class AvalancheMicroscopicGPU;

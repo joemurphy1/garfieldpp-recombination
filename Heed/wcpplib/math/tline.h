@@ -1,6 +1,6 @@
 #ifndef TLINE_H
 #define TLINE_H
-#include<iostream>
+#include <iostream>
 /*
 Copyright (c) 2005 Igor B. Smirnov
 
@@ -187,8 +187,8 @@ class PointCoorMesh {
 
  private:
   long q{0};  // the number of points
-           // The number of intervals is q-1.
-           // Therefore q has to be 2 or more
+              // The number of intervals is q-1.
+              // Therefore q has to be 2 or more
 #ifndef TLINE_REDUCE_TO_RAW_ARR
   D* amesh{nullptr};
 #else
@@ -197,7 +197,7 @@ class PointCoorMesh {
   T xmin{0};
   T xmax{0};
   // auxiliary thing to accelerate finding intervals
-  mutable T x_old{0};     // previous x for finding interval
+  mutable T x_old{0};      // previous x for finding interval
   mutable long n_old{-1};  // -1 if there is nothing
 };
 
@@ -588,11 +588,12 @@ T t_integ_power_2point(T x1, T y1, T x2, T y2, T xl, T xr)
 }
 
 template <class T, class D, class M>
-T t_integ_generic_point_ar(
-    const M& mesh, const D& y,  // array of function values
-    // GENERICFUN fun,
-    T (*fun)(T xp1, T yp1, T xp2, T yp2, T xmin, T xmax, T x1, T x2), T x1,
-    T x2, int s_extrap_left, T left_bond, int s_extrap_right, T right_bond) {
+T t_integ_generic_point_ar(const M& mesh, const D& y,  // array of function
+                                                       // values GENERICFUN fun,
+                           T (*fun)(T xp1, T yp1, T xp2, T yp2, T xmin, T xmax,
+                                    T x1, T x2),
+                           T x1, T x2, int s_extrap_left, T left_bond,
+                           int s_extrap_right, T right_bond) {
   check_econd12(x1, >, x2, std::cerr);
   long qi = mesh.get_qi();
   check_econd12(qi, <, 1, std::cerr);

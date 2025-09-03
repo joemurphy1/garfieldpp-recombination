@@ -10,9 +10,9 @@
 // in k-dimensional Euclidean space.
 
 #include <array>
+#include <cstddef>
 #include <queue>
 #include <vector>
-#include <cstddef>
 
 namespace Garfield {
 
@@ -23,7 +23,7 @@ class KDTreeNode;
 /// Search result
 
 struct KDTreeResult {
-  double dis;  //< square Euclidean distance
+  double dis;       //< square Euclidean distance
   std::size_t idx;  //< index
 };
 

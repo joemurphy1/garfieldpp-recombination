@@ -370,7 +370,7 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
           break;
         }
       }
-      
+
       if (m_useRecombination) {
         double prec = 0.;
         if (ptype == Particle::NegativeIon) {
@@ -927,7 +927,8 @@ double AvalancheMC::GetIonDensity(const std::array<double, 3>& x) const {
   return rho;
 }
 
-double AvalancheMC::GetNegativeIonDensity(const std::array<double, 3>& x) const {
+double AvalancheMC::GetNegativeIonDensity(
+    const std::array<double, 3>& x) const {
   double rho = 0.;
   if (m_useDensityMap) {
     const auto nComponents = m_sensor->GetNumberOfComponents();

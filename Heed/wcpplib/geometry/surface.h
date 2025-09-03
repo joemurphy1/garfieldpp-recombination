@@ -153,7 +153,7 @@ class ulsvolume : public absvol {
   /// Default constructor.
   ulsvolume() {}
   /// Constructor from surfaces.
-  ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf,double fprec);
+  ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf, double fprec);
   ulsvolume(ulsvolume& f);
   ulsvolume(const ulsvolume& fv);
   /// Destructor
@@ -165,11 +165,11 @@ class ulsvolume : public absvol {
   // If no cross, returns 0 and does not change fts
   // If there is cross, returns 1 and assign fts.mrange and fts.mpoint
 
-  void ulsvolume_init(const std::vector<std::shared_ptr<surface> >& fsurf, double fprec);
+  void ulsvolume_init(const std::vector<std::shared_ptr<surface> >& fsurf,
+                      double fprec);
 
   void income(gparticle* /*gp*/) override {}
 };
-
 
 }  // namespace Heed
 

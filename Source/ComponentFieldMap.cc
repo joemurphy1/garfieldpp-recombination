@@ -1,71 +1,72 @@
 #include "Garfield/ComponentFieldMap.hh"
 
-#include <cstddef>
-#include <string>
-#include <iostream>
-#include <vector>
-#include <cstdio>
-
-#include <TH1F.h>
 #include <TCanvas.h>
+#include <TH1F.h>
 #include <TMath.h>
+
+#include <cstddef>
+#include <cstdio>
+#include <iostream>
+#include <string>
+#include <vector>
 
 #include "Garfield/Medium.hh"
 
-namespace Garfield
-{
+namespace Garfield {
 
-ComponentFieldMap::ComponentFieldMap(const std::string& name) : Component(name) {}
+ComponentFieldMap::ComponentFieldMap(const std::string& name)
+    : Component(name) {}
 
 ComponentFieldMap::~ComponentFieldMap() = default;
 
-void ComponentFieldMap::ElectricField(const double x, const double y, const double z, double& ex, double& ey, double& ez, double& volt, Medium*& m, int& status)
-{
+void ComponentFieldMap::ElectricField(const double x, const double y,
+                                      const double z, double& ex, double& ey,
+                                      double& ez, double& volt, Medium*& m,
+                                      int& status) {
   ElectricField(x, y, z, ex, ey, ez, m, status);
   volt = Potential(x, y, z, m_pot);
 }
 
-void ComponentFieldMap::ElectricField(const double xin, const double yin, const double zin, double& ex, double& ey, double& ez, Medium*& m, int& status)
-{
+void ComponentFieldMap::ElectricField(const double xin, const double yin,
+                                      const double zin, double& ex, double& ey,
+                                      double& ez, Medium*& m, int& status) {
   // Initial values
   ex = ey = ez = 0.;
   m = nullptr;
   int iel = -1;
   status = Field(xin, yin, zin, ex, ey, ez, iel, m_pot);
-  if(status < 0 || iel < 0)
-  {
-    if(status == -10)
-    {
+  if (status < 0 || iel < 0) {
+    if (status == -10) {
       PrintNotReady("ElectricField");
     }
     return;
   }
   const auto& element = m_elements[iel];
   // Drift medium?
-  if(element.matmap >= m_materials.size())
-  {
-    if(m_debug)
-    {
-      std::cout << m_className << "::ElectricField: "<< "Out-of-range material number.\n";
+  if (element.matmap >= m_materials.size()) {
+    if (m_debug) {
+      std::cout << m_className
+                << "::ElectricField: " << "Out-of-range material number.\n";
     }
     status = -5;
     return;
   }
   const auto& mat = m_materials[element.matmap];
-  if(m_debug)
-  {
-    std::cout << "    Material " << element.matmap << ", drift flag " << mat.driftmedium << ".\n";
+  if (m_debug) {
+    std::cout << "    Material " << element.matmap << ", drift flag "
+              << mat.driftmedium << ".\n";
   }
   m = mat.medium;
   status = -5;
-  if (mat.driftmedium)
-  {
+  if (mat.driftmedium) {
     if (m && m->IsDriftable()) status = 0;
   }
 }
 
-int ComponentFieldMap::Field(const double xin, const double yin, const double zin, double& fx, double& fy, double& fz, int& imap, const std::vector<double>& pot) const
-{
+int ComponentFieldMap::Field(const double xin, const double yin,
+                             const double zin, double& fx, double& fy,
+                             double& fz, int& imap,
+                             const std::vector<double>& pot) const {
   // Do not proceed if not properly initialised.
   if (!m_ready) return -10;
   // Copy the coordinates.
@@ -76,10 +77,8 @@ int ComponentFieldMap::Field(const double xin, const double yin, const double zi
   double rcoordinate, rotation;
   MapCoordinates(x, y, z, xmirr, ymirr, zmirr, rcoordinate, rotation);
 
-  if (!m_is3d)
-  {
-    if(zin < m_minBoundingBox[2] || zin > m_maxBoundingBox[2])
-    {
+  if (!m_is3d) {
+    if (zin < m_minBoundingBox[2] || zin > m_maxBoundingBox[2]) {
       return -5;
     }
   }
@@ -89,18 +88,16 @@ int ComponentFieldMap::Field(const double xin, const double yin, const double zi
   double jac[4][4];
   double det = 0.;
   imap = -1;
-  if(m_elementType == ElementType::Serendipity)
-  {
+  if (m_elementType == ElementType::Serendipity) {
     imap = FindElement5(x, y, t1, t2, t3, t4, jac, det);
-  }
-  else if(m_elementType == ElementType::CurvedTetrahedron)
-  {
+  } else if (m_elementType == ElementType::CurvedTetrahedron) {
     imap = FindElement13(x, y, z, t1, t2, t3, t4, jac, det);
   }
   // Stop if the point is not in the mesh.
   if (imap < 0) {
     if (m_debug) {
-      std::cerr << m_className << "::Field: (" << x << ", " << y << ", " << z << ") is not in the mesh.\n";
+      std::cerr << m_className << "::Field: (" << x << ", " << y << ", " << z
+                << ") is not in the mesh.\n";
     }
     return -6;
   }
@@ -129,8 +126,9 @@ int ComponentFieldMap::Field(const double xin, const double yin, const double zi
   return 0;
 }
 
-double ComponentFieldMap::Potential(const double xin, const double yin, const double zin, const std::vector<double>& pot) const
-{
+double ComponentFieldMap::Potential(const double xin, const double yin,
+                                    const double zin,
+                                    const std::vector<double>& pot) const {
   // Do not proceed if not properly initialised.
   if (!m_ready) return 0.;
 
@@ -184,8 +182,9 @@ double ComponentFieldMap::Potential(const double xin, const double yin, const do
   return volt;
 }
 
-void ComponentFieldMap::WeightingField(const double xin, const double yin, const double zin,double& wx, double& wy, double& wz,const std::string& label)
-{
+void ComponentFieldMap::WeightingField(const double xin, const double yin,
+                                       const double zin, double& wx, double& wy,
+                                       double& wz, const std::string& label) {
   // Initial values.
   wx = wy = wz = 0;
   // Do not proceed if not properly initialised.
@@ -197,7 +196,8 @@ void ComponentFieldMap::WeightingField(const double xin, const double yin, const
   Field(xin, yin, zin, wx, wy, wz, iel, m_wpot[label]);
 }
 
-double ComponentFieldMap::WeightingPotential(double xin, double yin, double zin,const std::string& label0) {
+double ComponentFieldMap::WeightingPotential(double xin, double yin, double zin,
+                                             const std::string& label0) {
   // Do not proceed if not properly initialised.
   if (!m_ready) return 0.;
 
@@ -223,8 +223,10 @@ double ComponentFieldMap::WeightingPotential(double xin, double yin, double zin,
   return Potential(xin, yin, zin, m_wpot[label]);
 }
 
-double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,double zin, const double tin, const std::string& label0)
-{
+double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,
+                                                    double zin,
+                                                    const double tin,
+                                                    const std::string& label0) {
   if (m_wdtimes.empty()) return 0.;
   // Assume no weighting field for times outside the range of available maps.
   if (tin < m_wdtimes.front()) return 0.;
@@ -315,8 +317,11 @@ double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,doubl
   return f0 * dp0 + f1 * dp1;
 }
 
-void ComponentFieldMap::DelayedWeightingPotentials(const double xin, const double yin, const double zin, const std::string& label0, std::vector<double>& dwp)
-{
+void ComponentFieldMap::DelayedWeightingPotentials(const double xin,
+                                                   const double yin,
+                                                   const double zin,
+                                                   const std::string& label0,
+                                                   std::vector<double>& dwp) {
   const size_t nt = m_wdtimes.size();
   dwp.assign(nt, 0.);
 
@@ -393,8 +398,8 @@ void ComponentFieldMap::DelayedWeightingPotentials(const double xin, const doubl
   }
 }
 
-Medium* ComponentFieldMap::GetMedium(const double xin, const double yin, const double zin)
-{
+Medium* ComponentFieldMap::GetMedium(const double xin, const double yin,
+                                     const double zin) {
   // Copy the coordinates.
   double x = xin, y = yin;
   double z = m_is3d ? zin : 0.;
@@ -451,8 +456,7 @@ Medium* ComponentFieldMap::GetMedium(const double xin, const double yin, const d
   return m_materials[element.matmap].medium;
 }
 
-bool ComponentFieldMap::Check()
-{
+bool ComponentFieldMap::Check() {
   // MAPCHK
   // Ensure there are some mesh elements.
   if (!m_ready) {
@@ -577,8 +581,7 @@ bool ComponentFieldMap::Check()
   return true;
 }
 
-void ComponentFieldMap::PrintMaterials()
-{
+void ComponentFieldMap::PrintMaterials() {
   // Do not proceed if not properly initialised.
   if (!m_ready) PrintNotReady("PrintMaterials");
 
@@ -608,8 +611,7 @@ void ComponentFieldMap::PrintMaterials()
   }
 }
 
-void ComponentFieldMap::DriftMedium(const size_t imat)
-{
+void ComponentFieldMap::DriftMedium(const size_t imat) {
   // Do not proceed if not properly initialised.
   if (!m_ready) PrintNotReady("DriftMedium");
 
@@ -623,8 +625,7 @@ void ComponentFieldMap::DriftMedium(const size_t imat)
   m_materials[imat].driftmedium = true;
 }
 
-void ComponentFieldMap::NotDriftMedium(const size_t imat)
-{
+void ComponentFieldMap::NotDriftMedium(const size_t imat) {
   // Do not proceed if not properly initialised.
   if (!m_ready) PrintNotReady("NotDriftMedium");
 
@@ -638,8 +639,7 @@ void ComponentFieldMap::NotDriftMedium(const size_t imat)
   m_materials[imat].driftmedium = false;
 }
 
-double ComponentFieldMap::GetPermittivity(const size_t imat) const
-{
+double ComponentFieldMap::GetPermittivity(const size_t imat) const {
   if (imat >= m_materials.size()) {
     std::cerr << m_className << "::GetPermittivity: Index out of range.\n";
     return -1.;
@@ -647,8 +647,7 @@ double ComponentFieldMap::GetPermittivity(const size_t imat) const
   return m_materials[imat].eps;
 }
 
-double ComponentFieldMap::GetConductivity(const size_t imat) const
-{
+double ComponentFieldMap::GetConductivity(const size_t imat) const {
   if (imat >= m_materials.size()) {
     std::cerr << m_className << "::GetConductivity: Index out of range.\n";
     return -1.;
@@ -656,8 +655,7 @@ double ComponentFieldMap::GetConductivity(const size_t imat) const
   return m_materials[imat].ohm;
 }
 
-void ComponentFieldMap::SetMedium(const size_t imat, Medium* medium)
-{
+void ComponentFieldMap::SetMedium(const size_t imat, Medium* medium) {
   if (imat >= m_materials.size()) {
     std::cerr << m_className << "::SetMedium: Index out of range.\n";
     return;
@@ -673,8 +671,7 @@ void ComponentFieldMap::SetMedium(const size_t imat, Medium* medium)
   m_materials[imat].medium = medium;
 }
 
-Medium* ComponentFieldMap::GetMedium(const size_t imat) const
-{
+Medium* ComponentFieldMap::GetMedium(const size_t imat) const {
   if (imat >= m_materials.size()) {
     std::cerr << m_className << "::GetMedium: Index out of range.\n";
     return nullptr;
@@ -682,8 +679,7 @@ Medium* ComponentFieldMap::GetMedium(const size_t imat) const
   return m_materials[imat].medium;
 }
 
-void ComponentFieldMap::SetGas(Medium* medium)
-{
+void ComponentFieldMap::SetGas(Medium* medium) {
   if (!medium) {
     std::cerr << m_className << "::SetGas: Null pointer.\n";
     return;
@@ -702,8 +698,8 @@ void ComponentFieldMap::SetGas(Medium* medium)
   }
 }
 
-bool ComponentFieldMap::GetElement(const size_t i, double& vol, double& dmin, double& dmax) const
-{
+bool ComponentFieldMap::GetElement(const size_t i, double& vol, double& dmin,
+                                   double& dmax) const {
   if (i >= m_elements.size()) {
     std::cerr << m_className << "::GetElement: Index out of range.\n";
     return false;
@@ -713,8 +709,7 @@ bool ComponentFieldMap::GetElement(const size_t i, double& vol, double& dmin, do
   return true;
 }
 
-double ComponentFieldMap::GetElementVolume(const size_t i) const
-{
+double ComponentFieldMap::GetElementVolume(const size_t i) const {
   if (i >= m_elements.size()) return 0.;
 
   const Element& element = m_elements[i];
@@ -747,8 +742,8 @@ double ComponentFieldMap::GetElementVolume(const size_t i) const
   return 0.;
 }
 
-void ComponentFieldMap::GetAspectRatio(const size_t i, double& dmin, double& dmax) const
-{
+void ComponentFieldMap::GetAspectRatio(const size_t i, double& dmin,
+                                       double& dmax) const {
   if (i >= m_elements.size()) {
     dmin = dmax = 0.;
     return;
@@ -797,8 +792,8 @@ void ComponentFieldMap::GetAspectRatio(const size_t i, double& dmin, double& dma
   }
 }
 
-bool ComponentFieldMap::GetElementNodes(const size_t i, std::vector<size_t>& nodes) const
-{
+bool ComponentFieldMap::GetElementNodes(const size_t i,
+                                        std::vector<size_t>& nodes) const {
   if (i >= m_elements.size()) {
     std::cerr << m_className << "::GetElementNodes: Index out of range.\n";
     return false;
@@ -813,8 +808,8 @@ bool ComponentFieldMap::GetElementNodes(const size_t i, std::vector<size_t>& nod
   return true;
 }
 
-bool ComponentFieldMap::GetElementRegion(const size_t i, size_t& mat, bool& drift) const
-{
+bool ComponentFieldMap::GetElementRegion(const size_t i, size_t& mat,
+                                         bool& drift) const {
   if (i >= m_elements.size()) {
     std::cerr << m_className << "::GetElementRegion: Index out of range.\n";
     return false;
@@ -824,8 +819,8 @@ bool ComponentFieldMap::GetElementRegion(const size_t i, size_t& mat, bool& drif
   return true;
 }
 
-bool ComponentFieldMap::GetNode(const size_t i, double& x, double& y, double& z) const
-{
+bool ComponentFieldMap::GetNode(const size_t i, double& x, double& y,
+                                double& z) const {
   if (i >= m_nodes.size()) {
     std::cerr << m_className << "::GetNode: Index out of range.\n";
     return false;
@@ -836,13 +831,11 @@ bool ComponentFieldMap::GetNode(const size_t i, double& x, double& y, double& z)
   return true;
 }
 
-double ComponentFieldMap::GetPotential(const size_t i) const
-{
+double ComponentFieldMap::GetPotential(const size_t i) const {
   return i >= m_pot.size() ? 0. : m_pot[i];
 }
 
-bool ComponentFieldMap::SetDefaultDriftMedium()
-{
+bool ComponentFieldMap::SetDefaultDriftMedium() {
   // Find lowest epsilon and set drift medium flags.
   const size_t nMaterials = m_materials.size();
   double epsmin = -1;
@@ -869,8 +862,8 @@ bool ComponentFieldMap::SetDefaultDriftMedium()
   return true;
 }
 
-double ComponentFieldMap::Potential3(const std::array<double, 6>& v, const std::array<double, 3>& t)
-{
+double ComponentFieldMap::Potential3(const std::array<double, 6>& v,
+                                     const std::array<double, 3>& t) {
   double sum = 0.;
   for (size_t i = 0; i < 3; ++i) {
     sum += v[i] * t[i] * (2 * t[i] - 1);
@@ -879,8 +872,9 @@ double ComponentFieldMap::Potential3(const std::array<double, 6>& v, const std::
   return sum;
 }
 
-void ComponentFieldMap::Field3(const std::array<double, 6>& v, const std::array<double, 3>& t, double jac[4][4], const double det, double& ex, double& ey)
-{
+void ComponentFieldMap::Field3(const std::array<double, 6>& v,
+                               const std::array<double, 3>& t, double jac[4][4],
+                               const double det, double& ex, double& ey) {
   std::array<double, 3> g;
   g[0] = v[0] * (4 * t[0] - 1) + v[3] * 4 * t[1] + v[4] * 4 * t[2];
   g[1] = v[1] * (4 * t[1] - 1) + v[3] * 4 * t[0] + v[5] * 4 * t[2];
@@ -890,8 +884,8 @@ void ComponentFieldMap::Field3(const std::array<double, 6>& v, const std::array<
   ey = -(jac[0][2] * g[0] + jac[1][2] * g[1] + jac[2][2] * g[2]) * invdet;
 }
 
-double ComponentFieldMap::Potential5(const std::array<double, 8>& v, const std::array<double, 2>& t)
-{
+double ComponentFieldMap::Potential5(const std::array<double, 8>& v,
+                                     const std::array<double, 2>& t) {
   return -v[0] * (1 - t[0]) * (1 - t[1]) * (1 + t[0] + t[1]) * 0.25 -
          v[1] * (1 + t[0]) * (1 - t[1]) * (1 - t[0] + t[1]) * 0.25 -
          v[2] * (1 + t[0]) * (1 + t[1]) * (1 - t[0] - t[1]) * 0.25 -
@@ -902,8 +896,9 @@ double ComponentFieldMap::Potential5(const std::array<double, 8>& v, const std::
          v[7] * (1 - t[0]) * (1 + t[1]) * (1 - t[1]) * 0.5;
 }
 
-void ComponentFieldMap::Field5(const std::array<double, 8>& v, const std::array<double, 2>& t, double jac[4][4], const double det, double& ex, double& ey)
-{
+void ComponentFieldMap::Field5(const std::array<double, 8>& v,
+                               const std::array<double, 2>& t, double jac[4][4],
+                               const double det, double& ex, double& ey) {
   std::array<double, 2> g;
   g[0] = (v[0] * (1 - t[1]) * (2 * t[0] + t[1]) +
           v[1] * (1 - t[1]) * (2 * t[0] - t[1]) +
@@ -924,8 +919,8 @@ void ComponentFieldMap::Field5(const std::array<double, 8>& v, const std::array<
   ey = -(g[0] * jac[0][1] + g[1] * jac[1][1]) * invdet;
 }
 
-double ComponentFieldMap::Potential13(const std::array<double, 10>& v, const std::array<double, 4>& t)
-{
+double ComponentFieldMap::Potential13(const std::array<double, 10>& v,
+                                      const std::array<double, 4>& t) {
   double sum = 0.;
   for (size_t i = 0; i < 4; ++i) {
     sum += v[i] * t[i] * (t[i] - 0.5);
@@ -936,8 +931,10 @@ double ComponentFieldMap::Potential13(const std::array<double, 10>& v, const std
   return sum;
 }
 
-void ComponentFieldMap::Field13(const std::array<double, 10>& v, const std::array<double, 4>& t, double jac[4][4], const double det, double& ex, double& ey, double& ez)
-{
+void ComponentFieldMap::Field13(const std::array<double, 10>& v,
+                                const std::array<double, 4>& t,
+                                double jac[4][4], const double det, double& ex,
+                                double& ey, double& ez) {
   std::array<double, 4> g;
   g[0] = v[0] * (t[0] - 0.25) + v[4] * t[1] + v[5] * t[2] + v[6] * t[3];
   g[1] = v[1] * (t[1] - 0.25) + v[4] * t[0] + v[7] * t[2] + v[8] * t[3];
@@ -954,8 +951,9 @@ void ComponentFieldMap::Field13(const std::array<double, 10>& v, const std::arra
   ez = -f[2] * det;
 }
 
-int ComponentFieldMap::FindElement5(const double x, const double y, double& t1, double& t2, double& t3, double& t4, double jac[4][4], double& det) const
-{
+int ComponentFieldMap::FindElement5(const double x, const double y, double& t1,
+                                    double& t2, double& t3, double& t4,
+                                    double jac[4][4], double& det) const {
   // Backup
   double jacbak[4][4], detbak = 1.;
   double t1bak = 0., t2bak = 0., t3bak = 0., t4bak = 0.;
@@ -1058,8 +1056,10 @@ int ComponentFieldMap::FindElement5(const double x, const double y, double& t1, 
   return -1;
 }
 
-int ComponentFieldMap::FindElement13(const double x, const double y, const double z, double& t1,double& t2, double& t3, double& t4, double jac[4][4],double& det) const 
-{
+int ComponentFieldMap::FindElement13(const double x, const double y,
+                                     const double z, double& t1, double& t2,
+                                     double& t3, double& t4, double jac[4][4],
+                                     double& det) const {
   // Backup
   double jacbak[4][4];
   double detbak = 1.;
@@ -1151,8 +1151,10 @@ int ComponentFieldMap::FindElement13(const double x, const double y, const doubl
   return -1;
 }
 
-int ComponentFieldMap::FindElementCube(const double x, const double y, const double z, double& t1, double& t2, double& t3, TMatrixD*& jac, std::vector<TMatrixD*>& dN) const
-{
+int ComponentFieldMap::FindElementCube(const double x, const double y,
+                                       const double z, double& t1, double& t2,
+                                       double& t3, TMatrixD*& jac,
+                                       std::vector<TMatrixD*>& dN) const {
   int imap = -1;
   const size_t nElements = m_elements.size();
   for (size_t i = 0; i < nElements; ++i) {
@@ -1199,8 +1201,11 @@ int ComponentFieldMap::FindElementCube(const double x, const double y, const dou
   return imap;
 }
 
-void ComponentFieldMap::Jacobian3(const std::array<double, 8>& xn, const std::array<double, 8>& yn, const double u, const double v, const double w, double& det, double jac[4][4])
-{
+void ComponentFieldMap::Jacobian3(const std::array<double, 8>& xn,
+                                  const std::array<double, 8>& yn,
+                                  const double u, const double v,
+                                  const double w, double& det,
+                                  double jac[4][4]) {
   // Shorthands.
   const double fouru = 4 * u;
   const double fourv = 4 * v;
@@ -1227,8 +1232,10 @@ void ComponentFieldMap::Jacobian3(const std::array<double, 8>& xn, const std::ar
   jac[2][2] = j11 - j10;
 }
 
-void ComponentFieldMap::Jacobian5(const std::array<double, 8>& xn, const std::array<double, 8>& yn, const double u, const double v, double& det, double jac[4][4])
-{
+void ComponentFieldMap::Jacobian5(const std::array<double, 8>& xn,
+                                  const std::array<double, 8>& yn,
+                                  const double u, const double v, double& det,
+                                  double jac[4][4]) {
   // Jacobian terms
   const double g0 = (1 - u) * (2 * v + u);
   const double g1 = (1 + u) * (2 * v - u);
@@ -1257,8 +1264,12 @@ void ComponentFieldMap::Jacobian5(const std::array<double, 8>& xn, const std::ar
   det = jac[0][0] * jac[1][1] - jac[0][1] * jac[1][0];
 }
 
-void ComponentFieldMap::Jacobian13(const std::array<double, 10>& xn, const std::array<double, 10>& yn, const std::array<double, 10>& zn, const double fourt0, const double fourt1, const double fourt2, const double fourt3, double& det, double jac[4][4])
-{
+void ComponentFieldMap::Jacobian13(const std::array<double, 10>& xn,
+                                   const std::array<double, 10>& yn,
+                                   const std::array<double, 10>& zn,
+                                   const double fourt0, const double fourt1,
+                                   const double fourt2, const double fourt3,
+                                   double& det, double jac[4][4]) {
   const double fourt0m1 = fourt0 - 1.;
   const double j10 =
       fourt0m1 * xn[0] + fourt1 * xn[4] + fourt2 * xn[5] + fourt3 * xn[6];
@@ -1336,8 +1347,10 @@ void ComponentFieldMap::Jacobian13(const std::array<double, 10>& xn, const std::
         (jac[0][3] * j30 + jac[1][3] * j31 + jac[2][3] * j32 + jac[3][3] * j33);
 }
 
-void ComponentFieldMap::JacobianCube(const Element& element, const double t1, const double t2, const double t3, TMatrixD*& jac, std::vector<TMatrixD*>& dN) const
-{
+void ComponentFieldMap::JacobianCube(const Element& element, const double t1,
+                                     const double t2, const double t3,
+                                     TMatrixD*& jac,
+                                     std::vector<TMatrixD*>& dN) const {
   if (!jac) {
     std::cerr << m_className << "::JacobianCube:\n";
     std::cerr << "    Pointer to Jacobian matrix is empty!\n";
@@ -1898,14 +1911,11 @@ std::array<std::array<double, 3>, 4> ComponentFieldMap::Weights12(
   return w;
 }
 
-
-
 void ComponentFieldMap::Coordinates12(
     const double x, const double y, const double z, double& t1, double& t2,
     double& t3, double& t4, const std::array<double, 10>& xn,
     const std::array<double, 10>& yn, const std::array<double, 10>& zn,
-    const std::array<std::array<double, 3>, 4>& w) const
-{
+    const std::array<std::array<double, 3>, 4>& w) const {
   if (m_debug) {
     std::cout << m_className << "::Coordinates12:\n"
               << "   Point (" << x << ", " << y << ", " << z << ").\n";
@@ -1917,7 +1927,7 @@ void ComponentFieldMap::Coordinates12(
   t3 = (x - xn[3]) * w[2][0] + (y - yn[3]) * w[2][1] + (z - zn[3]) * w[2][2];
   t4 = (x - xn[0]) * w[3][0] + (y - yn[0]) * w[3][1] + (z - zn[0]) * w[3][2];
 
-// Result.
+  // Result.
   if (m_debug) {
     std::cout << "    Tetrahedral coordinates (t, u, v, w) = (" << t1 << ", "
               << t2 << ", " << t3 << ", " << t4
@@ -1942,8 +1952,7 @@ int ComponentFieldMap::Coordinates13(
     double& t3, double& t4, double jac[4][4], double& det,
     const std::array<double, 10>& xn, const std::array<double, 10>& yn,
     const std::array<double, 10>& zn,
-    const std::array<std::array<double, 3>, 4>& w) const
-{
+    const std::array<std::array<double, 3>, 4>& w) const {
   // Make a first order approximation.
   t1 = (x - xn[1]) * w[0][0] + (y - yn[1]) * w[0][1] + (z - zn[1]) * w[0][2];
   // Stop if we are far outside.
@@ -1955,7 +1964,7 @@ int ComponentFieldMap::Coordinates13(
   t4 = (x - xn[0]) * w[3][0] + (y - yn[0]) * w[3][1] + (z - zn[0]) * w[3][2];
   if (t4 < -0.5 || t4 > 1.5) return 1;
 
-// Start iteration.
+  // Start iteration.
   std::array<double, 4> td = {t1, t2, t3, t4};
 
   // Loop
@@ -1992,7 +2001,7 @@ int ComponentFieldMap::Coordinates13(
           f9 * zn[9];
     // Compute the Jacobian.
     Jacobian13(xn, yn, zn, fourt0, fourt1, fourt2, fourt3, det, jac);
-// Compute the difference vector.
+    // Compute the difference vector.
     const double sr = std::accumulate(td.cbegin(), td.cend(), 0.);
     const double diff[4] = {1. - sr, x - xr, y - yr, z - zr};
     // Update the estimate.
@@ -2283,13 +2292,13 @@ void ComponentFieldMap::UpdatePeriodicityCommon() {
       m_warning = true;
     }
   }
-  
+
   // Triangle symmetry
-  const int triSymmN = std::count(m_triangleSymmetric.begin(),
-                                       m_triangleSymmetric.end(), true);
+  const int triSymmN =
+      std::count(m_triangleSymmetric.begin(), m_triangleSymmetric.end(), true);
   // Check octant setting
-  if (triSymmN == 1){
-    if(m_triangleSymmetricOct < 1 || m_triangleSymmetricOct > 8){
+  if (triSymmN == 1) {
+    if (m_triangleSymmetricOct < 1 || m_triangleSymmetricOct > 8) {
       std::cerr << m_className << "::UpdatePeriodicityCommon:\n"
                 << "    For triangle symmetry octant needs to be in "
                 << "the range 1 - 8; reset.\n";
@@ -2299,13 +2308,13 @@ void ComponentFieldMap::UpdatePeriodicityCommon() {
       m_warning = true;
     } else {
       m_outsideCone = (m_triangleOctRules[0] == m_triangleSymmetricOct) ||
-                 (m_triangleOctRules[1] == m_triangleSymmetricOct) ||
-                 (m_triangleOctRules[2] == m_triangleSymmetricOct) ||
-                 (m_triangleOctRules[3] == m_triangleSymmetricOct);
+                      (m_triangleOctRules[1] == m_triangleSymmetricOct) ||
+                      (m_triangleOctRules[2] == m_triangleSymmetricOct) ||
+                      (m_triangleOctRules[3] == m_triangleSymmetricOct);
     }
   }
   // Not more than 1 triangle symmetry
-  if (triSymmN > 1){
+  if (triSymmN > 1) {
     std::cerr << m_className << "::UpdatePeriodicityCommon:\n"
               << "    Only one triangle symmetry allowed; reset.\n";
     m_mirrorPeriodic.fill(false);
@@ -2390,7 +2399,7 @@ void ComponentFieldMap::UpdatePeriodicity2d() {
     m_axiallyPeriodic[1] = false;
     m_warning = true;
   }
-  
+
   // No xz or yz-planes in 2d
   if (m_triangleSymmetric[1] || m_triangleSymmetric[2]) {
     std::cerr << m_className << "::UpdatePeriodicity2d:\n"
@@ -2521,12 +2530,12 @@ void ComponentFieldMap::PrintRange() {
       std::cout << " none";
     std::cout << "\n";
   }
-  
+
   // triangle symmetry check
-  const bool triangleSymm = std::any_of(m_triangleSymmetric.begin(),
-                                        m_triangleSymmetric.end(), [](bool val)
-                                        { return val; });
-  if(triangleSymm){
+  const bool triangleSymm =
+      std::any_of(m_triangleSymmetric.begin(), m_triangleSymmetric.end(),
+                  [](bool val) { return val; });
+  if (triangleSymm) {
     const std::array<std::string, 3> planes = {{"xy", "xz", "yz"}};
     for (unsigned int i = 0; i < 3; ++i) {
       if (m_triangleSymmetric[i]) {
@@ -2565,8 +2574,10 @@ bool ComponentFieldMap::GetElementaryCell(double& xmin, double& ymin,
   return true;
 }
 
-void ComponentFieldMap::MapCoordinates(double& xpos, double& ypos, double& zpos, bool& xmirrored,bool& ymirrored, bool& zmirrored, double& rcoordinate,double& rotation) const
-{
+void ComponentFieldMap::MapCoordinates(double& xpos, double& ypos, double& zpos,
+                                       bool& xmirrored, bool& ymirrored,
+                                       bool& zmirrored, double& rcoordinate,
+                                       double& rotation) const {
   // Initial values
   rotation = 0;
 
@@ -2678,23 +2689,23 @@ void ComponentFieldMap::MapCoordinates(double& xpos, double& ypos, double& zpos,
     ypos = zcoordinate;
     zpos = 0;
   }
-  
+
   if (m_triangleSymmetric[0] || m_triangleSymmetric[1] ||
       m_triangleSymmetric[2]) {
     const double pH[2] = {xpos, ypos};
     bool triSwap = false;
     double prefixH = 1.;
-    
-    if(m_outsideCone) {
+
+    if (m_outsideCone) {
       prefixH = (m_triangleSymmetricOct % 2 == 0) ? 1 : -1;
       if (std::abs(xpos) < std::abs(ypos)) triSwap = true;
     } else {
       prefixH = (m_triangleSymmetricOct % 2 == 0) ? -1 : 1;
       if (std::abs(xpos) > std::abs(ypos)) triSwap = true;
     }
-    
-    if(triSwap) {
-      if (m_triangleSymmetric[0]){
+
+    if (triSwap) {
+      if (m_triangleSymmetric[0]) {
         xpos = prefixH * ypos;
         ypos = prefixH * pH[0];
       } else if (m_triangleSymmetric[1]) {
@@ -2713,8 +2724,7 @@ void ComponentFieldMap::UnmapFields(double& ex, double& ey, double& ez,
                                     const double zpos, const bool xmirrored,
                                     const bool ymirrored, const bool zmirrored,
                                     const double rcoordinate,
-                                    const double rotation) const
-{
+                                    const double rotation) const {
   // Apply mirror imaging.
   if (xmirrored) ex = -ex;
   if (ymirrored) ey = -ey;

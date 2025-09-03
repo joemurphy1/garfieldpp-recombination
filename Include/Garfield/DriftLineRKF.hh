@@ -40,7 +40,7 @@ class DriftLineRKF {
   /// Newton-Raphson integration. Default: 2.
   void SetSignalAveragingOrder(const unsigned int navg) { m_navg = navg; }
   /// Use the weighting potential (as opposed to the weighting field)
-  /// for calculating the induced signal. 
+  /// for calculating the induced signal.
   /// By default, the weighting potential is used.
   void UseWeightingPotential(const bool on = true) {
     m_useWeightingPotential = on;
@@ -91,11 +91,11 @@ class DriftLineRKF {
   bool DriftElectron(const double x, const double y, const double z,
                      const double t, const size_t w = 1);
   /// Simulate the drift line of a hole with a given starting point.
-  bool DriftHole(const double x, const double y, const double z,
-                 const double t, const size_t w = 1);
+  bool DriftHole(const double x, const double y, const double z, const double t,
+                 const size_t w = 1);
   /// Simulate the drift line of an ion with a given starting point.
-  bool DriftIon(const double x, const double y, const double z,
-                const double t, const size_t w = 1);
+  bool DriftIon(const double x, const double y, const double z, const double t,
+                const size_t w = 1);
   /// Simulate the drift line of an electron with a given starting point,
   /// assuming that it has positive charge.
   bool DriftPositron(const double x, const double y, const double z,

@@ -2,10 +2,10 @@
 #define GARFIELD_AVALANCHEGRIDSPACECHARGE_HH
 
 #include <algorithm>
+#include <array>
 #include <string>
 #include <utility>
 #include <vector>
-#include <array>
 
 namespace Garfield {
 class Sensor;
@@ -331,14 +331,9 @@ class AvalancheGridSpaceCharge {
   std::vector<int> m_vSaturatedGaps{};
 
   std::string m_sFieldOption = "coulomb";
-  enum class Elliptic : std::size_t
-  {
-    X,
-    K,
-    E
-  };
+  enum class Elliptic : std::size_t { X, K, E };
   static const constexpr std::size_t elliptic_size{29981};
-  static const std::array<std::array<double,3>, elliptic_size> m_elliptic; 
+  static const std::array<std::array<double, 3>, elliptic_size> m_elliptic;
 };
 
 }  // namespace Garfield

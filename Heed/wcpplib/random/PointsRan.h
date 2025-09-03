@@ -58,7 +58,8 @@ class PointsRan {
              Maximum of generated distribution. If greater than x[q-1],
              extend the distribution by linear extrapolation.
     **/
-  PointsRan(const std::vector<double>& fx, const std::vector<double>& fy, double fxmin, double fxmax);
+  PointsRan(const std::vector<double>& fx, const std::vector<double>& fy,
+            double fxmin, double fxmax);
 
   double ran(double flat_ran) const;
   double get_integ_total() const { return integ_total; }

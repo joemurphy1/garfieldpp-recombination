@@ -13,10 +13,9 @@
 class TetrahedralTreeGPU;
 #endif
 
-#include <vector>
 #include <cstddef>
 #include <utility>
-
+#include <vector>
 
 namespace Garfield {
 
@@ -67,7 +66,6 @@ class GARFIELD_CLASS_NAME(TetrahedralTree) {
 #endif
 
  private:
-
   // Physical centre of this tree node.
   Vec3 m_origin;
   // Half the width/height/depth of this tree node.

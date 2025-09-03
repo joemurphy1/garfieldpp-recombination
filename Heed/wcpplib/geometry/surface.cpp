@@ -1,9 +1,10 @@
 #include "wcpplib/geometry/surface.h"
 
+#include <iostream>
+
 #include "wcpplib/geometry/circumf.h"
 #include "wcpplib/geometry/polyline.h"
 #include "wcpplib/geometry/trajestep.h"
-#include<iostream>
 /*
 Copyright (c) 2000 Igor B. Smirnov
 
@@ -294,22 +295,22 @@ void ulsvolume::ulsvolume_init(
   }
 }
 
-ulsvolume::ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf, double fprec)
-    : qsurf(fsurf.size()){
+ulsvolume::ulsvolume(const std::vector<std::shared_ptr<surface> >& fsurf,
+                     double fprec)
+    : qsurf(fsurf.size()) {
   check_econd12(qsurf, >, pqqsurf, std::cerr);
   prec = fprec;
   for (int n = 0; n < qsurf; ++n) surf[n] = fsurf[n];
 }
 
-ulsvolume::ulsvolume(ulsvolume& f)
-    : absref(f), absvol(f), qsurf(f.qsurf){
+ulsvolume::ulsvolume(ulsvolume& f) : absref(f), absvol(f), qsurf(f.qsurf) {
   check_econd12(f.qsurf, >, pqqsurf, std::cerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];
 }
 
 ulsvolume::ulsvolume(const ulsvolume& f)
-    : absref(f), absvol(f), qsurf(f.qsurf){
+    : absref(f), absvol(f), qsurf(f.qsurf) {
   check_econd12(f.qsurf, >, pqqsurf, std::cerr);
   prec = f.prec;
   for (int n = 0; n < qsurf; ++n) surf[n] = f.surf[n];

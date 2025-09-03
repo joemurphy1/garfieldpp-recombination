@@ -10,8 +10,8 @@ and notices about any modifications of the original text
 appear in all copies and in supporting documentation.
 It is provided "as is" without express or implied warranty.
 */
-#include <ostream>
 #include <iosfwd>
+#include <ostream>
 
 #define check_econd1(condition, a1, stream) \
   if (condition) {                          \

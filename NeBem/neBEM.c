@@ -979,9 +979,9 @@ property
                 if(MirrorTypeX[primsrc])
                         {
                         localP = ReflectOnMirror('X', elesrc, srcpt, fldpt,
-                                                                                                                                MirrorDistXFromOrigin[primsrc], &DirCos);
-                        double AddnalInfl = ComputeEleInf(Pot0Cont1, elesrc,
-&localP, &DirCos);
+                                                                                                                                MirrorDistXFromOrigin[primsrc],
+&DirCos); double AddnalInfl = ComputeEleInf(Pot0Cont1, elesrc, &localP,
+&DirCos);
 
                         if(MirrorTypeX[primsrc] == 1)	// element having
 opposite charge density Inf[elefld][elesrc] -= AddnalInfl;	// classical
@@ -992,9 +992,9 @@ density Inf[elefld][elesrc] += AddnalInfl;
                 if(MirrorTypeY[primsrc])
                         {
                         localP = ReflectOnMirror('Y', elesrc, srcpt, fldpt,
-                                                                                                                                MirrorDistYFromOrigin[primsrc], &DirCos);
-                        double AddnalInfl = ComputeEleInf(Pot0Cont1, elesrc,
-&localP, &DirCos);
+                                                                                                                                MirrorDistYFromOrigin[primsrc],
+&DirCos); double AddnalInfl = ComputeEleInf(Pot0Cont1, elesrc, &localP,
+&DirCos);
 
                         if(MirrorTypeY[primsrc] == 1)	// element having
 opposite charge density Inf[elefld][elesrc] -= AddnalInfl;	// classical
@@ -1005,9 +1005,9 @@ density Inf[elefld][elesrc] += AddnalInfl;
                 if(MirrorTypeZ[primsrc])
                         {
                         localP = ReflectOnMirror('Z', elesrc, srcpt, fldpt,
-                                                                                                                                MirrorDistZFromOrigin[primsrc], &DirCos);
-                        double AddnalInfl = ComputeEleInf(Pot0Cont1, elesrc,
-&localP, &DirCos);
+                                                                                                                                MirrorDistZFromOrigin[primsrc],
+&DirCos); double AddnalInfl = ComputeEleInf(Pot0Cont1, elesrc, &localP,
+&DirCos);
 
                         if(MirrorTypeZ[primsrc] == 1)	// element having
 opposite charge density InfVec[elesrc] -= AddnalInfl;	// classical image

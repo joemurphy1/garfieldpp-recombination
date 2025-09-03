@@ -2,8 +2,8 @@
 
 #include <array>
 #include <cmath>
+#include <iostream>
 #include <memory>
-#include<iostream>
 
 #include "wcpplib/geometry/polyline.h"
 #include "wcpplib/geometry/surface.h"
@@ -29,8 +29,7 @@ absref_transmit box::get_components() {
   return absref_transmit();
 }
 
-box::box()
-    : m_dx(0), m_dy(0), m_dz(0), m_dxh(0), m_dyh(0), m_dzh(0){
+box::box() : m_dx(0), m_dy(0), m_dz(0), m_dxh(0), m_dyh(0), m_dzh(0) {
   init_prec();
   init_planes();
 }

@@ -15,15 +15,14 @@
 namespace {
 
 /// Convert field from cylindrical to Cartesian coordinates.
-void GetCartesianLocalField(const double eFieldR, 
-                            double& eFieldX, double& eFieldY,
-                            const double x, const double y) {
+void GetCartesianLocalField(const double eFieldR, double& eFieldX,
+                            double& eFieldY, const double x, const double y) {
   const double phi = std::atan2(y, x);
   eFieldX = eFieldR * std::cos(phi);
   eFieldY = eFieldR * std::sin(phi);
 }
 
-}
+}  // namespace
 
 namespace Garfield {
 
@@ -168,8 +167,8 @@ void ComponentChargedRing::GetEllipticIntegrals(double x, double& K,
     return;
   }
   // Linear interpolation:
-  const std::array<double, 3> & ell_arg = m_elliptic[arg];
-  const std::array<double, 3> & ell_arg1 = m_elliptic[arg + 1];
+  const std::array<double, 3>& ell_arg = m_elliptic[arg];
+  const std::array<double, 3>& ell_arg1 = m_elliptic[arg + 1];
   const double f = (x - ell_arg[0]) * invStep;
   K = ell_arg[1] + f * (ell_arg1[1] - ell_arg[1]);
   E = ell_arg[2] + f * (ell_arg1[2] - ell_arg[2]);
@@ -216,8 +215,8 @@ bool ComponentChargedRing::AddChargedRing(const double x, const double y,
   return true;
 }
 void ComponentChargedRing::GetChargedRingField(
-    const ComponentChargedRing::Ring& ring, double r, double z, 
-    double& eFieldZ, double& eFieldR) const {
+    const ComponentChargedRing::Ring& ring, double r, double z, double& eFieldZ,
+    double& eFieldR) const {
   // field called exactly on a ring
   // This will cause the interpolation spiking but should almost never happen
   // as the field will rarely be called exactly on the charge
@@ -242,19 +241,19 @@ void ComponentChargedRing::GetChargedRingField(
 
     double dz = z - ring_z;  //< I double-checked that's the right sign
 
-    double dz2 = dz * dz;// 1
-    double r2 = r * r; // 1
-    double rr2 = ring_r * ring_r; // 1
-    double two_rrr = 2. * r * ring_r; // 2
-    const double intermediate = r2 + rr2 + dz2; // 2
-    const double a2 = intermediate + two_rrr; // 1
-    const double b2 = intermediate - two_rrr; // 1
-    const double b = std::sqrt(b2); // 1
-    const double c2 = r2 - rr2 - dz2; // 2
+    double dz2 = dz * dz;                        // 1
+    double r2 = r * r;                           // 1
+    double rr2 = ring_r * ring_r;                // 1
+    double two_rrr = 2. * r * ring_r;            // 2
+    const double intermediate = r2 + rr2 + dz2;  // 2
+    const double a2 = intermediate + two_rrr;    // 1
+    const double b2 = intermediate - two_rrr;    // 1
+    const double b = std::sqrt(b2);              // 1
+    const double c2 = r2 - rr2 - dz2;            // 2
 
     // parameter for elliptic integrals
     //< x < 0, i.e. never near x = 1 (singularity)
-    const double x = 2. * two_rrr / b2;  
+    const double x = 2. * two_rrr / b2;
 
     // calculation of elliptic integrals and fields (up to prefactor)
     double EllE, EllK;
@@ -308,6 +307,5 @@ void ComponentChargedRing::UpdatePeriodicity() {
               << "    Periodicities are not supported.\n";
   }
 }
-
 
 }  // namespace Garfield

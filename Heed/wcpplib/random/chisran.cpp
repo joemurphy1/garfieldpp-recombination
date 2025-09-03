@@ -1,7 +1,8 @@
 #include "wcpplib/random/chisran.h"
 
+#include <iostream>
+
 #include "wcpplib/util/FunNameStack.h"
-#include<iostream>
 
 // I. B. Smirnov, 2003.
 

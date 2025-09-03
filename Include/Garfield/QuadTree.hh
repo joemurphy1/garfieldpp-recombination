@@ -28,7 +28,6 @@ class QuadTree {
                                              const double y) const;
 
  private:
-
   // Centre of this tree node.
   double m_x0, m_y0;
   // Half-width in x and y of this tree node.

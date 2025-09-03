@@ -9,7 +9,12 @@ namespace Heed {
 class HeedCluster {
  public:
   HeedCluster() = default;
-  HeedCluster(double ftransferred_energy, const point& fpt, long fnatom, long fnshell): transferred_energy(ftransferred_energy), pt(fpt), natom(fnatom), nshell(fnshell) {}
+  HeedCluster(double ftransferred_energy, const point& fpt, long fnatom,
+              long fnshell)
+      : transferred_energy(ftransferred_energy),
+        pt(fpt),
+        natom(fnatom),
+        nshell(fnshell) {}
   /// Energy transfer in internal units.
   double transferred_energy = 0.;
   /// Coordinates in the global frame.

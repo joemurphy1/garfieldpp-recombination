@@ -36,11 +36,11 @@ class ComponentChargedRing : public Component {
 
   using Component::ElectricField;
   bool GetVoltageRange(double& vmin, double& vmax) override;
-  
+
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
                       double& ymax, double& zmax) override;
 
-  /// Add a ring of charge N*e at x,y,z                    
+  /// Add a ring of charge N*e at x,y,z
   bool AddChargedRing(const double x, const double y, const double z,
                       const double N);
 
@@ -91,7 +91,7 @@ class ComponentChargedRing : public Component {
 
   void Reset() override;
   void UpdatePeriodicity() override;
-  
+
   /// Gets elliptic integrals via list
   void GetEllipticIntegrals(double x, double& K, double& E) const;
 
@@ -120,12 +120,11 @@ class ComponentChargedRing : public Component {
 
   bool m_bCentreSet = false;
 
-  static void GetCoulombBallField(const Ring& ring, 
-                                  const double r, const double z,
-                                  double& eFieldZ, double& eFieldR);
+  static void GetCoulombBallField(const Ring& ring, const double r,
+                                  const double z, double& eFieldZ,
+                                  double& eFieldR);
   void GetChargedRingField(const Ring& ring, double r, double z,
                            double& eFieldZ, double& eFieldR) const;
-
 };
 }  // namespace Garfield
 #endif

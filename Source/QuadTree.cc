@@ -2,7 +2,6 @@
 
 namespace Garfield {
 
-
 QuadTree::QuadTree(const double x0, const double y0, const double hx,
                    const double hy)
     : m_x0(x0), m_y0(y0), m_hx(hx), m_hy(hy) {
@@ -89,8 +88,8 @@ void QuadTree::InsertMeshElement(const double bb[4], const int index) {
   }
 }
 
-const std::vector<int>& QuadTree::GetElementsInBlock(const double x, const double y) const
-{
+const std::vector<int>& QuadTree::GetElementsInBlock(const double x,
+                                                     const double y) const {
   static std::vector<int> nul;
   const auto node = GetBlockFromPoint(x, y);
   return node ? node->elements : nul;

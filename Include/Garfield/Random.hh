@@ -54,7 +54,7 @@ inline double RndmGaussian() {
 }
 
 /// Draw two Gaussian random variates with mean mu and standard deviation sigma.
-inline std::pair<double, double> RndmGaussians(const double mu, 
+inline std::pair<double, double> RndmGaussians(const double mu,
                                                const double sigma) {
   auto r = RndmGaussians();
   r.first = mu + sigma * r.first;
