@@ -5,18 +5,16 @@
 #error GPU HEADER INCLUDED WITHOUT SETTING __GPUCOMPILE__
 #endif
 
-#include "Garfield/HelperMacros.hh"
 #include "GPUInterface.hh"
-#include "Garfield/MagboltzInterface.hh"
 #include "Garfield/GarfieldConstants.hh"
+#include "Garfield/HelperMacros.hh"
+#include "Garfield/MagboltzInterface.hh"
 
-namespace Garfield
-{
+namespace Garfield {
 
-class MediumGPU
-{
-public:
-    /// Constructor
+class MediumGPU {
+ public:
+  /// Constructor
   MediumGPU() = default;
   /// Destructor
   ~MediumGPU() {};
@@ -33,14 +31,14 @@ public:
                                     cuda_t& dz, Particle* secondaries_type,
                                     cuda_t* secondaries_energy,
                                     int& num_secondaries, int& ndxc, int& band);
-    // Id number
+  // Id number
   int m_id;
 
   // Transport flags
   bool m_driftable = false;
   bool m_microscopic = false;
   bool m_ionisable = false;
-  #include "Garfield/MediumMagboltz.hh"
+#include "Garfield/MediumMagboltz.hh"
 
   friend class MediumGas;
   friend class MediumMagboltz;
@@ -49,8 +47,9 @@ public:
   enum class MediumType { Medium = 0, MediumGas, MediumMagboltz };
 
   MediumType m_MediumType{MediumType::Medium};
-private:
+
+ private:
 };
 
-}
+}  // namespace Garfield
 #endif

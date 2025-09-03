@@ -7,9 +7,7 @@
 
 #include "GPUInterface.hh"
 #include "Garfield/HelperMacros.hh"
-#include "Garfield/Vector.hh"
 #include "Garfield/TetrahedralTree.hh"
-
-
+#include "Garfield/Vector.hh"
 
 #endif

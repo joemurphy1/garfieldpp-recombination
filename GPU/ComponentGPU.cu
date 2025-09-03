@@ -1,36 +1,38 @@
-#include "GPUFunctions.h"
 #include "ComponentGPU.h"
+#include "GPUFunctions.h"
 #undef __GPUCOMPILE__
+#include <iostream>
+
 #include "Garfield/ComponentAnsys123.hh"
 #include "Garfield/ComponentComsol.hh"
 #include "Garfield/ComponentElmer.hh"
 #include "Garfield/Medium.hh"
 
-#include<iostream>
-
-
 #define __GPUCOMPILE__
 
 namespace Garfield {
 
-    // PART OF COMPONENT_FIELD_MAP
-    // This should be in a class  COMPONENT_FIELD_MAPGPU not ComponentGPU but because we don't want / can't have inherence now put that */@#$# here !
-    __device__ void ComponentGPU::ElectricField(const double xin, const double yin, const double zin, double& ex, double& ey, double& ez, MediumGPU*& m, int& status)
-    {
-        // Initial values
-        ex = ey = ez = 0.;
-        m = nullptr;
-        int iel = -1;
-        status = Field(xin, yin, zin, ex, ey, ez, iel, m_pot, m_numpot);
+// PART OF COMPONENT_FIELD_MAP
+// This should be in a class  COMPONENT_FIELD_MAPGPU not ComponentGPU but
+// because we don't want / can't have inherence now put that */@#$# here !
+__device__ void ComponentGPU::ElectricField(const double xin, const double yin,
+                                            const double zin, double& ex,
+                                            double& ey, double& ez,
+                                            MediumGPU*& m, int& status) {
+  // Initial values
+  ex = ey = ez = 0.;
+  m = nullptr;
+  int iel = -1;
+  status = Field(xin, yin, zin, ex, ey, ez, iel, m_pot, m_numpot);
 
-        if (status < 0 || iel < 0)
-        {
-        if (status == -10) { /*PrintNotReady("ElectricField");*/ }
-        return;
-        }
+  if (status < 0 || iel < 0) {
+    if (status == -10) { /*PrintNotReady("ElectricField");*/
+    }
+    return;
+  }
 
-        const auto& element = m_elements[iel];
-// Drift medium?
+  const auto& element = m_elements[iel];
+  // Drift medium?
   if (element.matmap >= numMaterials) {
     status = -5;
     return;
@@ -44,8 +46,10 @@ namespace Garfield {
   }
 }
 
-int __device__ ComponentGPU::Field(const double xin, const double yin, const double zin, double& fx, double& fy, double& fz, int& imap, const double* pot, const int numPot) const
-{
+int __device__ ComponentGPU::Field(const double xin, const double yin,
+                                   const double zin, double& fx, double& fy,
+                                   double& fz, int& imap, const double* pot,
+                                   const int numPot) const {
   // Do not proceed if not properly initialised.
   if (!m_ready) return -10;
   // Copy the coordinates.
@@ -57,7 +61,7 @@ int __device__ ComponentGPU::Field(const double xin, const double yin, const dou
   MapCoordinates(x, y, z, xmirr, ymirr, zmirr, rcoordinate, rotation);
   // TODO TN GPU: We don't support 2D field maps on the GPU yet and it will
   // silently ignore these
-  //if (!m_is3d) {
+  // if (!m_is3d) {
   //  if (zin < m_minBoundingBox[2] || zin > m_maxBoundingBox[2]) {
   //    return -5;
   //  }
@@ -68,26 +72,21 @@ int __device__ ComponentGPU::Field(const double xin, const double yin, const dou
   double jac[4][4];
   double det = 0.;
   imap = -1;
-  if(m_elementType == ElementType::Serendipity)
-  {
-  // TODO TN GPU: ElementType::Serendipity not supported on GPU
-    //imap = FindElement5(x, y, t1, t2, t3, t4, jac, det);
-  }
-  else if(m_elementType == ElementType::CurvedTetrahedron)
-  {
+  if (m_elementType == ElementType::Serendipity) {
+    // TODO TN GPU: ElementType::Serendipity not supported on GPU
+    // imap = FindElement5(x, y, t1, t2, t3, t4, jac, det);
+  } else if (m_elementType == ElementType::CurvedTetrahedron) {
     imap = FindElement13(x, y, z, t1, t2, t3, t4, jac, det);
   }
   // Stop if the point is not in the mesh.
-  if (imap < 0)
-  {
+  if (imap < 0) {
     return -6;
   }
 
   const Element& element = m_elements[imap];
-  if (m_elementType == ElementType::Serendipity)
-  {
-  // TODO TN GPU: ElementType::Serendipity not supported (see above)
-    //if (m_degenerate[imap]) {
+  if (m_elementType == ElementType::Serendipity) {
+    // TODO TN GPU: ElementType::Serendipity not supported (see above)
+    // if (m_degenerate[imap]) {
     //  std::array<double, 6> v;
     //   for (size_t i = 0; i < 6; ++i) v[i] = pot[element.emap[i]];
     //  Field3(v, {t1, t2, t3}, jac, det, fx, fy);
@@ -95,10 +94,8 @@ int __device__ ComponentGPU::Field(const double xin, const double yin, const dou
     //  std::array<double, 8> v;
     //  for (size_t i = 0; i < 8; ++i) v[i] = pot[element.emap[i]];
     //  Field5(v, {t1, t2}, jac, det, fx, fy);
-   // }
-  }
-  else if (m_elementType == ElementType::CurvedTetrahedron)
-  {
+    // }
+  } else if (m_elementType == ElementType::CurvedTetrahedron) {
     double v[10];
     // TODO TN GPU: Warning can not use size_t here for some reason...
     for (int i = 0; i < 10; ++i) v[i] = pot[element.emap[i]];
@@ -111,9 +108,10 @@ int __device__ ComponentGPU::Field(const double xin, const double yin, const dou
   return 0;
 }
 
-
-__device__ void ComponentGPU::WeightingField(const double xin, const double yin, const double zin,double& wx, double& wy, double& wz,size_t label)
-{
+__device__ void ComponentGPU::WeightingField(const double xin, const double yin,
+                                             const double zin, double& wx,
+                                             double& wy, double& wz,
+                                             size_t label) {
   // Initial values.
   wx = wy = wz = 0;
 
@@ -124,9 +122,9 @@ __device__ void ComponentGPU::WeightingField(const double xin, const double yin,
         m_num_entries_wpot[label]);
 }
 
-
-__device__ void ComponentGPU::Field13(const double v[10], const double t[4],double jac[4][4], const double det, double& ex, double& ey, double& ez)
-{
+__device__ void ComponentGPU::Field13(const double v[10], const double t[4],
+                                      double jac[4][4], const double det,
+                                      double& ex, double& ey, double& ez) {
   double g[4];
   g[0] = v[0] * (t[0] - 0.25) + v[4] * t[1] + v[5] * t[2] + v[6] * t[3];
   g[1] = v[1] * (t[1] - 0.25) + v[4] * t[0] + v[7] * t[2] + v[8] * t[3];
@@ -143,9 +141,11 @@ __device__ void ComponentGPU::Field13(const double v[10], const double t[4],doub
   ez = -f[2] * det;
 }
 
-__device__ int ComponentGPU::FindElement13(const double x, const double y, const double z, double& t1,double& t2, double& t3, double& t4, double jac[4][4],double& det) const 
-{
-
+__device__ int ComponentGPU::FindElement13(const double x, const double y,
+                                           const double z, double& t1,
+                                           double& t2, double& t3, double& t4,
+                                           double jac[4][4],
+                                           double& det) const {
   // Backup
   double jacbak[4][4];
   double detbak = 1.;
@@ -162,7 +162,6 @@ __device__ int ComponentGPU::FindElement13(const double x, const double y, const
   cuda_t xn[10];
   cuda_t yn[10];
   cuda_t zn[10];
-
 
   const int* tetList{nullptr};
   int tetListSize{0};
@@ -232,12 +231,10 @@ __device__ int ComponentGPU::FindElement13(const double x, const double y, const
   return -1;
 }
 
-
 __device__ void ComponentGPU::Jacobian13(
     const double xn[10], const double yn[10], const double zn[10],
     const double fourt0, const double fourt1, const double fourt2,
-    const double fourt3, double& det, double jac[4][4])
-{
+    const double fourt3, double& det, double jac[4][4]) {
   const double fourt0m1 = fourt0 - 1.;
   const double j10 =
       fourt0m1 * xn[0] + fourt1 * xn[4] + fourt2 * xn[5] + fourt3 * xn[6];
@@ -315,23 +312,21 @@ __device__ void ComponentGPU::Jacobian13(
         (jac[0][3] * j30 + jac[1][3] * j31 + jac[2][3] * j32 + jac[3][3] * j33);
 }
 
-
 __device__ void ComponentGPU::Coordinates12(
     const double x, const double y, const double z, double& t1, double& t2,
     double& t3, double& t4, const double xn[10], const double yn[10],
-    const double zn[10], const double w[4][3]) const
-{
-
+    const double zn[10], const double w[4][3]) const {
   // Compute tetrahedral coordinates.
   t1 = (x - xn[1]) * w[0][0] + (y - yn[1]) * w[0][1] + (z - zn[1]) * w[0][2];
   t2 = (x - xn[2]) * w[1][0] + (y - yn[2]) * w[1][1] + (z - zn[2]) * w[1][2];
   t3 = (x - xn[3]) * w[2][0] + (y - yn[3]) * w[2][1] + (z - zn[3]) * w[2][2];
   t4 = (x - xn[0]) * w[3][0] + (y - yn[0]) * w[3][1] + (z - zn[0]) * w[3][2];
-
 }
 
-__device__ int ComponentGPU::Coordinates13(const double x, const double y, const double z, double& t1, double& t2,double& t3, double& t4, double jac[4][4], double& det, const double xn[10],const double yn[10], const double zn[10], cuda_t** w) const
-{
+__device__ int ComponentGPU::Coordinates13(
+    const double x, const double y, const double z, double& t1, double& t2,
+    double& t3, double& t4, double jac[4][4], double& det, const double xn[10],
+    const double yn[10], const double zn[10], cuda_t** w) const {
   // Make a first order approximation.
   t1 = (x - xn[1]) * w[0][0] + (y - yn[1]) * w[0][1] + (z - zn[1]) * w[0][2];
   // Stop if we are far outside.
@@ -343,13 +338,12 @@ __device__ int ComponentGPU::Coordinates13(const double x, const double y, const
   t4 = (x - xn[0]) * w[3][0] + (y - yn[0]) * w[3][1] + (z - zn[0]) * w[3][2];
   if (t4 < -0.5 || t4 > 1.5) return 1;
 
-// Start iteration.
+  // Start iteration.
   double td[4] = {t1, t2, t3, t4};
 
   // Loop
   bool converged = false;
-  for (int iter = 0; iter < 10; ++iter)
-  {
+  for (int iter = 0; iter < 10; ++iter) {
     // Evaluate the shape functions and re-compute the (x,y,z) position
     // for this set of isoparametric coordinates.
     const double f0 = td[0] * (td[0] - 0.5);
@@ -377,7 +371,7 @@ __device__ int ComponentGPU::Coordinates13(const double x, const double y, const
           f9 * zn[9];
     // Compute the Jacobian.
     Jacobian13(xn, yn, zn, fourt0, fourt1, fourt2, fourt3, det, jac);
-// Compute the difference vector.
+    // Compute the difference vector.
     double sr{0};
     for (int i = 0; i < 4; ++i) {
       sr += td[i];
@@ -392,7 +386,6 @@ __device__ int ComponentGPU::Coordinates13(const double x, const double y, const
       corr[l] *= det;
       td[l] += corr[l];
     }
-
 
     // Check for convergence.
     constexpr double tol = 1.e-5;
@@ -430,10 +423,11 @@ __device__ int ComponentGPU::Coordinates13(const double x, const double y, const
   return 0;
 }
 
-
-
-__device__ void ComponentGPU::MapCoordinates(double& xpos, double& ypos, double& zpos, bool& xmirrored,bool& ymirrored, bool& zmirrored, double& rcoordinate,double& rotation) const
-{
+__device__ void ComponentGPU::MapCoordinates(double& xpos, double& ypos,
+                                             double& zpos, bool& xmirrored,
+                                             bool& ymirrored, bool& zmirrored,
+                                             double& rcoordinate,
+                                             double& rotation) const {
   // Initial values
   rotation = 0;
 
@@ -545,23 +539,23 @@ __device__ void ComponentGPU::MapCoordinates(double& xpos, double& ypos, double&
     ypos = zcoordinate;
     zpos = 0;
   }
-  
+
   if (m_triangleSymmetric[0] || m_triangleSymmetric[1] ||
       m_triangleSymmetric[2]) {
     const double pH[2] = {xpos, ypos};
     bool triSwap = false;
     double prefixH = 1.;
-    
-    if(m_outsideCone) {
+
+    if (m_outsideCone) {
       prefixH = (m_triangleSymmetricOct % 2 == 0) ? 1 : -1;
       if (std::abs(xpos) < std::abs(ypos)) triSwap = true;
     } else {
       prefixH = (m_triangleSymmetricOct % 2 == 0) ? -1 : 1;
       if (std::abs(xpos) > std::abs(ypos)) triSwap = true;
     }
-    
-    if(triSwap) {
-      if (m_triangleSymmetric[0]){
+
+    if (triSwap) {
+      if (m_triangleSymmetric[0]) {
         xpos = prefixH * ypos;
         ypos = prefixH * pH[0];
       } else if (m_triangleSymmetric[1]) {
@@ -578,8 +572,8 @@ __device__ void ComponentGPU::MapCoordinates(double& xpos, double& ypos, double&
 __device__ void ComponentGPU::UnmapFields(
     double& ex, double& ey, double& ez, const double xpos, const double ypos,
     const double zpos, const bool xmirrored, const bool ymirrored,
-    const bool zmirrored, const double rcoordinate, const double rotation) const
-{
+    const bool zmirrored, const double rcoordinate,
+    const double rotation) const {
   // Apply mirror imaging.
   if (xmirrored) ex = -ex;
   if (ymirrored) ey = -ey;
@@ -650,224 +644,223 @@ __device__ void ComponentGPU::UnmapFields(
   }
 }
 
+//////////////////////////////////
 
-    //////////////////////////////////
+double Component::CreateGPUTransferObject(ComponentGPU*& comp_gpu) {
+  // copy periodicity and min/max
+  for (int i = 0; i < 3; i++) {
+    comp_gpu->m_periodic[i] = m_periodic[i];
+    comp_gpu->m_mirrorPeriodic[i] = m_mirrorPeriodic[i];
+    comp_gpu->m_axiallyPeriodic[i] = m_axiallyPeriodic[i];
+    comp_gpu->m_rotationSymmetric[i] = m_rotationSymmetric[i];
+  }
+  comp_gpu->m_ready = m_ready;
 
-    double Component::CreateGPUTransferObject(ComponentGPU *&comp_gpu)
-    {
-        // copy periodicity and min/max
-        for (int i = 0; i < 3; i++)
-        {
-            comp_gpu->m_periodic[i] = m_periodic[i];
-            comp_gpu->m_mirrorPeriodic[i] = m_mirrorPeriodic[i];
-            comp_gpu->m_axiallyPeriodic[i] = m_axiallyPeriodic[i];
-            comp_gpu->m_rotationSymmetric[i] = m_rotationSymmetric[i];
-        }
-        comp_gpu->m_ready = m_ready;
+  comp_gpu->m_ComponentType = ComponentGPU::ComponentType::Component;
 
-        comp_gpu->m_ComponentType = ComponentGPU::ComponentType::Component;
-
-        return 0;
-    }
-
-    double ComponentFieldMap::CreateGPUTransferObject(ComponentGPU *&comp_gpu)
-    {
-        double alloc{0};
-
-        // Check if bounding boxes of elements have been computed
-        if (!m_cacheElemBoundingBoxes) {
-            std::cout << m_className << "::CreateGPUTransferObject:\n"
-                    << "    Caching the bounding boxes of all elements...";
-            CalculateElementBoundingBoxes();
-            std::cout << " done.\n";
-            m_cacheElemBoundingBoxes = true;
-        }
-
-        // initialise the tetraheral tree
-        if (m_useTetrahedralTree) {
-            if (!m_octree) {
-                if (!InitializeTetrahedralTree()) {
-                    std::cerr << m_className << "::FindElement13:\n";
-                    std::cerr << "    Tetrahedral tree initialization failed.\n";
-                    return alloc;
-                }
-            }
-        }
-
-        // copy periodicity and min/max
-        for (int i = 0; i < 3; i++)
-        {
-            comp_gpu->m_mapmin[i] = m_mapmin[i];
-            comp_gpu->m_mapmax[i] = m_mapmax[i];
-            comp_gpu->m_mapamin[i] = m_mapamin[i];
-            comp_gpu->m_mapamax[i] = m_mapamax[i];
-        }
-
-        // materials
-        comp_gpu->numMaterials = m_materials.size();
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_materials), sizeof(ComponentGPU::Material) * comp_gpu->numMaterials));
-        alloc += sizeof(ComponentGPU::Material) * comp_gpu->numMaterials;
-
-        for (int i = 0; i < comp_gpu->numMaterials; i++)
-        {
-            comp_gpu->m_materials[i].eps = m_materials[i].eps;
-            comp_gpu->m_materials[i].ohm = m_materials[i].ohm;
-            comp_gpu->m_materials[i].driftmedium = m_materials[i].driftmedium;
-
-            if (m_materials[i].medium)
-            {
-                alloc += m_materials[i].medium->CreateGPUTransferObject(comp_gpu->m_materials[i].medium);
-            }
-        }
-
-        // tetrahedral tree related things
-        comp_gpu->m_checkMultipleElement = m_checkMultipleElement;
-        comp_gpu->m_useTetrahedralTree = m_useTetrahedralTree;
-
-        // elements
-        comp_gpu->numElements = m_elements.size();
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_elements), sizeof(ComponentGPU::Element) * comp_gpu->numElements));
-        alloc += sizeof(ComponentGPU::Element) * comp_gpu->numElements;
-
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_degenerate), sizeof(bool) * comp_gpu->numElements));
-        alloc += sizeof(bool) * comp_gpu->numElements;
-
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_bbMin), sizeof(cuda_t*) * comp_gpu->numElements));
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_bbMax), sizeof(cuda_t*) * comp_gpu->numElements));
-        alloc += sizeof(cuda_t*) * comp_gpu->numElements * 2;
-
-        for (int i = 0; i < comp_gpu->numElements; i++)
-        {
-            checkCudaErrors(cudaMallocManaged(&comp_gpu->m_bbMin[i], sizeof(cuda_t) * 3));
-            checkCudaErrors(cudaMallocManaged(&comp_gpu->m_bbMax[i], sizeof(cuda_t) * 3));
-            alloc += sizeof(cuda_t) * 3 * 2;
-            for (int j = 0; j < 3; j++)
-            {
-            comp_gpu->m_bbMin[i][j] = m_bbMin[i][j];
-            comp_gpu->m_bbMax[i][j] = m_bbMax[i][j];
-            }
-        }
-
-        for (int i = 0; i < comp_gpu->numElements; i++)
-        {
-            for (int j = 0; j < 10; j++)
-            {
-                comp_gpu->m_elements[i].emap[j] = m_elements[i].emap[j];
-            }
-            comp_gpu->m_elements[i].matmap = m_elements[i].matmap;
-            comp_gpu->m_degenerate[i] = m_degenerate[i];
-        }
-
-        comp_gpu->numNodes = m_nodes.size();
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_nodes), sizeof(ComponentGPU::Node) * comp_gpu->numNodes));
-        alloc += sizeof(ComponentGPU::Node) * comp_gpu->numNodes;
-
-        for (int i = 0; i < comp_gpu->numNodes; i++)
-        {
-            comp_gpu->m_nodes[i].x = m_nodes[i].x;
-            comp_gpu->m_nodes[i].y = m_nodes[i].y;
-            comp_gpu->m_nodes[i].z = m_nodes[i].z;
-        }
-
-        comp_gpu->m_numpot = m_pot.size();
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_pot), sizeof(double) * comp_gpu->m_numpot));
-        alloc += sizeof(double) * comp_gpu->m_numpot;
-
-        for (int i = 0; i < comp_gpu->m_numpot; i++)
-        {
-            comp_gpu->m_pot[i] = m_pot[i];
-        }
-
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_w12), sizeof(cuda_t**) * comp_gpu->numElements));
-        alloc += sizeof(cuda_t**) * comp_gpu->numElements;
-
-        for (int i = 0; i < comp_gpu->numElements; i++)
-        {
-            checkCudaErrors(cudaMallocManaged(&comp_gpu->m_w12[i], sizeof(cuda_t*) * 4));
-            alloc += sizeof(cuda_t*) * 4;
-
-            for (int j = 0; j < 4; j++)
-            {
-                checkCudaErrors(cudaMallocManaged(&comp_gpu->m_w12[i][j], sizeof(cuda_t) * 3));
-                alloc += sizeof(cuda_t) * 3;
-
-                for (int k = 0; k < 3; k++)
-                {
-                    comp_gpu->m_w12[i][j][k] = m_w12[i][j][k];
-                }
-            }
-        }
-
-        // Weighting potentials
-        // - Label information is not used here and instead we are relying on the map being ordered
-        comp_gpu->m_num_wpots = m_wpot.size();
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_num_entries_wpot), sizeof(int) * comp_gpu->m_num_wpots));
-        alloc += sizeof(int) * comp_gpu->m_num_wpots;
-        checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_wpot), sizeof(double*) * comp_gpu->m_num_wpots));
-        alloc += sizeof(double*) * comp_gpu->m_num_wpots;
-        size_t index = 0;
-        for (const auto& data: m_wpot) {
-            comp_gpu->m_num_entries_wpot[index] = data.second.size();
-            checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_wpot[index]), sizeof(double) * data.second.size()));
-            alloc += sizeof(double) * data.second.size();
-            for (size_t j = 0; j < data.second.size(); j++) {
-                comp_gpu->m_wpot[index][j] = data.second.at(j);
-            }
-            ++index;
-        }
-
-        if (comp_gpu->m_useTetrahedralTree)
-        {
-            alloc += m_octree->CreateGPUTransferObject(comp_gpu->m_octree);
-        }
-
-        comp_gpu->numElements = m_elements.size();
-        // TODO TN GPU: Fix type to CurvedTetrahedron, work out how to get this
-        // from the CPU FieldMap in future
-        comp_gpu->m_elementType = ComponentGPU::ElementType::CurvedTetrahedron;
-        comp_gpu->m_is3d = m_is3d;
-
-        comp_gpu->m_ComponentType = ComponentGPU::ComponentType::ComponentFieldMap;
-
-        return alloc;
-    }
-
-    double ComponentAnsys123::CreateGPUTransferObject(ComponentGPU *&comp_gpu)
-    {
-        // create main sensor GPU class
-        checkCudaErrors(cudaMallocManaged(&comp_gpu, sizeof(ComponentGPU)));
-        double alloc{sizeof(ComponentGPU)};
-
-        alloc += ComponentFieldMap::CreateGPUTransferObject(comp_gpu);
-        alloc += Component::CreateGPUTransferObject(comp_gpu);
-
-        comp_gpu->m_ComponentType = ComponentGPU::ComponentType::ComponentAnsys123;
-        return alloc;
-    }
-
-    double ComponentElmer::CreateGPUTransferObject(ComponentGPU *&comp_gpu)
-    {
-        // create main sensor GPU class
-        checkCudaErrors(cudaMallocManaged(&comp_gpu, sizeof(ComponentGPU)));
-        double alloc{sizeof(ComponentGPU)};
-
-        alloc += ComponentFieldMap::CreateGPUTransferObject(comp_gpu);
-        alloc += Component::CreateGPUTransferObject(comp_gpu);
-
-        comp_gpu->m_ComponentType = ComponentGPU::ComponentType::ComponentElmer;
-        return alloc;
-    }
-
-    double ComponentComsol::CreateGPUTransferObject(ComponentGPU *&comp_gpu)
-    {
-        // create main sensor GPU class
-        checkCudaErrors(cudaMallocManaged(&comp_gpu, sizeof(ComponentGPU)));
-        double alloc{sizeof(ComponentGPU)};
-
-        alloc += ComponentFieldMap::CreateGPUTransferObject(comp_gpu);
-        alloc += Component::CreateGPUTransferObject(comp_gpu);
-
-        comp_gpu->m_ComponentType = ComponentGPU::ComponentType::ComponentComsol;
-        return alloc;
-    }
+  return 0;
 }
+
+double ComponentFieldMap::CreateGPUTransferObject(ComponentGPU*& comp_gpu) {
+  double alloc{0};
+
+  // Check if bounding boxes of elements have been computed
+  if (!m_cacheElemBoundingBoxes) {
+    std::cout << m_className << "::CreateGPUTransferObject:\n"
+              << "    Caching the bounding boxes of all elements...";
+    CalculateElementBoundingBoxes();
+    std::cout << " done.\n";
+    m_cacheElemBoundingBoxes = true;
+  }
+
+  // initialise the tetraheral tree
+  if (m_useTetrahedralTree) {
+    if (!m_octree) {
+      if (!InitializeTetrahedralTree()) {
+        std::cerr << m_className << "::FindElement13:\n";
+        std::cerr << "    Tetrahedral tree initialization failed.\n";
+        return alloc;
+      }
+    }
+  }
+
+  // copy periodicity and min/max
+  for (int i = 0; i < 3; i++) {
+    comp_gpu->m_mapmin[i] = m_mapmin[i];
+    comp_gpu->m_mapmax[i] = m_mapmax[i];
+    comp_gpu->m_mapamin[i] = m_mapamin[i];
+    comp_gpu->m_mapamax[i] = m_mapamax[i];
+  }
+
+  // materials
+  comp_gpu->numMaterials = m_materials.size();
+  checkCudaErrors(cudaMallocManaged(
+      &(comp_gpu->m_materials),
+      sizeof(ComponentGPU::Material) * comp_gpu->numMaterials));
+  alloc += sizeof(ComponentGPU::Material) * comp_gpu->numMaterials;
+
+  for (int i = 0; i < comp_gpu->numMaterials; i++) {
+    comp_gpu->m_materials[i].eps = m_materials[i].eps;
+    comp_gpu->m_materials[i].ohm = m_materials[i].ohm;
+    comp_gpu->m_materials[i].driftmedium = m_materials[i].driftmedium;
+
+    if (m_materials[i].medium) {
+      alloc += m_materials[i].medium->CreateGPUTransferObject(
+          comp_gpu->m_materials[i].medium);
+    }
+  }
+
+  // tetrahedral tree related things
+  comp_gpu->m_checkMultipleElement = m_checkMultipleElement;
+  comp_gpu->m_useTetrahedralTree = m_useTetrahedralTree;
+
+  // elements
+  comp_gpu->numElements = m_elements.size();
+  checkCudaErrors(
+      cudaMallocManaged(&(comp_gpu->m_elements),
+                        sizeof(ComponentGPU::Element) * comp_gpu->numElements));
+  alloc += sizeof(ComponentGPU::Element) * comp_gpu->numElements;
+
+  checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_degenerate),
+                                    sizeof(bool) * comp_gpu->numElements));
+  alloc += sizeof(bool) * comp_gpu->numElements;
+
+  checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_bbMin),
+                                    sizeof(cuda_t*) * comp_gpu->numElements));
+  checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_bbMax),
+                                    sizeof(cuda_t*) * comp_gpu->numElements));
+  alloc += sizeof(cuda_t*) * comp_gpu->numElements * 2;
+
+  for (int i = 0; i < comp_gpu->numElements; i++) {
+    checkCudaErrors(
+        cudaMallocManaged(&comp_gpu->m_bbMin[i], sizeof(cuda_t) * 3));
+    checkCudaErrors(
+        cudaMallocManaged(&comp_gpu->m_bbMax[i], sizeof(cuda_t) * 3));
+    alloc += sizeof(cuda_t) * 3 * 2;
+    for (int j = 0; j < 3; j++) {
+      comp_gpu->m_bbMin[i][j] = m_bbMin[i][j];
+      comp_gpu->m_bbMax[i][j] = m_bbMax[i][j];
+    }
+  }
+
+  for (int i = 0; i < comp_gpu->numElements; i++) {
+    for (int j = 0; j < 10; j++) {
+      comp_gpu->m_elements[i].emap[j] = m_elements[i].emap[j];
+    }
+    comp_gpu->m_elements[i].matmap = m_elements[i].matmap;
+    comp_gpu->m_degenerate[i] = m_degenerate[i];
+  }
+
+  comp_gpu->numNodes = m_nodes.size();
+  checkCudaErrors(cudaMallocManaged(
+      &(comp_gpu->m_nodes), sizeof(ComponentGPU::Node) * comp_gpu->numNodes));
+  alloc += sizeof(ComponentGPU::Node) * comp_gpu->numNodes;
+
+  for (int i = 0; i < comp_gpu->numNodes; i++) {
+    comp_gpu->m_nodes[i].x = m_nodes[i].x;
+    comp_gpu->m_nodes[i].y = m_nodes[i].y;
+    comp_gpu->m_nodes[i].z = m_nodes[i].z;
+  }
+
+  comp_gpu->m_numpot = m_pot.size();
+  checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_pot),
+                                    sizeof(double) * comp_gpu->m_numpot));
+  alloc += sizeof(double) * comp_gpu->m_numpot;
+
+  for (int i = 0; i < comp_gpu->m_numpot; i++) {
+    comp_gpu->m_pot[i] = m_pot[i];
+  }
+
+  checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_w12),
+                                    sizeof(cuda_t**) * comp_gpu->numElements));
+  alloc += sizeof(cuda_t**) * comp_gpu->numElements;
+
+  for (int i = 0; i < comp_gpu->numElements; i++) {
+    checkCudaErrors(
+        cudaMallocManaged(&comp_gpu->m_w12[i], sizeof(cuda_t*) * 4));
+    alloc += sizeof(cuda_t*) * 4;
+
+    for (int j = 0; j < 4; j++) {
+      checkCudaErrors(
+          cudaMallocManaged(&comp_gpu->m_w12[i][j], sizeof(cuda_t) * 3));
+      alloc += sizeof(cuda_t) * 3;
+
+      for (int k = 0; k < 3; k++) {
+        comp_gpu->m_w12[i][j][k] = m_w12[i][j][k];
+      }
+    }
+  }
+
+  // Weighting potentials
+  // - Label information is not used here and instead we are relying on the map
+  // being ordered
+  comp_gpu->m_num_wpots = m_wpot.size();
+  checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_num_entries_wpot),
+                                    sizeof(int) * comp_gpu->m_num_wpots));
+  alloc += sizeof(int) * comp_gpu->m_num_wpots;
+  checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_wpot),
+                                    sizeof(double*) * comp_gpu->m_num_wpots));
+  alloc += sizeof(double*) * comp_gpu->m_num_wpots;
+  size_t index = 0;
+  for (const auto& data : m_wpot) {
+    comp_gpu->m_num_entries_wpot[index] = data.second.size();
+    checkCudaErrors(cudaMallocManaged(&(comp_gpu->m_wpot[index]),
+                                      sizeof(double) * data.second.size()));
+    alloc += sizeof(double) * data.second.size();
+    for (size_t j = 0; j < data.second.size(); j++) {
+      comp_gpu->m_wpot[index][j] = data.second.at(j);
+    }
+    ++index;
+  }
+
+  if (comp_gpu->m_useTetrahedralTree) {
+    alloc += m_octree->CreateGPUTransferObject(comp_gpu->m_octree);
+  }
+
+  comp_gpu->numElements = m_elements.size();
+  // TODO TN GPU: Fix type to CurvedTetrahedron, work out how to get this
+  // from the CPU FieldMap in future
+  comp_gpu->m_elementType = ComponentGPU::ElementType::CurvedTetrahedron;
+  comp_gpu->m_is3d = m_is3d;
+
+  comp_gpu->m_ComponentType = ComponentGPU::ComponentType::ComponentFieldMap;
+
+  return alloc;
+}
+
+double ComponentAnsys123::CreateGPUTransferObject(ComponentGPU*& comp_gpu) {
+  // create main sensor GPU class
+  checkCudaErrors(cudaMallocManaged(&comp_gpu, sizeof(ComponentGPU)));
+  double alloc{sizeof(ComponentGPU)};
+
+  alloc += ComponentFieldMap::CreateGPUTransferObject(comp_gpu);
+  alloc += Component::CreateGPUTransferObject(comp_gpu);
+
+  comp_gpu->m_ComponentType = ComponentGPU::ComponentType::ComponentAnsys123;
+  return alloc;
+}
+
+double ComponentElmer::CreateGPUTransferObject(ComponentGPU*& comp_gpu) {
+  // create main sensor GPU class
+  checkCudaErrors(cudaMallocManaged(&comp_gpu, sizeof(ComponentGPU)));
+  double alloc{sizeof(ComponentGPU)};
+
+  alloc += ComponentFieldMap::CreateGPUTransferObject(comp_gpu);
+  alloc += Component::CreateGPUTransferObject(comp_gpu);
+
+  comp_gpu->m_ComponentType = ComponentGPU::ComponentType::ComponentElmer;
+  return alloc;
+}
+
+double ComponentComsol::CreateGPUTransferObject(ComponentGPU*& comp_gpu) {
+  // create main sensor GPU class
+  checkCudaErrors(cudaMallocManaged(&comp_gpu, sizeof(ComponentGPU)));
+  double alloc{sizeof(ComponentGPU)};
+
+  alloc += ComponentFieldMap::CreateGPUTransferObject(comp_gpu);
+  alloc += Component::CreateGPUTransferObject(comp_gpu);
+
+  comp_gpu->m_ComponentType = ComponentGPU::ComponentType::ComponentComsol;
+  return alloc;
+}
+}  // namespace Garfield
