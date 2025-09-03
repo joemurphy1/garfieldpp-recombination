@@ -1,11 +1,5 @@
-#if defined(__GPUCOMPILE__) || !defined(G_COMPONENT_FIELD_MAP_H)
-
-#if !defined(__GPUCOMPILE__) && !defined(G_COMPONENT_FIELD_MAP_H)
+#ifndef G_COMPONENT_FIELD_MAP_H
 #define G_COMPONENT_FIELD_MAP_H
-#endif
-
-#ifdef __GPUCOMPILE__
-#else
 
 #include <array>
 #include <map>
@@ -17,10 +11,6 @@
 #include "Garfield/TetrahedralTree.hh"
 #include "TMatrixD.h"
 #include "TVectorD.h"
-
-#endif
-
-#ifndef __GPUCOMPILE__
 
 namespace Garfield {
 
@@ -103,14 +93,11 @@ class ComponentFieldMap : public Component {
                      double& ey, double& ez, double& v, Medium*& m,
                      int& status) override;
   using Component::ElectricField;
-#endif
-  __DEVICE__
-  void WeightingField(const double x, const double y, const double z,
-                      double& wx, double& wy, double& wz,
-#ifdef __GPUCOMPILE__
-                      size_t label);
-#else
-                    const std::string& label) override;
+
+
+
+
+  void WeightingField(const double x, const double y, const double z,double& wx, double& wy, double& wz, const std::string& label) override;
 double WeightingPotential(const double x, const double y, const double z,
                           const std::string& label) override;
 
@@ -156,7 +143,10 @@ void CopyWeightingPotential(const std::string& label,
 
 /// Create and initialise GPU Transfer class
 double CreateGPUTransferObject(ComponentGPU*& comp_gpu) override;
-#endif
+
+
+
+
  protected:
   bool m_is3d = true;
 
@@ -174,67 +164,33 @@ double CreateGPUTransferObject(ComponentGPU*& comp_gpu) override;
     // Material
     unsigned int matmap;
   };
-#ifdef __GPUCOMPILE__
-  Element* m_elements = nullptr;
-  int* m_elementIndices = nullptr;
-  int numElements = 0;
-#else
+
 std::vector<Element> m_elements;
 std::vector<int> m_elementIndices;
-#endif
 
 // Degeneracy flags.
-#ifdef __GPUCOMPILE__
-  bool* m_degenerate;
-#else
 std::vector<bool> m_degenerate;
-#endif
 
 // Bounding boxes of the elements.
-#ifdef __GPUCOMPILE__
-  cuda_t** m_bbMin = nullptr;
-  cuda_t** m_bbMax = nullptr;
-#else
 std::vector<std::array<double, 3> > m_bbMin;
 std::vector<std::array<double, 3> > m_bbMax;
-#endif
 
-#ifdef __GPUCOMPILE__
-  cuda_t*** m_w12 = nullptr;
-#else
 std::vector<std::array<std::array<double, 3>, 4> > m_w12;
-#endif
 
   // Nodes
   struct Node {
     // Coordinates
     double x, y, z;
   };
-#ifdef __GPUCOMPILE__
-  Node* m_nodes = nullptr;
-  int numNodes = 0;
-#else
 std::vector<Node> m_nodes;
-#endif
 
 // TODO GPU: m_dwpot not yet implemented
-#ifndef __GPUCOMPILE__
   // Potentials.
   std::vector<double> m_pot;
   // Weighting potentials.
   std::map<std::string, std::vector<double> > m_wpot;
   // Delayed weighting potentials.
   std::map<std::string, std::vector<std::vector<double> > > m_dwpot;
-#else
-double* m_pot = nullptr;
-int m_numpot = 0;
-
-// The number of weighting potentials
-int m_num_wpots = 0;
-// The number of entries in each weighting potential
-int* m_num_entries_wpot = nullptr;
-double** m_wpot = nullptr;
-#endif
 
   // Materials
   struct Material {
@@ -243,22 +199,12 @@ double** m_wpot = nullptr;
     // Resistivity
     double ohm;
     bool driftmedium;
-#ifdef __GPUCOMPILE__
-    MediumGPU* medium;
-#else
   // Associated medium
   Medium* medium;
-#endif
   };
 
-#ifdef __GPUCOMPILE__
-  Material* m_materials;
-  int numMaterials;
-#else
 std::vector<Material> m_materials;
-#endif
 
-#ifndef __GPUCOMPILE__
   // Weighting potential copy
   struct WeightingFieldCopy {
     // Source
@@ -277,22 +223,13 @@ std::vector<Material> m_materials;
 
   /// Flag to check if bounding boxes of elements are cached
   bool m_cacheElemBoundingBoxes = false;
-#endif
 
-#ifdef __GPUCOMPILE__
-  double m_mapmin[3];
-  double m_mapmax[3];
-  double m_mapamin[3];
-  double m_mapamax[3];
-#else
 // Ranges and periodicities
 std::array<double, 3> m_mapmin = {{0., 0., 0.}};
 std::array<double, 3> m_mapmax = {{0., 0., 0.}};
 std::array<double, 3> m_mapamin = {{0., 0., 0.}};
 std::array<double, 3> m_mapamax = {{0., 0., 0.}};
-#endif
 
-#ifndef __GPUCOMPILE__
   std::array<double, 3> m_mapna = {{0., 0., 0.}};
   std::array<double, 3> m_cells = {{0., 0., 0.}};
 
@@ -334,18 +271,11 @@ std::array<double, 3> m_mapamax = {{0., 0., 0.}};
   /// Find lowest epsilon, check for eps = 0, set default drift media flags.
   bool SetDefaultDriftMedium();
 
-#endif
+
+
+
   /// Compute the electric/weighting field.
-  __DEVICE__
-  int Field(const double x, const double y, const double z, double& fx,
-            double& fy, double& fz, int& iel,
-#ifdef __GPUCOMPILE__
-            const double* potentials, const int numPotentials
-#else
-          const std::vector<double>& potentials
-#endif
-  ) const;
-#ifndef __GPUCOMPILE__
+  int Field(const double x, const double y, const double z, double& fx,double& fy, double& fz, int& iel,const std::vector<double>& potentials) const;
   /// Compute the electrostatic/weighting potential.
   double Potential(const double x, const double y, const double z,
                    const std::vector<double>& potentials) const;
@@ -366,45 +296,29 @@ std::array<double, 3> m_mapamax = {{0., 0., 0.}};
   /// Interpolate the potential in a curved quadratic tetrahedron.
   static double Potential13(const std::array<double, 10>& v,
                             const std::array<double, 4>& t);
-#endif
+
+
   /// Interpolate the field in a curved quadratic tetrahedron.
-  __DEVICE__ static void Field13(
-#ifndef __GPUCOMPILE__
-      const std::array<double, 10>& v, const std::array<double, 4>& t,
-#else
-    const double v[10], const double t[4],
-#endif
-      double jac[4][4], const double det, double& ex, double& ey, double& ez);
-#ifndef __GPUCOMPILE__
+  static void Field13(const std::array<double, 10>& v, const std::array<double, 4>& t,double jac[4][4], const double det, double& ex, double& ey, double& ez);
+
   /// Find the element for a point in curved quadratic quadrilaterals.
-  int FindElement5(const double x, const double y, double& t1, double& t2,
-                   double& t3, double& t4, double jac[4][4], double& det) const;
-#endif
+  int FindElement5(const double x, const double y, double& t1, double& t2,double& t3, double& t4, double jac[4][4], double& det) const;
+
+
   /// Find the element for a point in curved quadratic tetrahedra.
-  __DEVICE__
-  int FindElement13(const double x, const double y, const double z, double& t1,
-                    double& t2, double& t3, double& t4, double jac[4][4],
-                    double& det) const;
-#ifndef __GPUCOMPILE__
+  int FindElement13(const double x, const double y, const double z, double& t1,double& t2, double& t3, double& t4, double jac[4][4],double& det) const;
+
   /// Find the element for a point in a cube.
-  int FindElementCube(const double x, const double y, const double z,
-                      double& t1, double& t2, double& t3, TMatrixD*& jac,
-                      std::vector<TMatrixD*>& dN) const;
-#endif
+  int FindElementCube(const double x, const double y, const double z,double& t1, double& t2, double& t3, TMatrixD*& jac,std::vector<TMatrixD*>& dN) const;
 
   /// Move (xpos, ypos, zpos) to field map coordinates.
-  __DEVICE__
-  void MapCoordinates(double& xpos, double& ypos, double& zpos, bool& xmirrored,
-                      bool& ymirrored, bool& zmirrored, double& rcoordinate,
-                      double& rotation) const;
+  void MapCoordinates(double& xpos, double& ypos, double& zpos, bool& xmirrored,bool& ymirrored, bool& zmirrored, double& rcoordinate,double& rotation) const;
   /// Move (ex, ey, ez) to global coordinates.
-  __DEVICE__
   void UnmapFields(double& ex, double& ey, double& ez, const double xpos,
                    const double ypos, const double zpos, const bool xmirrored,
                    const bool ymirrored, const bool zmirrored,
                    const double rcoordinate, const double rotation) const;
 
-#ifndef __GPUCOMPILE__
   static int ReadInteger(char* token, int def, bool& error);
   static double ReadDouble(char* token, double def, bool& error);
 
@@ -422,7 +336,6 @@ std::array<double, 3> m_mapamax = {{0., 0., 0.}};
   /// Interpolation of potential between two time slices.
   void TimeInterpolation(const double t, double& f0, double& f1, int& i0,
                          int& i1);
-#endif
 
  protected:
   /// Scan for multiple elements that contain a point
@@ -430,14 +343,9 @@ std::array<double, 3> m_mapamax = {{0., 0., 0.}};
 
   // Tetrahedral tree
   bool m_useTetrahedralTree = true;
-#ifdef __GPUCOMPILE__
-  GARFIELD_CLASS_NAME(TetrahedralTree) * m_octree = nullptr;
-#else
-std::unique_ptr<GARFIELD_CLASS_NAME(TetrahedralTree)> m_octree;
-#endif
+  std::unique_ptr<TetrahedralTree> m_octree;
 
  protected:
-#ifndef __GPUCOMPILE__
   /// Calculate local coordinates for curved quadratic triangles.
   int Coordinates3(const double x, const double y, double& t1, double& t2,
                    double& t3, double& t4, double jac[4][4], double& det,
@@ -453,40 +361,27 @@ std::unique_ptr<GARFIELD_CLASS_NAME(TetrahedralTree)> m_octree;
                    double& t3, double& t4, double jac[4][4], double& det,
                    const std::array<double, 8>& xn,
                    const std::array<double, 8>& yn) const;
-#endif
 
   /// Calculate local coordinates in linear tetrahedra.
-  __DEVICE__
+
   void Coordinates12(const double x, const double y, const double z, double& t1,
                      double& t2, double& t3, double& t4,
-#ifdef __GPUCOMPILE__
-                     const double xn[10], const double yn[10],
-                     const double zn[10], const double w[4][3]
-#else
                    const std::array<double, 10>& xn,
                    const std::array<double, 10>& yn,
                    const std::array<double, 10>& zn,
                    const std::array<std::array<double, 3>, 4>& w
-#endif
   ) const;
 
   /// Calculate local coordinates for curved quadratic tetrahedra.
-  __DEVICE__
   int Coordinates13(const double x, const double y, const double z, double& t1,
                     double& t2, double& t3, double& t4, double jac[4][4],
                     double& det,
-#ifdef __GPUCOMPILE__
-                    const double xn[10], const double yn[10],
-                    const double zn[10], cuda_t** w
-#else
                   const std::array<double, 10>& xn,
                   const std::array<double, 10>& yn,
                   const std::array<double, 10>& zn,
                   const std::array<std::array<double, 3>, 4>& w
-#endif
   ) const;
 
-#ifndef __GPUCOMPILE__
   /// Calculate local coordinates for a cube.
   int CoordinatesCube(const double x, const double y, const double z,
                       double& t1, double& t2, double& t3, TMatrixD*& jac,
@@ -501,21 +396,14 @@ std::unique_ptr<GARFIELD_CLASS_NAME(TetrahedralTree)> m_octree;
   static void Jacobian5(const std::array<double, 8>& xn,
                         const std::array<double, 8>& yn, const double u,
                         const double v, double& det, double jac[4][4]);
-#endif
 
   /// Calculate Jacobian for curved quadratic tetrahedra.
-  __DEVICE__
   static void Jacobian13(
-#ifdef __GPUCOMPILE__
-      const double xn[10], const double yn[10], const double zn[10],
-#else
     const std::array<double, 10>& xn, const std::array<double, 10>& yn,
     const std::array<double, 10>& zn,
-#endif
       const double fourt0, const double fourt1, const double fourt2,
       const double fourt3, double& det, double jac[4][4]);
 
-#ifndef __GPUCOMPILE__
   /// Calculate Jacobian for a cube.
   void JacobianCube(const Element& element, const double t1, const double t2,
                     const double t3, TMatrixD*& jac,
@@ -533,5 +421,4 @@ std::unique_ptr<GARFIELD_CLASS_NAME(TetrahedralTree)> m_octree;
 };
 }  // namespace Garfield
 
-#endif
 #endif

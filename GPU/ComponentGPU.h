@@ -43,7 +43,7 @@ public:
 // include - all the code is protected by an ifndef __GPUCOMPILE__, whereas it
 // will be defined when these includes are made
 //#include "Garfield/ComponentAnsys123.hh"
-#include "Garfield/ComponentFieldMap.hh"
+#include "ComponentFieldMapGPU.h"
 
   friend class ComponentAnsys123;
   friend class ComponentComsol;
