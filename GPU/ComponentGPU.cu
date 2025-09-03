@@ -6,8 +6,6 @@
 #include "Garfield/ComponentElmer.hh"
 #include "Garfield/Medium.hh"
 
-#include<iostream>
-
 
 #define __GPUCOMPILE__
 
@@ -652,14 +650,6 @@ __device__ void ComponentGPU::UnmapFields(
 
 
     //////////////////////////////////
-
-
-    #include "ComponentAnsys123.cc"
-
-
-
-
-
 
     double Component::CreateGPUTransferObject(ComponentGPU *&comp_gpu)
     {
