@@ -12,10 +12,10 @@
 #include "TMatrixD.h"
 #include "TVectorD.h"
 
-namespace Garfield {
+namespace Garfield
+{
 
 /// Base class for components based on finite-element field maps.
-
 class ComponentFieldMap : public Component {
  public:
   /// Default constructor.

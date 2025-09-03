@@ -1,18 +1,15 @@
-#ifndef __GPUCOMPILE__
 #include "Garfield/ComponentFieldMap.hh"
 
-#include <TCanvas.h>
-#include <TH1F.h>
-#include <TMath.h>
-#include <math.h>
-
-#include <algorithm>
-#include <array>
-#include <iostream>
-#include <numeric>
+#include <cstddef>
 #include <string>
+#include <iostream>
+#include <vector>
+#include <cstdio>
 
-#include "Garfield/FundamentalConstants.hh"
+#include <TH1F.h>
+#include <TCanvas.h>
+#include <TMath.h>
+
 #include "Garfield/Medium.hh"
 
 namespace Garfield
@@ -22,19 +19,11 @@ ComponentFieldMap::ComponentFieldMap(const std::string& name) : Component(name) 
 
 ComponentFieldMap::~ComponentFieldMap() = default;
 
-void ComponentFieldMap::ElectricField(const double x, const double y,
-                                      const double z, double& ex, double& ey,
-                                      double& ez, double& volt, Medium*& m,
-                                      int& status) {
+void ComponentFieldMap::ElectricField(const double x, const double y, const double z, double& ex, double& ey, double& ez, double& volt, Medium*& m, int& status)
+{
   ElectricField(x, y, z, ex, ey, ez, m, status);
-#ifdef __GPUCOMPILE__
-  // TODO TN GPU: Volt not supported on GPU
-  volt = 0
-#else
   volt = Potential(x, y, z, m_pot);
-#endif
 }
-#endif
 
 void ComponentFieldMap::ElectricField(const double xin, const double yin, const double zin, double& ex, double& ey, double& ez, Medium*& m, int& status)
 {
@@ -140,9 +129,8 @@ int ComponentFieldMap::Field(const double xin, const double yin, const double zi
   return 0;
 }
 
-double ComponentFieldMap::Potential(const double xin, const double yin,
-                                    const double zin,
-                                    const std::vector<double>& pot) const {
+double ComponentFieldMap::Potential(const double xin, const double yin, const double zin, const std::vector<double>& pot) const
+{
   // Do not proceed if not properly initialised.
   if (!m_ready) return 0.;
 
@@ -235,10 +223,8 @@ double ComponentFieldMap::WeightingPotential(double xin, double yin, double zin,
   return Potential(xin, yin, zin, m_wpot[label]);
 }
 
-double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,
-                                                    double zin,
-                                                    const double tin,
-                                                    const std::string& label0) {
+double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,double zin, const double tin, const std::string& label0)
+{
   if (m_wdtimes.empty()) return 0.;
   // Assume no weighting field for times outside the range of available maps.
   if (tin < m_wdtimes.front()) return 0.;
@@ -329,11 +315,8 @@ double ComponentFieldMap::DelayedWeightingPotential(double xin, double yin,
   return f0 * dp0 + f1 * dp1;
 }
 
-void ComponentFieldMap::DelayedWeightingPotentials(const double xin,
-                                                   const double yin,
-                                                   const double zin,
-                                                   const std::string& label0,
-                                                   std::vector<double>& dwp) {
+void ComponentFieldMap::DelayedWeightingPotentials(const double xin, const double yin, const double zin, const std::string& label0, std::vector<double>& dwp)
+{
   const size_t nt = m_wdtimes.size();
   dwp.assign(nt, 0.);
 
@@ -410,8 +393,8 @@ void ComponentFieldMap::DelayedWeightingPotentials(const double xin,
   }
 }
 
-Medium* ComponentFieldMap::GetMedium(const double xin, const double yin,
-                                     const double zin) {
+Medium* ComponentFieldMap::GetMedium(const double xin, const double yin, const double zin)
+{
   // Copy the coordinates.
   double x = xin, y = yin;
   double z = m_is3d ? zin : 0.;
@@ -468,7 +451,8 @@ Medium* ComponentFieldMap::GetMedium(const double xin, const double yin,
   return m_materials[element.matmap].medium;
 }
 
-bool ComponentFieldMap::Check() {
+bool ComponentFieldMap::Check()
+{
   // MAPCHK
   // Ensure there are some mesh elements.
   if (!m_ready) {
@@ -593,7 +577,8 @@ bool ComponentFieldMap::Check() {
   return true;
 }
 
-void ComponentFieldMap::PrintMaterials() {
+void ComponentFieldMap::PrintMaterials()
+{
   // Do not proceed if not properly initialised.
   if (!m_ready) PrintNotReady("PrintMaterials");
 
@@ -623,7 +608,8 @@ void ComponentFieldMap::PrintMaterials() {
   }
 }
 
-void ComponentFieldMap::DriftMedium(const size_t imat) {
+void ComponentFieldMap::DriftMedium(const size_t imat)
+{
   // Do not proceed if not properly initialised.
   if (!m_ready) PrintNotReady("DriftMedium");
 
@@ -637,7 +623,8 @@ void ComponentFieldMap::DriftMedium(const size_t imat) {
   m_materials[imat].driftmedium = true;
 }
 
-void ComponentFieldMap::NotDriftMedium(const size_t imat) {
+void ComponentFieldMap::NotDriftMedium(const size_t imat)
+{
   // Do not proceed if not properly initialised.
   if (!m_ready) PrintNotReady("NotDriftMedium");
 
@@ -651,7 +638,8 @@ void ComponentFieldMap::NotDriftMedium(const size_t imat) {
   m_materials[imat].driftmedium = false;
 }
 
-double ComponentFieldMap::GetPermittivity(const size_t imat) const {
+double ComponentFieldMap::GetPermittivity(const size_t imat) const
+{
   if (imat >= m_materials.size()) {
     std::cerr << m_className << "::GetPermittivity: Index out of range.\n";
     return -1.;
@@ -659,7 +647,8 @@ double ComponentFieldMap::GetPermittivity(const size_t imat) const {
   return m_materials[imat].eps;
 }
 
-double ComponentFieldMap::GetConductivity(const size_t imat) const {
+double ComponentFieldMap::GetConductivity(const size_t imat) const
+{
   if (imat >= m_materials.size()) {
     std::cerr << m_className << "::GetConductivity: Index out of range.\n";
     return -1.;
@@ -667,7 +656,8 @@ double ComponentFieldMap::GetConductivity(const size_t imat) const {
   return m_materials[imat].ohm;
 }
 
-void ComponentFieldMap::SetMedium(const size_t imat, Medium* medium) {
+void ComponentFieldMap::SetMedium(const size_t imat, Medium* medium)
+{
   if (imat >= m_materials.size()) {
     std::cerr << m_className << "::SetMedium: Index out of range.\n";
     return;
@@ -683,7 +673,8 @@ void ComponentFieldMap::SetMedium(const size_t imat, Medium* medium) {
   m_materials[imat].medium = medium;
 }
 
-Medium* ComponentFieldMap::GetMedium(const size_t imat) const {
+Medium* ComponentFieldMap::GetMedium(const size_t imat) const
+{
   if (imat >= m_materials.size()) {
     std::cerr << m_className << "::GetMedium: Index out of range.\n";
     return nullptr;
@@ -691,7 +682,8 @@ Medium* ComponentFieldMap::GetMedium(const size_t imat) const {
   return m_materials[imat].medium;
 }
 
-void ComponentFieldMap::SetGas(Medium* medium) {
+void ComponentFieldMap::SetGas(Medium* medium)
+{
   if (!medium) {
     std::cerr << m_className << "::SetGas: Null pointer.\n";
     return;
@@ -710,19 +702,19 @@ void ComponentFieldMap::SetGas(Medium* medium) {
   }
 }
 
-bool ComponentFieldMap::GetElement(const size_t i, double& vol, double& dmin,
-                                   double& dmax) const {
+bool ComponentFieldMap::GetElement(const size_t i, double& vol, double& dmin, double& dmax) const
+{
   if (i >= m_elements.size()) {
     std::cerr << m_className << "::GetElement: Index out of range.\n";
     return false;
   }
-
   vol = GetElementVolume(i);
   GetAspectRatio(i, dmin, dmax);
   return true;
 }
 
-double ComponentFieldMap::GetElementVolume(const size_t i) const {
+double ComponentFieldMap::GetElementVolume(const size_t i) const
+{
   if (i >= m_elements.size()) return 0.;
 
   const Element& element = m_elements[i];
@@ -755,8 +747,8 @@ double ComponentFieldMap::GetElementVolume(const size_t i) const {
   return 0.;
 }
 
-void ComponentFieldMap::GetAspectRatio(const size_t i, double& dmin,
-                                       double& dmax) const {
+void ComponentFieldMap::GetAspectRatio(const size_t i, double& dmin, double& dmax) const
+{
   if (i >= m_elements.size()) {
     dmin = dmax = 0.;
     return;
@@ -805,8 +797,8 @@ void ComponentFieldMap::GetAspectRatio(const size_t i, double& dmin,
   }
 }
 
-bool ComponentFieldMap::GetElementNodes(const size_t i,
-                                        std::vector<size_t>& nodes) const {
+bool ComponentFieldMap::GetElementNodes(const size_t i, std::vector<size_t>& nodes) const
+{
   if (i >= m_elements.size()) {
     std::cerr << m_className << "::GetElementNodes: Index out of range.\n";
     return false;
@@ -821,8 +813,8 @@ bool ComponentFieldMap::GetElementNodes(const size_t i,
   return true;
 }
 
-bool ComponentFieldMap::GetElementRegion(const size_t i, size_t& mat,
-                                         bool& drift) const {
+bool ComponentFieldMap::GetElementRegion(const size_t i, size_t& mat, bool& drift) const
+{
   if (i >= m_elements.size()) {
     std::cerr << m_className << "::GetElementRegion: Index out of range.\n";
     return false;
@@ -832,8 +824,8 @@ bool ComponentFieldMap::GetElementRegion(const size_t i, size_t& mat,
   return true;
 }
 
-bool ComponentFieldMap::GetNode(const size_t i, double& x, double& y,
-                                double& z) const {
+bool ComponentFieldMap::GetNode(const size_t i, double& x, double& y, double& z) const
+{
   if (i >= m_nodes.size()) {
     std::cerr << m_className << "::GetNode: Index out of range.\n";
     return false;
@@ -844,11 +836,13 @@ bool ComponentFieldMap::GetNode(const size_t i, double& x, double& y,
   return true;
 }
 
-double ComponentFieldMap::GetPotential(const size_t i) const {
+double ComponentFieldMap::GetPotential(const size_t i) const
+{
   return i >= m_pot.size() ? 0. : m_pot[i];
 }
 
-bool ComponentFieldMap::SetDefaultDriftMedium() {
+bool ComponentFieldMap::SetDefaultDriftMedium()
+{
   // Find lowest epsilon and set drift medium flags.
   const size_t nMaterials = m_materials.size();
   double epsmin = -1;
@@ -875,8 +869,8 @@ bool ComponentFieldMap::SetDefaultDriftMedium() {
   return true;
 }
 
-double ComponentFieldMap::Potential3(const std::array<double, 6>& v,
-                                     const std::array<double, 3>& t) {
+double ComponentFieldMap::Potential3(const std::array<double, 6>& v, const std::array<double, 3>& t)
+{
   double sum = 0.;
   for (size_t i = 0; i < 3; ++i) {
     sum += v[i] * t[i] * (2 * t[i] - 1);
@@ -885,9 +879,8 @@ double ComponentFieldMap::Potential3(const std::array<double, 6>& v,
   return sum;
 }
 
-void ComponentFieldMap::Field3(const std::array<double, 6>& v,
-                               const std::array<double, 3>& t, double jac[4][4],
-                               const double det, double& ex, double& ey) {
+void ComponentFieldMap::Field3(const std::array<double, 6>& v, const std::array<double, 3>& t, double jac[4][4], const double det, double& ex, double& ey)
+{
   std::array<double, 3> g;
   g[0] = v[0] * (4 * t[0] - 1) + v[3] * 4 * t[1] + v[4] * 4 * t[2];
   g[1] = v[1] * (4 * t[1] - 1) + v[3] * 4 * t[0] + v[5] * 4 * t[2];
@@ -897,8 +890,8 @@ void ComponentFieldMap::Field3(const std::array<double, 6>& v,
   ey = -(jac[0][2] * g[0] + jac[1][2] * g[1] + jac[2][2] * g[2]) * invdet;
 }
 
-double ComponentFieldMap::Potential5(const std::array<double, 8>& v,
-                                     const std::array<double, 2>& t) {
+double ComponentFieldMap::Potential5(const std::array<double, 8>& v, const std::array<double, 2>& t)
+{
   return -v[0] * (1 - t[0]) * (1 - t[1]) * (1 + t[0] + t[1]) * 0.25 -
          v[1] * (1 + t[0]) * (1 - t[1]) * (1 - t[0] + t[1]) * 0.25 -
          v[2] * (1 + t[0]) * (1 + t[1]) * (1 - t[0] - t[1]) * 0.25 -
@@ -909,9 +902,8 @@ double ComponentFieldMap::Potential5(const std::array<double, 8>& v,
          v[7] * (1 - t[0]) * (1 + t[1]) * (1 - t[1]) * 0.5;
 }
 
-void ComponentFieldMap::Field5(const std::array<double, 8>& v,
-                               const std::array<double, 2>& t, double jac[4][4],
-                               const double det, double& ex, double& ey) {
+void ComponentFieldMap::Field5(const std::array<double, 8>& v, const std::array<double, 2>& t, double jac[4][4], const double det, double& ex, double& ey)
+{
   std::array<double, 2> g;
   g[0] = (v[0] * (1 - t[1]) * (2 * t[0] + t[1]) +
           v[1] * (1 - t[1]) * (2 * t[0] - t[1]) +
@@ -932,8 +924,8 @@ void ComponentFieldMap::Field5(const std::array<double, 8>& v,
   ey = -(g[0] * jac[0][1] + g[1] * jac[1][1]) * invdet;
 }
 
-double ComponentFieldMap::Potential13(const std::array<double, 10>& v,
-                                      const std::array<double, 4>& t) {
+double ComponentFieldMap::Potential13(const std::array<double, 10>& v, const std::array<double, 4>& t)
+{
   double sum = 0.;
   for (size_t i = 0; i < 4; ++i) {
     sum += v[i] * t[i] * (t[i] - 0.5);
@@ -943,10 +935,6 @@ double ComponentFieldMap::Potential13(const std::array<double, 10>& v,
               v[7] * t[1] * t[2] + v[8] * t[1] * t[3] + v[9] * t[2] * t[3]);
   return sum;
 }
-
-
-
-
 
 void ComponentFieldMap::Field13(const std::array<double, 10>& v, const std::array<double, 4>& t, double jac[4][4], const double det, double& ex, double& ey, double& ez)
 {
@@ -966,9 +954,8 @@ void ComponentFieldMap::Field13(const std::array<double, 10>& v, const std::arra
   ez = -f[2] * det;
 }
 
-int ComponentFieldMap::FindElement5(const double x, const double y, double& t1,
-                                    double& t2, double& t3, double& t4,
-                                    double jac[4][4], double& det) const {
+int ComponentFieldMap::FindElement5(const double x, const double y, double& t1, double& t2, double& t3, double& t4, double jac[4][4], double& det) const
+{
   // Backup
   double jacbak[4][4], detbak = 1.;
   double t1bak = 0., t2bak = 0., t3bak = 0., t4bak = 0.;
@@ -1071,8 +1058,6 @@ int ComponentFieldMap::FindElement5(const double x, const double y, double& t1,
   return -1;
 }
 
-
-
 int ComponentFieldMap::FindElement13(const double x, const double y, const double z, double& t1,double& t2, double& t3, double& t4, double jac[4][4],double& det) const 
 {
   // Backup
@@ -1166,10 +1151,8 @@ int ComponentFieldMap::FindElement13(const double x, const double y, const doubl
   return -1;
 }
 
-int ComponentFieldMap::FindElementCube(const double x, const double y,
-                                       const double z, double& t1, double& t2,
-                                       double& t3, TMatrixD*& jac,
-                                       std::vector<TMatrixD*>& dN) const {
+int ComponentFieldMap::FindElementCube(const double x, const double y, const double z, double& t1, double& t2, double& t3, TMatrixD*& jac, std::vector<TMatrixD*>& dN) const
+{
   int imap = -1;
   const size_t nElements = m_elements.size();
   for (size_t i = 0; i < nElements; ++i) {
@@ -1216,11 +1199,8 @@ int ComponentFieldMap::FindElementCube(const double x, const double y,
   return imap;
 }
 
-void ComponentFieldMap::Jacobian3(const std::array<double, 8>& xn,
-                                  const std::array<double, 8>& yn,
-                                  const double u, const double v,
-                                  const double w, double& det,
-                                  double jac[4][4]) {
+void ComponentFieldMap::Jacobian3(const std::array<double, 8>& xn, const std::array<double, 8>& yn, const double u, const double v, const double w, double& det, double jac[4][4])
+{
   // Shorthands.
   const double fouru = 4 * u;
   const double fourv = 4 * v;
@@ -1247,10 +1227,8 @@ void ComponentFieldMap::Jacobian3(const std::array<double, 8>& xn,
   jac[2][2] = j11 - j10;
 }
 
-void ComponentFieldMap::Jacobian5(const std::array<double, 8>& xn,
-                                  const std::array<double, 8>& yn,
-                                  const double u, const double v, double& det,
-                                  double jac[4][4]) {
+void ComponentFieldMap::Jacobian5(const std::array<double, 8>& xn, const std::array<double, 8>& yn, const double u, const double v, double& det, double jac[4][4])
+{
   // Jacobian terms
   const double g0 = (1 - u) * (2 * v + u);
   const double g1 = (1 + u) * (2 * v - u);
@@ -1279,12 +1257,7 @@ void ComponentFieldMap::Jacobian5(const std::array<double, 8>& xn,
   det = jac[0][0] * jac[1][1] - jac[0][1] * jac[1][0];
 }
 
-void ComponentFieldMap::Jacobian13(const std::array<double, 10>& xn,
-                                   const std::array<double, 10>& yn,
-                                   const std::array<double, 10>& zn,
-                                   const double fourt0, const double fourt1,
-                                   const double fourt2, const double fourt3,
-                                   double& det, double jac[4][4])
+void ComponentFieldMap::Jacobian13(const std::array<double, 10>& xn, const std::array<double, 10>& yn, const std::array<double, 10>& zn, const double fourt0, const double fourt1, const double fourt2, const double fourt3, double& det, double jac[4][4])
 {
   const double fourt0m1 = fourt0 - 1.;
   const double j10 =
@@ -1363,10 +1336,8 @@ void ComponentFieldMap::Jacobian13(const std::array<double, 10>& xn,
         (jac[0][3] * j30 + jac[1][3] * j31 + jac[2][3] * j32 + jac[3][3] * j33);
 }
 
-void ComponentFieldMap::JacobianCube(const Element& element, const double t1,
-                                     const double t2, const double t3,
-                                     TMatrixD*& jac,
-                                     std::vector<TMatrixD*>& dN) const {
+void ComponentFieldMap::JacobianCube(const Element& element, const double t1, const double t2, const double t3, TMatrixD*& jac, std::vector<TMatrixD*>& dN) const
+{
   if (!jac) {
     std::cerr << m_className << "::JacobianCube:\n";
     std::cerr << "    Pointer to Jacobian matrix is empty!\n";
@@ -1965,10 +1936,6 @@ void ComponentFieldMap::Coordinates12(
     std::cout << "    Checksum - 1:           " << sr - 1 << "\n";
   }
 }
-
-
-
-
 
 int ComponentFieldMap::Coordinates13(
     const double x, const double y, const double z, double& t1, double& t2,
@@ -2597,8 +2564,6 @@ bool ComponentFieldMap::GetElementaryCell(double& xmin, double& ymin,
   zmax = m_mapmax[2];
   return true;
 }
-
-
 
 void ComponentFieldMap::MapCoordinates(double& xpos, double& ypos, double& zpos, bool& xmirrored,bool& ymirrored, bool& zmirrored, double& rcoordinate,double& rotation) const
 {
