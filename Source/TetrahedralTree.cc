@@ -137,8 +137,8 @@ const std::vector<int>& TetrahedralTree::GetElementsInBlock(
   if (octreeNode) {
     return octreeNode->elements;
   }
-
-  return {};
+  static std::vector<int> ret;
+  return ret;
 }
 #endif
 
