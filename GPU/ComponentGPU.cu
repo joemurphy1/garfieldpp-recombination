@@ -6,6 +6,8 @@
 #include "Garfield/ComponentElmer.hh"
 #include "Garfield/Medium.hh"
 
+#include<iostream>
+
 
 #define __GPUCOMPILE__
 
