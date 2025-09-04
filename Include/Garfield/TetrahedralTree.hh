@@ -36,6 +36,8 @@ class TetrahedralTree {
 
   /// Create and initialise GPU Transfer class
   double CreateGPUTransferObject(TetrahedralTreeGPU*& tree_gpu);
+  // Get all tetrahedra linked to a block corresponding to the given point
+  const std::vector<int>& GetElementsInBlock(const Vec3& point) const;
 
  private:
   // Physical centre of this tree node.
@@ -48,7 +50,8 @@ class TetrahedralTree {
   // The tree has up to eight children and can additionally store
   // a list of mesh nodes and mesh elements.
   // Pointers to child octants.
-  TetrahedralTree* children[8];
+  TetrahedralTree* children[8]{nullptr, nullptr, nullptr, nullptr,
+                               nullptr, nullptr, nullptr, nullptr};
 
   // Children follow a predictable pattern to make accesses simple.
   // Here, - means less than 'origin' in that dimension, + means greater than.
@@ -60,18 +63,13 @@ class TetrahedralTree {
   std::vector<std::pair<Vec3, int> > nodes;
   std::vector<int> elements;
 
-  static const size_t BlockCapacity = 10;
+  static const std::size_t BlockCapacity{10};
 
   // Check if the given box overlaps with this tree node.
   bool DoesBoxOverlap(const double bb[6]) const;
   // Check if this tree node is a leaf or intermediate node.
   bool IsLeafNode() const;
 
- public:
-  // Get all tetrahedra linked to a block corresponding to the given point
-  const std::vector<int>& GetElementsInBlock(const Vec3& point) const;
-
- private:
   int GetOctantContainingPoint(const Vec3& point) const;
   // Get a block containing the input point
   const TetrahedralTree* GetBlockFromPoint(const Vec3& point) const;
