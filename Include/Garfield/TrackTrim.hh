@@ -28,9 +28,7 @@ class TrackTrim : public Track {
   void Print();
 
   /// Set the projectile charge [-].
-  void SetCharge(const double q) {
-    if (fabs(q) > 0.) m_q = q;
-  }
+  void SetCharge(const double q);
   /// Set the W value [eV].
   void SetWorkFunction(const double w) { m_work = w; }
   /// Get the W value [eV].

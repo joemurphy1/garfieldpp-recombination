@@ -92,6 +92,11 @@ TrackTrim::TrackTrim(Sensor* sensor) : Track("Trim") {
   m_q = 1.;
 }
 
+/// Set the projectile charge [-].
+void TrackTrim::SetCharge(const double q) {
+  if (fabs(q) > 0.) m_q = q;
+}
+
 void TrackTrim::SetParticle(const std::string& /*particle*/) {
   std::cerr << m_className << "::SetParticle: Not applicable.\n";
 }

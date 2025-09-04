@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cmath>
 #include <iostream>
 
 #include "Garfield/FundamentalConstants.hh"
@@ -15,6 +16,16 @@ namespace Garfield {
 Track::Track(const std::string& name) : m_mass(MuonMass) {
   m_className = "Track" + name;
   SetBetaGamma(3.);
+}
+
+double Track::GetBetaGamma() const { return sqrt(m_beta2 / (1. - m_beta2)); }
+
+double Track::GetBeta() const { return sqrt(m_beta2); }
+
+double Track::GetGamma() const { return sqrt(1. / (1. - m_beta2)); }
+
+double Track::GetMomentum() const {
+  return m_mass * sqrt(m_beta2 / (1. - m_beta2));
 }
 
 void Track::SetParticle(const std::string& part) {
