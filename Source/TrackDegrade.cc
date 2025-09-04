@@ -68,6 +68,11 @@ void TrackDegrade::SetThresholdEnergy(const double ethr) {
   }
 }
 
+void TrackDegrade::StoreExcitations(const bool on, const double thr) {
+  m_storeExcitations = on;
+  m_ethrExc = std::max(thr, 1.e-3);
+}
+
 bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
                             const double t0, const double dx0, const double dy0,
                             const double dz0) {
