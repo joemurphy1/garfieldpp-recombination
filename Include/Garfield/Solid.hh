@@ -10,7 +10,9 @@ namespace Garfield {
 
 struct Panel {
   /// Perpendicular vector
-  double a, b, c;
+  double a{0.};
+  double b{0.};
+  double c{0.};
   /// X-coordinates of vertices
   std::vector<double> xv;
   /// Y-coordinates of vertices
@@ -18,9 +20,9 @@ struct Panel {
   /// Z-coordinates of vertices
   std::vector<double> zv;
   /// Colour index
-  int colour;
+  int colour{-1};
   /// Reference to solid to which the panel belongs
-  int volume;
+  int volume{0};
 };
 
 /// Abstract base class for solids.
@@ -37,7 +39,7 @@ class Solid {
   }
 
   /// Destructor
-  virtual ~Solid() {}
+  virtual ~Solid() = default;
 
   /// Check whether a given point is inside the solid. If requested,
   /// use the tesselated approximation of the solid (if applicable).
@@ -199,35 +201,41 @@ class Solid {
 
  protected:
   /// Centre of the solid.
-  double m_cX = 0., m_cY = 0., m_cZ = 0.;
+  double m_cX{0.};
+  double m_cY{0.};
+  double m_cZ{0.};
 
   /// Direction vector.
-  double m_dX = 0., m_dY = 0., m_dZ = 1.;
+  double m_dX{0.};
+  double m_dY{0.};
+  double m_dZ{1.};
   /// Azimuthal angle.
-  double m_cPhi = 1., m_sPhi = 0.;
+  double m_cPhi{1.};
+  double m_sPhi{0.};
   /// Polar angle.
-  double m_cTheta = 1., m_sTheta = 0.;
+  double m_cTheta{1.};
+  double m_sTheta{0.};
 
   /// Class name.
-  std::string m_className = "Solid";
+  std::string m_className{"Solid"};
 
   /// Label.
-  std::string m_label = "";
+  std::string m_label;
 
   /// Debug flag.
-  bool m_debug = false;
+  bool m_debug{false};
 
   /// Type of boundary condition.
-  BoundaryCondition m_bctype = Unknown;
+  BoundaryCondition m_bctype{Unknown};
   /// Potential at the surface.
-  double m_volt = 0.;
+  double m_volt{0.};
   /// Surface charge density.
-  double m_charge = 0.;
+  double m_charge{0.};
   /// Dielectric constant.
-  double m_eps = 0.;
+  double m_eps{0.};
 
   /// Colour.
-  int m_colour = -1;
+  int m_colour{-1};
 
   /// Transform a point from global coordinates (x, y, z)
   /// to local coordinates (u, v, w).
@@ -264,7 +272,7 @@ class Solid {
   /// ID counter.
   static unsigned int s_id;
   /// ID of the solid.
-  unsigned int m_id;
+  unsigned int m_id{0};
 };
 }  // namespace Garfield
 
