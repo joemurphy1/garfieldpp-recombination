@@ -1,22 +1,7 @@
-#ifdef __GPUCOMPILE__
-#include "GPUFunctions.h"
-#include "TetrahedralTreeGPU.h"
-#else
 #include "Garfield/TetrahedralTree.hh"
-#endif
 
 namespace Garfield {
 
-#ifndef __GPUCOMPILE__
-
-/**
-TetrahedralTree.cc
-This class stores the mesh nodes and elements in an Octree data
-structure to optimize the element search operations
-
-Author: Ali Sheharyar
-Organization: Texas A&M University at Qatar
-*/
 TetrahedralTree::TetrahedralTree(const Vec3& origin, const Vec3& halfDimension)
     : m_origin(origin), m_halfDimension(halfDimension) {
   m_min.x() = origin.x() - halfDimension.x();
@@ -41,11 +26,9 @@ bool TetrahedralTree::DoesBoxOverlap(const double bb[6]) const {
   if (m_min.x() > bb[3] || m_min.y() > bb[4] || m_min.z() > bb[5]) return false;
   return true;
 }
-#endif
 
 // Determine which octant of the tree would contain 'point'
-__DEVICE__ int GARFIELD_CLASS_NAME(TetrahedralTree)::GetOctantContainingPoint(
-    const Vec3& point) const {
+int TetrahedralTree::GetOctantContainingPoint(const Vec3& point) const {
   int oct = 0;
   if (point.x() >= m_origin.x()) oct |= 4;
   if (point.y() >= m_origin.y()) oct |= 2;
@@ -53,13 +36,12 @@ __DEVICE__ int GARFIELD_CLASS_NAME(TetrahedralTree)::GetOctantContainingPoint(
   return oct;
 }
 
-__DEVICE__ bool GARFIELD_CLASS_NAME(TetrahedralTree)::IsLeafNode() const {
+bool TetrahedralTree::IsLeafNode() const {
   // We are a leaf if we have no children. Since we either have none, or
   // all eight, it is sufficient to just check the first.
   return children[0] == nullptr;
 }
 
-#ifndef __GPUCOMPILE__
 void TetrahedralTree::InsertMeshNode(Vec3 point, const int index) {
   // Check if it is a leaf node.
   if (!IsLeafNode()) {
@@ -110,26 +92,10 @@ void TetrahedralTree::InsertMeshElement(const double bb[6], const int index) {
     children[i]->InsertMeshElement(bb, index);
   }
 }
-#endif
 
 // It returns the list of tetrahedrons that intersects in a bounding box (Octree
 // block) that contains the
 // point passed as input.
-#ifdef __GPUCOMPILE__
-__device__ void TetrahedralTreeGPU::GetElementsInBlock(
-    const Vec3& point, const int*& tet_list_elems, int& num_elems) const {
-  const TetrahedralTreeGPU* octreeNode = GetBlockFromPoint(point);
-
-  if (octreeNode) {
-    tet_list_elems = octreeNode->elements;
-    num_elems = octreeNode->numelements;
-    return;
-  }
-
-  tet_list_elems = nullptr;
-  num_elems = 0;
-}
-#else
 const std::vector<int>& TetrahedralTree::GetElementsInBlock(
     const Vec3& point) const {
   const TetrahedralTree* octreeNode = GetBlockFromPoint(point);
@@ -140,16 +106,14 @@ const std::vector<int>& TetrahedralTree::GetElementsInBlock(
   static std::vector<int> ret;
   return ret;
 }
-#endif
 
 // check if the point is inside the domain.
 // This function is only executed at root to ensure that input point is inside
 // the mesh's bounding box
 // If we don't check this, the case when root is leaf node itself will return
 // wrong block
-__DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree) *
-    GARFIELD_CLASS_NAME(TetrahedralTree)::GetBlockFromPoint(
-        const Vec3& point) const {
+const TetrahedralTree* TetrahedralTree::GetBlockFromPoint(
+    const Vec3& point) const {
   if (!(m_min.x() <= point.x() && point.x() <= m_max.x() &&
         m_min.y() <= point.y() && point.y() <= m_max.y() &&
         m_min.z() <= point.z() && point.z() <= m_max.z()))
@@ -158,9 +122,8 @@ __DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree) *
   return GetBlockFromPointHelper(point);
 }
 
-__DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree) *
-    GARFIELD_CLASS_NAME(TetrahedralTree)::GetBlockFromPointHelper(
-        const Vec3& point) const {
+const TetrahedralTree* TetrahedralTree::GetBlockFromPointHelper(
+    const Vec3& point) const {
   // If we're at a leaf node, it means, the point is inside this block
   if (IsLeafNode()) return this;
   // We are at the interior node, so check which child octant contains the
@@ -168,12 +131,12 @@ __DEVICE__ const GARFIELD_CLASS_NAME(TetrahedralTree) *
   int octant = GetOctantContainingPoint(point);
   return children[octant]->GetBlockFromPointHelper(point);
 }
-#ifndef __GPUCOMPILE__
+
 #ifndef USEGPU
 double TetrahedralTree::CreateGPUTransferObject(TetrahedralTreeGPU*& tree_gpu) {
   tree_gpu = nullptr;
   return 0;
 }
 #endif
-#endif
+
 }  // namespace Garfield
