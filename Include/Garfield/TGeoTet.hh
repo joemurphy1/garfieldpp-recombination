@@ -1,18 +1,20 @@
 #ifndef G_TGEOTET
 #define G_TGEOTET
 
+#include <TGeoBBox.h>
+
 #include <array>
 
-#include "TGeoBBox.h"
+namespace Garfield {
 
 class TGeoTet : public TGeoBBox {
  public:
-  TGeoTet() {}
+  TGeoTet() = default;
   /// Constructor
   TGeoTet(const char* name,
           const std::array<std::array<double, 3>, 4>& vertices);
   /// Destructor
-  virtual ~TGeoTet() {}
+  virtual ~TGeoTet() = default;
 
   void ComputeBBox() override;
   int DistancetoPrimitive(int, int) override { return 99999; }
@@ -41,4 +43,5 @@ class TGeoTet : public TGeoBBox {
   TGeoTet& operator=(const TGeoTet&) = delete;
 };
 
+}  // namespace Garfield
 #endif
