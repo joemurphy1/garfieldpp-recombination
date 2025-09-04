@@ -1,8 +1,8 @@
 #include "heed++/code/HeedDeltaElectronCS.h"
 
 #include <cmath>
+#include <iostream>
 #include <limits>
-#include<iostream>
 
 #include "heed++/code/ElElasticScat.h"
 #include "heed++/code/EnergyMesh.h"

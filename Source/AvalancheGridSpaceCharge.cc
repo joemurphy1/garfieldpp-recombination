@@ -1,6 +1,5 @@
 #include "Garfield/AvalancheGridSpaceCharge.hh"
 
-
 #include <fstream>
 #include <iostream>
 #include <numeric>
@@ -167,10 +166,10 @@ void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn,
 
   // either the above has not been executed or nPosIonOut was not positive
   if (nElectronOut >= nElectronIn) {
-    nNegIonOut = std::expm1(eta * dx) * nElectronIn;     //< >= 0
+    nNegIonOut = std::expm1(eta * dx) * nElectronIn;         //< >= 0
     nPosIonOut = (nElectronOut - nElectronIn) + nNegIonOut;  //< >= 0
   } else {
-    nPosIonOut = std::expm1(alpha * dx) * nElectronIn;   //< >= 0
+    nPosIonOut = std::expm1(alpha * dx) * nElectronIn;       //< >= 0
     nNegIonOut = nPosIonOut - (nElectronOut - nElectronIn);  //< >= 0
   }
 }
@@ -184,7 +183,6 @@ AvalancheGridSpaceCharge::AvalancheGridSpaceCharge(Sensor *sensor) {
   m_rGrid.reserve(1000);
 
   SetSensor(sensor);
-
 }
 
 void AvalancheGridSpaceCharge::Reset() {
@@ -219,7 +217,7 @@ void AvalancheGridSpaceCharge::SetSensor(Sensor *sensor) {
   if (!m_sensor) return;
   const size_t nCmp = m_sensor->GetNumberOfComponents();
   for (size_t i = 0; i < nCmp; i++) {
-    m_pp = dynamic_cast<ComponentParallelPlate*>(m_sensor->GetComponent(i));
+    m_pp = dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(i));
     if (m_pp) break;
   }
 }
@@ -1307,9 +1305,10 @@ void AvalancheGridSpaceCharge::GetLocalField(const int iz, const int ir,
   eFieldR = 0;
   // HS: use enum instead of string.
   if (fieldOption == "coulomb") {
-    //if (!m_bImportElliptic) {
-    //  throw std::runtime_error("::GetLocalField Elliptic values not imported.");
-    //}
+    // if (!m_bImportElliptic) {
+    //   throw std::runtime_error("::GetLocalField Elliptic values not
+    //   imported.");
+    // }
 
     // loop over all cells with particles (except itself) and add fields
     for (int fz = 0; fz <= m_zSteps; fz++) {
@@ -1563,9 +1562,13 @@ void AvalancheGridSpaceCharge::GetEllipticIntegrals(double x, double &K,
   }
 
   // Linear interpolation:
-  const double f = (-x - m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::X)]) * invStep;
-  K = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::K)] + f * m_elliptic.at(arg+1)[static_cast<std::size_t>(Elliptic::K)];
-  E = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::E)] + f * m_elliptic.at(arg+1)[static_cast<std::size_t>(Elliptic::E)];
+  const double f =
+      (-x - m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::X)]) *
+      invStep;
+  K = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::K)] +
+      f * m_elliptic.at(arg + 1)[static_cast<std::size_t>(Elliptic::K)];
+  E = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::E)] +
+      f * m_elliptic.at(arg + 1)[static_cast<std::size_t>(Elliptic::E)];
 }
 
 double AvalancheGridSpaceCharge::GetMeanDistance() {

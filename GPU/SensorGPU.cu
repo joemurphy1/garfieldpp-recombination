@@ -1,52 +1,43 @@
 #include "SensorGPU.h"
 #undef __GPUCOMPILE__
 #include "GPUFunctions.h"
-
 #include "GPUInterface.hh"
-#include "TetrahedralTreeGPU.h"
 #include "Garfield/ComponentFieldMap.hh"
 #include "Garfield/Sensor.hh"
+#include "TetrahedralTreeGPU.h"
 namespace Garfield {
-  // https://github.com/FLAMEGPU/FLAMEGPU2/issues/847
-  #if __CUDA_ARCH__ < 600
-  __device__ double atomicAdd(double* address, double val)
-  {
-      unsigned long long int* address_as_ull =
-                                (unsigned long long int*)address;
-      unsigned long long int old = *address_as_ull, assumed;
-  
-      do {
-          assumed = old;
-          old = atomicCAS(address_as_ull, assumed,
-                          __double_as_longlong(val +
-                                 __longlong_as_double(assumed)));
-  
-      // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
-      } while (assumed != old);
-  
-      return __longlong_as_double(old);
-  }
-  #endif
+// https://github.com/FLAMEGPU/FLAMEGPU2/issues/847
+#if __CUDA_ARCH__ < 600
+__device__ double atomicAdd(double* address, double val) {
+  unsigned long long int* address_as_ull = (unsigned long long int*)address;
+  unsigned long long int old = *address_as_ull, assumed;
 
+  do {
+    assumed = old;
+    old = atomicCAS(address_as_ull, assumed,
+                    __double_as_longlong(val + __longlong_as_double(assumed)));
 
+    // Note: uses integer comparison to avoid hang in case of NaN (since NaN !=
+    // NaN)
+  } while (assumed != old);
 
+  return __longlong_as_double(old);
+}
+#endif
 
-__DEVICE__
-void SensorGPU::ElectricField(const double x, const double y,
-                                                const double z, double &ex,
-                                                double &ey, double &ez,
-                                                MediumGPU *
-                                                    &medium,
-                                                int &status) const {
+__device__ void SensorGPU::ElectricField(const double x, const double y,
+                                         const double z, double& ex, double& ey,
+                                         double& ez, MediumGPU*& medium,
+                                         int& status) const {
   ex = ey = ez = 0.;
   status = -10;
   medium = nullptr;
   double fx = 0., fy = 0., fz = 0.;
-  MediumGPU *med = nullptr;
+  MediumGPU* med = nullptr;
   int stat = 0;
-// Add up electric field contributions from all components.
+  // Add up electric field contributions from all components.
   for (int ic = 0; ic < m_numComponents; ic++) {
-    ComponentGPU *component{m_components[ic]};
+    ComponentGPU* component{m_components[ic]};
     component->ElectricField(x, y, z, fx, fy, fz, med, stat);
     if (status != 0) {
       status = stat;
@@ -60,19 +51,14 @@ void SensorGPU::ElectricField(const double x, const double y,
   }
 }
 
-
-__DEVICE__
-bool SensorGPU::IsInArea(const double x, const double y,
-                                           const double z) const {
-
-
+__device__ bool SensorGPU::IsInArea(const double x, const double y,
+                                    const double z) const {
   if (x >= m_xMinUser && x <= m_xMaxUser && y >= m_yMinUser &&
       y <= m_yMaxUser && z >= m_zMinUser && z <= m_zMaxUser) {
     return true;
   }
   return false;
 }
-
 
 double Sensor::CreateGPUTransferObject(SensorGPU*& sensor_gpu) {
   // create main sensor GPU class
@@ -109,12 +95,15 @@ double Sensor::CreateGPUTransferObject(SensorGPU*& sensor_gpu) {
   // We now have an array of components
   if (m_electrodes.size() > 0) {
     sensor_gpu->m_numElectrodes = m_electrodes.size();
-    checkCudaErrors(
-        cudaMallocManaged(&(sensor_gpu->m_electrodes), sizeof(SensorGPU::ElectrodeGPU) * m_electrodes.size()));
+    checkCudaErrors(cudaMallocManaged(
+        &(sensor_gpu->m_electrodes),
+        sizeof(SensorGPU::ElectrodeGPU) * m_electrodes.size()));
     // Allocate memory for storing signals
     for (size_t i = 0; i < m_electrodes.size(); i++) {
-      checkCudaErrors(cudaMallocManaged(&sensor_gpu->m_electrodes[i].signal, sizeof(double) * m_nTimeBins));
-      std::fill(sensor_gpu->m_electrodes[i].signal, sensor_gpu->m_electrodes[i].signal + m_nTimeBins, 0);
+      checkCudaErrors(cudaMallocManaged(&sensor_gpu->m_electrodes[i].signal,
+                                        sizeof(double) * m_nTimeBins));
+      std::fill(sensor_gpu->m_electrodes[i].signal,
+                sensor_gpu->m_electrodes[i].signal + m_nTimeBins, 0);
       // So here I need to find which component we are using and the label
       // of the wpot within that component
       for (size_t j = 0; j < m_components.size(); j++) {
@@ -131,7 +120,9 @@ double Sensor::CreateGPUTransferObject(SensorGPU*& sensor_gpu) {
       // m_wpot is a map of string to
       // static_cast to ComponentFieldMap here is perhaps risky
       // Need to see if this affects other types of field map
-      for (const auto& wpot : static_cast<ComponentFieldMap*>(m_electrodes[i].comp)->GetWeightingPotentials()) {
+      for (const auto& wpot :
+           static_cast<ComponentFieldMap*>(m_electrodes[i].comp)
+               ->GetWeightingPotentials()) {
         if (label == wpot.first) {
           // We have found a match
           sensor_gpu->m_electrodes[i].label = label_index;
@@ -146,8 +137,7 @@ double Sensor::CreateGPUTransferObject(SensorGPU*& sensor_gpu) {
   return alloc;
 }
 
-__device__
-void SensorGPU::AddSignal(
+__device__ void SensorGPU::AddSignal(
     const double q, const double t0, const double t1, const double x0,
     const double y0, const double z0, const double x1, const double y1,
     const double z1, const bool integrateWeightingField,
@@ -181,15 +171,15 @@ void SensorGPU::AddSignal(
   const double vy = dy * invdt;
   const double vz = dz * invdt;
 
-// Abscissae and weights for 6-point Gaussian integration
+  // Abscissae and weights for 6-point Gaussian integration
   constexpr size_t nG = 6;
   // Locations and weights for 6-point Gaussian integration
   constexpr double tG[nG] = {-0.932469514203152028, -0.661209386466264514,
-                            -0.238619186083196909, 0.238619186083196909,
-                            0.661209386466264514,  0.932469514203152028};
+                             -0.238619186083196909, 0.238619186083196909,
+                             0.661209386466264514,  0.932469514203152028};
   constexpr double wG[nG] = {0.171324492379170345, 0.360761573048138608,
-                            0.467913934572691047, 0.467913934572691047,
-                            0.360761573048138608, 0.171324492379170345};
+                             0.467913934572691047, 0.467913934572691047,
+                             0.360761573048138608, 0.171324492379170345};
   double sG[6];
   for (size_t i = 0; i < nG; ++i) sG[i] = 0.5 * (1. + tG[i]);
 
@@ -227,15 +217,18 @@ void SensorGPU::AddSignal(
       delta = dt - delta;
       unsigned int j = 1;
       while (delta > m_tStep && bin + j < m_nTimeBins) {
-        FillBin(m_electrodes[i], bin + j, current * m_tStep, electron, false, particle_idx);
+        FillBin(m_electrodes[i], bin + j, current * m_tStep, electron, false,
+                particle_idx);
         delta -= m_tStep;
         ++j;
       }
       if (bin + j < m_nTimeBins) {
-        FillBin(m_electrodes[i], bin + j, current * delta, electron, false, particle_idx);
+        FillBin(m_electrodes[i], bin + j, current * delta, electron, false,
+                particle_idx);
       }
     } else {
-      FillBin(m_electrodes[i], bin, current * dt, electron, false, particle_idx);
+      FillBin(m_electrodes[i], bin, current * dt, electron, false,
+              particle_idx);
     }
 
   }  // End of loop over electrodes
@@ -248,16 +241,15 @@ void SensorGPU::AddSignal(
   return;
 }
 
-__device__
-void SensorGPU::FillBin(ElectrodeGPU& electrode, const unsigned int bin, const double signal,
-                        const bool electron, const bool delayed, const int particle_idx) {
-                          
-                          
-                          #if __CUDA_ARCH__ < 600
-                            Garfield::atomicAdd(&electrode.signal[bin], signal);
-                          #else
+__device__ void SensorGPU::FillBin(ElectrodeGPU& electrode,
+                                   const unsigned int bin, const double signal,
+                                   const bool electron, const bool delayed,
+                                   const int particle_idx) {
+#if __CUDA_ARCH__ < 600
+  Garfield::atomicAdd(&electrode.signal[bin], signal);
+#else
   atomicAdd(&electrode.signal[bin], signal);
-  #endif
+#endif
   /*GPUREMOVE: if (electron) {
     electrode.electronsignal[bin] += signal;
     if (delayed) electrode.delayedElectronSignal[bin] += signal;
@@ -280,7 +272,7 @@ void Sensor::TransferGPUElectrodeSignals(SensorGPU*& sensor_gpu) {
     elec_id++;
   }
   if (m_nEvents == 0) {
-      m_nEvents = 1;
+    m_nEvents = 1;
   }
 }
 

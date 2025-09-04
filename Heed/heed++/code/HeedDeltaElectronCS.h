@@ -2,6 +2,7 @@
 #define HEEDDELTAELECTRONCS_H
 
 #include <vector>
+
 #include "wcpplib/random/PointsRan.h"
 
 #define USE_MEAN_COEF  // new variant, means that used mean(1-cos(theta))
@@ -9,8 +10,7 @@
 // may be very slightly more precise than the old variant
 // that is use of sqrt( mean ( square (1-cos(theta)) ) )
 
-namespace Heed
-{
+namespace Heed {
 
 class HeedMatterDef;
 class ElElasticScat;
@@ -25,7 +25,10 @@ class HeedDeltaElectronCS {
   /// Default constructor
   HeedDeltaElectronCS();
   /// Constructor
-  HeedDeltaElectronCS(HeedMatterDef* fhmd, ElElasticScat* fees, ElElasticScatLowSigma* feesls, PairProd* fpairprod, int fsruth = 2, double fmlambda = 0.001 * 4.0e-3, double fmthetac = 0.1);
+  HeedDeltaElectronCS(HeedMatterDef* fhmd, ElElasticScat* fees,
+                      ElElasticScatLowSigma* feesls, PairProd* fpairprod,
+                      int fsruth = 2, double fmlambda = 0.001 * 4.0e-3,
+                      double fmthetac = 0.1);
 
   double get_sigma(double energy, double nscat) const;
   // copy of similar thing from ElElasticScatLowSigma

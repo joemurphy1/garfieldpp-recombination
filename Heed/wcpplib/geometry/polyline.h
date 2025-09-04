@@ -109,7 +109,6 @@ class polyline : public absref {
                           polyline* crpll, int& qcrpll, double prec) const;
 };
 
-
 }  // namespace Heed
 
 #endif

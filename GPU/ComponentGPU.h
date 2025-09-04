@@ -5,19 +5,18 @@
 #error GPU HEADER INCLUDED WITHOUT SETTING __GPUCOMPILE__
 #endif
 
-#include "Garfield/HelperMacros.hh"
-#include "TetrahedralTreeGPU.h"
 #include "MediumGPU.h"
+#include "TetrahedralTreeGPU.h"
 
-namespace Garfield
-{
+namespace Garfield {
 
-class ComponentGPU
-{
-public:
+class ComponentGPU {
+ public:
   ComponentGPU() = default;
   ~ComponentGPU() = default;
-  __device__ void ElectricField(const cuda_t xin, const cuda_t yin, const cuda_t zin, cuda_t& ex, cuda_t& ey, cuda_t& ez, MediumGPU*& m, int& status);
+  __device__ void ElectricField(const cuda_t xin, const cuda_t yin,
+                                const cuda_t zin, cuda_t& ex, cuda_t& ey,
+                                cuda_t& ez, MediumGPU*& m, int& status);
 
   /// Simple periodicity in x, y, z.
   bool m_periodic[3] = {false, false, false};
@@ -35,15 +34,13 @@ public:
   const int m_triangleOctRules[4] = {1, 4, 5, 8};
   bool m_outsideCone = false;
 
-
-
 // include parts from derived class due to big performance hit from using
 // virtual methods
 // TODO GPU TN: It isn't clear to me that we actually need (at least) the Ansys
 // include - all the code is protected by an ifndef __GPUCOMPILE__, whereas it
 // will be defined when these includes are made
-//#include "Garfield/ComponentAnsys123.hh"
-#include "Garfield/ComponentFieldMap.hh"
+// #include "Garfield/ComponentAnsys123.hh"
+#include "ComponentFieldMapGPU.h"
 
   friend class ComponentAnsys123;
   friend class ComponentComsol;
@@ -52,8 +49,7 @@ public:
   friend class Component;
 
   // enum to mimic polymorphism
-  enum class ComponentType
-  {
+  enum class ComponentType {
     Component = 0,
     ComponentFieldMap,
     ComponentAnsys123,
@@ -62,11 +58,13 @@ public:
   };
 
   ComponentType m_ComponentType{ComponentType::Component};
-protected:
+
+ protected:
   /// Ready for use?
   bool m_ready = false;
-private:
+
+ private:
 };
 
-}
+}  // namespace Garfield
 #endif

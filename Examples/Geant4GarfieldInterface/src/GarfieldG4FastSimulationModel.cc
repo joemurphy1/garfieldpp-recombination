@@ -107,7 +107,8 @@ void GarfieldG4FastSimulationModel::DoIt(const G4FastTrack& fastTrack,
                          localpos.z() / CLHEP::cm, localdir.x(), localdir.y(),
                          localdir.z());
 
-  fastStep.ProposeTotalEnergyDeposited(fGarfieldPhysics->GetEnergyDeposit_MeV());
+  fastStep.ProposeTotalEnergyDeposited(
+      fGarfieldPhysics->GetEnergyDeposit_MeV());
 
   if (!fGarfieldPhysics->GetCreateSecondariesInGeant4()) return;
   const auto& secondaryParticles = fGarfieldPhysics->GetSecondaryParticles();

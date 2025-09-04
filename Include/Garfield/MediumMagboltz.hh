@@ -7,9 +7,11 @@
 #ifndef __GPUCOMPILE__
 #include <array>
 #include <mutex>
+
+#include "Garfield/MediumGas.hh"
 #endif
 #include "Garfield/MagboltzInterface.hh"
-#include "Garfield/MediumGas.hh"
+
 #ifndef __GPUCOMPILE__
 
 class TPad;
@@ -247,6 +249,7 @@ double GetElectronNullCollisionRate(const int band) override;
   bool m_useCsOutput = false;
   /// Number of different cross-section types in the current gas mixture
   unsigned int m_nTerms = 0;
+
 #ifndef __GPUCOMPILE__
   /// Mass
   std::array<double, m_nMaxGases> m_mgas;
@@ -266,8 +269,8 @@ double GetElectronNullCollisionRate(const int band) override;
   bool m_useGreenSawada = false;
 
 #ifdef __GPUCOMPILE__
-  int m_csType[Magboltz::nMaxLevels];
-  double m_energyLoss[Magboltz::nMaxLevels];
+  int m_csType[Garfield::Magboltz::nMaxLevels];
+  double m_energyLoss[Garfield::Magboltz::nMaxLevels];
 
   double** m_scatPar{nullptr};
   int* m_numscatParIdx{nullptr};
@@ -337,19 +340,19 @@ std::vector<std::vector<double> > m_cfLog;
   /// Null-collision frequency
   double m_cfNull = 0.;
 #ifdef __GPUCOMPILE__
-  double m_wOpalBeaty[Magboltz::nMaxLevels];
-  double m_yFluorescence[Magboltz::nMaxLevels];
+  double m_wOpalBeaty[Garfield::Magboltz::nMaxLevels];
+  double m_yFluorescence[Garfield::Magboltz::nMaxLevels];
 
-  unsigned int m_nAuger1[Magboltz::nMaxLevels];
-  unsigned int m_nAuger2[Magboltz::nMaxLevels];
+  unsigned int m_nAuger1[Garfield::Magboltz::nMaxLevels];
+  unsigned int m_nAuger2[Garfield::Magboltz::nMaxLevels];
   /// Energy imparted to Auger electrons
-  double m_eAuger1[Magboltz::nMaxLevels];
-  double m_eAuger2[Magboltz::nMaxLevels];
+  double m_eAuger1[Garfield::Magboltz::nMaxLevels];
+  double m_eAuger2[Garfield::Magboltz::nMaxLevels];
 
-  unsigned int m_nFluorescence[Magboltz::nMaxLevels];
-  double m_eFluorescence[Magboltz::nMaxLevels];
-  double m_rgas[m_nMaxGases];
-  double m_s2[m_nMaxGases];
+  unsigned int m_nFluorescence[Garfield::Magboltz::nMaxLevels];
+  double m_eFluorescence[Garfield::Magboltz::nMaxLevels];
+  double m_rgas[Garfield::Magboltz::MaxNumberGas];
+  double m_s2[Garfield::Magboltz::MaxNumberGas];
 #endif
 
 #ifndef __GPUCOMPILE__

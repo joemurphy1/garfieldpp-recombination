@@ -3,8 +3,7 @@
 
 #include <vector>
 
-namespace Heed
-{
+namespace Heed {
 
 class HeedMatterDef;
 #define EXCLUDE_A_VALUES  // exclude absorption values
@@ -21,7 +20,9 @@ class EnTransfCS {
   /// Default constructor
   EnTransfCS() = default;
   /// Constructor
-  EnTransfCS(double fparticle_mass, double fgamma_1, bool fs_primary_electron, HeedMatterDef* fhmd, double fparticle_charge = 1., const bool debug = false);
+  EnTransfCS(double fparticle_mass, double fgamma_1, bool fs_primary_electron,
+             HeedMatterDef* fhmd, double fparticle_charge = 1.,
+             const bool debug = false);
 
   /// Flag indicating whether the calculation was successful.
   bool m_ok = true;

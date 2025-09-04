@@ -12,9 +12,9 @@ using namespace Garfield;
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
   PlottingEngine::SetSerif();
- 
+
   // Plot range.
-  double emin =    4000.;
+  double emin = 4000.;
   double emax = 1000000.;
   const size_t nE = 200;
 

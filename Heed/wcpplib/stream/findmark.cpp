@@ -1,4 +1,5 @@
 #include "wcpplib/stream/findmark.h"
+
 #include <cstring>
 
 /*

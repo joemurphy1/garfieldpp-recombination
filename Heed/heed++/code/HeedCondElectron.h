@@ -30,9 +30,12 @@ class HeedCondElectron {
   /// Default constructor
   HeedCondElectron() = default;
   /// Constructor
-  HeedCondElectron(const point& fpt, const double ftime) : x(fpt.v.x), y(fpt.v.y), z(fpt.v.z), time(ftime) {}
+  HeedCondElectron(const point& fpt, const double ftime)
+      : x(fpt.v.x), y(fpt.v.y), z(fpt.v.z), time(ftime) {}
   /// Constructor
-  HeedCondElectron(const double fx, const double fy, const double fz, const double ftime) : x(fx), y(fy), z(fz), time(ftime) {}
+  HeedCondElectron(const double fx, const double fy, const double fz,
+                   const double ftime)
+      : x(fx), y(fy), z(fz), time(ftime) {}
 };
 
 }  // namespace Heed

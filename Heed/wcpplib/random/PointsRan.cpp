@@ -2,7 +2,8 @@
 
 #include <cmath>
 #include <iomanip>
-#include<iostream>
+#include <iostream>
+
 #include "wcpplib/util/FunNameStack.h"
 
 /*

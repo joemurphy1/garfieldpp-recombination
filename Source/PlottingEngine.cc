@@ -5,17 +5,18 @@
 #include <TF1.h>
 #include <TROOT.h>
 #include <TStyle.h>
+
 #include <memory>
 
 namespace Garfield {
 
-std::unique_ptr<TStyle> PlottingEngine::m_style{std::make_unique<TStyle>("Garfield","Garfield Style")};
+std::unique_ptr<TStyle> PlottingEngine::m_style{
+    std::make_unique<TStyle>("Garfield", "Garfield Style")};
 
-//PlottingEngine plottingEngine;
+// PlottingEngine plottingEngine;
 PlottingEngine::~PlottingEngine() = default;
 
-PlottingEngine::PlottingEngine()
-{
+PlottingEngine::PlottingEngine() {
   m_style->Reset();
   m_style->SetFillColor(1);
   m_style->SetFillStyle(1001);
@@ -42,7 +43,7 @@ PlottingEngine::PlottingEngine()
   m_style->SetPadGridX(kTRUE);
   m_style->SetPadGridY(kTRUE);
 
-  //const short font = m_serif ? 132 : 42;
+  // const short font = m_serif ? 132 : 42;
   const double tsize = 0.04;
   //
   m_style->SetTextSize(tsize);
@@ -89,14 +90,12 @@ PlottingEngine::PlottingEngine()
   m_style->cd();
 }
 
-void PlottingEngine::SetPalette(const int palette)
-{
-  if(palette > 0) m_style->SetPalette(palette);
+void PlottingEngine::SetPalette(const int palette) {
+  if (palette > 0) m_style->SetPalette(palette);
   m_style->cd();
 }
 
-void PlottingEngine::SetFont(const int font)
-{
+void PlottingEngine::SetFont(const int font) {
   m_style->SetTextFont(font);
   m_style->SetLegendFont(font);
   m_style->SetStatFont(font);
@@ -107,14 +106,8 @@ void PlottingEngine::SetFont(const int font)
 }
 
 /// Use serif font.
-void PlottingEngine::SetSerif()
-{
-  SetFont(42);
-}
+void PlottingEngine::SetSerif() { SetFont(42); }
 /// Use sans-serif font.
-void PlottingEngine::SetSansSerif()
-{
-  SetFont(132);
-}
+void PlottingEngine::SetSansSerif() { SetFont(132); }
 
 }  // namespace Garfield

@@ -15,7 +15,7 @@ namespace Garfield {
 
 ComponentParallelPlate::ComponentParallelPlate() : Component("ParallelPlate") {}
 
-void ComponentParallelPlate::Setup(const unsigned int N, 
+void ComponentParallelPlate::Setup(const unsigned int N,
                                    std::vector<double> eps,
                                    std::vector<double> d, const double V,
                                    std::vector<int> sigmaIndex) {

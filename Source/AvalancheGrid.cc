@@ -112,9 +112,9 @@ bool AvalancheGrid::SnapToGrid(const double x, const double y, const double z,
     std::cout << m_className << "::SnapToGrid: ix = " << iX << ", iy = " << iY
               << ", iz = " << iZ << ".\n\n";
   }
-  if (iX < 0 || (unsigned)iX >= m_xgrid.size() || 
-      iY < 0 || (unsigned)iY >= m_ygrid.size() ||
-      iZ < 0 || (unsigned)iZ >= m_zgrid.size()) {
+  if (iX < 0 || (unsigned)iX >= m_xgrid.size() || iY < 0 ||
+      (unsigned)iY >= m_ygrid.size() || iZ < 0 ||
+      (unsigned)iZ >= m_zgrid.size()) {
     if (m_debug)
       std::cerr << m_className << "::SnapToGrid: Point is outside the grid.\n";
     return false;

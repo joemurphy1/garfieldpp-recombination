@@ -31,11 +31,11 @@ class AvalancheMC {
   bool DriftElectron(const double x, const double y, const double z,
                      const double t, const size_t w = 1);
   /// Simulate the drift line of a hole from a given starting point.
-  bool DriftHole(const double x, const double y, const double z,
-                 const double t, const size_t w = 1);
+  bool DriftHole(const double x, const double y, const double z, const double t,
+                 const size_t w = 1);
   /// Simulate the drift line of an ion from a given starting point.
-  bool DriftIon(const double x, const double y, const double z, 
-                const double t, const size_t w = 1);
+  bool DriftIon(const double x, const double y, const double z, const double t,
+                const size_t w = 1);
   /// Simulate the drift line of a negative ion from a given starting point.
   bool DriftNegativeIon(const double x, const double y, const double z,
                         const double t, const size_t w = 1);
@@ -59,11 +59,11 @@ class AvalancheMC {
   void AddElectron(const double x, const double y, const double z,
                    const double t, const size_t w = 1);
   /// Add a hole to the list of particles to be transported.
-  void AddHole(const double x, const double y, const double z, 
-               const double t, const size_t w = 1);
+  void AddHole(const double x, const double y, const double z, const double t,
+               const size_t w = 1);
   /// Add an ion to the list of particles to be transported.
-  void AddIon(const double x, const double y, const double z, 
-              const double t, const size_t w = 1);
+  void AddIon(const double x, const double y, const double z, const double t,
+              const size_t w = 1);
   /// Add an negative ion to the list of particles to be transported.
   void AddNegativeIon(const double x, const double y, const double z,
                       const double t, const size_t w = 1);
@@ -82,9 +82,9 @@ class AvalancheMC {
   };
 
   struct Seed {
-    Point pt;      ///< Starting point.
-    Particle type; ///< Particle type.
-    size_t w = 1;  ///< Multiplicity.
+    Point pt;       ///< Starting point.
+    Particle type;  ///< Particle type.
+    size_t w = 1;   ///< Multiplicity.
   };
 
   const std::vector<EndPoint>& GetElectrons() const { return m_electrons; }
@@ -303,18 +303,17 @@ class AvalancheMC {
   bool m_useDensityMap = false;
 
   /// Recombination coefficient in cm3/ns.
-  double m_alphaRecombination = 0.; 
+  double m_alphaRecombination = 0.;
 
   bool m_debug = false;
 
   /// Compute a single drift line.
   int DriftLine(const Seed& seed, std::vector<Point>& path,
-                std::vector<Seed>& secondaries,
-                const bool aval, const bool signal) const;
+                std::vector<Seed>& secondaries, const bool aval,
+                const bool signal) const;
   /// Compute an avalanche.
-  bool TransportParticles(std::vector<Seed>& stack,
-                          const bool withElectrons, const bool withHoles,
-                          const bool aval);
+  bool TransportParticles(std::vector<Seed>& stack, const bool withElectrons,
+                          const bool withHoles, const bool aval);
 
   /// Compute electric and magnetic field at a given position.
   int GetField(const std::array<double, 3>& x, std::array<double, 3>& e,

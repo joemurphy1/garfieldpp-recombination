@@ -22,7 +22,7 @@ and notices about any modifications of the original text
 appear in all copies and in supporting documentation.
 The file is provided "as is" without express or implied warranty.
 */
-#include<iostream>
+#include <iostream>
 
 #include "wcpplib/geometry/vfloat.h"
 #include "wcpplib/util/FunNameStack.h"

@@ -9,15 +9,13 @@
 #include "Garfield/HelperMacros.hh"
 #include "Garfield/Vector.hh"
 
-#if defined(__GPUCOMPILE__)
-#include "GPUInterface.hh"
-#else
+#if !defined(__GPUCOMPILE__)
 class TetrahedralTreeGPU;
+#include <utility>
+#include <vector>
 #endif
 
 #include <cstddef>
-#include <utility>
-#include <vector>
 
 namespace Garfield {
 
@@ -68,8 +66,6 @@ class GARFIELD_CLASS_NAME(TetrahedralTree) {
 #endif
 
  private:
-  static std::vector<int> emptyBlock;
-
   // Physical centre of this tree node.
   Vec3 m_origin;
   // Half the width/height/depth of this tree node.

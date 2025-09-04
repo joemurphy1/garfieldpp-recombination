@@ -8,7 +8,6 @@
 namespace Garfield {
 
 #ifndef __GPUCOMPILE__
-std::vector<int> TetrahedralTree::emptyBlock = {};
 
 /**
 TetrahedralTree.cc
@@ -138,8 +137,8 @@ const std::vector<int>& TetrahedralTree::GetElementsInBlock(
   if (octreeNode) {
     return octreeNode->elements;
   }
-
-  return emptyBlock;
+  static std::vector<int> ret;
+  return ret;
 }
 #endif
 

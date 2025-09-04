@@ -1,7 +1,7 @@
 #include "wcpplib/geometry/polyline.h"
 
+#include <iostream>
 #include <limits>
-#include<iostream>
 
 /*
 Copyright (c) 2000 Igor B. Smirnov

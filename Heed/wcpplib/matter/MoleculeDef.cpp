@@ -1,7 +1,7 @@
 #include "wcpplib/matter/MoleculeDef.h"
 
 #include <iomanip>
-#include<iostream>
+#include <iostream>
 
 #include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/math/cubic.h"

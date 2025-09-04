@@ -301,8 +301,8 @@ bool Medium::VelocityFluxBulk(
     const double ex, const double ey, const double ez, const double bx,
     const double by, const double bz,
     const std::vector<std::vector<std::vector<double> > >& velWv,
-    const std::vector<std::vector<std::vector<double> > >& velWr,
-    double& wv, double& wr) const {
+    const std::vector<std::vector<std::vector<double> > >& velWr, double& wv,
+    double& wr) const {
   wv = wr = 0;
   // Make sure there is at least a table of velocities along E.
   if (velWv.empty() || velWr.empty()) return false;
@@ -489,8 +489,7 @@ bool Medium::ElectronVelocityFluxBulk(const double ex, const double ey,
                                       const double ez, const double bx,
                                       const double by, const double bz,
                                       double& wv, double& wr) {
-  return VelocityFluxBulk(ex, ey, ez, bx, by, bz, m_eVelWv, m_eVelWr, wv,
-                          wr);
+  return VelocityFluxBulk(ex, ey, ez, bx, by, bz, m_eVelWv, m_eVelWr, wv, wr);
 }
 
 bool Medium::ElectronDiffusion(const double ex, const double ey,
@@ -1504,8 +1503,8 @@ double Medium::Interpolate1D(const double x, const std::vector<double>& ytab,
       } else {
         // Log values in gas table for alpha, eta.
         const double y0 = std::exp(ytab[nt - 1]);
-        const double extr2 = (y0 - std::exp(ytab[nt - 2])) /
-                             (xtab[nt - 1] - xtab[nt - 2]);
+        const double extr2 =
+            (y0 - std::exp(ytab[nt - 2])) / (xtab[nt - 1] - xtab[nt - 2]);
         result = y0 + extr2 * (x - xtab[nt - 1]);
         result = result > 0. ? log(result) : -30.;
       }

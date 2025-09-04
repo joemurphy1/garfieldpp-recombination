@@ -1,7 +1,7 @@
 #include "wcpplib/geometry/volume.h"
 
 #include <cstddef>
-#include<iostream>
+#include <iostream>
 
 /*
 Copyright (c) 2000 Igor B. Smirnov

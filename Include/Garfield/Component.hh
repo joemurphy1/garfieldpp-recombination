@@ -394,22 +394,22 @@ class Component {
   }
 
   virtual bool IonDensity(const double /*x*/, const double /*y*/,
-                           const double /*z*/, double& rho) {
+                          const double /*z*/, double& rho) {
     rho = 0.;
     return false;
   }
   virtual bool NegativeIonDensity(const double /*x*/, const double /*y*/,
-                                       const double /*z*/, double& rho) {
+                                  const double /*z*/, double& rho) {
     rho = 0.;
     return false;
   }
   virtual bool ElectronDensity(const double /*x*/, const double /*y*/,
-                                    const double /*z*/, double& rho) {
+                               const double /*z*/, double& rho) {
     rho = 0.;
     return false;
   }
   virtual bool HoleDensity(const double /*x*/, const double /*y*/,
-                                const double /*z*/, double& rho) {
+                           const double /*z*/, double& rho) {
     rho = 0.;
     return false;
   }

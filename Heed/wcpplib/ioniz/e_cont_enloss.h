@@ -6,7 +6,9 @@ namespace Heed {
 /// Continuous energy loss of electron.
 /// Similar to GDRELE from GEANT 3.21
 /// 2003,  I. Smirnov
-double e_cont_enloss(const double ratio_Z_to_A, const double I_eff, const double density, const double Ekin, const double Ecut, const double z);
+double e_cont_enloss(const double ratio_Z_to_A, const double I_eff,
+                     const double density, const double Ekin, const double Ecut,
+                     const double z);
 
 // z = -1 (electron) or +1 (positron)
 // returns the positive value in units

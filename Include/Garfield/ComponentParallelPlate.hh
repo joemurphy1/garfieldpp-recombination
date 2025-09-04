@@ -35,9 +35,9 @@ class ComponentParallelPlate : public Component {
    * \param V applied potential difference between the
    *        parallel plates.
    */
-  void Setup(const unsigned int N, std::vector<double> eps, 
-             std::vector<double> d,
-             const double V, std::vector<int> sigmaIndex = {});
+  void Setup(const unsigned int N, std::vector<double> eps,
+             std::vector<double> d, const double V,
+             std::vector<int> sigmaIndex = {});
 
   void ElectricField(const double x, const double y, const double z, double &ex,
                      double &ey, double &ez, Medium *&m, int &status) override;

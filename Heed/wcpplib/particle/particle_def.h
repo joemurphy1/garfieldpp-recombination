@@ -9,8 +9,7 @@ namespace Heed {
 ///
 /// 1999 - 2004,   I. Smirnov
 
-class particle_def
-{
+class particle_def {
  public:
   std::string name{"none"};
   /// Short name to make data summary files short.
@@ -22,11 +21,23 @@ class particle_def
   /// Default constructor.
   particle_def() = default;
   /// Constructor.
-  particle_def(const std::string& fname, const std::string& fnotation, double fmass, double fcharge, float fspin): name(fname), notation(fnotation), mass(fmass), charge(fcharge), spin(fspin) {}
+  particle_def(const std::string& fname, const std::string& fnotation,
+               double fmass, double fcharge, float fspin)
+      : name(fname),
+        notation(fnotation),
+        mass(fmass),
+        charge(fcharge),
+        spin(fspin) {}
   /// Constructor to create an anti-particle.
-  particle_def(const std::string& fname, const std::string& fnotation, particle_def& p);
+  particle_def(const std::string& fname, const std::string& fnotation,
+               particle_def& p);
   /// Copy constructor.
-  particle_def(const particle_def& f) : name(f.name), notation(f.notation), mass(f.mass), charge(f.charge), spin(f.spin) {}
+  particle_def(const particle_def& f)
+      : name(f.name),
+        notation(f.notation),
+        mass(f.mass),
+        charge(f.charge),
+        spin(f.spin) {}
   /// Assignment operator.
   particle_def& operator=(const particle_def&) = default;
   /// Destructor.
