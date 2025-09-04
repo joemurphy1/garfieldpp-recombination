@@ -1,7 +1,7 @@
 #ifndef G_MEDIUM_SILICON_H
 #define G_MEDIUM_SILICON_H
 
-// #include <array>
+#include <array>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -290,7 +290,7 @@ class MediumSilicon : public Medium {
 
   // Conduction bands.
   std::array<Band, 3> m_cb;
-  std::vector<size_t> m_cbIndex;
+  std::vector<std::size_t> m_cbIndex;
   // Valence band.
   Band m_vb;
 
