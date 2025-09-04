@@ -76,6 +76,16 @@ std::array<double, 3> MidPoint(const std::array<double, 3>& x0,
 
 namespace Garfield {
 
+/// Return the number of electrons and ions/holes in the avalanche.
+std::pair<unsigned int, unsigned int> AvalancheMC::GetAvalancheSize() const {
+  return std::make_pair(m_nElectrons, std::max(m_nIons, m_nHoles));
+}
+/// Return the number of electrons and ions/holes in the avalanche.
+void AvalancheMC::GetAvalancheSize(unsigned int& ne, unsigned int& ni) const {
+  ne = m_nElectrons;
+  ni = std::max(m_nIons, m_nHoles);
+}
+
 AvalancheMC::AvalancheMC(Sensor* sensor) : m_sensor(sensor) {}
 
 void AvalancheMC::SetSensor(Sensor* sensor) {

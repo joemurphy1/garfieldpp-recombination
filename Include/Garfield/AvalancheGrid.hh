@@ -2,7 +2,6 @@
 #define G_AVALANCHE_GRID_H
 
 #include <array>
-#include <cmath>
 #include <string>
 #include <vector>
 
@@ -10,7 +9,7 @@ namespace Garfield {
 
 class Sensor;
 class AvalancheMicroscopic;
-class ComponentParallelPlate;
+// class ComponentParallelPlate;
 
 /// Calculate avalanches in a uniform electric field using avalanche statistics.
 class AvalancheGrid {
@@ -28,16 +27,7 @@ class AvalancheGrid {
   /// Start grid based avalanche simulation.
   void StartGridAvalanche();
   /// Set the electron drift velocity (in cm / ns).
-  void SetElectronVelocity(const double vx, const double vy, const double vz) {
-    double vel = std::sqrt(vx * vx + vy * vy + vz * vz);
-    if (vel != std::abs(vx) && vel != std::abs(vy) && vel != std::abs(vz))
-      return;
-    int nx = (int)vx / vel;
-    int ny = (int)vy / vel;
-    int nz = (int)vz / vel;
-    m_velNormal = {nx, ny, nz};
-    m_Velocity = -std::abs(vel);
-  }
+  void SetElectronVelocity(const double vx, const double vy, const double vz);
   /// Set the electron Townsend coefficient (in 1 / cm).
   void SetElectronTownsend(const double town) { m_Townsend = town; }
   /// Set the electron attachment coefficient (in 1 / cm).
@@ -81,77 +71,77 @@ class AvalancheGrid {
   void Reset();
 
  private:
-  bool m_debug = false;
+  bool m_debug{false};
 
-  double m_Townsend = -1;  // [1/cm]
+  double m_Townsend{-1};  // [1/cm]
 
-  double m_Attachment = -1;  // [1/cm]
+  double m_Attachment{-1};  // [1/cm]
 
-  double m_Velocity = 0.;  // [cm/ns]
+  double m_Velocity{0.};  // [cm/ns]
 
   std::vector<int> m_velNormal = {0, 0, 0};
 
-  double m_MaxSize = 1.6e7;  // Saturations size
+  double m_MaxSize{1.6e7};  // Saturations size
   // Check if avalanche has reached maximum size
-  bool m_Saturated = false;
+  bool m_Saturated{false};
   // Time when the avalanche has reached maximum size
-  double m_SaturationTime = -1.;
+  double m_SaturationTime{-1.};
 
-  int m_nestart = 0.;
+  int m_nestart{0};
 
   std::vector<double> m_nLayer;
 
-  std::string m_className = "AvalancheGrid";
+  std::string m_className{"AvalancheGrid"};
 
-  Sensor *m_sensor = nullptr;
+  Sensor *m_sensor{nullptr};
 
-  bool m_printPar = false;
+  bool m_printPar{false};
 
   std::vector<double> m_zgrid;  ///< Grid points of z-coordinate.
-  double m_zStepSize = 0.;      ///< Distance between the grid points.
+  double m_zStepSize{0.};       ///< Distance between the grid points.
 
   std::vector<double> m_ygrid;  ///< Grid points of y-coordinate.
-  double m_yStepSize = 0.;      ///< Distance between the grid points.
+  double m_yStepSize{0.};       ///< Distance between the grid points.
 
   std::vector<double> m_xgrid;  ///< Grid points of x-coordinate.
-  double m_xStepSize = 0.;      ///< Distance between the grid points.
+  double m_xStepSize{0.};       ///< Distance between the grid points.
 
-  bool m_gridset = false;  ///< Keeps track if the grid has been defined.
-  int m_nTotal = 0;        ///< Total amount of charge.
-  double m_time = 0;       ///< Clock.
-  bool m_run = true;  ///< Tracking if the charges are still in the drift gap.
+  bool m_gridset{false};  ///< Keeps track if the grid has been defined.
+  int m_nTotal{0};        ///< Total amount of charge.
+  double m_time{0.};      ///< Clock.
+  bool m_run{true};  ///< Tracking if the charges are still in the drift gap.
 
   struct Path {
-    std::vector<double> ts = {};
-    std::vector<std::array<double, 3> > xs = {};
-    std::vector<double> qs = {};
+    std::vector<double> ts;
+    std::vector<std::array<double, 3> > xs;
+    std::vector<double> qs;
   };
 
   struct AvalancheNode {
-    double ix = 0;
-    double iy = 0;
-    double iz = 0;
+    double ix{0.};
+    double iy{0.};
+    double iz{0.};
 
-    int n = 1;
+    int n{1};
 
-    int layer = 0;
+    int layer{0};
 
-    double townsend = 0;
-    double attachment = 0;
-    double velocity = 0;
+    double townsend{0.};
+    double attachment{0.};
+    double velocity{0.};
 
-    double stepSize = 0;
+    double stepSize{0.};
     std::vector<int> velNormal = {0, 0, 0};
 
-    double time = 0.;  ///< Clock.
-    double dt = -1.;   ///< time step.
+    double time{0.};  ///< Clock.
+    double dt{-1.};   ///< time step.
 
-    bool active = true;
+    bool active{true};
 
     Path path;
   };
 
-  std::vector<AvalancheNode> m_activeNodes = {};
+  std::vector<AvalancheNode> m_activeNodes;
 
   // Assign electron to the closest grid point.
   bool SnapToGrid(const double x, const double y, const double z,

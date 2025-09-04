@@ -185,6 +185,14 @@ AvalancheGridSpaceCharge::AvalancheGridSpaceCharge(Sensor *sensor) {
   SetSensor(sensor);
 }
 
+int AvalancheGridSpaceCharge::GetGasGapNumber(int layerIndex) {
+  auto it =
+      std::find(m_vIndexGasGaps.begin(), m_vIndexGasGaps.end(), layerIndex);
+  return (it != m_vIndexGasGaps.end())
+             ? std::distance(m_vIndexGasGaps.begin(), it)
+             : -1;
+}
+
 void AvalancheGridSpaceCharge::Reset() {
   m_time = 0.;
   m_time0 = 0.;
