@@ -1,14 +1,11 @@
-#include "ComponentGPU.h"
-#include "GPUFunctions.h"
-#undef __GPUCOMPILE__
 #include <iostream>
 
+#include "ComponentGPU.h"
+#include "GPUFunctions.h"
 #include "Garfield/ComponentAnsys123.hh"
 #include "Garfield/ComponentComsol.hh"
 #include "Garfield/ComponentElmer.hh"
 #include "Garfield/Medium.hh"
-
-#define __GPUCOMPILE__
 
 namespace Garfield {
 

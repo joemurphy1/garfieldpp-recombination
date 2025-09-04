@@ -6,10 +6,11 @@
 #endif
 
 #include "GPUInterface.hh"
-#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/MagboltzInterface.hh"
 
 namespace Garfield {
+
+enum class Particle;
 
 class MediumGPU {
  public:
