@@ -37,7 +37,7 @@ class MediumGPU {
   bool m_driftable = false;
   bool m_microscopic = false;
   bool m_ionisable = false;
-#include "Garfield/MediumMagboltz.hh"
+#include "MediumMagboltzGPU.h"
 
   friend class MediumGas;
   friend class MediumMagboltz;

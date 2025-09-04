@@ -1,18 +1,12 @@
-#if defined(__GPUCOMPILE__) || !defined(G_MEDIUM_MAGBOLTZ_11)
+#ifndef G_MEDIUM_MAGBOLTZ_H
+#define G_MEDIUM_MAGBOLTZ_H
 
-#if !defined(__GPUCOMPILE__) && !defined(G_MEDIUM_MAGBOLTZ_11)
-#define G_MEDIUM_MAGBOLTZ_11
-#endif
-
-#ifndef __GPUCOMPILE__
 #include <array>
 #include <mutex>
+#include <string>
 
-#include "Garfield/MediumGas.hh"
-#endif
 #include "Garfield/MagboltzInterface.hh"
-
-#ifndef __GPUCOMPILE__
+#include "Garfield/MediumGas.hh"
 
 class TPad;
 
@@ -92,21 +86,7 @@ class MediumMagboltz : public MediumGas {
 
   void PrintGas() override;
 
-#endif
-
-#ifdef __GPUCOMPILE__
-  /// Get the overall null-collision rate [ns-1].
-  __device__ double GetElectronNullCollisionRate(const int band);
-#else
-double GetElectronNullCollisionRate(const int band) override;
-#endif
-
-#ifdef __GPUCOMPILE__
-  __device__ double GetElectronCollisionRate__MediumMagboltz(const double e,
-                                                             const int band);
-#endif
-
-#ifndef __GPUCOMPILE__
+  double GetElectronNullCollisionRate(const int band) override;
   /// Get the (real) collision rate [ns-1] at a given electron energy e [eV].
   double GetElectronCollisionRate(const double e, const int band) override;
   /// Get the collision rate [ns-1] for a specific level.
@@ -215,12 +195,10 @@ double GetElectronNullCollisionRate(const int band) override;
   double CreateGPUTransferObject(MediumGPU*& med_gpu) override;
 
  private:
-#endif
   static constexpr int nEnergyStepsLog = 1000;
   static constexpr int nEnergyStepsGamma = 5000;
   static constexpr int nCsTypes = 7;
 
-#ifndef __GPUCOMPILE__
   static constexpr int nCsTypesGamma = 4;
 
   static const int DxcTypeRad;
@@ -234,7 +212,6 @@ double GetElectronNullCollisionRate(const int band) override;
   bool m_useGasMotion = false;
   /// Automatic calculation of the energy limit by Magboltz or not.
   bool m_autoEnergyLimit = true;
-#endif
 
   /// Max. electron energy in the collision rate tables.
   double m_eMax;
@@ -250,7 +227,6 @@ double GetElectronNullCollisionRate(const int band) override;
   /// Number of different cross-section types in the current gas mixture
   unsigned int m_nTerms = 0;
 
-#ifndef __GPUCOMPILE__
   /// Mass
   std::array<double, m_nMaxGases> m_mgas;
   /// Recoil energy parameter
@@ -262,100 +238,48 @@ double GetElectronNullCollisionRate(const int band) override;
   /// (&Gamma;s, &Gamma;b, Ts, Ta, Tb).
   std::array<std::array<double, 5>, m_nMaxGases> m_parGreenSawada;
   std::array<bool, m_nMaxGases> m_hasGreenSawada;
-#endif
   /// Sample secondary electron energies using Opal-Beaty parameterisation
   bool m_useOpalBeaty = true;
   /// Sample secondary electron energies using Green-Sawada parameterisation
   bool m_useGreenSawada = false;
 
-#ifdef __GPUCOMPILE__
-  int m_csType[Garfield::Magboltz::nMaxLevels];
-  double m_energyLoss[Garfield::Magboltz::nMaxLevels];
+  /// Energy loss
+  std::array<double, Magboltz::nMaxLevels> m_energyLoss;
+  /// Cross-section type
+  std::array<int, Magboltz::nMaxLevels> m_csType;
 
-  double** m_scatPar{nullptr};
-  int* m_numscatParIdx{nullptr};
-  int m_numscatPar{0};
+  /// Fluorescence yield
+  std::array<double, Magboltz::nMaxLevels> m_yFluorescence;
+  /// Number of Auger electrons produced in a collision
+  std::array<unsigned int, Magboltz::nMaxLevels> m_nAuger1;
+  std::array<unsigned int, Magboltz::nMaxLevels> m_nAuger2;
+  /// Energy imparted to Auger electrons
+  std::array<double, Magboltz::nMaxLevels> m_eAuger1;
+  std::array<double, Magboltz::nMaxLevels> m_eAuger2;
+  std::array<unsigned int, Magboltz::nMaxLevels> m_nFluorescence;
+  std::array<double, Magboltz::nMaxLevels> m_eFluorescence;
 
-  double** m_scatCut{nullptr};
-  int* m_numscatCutIdx{nullptr};
-  int m_numscatCut{0};
+  // Parameters for calculation of scattering angles
+  std::vector<std::vector<double> > m_scatPar;
+  std::vector<std::vector<double> > m_scatCut;
+  std::vector<std::vector<double> > m_scatParLog;
+  std::vector<std::vector<double> > m_scatCutLog;
+  std::array<int, Magboltz::nMaxLevels> m_scatModel;
 
-  double** m_scatParLog{nullptr};
-  int* m_numscatParLogIdx{nullptr};
-  int m_numscatParLog{0};
+  /// Level description
+  std::vector<std::string> m_description;
 
-  double** m_scatCutLog{nullptr};
-  int* m_numscatCutLogIdx{nullptr};
-  int m_numscatCutLog{0};
-  int m_scatModel[Magboltz::nMaxLevels];
+  // Total collision frequency
+  std::vector<double> m_cfTot;
+  std::vector<double> m_cfTotLog;
+  // Collision frequencies
+  std::vector<std::vector<double> > m_cf;
+  std::vector<std::vector<double> > m_cfLog;
 
-  double* m_cfTot{nullptr};
-  int m_numcfTot{0};
-  double* m_cfTotLog{nullptr};
-  int m_numcfTotLog{0};
-
-  double** m_cf{nullptr};
-  int* m_numcfIdx{nullptr};
-  int m_numcf{0};
-
-  double** m_cfLog{nullptr};
-  int* m_numcfLogIdx{nullptr};
-  int m_numcfLog{0};
-#else
-/// Energy loss
-std::array<double, Magboltz::nMaxLevels> m_energyLoss;
-/// Cross-section type
-std::array<int, Magboltz::nMaxLevels> m_csType;
-
-/// Fluorescence yield
-std::array<double, Magboltz::nMaxLevels> m_yFluorescence;
-/// Number of Auger electrons produced in a collision
-std::array<unsigned int, Magboltz::nMaxLevels> m_nAuger1;
-std::array<unsigned int, Magboltz::nMaxLevels> m_nAuger2;
-/// Energy imparted to Auger electrons
-std::array<double, Magboltz::nMaxLevels> m_eAuger1;
-std::array<double, Magboltz::nMaxLevels> m_eAuger2;
-std::array<unsigned int, Magboltz::nMaxLevels> m_nFluorescence;
-std::array<double, Magboltz::nMaxLevels> m_eFluorescence;
-
-// Parameters for calculation of scattering angles
-std::vector<std::vector<double> > m_scatPar;
-std::vector<std::vector<double> > m_scatCut;
-std::vector<std::vector<double> > m_scatParLog;
-std::vector<std::vector<double> > m_scatCutLog;
-std::array<int, Magboltz::nMaxLevels> m_scatModel;
-
-/// Level description
-std::vector<std::string> m_description;
-
-// Total collision frequency
-std::vector<double> m_cfTot;
-std::vector<double> m_cfTotLog;
-// Collision frequencies
-std::vector<std::vector<double> > m_cf;
-std::vector<std::vector<double> > m_cfLog;
-
-#endif
   bool m_useAnisotropic = true;
   /// Null-collision frequency
   double m_cfNull = 0.;
-#ifdef __GPUCOMPILE__
-  double m_wOpalBeaty[Garfield::Magboltz::nMaxLevels];
-  double m_yFluorescence[Garfield::Magboltz::nMaxLevels];
 
-  unsigned int m_nAuger1[Garfield::Magboltz::nMaxLevels];
-  unsigned int m_nAuger2[Garfield::Magboltz::nMaxLevels];
-  /// Energy imparted to Auger electrons
-  double m_eAuger1[Garfield::Magboltz::nMaxLevels];
-  double m_eAuger2[Garfield::Magboltz::nMaxLevels];
-
-  unsigned int m_nFluorescence[Garfield::Magboltz::nMaxLevels];
-  double m_eFluorescence[Garfield::Magboltz::nMaxLevels];
-  double m_rgas[Garfield::Magboltz::MaxNumberGas];
-  double m_s2[Garfield::Magboltz::MaxNumberGas];
-#endif
-
-#ifndef __GPUCOMPILE__
   /// Collision counters
   /// 0: elastic
   /// 1: ionisation
@@ -471,6 +395,5 @@ std::vector<std::vector<double> > m_cfLog;
                                    std::vector<Secondary>& secondaries);
   bool ComputePhotonCollisionTable(const bool verbose);
 };
-}
-#endif
+}  // namespace Garfield
 #endif
