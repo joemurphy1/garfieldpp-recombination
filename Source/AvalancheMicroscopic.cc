@@ -8,6 +8,7 @@
 #include <string>
 
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
@@ -107,11 +108,10 @@ void RotationMatrix(double bx, double by, double bz, const double bmag,
   }
 }
 
-Garfield::AvalancheMicroscopic::Point MakePoint(
-    const double x, const double y, const double z, const double t,
-    const double energy, const double dx, const double dy, const double dz,
-    const int band) {
-  Garfield::AvalancheMicroscopic::Point p;
+Garfield::Point MakePoint(const double x, const double y, const double z,
+                          const double t, const double energy, const double dx,
+                          const double dy, const double dz, const int band) {
+  Garfield::Point p;
   p.x = x;
   p.y = y;
   p.z = z;
@@ -124,19 +124,17 @@ Garfield::AvalancheMicroscopic::Point MakePoint(
   return p;
 }
 
-Garfield::AvalancheMicroscopic::Point MakePoint(const double x, const double y,
-                                                const double z, const double t,
-                                                const double energy) {
+Garfield::Point MakePoint(const double x, const double y, const double z,
+                          const double t, const double energy) {
   // Randomise the direction.
   double dx = 0., dy = 0., dz = 1.;
   Garfield::RndmDirection(dx, dy, dz);
   return MakePoint(x, y, z, t, energy, dx, dy, dz, 0);
 }
 
-Garfield::AvalancheMicroscopic::Seed MakeSeed(
-    const Garfield::AvalancheMicroscopic::Point point,
-    const Garfield::Particle particle, const size_t w) {
-  Garfield::AvalancheMicroscopic::Seed seed;
+Garfield::Seed MakeSeed(const Garfield::Point point,
+                        const Garfield::Particle particle, const size_t w) {
+  Garfield::Seed seed;
   seed.pt = point;
   seed.type = particle;
   seed.w = w;

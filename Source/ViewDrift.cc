@@ -16,7 +16,7 @@
 #include <iterator>
 #include <limits>
 
-#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/ParticleTypes.hh"
 
 namespace Garfield {
 

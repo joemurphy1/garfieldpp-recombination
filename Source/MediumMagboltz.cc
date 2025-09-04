@@ -17,6 +17,7 @@
 #include <regex>
 #include <string>
 
+#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/OpticalData.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Utilities.hh"

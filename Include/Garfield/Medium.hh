@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "Garfield/FundamentalConstants.hh"
-#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/ParticleTypes.hh"
 
 class TPad;
 

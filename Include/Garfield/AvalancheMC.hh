@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/ParticleTypes.hh"
 
 namespace Garfield {
 

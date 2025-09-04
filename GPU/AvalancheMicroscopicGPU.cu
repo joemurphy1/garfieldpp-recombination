@@ -12,7 +12,9 @@
 #include <thrust/remove.h>
 #include <thrust/sort.h>
 
+#include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/RandomEngineRoot.hh"
 #include "Garfield/Sensor.hh"
 #include "RandomEngineGPU.h"
@@ -224,7 +226,7 @@ void AvalancheMicroscopicGPU::transferParticleStack(
 }
 
 void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(
-    std::vector<Garfield::AvalancheMicroscopic::Seed> &stackOld) {
+    std::vector<Garfield::Seed> &stackOld) {
   // assumes that stackOld contains only active particles and the current state
   // of the GPU memory can be overwritten
   std::cout << "Transferring stack data to GPU..." << std::endl;
@@ -366,8 +368,8 @@ void AvalancheMicroscopicGPU::SetCUDADevice(int dev) {
 }
 
 void AvalancheMicroscopicGPU::TransferStackFromGPUToCPU(
-    std::vector<AvalancheMicroscopic::Electron> &stack, bool end_points) {
-  AvalancheMicroscopic::Electron elec;
+    std::vector<Electron> &stack, bool end_points) {
+  Electron elec;
   // Going to add two paths as start and end points
   elec.path.resize(2);
   stack.clear();

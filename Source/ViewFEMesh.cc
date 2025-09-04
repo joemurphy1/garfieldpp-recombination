@@ -18,7 +18,7 @@
 
 #include "Garfield/Component.hh"
 #include "Garfield/ComponentCST.hh"
-#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/ParticleTypes.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/TGeoTet.hh"
 #include "Garfield/ViewDrift.hh"

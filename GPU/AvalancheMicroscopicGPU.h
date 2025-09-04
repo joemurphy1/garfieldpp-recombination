@@ -3,11 +3,14 @@
 
 #include <vector>
 
-#include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/AvalancheMicroscopicTypes.hh"
 
 namespace Garfield {
+
 class RandomEngineGPU;
 class SensorGPU;
+class AvalancheMicroscopic;
+
 class AvalancheMicroscopicGPU {
  public:
   /// Constructor
@@ -59,10 +62,8 @@ class AvalancheMicroscopicGPU {
   void FreeGPUParticleStack(ParticleStack &stack);
   void InitialiseCPUParticleStack(ParticleStack &stack, unsigned int num);
   void FreeCPUParticleStack(ParticleStack &stack);
-  void TransferStackFromCPUToGPU(
-      std::vector<AvalancheMicroscopic::Seed> &particles);
-  void TransferStackFromGPUToCPU(
-      std::vector<AvalancheMicroscopic::Electron> &stack, bool end_points);
+  void TransferStackFromCPUToGPU(std::vector<Seed> &particles);
+  void TransferStackFromGPUToCPU(std::vector<Electron> &stack, bool end_points);
   void TransferClassInternalInfo(AvalancheMicroscopic *src);
   void transferParticleStack(ParticleStack dest, unsigned int offset,
                              ParticleStack source, unsigned int num,

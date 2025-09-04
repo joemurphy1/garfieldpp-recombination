@@ -4,7 +4,7 @@
 #include <array>
 #include <vector>
 
-#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/ParticleTypes.hh"
 #include "Garfield/ViewBase.hh"
 
 namespace Garfield {
