@@ -2,11 +2,14 @@
 #define G_TRACK_SRIM_H
 
 #include <array>
+#include <cstddef>
+#include <string>
 #include <vector>
 
 #include "Garfield/Track.hh"
 
 namespace Garfield {
+class Sensor;
 class Medium;
 /// Generate tracks based on SRIM energy loss, range and straggling tables.
 ///  - http://www.srim.org
@@ -18,7 +21,7 @@ class TrackSrim : public Track {
   /// Constructor
   TrackSrim(Sensor* sensor);
   /// Destructor
-  virtual ~TrackSrim() {}
+  virtual ~TrackSrim() = default;
 
   /// Load data from a SRIM file.
   bool ReadFile(const std::string& file);
@@ -103,31 +106,31 @@ class TrackSrim : public Track {
 
  protected:
   /// Include transverse straggling
-  bool m_useTransStraggle = true;
+  bool m_useTransStraggle{true};
   /// Include longitudinal straggling
-  bool m_useLongStraggle = false;
+  bool m_useLongStraggle{false};
 
   /// Has the charge been defined?
-  bool m_chargeset = false;
+  bool m_chargeset{false};
   /// Charge of the projectile
-  double m_qion = 1.;
+  double m_qion{1.};
   /// Mass [MeV] of the projectile
-  double m_mion = -1.;
+  double m_mion{-1.};
   /// Mass density [g/cm3] of the target
-  double m_rho = -1.;
+  double m_rho{-1.};
   /// Work function [eV] of the target
-  double m_work = -1.;
+  double m_work{-1.};
   /// Has the Fano factor been set?
-  bool m_fset = false;
+  bool m_fset{false};
   /// Fano factor [-] of the target
-  double m_fano = -1.;
+  double m_fano{-1.};
   /// Effective A of the target
-  double m_a = -1.;
+  double m_a{-1.};
   /// Effective Z of the target
-  double m_z = -1.;
+  double m_z{-1.};
 
   /// Maximum number of clusters allowed (infinite if 0)
-  int m_maxclusters = -1;
+  int m_maxclusters{-1};
   /// Energy in energy loss table [MeV]
   std::vector<double> m_ekin;
   /// EM energy loss [MeV cm2/g]
@@ -142,12 +145,12 @@ class TrackSrim : public Track {
   std::vector<double> m_longstraggle;
 
   /// Index of the next cluster to be returned
-  size_t m_currcluster = 0;
+  std::size_t m_currcluster{0};
   /// Fluctuation model (0 = none, 1 = Landau, 2 = Vavilov,
   ///                    3 = Gaussian, 4 = Combined)
-  unsigned int m_model = 4;
+  unsigned int m_model{4};
   /// Targeted cluster size
-  int m_nsize = -1;
+  int m_nsize{-1};
   std::vector<Cluster> m_clusters;
 
   double Xi(const double x, const double beta2, const double edens) const;
