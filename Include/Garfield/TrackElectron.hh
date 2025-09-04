@@ -14,14 +14,17 @@ class Medium;
 class TrackElectron : public Track {
  public:
   struct Cluster {
-    double x, y, z, t;
-    double esec;
+    double x{0.};
+    double y{0.};
+    double z{0.};
+    double t{0.};
+    double esec{0.};
   };
 
   /// Constructor
   TrackElectron();
   /// Destructor
-  virtual ~TrackElectron() {}
+  virtual ~TrackElectron() = default;
 
   void SetParticle(const std::string& particle) override;
 
@@ -37,27 +40,27 @@ class TrackElectron : public Track {
  private:
   struct Parameters {
     // Dipole moment
-    double m2;
+    double m2{0.};
     // Constant in ionisation cross-section
-    double cIon;
+    double cIon{0.};
     // Density correction term
-    double x0;
-    double x1;
-    double cDens;
-    double aDens;
-    double mDens;
+    double x0{0.};
+    double x1{0.};
+    double cDens{0.};
+    double aDens{0.};
+    double mDens{0.};
     // Opal-Beaty-Peterson splitting factor
-    double wSplit;
+    double wSplit{0.};
     // Ionisation threshold
-    double ethr;
+    double ethr{0.};
   };
 
   std::vector<Cluster> m_clusters;
 
   // Mean free path
-  double m_mfp = 0.;
+  double m_mfp{0.};
   // Stopping power
-  double m_dedx = 0.;
+  double m_dedx{0.};
 
   static bool Setup(Medium* gas, std::vector<Parameters>& par,
                     std::vector<double>& frac);
