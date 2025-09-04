@@ -15,7 +15,7 @@ class Shaper {
   Shaper(const unsigned int n, const double tau, const double g,
          std::string shaperType);
   /// Destructor.
-  ~Shaper() {}
+  ~Shaper() = default;
 
   /// Evaluate the transfer function.
   double Shape(const double t) const;
@@ -40,23 +40,23 @@ class Shaper {
   }
 
  private:
-  std::string m_className = "Shaper";
+  std::string m_className{"Shaper"};
 
   // Shaper type.
   enum class ShaperType { Unipolar = 0, Bipolar };
-  ShaperType m_type = ShaperType::Unipolar;
+  ShaperType m_type{ShaperType::Unipolar};
   // Order of the shaper.
-  unsigned int m_n = 1;
+  unsigned int m_n{1};
   // Time constant.
-  double m_tau = 1.;
+  double m_tau{1.};
   // Peaking time.
-  double m_tp = 1.;
+  double m_tp{1.};
   // Normalization factor.
-  double m_prefactor = 1.;
+  double m_prefactor{1.};
   // Gain.
-  double m_g = 1.;
+  double m_g{1.};
   // Integral of the transfer function squared.
-  double m_transfer_func_sq = -1.;
+  double m_transfer_func_sq{-1.};
 };
 }  // namespace Garfield
 
