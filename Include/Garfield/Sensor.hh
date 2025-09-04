@@ -2,6 +2,7 @@
 #define G_SENSOR_H
 
 #include <array>
+#include <cstddef>
 #include <functional>
 #include <mutex>
 #include <string>
@@ -31,7 +32,7 @@ class Sensor {
   /// Add a component.
   void AddComponent(Component* comp);
   /// Get the number of components attached to the sensor.
-  size_t GetNumberOfComponents() const { return m_components.size(); }
+  std::size_t GetNumberOfComponents() const { return m_components.size(); }
   /// Retrieve the pointer to a given component.
   Component* GetComponent(const unsigned int i);
   /// Activate/deactivate a given component.
@@ -44,7 +45,7 @@ class Sensor {
   /// Add an electrode.
   void AddElectrode(Component* comp, const std::string& label);
   /// Get the number of electrodes attached to the sensor.
-  size_t GetNumberOfElectrodes() const { return m_electrodes.size(); }
+  std::size_t GetNumberOfElectrodes() const { return m_electrodes.size(); }
   /// Remove all electrodes.
   void ClearElectrodes();
   /// Remove all components, electrodes and reset the sensor.
@@ -221,7 +222,7 @@ class Sensor {
                                  int& n);
   /// Get the number of threshold crossings
   /// (after having called ComputeThresholdCrossings).
-  size_t GetNumberOfThresholdCrossings() const {
+  std::size_t GetNumberOfThresholdCrossings() const {
     return m_thresholdCrossings.size();
   }
   /** Retrieve the time and type of a given threshold crossing (after having
@@ -306,7 +307,7 @@ class Sensor {
 #endif
 
  private:
-  std::string m_className = "Sensor";
+  std::string m_className{"Sensor"};
   /// Mutex.
   std::mutex m_mutex;
 
@@ -329,22 +330,22 @@ class Sensor {
   std::vector<Electrode> m_electrodes;
 
   // Time window for signals
-  double m_tStart = 0.;
-  double m_tStep = 10.;
-  unsigned int m_nTimeBins = 200;
-  unsigned int m_nEvents = 0;
+  double m_tStart{0.};
+  double m_tStep{10.};
+  unsigned int m_nTimeBins{200};
+  unsigned int m_nEvents{0};
 
-  bool m_delayedSignal = false;
+  bool m_delayedSignal{false};
   std::vector<double> m_delayedSignalTimes;
-  unsigned int m_nAvgDelayedSignal = 0;
+  unsigned int m_nAvgDelayedSignal{0};
 
   // Transfer function
   std::function<double(double)> m_fTransfer;
-  Shaper* m_shaper = nullptr;
+  Shaper* m_shaper{nullptr};
   std::vector<std::pair<double, double> > m_fTransferTab;
-  bool m_cacheTransferFunction = true;
+  bool m_cacheTransferFunction{true};
   // Integral of the transfer function squared.
-  double m_fTransferSq = -1.;
+  double m_fTransferSq{-1.};
   // FFT of the transfer function.
   std::vector<double> m_fTransferFFT;
 
@@ -352,15 +353,19 @@ class Sensor {
   double (*m_fNoise)(double t) = nullptr;
 
   std::vector<std::pair<double, bool> > m_thresholdCrossings;
-  double m_thresholdLevel = 0.;
+  double m_thresholdLevel{0.};
 
   // User bounding box
-  double m_xMinUser = 0., m_yMinUser = 0., m_zMinUser = 0.;
-  double m_xMaxUser = 0., m_yMaxUser = 0., m_zMaxUser = 0.;
-  bool m_hasUserArea = false;
+  double m_xMinUser{0.};
+  double m_yMinUser{0.};
+  double m_zMinUser{0.};
+  double m_xMaxUser{0.};
+  double m_yMaxUser{0.};
+  double m_zMaxUser{0.};
+  bool m_hasUserArea{false};
 
   // Switch on/off debugging messages
-  bool m_debug = false;
+  bool m_debug{false};
 
   // Return the current sensor size
   bool GetBoundingBox(double& xmin, double& ymin, double& zmin, double& xmax,
@@ -370,18 +375,7 @@ class Sensor {
                   const std::vector<double>& ts, const std::vector<double>& is,
                   const int navg, const bool delayed = false);
   void FillBin(Electrode& electrode, const unsigned int bin,
-               const double signal, const bool electron, const bool delayed) {
-    std::lock_guard<std::mutex> guard(m_mutex);
-    electrode.signal[bin] += signal;
-    if (delayed) electrode.delayedSignal[bin] += signal;
-    if (electron) {
-      electrode.electronSignal[bin] += signal;
-      if (delayed) electrode.delayedElectronSignal[bin] += signal;
-    } else {
-      electrode.ionSignal[bin] += signal;
-      if (delayed) electrode.delayedIonSignal[bin] += signal;
-    }
-  }
+               const double signal, const bool electron, const bool delayed);
 
   void IntegrateSignal(Electrode& electrode);
   void ConvoluteSignal(Electrode& electrode, const std::vector<double>& tab);
