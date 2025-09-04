@@ -1,6 +1,5 @@
 #include "Garfield/AvalancheGrid.hh"
 
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 

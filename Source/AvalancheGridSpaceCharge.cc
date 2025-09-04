@@ -1,5 +1,7 @@
 #include "Garfield/AvalancheGridSpaceCharge.hh"
 
+#include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <numeric>
