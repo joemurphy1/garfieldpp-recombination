@@ -136,6 +136,16 @@ namespace Garfield {
 
 ViewIsochrons::ViewIsochrons() : ViewBase("ViewIsochrons") {}
 
+void ViewIsochrons::DriftElectrons(const bool positive) {
+  m_particle = Particle::Electron;
+  m_positive = positive;
+}
+
+void ViewIsochrons::DriftIons(const bool negative) {
+  m_particle = Particle::Ion;
+  m_positive = !negative;
+}
+
 void ViewIsochrons::SetSensor(Sensor* s) {
   if (!s) {
     std::cerr << m_className << "::SetSensor: Null pointer.\n";

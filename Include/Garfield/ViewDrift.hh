@@ -8,11 +8,11 @@
 #include <mutex>
 #include <vector>
 
-#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/ViewBase.hh"
 
 namespace Garfield {
 
+enum class Particle;
 /// Visualize drift lines and tracks.
 
 class ViewDrift : public ViewBase {
@@ -70,7 +70,7 @@ class ViewDrift : public ViewBase {
                     bool& electron) const;
 
   // Functions used by the transport classes.
-  std::size_t NewDriftLine(const Particle particle, const std::size_t np,
+  std::size_t NewDriftLine(const Particle& particle, const std::size_t np,
                            const float x0, const float y0, const float z0);
   void NewChargedParticleTrack(const std::size_t np, std::size_t& id,
                                const float x0, const float y0, const float z0);
@@ -105,22 +105,22 @@ class ViewDrift : public ViewBase {
   std::vector<std::array<float, 3> > m_ion;
   std::vector<std::array<float, 3> > m_att;
 
-  double m_markerSizeCluster = 0.01;
-  double m_markerSizeCollision = 0.5;
+  double m_markerSizeCluster{0.01};
+  double m_markerSizeCollision{0.5};
 
-  short m_colTrack = kGreen + 3;
-  short m_colPhoton = kBlue + 1;
-  short m_colElectron = kOrange - 3;
-  short m_colHole = kRed + 1;
-  short m_colIon = kRed + 1;
-  short m_colNegativeIon = kGray + 2;
-  short m_colExcitation = kGreen + 3;
-  short m_colIonisation = kOrange - 3;
-  short m_colAttachment = kCyan + 3;
+  short m_colTrack{kGreen + 3};
+  short m_colPhoton{kBlue + 1};
+  short m_colElectron{kOrange - 3};
+  short m_colHole{kRed + 1};
+  short m_colIon{kRed + 1};
+  short m_colNegativeIon{kGray + 2};
+  short m_colExcitation{kGreen + 3};
+  short m_colIonisation{kOrange - 3};
+  short m_colAttachment{kCyan + 3};
 
-  bool m_drawClusters = false;
+  bool m_drawClusters{false};
 
-  bool m_eTop = false;
+  bool m_eTop{false};
 
   bool SetPlotLimits2d();
   bool SetPlotLimits3d();

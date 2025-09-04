@@ -3,6 +3,9 @@
 
 #include <Rtypes.h>
 
+#include <string>
+#include <vector>
+
 #include "Garfield/ViewBase.hh"
 
 namespace Garfield {
@@ -153,27 +156,31 @@ class ViewField : public ViewBase {
     Unknown
   };
 
-  bool m_useAutoRange = true;
-  bool m_samplePotential = true;
-  bool m_useStatus = false;
-  double m_vBkg = 0.;
+  bool m_useAutoRange{true};
+  bool m_samplePotential{true};
+  bool m_useStatus{false};
+  double m_vBkg{0.};
 
   // Sensor
-  Sensor* m_sensor = nullptr;
-  Component* m_component = nullptr;
+  Sensor* m_sensor{nullptr};
+  Component* m_component{nullptr};
 
   // Function range
-  double m_vmin = 0., m_vmax = 100.;
-  double m_emin = 0., m_emax = 10000.;
-  double m_wmin = 0., m_wmax = 100.;
-  double m_bmin = 0., m_bmax = 10.;
+  double m_vmin{0.};
+  double m_vmax{100.};
+  double m_emin{0.};
+  double m_emax{10000.};
+  double m_wmin{0.};
+  double m_wmax{100.};
+  double m_bmin{0.};
+  double m_bmax{10.};
 
   // Number of contours
-  unsigned int m_nContours = 20;
+  unsigned int m_nContours{20};
   // Number of points used to draw the functions
-  unsigned int m_nSamples1d = 1000;
-  unsigned int m_nSamples2dX = 200;
-  unsigned int m_nSamples2dY = 200;
+  unsigned int m_nSamples1d{1000};
+  unsigned int m_nSamples2dX{200};
+  unsigned int m_nSamples2dY{200};
 
   bool SetPlotLimits();
   void Draw2d(const std::string& option, const bool contour, const bool wfield,

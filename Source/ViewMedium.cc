@@ -14,6 +14,7 @@
 #include <limits>
 #include <string>
 
+#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 
@@ -42,7 +43,10 @@ bool NonZero(const std::vector<double>& v) {
 namespace Garfield {
 
 ViewMedium::ViewMedium(Medium* medium)
-    : ViewBase("ViewMedium"), m_medium(medium) {}
+    : ViewBase("ViewMedium"), m_medium(medium) {
+  m_aMax = Pi;
+  m_angle = HalfPi;
+}
 
 void ViewMedium::SetMedium(Medium* m) {
   if (!m) {

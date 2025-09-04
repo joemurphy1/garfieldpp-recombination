@@ -1,12 +1,11 @@
 #ifndef G_VIEW_BASE
 #define G_VIEW_BASE
 
+#include <TCanvas.h>
+
 #include <array>
 #include <memory>
 #include <string>
-
-// #include <TPad.h>
-#include <TCanvas.h>
 
 class TPad;
 class TVirtualPad;
@@ -82,21 +81,26 @@ class ViewBase {
   static std::string FindUnusedCanvasName(const std::string& s);
 
  protected:
-  std::string m_className = "ViewBase";
+  std::string m_className{"ViewBase"};
 
   // Options
-  bool m_debug = false;
+  bool m_debug{false};
 
   // Plot axis limits.
-  bool m_userPlotLimits = false;
-  double m_xMinPlot = -1., m_xMaxPlot = 1.;
-  double m_yMinPlot = -1., m_yMaxPlot = 1.;
+  bool m_userPlotLimits{false};
+  double m_xMinPlot{-1.};
+  double m_xMaxPlot{1.};
+  double m_yMinPlot{-1.};
+  double m_yMaxPlot{1.};
 
   // Bounding box.
-  bool m_userBox = false;
-  double m_xMinBox = -1., m_xMaxBox = 1.;
-  double m_yMinBox = -1., m_yMaxBox = 1.;
-  double m_zMinBox = -1., m_zMaxBox = 1.;
+  bool m_userBox{false};
+  double m_xMinBox{-1.};
+  double m_xMaxBox{1.};
+  double m_yMinBox{-1.};
+  double m_yMaxBox{1.};
+  double m_zMinBox{-1.};
+  double m_zMaxBox{1.};
 
   // Viewing plane (FPROJ).
   // Default projection: x-y at z = 0.
@@ -153,7 +157,7 @@ class ViewBase {
 
  private:
   // Current pad.
-  TPad* m_pad = nullptr;
+  TPad* m_pad{nullptr};
   std::unique_ptr<TCanvas> m_canvas;
 };
 }  // namespace Garfield

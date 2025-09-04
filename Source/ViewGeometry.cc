@@ -5,6 +5,7 @@
 #include <TGeoBoolNode.h>
 #include <TGeoCompositeShape.h>
 #include <TGeoCone.h>
+#include <TGeoManager.h>
 #include <TGeoXtru.h>
 #include <TPolyLine.h>
 #include <TPolyLine3D.h>

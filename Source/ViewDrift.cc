@@ -16,6 +16,8 @@
 #include <iterator>
 #include <limits>
 
+#include "Garfield/GarfieldConstants.hh"
+
 namespace Garfield {
 
 ViewDrift::ViewDrift() : ViewBase("ViewDrift") {
@@ -65,7 +67,7 @@ void ViewDrift::GetDriftLine(const size_t i,
   }
 }
 
-size_t ViewDrift::NewDriftLine(const Particle particle, const size_t np,
+size_t ViewDrift::NewDriftLine(const Particle& particle, const size_t np,
                                const float x0, const float y0, const float z0) {
   std::lock_guard<std::mutex> guard(m_mutex);
   // Create a new drift line and add it to the list.

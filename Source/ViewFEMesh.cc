@@ -1,8 +1,10 @@
 #include "Garfield/ViewFEMesh.hh"
 
 #include <TGaxis.h>
+#include <TGeoManager.h>
 #include <TGeoSphere.h>
 #include <TGeoTessellated.h>
+#include <TGeoVolume.h>
 #include <TGraph.h>
 #include <TH1F.h>
 #include <TPolyLine.h>

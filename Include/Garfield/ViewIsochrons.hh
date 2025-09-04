@@ -2,6 +2,7 @@
 #define G_VIEW_ISOCHRONS
 
 #include <array>
+#include <vector>
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/ViewBase.hh"
@@ -42,15 +43,9 @@ class ViewIsochrons : public ViewBase {
 
   /// Request electron drift lines with negative (default) or
   /// positive charge.
-  void DriftElectrons(const bool positive = false) {
-    m_particle = Particle::Electron;
-    m_positive = positive;
-  }
+  void DriftElectrons(const bool positive = false);
   /// Request ion drift lines with positive (default) or negative charge.
-  void DriftIons(const bool negative = false) {
-    m_particle = Particle::Ion;
-    m_positive = !negative;
-  }
+  void DriftIons(const bool negative = false);
   /// Sort (or not) the points on a contour line (default: sorting is done).
   void EnableSorting(const bool on = true) { m_sortContours = on; }
   /// Check (or not) that drift-lines do not cross isochrons
