@@ -4,7 +4,6 @@ add_library(GarfieldGPU STATIC AvalancheMicroscopicGPU.cu
                                RandomEngineGPU.cu
                                TetrahedralTreeGPU.cu
                                MediumGPU.cu
-                               MediumMagboltzGPU.cu
                                SensorGPU.cu
                                ComponentGPU.cu)
 set_target_properties(GarfieldGPU PROPERTIES
