@@ -1,6 +1,8 @@
+// clang-format off
 #include "GPUFunctions.h"
-#include "Garfield/TetrahedralTree.hh"
 #include "TetrahedralTreeGPU.h"
+#include "Garfield/TetrahedralTree.hh"
+// clang-format on
 
 namespace Garfield {
 
