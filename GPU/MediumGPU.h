@@ -10,10 +10,6 @@ enum class Particle;
 
 class MediumGPU {
  public:
-  /// Constructor
-  MediumGPU() = default;
-  /// Destructor
-  ~MediumGPU() {};
   /// Return the id number of the class instance.
   __device__ int GetId() const { return m_id; }
   /// Is charge carrier transport enabled in this medium?
@@ -31,9 +27,9 @@ class MediumGPU {
   int m_id;
 
   // Transport flags
-  bool m_driftable = false;
-  bool m_microscopic = false;
-  bool m_ionisable = false;
+  bool m_driftable{false};
+  bool m_microscopic{false};
+  bool m_ionisable{false};
 #include "MediumMagboltzGPU.h"
 
   friend class MediumGas;
@@ -43,8 +39,6 @@ class MediumGPU {
   enum class MediumType { Medium = 0, MediumGas, MediumMagboltz };
 
   MediumType m_MediumType{MediumType::Medium};
-
- private:
 };
 
 }  // namespace Garfield

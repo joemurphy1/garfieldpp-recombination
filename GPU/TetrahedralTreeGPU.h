@@ -1,6 +1,8 @@
 #ifndef TETRAHEDRAL_TREE_GPU_H
 #define TETRAHEDRAL_TREE_GPU_H
 
+#include <cstddef>
+
 #include "GPUInterface.hh"
 #include "Garfield/Vector.hh"
 
@@ -26,7 +28,8 @@ class TetrahedralTreeGPU {
   // The tree has up to eight children and can additionally store
   // a list of mesh nodes and mesh elements.
   // Pointers to child octants.
-  TetrahedralTreeGPU* children[8];
+  TetrahedralTreeGPU* children[8]{nullptr, nullptr, nullptr, nullptr,
+                                  nullptr, nullptr, nullptr, nullptr};
 
   // Children follow a predictable pattern to make accesses simple.
   // Here, - means less than 'origin' in that dimension, + means greater than.
@@ -38,7 +41,7 @@ class TetrahedralTreeGPU {
   int* elements{nullptr};
   int numelements{0};
 
-  static const size_t BlockCapacity = 10;
+  static const std::size_t BlockCapacity{10};
   // Check if this tree node is a leaf or intermediate node.
   __device__ bool IsLeafNode() const;
 

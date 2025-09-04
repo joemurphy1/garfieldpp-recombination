@@ -5,26 +5,26 @@
 __device__ double GetElectronNullCollisionRate(const int band);
 __device__ double GetElectronCollisionRate__MediumMagboltz(const double e,
                                                            const int band);
-static constexpr int nEnergyStepsLog = 1000;
-static constexpr int nEnergyStepsGamma = 5000;
-static constexpr int nCsTypes = 7;
+static constexpr int nEnergyStepsLog{1000};
+static constexpr int nEnergyStepsGamma{5000};
+static constexpr int nCsTypes{7};
 /// Max. electron energy in the collision rate tables.
-double m_eMax;
+double m_eMax{0.};
 /// Energy spacing in the linear part of the collision rate tables.
-double m_eStep;
+double m_eStep{0.};
 /// Inverse energy spacing.
-double m_eStepInv;
-double m_eHigh, m_eHighLog;
-double m_lnStep;
+double m_eStepInv{0.};
+double m_eHigh, m_eHighLog{0.};
+double m_lnStep{0.};
 
 /// Flag enabling/disabling output of cross-section table to file
-bool m_useCsOutput = false;
+bool m_useCsOutput{false};
 /// Number of different cross-section types in the current gas mixture
-unsigned int m_nTerms = 0;
+unsigned int m_nTerms{0};
 /// Sample secondary electron energies using Opal-Beaty parameterisation
-bool m_useOpalBeaty = true;
+bool m_useOpalBeaty{true};
 /// Sample secondary electron energies using Green-Sawada parameterisation
-bool m_useGreenSawada = false;
+bool m_useGreenSawada{false};
 int m_csType[Garfield::Magboltz::nMaxLevels];
 double m_energyLoss[Garfield::Magboltz::nMaxLevels];
 
@@ -58,9 +58,9 @@ double** m_cfLog{nullptr};
 int* m_numcfLogIdx{nullptr};
 int m_numcfLog{0};
 
-bool m_useAnisotropic = true;
+bool m_useAnisotropic{true};
 /// Null-collision frequency
-double m_cfNull = 0.;
+double m_cfNull{0.};
 
 double m_wOpalBeaty[Garfield::Magboltz::nMaxLevels];
 double m_yFluorescence[Garfield::Magboltz::nMaxLevels];
