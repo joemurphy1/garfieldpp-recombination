@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -133,6 +134,10 @@ MediumGas::MediumGas()
 
   m_driftable = true;
   m_ionisable = true;
+}
+
+double MediumGas::ScaleDiffusion(const double d) const {
+  return d * sqrt(m_pressureTable / m_pressure);
 }
 
 bool MediumGas::SetComposition(const std::string& gas1, const double f1,

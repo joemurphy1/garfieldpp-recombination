@@ -2,6 +2,7 @@
 #define G_MEDIUM_DIAMOND_H
 
 #include <mutex>
+#include <string>
 
 #include "Garfield/Medium.hh"
 
@@ -14,7 +15,7 @@ class MediumDiamond : public Medium {
   /// Constructor
   MediumDiamond();
   /// Destructor
-  virtual ~MediumDiamond() {}
+  virtual ~MediumDiamond() = default;
 
   bool IsSemiconductor() const override { return true; }
 
@@ -54,16 +55,16 @@ class MediumDiamond : public Medium {
   std::mutex m_mutex;
 
   // Low-field mobility
-  double m_eMobility = 4.551e-6;
-  double m_hMobility = 2.750e-6;
+  double m_eMobility{4.551e-6};
+  double m_hMobility{2.750e-6};
   // Hall factor
-  double m_eHallFactor = 1.;
-  double m_hHallFactor = 1.;
+  double m_eHallFactor{1.};
+  double m_hHallFactor{1.};
   // Saturation velocity
-  double m_eSatVel = 2.6e-2;
-  double m_hSatVel = 1.6e-2;
+  double m_eSatVel{2.6e-2};
+  double m_hSatVel{1.6e-2};
 
-  bool m_userMobility = false;
+  bool m_userMobility{false};
 
   void UpdateTransportParameters();
 };

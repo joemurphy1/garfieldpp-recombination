@@ -1,6 +1,8 @@
 #ifndef G_MEDIUM_GAN_H
 #define G_MEDIUM_GAN_H
 
+#include <string>
+
 #include "Garfield/Medium.hh"
 
 namespace Garfield {
@@ -52,25 +54,25 @@ class MediumGaN : public Medium {
 
  private:
   // Low-field mobility.
-  double m_eMobility = 1.405e-6;
-  double m_hMobility = 0.170e-6;
+  double m_eMobility{1.405e-6};
+  double m_hMobility{0.170e-6};
 
   // Electron concentration.
-  double m_eDensity = 7.78e16;
+  double m_eDensity{7.78e16};
 
   // Hall factors.
-  double m_eHallFactor = 1.;
-  double m_hHallFactor = 1.;
+  double m_eHallFactor{1.};
+  double m_hHallFactor{1.};
 
   // Impact ionization parameters.
   // J. Baliga, Semicond. Sci. Technol. 28 (2013) 074011,
   // https://doi-org.ezproxy.cern.ch/10.1088/0268-1242/28/7/074011
-  double m_eImpactA = 1.5e5;
-  double m_hImpactA = 6.4e5;
-  double m_eImpactB = 1.41e7;
-  double m_hImpactB = 1.46e7;
+  double m_eImpactA{1.5e5};
+  double m_hImpactA{6.4e5};
+  double m_eImpactB{1.41e7};
+  double m_hImpactB{1.46e7};
 
-  bool m_userMobility = false;
+  bool m_userMobility{false};
   void UpdateTransportParameters();
 };
 }  // namespace Garfield
