@@ -1,11 +1,11 @@
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TLatex.h>
-#include <TROOT.h>
 #include <TSystem.h>
 
-#include <cstdlib>
+#include <array>
 #include <iostream>
+#include <vector>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/AvalancheMicroscopic.hh"

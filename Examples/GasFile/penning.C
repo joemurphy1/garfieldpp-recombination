@@ -1,6 +1,5 @@
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TROOT.h>
 
 #include "Garfield/MediumMagboltz.hh"
 

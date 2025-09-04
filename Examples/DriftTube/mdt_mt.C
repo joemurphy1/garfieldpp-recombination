@@ -1,10 +1,10 @@
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TROOT.h>
 
-#include <cstdlib>
+#include <cmath>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/DriftLineRKF.hh"

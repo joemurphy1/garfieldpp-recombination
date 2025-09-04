@@ -2,7 +2,6 @@
 #include <TAxis.h>
 #include <TCanvas.h>
 #include <TGraph.h>
-#include <TROOT.h>
 
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/TrackDegrade.hh"

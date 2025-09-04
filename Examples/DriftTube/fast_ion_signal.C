@@ -1,5 +1,4 @@
 #include <TApplication.h>
-#include <TROOT.h>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentAnalyticField.hh"

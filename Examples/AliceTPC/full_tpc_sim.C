@@ -1,7 +1,4 @@
 #include <TApplication.h>
-#include <TROOT.h>
-
-#include <cstdlib>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/DriftLineRKF.hh"

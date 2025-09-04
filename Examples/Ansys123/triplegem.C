@@ -1,12 +1,10 @@
 #include <TApplication.h>
-#include <TCanvas.h>
 #include <TFile.h>
 #include <TH1F.h>
-#include <TROOT.h>
-#include <time.h>
 
-#include <cmath>
+#include <ctime>
 #include <iostream>
+#include <string>
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentAnsys123.hh"

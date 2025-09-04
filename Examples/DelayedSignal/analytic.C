@@ -1,9 +1,7 @@
 #include <TApplication.h>
-#include <TCanvas.h>
-#include <TH1F.h>
-#include <TROOT.h>
 
-#include <cmath>
+#include <cstddef>
+#include <vector>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentUser.hh"

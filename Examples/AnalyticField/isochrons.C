@@ -1,6 +1,5 @@
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TROOT.h>
 #include <TStyle.h>
 
 #include <array>

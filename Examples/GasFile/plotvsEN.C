@@ -1,6 +1,8 @@
+#include <cstddef>
 #include <iostream>
+#include <vector>
 
-#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/MediumGas.hh"
 #include "Garfield/ViewMedium.hh"
 #include "TApplication.h"
 #include "TCanvas.h"
@@ -9,7 +11,6 @@
 #include "TH1.h"
 #include "TLegend.h"
 #include "TStyle.h"
-
 using namespace Garfield;
 
 int main(int argc, char* argv[]) {

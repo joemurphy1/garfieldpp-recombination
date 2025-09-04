@@ -1,11 +1,7 @@
 #include <TApplication.h>
-#include <TAxis.h>
 #include <TCanvas.h>
-#include <TGraph.h>
 #include <TH1F.h>
-#include <TROOT.h>
 
-#include <cmath>
 #include <iostream>
 
 #include "Garfield/ComponentConstant.hh"

@@ -2,10 +2,8 @@
 #include <TCanvas.h>
 #include <TGraph.h>
 #include <TH1F.h>
-#include <TROOT.h>
 #include <TSystem.h>
 
-#include <cmath>
 #include <fstream>
 #include <iostream>
 

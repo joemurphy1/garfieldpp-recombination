@@ -1,8 +1,5 @@
 #include <TApplication.h>
-#include <TCanvas.h>
-#include <TH1F.h>
 
-#include <cstdlib>
 #include <iostream>
 
 #include "Garfield/AvalancheMC.hh"

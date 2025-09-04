@@ -11,13 +11,10 @@
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TH1F.h>
-#include <TROOT.h>
 
-#include <cmath>
 #include <iostream>
 
 #include "Garfield/ComponentConstant.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GeometrySimple.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"

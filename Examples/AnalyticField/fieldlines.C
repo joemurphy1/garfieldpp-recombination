@@ -1,7 +1,4 @@
 #include <TApplication.h>
-#include <TCanvas.h>
-#include <TROOT.h>
-#include <TStyle.h>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/MediumMagboltz.hh"

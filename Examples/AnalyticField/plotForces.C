@@ -1,6 +1,6 @@
 #include <TApplication.h>
-#include <TCanvas.h>
 #include <TH2D.h>
+#include <TPad.h>
 
 #include <vector>
 
