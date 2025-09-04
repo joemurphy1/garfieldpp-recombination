@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/MediumSilicon.hh"
 #include "Garfield/Random.hh"
@@ -25,9 +26,12 @@ bool IsComment(const std::string& line) {
 
 namespace Garfield {
 
-TrackBichsel::TrackBichsel(Sensor* sensor) : Track("Bichsel") {
-  m_sensor = sensor;
+TrackBichsel::TrackBichsel() : Track("Bichsel"), m_speed(SpeedOfLight) {
   Initialise();
+}
+
+TrackBichsel::TrackBichsel(Sensor* sensor) : TrackBichsel() {
+  m_sensor = sensor;
 }
 
 bool TrackBichsel::Initialise() {
