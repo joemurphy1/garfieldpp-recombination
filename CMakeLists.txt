@@ -274,7 +274,6 @@ Include/Garfield/TrackDegrade.hh
 Include/Garfield/ViewField.hh
 Include/Garfield/ComponentAnsys121.hh
 Include/Garfield/ComponentTcad2d.hh
-Include/Garfield/HelperMacros.hh
 Include/Garfield/MediumSilicon.hh
 Include/Garfield/Solid.hh
 Include/Garfield/TrackElectron.hh
