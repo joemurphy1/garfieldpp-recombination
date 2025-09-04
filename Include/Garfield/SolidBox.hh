@@ -2,6 +2,7 @@
 #define G_SOLID_BOX_H
 
 #include <array>
+#include <vector>
 
 #include "Garfield/Solid.hh"
 
@@ -19,7 +20,7 @@ class SolidBox : public Solid {
            const double ly, const double lz, const double dx, const double dy,
            const double dz);
   /// Destructor
-  ~SolidBox() {}
+  ~SolidBox() = default;
 
   bool IsInside(const double x, const double y, const double z,
                 const bool tesselated) const override;
@@ -45,7 +46,9 @@ class SolidBox : public Solid {
 
  private:
   /// Half lengths.
-  double m_lX = 0., m_lY = 0., m_lZ = 0.;
+  double m_lX{0.};
+  double m_lY{0.};
+  double m_lZ{0.};
   /// Discretisation levels.
   std::array<double, 6> m_dis{{-1, -1, -1, -1, -1, -1}};
 };

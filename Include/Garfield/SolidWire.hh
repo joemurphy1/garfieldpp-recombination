@@ -1,6 +1,8 @@
 #ifndef G_SOLID_WIRE_H
 #define G_SOLID_WIRE_H
 
+#include <vector>
+
 #include "Garfield/Solid.hh"
 
 namespace Garfield {
@@ -16,7 +18,7 @@ class SolidWire : public Solid {
   SolidWire(const double cx, const double cy, const double cz, const double r,
             const double lz, const double dx, const double dy, const double dz);
   /// Destructor
-  ~SolidWire() {}
+  ~SolidWire() = default;
 
   bool IsInside(const double x, const double y, const double z,
                 const bool tesselated) const override;
@@ -40,12 +42,12 @@ class SolidWire : public Solid {
 
  private:
   /// Radius.
-  double m_r;
+  double m_r{0.};
   /// Half-length
-  double m_lZ;
+  double m_lZ{0.};
 
   /// Discretisation level.
-  double m_dis = -1.;
+  double m_dis{-1.};
 };
 }  // namespace Garfield
 

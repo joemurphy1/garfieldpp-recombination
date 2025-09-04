@@ -3,6 +3,7 @@
 
 #include <array>
 #include <mutex>
+#include <vector>
 
 #include "Garfield/Solid.hh"
 
@@ -22,7 +23,7 @@ class SolidHole : public Solid {
             const double rlow, const double lx, const double ly,
             const double lz, const double dx, const double dy, const double dz);
   /// Destructor
-  ~SolidHole() {}
+  ~SolidHole() = default;
 
   bool IsInside(const double x, const double y, const double z,
                 const bool tesselated) const override;
@@ -80,25 +81,25 @@ class SolidHole : public Solid {
   std::mutex m_mutex;
 
   /// Upper radius.
-  double m_rUp;
+  double m_rUp{0.};
   /// Lower radius.
-  double m_rLow;
+  double m_rLow{0.};
   /// Half-length in x.
-  double m_lX;
+  double m_lX{0.};
   /// Half-length in y.
-  double m_lY;
+  double m_lY{0.};
   /// Half-length in z.
-  double m_lZ;
+  double m_lZ{0.};
 
   /// Number of sectors.
-  unsigned int m_n = 2;
+  unsigned int m_n{2};
   /// Average chord over the sectors.
-  bool m_average = false;
+  bool m_average{false};
 
   /// Ratio between the approximating polygon's radius and the hole radius.
-  double m_fp = 1.;
+  double m_fp{1.};
   /// Ratio between inradius and exradius of the approximating polygon.
-  double m_fi = 1.;
+  double m_fi{1.};
 
   /// Discretisation levels.
   std::array<double, 7> m_dis{{-1., -1., -1., -1., -1., -1., -1.}};
