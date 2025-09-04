@@ -1,6 +1,5 @@
 #include "Garfield/MediumMagboltz.hh"
 
-#include <TCanvas.h>
 #include <TColor.h>
 #include <TGraph.h>
 #include <TH1F.h>
@@ -10,25 +9,17 @@
 #include <TPad.h>
 
 #include <algorithm>
-#include <array>
-#include <cassert>
 #include <cmath>
-#include <cstdio>
-#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <map>
 #include <numeric>
 #include <regex>
+#include <string>
 
-#include "Garfield/FundamentalConstants.hh"
-#include "Garfield/GarfieldConstants.hh"
-#include "Garfield/MagboltzInterface.hh"
 #include "Garfield/OpticalData.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Utilities.hh"
-#include "Garfield/ViewBase.hh"
 
 namespace {
 
