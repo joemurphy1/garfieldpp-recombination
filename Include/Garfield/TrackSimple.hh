@@ -7,13 +7,16 @@
 
 namespace Garfield {
 
+class Sensor;
 /// Generate tracks based on a cluster density given by the user.
-
 class TrackSimple : public Track {
  public:
   struct Cluster {
-    double x, y, z, t;
-    double energy;
+    double x{0.};
+    double y{0.};
+    double z{0.};
+    double t{0.};
+    double energy{0.};
   };
 
   /// Default constructor
@@ -21,7 +24,7 @@ class TrackSimple : public Track {
   /// Constructor
   TrackSimple(Sensor* sensor);
   /// Destructor
-  virtual ~TrackSimple() {}
+  virtual ~TrackSimple() = default;
 
   /// Constant distance between clusters.
   void SetEqualSpacing() { m_useEqualSpacing = true; }
@@ -42,11 +45,11 @@ class TrackSimple : public Track {
 
  protected:
   // Mean free path (mean spacing between adjacent clusters)
-  double m_mfp = 0.04;
+  double m_mfp{0.04};
   // Average energy per cluster
-  double m_eloss = 2530.;
+  double m_eloss{2530.};
 
-  bool m_useEqualSpacing = false;
+  bool m_useEqualSpacing{false};
 
   std::vector<Cluster> m_clusters;
 };
