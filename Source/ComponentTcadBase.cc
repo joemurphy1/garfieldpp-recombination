@@ -1,12 +1,12 @@
 #include "Garfield/ComponentTcadBase.hh"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <map>
-#include <sstream>
 #include <string>
 
 #include "Garfield/GarfieldConstants.hh"

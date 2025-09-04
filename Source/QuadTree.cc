@@ -1,5 +1,7 @@
 #include "Garfield/QuadTree.hh"
 
+#include <cstddef>
+
 namespace Garfield {
 
 QuadTree::QuadTree(const double x0, const double y0, const double hx,

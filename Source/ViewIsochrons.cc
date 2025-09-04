@@ -1,16 +1,16 @@
 #include "Garfield/ViewIsochrons.hh"
 
-#include <TAxis.h>
 #include <TGraph.h>
 #include <TH1F.h>
-#include <TROOT.h>
 #include <TStyle.h>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <iterator>
 #include <set>
+#include <vector>
 
 #include "Garfield/Component.hh"
 #include "Garfield/DriftLineRKF.hh"

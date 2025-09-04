@@ -2,13 +2,14 @@
 
 #include <algorithm>
 #include <array>
-#include <cstdio>
+#include <cmath>
 #include <iostream>
+#include <string>
 
 #include "Garfield/DegradeInterface.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/MediumGas.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"

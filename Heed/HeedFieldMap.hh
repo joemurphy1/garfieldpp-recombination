@@ -4,6 +4,7 @@
 
 #include "Garfield/Medium.hh"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
+#include "wcpplib/geometry/vec.h"
 #include "wcpplib/particle/fieldmap.h"
 
 namespace Garfield {

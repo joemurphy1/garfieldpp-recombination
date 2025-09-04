@@ -1,5 +1,6 @@
 #include "Garfield/TrackSimple.hh"
 
+#include <cmath>
 #include <iostream>
 
 #include "Garfield/GarfieldConstants.hh"

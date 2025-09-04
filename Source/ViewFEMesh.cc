@@ -2,7 +2,7 @@
 
 #include <TGaxis.h>
 #include <TGeoManager.h>
-#include <TGeoSphere.h>
+#include <TGeoShape.h>
 #include <TGeoTessellated.h>
 #include <TGeoVolume.h>
 #include <TGraph.h>
@@ -10,11 +10,11 @@
 #include <TPolyLine.h>
 #include <TPolyLine3D.h>
 
-#include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <iostream>
-#include <unordered_set>
+#include <vector>
 
 #include "Garfield/Component.hh"
 #include "Garfield/ComponentCST.hh"

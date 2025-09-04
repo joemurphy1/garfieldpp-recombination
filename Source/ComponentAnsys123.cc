@@ -1,11 +1,9 @@
 #ifndef __GPUCOMPILE__
 #include "Garfield/ComponentAnsys123.hh"
 
-#include <math.h>
-#include <stdlib.h>
-
 #include <fstream>
 #include <iostream>
+#include <string>
 
 namespace Garfield {
 

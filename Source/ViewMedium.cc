@@ -1,18 +1,17 @@
 #include "Garfield/ViewMedium.hh"
 
-#include <TAxis.h>
 #include <TGraph.h>
 #include <TH1F.h>
 #include <TLatex.h>
 #include <TStyle.h>
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <limits>
 #include <string>
+#include <vector>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"

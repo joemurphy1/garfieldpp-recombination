@@ -1,7 +1,7 @@
 #include "Garfield/TrackTrim.hh"
 
-#include <algorithm>
 #include <array>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <numeric>

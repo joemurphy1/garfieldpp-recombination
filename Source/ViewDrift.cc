@@ -1,20 +1,15 @@
 #include "Garfield/ViewDrift.hh"
 
-#include <TAxis.h>
 #include <TAxis3D.h>
 #include <TGraph.h>
 #include <TH1F.h>
 #include <TPolyLine3D.h>
 #include <TPolyMarker3D.h>
-#include <TView3D.h>
-#include <TVirtualViewer3D.h>
+#include <TView.h>
 
-#include <algorithm>
 #include <array>
-#include <cmath>
 #include <iostream>
-#include <iterator>
-#include <limits>
+#include <vector>
 
 #include "Garfield/ParticleTypes.hh"
 

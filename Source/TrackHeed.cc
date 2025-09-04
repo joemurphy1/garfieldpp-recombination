@@ -1,10 +1,12 @@
 #include "Garfield/TrackHeed.hh"
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <vector>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
@@ -12,17 +14,14 @@
 #include "HeedChamber.hh"
 #include "HeedFieldMap.hh"
 #include "heed++/code/ElElasticScat.h"
-#include "heed++/code/EnTransfCS.h"
 #include "heed++/code/EnergyMesh.h"
-#include "heed++/code/HeedCondElectron.h"
 #include "heed++/code/HeedDeltaElectron.h"
-#include "heed++/code/HeedDeltaElectronCS.h"
 #include "heed++/code/HeedMatterDef.h"
 #include "heed++/code/HeedParticle.h"
 #include "heed++/code/HeedPhoton.h"
 #include "heed++/code/PairProd.h"
+#include "heed++/code/PhotoAbsCS.h"
 #include "heed++/code/PhotoAbsCSLib.h"
-#include "wcpplib/clhep_units/WPhysicalConstants.h"
 #include "wcpplib/matter/GasDef.h"
 #include "wcpplib/matter/MatterDef.h"
 

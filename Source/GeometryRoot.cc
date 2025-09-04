@@ -1,10 +1,7 @@
 #include "Garfield/GeometryRoot.hh"
 
 #include <TGeoBBox.h>
-#include <TGeoNode.h>
-#include <TList.h>
 
-#include <cmath>
 #include <iostream>
 
 #include "Garfield/Medium.hh"

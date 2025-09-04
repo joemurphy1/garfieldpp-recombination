@@ -1,13 +1,12 @@
 #include "Garfield/ComponentCST.hh"
 
-#include <math.h>
-#include <stdlib.h>
-#include <sys/stat.h>
+#include <sys/stat.h>  //TODO CHANGE THIS
 
-#include <algorithm>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
 
 #include "Garfield/Medium.hh"

@@ -6,7 +6,6 @@
 #include <string>
 
 #include "Garfield/Component.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Numerics.hh"

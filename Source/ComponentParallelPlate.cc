@@ -3,10 +3,8 @@
 #include <TF1.h>
 #include <TF2.h>
 
-#include <algorithm>
-#include <cmath>
-#include <iostream>
-#include <limits>
+#include <string>
+#include <vector>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Geometry.hh"

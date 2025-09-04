@@ -1,11 +1,10 @@
 #include "Garfield/TrackBichsel.hh"
 
-#include <algorithm>
 #include <array>
-#include <cstdlib>
+#include <cmath>
 #include <fstream>
 #include <iostream>
-#include <sstream>
+#include <string>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"

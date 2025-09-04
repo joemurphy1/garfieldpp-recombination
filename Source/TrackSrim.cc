@@ -2,16 +2,16 @@
 
 #include <TCanvas.h>
 #include <TGraph.h>
-#include <TH1.h>
 #include <TLatex.h>
-#include <TLegend.h>
 
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <vector>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Numerics.hh"

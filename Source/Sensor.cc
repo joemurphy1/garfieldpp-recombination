@@ -4,13 +4,13 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 #include "Garfield/Component.hh"
-#include "Garfield/FundamentalConstants.hh"
+// #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"

@@ -6,19 +6,17 @@
 #include <TPad.h>
 #include <TROOT.h>
 
-#include <algorithm>
 #include <array>
-#include <cstdio>
 #include <iomanip>
 #include <iostream>
-#include <limits>
 #include <numeric>
+#include <string>
+#include <vector>
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Geometry.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Numerics.hh"
-#include "Garfield/ViewBase.hh"
 #include "Garfield/ViewCell.hh"
 
 namespace {

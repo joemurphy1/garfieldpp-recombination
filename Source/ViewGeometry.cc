@@ -10,10 +10,10 @@
 #include <TPolyLine.h>
 #include <TPolyLine3D.h>
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 #include "Garfield/GeometrySimple.hh"
 #include "Garfield/Medium.hh"

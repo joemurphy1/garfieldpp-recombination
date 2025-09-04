@@ -1,12 +1,9 @@
 #include "Garfield/ViewSignal.hh"
 
-#include <TAxis.h>
 #include <TGraph.h>
 #include <TH1D.h>
 #include <TLegend.h>
-#include <TPaveLabel.h>
 
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 

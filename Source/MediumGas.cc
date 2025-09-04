@@ -3,19 +3,14 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <cstdio>
-#include <cstdlib>
 #include <cstring>
-#include <ctime>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <limits>
 #include <numeric>
 #include <sstream>
-#include <utility>
+#include <string>
+#include <vector>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/OpticalData.hh"
 #include "Garfield/Utilities.hh"

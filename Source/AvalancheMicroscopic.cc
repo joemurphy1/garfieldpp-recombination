@@ -7,7 +7,6 @@
 #include <iostream>
 #include <string>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
@@ -15,9 +14,7 @@
 #include "Garfield/ViewDrift.hh"
 
 #if defined(USEGPU)
-#define __GPUCOMPILE__
 #include "AvalancheMicroscopicGPU.h"
-#undef __GPUCOMPILE__
 #endif
 
 #include <TH1.h>
