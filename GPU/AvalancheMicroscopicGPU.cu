@@ -1,10 +1,3 @@
-#include <chrono>
-#include <iostream>
-
-#include "AvalancheMicroscopicGPU.h"
-#include "GPUFunctions.h"
-#include "SensorGPU.h"
-#undef __GPUCOMPILE__
 #include <thrust/count.h>
 #include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
@@ -12,6 +5,13 @@
 #include <thrust/remove.h>
 #include <thrust/sort.h>
 
+#include <chrono>
+#include <cmath>
+#include <iostream>
+
+#include "AvalancheMicroscopicGPU.h"
+#include "GPUFunctions.h"
+#include "GPUInterface.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
@@ -19,6 +19,7 @@
 #include "Garfield/Sensor.hh"
 #include "RandomEngineGPU.h"
 #include "RandomGPU.h"
+#include "SensorGPU.h"
 
 using highres_clock_t = std::chrono::high_resolution_clock;
 using second_t = std::chrono::duration<double, std::ratio<1>>;
@@ -36,7 +37,7 @@ __global__ void setStatusArray(int *all_status_array, int num_active_particles,
 }
 
 __device__ double Mag(const double x, const double y, const double z) {
-  return sqrt(x * x + y * y + z * z);
+  return std::sqrt(x * x + y * y + z * z);
 }
 
 // ----------------------------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 // clang-format off
-#include "GPUFunctions.h"
 #include "TetrahedralTreeGPU.h"
+#include "GPUFunctions.h"
 #include "Garfield/TetrahedralTree.hh"
 // clang-format on
 

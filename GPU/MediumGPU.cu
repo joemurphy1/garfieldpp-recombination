@@ -1,13 +1,10 @@
-#include "GPUFunctions.h"
-#include "MediumGPU.h"
-#undef __GPUCOMPILE__
 #include <cstddef>
 
+#include "GPUFunctions.h"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/MediumMagboltz.hh"
+#include "MediumGPU.h"
 #include "RandomGPU.h"
-
-#define __GPUCOMPILE__
 
 namespace Garfield {
 
