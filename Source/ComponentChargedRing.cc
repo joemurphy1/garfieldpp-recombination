@@ -1,6 +1,7 @@
 #include "Garfield/ComponentChargedRing.hh"
 
 #include <array>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <numeric>

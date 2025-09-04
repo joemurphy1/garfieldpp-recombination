@@ -2,13 +2,17 @@
 #define G_COMPONENT_TCAD_2D_H
 
 #include <array>
+#include <cstddef>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "Garfield/ComponentTcadBase.hh"
-#include "QuadTree.hh"
+#include "Garfield/QuadTree.hh"
 
 namespace Garfield {
 
+class Medium;
 /// Interpolation in a two-dimensional field map created by Sentaurus Device.
 
 class ComponentTcad2d : public ComponentTcadBase<2> {
@@ -16,7 +20,7 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
   /// Constructor
   ComponentTcad2d();
   /// Destructor
-  ~ComponentTcad2d() {}
+  ~ComponentTcad2d() = default;
 
   /// Set the z-extent of the bounding box (default: unlimited).
   void SetRangeZ(const double zmin, const double zmax);
@@ -28,10 +32,11 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
    * \param dmax largest length in the element
    * \param type element type
    */
-  bool GetElement(const size_t i, double& vol, double& dmin, double& dmax,
+  bool GetElement(const std::size_t i, double& vol, double& dmin, double& dmax,
                   int& type) const;
   /// Get the coordinates of a mesh node.
-  bool GetNode(const size_t i, double& x, double& y, double& z) const override;
+  bool GetNode(const std::size_t i, double& x, double& y,
+               double& z) const override;
 
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,
@@ -55,7 +60,7 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
 
  private:
   // Bounding box
-  bool m_hasRangeZ = false;
+  bool m_hasRangeZ{false};
 
   // Tetrahedral tree.
   std::unique_ptr<QuadTree> m_tree;
@@ -66,8 +71,8 @@ class ComponentTcad2d : public ComponentTcadBase<2> {
     m_ready = false;
   }
 
-  size_t FindElement(const double x, const double y,
-                     std::array<double, nMaxVertices>& w) const;
+  std::size_t FindElement(const double x, const double y,
+                          std::array<double, nMaxVertices>& w) const;
   // Check whether a point is inside a given element and calculate the
   // shape functions if it is.
   bool InElement(const double x, const double y, const Element& element,

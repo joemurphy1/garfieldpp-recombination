@@ -8,6 +8,7 @@
 
 namespace Garfield {
 
+class Medium;
 /// Component with constant electric field.
 
 class ComponentConstant : public Component {
@@ -15,7 +16,7 @@ class ComponentConstant : public Component {
   /// Constructor
   ComponentConstant();
   /// Destructor
-  ~ComponentConstant() {}
+  ~ComponentConstant() = default;
 
   /// Set the components of the electric field [V / cm].
   void SetElectricField(const double ex, const double ey, const double ez);
@@ -61,32 +62,36 @@ class ComponentConstant : public Component {
   std::array<double, 3> m_efield = {{0., 0., 0.}};
 
   // Is the potential defined?
-  bool m_hasPotential = false;
+  bool m_hasPotential{false};
   // Point where potential was specified.
-  double m_x0 = 0., m_y0 = 0., m_z0 = 0.;
+  double m_x0{0.};
+  double m_y0{0.};
+  double m_z0{0.};
   // Potential at this point.
-  double m_v0 = 0.;
+  double m_v0{0.};
 
   // Is the weighting field defined?
-  bool m_hasWeightingField = false;
+  bool m_hasWeightingField{false};
   // Identifier of the weighting field.
-  std::string m_label = "";
+  std::string m_label;
   // Weighting field.
   std::array<double, 3> m_wfield = {{0., 0., 0.}};
   // Is the weighting potential defined?
   bool m_hasWeightingPotential = false;
   // Point where the weighting potential was specified.
-  double m_wx0 = 0., m_wy0 = 0., m_wz0 = 0.;
+  double m_wx0{0.};
+  double m_wy0{0.};
+  double m_wz0{0.};
   // Weighting potential at this point.
-  double m_w0 = 0.;
+  double m_w0{0.};
 
   // Active area.
   std::array<double, 3> m_xmin = {{0., 0., 0.}};
   std::array<double, 3> m_xmax = {{0., 0., 0.}};
   // Did we specify the active area explicitly?
-  bool m_hasArea = false;
+  bool m_hasArea{false};
   // Medium in the active area.
-  Medium* m_medium = nullptr;
+  Medium* m_medium{nullptr};
 
   void Reset() override;
   void UpdatePeriodicity() override;

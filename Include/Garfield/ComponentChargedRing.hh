@@ -2,15 +2,16 @@
 #define G_COMPONENT_CHARGED_RING_H
 
 #include <array>
-#include <cmath>
-#include <string>
+#include <cstddef>
+#include <vector>
 
 #include "Garfield/Component.hh"
 
 namespace Garfield {
 
-/// Component for calculating the field of a system of charged r,z rings.
+class Medium;
 
+/// Component for calculating the field of a system of charged r,z rings.
 class ComponentChargedRing : public Component {
  public:
   /// Constructor
@@ -56,7 +57,9 @@ class ComponentChargedRing : public Component {
   }
 
   struct Ring {
-    double z, r, charge;
+    double z{0.};
+    double r{0.};
+    double charge{0.};
     Ring(double z_, double r_, double charge_) {
       z = z_;
       r = r_;
@@ -85,9 +88,9 @@ class ComponentChargedRing : public Component {
   std::array<double, 3> m_xmin = {{0., 0., 0.}};
   std::array<double, 3> m_xmax = {{0., 0., 0.}};
   /// Did we specify the active area explicitly?
-  bool m_hasArea = false;
+  bool m_hasArea{false};
   /// Medium in the active area.
-  Medium* m_medium = nullptr;
+  Medium* m_medium{nullptr};
 
   void Reset() override;
   void UpdatePeriodicity() override;
@@ -107,18 +110,18 @@ class ComponentChargedRing : public Component {
   static const constexpr std::size_t elliptic_size{29981};
   static const std::array<std::array<double, 3>, elliptic_size> m_elliptic;
 
-  bool m_bDebug = false;
+  bool m_bDebug{false};
 
   /// centre of cylindrical symmetry (x,y)
   std::array<double, 2> m_centre = {0., 0.};
 
   std::vector<Ring> m_vRings;
 
-  double m_dSelfFieldTolerance = 0.00001;  // this is a decent value with
-                                           // minimal 'strangeness' in the field
-  double m_dSpacingTolerance = 2.1 * m_dSelfFieldTolerance;
+  double m_dSelfFieldTolerance{0.00001};  // this is a decent value with
+                                          // minimal 'strangeness' in the field
+  double m_dSpacingTolerance{2.1 * m_dSelfFieldTolerance};
 
-  bool m_bCentreSet = false;
+  bool m_bCentreSet{false};
 
   static void GetCoulombBallField(const Ring& ring, const double r,
                                   const double z, double& eFieldZ,

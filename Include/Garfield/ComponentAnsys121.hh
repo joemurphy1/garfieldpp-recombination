@@ -1,6 +1,9 @@
 #ifndef G_COMPONENT_ANSYS121_H
 #define G_COMPONENT_ANSYS121_H
 
+#include <string>
+#include <vector>
+
 #include "Garfield/ComponentFieldMap.hh"
 
 namespace Garfield {
@@ -12,7 +15,7 @@ class ComponentAnsys121 : public ComponentFieldMap {
   /// Constructor
   ComponentAnsys121();
   /// Destructor
-  ~ComponentAnsys121() {}
+  ~ComponentAnsys121() = default;
 
   /** Import a field map.
    * \param elist name of the file containing the list of elements

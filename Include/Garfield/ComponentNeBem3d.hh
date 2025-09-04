@@ -2,13 +2,17 @@
 #define G_COMPONENT_NEBEM_3D_H
 
 #include <array>
+#include <cstddef>
 #include <map>
+#include <string>
+#include <vector>
 
 #include "Garfield/Component.hh"
 #include "Garfield/Solid.hh"
 
 namespace Garfield {
 
+class Medium;
 /// Interface to neBEM.
 
 class ComponentNeBem3d : public Component {
@@ -16,7 +20,7 @@ class ComponentNeBem3d : public Component {
   /// Constructor
   ComponentNeBem3d();
   /// Destructor
-  ~ComponentNeBem3d() {}
+  ~ComponentNeBem3d() = default;
 
   Medium* GetMedium(const double x, const double y, const double z) override;
 
@@ -39,7 +43,7 @@ class ComponentNeBem3d : public Component {
   /// Retrieve the parameters of a plane at constant z.
   bool GetPlaneZ(const unsigned int i, double& z, double& v) const;
 
-  unsigned int GetNumberOfPrimitives() const { return m_primitives.size(); }
+  std::size_t GetNumberOfPrimitives() const { return m_primitives.size(); }
   bool GetPrimitive(const unsigned int i, double& a, double& b, double& c,
                     std::vector<double>& xv, std::vector<double>& yv,
                     std::vector<double>& zv, int& interface, double& v,
@@ -51,7 +55,7 @@ class ComponentNeBem3d : public Component {
                  double& potential, double& charge, int& bc);
   int GetVolume(const double x, const double y, const double z);
 
-  size_t GetNumberOfElements() const override { return m_elements.size(); }
+  std::size_t GetNumberOfElements() const override { return m_elements.size(); }
   bool GetElement(const unsigned int i, std::vector<double>& xv,
                   std::vector<double>& yv, std::vector<double>& zv,
                   int& interface, double& bc, double& lambda) const;
@@ -218,7 +222,9 @@ class ComponentNeBem3d : public Component {
  private:
   struct Primitive {
     /// Perpendicular vector
-    double a, b, c;
+    double a{0.};
+    double b{0.};
+    double c{0.};
     /// X-coordinates of vertices
     std::vector<double> xv;
     /// Y-coordinates of vertices
@@ -226,17 +232,18 @@ class ComponentNeBem3d : public Component {
     /// Z-coordinates of vertices
     std::vector<double> zv;
     /// Interface type.
-    int interface = 0;
+    int interface{0};
     /// Potential
-    double v = 0.;
+    double v{0.};
     /// Charge
-    double q = 0.;
+    double q{0.};
     /// Ratio of dielectric constants
-    double lambda = 0.;
+    double lambda{0.};
     /// Target element size.
-    double elementSize;
+    double elementSize{0.};
     /// Volumes.
-    int vol1, vol2;
+    int vol1{0};
+    int vol2{0};
   };
   /// List of primitives.
   std::vector<Primitive> m_primitives;
@@ -244,10 +251,10 @@ class ComponentNeBem3d : public Component {
   struct Element {
     /// Local origin.
     std::array<double, 3> origin;
-    double lx;
-    double lz;
+    double lx{0.};
+    double lz{0.};
     /// Area.
-    double dA;
+    double dA{0.};
     /// Direction cosines.
     std::array<std::array<double, 3>, 3> dcos;
     /// X-coordinates of vertices
@@ -257,17 +264,17 @@ class ComponentNeBem3d : public Component {
     /// Z-coordinates of vertices
     std::vector<double> zv;
     /// Interface type.
-    int interface = 0;
+    int interface{0};
     /// Ratio of dielectric permittivities.
-    double lambda = 0.;
+    double lambda{0.};
     /// Collocation point.
     std::array<double, 3> collocationPoint;
     /// Boundary condition.
-    double bc = 0.;
+    double bc{0.};
     /// Fixed charge density.
-    double assigned = 0.;
+    double assigned{0.};
     /// Solution (accumulated charge).
-    double solution = 0.;
+    double solution{0.};
   };
   /// List of elements.
   std::vector<Element> m_elements;
@@ -280,22 +287,22 @@ class ComponentNeBem3d : public Component {
   std::array<double, 6> m_vtplan{{0., 0., 0., 0., 0., 0.}};
 
   // Model specifications
-  unsigned int m_newModel = 1;
-  unsigned int m_newMesh = 1;
-  unsigned int m_newBC = 1;
-  unsigned int m_newPP = 1;
+  unsigned int m_newModel{1};
+  unsigned int m_newMesh{1};
+  unsigned int m_newBC{1};
+  unsigned int m_newPP{1};
 
   // Store and read options
-  unsigned int m_optStoreInflMatrix = 0;
-  unsigned int m_optReadInflMatrix = 0;
-  unsigned int m_optStoreInvMatrix = 1;
-  unsigned int m_optReadInvMatrix = 0;
-  unsigned int m_optStorePrimitives = 0;
-  unsigned int m_optReadPrimitives = 0;
-  unsigned int m_optStoreElements = 0;
-  unsigned int m_optReadElements = 0;
-  unsigned int m_optStoreFormatted = 1;
-  unsigned int m_optStoreUnformatted = 0;
+  unsigned int m_optStoreInflMatrix{0};
+  unsigned int m_optReadInflMatrix{0};
+  unsigned int m_optStoreInvMatrix{1};
+  unsigned int m_optReadInvMatrix{0};
+  unsigned int m_optStorePrimitives{0};
+  unsigned int m_optReadPrimitives{0};
+  unsigned int m_optStoreElements{0};
+  unsigned int m_optReadElements{0};
+  unsigned int m_optStoreFormatted{1};
+  unsigned int m_optStoreUnformatted{0};
 
   // Plot options
   // unsigned int m_optGnuplotPrimitives = 0;
@@ -304,66 +311,66 @@ class ComponentNeBem3d : public Component {
   // unsigned int m_optElementFiles = 0;
 
   // Compute options
-  unsigned int m_optSystemChargeZero = 1;
-  unsigned int m_optValidateSolution = 1;
-  unsigned int m_optForceValidation = 0;
-  unsigned int m_optRepeatLHMatrix = 0;
+  unsigned int m_optSystemChargeZero{1};
+  unsigned int m_optValidateSolution{1};
+  unsigned int m_optForceValidation{0};
+  unsigned int m_optRepeatLHMatrix{0};
 
   // Fast volume information (physical potential and fields)
-  unsigned int m_optFastVol = 0;
-  unsigned int m_optCreateFastPF = 0;
-  unsigned int m_optReadFastPF = 0;
-  unsigned int m_versionFV = 0;
-  unsigned int m_nbBlocksFV = 0;
+  unsigned int m_optFastVol{0};
+  unsigned int m_optCreateFastPF{0};
+  unsigned int m_optReadFastPF{0};
+  unsigned int m_versionFV{0};
+  unsigned int m_nbBlocksFV{0};
 
   // Weighting potential and field related Fast volume information
-  unsigned int m_idWtField = 0;
-  unsigned int m_optWtFldFastVol[11];
-  unsigned int m_optCreateWtFldFastPF[11];
-  unsigned int m_optReadWtFldFastPF[11];
-  unsigned int m_versionWtFldFV[11];
-  unsigned int m_nbBlocksWtFldFV[11];
+  unsigned int m_idWtField{0};
+  unsigned int m_optWtFldFastVol[11]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  unsigned int m_optCreateWtFldFastPF[11]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  unsigned int m_optReadWtFldFastPF[11]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  unsigned int m_versionWtFldFV[11]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  unsigned int m_nbBlocksWtFldFV[11]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   // Known charge options
-  unsigned int m_optKnownCharge = 0;
+  unsigned int m_optKnownCharge{0};
 
   // Charging up options
-  unsigned int m_optChargingUp = 0;
+  unsigned int m_optChargingUp{0};
 
   // Number of threads to be used by neBEM.
-  unsigned int m_nThreads = 1;
+  unsigned int m_nThreads{1};
 
   // Number of repetitions, after which only primitive properties are used.
   // a negative value implies elements are used always.
-  int m_primAfter = -1;
+  int m_primAfter{-1};
 
   // Number of repetitions, after which only primitive properties are used
   // for weighting field calculations.
   // A negative value implies only elements are used.
-  int m_wtFldPrimAfter = -1;
+  int m_wtFldPrimAfter{-1};
 
   // Option for removing primitives from a device geometry.
   // Zero implies none to be removed.
-  unsigned int m_optRmPrim = 0;
+  unsigned int m_optRmPrim{0};
 
-  static constexpr double MinDist = 1.e-6;
+  static constexpr double MinDist{1.e-6};
   /// Target size of elements [cm].
-  double m_targetElementSize = 50.0e-4;
+  double m_targetElementSize{50.0e-4};
   /// Smallest number of elements produced along the axis of a primitive.
-  unsigned int m_minNbElementsOnLength = 1;
+  unsigned int m_minNbElementsOnLength{1};
   /// Largest number of elements produced along the axis of a primitive.
-  unsigned int m_maxNbElementsOnLength = 100;
+  unsigned int m_maxNbElementsOnLength{100};
   /// Periodic lengths.
   std::array<double, 3> m_periodicLength{{0., 0., 0.}};
   /// Number of periodic copies along x.
-  unsigned int m_nCopiesX = 5;
+  unsigned int m_nCopiesX{5};
   /// Number of periodic copies along y.
-  unsigned int m_nCopiesY = 5;
+  unsigned int m_nCopiesY{5};
   /// Number of periodic copies along z.
-  unsigned int m_nCopiesZ = 5;
+  unsigned int m_nCopiesZ{5};
 
   enum class Inversion { LU = 0, SVD };
-  Inversion m_inversion = Inversion::LU;
+  Inversion m_inversion{Inversion::LU};
 
   /// Electrode labels and corresponding neBEM weighting field indices.
   std::map<std::string, int> m_wfields;

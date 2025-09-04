@@ -1,10 +1,14 @@
 #ifndef G_COMPONENT_ANSYS123_H
 #define G_COMPONENT_ANSYS123_H
 
+#include <string>
+#include <vector>
+
 #include "Garfield/ComponentFieldMap.hh"
 
 namespace Garfield {
 
+class ComponentGPU;
 /// Component for importing and interpolating three-dimensional ANSYS field
 /// maps.
 class ComponentAnsys123 : public ComponentFieldMap {

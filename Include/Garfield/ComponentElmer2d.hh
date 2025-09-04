@@ -2,6 +2,7 @@
 #define G_COMPONENT_ELMER_2D_H
 
 #include <string>
+#include <vector>
 
 #include "Garfield/ComponentFieldMap.hh"
 
@@ -18,7 +19,7 @@ class ComponentElmer2d : public ComponentFieldMap {
                    const std::string& nlist, const std::string& mplist,
                    const std::string& volt, const std::string& unit);
   /// Destructor
-  ~ComponentElmer2d() {}
+  ~ComponentElmer2d() = default;
 
   /** Import a field map from a set of files.
     * \param header name of the header file

@@ -1,12 +1,14 @@
 #ifndef G_COMPONENT_NEBEM_2D_H
 #define G_COMPONENT_NEBEM_2D_H
 
-#include <array>
+#include <cstddef>
+#include <vector>
 
 #include "Garfield/Component.hh"
 
 namespace Garfield {
 
+class Medium;
 /// Two-dimensional implementation of the nearly exact Boundary %Element Method.
 
 class ComponentNeBem2d : public Component {
@@ -14,7 +16,7 @@ class ComponentNeBem2d : public Component {
   /// Constructor
   ComponentNeBem2d();
   /// Destructor
-  ~ComponentNeBem2d() {}
+  ~ComponentNeBem2d() = default;
 
   /// Set the "background" medium.
   void SetMedium(Medium* medium) { m_medium = medium; }
@@ -64,23 +66,23 @@ class ComponentNeBem2d : public Component {
   void SetMaxNumberOfIterations(const unsigned int niter);
 
   /// Return the number of regions.
-  unsigned int GetNumberOfRegions() const { return m_regions.size(); }
+  std::size_t GetNumberOfRegions() const { return m_regions.size(); }
   /// Return the properties of a given region.
   bool GetRegion(const unsigned int i, std::vector<double>& xv,
                  std::vector<double>& yv, Medium*& medium, unsigned int& bctype,
                  double& v);
   /// Return the number of conducting straight-line segments.
-  unsigned int GetNumberOfSegments() const { return m_segments.size(); }
+  std::size_t GetNumberOfSegments() const { return m_segments.size(); }
   /// Return the coordinates and voltage of a given straight-line segment.
   bool GetSegment(const unsigned int i, double& x0, double& y0, double& x1,
                   double& x2, double& v) const;
   /// Return the number of wires.
-  unsigned int GetNumberOfWires() const { return m_wires.size(); }
+  std::size_t GetNumberOfWires() const { return m_wires.size(); }
   /// Return the coordinates, diameter, potential and charge of a given wire.
   bool GetWire(const unsigned int i, double& x, double& y, double& d, double& v,
                double& q) const;
   /// Return the number of boundary elements.
-  size_t GetNumberOfElements() const override { return m_elements.size(); }
+  std::size_t GetNumberOfElements() const override { return m_elements.size(); }
   /// Return the coordinates and charge of a given boundary element.
   bool GetElement(const unsigned int i, double& x0, double& y0, double& x1,
                   double& y1, double& q) const;
@@ -113,20 +115,20 @@ class ComponentNeBem2d : public Component {
   static const double InvTwoPiEpsilon0;
 
   /// Default number elements per segment.
-  unsigned int m_nDivisions = 5;
-  unsigned int m_nCollocationPoints = 1;
-  bool m_autoSize = false;
-  bool m_randomCollocation = false;
-  unsigned int m_nMaxIterations = 3;
+  unsigned int m_nDivisions{5};
+  unsigned int m_nCollocationPoints{1};
+  bool m_autoSize{false};
+  bool m_randomCollocation{false};
+  unsigned int m_nMaxIterations{3};
 
   /// Background medium.
-  Medium* m_medium = nullptr;
+  Medium* m_medium{nullptr};
   /// Flag whether a z-range has been defined by the user.
-  bool m_useRangeZ = false;
+  bool m_useRangeZ{false};
   /// Lower z limit.
-  double m_zmin = -1.;
+  double m_zmin{-1.};
   /// Upper z limit.
-  double m_zmax = 1.;
+  double m_zmax{1.};
   /// Boundary condition type.
   enum BC {
     Voltage = 1,  ///< Fixed potential.
@@ -137,10 +139,10 @@ class ComponentNeBem2d : public Component {
   struct Region {
     std::vector<double> xv;    ///< x-coordinates of the vertices.
     std::vector<double> yv;    ///< y-coordinates of the vertices.
-    Medium* medium;            ///< Medium associated to the region.
+    Medium* medium{nullptr};   ///< Medium associated to the region.
     std::pair<BC, double> bc;  ///< Applied boundary condition.
-    unsigned int depth;        ///< Level in the hierarchy.
-    int ndiv;                  ///< Number of elements per edge segment.
+    unsigned int depth{0};     ///< Level in the hierarchy.
+    int ndiv{0};               ///< Number of elements per edge segment.
   };
   /// Regions.
   std::vector<Region> m_regions;
@@ -148,41 +150,45 @@ class ComponentNeBem2d : public Component {
   struct Segment {
     std::array<double, 2> x0;  ///< Coordinates of the start point.
     std::array<double, 2> x1;  ///< Coordinates of the end point.
-    int region1;               ///< Inner region.
-    int region2;               ///< Outer region.
+    int region1{0};            ///< Inner region.
+    int region2{0};            ///< Outer region.
     std::pair<BC, double> bc;  ///< Applied boundary condition.
-    int ndiv;                  ///< Number of elements.
+    int ndiv{0};               ///< Number of elements.
   };
   /// User-specified conducting straight-line segments.
   std::vector<Segment> m_segments;
 
   struct Wire {
-    double x, y;  ///< Coordinates of the centre.
-    double r;     ///< Radius.
-    double v;     ///< Potential.
-    double q;     ///< Charge.
-    int ntrap;    ///< Trap radius (in units of the wire radius).
+    double x{0.};
+    double y{0.};  ///< Coordinates of the centre.
+    double r{0.};  ///< Radius.
+    double v{0.};  ///< Potential.
+    double q{0.};  ///< Charge.
+    int ntrap{0};  ///< Trap radius (in units of the wire radius).
   };
   /// Wires.
   std::vector<Wire> m_wires;
 
   struct Element {
-    double x, y;  ///< Coordinates of the element centre (collocation point).
-    double a;     ///< Half-length.
-    double cphi;  ///< Rotation.
-    double sphi;  ///< Rotation.
-    double q;     ///< Charge density (solution).
+    double x{0.};
+    double y{0.};  ///< Coordinates of the element centre (collocation point).
+    double a{0.};  ///< Half-length.
+    double cphi{0.};           ///< Rotation.
+    double sphi{0.};           ///< Rotation.
+    double q{0.};              ///< Charge density (solution).
     std::pair<BC, double> bc;  ///< Boundary condition.
-    double lambda;             ///< Ratio of dielectric permittivities.
+    double lambda{0.};         ///< Ratio of dielectric permittivities.
   };
   /// Straight-line boundary elements.
   std::vector<Element> m_elements;
 
   struct SpaceCharge {
-    double x, y;  ///< Coordinates of the centre.
-    double a, b;  ///< Half-lengths.
-    double q;     ///< Charge density.
-    double v0;    ///< Offset.
+    double x{0.};
+    double y{0.};  ///< Coordinates of the centre.
+    double a{0.};
+    double b{0.};   ///< Half-lengths.
+    double q{0.};   ///< Charge density.
+    double v0{0.};  ///< Offset.
   };
   std::vector<SpaceCharge> m_spaceCharge;
 

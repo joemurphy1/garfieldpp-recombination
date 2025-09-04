@@ -5,6 +5,7 @@
 #include <TF2.h>
 
 #include <string>
+#include <vector>
 
 #include "Garfield/Component.hh"
 #include "Garfield/ComponentGrid.hh"
@@ -12,7 +13,7 @@
 namespace Garfield {
 
 class Medium;
-class ComponentGrid;
+// class ComponentGrid;
 
 /// Component for parallel-plate geometries.
 
@@ -21,7 +22,7 @@ class ComponentParallelPlate : public Component {
   /// Constructor
   ComponentParallelPlate();
   /// Destructor
-  ~ComponentParallelPlate() {}
+  ~ComponentParallelPlate() = default;
 
   /** Define the geometry.
    * \param N amount of layers in the geometry, this includes the gas gaps
@@ -94,20 +95,7 @@ class ComponentParallelPlate : public Component {
 
   /// This will load a previously calculated grid of time-dependent weighting
   /// potential values.
-  void LoadWeightingPotentialGrid(const std::string &label) {
-    for (auto &electrode : m_readout_p) {
-      if (electrode.label != label) continue;
-      if (electrode.grid.LoadWeightingField(label + "map", "xyz", true)) {
-        std::cout << m_className << "::LoadWeightingPotentialGrid: "
-                  << "Weighting potential set for " << label << ".\n";
-        electrode.m_usegrid = true;
-        return;
-      }
-    }
-    std::cerr << m_className
-              << "::LoadWeightingPotentialGrid: Could not find file for "
-              << label << ".\n";
-  }
+  void LoadWeightingPotentialGrid(const std::string &label);
 
   Medium *GetMedium(const double x, const double y, const double z) override;
 
@@ -157,16 +145,16 @@ class ComponentParallelPlate : public Component {
   }
 
  private:
-  double m_precision = 1.e-12;
-  static constexpr double m_Vw = 1.;
+  double m_precision{1.e-12};
+  static constexpr double m_Vw{1.};
   /// Voltage difference between the parallel plates.
-  double m_V = 0.;
+  double m_V{0.};
 
-  bool m_getPotentialInPlate = true;
+  bool m_getPotentialInPlate{true};
 
-  int m_N = 0;  ///< Number of layers
+  int m_N{0};  ///< Number of layers
 
-  double m_upperBoundIntegration = 30;
+  double m_upperBoundIntegration{30.};
 
   std::vector<double> m_eps;  ///< relative permittivity of each layer
   std::vector<double> m_epsHolder;
@@ -193,21 +181,22 @@ class ComponentParallelPlate : public Component {
   std::vector<std::vector<double>> m_gMatrix;  ///< g-matrixl.
   std::vector<std::vector<double>> m_wMatrix;  ///< w-matrixl.
 
-  int m_currentLayer = 0;  ///< Index of the current layer.
-  double m_currentPosition = -1;
+  int m_currentLayer{0};  ///< Index of the current layer.
+  double m_currentPosition{-1.};
 
-  Medium *m_medium = nullptr;
+  Medium *m_medium{nullptr};
 
   /// Structure that captures the information of the electrodes under study
   struct Electrode {
-    std::string label;                     ///< Label.
-    int ind = structureelectrode::NotSet;  ///< Readout group.
-    double xpos, ypos;                     ///< Coordinates in x/y.
-    double lx, ly;                         ///< Dimensions in the x-y plane.
-    bool formAnode = true;
-
-    bool m_usegrid = false;  ///< Enabling grid based calculations.
-    ComponentGrid grid;      ///< grid object.
+    std::string label;                    ///< Label.
+    int ind{structureelectrode::NotSet};  ///< Readout group.
+    double xpos{0.};
+    double ypos{0.};  ///< Coordinates in x/y.
+    double lx{0.};
+    double ly{0.};  ///< Dimensions in the x-y plane.
+    bool formAnode{true};
+    bool m_usegrid{false};  ///< Enabling grid based calculations.
+    ComponentGrid grid;     ///< grid object.
   };
 
   /// Possible readout groups

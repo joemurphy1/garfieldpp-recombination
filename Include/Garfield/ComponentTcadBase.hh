@@ -1,17 +1,20 @@
 #ifndef G_COMPONENT_TCAD_BASE_H
 #define G_COMPONENT_TCAD_BASE_H
 
-#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <map>
+#include <string>
+#include <vector>
 
 #include "Garfield/Component.hh"
 
 namespace Garfield {
 
+class Medium;
 /// Interpolation in a field map created by Sentaurus Device.
 
-template <size_t N>
+template <std::size_t N>
 class ComponentTcadBase : public Component {
  public:
   /// Default constructor
@@ -23,7 +26,7 @@ class ComponentTcadBase : public Component {
     m_elements.reserve(10000);
   }
   /// Destructor
-  virtual ~ComponentTcadBase() {}
+  virtual ~ComponentTcadBase() = default;
 
   /** Import mesh and field map from files.
    * \param gridfilename name of the .grd file containing the mesh
@@ -70,32 +73,32 @@ class ComponentTcadBase : public Component {
   /// List all currently defined regions.
   void PrintRegions() const;
   /// Get the number of regions in the device.
-  size_t GetNumberOfRegions() const { return m_regions.size(); }
+  std::size_t GetNumberOfRegions() const { return m_regions.size(); }
   /// Get the name and "active volume" flag of a region.
-  void GetRegion(const size_t ireg, std::string& name, bool& active) const;
+  void GetRegion(const std::size_t ireg, std::string& name, bool& active) const;
   /// Make a region active ("driftable").
-  void SetDriftRegion(const size_t ireg);
+  void SetDriftRegion(const std::size_t ireg);
   /// Make a region inactive.
-  void UnsetDriftRegion(const size_t ireg);
+  void UnsetDriftRegion(const std::size_t ireg);
   /// Set the medium to be associated to a given region.
-  void SetMedium(const size_t ireg, Medium* m);
+  void SetMedium(const std::size_t ireg, Medium* m);
   /// Set the medium to be associated to all regions with a given material.
   void SetMedium(const std::string& material, Medium* m);
 
-  size_t GetNumberOfElements() const override { return m_elements.size(); }
-  bool GetElementNodes(const size_t i,
-                       std::vector<size_t>& nodes) const override;
-  bool GetElementRegion(const size_t i, size_t& region,
+  std::size_t GetNumberOfElements() const override { return m_elements.size(); }
+  bool GetElementNodes(const std::size_t i,
+                       std::vector<std::size_t>& nodes) const override;
+  bool GetElementRegion(const std::size_t i, std::size_t& region,
                         bool& active) const override;
-  size_t GetNumberOfNodes() const override { return m_vertices.size(); }
+  std::size_t GetNumberOfNodes() const override { return m_vertices.size(); }
 
   /// Switch use of the imported velocity map on/off.
   void EnableVelocityMap(const bool on);
 
   /// Get the number of donor states found in the map.
-  size_t GetNumberOfDonors() { return m_donors.size(); }
+  std::size_t GetNumberOfDonors() { return m_donors.size(); }
   /// Get the number of acceptor states found in the map.
-  size_t GetNumberOfAcceptors() { return m_acceptors.size(); }
+  std::size_t GetNumberOfAcceptors() { return m_acceptors.size(); }
 
   /** Set the properties of a donor-type defect state.
    * \param donorNumber index of the donor
@@ -103,10 +106,10 @@ class ComponentTcadBase : public Component {
    * \param hxsec cross-section [cm2] for holes
    * \param concentration defect density [cm-3]
    */
-  bool SetDonor(const size_t donorNumber, const double exsec,
+  bool SetDonor(const std::size_t donorNumber, const double exsec,
                 const double hxsec, const double concentration);
   /// Set the properties of an acceptor-type defect state.
-  bool SetAcceptor(const size_t acceptorNumber, const double exsec,
+  bool SetAcceptor(const std::size_t acceptorNumber, const double exsec,
                    const double hxsec, const double concentration);
 
   /// Use the imported impact ionisation map or not.
@@ -181,7 +184,7 @@ class ComponentTcadBase : public Component {
 
  protected:
   // Max. number of vertices per element
-  static constexpr size_t nMaxVertices = 4;
+  static constexpr std::size_t nMaxVertices{4};
 
   // Regions
   struct Region {
@@ -190,19 +193,19 @@ class ComponentTcadBase : public Component {
     // Material of the region (from Tcad)
     std::string material;
     // Flag indicating if the region is active (i. e. a drift medium)
-    bool drift;
+    bool drift{false};
     // Medium object associated to the region
-    Medium* medium;
+    Medium* medium{nullptr};
   };
   std::vector<Region> m_regions;
 
   // Vertex coordinates [cm].
-  std::vector<std::array<double, N> > m_vertices;
+  std::vector<std::array<double, N>> m_vertices;
 
   // Elements
   struct Element {
     // Indices of vertices
-    unsigned int vertex[nMaxVertices];
+    unsigned int vertex[nMaxVertices]{0, 0, 0, 0};
     // Type of element
     // 0: Point
     // 1: Segment (line)
@@ -217,9 +220,9 @@ class ComponentTcadBase : public Component {
     // 10: Polyhedron
     // In 2D, types 1 - 3 are supported.
     // In 3D, only types 2 and 5 are supported.
-    unsigned int type;
+    unsigned int type{0};
     // Associated region
-    unsigned int region;
+    unsigned int region{0};
     // Bounding box
     std::array<float, N> bbMin;
     std::array<float, N> bbMax;
@@ -229,25 +232,24 @@ class ComponentTcadBase : public Component {
   // Potential [V] at each vertex.
   std::vector<double> m_epot;
   // Electric field [V / cm].
-  std::vector<std::array<double, N> > m_efield;
+  std::vector<std::array<double, N>> m_efield;
 
   // Weighting field and potential at each vertex.
-  std::map<std::string, std::vector<std::array<double, N> > > m_wfield;
-  std::map<std::string, std::vector<double> > m_wpot;
+  std::map<std::string, std::vector<std::array<double, N>>> m_wfield;
+  std::map<std::string, std::vector<double>> m_wpot;
   // Weighting field labels and offsets.
-  std::map<std::string, std::vector<double> > m_wshift;
+  std::map<std::string, std::vector<double>> m_wshift;
 
   // Delayed weighting field and potential.
-  std::map<std::string, std::vector<std::vector<std::array<double, N> > > >
-      m_dwf;
-  std::map<std::string, std::vector<std::vector<double> > > m_dwp;
+  std::map<std::string, std::vector<std::vector<std::array<double, N>>>> m_dwf;
+  std::map<std::string, std::vector<std::vector<double>>> m_dwp;
   // Times corresponding to the delayed weighting fields/potentials.
-  std::map<std::string, std::vector<double> > m_dwtf;
-  std::map<std::string, std::vector<double> > m_dwtp;
+  std::map<std::string, std::vector<double>> m_dwtf;
+  std::map<std::string, std::vector<double>> m_dwtp;
 
   // Velocities [cm / ns]
-  std::vector<std::array<double, N> > m_eVelocity;
-  std::vector<std::array<double, N> > m_hVelocity;
+  std::vector<std::array<double, N>> m_eVelocity;
+  std::vector<std::array<double, N>> m_hVelocity;
   // Mobilities [cm2 / (V ns)]
   std::vector<double> m_eMobility;
   std::vector<double> m_hMobility;
@@ -258,39 +260,39 @@ class ComponentTcadBase : public Component {
   std::vector<double> m_eLifetime;
   std::vector<double> m_hLifetime;
   // Trap occupations [dimensionless]
-  std::vector<std::vector<float> > m_donorOcc;
-  std::vector<std::vector<float> > m_acceptorOcc;
+  std::vector<std::vector<float>> m_donorOcc;
+  std::vector<std::vector<float>> m_acceptorOcc;
   // Attachment coefficients [1 / cm]
   std::vector<double> m_eEta;
   std::vector<double> m_hEta;
 
   struct Defect {
     // Electron cross-section
-    double xsece;
+    double xsece{0.};
     // Hole cross-section
-    double xsech;
+    double xsech{0.};
     // Concentration
-    double conc;
+    double conc{0.};
   };
   std::vector<Defect> m_donors;
   std::vector<Defect> m_acceptors;
 
   // Use velocity map or not.
-  bool m_useVelocityMap = false;
+  bool m_useVelocityMap{false};
   // Use trap occupation probability map or not.
-  bool m_useTrapOccMap = false;
+  bool m_useTrapOccMap{false};
   // Use lifetime map or not.
-  bool m_useLifetimeMap = false;
+  bool m_useLifetimeMap{false};
   // Use impact ionisation map or not.
-  bool m_useAlphaMap = false;
+  bool m_useAlphaMap{false};
 
   // Bounding box.
   std::array<double, 3> m_bbMin = {{0., 0., 0.}};
   std::array<double, 3> m_bbMax = {{0., 0., 0.}};
 
   // Voltage range
-  double m_pMin = 0.;
-  double m_pMax = 0.;
+  double m_pMin{0.};
+  double m_pMax{0.};
 
   void UpdatePeriodicity() override;
 
@@ -302,15 +304,15 @@ class ComponentTcadBase : public Component {
   virtual bool Interpolate(const double x, const double y, const double z,
                            const std::vector<double>& field, double& f) = 0;
   virtual bool Interpolate(const double x, const double y, const double z,
-                           const std::vector<std::array<double, N> >& field,
+                           const std::vector<std::array<double, N>>& field,
                            double& fx, double& fy, double& fz) = 0;
   virtual void FillTree() = 0;
 
-  size_t FindRegion(const std::string& name) const;
+  std::size_t FindRegion(const std::string& name) const;
   void MapCoordinates(std::array<double, N>& x,
                       std::array<bool, N>& mirr) const;
   bool InBoundingBox(const std::array<double, N>& x) const {
-    for (size_t i = 0; i < N; ++i) {
+    for (std::size_t i = 0; i < N; ++i) {
       if (x[i] < m_bbMin[i] || x[i] > m_bbMax[i]) return false;
     }
     return true;
@@ -325,7 +327,7 @@ class ComponentTcadBase : public Component {
   bool LoadData(const std::string& datafilename);
   bool ReadDataset(std::ifstream& datafile, const std::string& dataset);
   bool LoadWeightingField(const std::string& datafilename,
-                          std::vector<std::array<double, N> >& wf,
+                          std::vector<std::array<double, N>>& wf,
                           std::vector<double>& wp);
 };
 }  // namespace Garfield

@@ -333,6 +333,10 @@ Medium* ComponentAnalyticField::GetMedium(const double xin, const double yin,
   return m_medium;
 }
 
+double ComponentAnalyticField::Ph2Lim(const double radius) const {
+  return -log(abs(m_zmult) * radius * (1. - 3. * m_p1 + 5. * m_p2));
+}
+
 bool ComponentAnalyticField::GetVoltageRange(double& pmin, double& pmax) {
   // Make sure the cell is prepared.
   if (!m_cellset && !Prepare()) {
