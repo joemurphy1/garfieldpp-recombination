@@ -71,7 +71,8 @@
 #pragma link C++ class Garfield::TrackSrim;
 #pragma link C++ class Garfield::TrackBichsel;
 
-#pragma link C++ function Garfield::RndmUniform();
+#pragma link C++ function Garfield::RndmUniform;
+#pragma link C++ function Garfield::SetDefaultStyle;
 
 #pragma link C++ enum Garfield::Particle;
 

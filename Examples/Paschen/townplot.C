@@ -4,13 +4,13 @@
 #include <TH1F.h>
 
 #include "Garfield/MediumMagboltz.hh"
-#include "Garfield/PlottingEngine.hh"
+#include "Garfield/ViewBase.hh"
 
 using namespace Garfield;
 
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
-  PlottingEngine::SetSerif();
+  SetDefaultStyle(true);
 
   // Plot range.
   double emin = 4000.;

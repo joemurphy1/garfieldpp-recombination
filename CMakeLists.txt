@@ -176,7 +176,6 @@ add_library(Garfield SHARED
             Source/NeBemInterface.cpp
             Source/Numerics.cc
             Source/OpticalData.cc
-            Source/PlottingEngine.cc
             Source/Polygon.cc
             Source/QuadTree.cc
             Source/Sensor.cc
@@ -301,7 +300,6 @@ Include/Garfield/ViewSignal.hh
 Include/Garfield/ComponentConstant.hh
 Include/Garfield/ComponentVoxel.hh
 Include/Garfield/Medium.hh
-Include/Garfield/PlottingEngine.hh
 Include/Garfield/SolidRidge.hh
 Include/Garfield/TrackSrim.hh
 Include/Garfield/ComponentElmer.hh
