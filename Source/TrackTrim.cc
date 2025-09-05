@@ -1,7 +1,7 @@
 #include "Garfield/TrackTrim.hh"
 
-#include <algorithm>
 #include <array>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <numeric>
@@ -90,6 +90,11 @@ namespace Garfield {
 TrackTrim::TrackTrim(Sensor* sensor) : Track("Trim") {
   m_sensor = sensor;
   m_q = 1.;
+}
+
+/// Set the projectile charge [-].
+void TrackTrim::SetCharge(const double q) {
+  if (fabs(q) > 0.) m_q = q;
 }
 
 void TrackTrim::SetParticle(const std::string& /*particle*/) {

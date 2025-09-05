@@ -2,7 +2,6 @@
 #include <TCanvas.h>
 #include <TStyle.h>
 
-#include <cmath>
 #include <iostream>
 
 #include "Garfield/AvalancheMicroscopic.hh"

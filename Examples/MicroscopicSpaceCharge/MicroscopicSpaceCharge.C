@@ -1,14 +1,14 @@
 #include <TApplication.h>
 #include <TCanvas.h>
 
-#include <fstream>
+#include <array>
 #include <iostream>
-#include <numeric>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/ComponentChargedRing.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewDrift.hh"

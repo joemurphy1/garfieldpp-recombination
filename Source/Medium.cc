@@ -1,11 +1,8 @@
 #include "Garfield/Medium.hh"
 
-#include <algorithm>
-#include <cmath>
 #include <iostream>
-#include <utility>
+#include <string>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"

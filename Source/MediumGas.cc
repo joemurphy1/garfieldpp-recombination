@@ -2,19 +2,15 @@
 
 #include <algorithm>
 #include <array>
-#include <cstdio>
-#include <cstdlib>
+#include <cmath>
 #include <cstring>
-#include <ctime>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <limits>
 #include <numeric>
 #include <sstream>
-#include <utility>
+#include <string>
+#include <vector>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/OpticalData.hh"
 #include "Garfield/Utilities.hh"
@@ -133,6 +129,10 @@ MediumGas::MediumGas()
 
   m_driftable = true;
   m_ionisable = true;
+}
+
+double MediumGas::ScaleDiffusion(const double d) const {
+  return d * sqrt(m_pressureTable / m_pressure);
 }
 
 bool MediumGas::SetComposition(const std::string& gas1, const double f1,

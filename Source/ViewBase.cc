@@ -2,12 +2,12 @@
 
 #include <TGraph.h>
 #include <TROOT.h>
+#include <TVirtualPad.h>
 
 #include <array>
 #include <cmath>
-#include <cstdio>
 #include <iostream>
-#include <limits>
+#include <string>
 
 #include "Garfield/Component.hh"
 #include "Garfield/GarfieldConstants.hh"

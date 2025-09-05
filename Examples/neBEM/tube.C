@@ -1,7 +1,5 @@
 #include <TApplication.h>
 
-#include <iostream>
-
 #include "Garfield/ComponentNeBem3d.hh"
 #include "Garfield/GeometrySimple.hh"
 #include "Garfield/MediumConductor.hh"

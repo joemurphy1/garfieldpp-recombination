@@ -1,10 +1,6 @@
 #ifndef G_COMPONENT_GPU_H
 #define G_COMPONENT_GPU_H
 
-#ifndef __GPUCOMPILE__
-#error GPU HEADER INCLUDED WITHOUT SETTING __GPUCOMPILE__
-#endif
-
 #include "MediumGPU.h"
 #include "TetrahedralTreeGPU.h"
 
@@ -12,8 +8,6 @@ namespace Garfield {
 
 class ComponentGPU {
  public:
-  ComponentGPU() = default;
-  ~ComponentGPU() = default;
   __device__ void ElectricField(const cuda_t xin, const cuda_t yin,
                                 const cuda_t zin, cuda_t& ex, cuda_t& ey,
                                 cuda_t& ez, MediumGPU*& m, int& status);
@@ -32,7 +26,7 @@ class ComponentGPU {
   int m_triangleSymmetricOct = 0;
   /// Octants where |x| >= |y|
   const int m_triangleOctRules[4] = {1, 4, 5, 8};
-  bool m_outsideCone = false;
+  bool m_outsideCone{false};
 
 // include parts from derived class due to big performance hit from using
 // virtual methods
@@ -61,9 +55,7 @@ class ComponentGPU {
 
  protected:
   /// Ready for use?
-  bool m_ready = false;
-
- private:
+  bool m_ready{false};
 };
 
 }  // namespace Garfield

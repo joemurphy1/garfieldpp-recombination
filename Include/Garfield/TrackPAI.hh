@@ -2,6 +2,7 @@
 #define G_TRACK_PAI
 
 #include <array>
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -14,14 +15,17 @@ class Medium;
 class TrackPAI : public Track {
  public:
   struct Cluster {
-    double x, y, z, t;
-    double energy;
+    double x{0.};
+    double y{0.};
+    double z{0.};
+    double t{0.};
+    double energy{0.};
   };
 
   // Constructor
   TrackPAI();
   // Destructor
-  virtual ~TrackPAI() {}
+  virtual ~TrackPAI() = default;
 
   bool NewTrack(const double x0, const double y0, const double z0,
                 const double t0, const double dx0, const double dy0,
@@ -34,17 +38,17 @@ class TrackPAI : public Track {
 
  private:
   // Particle speed.
-  double m_speed = 0.;
+  double m_speed{0.};
   // Max. energy transfer in a collision
-  double m_emax = 0.;
+  double m_emax{0.};
 
   // Total inelastic mean free path
-  double m_imfp = 0.;
+  double m_imfp{0.};
   // Stopping power
-  double m_dedx = 0.;
+  double m_dedx{0.};
 
   // Dielectric function
-  static constexpr size_t m_nSteps = 1000;
+  static constexpr std::size_t m_nSteps{1000};
   std::array<double, m_nSteps> m_eps1;
   std::array<double, m_nSteps> m_eps2;
   std::array<double, m_nSteps> m_epsInt;
@@ -57,9 +61,9 @@ class TrackPAI : public Track {
   std::vector<Cluster> m_clusters;
 
   // Medium properties
-  std::string m_mediumName = "";
-  double m_mediumDensity = 0.;
-  double m_electronDensity = 0.;
+  std::string m_mediumName;
+  double m_mediumDensity{0.};
+  double m_electronDensity{0.};
 
   bool SetupMedium(Medium* medium);
   bool SetupCrossSectionTable();

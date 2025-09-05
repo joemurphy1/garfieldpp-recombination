@@ -1,13 +1,16 @@
 #ifndef G_COMPONENT_CST_H
 #define G_COMPONENT_CST_H
 
+#include <cstddef>
 #include <map>
+#include <string>
 #include <vector>
 
 #include "Garfield/ComponentFieldMap.hh"
 
 namespace Garfield {
 
+class Medium;
 /// Component for importing and interpolating field maps from CST.
 /// This interface assumes a certain format of the ascii files
 /// Please find the tools to extract the field data from CST
@@ -18,20 +21,21 @@ class ComponentCST : public ComponentFieldMap {
   /// Constructor
   ComponentCST();
   /// Destructor
-  ~ComponentCST() {}
+  ~ComponentCST() = default;
 
   void ShiftComponent(const double xShift, const double yShift,
                       const double zShift);
 
   void GetNumberOfMeshLines(unsigned int& nx, unsigned int& ny,
                             unsigned int& nz) const;
-  size_t GetNumberOfElements() const override { return m_nElements; }
-  bool GetElementNodes(const size_t i,
-                       std::vector<size_t>& nodes) const override;
-  bool GetElementRegion(const size_t i, size_t& mat,
+  std::size_t GetNumberOfElements() const override { return m_nElements; }
+  bool GetElementNodes(const std::size_t i,
+                       std::vector<std::size_t>& nodes) const override;
+  bool GetElementRegion(const std::size_t i, std::size_t& mat,
                         bool& drift) const override;
-  size_t GetNumberOfNodes() const override { return m_nNodes; }
-  bool GetNode(const size_t i, double& x, double& y, double& z) const override;
+  std::size_t GetNumberOfNodes() const override { return m_nNodes; }
+  bool GetNode(const std::size_t i, double& x, double& y,
+               double& z) const override;
 
   void GetElementBoundaries(unsigned int element, double& xmin, double& xmax,
                             double& ymin, double& ymax, double& zmin,
@@ -205,8 +209,8 @@ class ComponentCST : public ComponentFieldMap {
  protected:
   void SetRange() override;
 
-  double GetElementVolume(const size_t i) const override;
-  void GetAspectRatio(const size_t i, double& dmin,
+  double GetElementVolume(const std::size_t i) const override;
+  void GetAspectRatio(const std::size_t i, double& dmin,
                       double& dmax) const override;
 
   /**
@@ -241,14 +245,14 @@ class ComponentCST : public ComponentFieldMap {
   /// Material id for each element (unsigned char since it uses only 1 byte)
   std::vector<unsigned char> m_elementMaterial;
 
-  unsigned int m_nx = 0;   ///< Number of mesh lines in x direction
-  unsigned int m_ny = 0;   ///< Number of mesh lines in y direction
-  unsigned int m_nz = 0;   ///< Number of mesh lines in z direction
-  size_t m_nElements = 0;  ///< Number of elements
-  size_t m_nNodes = 0;     ///< Number of nodes
+  unsigned int m_nx{0};        ///< Number of mesh lines in x direction
+  unsigned int m_ny{0};        ///< Number of mesh lines in y direction
+  unsigned int m_nz{0};        ///< Number of mesh lines in z direction
+  std::size_t m_nElements{0};  ///< Number of elements
+  std::size_t m_nNodes{0};     ///< Number of nodes
   // If true x,y,z fields of this component are disabled (e=0 V/cm).
   bool disableFieldComponent[3] = {false, false, false};
-  bool doShaping = false;
+  bool doShaping{false};
 
   void ElectricFieldBinary(const double x, const double y, const double z,
                            double& ex, double& ey, double& ez, double& v,
@@ -274,13 +278,13 @@ class ComponentCST : public ComponentFieldMap {
    * i,j,k start at 0 and reach at maximum
    * m_xlines-1,m_ylines-1,m_zlines-1
    */
-  void Element2Index(const size_t element, unsigned int& i, unsigned int& j,
-                     unsigned int& k) const;
+  void Element2Index(const std::size_t element, unsigned int& i,
+                     unsigned int& j, unsigned int& k) const;
 
   int Index2Node(const unsigned int i, const unsigned int j,
                  const unsigned int k) const;
 
-  void Node2Index(const size_t node, unsigned int& i, unsigned int& j,
+  void Node2Index(const std::size_t node, unsigned int& i, unsigned int& j,
                   unsigned int& k) const;
 };
 

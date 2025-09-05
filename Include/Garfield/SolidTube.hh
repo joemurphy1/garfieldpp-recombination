@@ -3,6 +3,7 @@
 
 #include <array>
 #include <mutex>
+#include <vector>
 
 #include "Garfield/Solid.hh"
 
@@ -27,7 +28,7 @@ class SolidTube : public Solid {
             const double ro, const double lz, const double dx, const double dy,
             const double dz);
   /// Destructor
-  ~SolidTube() {}
+  ~SolidTube() = default;
 
   bool IsInside(const double x, const double y, const double z,
                 const bool tesselated) const override;
@@ -88,26 +89,26 @@ class SolidTube : public Solid {
   std::mutex m_mutex;
 
   /// Outer radius.
-  double m_rO;
+  double m_rO{0.};
   /// Inner radius.
-  double m_rI = 0.;
+  double m_rI{0.};
   /// Half-length
-  double m_lZ;
+  double m_lZ{0.};
 
   /// Rotation angle
-  double m_rot = 0.;
+  double m_rot{0.};
   /// Number of sectors
-  unsigned int m_n = 2;
+  unsigned int m_n{2};
   /// Average chord over the sectors.
-  bool m_average = false;
+  bool m_average{false};
   /// Radius of the outer approximating polygon.
-  double m_rpO;
+  double m_rpO{0.};
   /// Radius of the inner approximating polygon.
-  double m_rpI = 0.;
+  double m_rpI{0.};
   /// Inradius of the outer approximating polygon.
-  double m_riO;
+  double m_riO{0.};
   /// Inradius of the inner approximating polygon.
-  double m_riI = 0.;
+  double m_riI{0.};
   /// X-coordinates of the outer approximating polygon.
   std::vector<double> m_xpO;
   /// Y-coordinates of the outer approximating polygon.
@@ -118,9 +119,9 @@ class SolidTube : public Solid {
   std::vector<double> m_ypI;
 
   /// Have a top lid?
-  bool m_toplid = true;
+  bool m_toplid{true};
   /// Have a bottom lid?
-  bool m_botlid = true;
+  bool m_botlid{true};
 
   /// Discretisation levels.
   std::array<double, 3> m_dis{{-1., -1., -1.}};

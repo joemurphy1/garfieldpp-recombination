@@ -1,6 +1,8 @@
 #ifndef G_MEDIUM_CDTE_H
 #define G_MEDIUM_CDTE_H
 
+#include <string>
+
 #include "Garfield/Medium.hh"
 
 namespace Garfield {
@@ -12,7 +14,7 @@ class MediumCdTe : public Medium {
   /// Constructor
   MediumCdTe();
   /// Destructor
-  virtual ~MediumCdTe() {}
+  virtual ~MediumCdTe() = default;
 
   bool IsSemiconductor() const override { return true; }
 
@@ -49,13 +51,13 @@ class MediumCdTe : public Medium {
   // Band gap energy [eV]
   // m_bandGap = 1.44;
   // Low-field mobility
-  double m_eMobility = 1.05e-6;
-  double m_hMobility = 0.1e-6;
+  double m_eMobility{1.05e-6};
+  double m_hMobility{0.1e-6};
   // Hall factor
-  double m_eHallFactor = 1.15;
-  double m_hHallFactor = 0.7;
+  double m_eHallFactor{1.15};
+  double m_hHallFactor{0.7};
 
-  bool m_userMobility = false;
+  bool m_userMobility{false};
 
   void UpdateTransportParameters();
 };

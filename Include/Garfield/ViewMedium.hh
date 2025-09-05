@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "Garfield/FundamentalConstants.hh"
+// #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/ViewBase.hh"
 
 namespace Garfield {
@@ -185,34 +185,40 @@ class ViewMedium : public ViewBase {
 
   enum class Axis { E, B, Angle, EoverN, EoverP, None };
 
-  Medium* m_medium = nullptr;
-
   // X axis
-  double m_eMin = 100., m_eMax = 100000.;
-  double m_bMin = 0., m_bMax = 2.;
-  double m_aMin = 0., m_aMax = Pi;
-  double m_enMin = 0.25, m_enMax = 400.;
-  double m_epMin = 0.13, m_epMax = 132.;
-  bool m_logE = true;
-  bool m_logB = false;
-  bool m_logA = false;
-  bool m_logEN = true;
-  bool m_logEP = true;
-  bool m_logX = true;
-  bool m_autoRangeX = true;
-  Axis m_xaxis = Axis::None;
+  double m_eMin{100.};
+  double m_eMax{100000.};
+  double m_bMin{0.};
+  double m_bMax{2.};
+  double m_aMin{0.};
+  double m_aMax{3.14};  // Will be redefined
+  double m_enMin{0.25};
+  double m_enMax{400.};
+  double m_epMin{0.13};
+  double m_epMax{132.};
+  bool m_logE{true};
+  bool m_logB{false};
+  bool m_logA{false};
+  bool m_logEN{true};
+  bool m_logEP{true};
+  bool m_logX{true};
+  bool m_autoRangeX{true};
+  Axis m_xaxis{Axis::None};
 
   // Y axis
-  double m_yMin = 0., m_yMax = 1.;
-  bool m_logY = false;
-  bool m_autoRangeY = true;
+  double m_yMin{0.};
+  double m_yMax{1.};
+  bool m_logY{false};
+  bool m_autoRangeY{true};
+
+  Medium* m_medium{nullptr};
 
   // E-field to use when plotting as function of B-field or angle.
-  double m_efield = 1000.;
+  double m_efield{1000.};
   // B-field to use when plotting as function of E-field or angle.
-  double m_bfield = 0.;
+  double m_bfield{0.};
   // Angle to use when plotting as function of E-field or B-field.
-  double m_angle = HalfPi;
+  double m_angle{1.57};  // Will be redefined
 
   std::vector<double> m_xPlot;
   std::vector<std::vector<double> > m_yPlot;

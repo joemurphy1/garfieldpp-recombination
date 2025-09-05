@@ -274,7 +274,6 @@ Include/Garfield/TrackDegrade.hh
 Include/Garfield/ViewField.hh
 Include/Garfield/ComponentAnsys121.hh
 Include/Garfield/ComponentTcad2d.hh
-Include/Garfield/HelperMacros.hh
 Include/Garfield/MediumSilicon.hh
 Include/Garfield/Solid.hh
 Include/Garfield/TrackElectron.hh
@@ -317,6 +316,8 @@ Include/Garfield/MediumConductor.hh
 Include/Garfield/QuadTree.hh
 Include/Garfield/SolidTube.hh
 Include/Garfield/Utilities.hh
+Include/Garfield/ParticleTypes.hh
+Include/Garfield/AvalancheMicroscopicTypes.hh
 Include/Garfield/ComponentChargedRing.hh
 )
 set_target_properties(Garfield PROPERTIES PUBLIC_HEADER "${GARFIELD_PUBLIC_HEADERS}")

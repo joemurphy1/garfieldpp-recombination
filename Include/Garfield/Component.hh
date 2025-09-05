@@ -2,7 +2,7 @@
 #define G_COMPONENT_H
 
 #include <array>
-#include <cstdint>
+#include <cstddef>
 #include <string>
 #include <vector>
 

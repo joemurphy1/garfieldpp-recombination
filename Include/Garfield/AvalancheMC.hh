@@ -2,11 +2,12 @@
 #define G_AVALANCHE_MC_H
 
 #include <array>
+#include <cstddef>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/ParticleTypes.hh"
 
 namespace Garfield {
 
@@ -22,23 +23,23 @@ class AvalancheMC {
   /// Constructor
   AvalancheMC(Sensor* sensor);
   /// Destructor
-  ~AvalancheMC() {}
+  ~AvalancheMC() = default;
 
   /// Set the sensor.
   void SetSensor(Sensor* s);
 
   /// Simulate the drift line of an electron from a given starting point.
   bool DriftElectron(const double x, const double y, const double z,
-                     const double t, const size_t w = 1);
+                     const double t, const std::size_t w = 1);
   /// Simulate the drift line of a hole from a given starting point.
   bool DriftHole(const double x, const double y, const double z, const double t,
-                 const size_t w = 1);
+                 const std::size_t w = 1);
   /// Simulate the drift line of an ion from a given starting point.
   bool DriftIon(const double x, const double y, const double z, const double t,
-                const size_t w = 1);
+                const std::size_t w = 1);
   /// Simulate the drift line of a negative ion from a given starting point.
   bool DriftNegativeIon(const double x, const double y, const double z,
-                        const double t, const size_t w = 1);
+                        const double t, const std::size_t w = 1);
   /** Simulate an avalanche initiated by an electron at a given starting point.
    * \param x,y,z,t coordinates and time of the initial electron
    * \param hole simulate the hole component of the avalanche or not
@@ -46,45 +47,47 @@ class AvalancheMC {
    */
   bool AvalancheElectron(const double x, const double y, const double z,
                          const double t, const bool hole = false,
-                         const size_t w = 1);
+                         const std::size_t w = 1);
   /// Simulate an avalanche initiated by a hole at a given starting point.
   bool AvalancheHole(const double x, const double y, const double z,
                      const double t, const bool electron = false,
-                     const size_t w = 1);
+                     const std::size_t w = 1);
   /// Simulate an avalanche initiated by an electron-hole pair.
   bool AvalancheElectronHole(const double x, const double y, const double z,
-                             const double t, const size_t w = 1);
+                             const double t, const std::size_t w = 1);
 
   /// Add an electron to the list of particles to be transported.
   void AddElectron(const double x, const double y, const double z,
-                   const double t, const size_t w = 1);
+                   const double t, const std::size_t w = 1);
   /// Add a hole to the list of particles to be transported.
   void AddHole(const double x, const double y, const double z, const double t,
-               const size_t w = 1);
+               const std::size_t w = 1);
   /// Add an ion to the list of particles to be transported.
   void AddIon(const double x, const double y, const double z, const double t,
-              const size_t w = 1);
+              const std::size_t w = 1);
   /// Add an negative ion to the list of particles to be transported.
   void AddNegativeIon(const double x, const double y, const double z,
-                      const double t, const size_t w = 1);
+                      const double t, const std::size_t w = 1);
   /// Resume the simulation from the current set of charge carriers.
   bool ResumeAvalanche(const bool electron = true, const bool hole = true);
 
   struct Point {
-    double x, y, z;
-    double t;
+    double x{0.};
+    double y{0.};
+    double z{0.};
+    double t{0.};
   };
 
   struct EndPoint {
-    int status;               ///< Status flag.
+    int status{0};            ///< Status flag.
     std::vector<Point> path;  ///< Drift line.
-    size_t weight;            ///< Multiplicity.
+    std::size_t weight{0};    ///< Multiplicity.
   };
 
   struct Seed {
-    Point pt;       ///< Starting point.
-    Particle type;  ///< Particle type.
-    size_t w = 1;   ///< Multiplicity.
+    Point pt;          ///< Starting point.
+    Particle type;     ///< Particle type.
+    std::size_t w{1};  ///< Multiplicity.
   };
 
   const std::vector<EndPoint>& GetElectrons() const { return m_electrons; }
@@ -96,9 +99,11 @@ class AvalancheMC {
 
   /** Return the number of electron trajectories in the last
    * simulated avalanche (including captured electrons). */
-  size_t GetNumberOfElectronEndpoints() const { return m_electrons.size(); }
+  std::size_t GetNumberOfElectronEndpoints() const {
+    return m_electrons.size();
+  }
   /// Return the number of ion trajectories.
-  size_t GetNumberOfIonEndpoints() const { return m_ions.size(); }
+  std::size_t GetNumberOfIonEndpoints() const { return m_ions.size(); }
 
   /** Return the coordinates and time of start and end point of a given
    * electron drift line.
@@ -107,13 +112,13 @@ class AvalancheMC {
    * \param x1,y1,z1,t1 coordinates and time of the end point
    * \param status status code (see GarfieldConstants.hh)
    */
-  void GetElectronEndpoint(const size_t i, double& x0, double& y0, double& z0,
-                           double& t0, double& x1, double& y1, double& z1,
-                           double& t1, int& status) const;
-  void GetIonEndpoint(const size_t i, double& x0, double& y0, double& z0,
+  void GetElectronEndpoint(const std::size_t i, double& x0, double& y0,
+                           double& z0, double& t0, double& x1, double& y1,
+                           double& z1, double& t1, int& status) const;
+  void GetIonEndpoint(const std::size_t i, double& x0, double& y0, double& z0,
                       double& t0, double& x1, double& y1, double& z1,
                       double& t1, int& status) const;
-  void GetNegativeIonEndpoint(const size_t i, double& x0, double& y0,
+  void GetNegativeIonEndpoint(const std::size_t i, double& x0, double& y0,
                               double& z0, double& t0, double& x1, double& y1,
                               double& z1, double& t1, int& status) const;
 
@@ -207,21 +212,16 @@ class AvalancheMC {
   void SetIonSignalScalingFactor(const double scale) { m_scaleI = scale; }
 
   /// Return the number of electrons and ions/holes in the avalanche.
-  void GetAvalancheSize(unsigned int& ne, unsigned int& ni) const {
-    ne = m_nElectrons;
-    ni = std::max(m_nIons, m_nHoles);
-  }
+  void GetAvalancheSize(unsigned int& ne, unsigned int& ni) const;
   /// Return the number of electrons and ions/holes in the avalanche.
-  std::pair<unsigned int, unsigned int> GetAvalancheSize() const {
-    return std::make_pair(m_nElectrons, std::max(m_nIons, m_nHoles));
-  }
+  std::pair<unsigned int, unsigned int> GetAvalancheSize() const;
   /// Switch debugging messages on/off (default: off).
   void EnableDebugging(const bool on = true) { m_debug = on; }
 
  private:
-  std::string m_className = "AvalancheMC";
+  std::string m_className{"AvalancheMC"};
 
-  Sensor* m_sensor = nullptr;
+  Sensor* m_sensor{nullptr};
 
   enum class StepModel {
     FixedTime,
@@ -230,35 +230,35 @@ class AvalancheMC {
     UserDistance
   };
   /// Step size model.
-  StepModel m_stepModel = StepModel::CollisionTime;
+  StepModel m_stepModel{StepModel::CollisionTime};
 
   /// Fixed time step
-  double m_tMc = 0.02;
+  double m_tMc{0.02};
   /// Fixed distance step
-  double m_dMc = 0.001;
+  double m_dMc{0.001};
   /// Sample step size according to collision time
-  int m_nMc = 100;
+  int m_nMc{100};
   /// User function returning the step size
   double (*m_fStep)(double x, double y, double z) = nullptr;
 
   /// Flag whether a time window should be used.
-  bool m_hasTimeWindow = false;
+  bool m_hasTimeWindow{false};
   /// Lower limit of the time window.
-  double m_tMin = 0.;
+  double m_tMin{0.};
   /// Upper limit of the time window.
-  double m_tMax = 0.;
+  double m_tMax{0.};
 
   /// Max. avalanche size.
-  unsigned int m_sizeCut = 0;
+  unsigned int m_sizeCut{0};
 
   /// Number of electrons produced
-  unsigned int m_nElectrons = 0;
+  unsigned int m_nElectrons{0};
   /// Number of holes produced
-  unsigned int m_nHoles = 0;
+  unsigned int m_nHoles{0};
   /// Number of ions produced
-  unsigned int m_nIons = 0;
+  unsigned int m_nIons{0};
   /// Number of negative ions produced
-  unsigned int m_nNegativeIons = 0;
+  unsigned int m_nNegativeIons{0};
 
   /// Start/end points of all electrons in the avalanche
   /// (including captured ones).
@@ -271,41 +271,41 @@ class AvalancheMC {
   /// Start/end points of all negative ions in the avalanche.
   std::vector<EndPoint> m_negativeIons;
 
-  ViewDrift* m_viewer = nullptr;
+  ViewDrift* m_viewer{nullptr};
 
-  bool m_storeDriftLines = false;
-  bool m_doSignal = true;
-  unsigned int m_navg = 1;
-  bool m_useWeightingPotential = true;
-  bool m_doInducedCharge = false;
-  bool m_doEquilibration = true;
-  bool m_doRKF = false;
-  bool m_useDiffusion = true;
-  bool m_useAttachment = true;
-  bool m_useRecombination = true;
-  bool m_useMultiplication = true;
+  bool m_storeDriftLines{false};
+  bool m_doSignal{true};
+  unsigned int m_navg{1};
+  bool m_useWeightingPotential{true};
+  bool m_doInducedCharge{false};
+  bool m_doEquilibration{true};
+  bool m_doRKF{false};
+  bool m_useDiffusion{true};
+  bool m_useAttachment{true};
+  bool m_useRecombination{true};
+  bool m_useMultiplication{true};
   /// Scaling factor for electron signals.
-  double m_scaleE = 1.;
+  double m_scaleE{1.};
   /// Scaling factor for hole signals.
-  double m_scaleH = 1.;
+  double m_scaleH{1.};
   /// Scaling factor for ion signals.
-  double m_scaleI = 1.;
+  double m_scaleI{1.};
 
   /// Take Townsend coefficients from the component.
-  bool m_useTownsendMap = false;
+  bool m_useTownsendMap{false};
   /// Take attachment coefficients from the component.
-  bool m_useAttachmentMap = false;
+  bool m_useAttachmentMap{false};
   /// Take mobility coefficients from the component.
-  bool m_useMobilityMap = false;
+  bool m_useMobilityMap{false};
   /// Take the drift velocities from the component.
-  bool m_useVelocityMap = false;
+  bool m_useVelocityMap{false};
   /// Take the densities from the component.
-  bool m_useDensityMap = false;
+  bool m_useDensityMap{false};
 
   /// Recombination coefficient in cm3/ns.
-  double m_alphaRecombination = 0.;
+  double m_alphaRecombination{0.};
 
-  bool m_debug = false;
+  bool m_debug{false};
 
   /// Compute a single drift line.
   int DriftLine(const Seed& seed, std::vector<Point>& path,

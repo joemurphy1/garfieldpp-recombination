@@ -2,9 +2,9 @@
 
 #include <array>
 #include <cmath>
-#include <cstdio>
 #include <iostream>
 #include <numeric>
+#include <string>
 
 #include "Garfield/Component.hh"
 #include "Garfield/GarfieldConstants.hh"

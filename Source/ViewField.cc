@@ -1,18 +1,14 @@
 #include "Garfield/ViewField.hh"
 
-#include <TAxis.h>
-#include <TF1.h>
 #include <TF2.h>
 #include <TH1F.h>
-#include <TROOT.h>
-#include <stdio.h>
-#include <string.h>
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <string>
+#include <vector>
 
 #include "Garfield/Component.hh"
 #include "Garfield/DriftLineRKF.hh"

@@ -2,16 +2,16 @@
 #define G_TRACK_BICHSEL_H
 
 #include <array>
+#include <cstddef>
 #include <vector>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Track.hh"
 
 namespace Garfield {
 
-/// Generate tracks using differential cross-sections
-/// for silicon computed by Hans Bichsel.
-/// References:
+class Sensor;
+/// Generate tracks using differential cross-sections for silicon computed by
+/// Hans Bichsel. References:
 ///   - H. Bichsel, Rev. Mod. Phys. 60 (1988), 663-699
 ///   - https://faculty.washington.edu/hbichsel/
 
@@ -23,11 +23,11 @@ class TrackBichsel : public Track {
   };
 
   /// Default constructor
-  TrackBichsel() : TrackBichsel(nullptr) {}
+  TrackBichsel();
   /// Constructor
   TrackBichsel(Sensor* sensor);
   /// Destructor
-  virtual ~TrackBichsel() {}
+  virtual ~TrackBichsel() = default;
 
   bool NewTrack(const double x0, const double y0, const double z0,
                 const double t0, const double dx0, const double dy0,
@@ -41,7 +41,7 @@ class TrackBichsel : public Track {
   bool ComputeCrossSection();
 
  private:
-  constexpr static size_t NEnergyBins = 1250;
+  constexpr static std::size_t NEnergyBins{1250};
   std::array<double, NEnergyBins + 1> m_E;
 
   /// Optical oscillator strength density.
@@ -55,23 +55,23 @@ class TrackBichsel : public Track {
   /// Lower limit of the integral over the GOS.
   std::array<double, NEnergyBins> m_k1;
 
-  constexpr static size_t NCdfBins = 10000;
+  constexpr static std::size_t NCdfBins{10000};
   std::array<double, NCdfBins> m_tab;
 
   /// Density of silicon.
-  double m_density;
+  double m_density{0.};
   /// Conversion from optical loss function to oscillator strength density.
-  double m_conv = 0.0092456;
+  double m_conv{0.0092456};
 
-  bool m_initialised = false;
+  bool m_initialised{false};
 
   /// Inverse mean free path [cm-1].
-  double m_imfp = 0.;
+  double m_imfp{0.};
   /// Stopping power [eV/cm].
-  double m_dEdx = 0.;
+  double m_dEdx{0.};
 
   /// Particle speed
-  double m_speed = SpeedOfLight;
+  double m_speed{0.};
 
   std::vector<Cluster> m_clusters;
 };

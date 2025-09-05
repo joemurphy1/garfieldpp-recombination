@@ -5,8 +5,8 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <string>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"

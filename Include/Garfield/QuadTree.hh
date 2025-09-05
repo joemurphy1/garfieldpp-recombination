@@ -29,14 +29,19 @@ class QuadTree {
 
  private:
   // Centre of this tree node.
-  double m_x0, m_y0;
+  double m_x0{0.};
+  double m_y0{0.};
   // Half-width in x and y of this tree node.
-  double m_hx, m_hy;
+  double m_hx{0.};
+  double m_hy{0.};
   // Bounding box of the tree node.
-  double m_xmin, m_ymin, m_xmax, m_ymax;
+  double m_xmin{0.};
+  double m_ymin{0.};
+  double m_xmax{0.};
+  double m_ymax{0.};
 
   // Pointers to child quadrants.
-  QuadTree* children[4];
+  QuadTree* children[4]{nullptr, nullptr, nullptr, nullptr};
 
   // Children follow a predictable pattern to make accesses simple.
   // Here, - means less than 'origin' in that dimension, + means greater than.
@@ -47,7 +52,7 @@ class QuadTree {
   std::vector<std::tuple<float, float, int> > nodes;
   std::vector<int> elements;
 
-  static const size_t BlockCapacity = 10;
+  static const std::size_t BlockCapacity{10};
 
   // Check if the given box overlaps with this tree node.
   bool DoesBoxOverlap(const double bb[4]) const;

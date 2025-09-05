@@ -2,13 +2,14 @@
 
 #include <algorithm>
 #include <array>
-#include <cstdio>
+#include <cmath>
 #include <iostream>
+#include <string>
 
 #include "Garfield/DegradeInterface.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
-#include "Garfield/MediumGas.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
@@ -66,6 +67,11 @@ void TrackDegrade::SetThresholdEnergy(const double ethr) {
   } else {
     m_ethr = ethr;
   }
+}
+
+void TrackDegrade::StoreExcitations(const bool on, const double thr) {
+  m_storeExcitations = on;
+  m_ethrExc = std::max(thr, 1.e-3);
 }
 
 bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,

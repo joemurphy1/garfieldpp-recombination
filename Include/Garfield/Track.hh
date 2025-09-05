@@ -2,7 +2,7 @@
 #define G_TRACK_H
 
 #include <array>
-#include <cmath>
+#include <cstddef>
 #include <string>
 
 namespace Garfield {
@@ -11,7 +11,6 @@ class Sensor;
 class ViewDrift;
 
 /// Abstract base class for track generation.
-
 class Track {
  public:
   /// Default constructor.
@@ -19,7 +18,7 @@ class Track {
   /// Constructor
   Track(const std::string& name);
   /// Destructor
-  virtual ~Track() {}
+  virtual ~Track() = default;
 
   /// Set the type of charged particle.
   /// - electron,e-
@@ -52,13 +51,13 @@ class Track {
   /// Return the particle energy.
   double GetEnergy() const { return m_energy; }
   /// Return the \f$\beta\gamma\f$ of the projectile.
-  double GetBetaGamma() const { return sqrt(m_beta2 / (1. - m_beta2)); }
+  double GetBetaGamma() const;
   /// Return the speed (\f$\beta = v/c\f$) of the projectile.
-  double GetBeta() const { return sqrt(m_beta2); }
+  double GetBeta() const;
   /// Return the Lorentz factor of the projectile.
-  double GetGamma() const { return sqrt(1. / (1. - m_beta2)); }
+  double GetGamma() const;
   /// Return the particle momentum.
-  double GetMomentum() const { return m_mass * sqrt(m_beta2 / (1. - m_beta2)); }
+  double GetMomentum() const;
   /// Return the kinetic energy of the projectile.
   double GetKineticEnergy() const { return m_energy - m_mass; }
 
@@ -93,25 +92,25 @@ class Track {
   void DisableDebugging() { m_debug = false; }
 
  protected:
-  std::string m_className = "Track";
+  std::string m_className{"Track"};
 
-  double m_q = -1.;
-  int m_spin = 1;
-  double m_mass;
-  double m_energy = 0.;
-  double m_beta2 = 1.;
-  bool m_isElectron = false;
-  std::string m_particleName = "mu-";
+  double m_q{-1.};
+  int m_spin{1};
+  double m_mass{0.};
+  double m_energy{0.};
+  double m_beta2{1.};
+  bool m_isElectron{false};
+  std::string m_particleName{"mu-"};
 
-  Sensor* m_sensor = nullptr;
+  Sensor* m_sensor{nullptr};
 
-  bool m_isChanged = true;
+  bool m_isChanged{true};
 
-  ViewDrift* m_viewer = nullptr;
+  ViewDrift* m_viewer{nullptr};
 
-  bool m_debug = false;
+  bool m_debug{false};
 
-  size_t m_plotId = 0;
+  std::size_t m_plotId{0};
   void PlotNewTrack(const double x0, const double y0, const double z0);
   void PlotCluster(const double x0, const double y0, const double z0);
 

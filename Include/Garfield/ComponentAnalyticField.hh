@@ -23,7 +23,7 @@ class ComponentAnalyticField : public Component {
   /// Constructor
   ComponentAnalyticField();
   /// Destructor
-  ~ComponentAnalyticField() {}
+  ~ComponentAnalyticField() = default;
 
   /// Set the medium inside the cell.
   void SetMedium(Medium* medium) { m_medium = medium; }
@@ -384,63 +384,69 @@ class ComponentAnalyticField : public Component {
  private:
   std::mutex m_mutex;
 
-  Medium* m_medium = nullptr;
+  Medium* m_medium{nullptr};
 
-  bool m_chargeCheck = false;
+  bool m_chargeCheck{false};
 
-  bool m_cellset = false;
-  bool m_sigset = false;
+  bool m_cellset{false};
+  bool m_sigset{false};
 
-  bool m_polar = false;
+  bool m_polar{false};
 
   // Cell type.
-  Cell m_cellType;
+  Cell m_cellType{Unknown};
 
   // Bounding box
-  double m_xmin, m_xmax;
-  double m_ymin, m_ymax;
-  double m_zmin, m_zmax;
+  double m_xmin{0.};
+  double m_xmax{0.};
+  double m_ymin{0.};
+  double m_ymax{0.};
+  double m_zmin{0.};
+  double m_zmax{0.};
 
   // Voltage range
-  double m_vmin, m_vmax;
+  double m_vmin{0.};
+  double m_vmax{0.};
 
   // Periodicities
-  bool m_perx = false;
-  bool m_pery = false;
-  double m_sx, m_sy;
+  bool m_perx{false};
+  bool m_pery{false};
+  double m_sx{0.};
+  double m_sy{0.};
 
   // Signals
-  int m_nFourier = 1;
-  Cell m_cellTypeFourier = A00;
-  bool m_fperx = false;
-  bool m_fpery = false;
-  int m_mxmin = 0;
-  int m_mxmax = 0;
-  int m_mymin = 0;
-  int m_mymax = 0;
-  int m_mfexp = 0;
+  int m_nFourier{1};
+  Cell m_cellTypeFourier{A00};
+  bool m_fperx{false};
+  bool m_fpery{false};
+  int m_mxmin{0};
+  int m_mxmax{0};
+  int m_mymin{0};
+  int m_mymax{0};
+  int m_mfexp{0};
 
   std::vector<std::string> m_readout;
 
   // Wires
-  unsigned int m_nWires;
+  unsigned int m_nWires{0};
   struct Wire {
-    double x, y;       ///< Location.
-    double r;          ///< Radius.
-    double v;          ///< Potential.
-    double e;          ///< Charge.
+    double x{0.};
+    double y{0.};      ///< Location.
+    double r{0.};      ///< Radius.
+    double v{0.};      ///< Potential.
+    double e{0.};      ///< Charge.
     std::string type;  ///< Label.
-    double u;          ///< Length.
-    int ind;           ///< Readout group.
+    double u{0.};      ///< Length.
+    int ind{0};        ///< Readout group.
     /// Trap radius. Particle is "trapped" if within nTrap * radius of wire.
-    int nTrap;
-    double tension;  ///< Stretching weight.
-    double density;  ///< Density.
+    int nTrap{0};
+    double tension{0.};  ///< Stretching weight.
+    double density{0.};  ///< Density.
   };
   std::vector<Wire> m_w;
 
   // Option for computation of dipole terms
-  bool m_dipole = false;
+  bool m_dipole{false};
   // Dipole angle and amplitude
   std::vector<double> m_cosph2;
   std::vector<double> m_sinph2;
@@ -449,49 +455,59 @@ class ComponentAnalyticField : public Component {
   // Parameters for B2 type cells
   std::vector<double> m_b2sin;
   // Parameters for C type cells
-  int m_mode;
+  int m_mode{0};
   std::complex<double> m_zmult;
-  double m_p1, m_p2, m_c1;
+  double m_p1{0.};
+  double m_p2{0.};
+  double m_c1{0.};
   // Parameters for D3 type cells
   // Wire positions in conformal mapping
   std::vector<std::complex<double> > m_zw;
-  double m_kappa;
+  double m_kappa{0.};
 
   // Reference potential
-  double m_v0;
-  double m_corvta, m_corvtb, m_corvtc;
+  double m_v0{0.};
+  double m_corvta{0.};
+  double m_corvtb{0.};
+  double m_corvtc{0};
 
   // Planes
   // Existence
-  bool m_ynplan[4];
-  bool m_ynplax, m_ynplay;
+  bool m_ynplan[4]{false, false, false, false};
+  bool m_ynplax{false};
+  bool m_ynplay{false};
   // Coordinates
   double m_coplan[4];
-  double m_coplax, m_coplay;
+  double m_coplax{0.};
+  double m_coplay{0.};
   // Voltages
-  double m_vtplan[4];
+  double m_vtplan[4]{0., 0., 0., 0.};
 
   struct Strip {
-    std::string type;   ///< Label.
-    int ind;            ///< Readout group.
-    double smin, smax;  ///< Coordinates.
-    double gap;         ///< Distance to the opposite electrode.
+    std::string type;  ///< Label.
+    int ind{0};        ///< Readout group.
+    double smin{0.};
+    double smax{0.};  ///< Coordinates.
+    double gap{0.};   ///< Distance to the opposite electrode.
   };
 
   struct Pixel {
-    std::string type;             ///< Label.
-    int ind = 0;                  ///< Readout group.
-    double smin = 0., smax = 0.;  ///< Coordinates in x/y.
-    double zmin = 0., zmax = 0.;  ///< Coordinates in z.
-    double gap = -1.;             ///< Distance to the opposite electrode.
-    double cphi = 1.;             ///< Rotation.
-    double sphi = 0.;             ///< Rotation.
+    std::string type;  ///< Label.
+    int ind{0};        ///< Readout group.
+    double smin{0.};
+    double smax{0.};  ///< Coordinates in x/y.
+    double zmin{0.};
+    double zmax{0.};  ///< Coordinates in z.
+    double gap{-1.};  ///< Distance to the opposite electrode.
+    double cphi{1.};  ///< Rotation.
+    double sphi{0.};  ///< Rotation.
   };
 
   struct Plane {
-    std::string type;            ///< Label.
-    int ind;                     ///< Readout group.
-    double ewxcor, ewycor;       ///< Background weighting fields
+    std::string type;  ///< Label.
+    int ind{0};        ///< Readout group.
+    double ewxcor{0.};
+    double ewycor{0.};           ///< Background weighting fields
     std::vector<Strip> strips1;  ///< x/y strips.
     std::vector<Strip> strips2;  ///< z strips.
     std::vector<Pixel> pixels;   ///< Pixels.
@@ -499,15 +515,15 @@ class ComponentAnalyticField : public Component {
   std::array<Plane, 5> m_planes;
 
   // Tube
-  bool m_tube = false;
-  int m_mtube = 0;
-  int m_ntube = 1;
-  double m_cotube = 1.;
-  double m_cotube2 = 1.;
-  double m_vttube = 0.;
+  bool m_tube{false};
+  int m_mtube{0};
+  int m_ntube{1};
+  double m_cotube{1.};
+  double m_cotube2{1.};
+  double m_vttube{0.};
 
   // Smallest dimension.
-  double m_dmin = -1.;
+  double m_dmin{-1.};
 
   // Wire weighting charges.
   std::vector<std::vector<std::vector<double> > > m_qwire;
@@ -516,46 +532,48 @@ class ComponentAnalyticField : public Component {
 
   // Point charges
   struct Charge3d {
-    double x, y, z;  ///< Coordinates.
-    double e;        ///< Charge.
+    double x{0.};
+    double y{0.};
+    double z{0.};  ///< Coordinates.
+    double e{0.};  ///< Charge.
   };
   std::vector<Charge3d> m_ch3d;
-  unsigned int m_nTermBessel = 10;
-  unsigned int m_nTermPoly = 100;
+  unsigned int m_nTermBessel{10};
+  unsigned int m_nTermPoly{100};
 
-  bool m_useElectrostaticForce = true;
-  bool m_useGravitationalForce = true;
+  bool m_useElectrostaticForce{true};
+  bool m_useGravitationalForce{true};
   // Gravity
   std::array<double, 3> m_down{{0, 0, 1}};
   // Number of shots used for solving the wire sag differential equations
-  unsigned int m_nShots = 2;
+  unsigned int m_nShots{2};
   // Number of integration steps within each shot.
-  unsigned int m_nSteps = 20;
+  unsigned int m_nSteps{20};
   // Options for setting the range of wire shifts
   // for which the forces are computed.
   enum class ScanningRange { Largest = 0, FirstOrder, User };
-  ScanningRange m_scanRange = ScanningRange::FirstOrder;
+  ScanningRange m_scanRange{ScanningRange::FirstOrder};
   // Limits of the user-specified scanning range.
-  double m_xScanMin = 0.;
-  double m_xScanMax = 0.;
-  double m_yScanMin = 0.;
-  double m_yScanMax = 0.;
+  double m_xScanMin{0.};
+  double m_xScanMax{0.};
+  double m_yScanMin{0.};
+  double m_yScanMax{0.};
   // Scaling factor for first-order estimate of the scanning range.
-  double m_scaleRange = 2.;
+  double m_scaleRange{2.};
   // Number of grid lines at which the forces are stored.
-  unsigned int m_nScanX = 11;
-  unsigned int m_nScanY = 11;
+  unsigned int m_nScanX{11};
+  unsigned int m_nScanY{11};
   // Extrapolate beyond the scanning range or not.
-  bool m_extrapolateForces = false;
+  bool m_extrapolateForces{false};
 
   // Maximum deviation between target and field function at which
   // to allow the iteration to stop.
-  double m_optDist = 1.;
+  double m_optDist{1.};
   // Relative change in Euclidean distance between target and
   // field function at which to allow the iteration to stop.
-  double m_optEps = 1.e-4;
+  double m_optEps{1.e-4};
   // Maximum number of iterations in the optimisation fit.
-  unsigned int m_optNitmax = 10;
+  unsigned int m_optNitmax{10};
 
   void UpdatePeriodicity() override;
   void Reset() override {
@@ -775,9 +793,7 @@ class ComponentAnalyticField : public Component {
 
   // Auxiliary functions for C type cells
   double Ph2(const double xpos, const double ypos) const;
-  double Ph2Lim(const double radius) const {
-    return -log(abs(m_zmult) * radius * (1. - 3. * m_p1 + 5. * m_p2));
-  }
+  double Ph2Lim(const double radius) const;
   void E2Sum(const double xpos, const double ypos, double& ex,
              double& ey) const;
 

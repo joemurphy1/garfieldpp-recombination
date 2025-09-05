@@ -16,7 +16,7 @@ class MediumSilicon : public Medium {
   /// Constructor
   MediumSilicon();
   /// Destructor
-  virtual ~MediumSilicon() {}
+  virtual ~MediumSilicon() = default;
 
   bool IsSemiconductor() const override { return true; }
 
@@ -186,97 +186,97 @@ class MediumSilicon : public Medium {
   std::mutex m_mutex;
 
   // Diffusion scaling factor
-  double m_diffScale = 1.;
+  double m_diffScale{1.};
 
-  double m_bandGap = 1.12;
+  double m_bandGap{1.12};
   // Doping
-  char m_dopingType = 'i';
+  char m_dopingType{'i'};
   // Doping concentration
-  double m_cDop = 0.;
+  double m_cDop{0.};
 
   // Lattice mobility
-  double m_eMuLat = 1.35e-6;
-  double m_hMuLat = 0.45e-6;
+  double m_eMuLat{1.35e-6};
+  double m_hMuLat{0.45e-6};
   // Low-field mobility
-  double m_eMu = 1.35e-6;
-  double m_hMu = 0.45e-6;
+  double m_eMu{1.35e-6};
+  double m_hMu{0.45e-6};
   // High-field mobility parameters
-  double m_eBetaCanali = 1.109;
-  double m_hBetaCanali = 1.213;
-  double m_eBetaCanaliInv = 1. / 1.109;
-  double m_hBetaCanaliInv = 1. / 1.213;
+  double m_eBetaCanali{1.109};
+  double m_hBetaCanali{1.213};
+  double m_eBetaCanaliInv{1. / 1.109};
+  double m_hBetaCanaliInv{1. / 1.213};
   // Saturation velocity
-  double m_eVs = 1.02e-2;
-  double m_hVs = 0.72e-2;
+  double m_eVs{1.02e-2};
+  double m_hVs{0.72e-2};
   // Ratio between low-field mobility and saturation velocity
-  double m_eRs = 1.35e-6 / 1.02e-2;
-  double m_hRs = 0.45e-6 / 0.72e-2;
+  double m_eRs{1.35e-6 / 1.02e-2};
+  double m_hRs{0.45e-6 / 0.72e-2};
   // Hall factor
-  double m_eHallFactor = 1.15;
-  double m_hHallFactor = 0.7;
+  double m_eHallFactor{1.15};
+  double m_hHallFactor{0.7};
 
   // Trapping parameters
-  double m_eTrapCs = 1.e-15;
-  double m_hTrapCs = 1.e-15;
-  double m_eTrapDensity = 0.;
-  double m_hTrapDensity = 0.;
-  double m_eTrapTime = 0.;
-  double m_hTrapTime = 0.;
-  double m_eTrapRate = 0.;
-  double m_hTrapRate = 0.;
-  int m_trappingModel = 0;
+  double m_eTrapCs{1.e-15};
+  double m_hTrapCs{1.e-15};
+  double m_eTrapDensity{0.};
+  double m_hTrapDensity{0.};
+  double m_eTrapTime{0.};
+  double m_hTrapTime{0.};
+  double m_eTrapRate{0.};
+  double m_hTrapRate{0.};
+  int m_trappingModel{0};
 
   // Impact ionisation parameters
-  double m_eImpactA0 = 3.318e5;
-  double m_eImpactA1 = 0.703e6;
-  double m_eImpactA2 = 0.;
-  double m_eImpactB0 = 1.135e6;
-  double m_eImpactB1 = 1.231e6;
-  double m_eImpactB2 = 0.;
-  double m_hImpactA0 = 1.582e6;
-  double m_hImpactA1 = 0.671e6;
-  double m_hImpactB0 = 2.036e6;
-  double m_hImpactB1 = 1.693e6;
+  double m_eImpactA0{3.318e5};
+  double m_eImpactA1{0.703e6};
+  double m_eImpactA2{0.};
+  double m_eImpactB0{1.135e6};
+  double m_eImpactB1{1.231e6};
+  double m_eImpactB2{0.};
+  double m_hImpactA0{1.582e6};
+  double m_hImpactA1{0.671e6};
+  double m_hImpactB0{2.036e6};
+  double m_hImpactB1{1.693e6};
 
   // Models
-  bool m_hasUserMobility = false;
-  bool m_hasUserSaturationVelocity = false;
-  LatticeMobility m_latticeMobilityModel = LatticeMobility::Sentaurus;
-  DopingMobility m_dopingMobilityModel = DopingMobility::Masetti;
-  SaturationVelocity m_saturationVelocityModel = SaturationVelocity::Canali;
-  HighFieldMobility m_highFieldMobilityModel = HighFieldMobility::Canali;
-  ImpactIonisation m_impactIonisationModel = ImpactIonisation::VanOverstraeten;
+  bool m_hasUserMobility{false};
+  bool m_hasUserSaturationVelocity{false};
+  LatticeMobility m_latticeMobilityModel{LatticeMobility::Sentaurus};
+  DopingMobility m_dopingMobilityModel{DopingMobility::Masetti};
+  SaturationVelocity m_saturationVelocityModel{SaturationVelocity::Canali};
+  HighFieldMobility m_highFieldMobilityModel{HighFieldMobility::Canali};
+  ImpactIonisation m_impactIonisationModel{ImpactIonisation::VanOverstraeten};
 
   // Options
-  bool m_cfOutput = false;
-  bool m_nonParabolic = true;
-  bool m_fullBandDos = false;
-  bool m_anisotropic = true;
+  bool m_cfOutput{false};
+  bool m_nonParabolic{true};
+  bool m_fullBandDos{false};
+  bool m_anisotropic{true};
 
   struct Band {
-    int nEnergySteps = 2000;
-    double eStep = 0.;
-    double invStep = 0.;
+    int nEnergySteps{2000};
+    double eStep{0.};
+    double invStep{0.};
     // Energy range of scattering rates.
-    double eFinal;
+    double eFinal{0.};
     // Energy offset [eV].
-    double eMin = 0.;
+    double eMin{0.};
     // Index corresponding to the energy offset.
-    int iMin = 0;
+    int iMin{0};
     // Density of states.
     std::vector<double> dos;
     // Multiplicity (number of valleys).
-    int nValleys = 1;
+    int nValleys{1};
     // Longitudinal mass.
-    double mL = 1.;
+    double mL{1.};
     // Transverse mass.
-    double mT = 1.;
+    double mT{1.};
     // Conduction effective mass.
-    double mC = 1.;
+    double mC{1.};
     // Non-parabolicity parameter [1/eV].
-    double alpha = 0.;
+    double alpha{0.};
     // Null-collision rate.
-    double cfNull;
+    double cfNull{0.};
     // Total scattering rate.
     std::vector<double> cfTot;
     // Scattering rates.
@@ -285,30 +285,31 @@ class MediumSilicon : public Medium {
     // Cross-section type.
     std::vector<int> scatType;
     // Number of scattering terms.
-    int nLevels = 0;
+    int nLevels{0};
   };
 
   // Conduction bands.
   std::array<Band, 3> m_cb;
-  std::vector<size_t> m_cbIndex;
+  std::vector<std::size_t> m_cbIndex;
   // Valence band.
   Band m_vb;
 
   // Collision counters
-  unsigned int m_nCollElectronAcoustic = 0;
-  unsigned int m_nCollElectronOptical = 0;
-  unsigned int m_nCollElectronIntervalley = 0;
-  unsigned int m_nCollElectronImpurity = 0;
-  unsigned int m_nCollElectronIonisation = 0;
+  unsigned int m_nCollElectronAcoustic{0};
+  unsigned int m_nCollElectronOptical{0};
+  unsigned int m_nCollElectronIntervalley{0};
+  unsigned int m_nCollElectronImpurity{0};
+  unsigned int m_nCollElectronIonisation{0};
   std::vector<unsigned int> m_nCollElectronDetailed;
   std::vector<unsigned int> m_nCollElectronBand;
 
   // Density of states tables
-  double m_eStepDos = 0.;
-  double m_invStepDos = 0.;
+  double m_eStepDos{0.};
+  double m_invStepDos{0.};
   std::vector<double> m_fbDosV;
   std::vector<double> m_fbDosC;
-  double m_fbDosMaxV, m_fbDosMaxC;
+  double m_fbDosMaxV{0.};
+  double m_fbDosMaxC{0.};
 
   // Optical data
   std::string m_opticalDataFile = "OpticalData_Si.txt";

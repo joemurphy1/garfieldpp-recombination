@@ -1,10 +1,14 @@
 #ifndef G_COMPONENT_VOXEL_H
 #define G_COMPONENT_VOXEL_H
 
+#include <string>
+#include <vector>
+
 #include "Garfield/Component.hh"
 
 namespace Garfield {
 
+class Medium;
 /// Component for interpolating field maps stored in a regular mesh.
 
 class ComponentVoxel : public Component {
@@ -12,7 +16,7 @@ class ComponentVoxel : public Component {
   /// Constructor
   ComponentVoxel();
   /// Destructor
-  ~ComponentVoxel() {}
+  ~ComponentVoxel() = default;
 
   /// Interpolate between field values at the element centres.
   void EnableInterpolation(const bool on = true) { m_interpolate = on; }
@@ -117,8 +121,10 @@ class ComponentVoxel : public Component {
  private:
   std::vector<Medium*> m_media;
   struct Element {
-    double fx, fy, fz;  ///< Field
-    double v;           ///< Potential
+    double fx{0.};
+    double fy{0.};
+    double fz{0.};  ///< Field
+    double v{0.};   ///< Potential
   };
 
   /// Region indices.
@@ -133,26 +139,35 @@ class ComponentVoxel : public Component {
   std::vector<std::vector<std::vector<std::vector<Element> > > > m_wdfields;
 
   // Dimensions of the mesh
-  unsigned int m_nX = 0, m_nY = 0, m_nZ = 0;
-  double m_xMin = 0., m_yMin = 0., m_zMin = 0.;
-  double m_xMax = 0., m_yMax = 0., m_zMax = 0.;
-  double m_dx = 0., m_dy = 0., m_dz = 0.;
+  unsigned int m_nX{0};
+  unsigned int m_nY{0};
+  unsigned int m_nZ{0};
+  double m_xMin{0.};
+  double m_yMin{0.};
+  double m_zMin{0.};
+  double m_xMax{0.};
+  double m_yMax{0.};
+  double m_zMax{0.};
+  double m_dx{0.};
+  double m_dy{0.};
+  double m_dz{0.};
 
-  bool m_interpolate = false;
+  bool m_interpolate{false};
 
-  bool m_hasMesh = false;
-  bool m_hasPotential = false;
-  bool m_hasEfield = false;
-  bool m_hasBfield = false;
-  bool m_hasWfield = false;
+  bool m_hasMesh{false};
+  bool m_hasPotential{false};
+  bool m_hasEfield{false};
+  bool m_hasBfield{false};
+  bool m_hasWfield{false};
 
   // Offset for weighting field
-  double m_wField_xOffset = 0.;
-  double m_wField_yOffset = 0.;
-  double m_wField_zOffset = 0.;
+  double m_wField_xOffset{0.};
+  double m_wField_yOffset{0.};
+  double m_wField_zOffset{0.};
 
   // Voltage range
-  double m_pMin = 0., m_pMax = 0.;
+  double m_pMin{0.};
+  double m_pMax{0.};
 
   /// Read data from file.
   bool LoadData(const std::string& filename, std::string format,

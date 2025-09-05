@@ -1,6 +1,4 @@
 #include <TApplication.h>
-#include <TCanvas.h>
-#include <TROOT.h>
 
 #include "Garfield/ComponentGrid.hh"
 #include "Garfield/MediumSilicon.hh"

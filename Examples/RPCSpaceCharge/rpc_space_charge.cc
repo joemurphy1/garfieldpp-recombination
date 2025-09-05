@@ -3,13 +3,11 @@
 //
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TH1F.h>
 #include <TSystem.h>
 
-#include <cstdlib>
-#include <fstream>
 #include <iostream>
-#include <numeric>
+#include <string>
+#include <vector>
 
 #include "Garfield/AvalancheGridSpaceCharge.hh"
 #include "Garfield/ComponentParallelPlate.hh"

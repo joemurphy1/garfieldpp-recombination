@@ -1,13 +1,12 @@
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TFile.h>
 #include <TH1F.h>
-#include <TROOT.h>
 
 #include <iostream>
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentConstant.hh"
+#include "Garfield/Medium.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"
 

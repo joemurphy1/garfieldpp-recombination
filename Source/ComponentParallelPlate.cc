@@ -3,10 +3,8 @@
 #include <TF1.h>
 #include <TF2.h>
 
-#include <algorithm>
-#include <cmath>
-#include <iostream>
-#include <limits>
+#include <string>
+#include <vector>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Geometry.hh"
@@ -14,6 +12,22 @@
 namespace Garfield {
 
 ComponentParallelPlate::ComponentParallelPlate() : Component("ParallelPlate") {}
+
+void ComponentParallelPlate::LoadWeightingPotentialGrid(
+    const std::string &label) {
+  for (auto &electrode : m_readout_p) {
+    if (electrode.label != label) continue;
+    if (electrode.grid.LoadWeightingField(label + "map", "xyz", true)) {
+      std::cout << m_className << "::LoadWeightingPotentialGrid: "
+                << "Weighting potential set for " << label << ".\n";
+      electrode.m_usegrid = true;
+      return;
+    }
+  }
+  std::cerr << m_className
+            << "::LoadWeightingPotentialGrid: Could not find file for " << label
+            << ".\n";
+}
 
 void ComponentParallelPlate::Setup(const unsigned int N,
                                    std::vector<double> eps,

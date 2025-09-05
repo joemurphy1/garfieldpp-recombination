@@ -1,10 +1,7 @@
-#include "SensorGPU.h"
-#undef __GPUCOMPILE__
 #include "GPUFunctions.h"
-#include "GPUInterface.hh"
 #include "Garfield/ComponentFieldMap.hh"
 #include "Garfield/Sensor.hh"
-#include "TetrahedralTreeGPU.h"
+#include "SensorGPU.h"
 namespace Garfield {
 // https://github.com/FLAMEGPU/FLAMEGPU2/issues/847
 #if __CUDA_ARCH__ < 600

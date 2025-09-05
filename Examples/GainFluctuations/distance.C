@@ -1,9 +1,6 @@
 #include <TApplication.h>
 #include <TFile.h>
 #include <TH1F.h>
-#include <TROOT.h>
-
-#include <cmath>
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentConstant.hh"

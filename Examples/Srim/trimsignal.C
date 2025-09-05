@@ -1,6 +1,4 @@
 #include <TApplication.h>
-#include <TCanvas.h>
-#include <TH1F.h>
 
 #include <iostream>
 

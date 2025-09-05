@@ -15,7 +15,7 @@ class MediumConductor : public Medium {
     m_name = "Conductor";
   }
   /// Destructor
-  virtual ~MediumConductor() {}
+  virtual ~MediumConductor() = default;
 
   bool IsConductor() const override { return true; }
   void EnableDrift(const bool /*on*/) override {}

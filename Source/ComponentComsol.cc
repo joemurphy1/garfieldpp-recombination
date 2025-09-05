@@ -1,12 +1,10 @@
 #include "Garfield/ComponentComsol.hh"
 
-#include <math.h>
-#include <stdlib.h>
-
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <string>
 
 #include "Garfield/KDTree.hh"
 

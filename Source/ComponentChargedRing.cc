@@ -1,16 +1,11 @@
 #include "Garfield/ComponentChargedRing.hh"
 
 #include <array>
-#include <fstream>
+#include <cmath>
 #include <iostream>
-#include <numeric>
-#include <sstream>
-#include <string>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
-#include "Garfield/Utilities.hh"
 
 namespace {
 

@@ -1,13 +1,17 @@
 #ifndef G_AVALANCHMICROSCOPICGPU_H
 #define G_AVALANCHMICROSCOPICGPU_H
 
+#include <cstddef>
 #include <vector>
 
-#include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/AvalancheMicroscopicTypes.hh"
 
 namespace Garfield {
+
 class RandomEngineGPU;
 class SensorGPU;
+class AvalancheMicroscopic;
+
 class AvalancheMicroscopicGPU {
  public:
   /// Constructor
@@ -17,22 +21,22 @@ class AvalancheMicroscopicGPU {
 
   // make a struct of arrays rather than array of structs
   struct ParticleStack {
-    double *x{nullptr};
-    double *y{nullptr};
-    double *z{nullptr};
-    double *t{nullptr};
-    int *status{nullptr};
-    double *energy{nullptr};
-    int *band{nullptr};
-    double *kx{nullptr};
-    double *ky{nullptr};
-    double *kz{nullptr};
-    Particle *ptype{nullptr};
-    double *x0{nullptr};
-    double *y0{nullptr};
-    double *z0{nullptr};
-    double *t0{nullptr};
-    double *e0{nullptr};
+    double* x{nullptr};
+    double* y{nullptr};
+    double* z{nullptr};
+    double* t{nullptr};
+    int* status{nullptr};
+    double* energy{nullptr};
+    int* band{nullptr};
+    double* kx{nullptr};
+    double* ky{nullptr};
+    double* kz{nullptr};
+    Particle* ptype{nullptr};
+    double* x0{nullptr};
+    double* y0{nullptr};
+    double* z0{nullptr};
+    double* t0{nullptr};
+    double* e0{nullptr};
     unsigned int stack_size{0};
   };
 
@@ -48,27 +52,26 @@ class AvalancheMicroscopicGPU {
   // the active particles and then add any new ones This array should only be a
   // maximum of the number of threads stackOld has to be big enough for *all*
   // particles as they *won't be removed*
-  int *activeIndexArray{nullptr};
-  int *newIndexArray{nullptr};
+  int* activeIndexArray{nullptr};
+  int* newIndexArray{nullptr};
   int numActiveParticles{0};
   unsigned int m_nElectrons{0};
 
   enum class TransferType { HostToDevice = 0, DeviceToDevice, DeviceToHost };
 
-  double InitialiseGPUParticleStack(ParticleStack &stack, unsigned int num);
-  void FreeGPUParticleStack(ParticleStack &stack);
-  void InitialiseCPUParticleStack(ParticleStack &stack, unsigned int num);
-  void FreeCPUParticleStack(ParticleStack &stack);
-  void TransferStackFromCPUToGPU(
-      std::vector<AvalancheMicroscopic::Seed> &particles);
-  void TransferStackFromGPUToCPU(
-      std::vector<AvalancheMicroscopic::Electron> &stack, bool end_points);
-  void TransferClassInternalInfo(AvalancheMicroscopic *src);
+  double InitialiseGPUParticleStack(ParticleStack& stack, unsigned int num);
+  void FreeGPUParticleStack(ParticleStack& stack);
+  void InitialiseCPUParticleStack(ParticleStack& stack, unsigned int num);
+  void FreeCPUParticleStack(ParticleStack& stack);
+  void TransferStackFromCPUToGPU(std::vector<Seed>& particles);
+  void TransferStackFromGPUToCPU(std::vector<Electron>& stack, bool end_points);
+  void TransferClassInternalInfo(AvalancheMicroscopic* src);
   void transferParticleStack(ParticleStack dest, unsigned int offset,
                              ParticleStack source, unsigned int num,
                              TransferType type, bool init_dest = false);
-  size_t processParticleStack(unsigned int &num_active, unsigned int &num_new);
-  bool transportParticleStack(const bool aval, AvalancheMicroscopic *aval_ptr,
+  std::size_t processParticleStack(unsigned int& num_active,
+                                   unsigned int& num_new);
+  bool transportParticleStack(const bool aval, AvalancheMicroscopic* aval_ptr,
                               int id, double fLim, double fInv, bool useBfield,
                               bool sc, int debug_electron = -1);
   void SetCUDADevice(int dev);
@@ -78,8 +81,8 @@ class AvalancheMicroscopicGPU {
   unsigned long memRNG{0};
 
   // Internal GPU transfer classes
-  SensorGPU *m_sensor{nullptr};
-  RandomEngineGPU *m_randomEngine{nullptr};
+  SensorGPU* m_sensor{nullptr};
+  RandomEngineGPU* m_randomEngine{nullptr};
 };
 }  // namespace Garfield
 

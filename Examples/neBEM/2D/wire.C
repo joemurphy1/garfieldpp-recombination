@@ -1,9 +1,5 @@
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TROOT.h>
-
-#include <cmath>
-#include <iostream>
 
 #include "Garfield/ComponentNeBem2d.hh"
 #include "Garfield/MediumMagboltz.hh"

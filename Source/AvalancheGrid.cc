@@ -1,6 +1,5 @@
 #include "Garfield/AvalancheGrid.hh"
 
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 
@@ -51,6 +50,17 @@ int AvalancheSize(const double dx, const int ni, const double alpha,
 namespace Garfield {
 
 AvalancheGrid::AvalancheGrid(Sensor *sensor) : m_sensor(sensor) {}
+
+void AvalancheGrid::SetElectronVelocity(const double vx, const double vy,
+                                        const double vz) {
+  double vel = std::sqrt(vx * vx + vy * vy + vz * vz);
+  if (vel != std::abs(vx) && vel != std::abs(vy) && vel != std::abs(vz)) return;
+  int nx = (int)vx / vel;
+  int ny = (int)vy / vel;
+  int nz = (int)vz / vel;
+  m_velNormal = {nx, ny, nz};
+  m_Velocity = -std::abs(vel);
+}
 
 void AvalancheGrid::SetGrid(const double xmin, const double xmax,
                             const int xsteps, const double ymin,

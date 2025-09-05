@@ -84,25 +84,25 @@ class ViewSignal : public ViewBase {
 
  private:
   // Sensor.
-  Sensor* m_sensor = nullptr;
+  Sensor* m_sensor{nullptr};
 
   // Axis range.
-  double m_xmin = 0.;
-  double m_xmax = 0.;
-  bool m_userRangeX = false;
-  double m_ymin = 0.;
-  double m_ymax = 0.;
+  double m_xmin{0.};
+  double m_xmax{0.};
+  bool m_userRangeX{false};
+  double m_ymin{0.};
+  double m_ymax{0.};
   bool m_userRangeY = false;
 
   // Axis label.
-  std::string m_labelY = "";
+  std::string m_labelY;
 
-  bool m_legend = false;
+  bool m_legend{false};
 
   // Colours.
-  short m_colTotal = kBlue + 3;
-  short m_colElectrons = kOrange - 3;
-  short m_colIons = kRed + 1;
+  short m_colTotal{kBlue + 3};
+  short m_colElectrons{kOrange - 3};
+  short m_colIons{kRed + 1};
   std::array<short, 6> m_colDelayed{
       {kCyan + 2, kYellow - 7, kRed - 9, kGreen + 1, kYellow - 4, kRed - 9}};
 

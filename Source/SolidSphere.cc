@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Polygon.hh"

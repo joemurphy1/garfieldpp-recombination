@@ -1,7 +1,6 @@
 #ifndef GARFIELD_AVALANCHEGRIDSPACECHARGE_HH
 #define GARFIELD_AVALANCHEGRIDSPACECHARGE_HH
 
-#include <algorithm>
 #include <array>
 #include <string>
 #include <utility>
@@ -133,49 +132,51 @@ class AvalancheGridSpaceCharge {
 
  private:
   struct GridNode {
-    long nElectron = 0;  ///< electrons on node
-    double nPosIon = 0;  ///< pos ion on node (smeared values allowed)
-    double nNegIon = 0;  ///< neg ion on node (smeared values allowed)
+    long nElectron{0};   ///< electrons on node
+    double nPosIon{0.};  ///< pos ion on node (smeared values allowed)
+    double nNegIon{0.};  ///< neg ion on node (smeared values allowed)
     // holder memories for stepping in time:
-    long nElectronHolder = 0;  ///< at t+dt
-    double nPosIonHolder = 0;  ///< at t+dt
-    double nNegIonHolder = 0;  ///< at t+dt
+    long nElectronHolder{0};   ///< at t+dt
+    double nPosIonHolder{0.};  ///< at t+dt
+    double nNegIonHolder{0.};  ///< at t+dt
 
-    double townsend = 0;    ///< townsend at this node 1/cm
-    double attachment = 0;  ///< attachment at this node 1/cm
+    double townsend{0.};    ///< townsend at this node 1/cm
+    double attachment{0.};  ///< attachment at this node 1/cm
     /// Magnitude of velocity of the node (not negative) cm/ns
-    double velocity = 0.;
+    double velocity{0.};
     /// Diffusion along E.
-    double dSigmaL = 0;
+    double dSigmaL{0.};
     /// Diffusion transverse to E (radial, phi dir is net 0).
-    double dSigmaT = 0;
+    double dSigmaT{0.};
 
-    double Wv = 0;  ///< flux drift cm/ns
-    double Wr = 0;  ///< bulk drift cm/ns
+    double Wv{0.};  ///< flux drift cm/ns
+    double Wr{0.};  ///< bulk drift cm/ns
     /// Ionization rate from TOF experiment 1/ns -> 1/cm
-    double townsendPT = 0;
+    double townsendPT{0.};
     /// Attachment rate from TOF experiment 1/ns -> 1/cm
-    double attachmentPT = 0;
+    double attachmentPT{0.};
     /// Space-charge electric field in R direction (can be negative)
-    double eFieldR = 0;
+    double eFieldR{0.};
     /// Space-charge electric field in Z direction (can be negative)
-    double eFieldZ = 0;
+    double eFieldZ{0.};
 
-    double time = 0.;  ///< Node clock.
+    double time{0.};  ///< Node clock.
 
-    bool anode = false;  ///< init the anode
+    bool anode{false};  ///< init the anode
     /// LayerIndex in ParallelPlate convention != gas gap index
-    int layerIndex = 0;
+    int layerIndex{0};
     /// Gas gap index: -1 if not gas gap; starts with 0, 1, ...
-    int gasGapIndex = 0;
-    bool isGasGap = true;
+    int gasGapIndex{0};
+    bool isGasGap{true};
   };
 
   struct Point {
-    double x, y, z;  ///< coordinates
-    double t;        ///< time
+    double x{0.};
+    double y{0.};
+    double z{0.};  ///< coordinates
+    double t{0.};  ///< time
 
-    int gasLayerIndex;
+    int gasLayerIndex{0};
   };
 
   // Prepare grid and place stored electrons from AvalancheMicroscopic import
@@ -242,68 +243,62 @@ class AvalancheGridSpaceCharge {
   void GetEllipticIntegrals(double x, double &K, double &E);
 
   // Get from index the gas gap number, else -1
-  int GetGasGapNumber(int layerIndex) {
-    auto it =
-        std::find(m_vIndexGasGaps.begin(), m_vIndexGasGaps.end(), layerIndex);
-    return (it != m_vIndexGasGaps.end())
-               ? std::distance(m_vIndexGasGaps.begin(), it)
-               : -1;
-  }
+  int GetGasGapNumber(int layerIndex);
 
  private:
-  std::string m_className = "AvalancheGridSpaceCharge";
+  std::string m_className{"AvalancheGridSpaceCharge"};
 
-  bool m_bDebug = false;
-  bool m_bDiffusion = false;
-  bool m_bStick = true;
+  bool m_bDebug{false};
+  bool m_bDiffusion{false};
+  bool m_bStick{true};
   // boolean for AvalancheElectron
-  bool m_bDriftAvalanche = false;
+  bool m_bDriftAvalanche{false};
   // boolean for ImportElectronsFromAvalancheMicroscopic
-  bool m_bImportAvalanche = false;
-  bool m_bPreparedImportAvalanche = false;
-  long m_lNCrit = 1e8;
-  bool m_bSpaceCharge = true;
+  bool m_bImportAvalanche{false};
+  bool m_bPreparedImportAvalanche{false};
+  long m_lNCrit = {100000000};
+  bool m_bSpaceCharge{true};
 
-  float m_fStreamerK = 0.95;
-  bool m_bStopAtK = false;
-  bool m_bFieldK = false;
-  long m_lElectronsK;
+  float m_fStreamerK{0.95};
+  bool m_bStopAtK{false};
+  bool m_bFieldK{false};
+  long m_lElectronsK{0};
 
-  bool m_bAdaptiveTime = true;
-  bool m_bImportElliptic = false;
+  bool m_bAdaptiveTime{true};
+  bool m_bImportElliptic{false};
   /// Flag if TOF parameters should be used, else Magboltz
   /// drift and SST spatial coefficients
-  bool m_bUseTOF = true;
+  bool m_bUseTOF{true};
   /// Flag if bulk drift velocity is available to the simulation
-  bool m_bWrAvailable = true;
+  bool m_bWrAvailable{true};
   /// Flag if temporal rates are available to the simulation
-  bool m_bRatesAvailable = true;
+  bool m_bRatesAvailable{true};
 
-  bool m_bMC = true;
+  bool m_bMC{true};
 
-  int m_iFieldApprox = 1;    //< order of approximation in Set(1,2,3,...)
-  double m_dMinGroups = 50;  //< same values as lippmann
+  int m_iFieldApprox{1};    //< order of approximation in Set(1,2,3,...)
+  double m_dMinGroups{50};  //< same values as lippmann
 
-  ComponentParallelPlate *m_pp = nullptr;
-  Sensor *m_sensor = nullptr;
+  ComponentParallelPlate *m_pp{nullptr};
+  Sensor *m_sensor{nullptr};
 
   std::vector<double> m_zGrid;  ///< Grid points of z-coordinate.
-  int m_zSteps = 0;             ///< Number of grid points.
-  double m_zStepSize = 0.;      /// Distance between the grid points.
+  int m_zSteps{0};              ///< Number of grid points.
+  double m_zStepSize{0.};       /// Distance between the grid points.
 
   std::vector<double> m_rGrid;  ///< Grid points of r-coordinate.
-  int m_rSteps = 0.;            ///< Number of grid points
-  double m_rStepSize = 0.;      /// Distance between the grid points.
+  int m_rSteps{0};              ///< Number of grid points
+  double m_rStepSize{0.};       /// Distance between the grid points.
 
-  bool m_isgridset = false;  ///< Keeps track if the grid has been defined.
-  long m_nTotElectron = 0;   ///< Total amount of electrons at time step.
-  long m_nTotPosIons = 0;    ///< total amount of charge created
+  bool m_isgridset{false};  ///< Keeps track if the grid has been defined.
+  long m_nTotElectron{0};   ///< Total amount of electrons at time step.
+  long m_nTotPosIons{0};    ///< total amount of charge created
 
-  double m_time = 0.;   ///< Clock.
-  double m_time0 = 0.;  ///< Initial time.
-  double m_dt = 0.;     ///< Time step.
+  double m_time{0.};   ///< Clock.
+  double m_time0{0.};  ///< Initial time.
+  double m_dt{0.};     ///< Time step.
   /// Tracking if the charges are still in the drift gap.
-  bool m_run = true;
+  bool m_run{true};
 
   std::vector<std::vector<int>>
       m_zGasGapBoundaries;  ///< [k] -> {izLeft, ..., izRight}
@@ -321,16 +316,16 @@ class AvalancheGridSpaceCharge {
 
   /// Coordinates of center of electron number.
   /// Required: y in [zmin, zmax]
-  std::vector<std::vector<double>> m_vCoNGasLayer{};
+  std::vector<std::vector<double>> m_vCoNGasLayer;
   /// Example point (y-coord) in each gas gap
-  std::vector<double> m_vYPointInGasGap{};
+  std::vector<double> m_vYPointInGasGap;
 
   /// Uniform background field in z direction, can be negative.
   std::vector<double> m_ezBkg = {0};
   /// Which gas gaps are saturated if saturation is on
-  std::vector<int> m_vSaturatedGaps{};
+  std::vector<int> m_vSaturatedGaps;
 
-  std::string m_sFieldOption = "coulomb";
+  std::string m_sFieldOption{"coulomb"};
   enum class Elliptic : std::size_t { X, K, E };
   static const constexpr std::size_t elliptic_size{29981};
   static const std::array<std::array<double, 3>, elliptic_size> m_elliptic;

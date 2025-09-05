@@ -4,7 +4,6 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
 
 #include "Garfield/GarfieldConstants.hh"

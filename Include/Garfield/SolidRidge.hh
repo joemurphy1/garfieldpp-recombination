@@ -2,6 +2,7 @@
 #define G_SOLID_RIDGE_H
 
 #include <array>
+#include <vector>
 
 #include "Garfield/Solid.hh"
 
@@ -19,7 +20,7 @@ class SolidRidge : public Solid {
              const double ly, const double hz, const double offsetx,
              const double dx, const double dy, const double dz);
   /// Destructor
-  ~SolidRidge() {}
+  ~SolidRidge() = default;
 
   bool IsInside(const double x, const double y, const double z,
                 const bool tesselated) const override;
@@ -51,13 +52,13 @@ class SolidRidge : public Solid {
 
  private:
   /// Half-length in x.
-  double m_lX;
+  double m_lX{0.};
   /// Half-length in y.
-  double m_lY;
+  double m_lY{0.};
   /// Height of the ridge.
-  double m_hz;
+  double m_hz{0.};
   /// Offset of the ridge in x.
-  double m_hx;
+  double m_hx{0.};
 
   /// Discretisation levels.
   std::array<double, 5> m_dis{{-1., -1., -1., -1., -1.}};

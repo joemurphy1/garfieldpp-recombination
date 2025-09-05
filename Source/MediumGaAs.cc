@@ -1,6 +1,5 @@
 #include "Garfield/MediumGaAs.hh"
 
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 

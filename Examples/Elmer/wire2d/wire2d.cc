@@ -7,7 +7,6 @@
  */
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TFile.h>
 
 #include <cmath>
 #include <iostream>

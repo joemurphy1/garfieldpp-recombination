@@ -3,8 +3,8 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <string>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Geometry.hh"
 #include "Garfield/Numerics.hh"

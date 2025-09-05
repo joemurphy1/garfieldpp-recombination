@@ -1,10 +1,8 @@
 #include "Garfield/ComponentAnsys121.hh"
 
-#include <math.h>
-#include <stdlib.h>
-
 #include <fstream>
 #include <iostream>
+#include <string>
 
 namespace Garfield {
 

@@ -3,8 +3,9 @@
 
 #include <array>
 #include <bitset>
-#include <cmath>
-#include <vector>
+#include <cstddef>
+#include <fstream>
+#include <string>
 
 #include "Garfield/Medium.hh"
 
@@ -16,7 +17,7 @@ class MediumGas : public Medium {
   /// Constructor
   MediumGas();
   /// Destructor
-  virtual ~MediumGas() {}
+  virtual ~MediumGas() = default;
 
   /// Set the gas mixture.
   bool SetComposition(const std::string& gas1, const double f1 = 1.,
@@ -78,22 +79,22 @@ class MediumGas : public Medium {
   bool AdjustTownsendCoefficient();
 
   /// Return the number of ionisation levels in the table.
-  size_t GetNumberOfIonisationLevels() const { return m_ionLevels.size(); }
+  std::size_t GetNumberOfIonisationLevels() const { return m_ionLevels.size(); }
   /// Return the number of excitation levels in the table.
-  size_t GetNumberOfExcitationLevels() const { return m_excLevels.size(); }
+  std::size_t GetNumberOfExcitationLevels() const { return m_excLevels.size(); }
   /// Return the identifier and threshold of an ionisation level.
-  void GetIonisationLevel(const size_t level, std::string& label,
+  void GetIonisationLevel(const std::size_t level, std::string& label,
                           double& energy) const;
   /// Return the identifier and energy of an excitation level.
-  void GetExcitationLevel(const size_t level, std::string& label,
+  void GetExcitationLevel(const std::size_t level, std::string& label,
                           double& energy) const;
   /// Get an entry in the table of ionisation rates.
-  bool GetElectronIonisationRate(const size_t level, const size_t ie,
-                                 const size_t ib, const size_t ia,
+  bool GetElectronIonisationRate(const std::size_t level, const std::size_t ie,
+                                 const std::size_t ib, const std::size_t ia,
                                  double& f) const;
   /// Get an entry in the table of excitation rates.
-  bool GetElectronExcitationRate(const size_t level, const size_t ie,
-                                 const size_t ib, const size_t ia,
+  bool GetElectronExcitationRate(const std::size_t level, const std::size_t ie,
+                                 const std::size_t ib, const std::size_t ia,
                                  double& f) const;
 
   bool IsGas() const override { return true; }
@@ -135,9 +136,7 @@ class MediumGas : public Medium {
   double UnScaleElectricField(const double e) const override {
     return e * m_pressure / m_pressureTable;
   }
-  double ScaleDiffusion(const double d) const override {
-    return d * sqrt(m_pressureTable / m_pressure);
-  }
+  double ScaleDiffusion(const double d) const override;
   double ScaleDiffusionTensor(const double d) const override {
     return d * m_pressureTable / m_pressure;
   }
@@ -158,7 +157,7 @@ class MediumGas : public Medium {
   virtual double CreateGPUTransferObject(MediumGPU*& med_gpu) override;
 
  protected:
-  static constexpr unsigned int m_nMaxGases = 6;
+  static constexpr std::size_t m_nMaxGases{6};
 
   // Gas mixture
   std::array<std::string, m_nMaxGases> m_gas;
@@ -168,20 +167,20 @@ class MediumGas : public Medium {
 
   // Penning transfer
   // Flag enabling/disabling Penning transfer
-  bool m_usePenning = false;
+  bool m_usePenning{false};
   // Penning transfer probability
-  double m_rPenningGlobal = 0.;
+  double m_rPenningGlobal{0.};
   // Mean distance of Penning ionisation
-  double m_lambdaPenningGlobal = 0.;
+  double m_lambdaPenningGlobal{0.};
   // Penning transfer probability per component
   std::array<double, m_nMaxGases> m_rPenningGas;
   // Penning transfer distance per component
   std::array<double, m_nMaxGases> m_lambdaPenningGas;
 
   // Pressure at which the transport parameter table was calculated
-  double m_pressureTable;
+  double m_pressureTable{0.};
   // Temperature at which the transport parameter table was calculated
-  double m_temperatureTable;
+  double m_temperatureTable{0.};
 
   // Table of Townsend coefficients without Penning transfer
   std::vector<std::vector<std::vector<double> > > m_eAlp0;
@@ -193,24 +192,24 @@ class MediumGas : public Medium {
   // Store excitation and ionization information
   struct ExcLevel {
     std::string label;
-    double energy;
-    double prob;
-    double rms;
-    double dt;
+    double energy{0.};
+    double prob{0.};
+    double rms{0.};
+    double dt{0.};
   };
   std::vector<ExcLevel> m_excLevels;
 
   struct IonLevel {
     std::string label;
-    double energy;
+    double energy{0.};
   };
   std::vector<IonLevel> m_ionLevels;
 
   // Extrapolation/interpolation for excitation and ionisation rates.
   std::pair<unsigned int, unsigned int> m_extrExc = {0, 1};
   std::pair<unsigned int, unsigned int> m_extrIon = {0, 1};
-  unsigned int m_intpExc = 2;
-  unsigned int m_intpIon = 2;
+  unsigned int m_intpExc{2};
+  unsigned int m_intpIon{2};
 
   bool LoadMobility(const std::string& filename, const bool quiet,
                     const bool negative);

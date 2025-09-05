@@ -1,6 +1,5 @@
 #include "Garfield/GeometrySimple.hh"
 
-#include <algorithm>
 #include <iostream>
 
 #include "Garfield/Medium.hh"

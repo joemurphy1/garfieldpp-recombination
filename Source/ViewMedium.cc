@@ -1,19 +1,19 @@
 #include "Garfield/ViewMedium.hh"
 
-#include <TAxis.h>
 #include <TGraph.h>
 #include <TH1F.h>
 #include <TLatex.h>
 #include <TStyle.h>
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <limits>
 #include <string>
+#include <vector>
 
+#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 
@@ -42,7 +42,10 @@ bool NonZero(const std::vector<double>& v) {
 namespace Garfield {
 
 ViewMedium::ViewMedium(Medium* medium)
-    : ViewBase("ViewMedium"), m_medium(medium) {}
+    : ViewBase("ViewMedium"), m_medium(medium) {
+  m_aMax = Pi;
+  m_angle = HalfPi;
+}
 
 void ViewMedium::SetMedium(Medium* m) {
   if (!m) {

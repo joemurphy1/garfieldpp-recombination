@@ -4,11 +4,13 @@
 #include <array>
 #include <functional>
 #include <map>
+#include <string>
 
 #include "Garfield/Component.hh"
 
 namespace Garfield {
 
+class Medium;
 /// Simple component with electric field given by a user function.
 
 class ComponentUser : public Component {
@@ -16,7 +18,7 @@ class ComponentUser : public Component {
   /// Constructor
   ComponentUser();
   /// Destructor
-  ~ComponentUser() {}
+  ~ComponentUser() = default;
 
   /// Set the function to be called for calculating the electric field.
   void SetElectricField(

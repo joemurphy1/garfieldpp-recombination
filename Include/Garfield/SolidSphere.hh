@@ -2,6 +2,7 @@
 #define G_SOLID_SPHERE_H
 
 #include <mutex>
+#include <vector>
 
 #include "Garfield/Solid.hh"
 
@@ -18,7 +19,7 @@ class SolidSphere : public Solid {
   SolidSphere(const double cx, const double cy, const double cz,
               const double rmin, const double rmax);
   /// Destructor
-  ~SolidSphere() {}
+  ~SolidSphere() = default;
 
   bool IsInside(const double x, const double y, const double z,
                 const bool tesselated) const override;
@@ -53,13 +54,14 @@ class SolidSphere : public Solid {
   std::mutex m_mutex;
 
   /// Inner and outer radii.
-  double m_rMin = 0., m_rMax = 1.;
+  double m_rMin{0.};
+  double m_rMax{1.};
 
   /// Number of meridians.
-  unsigned int m_n = 10;
+  unsigned int m_n{10};
 
   /// Discretisation level.
-  double m_dis = -1.;
+  double m_dis{-1.};
 
   /// Surface panels.
   std::vector<Panel> m_panelsO;

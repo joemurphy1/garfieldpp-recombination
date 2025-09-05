@@ -6,8 +6,8 @@ if(NOT TARGET Garfield::Garfield)
 endif()
 
 #---Build executable------------------------------------------------------------
-add_executable(diode diode.cpp)
-target_link_libraries(diode Garfield::Garfield)
+add_executable(diode3D diode3D.cpp)
+target_link_libraries(diode3D Garfield::Garfield)
 
 #---Copy all files locally to the build directory-------------------------------
 foreach(_file diode_des.dat diode_msh.grd)

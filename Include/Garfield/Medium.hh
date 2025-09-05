@@ -1,11 +1,13 @@
 #ifndef G_MEDIUM_H
 #define G_MEDIUM_H
 
+#include <cstddef>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "Garfield/FundamentalConstants.hh"
-#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/ParticleTypes.hh"
 
 class TPad;
 
@@ -171,10 +173,10 @@ class Medium {
   /// Collision rate [ns-1] for given electron energy
   virtual double GetElectronCollisionRate(const double e, const int band = 0);
   struct Secondary {
-    Particle type = Particle::Electron;
-    double energy = 0.;
-    double time = 0.;
-    double distance = 0.;
+    Particle type{Particle::Electron};
+    double energy{0.};
+    double time{0.};
+    double distance{0.};
   };
   /// Sample the collision type. Update energy and direction vector.
   virtual bool ElectronCollision(const double e, int& type, int& level,
@@ -232,10 +234,10 @@ class Medium {
   virtual double NegativeIonMobility();
 
   /// Set the range of fields to be covered by the transport tables.
-  void SetFieldGrid(double emin, double emax, const size_t ne, bool logE,
-                    double bmin = 0., double bmax = 0., const size_t nb = 1,
-                    double amin = HalfPi, double amax = HalfPi,
-                    const size_t na = 1);
+  void SetFieldGrid(double emin, double emax, const std::size_t ne, bool logE,
+                    double bmin = 0., double bmax = 0.,
+                    const std::size_t nb = 1, double amin = HalfPi,
+                    double amax = HalfPi, const std::size_t na = 1);
   /// Set the fields and E-B angles to be used in the transport tables.
   void SetFieldGrid(const std::vector<double>& efields,
                     const std::vector<double>& bfields,
@@ -245,196 +247,200 @@ class Medium {
                     std::vector<double>& angles);
 
   /// Set an entry in the table of drift speeds along E.
-  bool SetElectronVelocityE(const size_t ie, const size_t ib, const size_t ia,
-                            const double v) {
+  bool SetElectronVelocityE(const std::size_t ie, const std::size_t ib,
+                            const std::size_t ia, const double v) {
     return SetEntry(ie, ib, ia, "ElectronVelocityE", m_eVelE, v);
   }
   /// Get an entry in the table of drift speeds along E.
-  bool GetElectronVelocityE(const size_t ie, const size_t ib, const size_t ia,
-                            double& v) {
+  bool GetElectronVelocityE(const std::size_t ie, const std::size_t ib,
+                            const std::size_t ia, double& v) {
     return GetEntry(ie, ib, ia, "ElectronVelocityE", m_eVelE, v);
   }
   /// Set an entry in the table of drift speeds along ExB.
-  bool SetElectronVelocityExB(const size_t ie, const size_t ib, const size_t ia,
-                              const double v) {
+  bool SetElectronVelocityExB(const std::size_t ie, const std::size_t ib,
+                              const std::size_t ia, const double v) {
     return SetEntry(ie, ib, ia, "ElectronVelocityExB", m_eVelX, v);
   }
   /// Get an entry in the table of drift speeds along ExB.
-  bool GetElectronVelocityExB(const size_t ie, const size_t ib, const size_t ia,
-                              double& v) {
+  bool GetElectronVelocityExB(const std::size_t ie, const std::size_t ib,
+                              const std::size_t ia, double& v) {
     return GetEntry(ie, ib, ia, "ElectronVelocityExB", m_eVelX, v);
   }
   /// Set an entry in the table of drift speeds along Btrans.
-  bool SetElectronVelocityB(const size_t ie, const size_t ib, const size_t ia,
-                            const double v) {
+  bool SetElectronVelocityB(const std::size_t ie, const std::size_t ib,
+                            const std::size_t ia, const double v) {
     return SetEntry(ie, ib, ia, "ElectronVelocityB", m_eVelB, v);
   }
   /// Get an entry in the table of drift speeds along Btrans.
-  bool GetElectronVelocityB(const size_t ie, const size_t ib, const size_t ia,
-                            double& v) {
+  bool GetElectronVelocityB(const std::size_t ie, const std::size_t ib,
+                            const std::size_t ia, double& v) {
     return GetEntry(ie, ib, ia, "ElectronVelocityB", m_eVelB, v);
   }
   /// Set an entry in the table of flux drift speeds.
-  bool SetElectronFluxVelocity(const size_t ie, const size_t ib,
-                               const size_t ia, const double v) {
+  bool SetElectronFluxVelocity(const std::size_t ie, const std::size_t ib,
+                               const std::size_t ia, const double v) {
     return SetEntry(ie, ib, ia, "ElectronFluxVelocity", m_eVelWv, v);
   }
   /// Get an entry in the table of flux drift speeds.
-  bool GetElectronFluxVelocity(const size_t ie, const size_t ib,
-                               const size_t ia, double& v) {
+  bool GetElectronFluxVelocity(const std::size_t ie, const std::size_t ib,
+                               const std::size_t ia, double& v) {
     return GetEntry(ie, ib, ia, "ElectronFluxVelocity", m_eVelWv, v);
   }
   /// Set an entry in the table of bulk drift speeds.
-  bool SetElectronBulkVelocity(const size_t ie, const size_t ib,
-                               const size_t ia, const double v) {
+  bool SetElectronBulkVelocity(const std::size_t ie, const std::size_t ib,
+                               const std::size_t ia, const double v) {
     return SetEntry(ie, ib, ia, "ElectronBulkVelocity", m_eVelWr, v);
   }
   /// Get an entry in the table of bulk drift speeds.
-  bool GetElectronBulkVelocity(const size_t ie, const size_t ib,
-                               const size_t ia, double& v) {
+  bool GetElectronBulkVelocity(const std::size_t ie, const std::size_t ib,
+                               const std::size_t ia, double& v) {
     return GetEntry(ie, ib, ia, "ElectronBulkVelocity", m_eVelWr, v);
   }
   /// Set an entry in the table of longitudinal diffusion coefficients.
-  bool SetElectronLongitudinalDiffusion(const size_t ie, const size_t ib,
-                                        const size_t ia, const double dl) {
+  bool SetElectronLongitudinalDiffusion(const std::size_t ie,
+                                        const std::size_t ib,
+                                        const std::size_t ia, const double dl) {
     return SetEntry(ie, ib, ia, "ElectronLongitudinalDiffusion", m_eDifL, dl);
   }
   /// Get an entry in the table of longitudinal diffusion coefficients.
-  bool GetElectronLongitudinalDiffusion(const size_t ie, const size_t ib,
-                                        const size_t ia, double& dl) {
+  bool GetElectronLongitudinalDiffusion(const std::size_t ie,
+                                        const std::size_t ib,
+                                        const std::size_t ia, double& dl) {
     return GetEntry(ie, ib, ia, "ElectronLongitudinalDiffusion", m_eDifL, dl);
   }
   /// Set an entry in the table of transverse diffusion coefficients.
-  bool SetElectronTransverseDiffusion(const size_t ie, const size_t ib,
-                                      const size_t ia, const double dt) {
+  bool SetElectronTransverseDiffusion(const std::size_t ie,
+                                      const std::size_t ib,
+                                      const std::size_t ia, const double dt) {
     return SetEntry(ie, ib, ia, "ElectronTransverseDiffusion", m_eDifT, dt);
   }
   /// Get an entry in the table of transverse diffusion coefficients.
-  bool GetElectronTransverseDiffusion(const size_t ie, const size_t ib,
-                                      const size_t ia, double& dt) {
+  bool GetElectronTransverseDiffusion(const std::size_t ie,
+                                      const std::size_t ib,
+                                      const std::size_t ia, double& dt) {
     return GetEntry(ie, ib, ia, "ElectronTransverseDiffusion", m_eDifT, dt);
   }
   /// Set an entry in the table of Townsend coefficients.
-  bool SetElectronTownsend(const size_t ie, const size_t ib, const size_t ia,
-                           const double alpha) {
+  bool SetElectronTownsend(const std::size_t ie, const std::size_t ib,
+                           const std::size_t ia, const double alpha) {
     return SetEntry(ie, ib, ia, "ElectronTownsend", m_eAlp, alpha);
   }
   /// Get an entry in the table of Townsend coefficients.
-  bool GetElectronTownsend(const size_t ie, const size_t ib, const size_t ia,
-                           double& alpha) {
+  bool GetElectronTownsend(const std::size_t ie, const std::size_t ib,
+                           const std::size_t ia, double& alpha) {
     return GetEntry(ie, ib, ia, "ElectronTownsend", m_eAlp, alpha);
   }
   /// Set an entry in the table of attachment coefficients.
-  bool SetElectronAttachment(const size_t ie, const size_t ib, const size_t ia,
-                             const double eta) {
+  bool SetElectronAttachment(const std::size_t ie, const std::size_t ib,
+                             const std::size_t ia, const double eta) {
     return SetEntry(ie, ib, ia, "ElectronAttachment", m_eAtt, eta);
   }
   /// Get an entry in the table of attachment coefficients.
-  bool GetElectronAttachment(const size_t ie, const size_t ib, const size_t ia,
-                             double& eta) {
+  bool GetElectronAttachment(const std::size_t ie, const std::size_t ib,
+                             const std::size_t ia, double& eta) {
     return GetEntry(ie, ib, ia, "ElectronAttachment", m_eAtt, eta);
   }
   /// Set an entry in the table of ionization rate of TOF.
-  bool SetElectronTOFIonisation(const size_t ie, const size_t ib,
-                                const size_t ia, const double v) {
+  bool SetElectronTOFIonisation(const std::size_t ie, const std::size_t ib,
+                                const std::size_t ia, const double v) {
     return SetEntry(ie, ib, ia, "ElectronTOFIonisation", m_eRIon, v);
   }
   /// Get an entry in the table of ionization rate of TOF.
-  bool GetElectronTOFIonisation(const size_t ie, const size_t ib,
-                                const size_t ia, double& v) {
+  bool GetElectronTOFIonisation(const std::size_t ie, const std::size_t ib,
+                                const std::size_t ia, double& v) {
     return GetEntry(ie, ib, ia, "ElectronTOFIonisation", m_eRIon, v);
   }
   /// Set an entry in the table of attachment rate of TOF.
-  bool SetElectronTOFAttachment(const size_t ie, const size_t ib,
-                                const size_t ia, const double v) {
+  bool SetElectronTOFAttachment(const std::size_t ie, const std::size_t ib,
+                                const std::size_t ia, const double v) {
     return SetEntry(ie, ib, ia, "ElectronTOFAttachment", m_eRAtt, v);
   }
   /// Get an entry in the table of attachment rate of TOF.
-  bool GetElectronTOFAttachment(const size_t ie, const size_t ib,
-                                const size_t ia, double& v) {
+  bool GetElectronTOFAttachment(const std::size_t ie, const std::size_t ib,
+                                const std::size_t ia, double& v) {
     return GetEntry(ie, ib, ia, "ElectronTOFAttachment", m_eRAtt, v);
   }
 
   /// Set an entry in the table of Lorentz angles.
-  bool SetElectronLorentzAngle(const size_t ie, const size_t ib,
-                               const size_t ia, const double lor) {
+  bool SetElectronLorentzAngle(const std::size_t ie, const std::size_t ib,
+                               const std::size_t ia, const double lor) {
     return SetEntry(ie, ib, ia, "ElectronLorentzAngle", m_eLor, lor);
   }
   /// Get an entry in the table of Lorentz angles.
-  bool GetElectronLorentzAngle(const size_t ie, const size_t ib,
-                               const size_t ia, double& lor) {
+  bool GetElectronLorentzAngle(const std::size_t ie, const std::size_t ib,
+                               const std::size_t ia, double& lor) {
     return GetEntry(ie, ib, ia, "ElectronLorentzAngle", m_eLor, lor);
   }
 
   /// Set an entry in the table of drift speeds along E.
-  bool SetHoleVelocityE(const size_t ie, const size_t ib, const size_t ia,
-                        const double v) {
+  bool SetHoleVelocityE(const std::size_t ie, const std::size_t ib,
+                        const std::size_t ia, const double v) {
     return SetEntry(ie, ib, ia, "HoleVelocityE", m_hVelE, v);
   }
   /// Get an entry in the table of drift speeds along E.
-  bool GetHoleVelocityE(const size_t ie, const size_t ib, const size_t ia,
-                        double& v) {
+  bool GetHoleVelocityE(const std::size_t ie, const std::size_t ib,
+                        const std::size_t ia, double& v) {
     return GetEntry(ie, ib, ia, "HoleVelocityE", m_hVelE, v);
   }
   /// Set an entry in the table of drift speeds along ExB.
-  bool SetHoleVelocityExB(const size_t ie, const size_t ib, const size_t ia,
-                          const double v) {
+  bool SetHoleVelocityExB(const std::size_t ie, const std::size_t ib,
+                          const std::size_t ia, const double v) {
     return SetEntry(ie, ib, ia, "HoleVelocityExB", m_hVelX, v);
   }
   /// Get an entry in the table of drift speeds along ExB.
-  bool GetHoleVelocityExB(const size_t ie, const size_t ib, const size_t ia,
-                          double& v) {
+  bool GetHoleVelocityExB(const std::size_t ie, const std::size_t ib,
+                          const std::size_t ia, double& v) {
     return GetEntry(ie, ib, ia, "HoleVelocityExB", m_hVelX, v);
   }
   /// Set an entry in the table of drift speeds along Btrans.
-  bool SetHoleVelocityB(const size_t ie, const size_t ib, const size_t ia,
-                        const double v) {
+  bool SetHoleVelocityB(const std::size_t ie, const std::size_t ib,
+                        const std::size_t ia, const double v) {
     return SetEntry(ie, ib, ia, "HoleVelocityB", m_hVelB, v);
   }
   /// Get an entry in the table of drift speeds along Btrans.
-  bool GetHoleVelocityB(const size_t ie, const size_t ib, const size_t ia,
-                        double& v) {
+  bool GetHoleVelocityB(const std::size_t ie, const std::size_t ib,
+                        const std::size_t ia, double& v) {
     return GetEntry(ie, ib, ia, "HoleVelocityB", m_hVelB, v);
   }
 
   /// Set an entry in the table of longitudinal diffusion coefficients.
-  bool SetHoleLongitudinalDiffusion(const size_t ie, const size_t ib,
-                                    const size_t ia, const double dl) {
+  bool SetHoleLongitudinalDiffusion(const std::size_t ie, const std::size_t ib,
+                                    const std::size_t ia, const double dl) {
     return SetEntry(ie, ib, ia, "HoleLongitudinalDiffusion", m_hDifL, dl);
   }
   /// Get an entry in the table of longitudinal diffusion coefficients.
-  bool GetHoleLongitudinalDiffusion(const size_t ie, const size_t ib,
-                                    const size_t ia, double& dl) {
+  bool GetHoleLongitudinalDiffusion(const std::size_t ie, const std::size_t ib,
+                                    const std::size_t ia, double& dl) {
     return GetEntry(ie, ib, ia, "HoleLongitudinalDiffusion", m_hDifL, dl);
   }
   /// Set an entry in the table of transverse diffusion coefficients.
-  bool SetHoleTransverseDiffusion(const size_t ie, const size_t ib,
-                                  const size_t ia, const double dt) {
+  bool SetHoleTransverseDiffusion(const std::size_t ie, const std::size_t ib,
+                                  const std::size_t ia, const double dt) {
     return SetEntry(ie, ib, ia, "HoleTransverseDiffusion", m_hDifT, dt);
   }
   /// Get an entry in the table of transverse diffusion coefficients.
-  bool GetHoleTransverseDiffusion(const size_t ie, const size_t ib,
-                                  const size_t ia, double& dt) {
+  bool GetHoleTransverseDiffusion(const std::size_t ie, const std::size_t ib,
+                                  const std::size_t ia, double& dt) {
     return GetEntry(ie, ib, ia, "HoleTransverseDiffusion", m_hDifT, dt);
   }
   /// Set an entry in the table of Townsend coefficients.
-  bool SetHoleTownsend(const size_t ie, const size_t ib, const size_t ia,
-                       const double alpha) {
+  bool SetHoleTownsend(const std::size_t ie, const std::size_t ib,
+                       const std::size_t ia, const double alpha) {
     return SetEntry(ie, ib, ia, "HoleTownsend", m_hAlp, alpha);
   }
   /// Get an entry in the table of Townsend coefficients.
-  bool GetHoleTownsend(const size_t ie, const size_t ib, const size_t ia,
-                       double& alpha) {
+  bool GetHoleTownsend(const std::size_t ie, const std::size_t ib,
+                       const std::size_t ia, double& alpha) {
     return GetEntry(ie, ib, ia, "HoleTownsend", m_hAlp, alpha);
   }
   /// Set an entry in the table of attachment coefficients.
-  bool SetHoleAttachment(const size_t ie, const size_t ib, const size_t ia,
-                         const double eta) {
+  bool SetHoleAttachment(const std::size_t ie, const std::size_t ib,
+                         const std::size_t ia, const double eta) {
     return SetEntry(ie, ib, ia, "HoleAttachment", m_hAtt, eta);
   }
   /// Get an entry in the table of attachment coefficients.
-  bool GetHoleAttachment(const size_t ie, const size_t ib, const size_t ia,
-                         double& eta) {
+  bool GetHoleAttachment(const std::size_t ie, const std::size_t ib,
+                         const std::size_t ia, double& eta) {
     return GetEntry(ie, ib, ia, "HoleAttachment", m_hAtt, eta);
   }
 
@@ -446,51 +452,51 @@ class Medium {
                       const std::vector<double>& mobilities,
                       const bool negativeIons = false);
   /// Set an entry in the table of ion mobilities.
-  bool SetIonMobility(const size_t ie, const size_t ib, const size_t ia,
-                      const double mu);
+  bool SetIonMobility(const std::size_t ie, const std::size_t ib,
+                      const std::size_t ia, const double mu);
   /// Get an entry in the table of ion mobilities.
-  bool GetIonMobility(const size_t ie, const size_t ib, const size_t ia,
-                      double& mu) {
+  bool GetIonMobility(const std::size_t ie, const std::size_t ib,
+                      const std::size_t ia, double& mu) {
     return GetEntry(ie, ib, ia, "IonMobility", m_iMob, mu);
   }
 
   /// Set an entry in the table of longitudinal diffusion coefficients.
-  bool SetIonLongitudinalDiffusion(const size_t ie, const size_t ib,
-                                   const size_t ia, const double dl) {
+  bool SetIonLongitudinalDiffusion(const std::size_t ie, const std::size_t ib,
+                                   const std::size_t ia, const double dl) {
     return SetEntry(ie, ib, ia, "IonLongitudinalDiffusion", m_iDifL, dl);
   }
   /// Get an entry in the table of longitudinal diffusion coefficients.
-  bool GetIonLongitudinalDiffusion(const size_t ie, const size_t ib,
-                                   const size_t ia, double& dl) {
+  bool GetIonLongitudinalDiffusion(const std::size_t ie, const std::size_t ib,
+                                   const std::size_t ia, double& dl) {
     return GetEntry(ie, ib, ia, "IonLongitudinalDiffusion", m_iDifL, dl);
   }
   /// Set an entry in the table of transverse diffusion coefficients.
-  bool SetIonTransverseDiffusion(const size_t ie, const size_t ib,
-                                 const size_t ia, const double dt) {
+  bool SetIonTransverseDiffusion(const std::size_t ie, const std::size_t ib,
+                                 const std::size_t ia, const double dt) {
     return SetEntry(ie, ib, ia, "IonTransverseDiffusion", m_iDifT, dt);
   }
   /// Get an entry in the table of transverse diffusion coefficients.
-  bool GetIonTransverseDiffusion(const size_t ie, const size_t ib,
-                                 const size_t ia, double& dt) {
+  bool GetIonTransverseDiffusion(const std::size_t ie, const std::size_t ib,
+                                 const std::size_t ia, double& dt) {
     return GetEntry(ie, ib, ia, "IonTransverseDiffusion", m_iDifT, dt);
   }
   /// Set an entry in the table of dissociation coefficients.
-  bool SetIonDissociation(const size_t ie, const size_t ib, const size_t ia,
-                          const double diss) {
+  bool SetIonDissociation(const std::size_t ie, const std::size_t ib,
+                          const std::size_t ia, const double diss) {
     return SetEntry(ie, ib, ia, "IonDissociation", m_iDis, diss);
   }
   /// Get an entry in the table of dissociation coefficients.
-  bool GetIonDissociation(const size_t ie, const size_t ib, const size_t ia,
-                          double& diss) {
+  bool GetIonDissociation(const std::size_t ie, const std::size_t ib,
+                          const std::size_t ia, double& diss) {
     return GetEntry(ie, ib, ia, "IonDissociation", m_iDis, diss);
   }
 
   /// Set an entry in the table of negative ion mobilities.
-  bool SetNegativeIonMobility(const size_t ie, const size_t ib, const size_t ia,
-                              const double mu);
+  bool SetNegativeIonMobility(const std::size_t ie, const std::size_t ib,
+                              const std::size_t ia, const double mu);
   /// Get an entry in the table of negative ion mobilities.
-  bool GetNegativeIonMobility(const size_t ie, const size_t ib, const size_t ia,
-                              double& mu) {
+  bool GetNegativeIonMobility(const std::size_t ie, const std::size_t ib,
+                              const std::size_t ia, double& mu) {
     return GetEntry(ie, ib, ia, "NegativeIonMobility", m_nMob, mu);
   }
 
@@ -605,48 +611,48 @@ class Medium {
   virtual double CreateGPUTransferObject(MediumGPU*& med_gpu);
 
  protected:
-  std::string m_className = "Medium";
+  std::string m_className{"Medium"};
 
   static int m_idCounter;
 
   // Number of components
-  unsigned int m_nComponents = 1;
+  unsigned int m_nComponents{1};
   // Name
-  std::string m_name = "";
+  std::string m_name;
   // Temperature [K]
-  double m_temperature = 293.15;
+  double m_temperature{293.15};
   // Pressure [Torr]
-  double m_pressure = 760.;
+  double m_pressure{760.};
   // Static dielectric constant
-  double m_epsilon = 1.;
+  double m_epsilon{1.};
   // (Effective) atomic number Z
-  double m_z = 1.;
+  double m_z{1.};
   // Atomic weight A
-  double m_a = 0.;
+  double m_a{0.};
   // Number density [cm-3]
-  double m_density = 0.;
+  double m_density{0.};
 
   // Id number
-  int m_id;
+  int m_id{0};
 
   // Transport flags
-  bool m_driftable = false;
-  bool m_microscopic = false;
-  bool m_ionisable = false;
+  bool m_driftable{false};
+  bool m_microscopic{false};
+  bool m_ionisable{false};
 
   // W value
-  double m_w = 0.;
+  double m_w{0.};
   // Fano factor
-  double m_fano = 0.;
+  double m_fano{0.};
 
   // Update flag
-  bool m_isChanged = true;
+  bool m_isChanged{true};
 
   // Switch on/off debugging messages
-  bool m_debug = false;
+  bool m_debug{false};
 
   // Tables of transport parameters
-  bool m_tab2d = false;
+  bool m_tab2d{false};
 
   // Field grids
   std::vector<double> m_eFields;
@@ -691,11 +697,11 @@ class Medium {
   std::vector<std::vector<std::vector<double> > > m_nVel;
 
   // Thresholds for Townsend, attachment and dissociation coefficients.
-  unsigned int m_eThrAlp = 0;
-  unsigned int m_eThrAtt = 0;
-  unsigned int m_hThrAlp = 0;
-  unsigned int m_hThrAtt = 0;
-  unsigned int m_iThrDis = 0;
+  unsigned int m_eThrAlp{0};
+  unsigned int m_eThrAtt{0};
+  unsigned int m_hThrAlp{0};
+  unsigned int m_hThrAtt{0};
+  unsigned int m_iThrDis{0};
 
   // Extrapolation methods (TODO: enum).
   std::pair<unsigned int, unsigned int> m_extrVel = {0, 1};
@@ -707,13 +713,13 @@ class Medium {
   std::pair<unsigned int, unsigned int> m_extrDis = {0, 1};
 
   // Interpolation methods
-  unsigned int m_intpVel = 2;
-  unsigned int m_intpDif = 2;
-  unsigned int m_intpAlp = 2;
-  unsigned int m_intpAtt = 2;
-  unsigned int m_intpLor = 2;
-  unsigned int m_intpMob = 2;
-  unsigned int m_intpDis = 2;
+  unsigned int m_intpVel{2};
+  unsigned int m_intpDif{2};
+  unsigned int m_intpAlp{2};
+  unsigned int m_intpAtt{2};
+  unsigned int m_intpLor{2};
+  unsigned int m_intpMob{2};
+  unsigned int m_intpDis{2};
 
   bool Velocity(const double ex, const double ey, const double ez,
                 const double bx, const double by, const double bz,
@@ -764,11 +770,11 @@ class Medium {
                        const std::pair<unsigned int, unsigned int>& extr,
                        const bool logval = false) const;
 
-  bool SetEntry(const size_t i, const size_t j, const size_t k,
+  bool SetEntry(const std::size_t i, const std::size_t j, const std::size_t k,
                 const std::string& fcn,
                 std::vector<std::vector<std::vector<double> > >& tab,
                 const double val);
-  bool GetEntry(const size_t i, const size_t j, const size_t k,
+  bool GetEntry(const std::size_t i, const std::size_t j, const std::size_t k,
                 const std::string& fcn,
                 const std::vector<std::vector<std::vector<double> > >& tab,
                 double& val) const;
@@ -777,7 +783,7 @@ class Medium {
                               std::pair<unsigned int, unsigned int>& extr,
                               const std::string& fcn);
   bool GetExtrapolationIndex(std::string str, unsigned int& nb) const;
-  size_t SetThreshold(
+  std::size_t SetThreshold(
       const std::vector<std::vector<std::vector<double> > >& tab) const;
 
   void Clone(std::vector<std::vector<std::vector<double> > >& tab,
@@ -787,16 +793,17 @@ class Medium {
              const std::pair<unsigned int, unsigned int>& extr,
              const double init, const std::string& label);
   void Clone(std::vector<std::vector<std::vector<std::vector<double> > > >& tab,
-             const size_t n, const std::vector<double>& efields,
+             const std::size_t n, const std::vector<double>& efields,
              const std::vector<double>& bfields,
              const std::vector<double>& angles, const unsigned int intp,
              const std::pair<unsigned int, unsigned int>& extr,
              const double init, const std::string& label);
 
-  void Init(const size_t nE, const size_t nB, const size_t nA,
+  void Init(const std::size_t nE, const std::size_t nB, const std::size_t nA,
             std::vector<std::vector<std::vector<double> > >& tab,
             const double val);
-  void Init(const size_t nE, const size_t nB, const size_t nA, const size_t nT,
+  void Init(const std::size_t nE, const std::size_t nB, const std::size_t nA,
+            const std::size_t nT,
             std::vector<std::vector<std::vector<std::vector<double> > > >& tab,
             const double val);
 };

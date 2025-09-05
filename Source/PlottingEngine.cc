@@ -1,9 +1,5 @@
 #include "Garfield/PlottingEngine.hh"
 
-#include <TAxis.h>
-#include <TCanvas.h>
-#include <TF1.h>
-#include <TROOT.h>
 #include <TStyle.h>
 
 #include <memory>

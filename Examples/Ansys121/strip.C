@@ -1,5 +1,4 @@
 #include <TApplication.h>
-#include <TCanvas.h>
 
 #include "Garfield/ComponentAnsys121.hh"
 #include "Garfield/ViewFEMesh.hh"

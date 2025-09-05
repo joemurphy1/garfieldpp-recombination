@@ -5,14 +5,15 @@
 #include <TGeoBoolNode.h>
 #include <TGeoCompositeShape.h>
 #include <TGeoCone.h>
+#include <TGeoManager.h>
 #include <TGeoXtru.h>
 #include <TPolyLine.h>
 #include <TPolyLine3D.h>
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 #include "Garfield/GeometrySimple.hh"
 #include "Garfield/Medium.hh"

@@ -7,10 +7,9 @@
 #include <TMarker.h>
 #include <TPolyLine.h>
 
-#include <algorithm>
 #include <array>
-#include <cmath>
 #include <iostream>
+#include <string>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/ComponentNeBem2d.hh"

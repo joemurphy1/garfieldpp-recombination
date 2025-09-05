@@ -5,8 +5,6 @@
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include "TGeoManager.h"
-#include "TVirtualGeoPainter.h"
 
 // ClassImp(TGeoTet)
 
@@ -32,7 +30,7 @@ double Dot(const Vec& a, const Vec& b) {
 
 }  // namespace
 
-TGeoTet::TGeoTet(const char* name, const std::array<Vec, 4>& vertices)
+Garfield::TGeoTet::TGeoTet(const char* name, const std::array<Vec, 4>& vertices)
     : TGeoBBox(name, 0, 0, 0) {
   fVertices = vertices;
 
@@ -49,7 +47,7 @@ TGeoTet::TGeoTet(const char* name, const std::array<Vec, 4>& vertices)
   if (det < 0.) std::swap(fVertices[0], fVertices[1]);
 }
 
-void TGeoTet::ComputeBBox() {
+void Garfield::TGeoTet::ComputeBBox() {
   const double kBig = TGeoShape::Big();
   double vmin[3] = {kBig, kBig, kBig};
   double vmax[3] = {-kBig, -kBig, -kBig};
@@ -67,7 +65,7 @@ void TGeoTet::ComputeBBox() {
   }
 }
 
-TBuffer3D* TGeoTet::MakeBuffer3D() const {
+TBuffer3D* Garfield::TGeoTet::MakeBuffer3D() const {
   // Number of vertices.
   constexpr int nv = 4;
   // Number of segments.
@@ -82,11 +80,11 @@ TBuffer3D* TGeoTet::MakeBuffer3D() const {
   return buff;
 }
 
-void TGeoTet::Print(Option_t*) const {
+void Garfield::TGeoTet::Print(Option_t*) const {
   std::cout << "=== Tetrahedron " << GetName() << "\n";
 }
 
-void TGeoTet::SetSegsAndPols(TBuffer3D& buff) const {
+void Garfield::TGeoTet::SetSegsAndPols(TBuffer3D& buff) const {
   const int c = GetBasicColor();
 
   auto v01 = Dir(fVertices[0], fVertices[1]);
@@ -153,7 +151,7 @@ void TGeoTet::SetSegsAndPols(TBuffer3D& buff) const {
   }
 }
 
-void TGeoTet::SetPoints(double* points) const {
+void Garfield::TGeoTet::SetPoints(double* points) const {
   size_t ind = 0;
   for (const auto& vertex : fVertices) {
     points[ind++] = vertex[0];
@@ -162,7 +160,7 @@ void TGeoTet::SetPoints(double* points) const {
   }
 }
 
-void TGeoTet::SetPoints(float* points) const {
+void Garfield::TGeoTet::SetPoints(float* points) const {
   size_t ind = 0;
   for (const auto& vertex : fVertices) {
     points[ind++] = vertex[0];
@@ -172,7 +170,8 @@ void TGeoTet::SetPoints(float* points) const {
 }
 
 /// Fills a static 3D buffer and returns a reference.
-const TBuffer3D& TGeoTet::GetBuffer3D(int reqSections, bool localFrame) const {
+const TBuffer3D& Garfield::TGeoTet::GetBuffer3D(int reqSections,
+                                                bool localFrame) const {
   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
   FillBuffer3D(buffer, reqSections, localFrame);

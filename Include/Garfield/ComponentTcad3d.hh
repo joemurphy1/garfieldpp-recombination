@@ -2,13 +2,17 @@
 #define G_COMPONENT_TCAD_3D_H
 
 #include <array>
+#include <cstddef>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "Garfield/ComponentTcadBase.hh"
 #include "Garfield/TetrahedralTree.hh"
 
 namespace Garfield {
 
+class Medium;
 /// Interpolation in a three-dimensional field map created by Sentaurus Device.
 
 class ComponentTcad3d : public ComponentTcadBase<3> {
@@ -16,7 +20,7 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
   /// Constructor
   ComponentTcad3d();
   /// Destructor
-  ~ComponentTcad3d() {}
+  ~ComponentTcad3d() = default;
 
   /** Retrieve the properties of an element.
    * \param i index of the element
@@ -25,10 +29,11 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
    * \param dmax largest length in the element
    * \param type element type
    */
-  bool GetElement(const size_t i, double& vol, double& dmin, double& dmax,
+  bool GetElement(const std::size_t i, double& vol, double& dmin, double& dmax,
                   int& type) const;
   /// Get the coordinates of a mesh node.
-  bool GetNode(const size_t i, double& x, double& y, double& z) const override;
+  bool GetNode(const std::size_t i, double& x, double& y,
+               double& z) const override;
 
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,

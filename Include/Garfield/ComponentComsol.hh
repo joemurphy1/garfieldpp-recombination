@@ -1,4 +1,9 @@
-#pragma once
+#ifndef G_COMPONENT_COMSOL_H
+#define G_COMPONENT_COMSOL_H
+
+#include <cstddef>
+#include <string>
+#include <vector>
 
 #include "Garfield/ComponentFieldMap.hh"
 
@@ -14,7 +19,7 @@ class ComponentComsol : public ComponentFieldMap {
   ComponentComsol(const std::string &mesh, const std::string &mplist,
                   const std::string &field, const std::string &unit = "m");
   /// Destructor.
-  ~ComponentComsol() {}
+  ~ComponentComsol() = default;
 
   void SetImportRange(const double xmin, const double xmax, const double ymin,
                       const double ymax, const double zmin, const double zmax) {
@@ -69,26 +74,26 @@ class ComponentComsol : public ComponentFieldMap {
 
 #endif
  private:
-  double m_unit = 100.;
-  bool m_timeset = false;
-  static constexpr double MaxNodeDistance = 1.e-8;
+  double m_unit{100.};
+  bool m_timeset{false};
+  static constexpr double MaxNodeDistance{1.e-8};
 
-  bool m_materialSelect = false;
-  double m_epsr = 1.;
+  bool m_materialSelect{false};
+  double m_epsr{1.};
 
   bool GetTimeInterval(const std::string &file);
 
   struct Range {
-    bool set = false;
+    bool set{false};
 
-    double xmin = 0;
-    double xmax = 0;
+    double xmin{0.};
+    double xmax{0.};
 
-    double ymin = 0;
-    double ymax = 0;
+    double ymin{0.};
+    double ymax{0.};
 
-    double zmin = 0;
-    double zmax = 0;
+    double zmin{0.};
+    double zmax{0.};
   };
 
   Range m_range;
@@ -106,7 +111,7 @@ class ComponentComsol : public ComponentFieldMap {
   bool ElementInRange(const Element &element,
                       const std::vector<Node> &nodes) const {
     if (m_range.set) {
-      for (size_t i = 0; i < 10; i++) {
+      for (std::size_t i = 0; i < 10; i++) {
         const Node &node = nodes[element.emap[i]];
         if (!CheckInRange(node.x, node.y, node.z)) return false;
       }
@@ -118,3 +123,5 @@ class ComponentComsol : public ComponentFieldMap {
   bool LoadPotentials(const std::string &field, std::vector<double> &pot);
 };
 }  // namespace Garfield
+
+#endif

@@ -2,14 +2,13 @@
 
 #include <algorithm>
 #include <array>
-#include <cfloat>
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <set>
 #include <vector>
 
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Geometry.hh"
 #include "Garfield/Medium.hh"
@@ -464,7 +463,8 @@ void ComponentNeBem3d::WeightingField(const double x, const double y,
   point.Y = 0.01 * y;
   point.Z = 0.01 * z;
   neBEM::Vector3D field;
-  if (neBEM::neBEMWeightingField(&point, &field, id) == DBL_MAX) {
+  if (neBEM::neBEMWeightingField(&point, &field, id) ==
+      std::numeric_limits<double>::max()) {
     std::cerr << m_className << "::WeightingField: Evaluation failed.\n";
     return;
   }
@@ -484,7 +484,7 @@ double ComponentNeBem3d::WeightingPotential(const double x, const double y,
   point.Z = 0.01 * z;
   neBEM::Vector3D field;
   const double v = neBEM::neBEMWeightingField(&point, &field, id);
-  return v == DBL_MAX ? 0. : v;
+  return v == std::numeric_limits<double>::max() ? 0. : v;
 }
 
 void ComponentNeBem3d::AddPlaneX(const double x, const double v) {

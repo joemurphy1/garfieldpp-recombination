@@ -1,8 +1,8 @@
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TROOT.h>
 #include <TSystem.h>
 
+#include <cmath>
 #include <iostream>
 
 #include "Garfield/ComponentAnalyticField.hh"

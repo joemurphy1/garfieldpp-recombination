@@ -24,3 +24,8 @@ target_link_libraries(crossingWires Garfield::Garfield)
 
 add_executable(parallelPlatesWeightingField parallelPlatesWeightingField.C)
 target_link_libraries(parallelPlatesWeightingField Garfield::Garfield)
+
+add_executable(tube tube.C)
+target_link_libraries(tube Garfield::Garfield)
+
+add_subdirectory(2D)

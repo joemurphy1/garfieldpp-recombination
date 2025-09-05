@@ -1,5 +1,7 @@
 #include "Garfield/AvalancheGridSpaceCharge.hh"
 
+#include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <numeric>
@@ -7,6 +9,7 @@
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentParallelPlate.hh"
 #include "Garfield/EllipticIntegrals.hh"
+#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
@@ -183,6 +186,14 @@ AvalancheGridSpaceCharge::AvalancheGridSpaceCharge(Sensor *sensor) {
   m_rGrid.reserve(1000);
 
   SetSensor(sensor);
+}
+
+int AvalancheGridSpaceCharge::GetGasGapNumber(int layerIndex) {
+  auto it =
+      std::find(m_vIndexGasGaps.begin(), m_vIndexGasGaps.end(), layerIndex);
+  return (it != m_vIndexGasGaps.end())
+             ? std::distance(m_vIndexGasGaps.begin(), it)
+             : -1;
 }
 
 void AvalancheGridSpaceCharge::Reset() {

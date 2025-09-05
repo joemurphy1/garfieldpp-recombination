@@ -9,9 +9,6 @@
 #include <TApplication.h>
 #include <TCanvas.h>
 
-#include <cmath>
-#include <cstring>
-
 #include "Garfield/ComponentElmer.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"

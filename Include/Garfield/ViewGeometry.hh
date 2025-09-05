@@ -1,12 +1,14 @@
 #ifndef G_VIEW_GEOMETRY
 #define G_VIEW_GEOMETRY
 
-#include <TGeoManager.h>
-
 #include <memory>
 #include <vector>
 
 #include "Garfield/ViewBase.hh"
+
+class TGeoVolume;
+class TGeoMedium;
+class TGeoManager;
 
 namespace Garfield {
 
@@ -35,7 +37,7 @@ class ViewGeometry : public ViewBase {
   void PlotPanels();
 
  private:
-  GeometrySimple* m_geometry = nullptr;
+  GeometrySimple* m_geometry{nullptr};
 
   std::vector<TGeoVolume*> m_volumes;
   std::vector<TGeoMedium*> m_media;

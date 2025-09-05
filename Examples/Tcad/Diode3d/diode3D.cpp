@@ -1,9 +1,4 @@
 #include <TApplication.h>
-#include <TCanvas.h>
-#include <TROOT.h>
-#include <TSystem.h>
-
-#include <cmath>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/ComponentTcad3d.hh"

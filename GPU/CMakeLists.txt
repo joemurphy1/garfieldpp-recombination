@@ -15,5 +15,5 @@ set_target_properties(GarfieldGPU PROPERTIES
                                   CUDA_SEPARABLE_COMPILATION ON
                                   COMPILE_OPTIONS "-Wall;-Wextra;-Wfatal-errors;-Wno-deprecated-gpu-targets")
 target_include_directories(GarfieldGPU PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Include> $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Source> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
-target_compile_definitions(GarfieldGPU PRIVATE __GPUCOMPILE__ USEGPU)
+target_compile_definitions(GarfieldGPU PRIVATE USEGPU)
 endif()

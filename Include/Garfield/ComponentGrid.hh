@@ -2,7 +2,6 @@
 #define G_COMPONENT_GRID_H
 
 #include <array>
-#include <cmath>
 #include <string>
 #include <vector>
 
@@ -10,6 +9,7 @@
 
 namespace Garfield {
 
+class Medium;
 /// Component for interpolating field maps on a regular mesh.
 
 class ComponentGrid : public Component {
@@ -17,7 +17,7 @@ class ComponentGrid : public Component {
   /// Constructor
   ComponentGrid();
   /// Destructor
-  ~ComponentGrid() {}
+  ~ComponentGrid() = default;
 
   /** Define the grid.
    * \param nx,ny,nz number of nodes along \f$x, y, z\f$.
@@ -232,8 +232,10 @@ class ComponentGrid : public Component {
   }
   bool ChargeDensity(const double x, const double y, const double z, double& q);
   struct Node {
-    double fx, fy, fz;  ///< Field
-    double v;           ///< Potential
+    double fx{0.};
+    double fy{0.};
+    double fz{0.};  ///< Field
+    double v{0.};   ///< Potential
   };
   /// Get field values on all nodes
   void GetFieldOnGrid(
@@ -255,9 +257,9 @@ class ComponentGrid : public Component {
  private:
   enum class Format { Unknown, XY, XZ, XYZ, IJ, IK, IJK, YXZ };
   enum class Coordinates { Cartesian, Cylindrical };
-  Coordinates m_coordinates = Coordinates::Cartesian;
+  Coordinates m_coordinates{Coordinates::Cartesian};
 
-  Medium* m_medium = nullptr;
+  Medium* m_medium{nullptr};
 
   /// Electric field values and potentials.
   std::vector<std::vector<std::vector<Node>>> m_efields;
@@ -287,19 +289,20 @@ class ComponentGrid : public Component {
   std::vector<std::vector<std::vector<bool>>> m_active;
 
   // Dimensions of the mesh
-  std::array<unsigned int, 3> m_nX = {{1, 1, 1}};
-  std::array<double, 3> m_xMin = {{0., 0., 0.}};
-  std::array<double, 3> m_xMax = {{0., 0., 0.}};
-  std::array<double, 3> m_sX = {{0., 0., 0.}};
+  std::array<unsigned int, 3> m_nX{{1, 1, 1}};
+  std::array<double, 3> m_xMin{{0., 0., 0.}};
+  std::array<double, 3> m_xMax{{0., 0., 0.}};
+  std::array<double, 3> m_sX{{0., 0., 0.}};
 
-  bool m_hasMesh = false;
-  bool m_hasPotential = false;
+  bool m_hasMesh{false};
+  bool m_hasPotential{false};
 
   // Offset for weighting field
-  std::array<double, 3> m_wFieldOffset = {{0., 0., 0.}};
+  std::array<double, 3> m_wFieldOffset{{0., 0., 0.}};
 
   // Voltage range
-  double m_pMin = 0., m_pMax = 0.;
+  double m_pMin{0.};
+  double m_pMax{0.};
 
   /// Read/determine mesh parameters from file.
   bool LoadMesh(const std::string& filename, std::string format,

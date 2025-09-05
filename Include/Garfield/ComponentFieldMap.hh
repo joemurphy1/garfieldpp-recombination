@@ -1,7 +1,7 @@
 #ifndef G_COMPONENT_FIELD_MAP_H
 #define G_COMPONENT_FIELD_MAP_H
 
-#include <array>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
@@ -14,6 +14,8 @@
 
 namespace Garfield {
 
+class Medium;
+class ComponentGPU;
 /// Base class for components based on finite-element field maps.
 class ComponentFieldMap : public Component {
  public:
@@ -33,36 +35,37 @@ class ComponentFieldMap : public Component {
   /// List all currently defined materials
   void PrintMaterials();
   /// Flag a field map material as a drift medium.
-  void DriftMedium(const size_t imat);
+  void DriftMedium(const std::size_t imat);
   /// Flag a field map materials as a non-drift medium.
-  void NotDriftMedium(const size_t imat);
+  void NotDriftMedium(const std::size_t imat);
   /// Return the number of materials in the field map.
-  size_t GetNumberOfMaterials() const { return m_materials.size(); }
+  std::size_t GetNumberOfMaterials() const { return m_materials.size(); }
   /// Return the relative permittivity of a field map material.
-  double GetPermittivity(const size_t imat) const;
+  double GetPermittivity(const std::size_t imat) const;
   /// Return the conductivity of a field map material.
-  double GetConductivity(const size_t imat) const;
+  double GetConductivity(const std::size_t imat) const;
   /// Associate a field map material with a Medium object.
-  void SetMedium(const size_t imat, Medium* medium);
+  void SetMedium(const std::size_t imat, Medium* medium);
   /// Return the Medium associated to a field map material.
-  Medium* GetMedium(const size_t imat) const;
+  Medium* GetMedium(const std::size_t imat) const;
   using Component::GetMedium;
   /// Associate all field map materials with a relative permittivity
   /// of unity to a given Medium class.
   void SetGas(Medium* medium);
 
-  size_t GetNumberOfElements() const override { return m_elements.size(); }
-  bool GetElementNodes(const size_t i,
+  std::size_t GetNumberOfElements() const override { return m_elements.size(); }
+  bool GetElementNodes(const std::size_t i,
                        std::vector<size_t>& nodes) const override;
-  bool GetElementRegion(const size_t i, size_t& mat,
+  bool GetElementRegion(const std::size_t i, std::size_t& mat,
                         bool& drift) const override;
   /// Return the volume and aspect ratio of a mesh element.
-  bool GetElement(const size_t i, double& vol, double& dmin,
+  bool GetElement(const std::size_t i, double& vol, double& dmin,
                   double& dmax) const;
-  size_t GetNumberOfNodes() const override { return m_nodes.size(); }
-  bool GetNode(const size_t i, double& x, double& y, double& z) const override;
+  std::size_t GetNumberOfNodes() const override { return m_nodes.size(); }
+  bool GetNode(const std::size_t i, double& x, double& y,
+               double& z) const override;
   /// Return the potential at a given node.
-  double GetPotential(const size_t i) const;
+  double GetPotential(const std::size_t i) const;
 
   // Options
   void EnableCheckMapIndices(const bool on = true) {
@@ -144,21 +147,21 @@ class ComponentFieldMap : public Component {
   double CreateGPUTransferObject(ComponentGPU*& comp_gpu) override;
 
  protected:
-  bool m_is3d = true;
+  bool m_is3d{true};
 
   enum class ElementType {
     Unknown = 0,
     Serendipity = 5,
     CurvedTetrahedron = 13
   };
-  ElementType m_elementType = ElementType::CurvedTetrahedron;
+  ElementType m_elementType{ElementType::CurvedTetrahedron};
 
   // Elements
   struct Element {
     // Nodes
-    int emap[10];
+    int emap[10]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     // Material
-    unsigned int matmap;
+    unsigned int matmap{0};
   };
 
   std::vector<Element> m_elements;
@@ -176,7 +179,9 @@ class ComponentFieldMap : public Component {
   // Nodes
   struct Node {
     // Coordinates
-    double x, y, z;
+    double x{0.};
+    double y{0.};
+    double z{0.};
   };
   std::vector<Node> m_nodes;
 
@@ -191,12 +196,12 @@ class ComponentFieldMap : public Component {
   // Materials
   struct Material {
     // Permittivity
-    double eps;
+    double eps{0.};
     // Resistivity
-    double ohm;
-    bool driftmedium;
+    double ohm{0.};
+    bool driftmedium{false};
     // Associated medium
-    Medium* medium;
+    Medium* medium{nullptr};
   };
 
   std::vector<Material> m_materials;
@@ -205,45 +210,45 @@ class ComponentFieldMap : public Component {
   struct WeightingFieldCopy {
     // Source
     std::string source;
-    TMatrixD rot = TMatrixD(3, 3);
-    TVectorD trans = TVectorD(3);
+    TMatrixD rot{TMatrixD(3, 3)};
+    TVectorD trans{TVectorD(3)};
   };
 
   // Weighting potential copies.
   std::map<std::string, WeightingFieldCopy> m_wfieldCopies;
 
   // Bounding box
-  bool m_hasBoundingBox = false;
-  std::array<double, 3> m_minBoundingBox = {{0., 0., 0.}};
-  std::array<double, 3> m_maxBoundingBox = {{0., 0., 0.}};
+  bool m_hasBoundingBox{false};
+  std::array<double, 3> m_minBoundingBox{{0., 0., 0.}};
+  std::array<double, 3> m_maxBoundingBox{{0., 0., 0.}};
 
   /// Flag to check if bounding boxes of elements are cached
-  bool m_cacheElemBoundingBoxes = false;
+  bool m_cacheElemBoundingBoxes{false};
 
   // Ranges and periodicities
-  std::array<double, 3> m_mapmin = {{0., 0., 0.}};
-  std::array<double, 3> m_mapmax = {{0., 0., 0.}};
-  std::array<double, 3> m_mapamin = {{0., 0., 0.}};
-  std::array<double, 3> m_mapamax = {{0., 0., 0.}};
+  std::array<double, 3> m_mapmin{{0., 0., 0.}};
+  std::array<double, 3> m_mapmax{{0., 0., 0.}};
+  std::array<double, 3> m_mapamin{{0., 0., 0.}};
+  std::array<double, 3> m_mapamax{{0., 0., 0.}};
 
-  std::array<double, 3> m_mapna = {{0., 0., 0.}};
-  std::array<double, 3> m_cells = {{0., 0., 0.}};
+  std::array<double, 3> m_mapna{{0., 0., 0.}};
+  std::array<double, 3> m_cells{{0., 0., 0.}};
 
-  double m_mapvmin = 0.;
-  double m_mapvmax = 0.;
+  double m_mapvmin{0.};
+  double m_mapvmax{0.};
 
   std::array<bool, 3> m_setang;
 
   // Option to delete meshing in conductors
-  bool m_deleteBackground = true;
+  bool m_deleteBackground{true};
 
   // Warnings flag
-  bool m_warning = false;
-  unsigned int m_nWarnings = 0;
+  bool m_warning{false};
+  unsigned int m_nWarnings{0};
 
   // Print warnings about failed convergence when refining
   // isoparametric coordinates.
-  bool m_printConvergenceWarnings = true;
+  bool m_printConvergenceWarnings{true};
 
   // Get the scaling factor for a given length unit.
   static double ScalingFactor(std::string unit);
@@ -333,7 +338,7 @@ class ComponentFieldMap : public Component {
                          const std::string& filename) const;
   void PrintElement(const std::string& header, const double x, const double y,
                     const double z, const double t1, const double t2,
-                    const double t3, const double t4, const size_t i,
+                    const double t3, const double t4, const std::size_t i,
                     const std::vector<double>& potential) const;
   /// Interpolation of potential between two time slices.
   void TimeInterpolation(const double t, double& f0, double& f1, int& i0,
@@ -341,10 +346,10 @@ class ComponentFieldMap : public Component {
 
  protected:
   /// Scan for multiple elements that contain a point
-  bool m_checkMultipleElement = false;
+  bool m_checkMultipleElement{false};
 
   // Tetrahedral tree
-  bool m_useTetrahedralTree = true;
+  bool m_useTetrahedralTree{true};
   std::unique_ptr<TetrahedralTree> m_octree;
 
  protected:

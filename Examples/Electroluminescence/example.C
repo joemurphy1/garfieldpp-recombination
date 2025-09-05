@@ -7,12 +7,10 @@
 // email: carlos.oliveira@ua.pt
 
 #include <TApplication.h>
-#include <TCanvas.h>
 #include <TH1D.h>
-#include <TROOT.h>
 
-#include <cmath>
 #include <iostream>
+#include <vector>
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentAnalyticField.hh"

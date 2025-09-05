@@ -1,10 +1,11 @@
 #ifndef G_VIEW_FE_MESH
 #define G_VIEW_FE_MESH
 
-#include <TGeoManager.h>
 #include <TMatrixDfwd.h>
 
+#include <cstddef>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -13,6 +14,7 @@
 class TGaxis;
 class TGeoVolume;
 class TGeoMedium;
+class TGeoManager;
 
 namespace Garfield {
 
@@ -89,26 +91,26 @@ class ViewFEMesh : public ViewBase {
 
  private:
   // Options
-  bool m_fillMesh = false;
+  bool m_fillMesh{false};
 
   // Intersection of viewing plane with plotted area in planar coordinates
-  bool m_drawViewRegion = false;
+  bool m_drawViewRegion{false};
   std::vector<double> m_viewRegionX;
   std::vector<double> m_viewRegionY;
 
   // Field map object
-  Component* m_cmp = nullptr;
+  Component* m_cmp{nullptr};
 
   // Optional associated ViewDrift object
-  ViewDrift* m_viewDrift = nullptr;
-  bool m_plotMeshBorders = false;
+  ViewDrift* m_viewDrift{nullptr};
+  bool m_plotMeshBorders{false};
 
   // Axes
-  TGaxis* m_xaxis = nullptr;
-  TGaxis* m_yaxis = nullptr;
-  std::string m_xaxisTitle = "";
-  std::string m_yaxisTitle = "";
-  bool m_drawAxes = false;
+  TGaxis* m_xaxis{nullptr};
+  TGaxis* m_yaxis{nullptr};
+  std::string m_xaxisTitle;
+  std::string m_yaxisTitle;
+  bool m_drawAxes{false};
 
   // The color map
   std::map<int, int> m_colorMap;
@@ -128,12 +130,13 @@ class ViewFEMesh : public ViewBase {
   void DrawBorders2d();
   void DrawBorders3d();
 
-  typedef std::vector<size_t> Facet;
-  void AddFacets(const size_t i,
-                 const std::vector<std::vector<Facet> >& elementFacets,
-                 const std::map<Facet, std::vector<size_t> >& facetElements,
-                 std::vector<Facet>& facets, std::vector<bool>& done) const;
-  bool FacetSign(const Facet& f, const size_t element) const;
+  typedef std::vector<std::size_t> Facet;
+  void AddFacets(
+      const std::size_t i,
+      const std::vector<std::vector<Facet> >& elementFacets,
+      const std::map<Facet, std::vector<std::size_t> >& facetElements,
+      std::vector<Facet>& facets, std::vector<bool>& done) const;
+  bool FacetSign(const Facet& f, const std::size_t element) const;
   void DrawDriftLines2d();
   void DrawDriftLines3d();
 
@@ -159,8 +162,6 @@ class ViewFEMesh : public ViewBase {
 
   void Reset();
 };
-
-using ViewMesh = ViewFEMesh;
 
 }  // namespace Garfield
 #endif

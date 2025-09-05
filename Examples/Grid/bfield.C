@@ -1,8 +1,4 @@
 #include <TApplication.h>
-#include <TCanvas.h>
-#include <TROOT.h>
-
-#include <cmath>
 
 #include "Garfield/ComponentGrid.hh"
 #include "Garfield/ViewField.hh"

@@ -4,8 +4,6 @@
 
 namespace Garfield {
 
-enum class Particle { Electron = 0, Ion, Hole, Positron, NegativeIon, Photon };
-
 // Collision types
 static const int ElectronCollisionTypeElastic = 0;
 static const int ElectronCollisionTypeIonisation = 1;

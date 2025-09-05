@@ -1,16 +1,16 @@
 #include "Garfield/ViewIsochrons.hh"
 
-#include <TAxis.h>
 #include <TGraph.h>
 #include <TH1F.h>
-#include <TROOT.h>
 #include <TStyle.h>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <iterator>
 #include <set>
+#include <vector>
 
 #include "Garfield/Component.hh"
 #include "Garfield/DriftLineRKF.hh"
@@ -135,6 +135,16 @@ bool Crossing(const double x1, const double y1, const double x2,
 namespace Garfield {
 
 ViewIsochrons::ViewIsochrons() : ViewBase("ViewIsochrons") {}
+
+void ViewIsochrons::DriftElectrons(const bool positive) {
+  m_particle = Particle::Electron;
+  m_positive = positive;
+}
+
+void ViewIsochrons::DriftIons(const bool negative) {
+  m_particle = Particle::Ion;
+  m_positive = !negative;
+}
 
 void ViewIsochrons::SetSensor(Sensor* s) {
   if (!s) {

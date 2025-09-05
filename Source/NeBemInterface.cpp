@@ -1,9 +1,8 @@
 #include "neBEMInterface.h"
 
-#include <stdio.h>
+// #include <stdio.h>
 
 #include "Garfield/ComponentNeBem3d.hh"
-#include "NR.h"
 #include "neBEM.h"
 
 namespace neBEM {

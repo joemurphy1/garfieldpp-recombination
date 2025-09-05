@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/AvalancheMicroscopicTypes.hh"
 #include "Garfield/MultiProcessInterface.hh"
 
 class TH1;
@@ -170,33 +170,14 @@ class AvalancheMicroscopic {
     ni = m_nIonsGPU;
   }
 
-  struct Point {
-    double x, y, z;     ///< Coordinates.
-    double t;           ///< Time.
-    double energy;      ///< Kinetic energy.
-    double kx, ky, kz;  ///< Direction/wave vector.
-    int band;           ///< Band.
-  };
-
-  struct Electron {
-    int status = 0;           ///< Status.
-    std::vector<Point> path;  ///< Drift line.
-    size_t weight = 1;        ///< Multiplicity.
-    double pathLength = 0.;   ///< Path length.
-  };
-
-  struct Seed {
-    Point pt;       ///< Starting point.
-    Particle type;  ///< Particle type.
-    size_t w = 1;   ///< Multiplicity.
-  };
-
   const std::vector<Electron>& GetElectrons() const { return m_electrons; }
   const std::vector<Electron>& GetHoles() const { return m_holes; }
   /** Return the number of electron trajectories in the last
    * simulated avalanche (including captured electrons). */
-  size_t GetNumberOfElectronEndpoints() const { return m_electrons.size(); }
-  unsigned int GetNumberOfElectronEndpointsGPU() const {
+  std::size_t GetNumberOfElectronEndpoints() const {
+    return m_electrons.size();
+  }
+  std::size_t GetNumberOfElectronEndpointsGPU() const {
     return m_electrons_gpu.size();
   }
   /** Return the coordinates and time of start and end point of a given
@@ -207,24 +188,25 @@ class AvalancheMicroscopic {
    * \param e0,e1 initial and final energy
    * \param status status code (see GarfieldConstants.hh)
    */
-  void GetElectronEndpoint(const size_t i, double& x0, double& y0, double& z0,
-                           double& t0, double& e0, double& x1, double& y1,
-                           double& z1, double& t1, double& e1,
+  void GetElectronEndpoint(const std::size_t i, double& x0, double& y0,
+                           double& z0, double& t0, double& e0, double& x1,
+                           double& y1, double& z1, double& t1, double& e1,
                            int& status) const;
-  void GetElectronEndpointGPU(const size_t i, double& x0, double& y0,
+  void GetElectronEndpointGPU(const std::size_t i, double& x0, double& y0,
                               double& z0, double& t0, double& e0, double& x1,
                               double& y1, double& z1, double& t1, double& e1,
                               int& status) const;
-  size_t GetNumberOfElectronDriftLinePoints(const size_t i = 0) const;
+  std::size_t GetNumberOfElectronDriftLinePoints(const std::size_t i = 0) const;
   void GetElectronDriftLinePoint(double& x, double& y, double& z, double& t,
-                                 const size_t ip, const size_t ie = 0) const;
+                                 const std::size_t ip,
+                                 const std::size_t ie = 0) const;
 
-  size_t GetNumberOfPhotons() const { return m_photons.size(); }
+  std::size_t GetNumberOfPhotons() const { return m_photons.size(); }
   // Status codes:
   //   -2: photon absorbed by gas molecule
-  void GetPhoton(const size_t i, double& e, double& x0, double& y0, double& z0,
-                 double& t0, double& x1, double& y1, double& z1, double& t1,
-                 int& status) const;
+  void GetPhoton(const std::size_t i, double& e, double& x0, double& y0,
+                 double& z0, double& t0, double& x1, double& y1, double& z1,
+                 double& t1, int& status) const;
 
   /** Calculate an electron drift line.
    * \param x,y,z,t starting point of the electron
@@ -236,18 +218,18 @@ class AvalancheMicroscopic {
   bool DriftElectron(const double x, const double y, const double z,
                      const double t, const double e, const double dx = 0.,
                      const double dy = 0., const double dz = 0.,
-                     const size_t w = 1);
+                     const std::size_t w = 1);
 
   /// Calculate an avalanche initiated by a given electron.
   bool AvalancheElectron(const double x, const double y, const double z,
                          const double t, const double e, const double dx = 0.,
                          const double dy = 0., const double dz = 0.,
-                         const size_t w = 1);
+                         const std::size_t w = 1);
   /// Add an electron to the list of particles to be transported.
   void AddElectron(const double x, const double y, const double z,
                    const double t, const double e, const double dx = 0.,
                    const double dy = 0., const double dz = 0.,
-                   const size_t w = 1);
+                   const std::size_t w = 1);
   /// Continue the avalanche simulation from the current set of electrons.
   bool ResumeAvalanche();
 
@@ -293,8 +275,8 @@ class AvalancheMicroscopic {
     std::vector<double> gpu_stack_transport_time;
     std::vector<double> cpu_stack_transport_time;
 
-    std::vector<size_t> stack_old_size;
-    std::vector<size_t> stack_new_size;
+    std::vector<std::size_t> stack_old_size;
+    std::vector<std::size_t> stack_new_size;
   };
 
   Statistics GetStatistics() { return m_stats; }
@@ -320,7 +302,7 @@ class AvalancheMicroscopic {
 
   Statistics m_stats;
 
-  Sensor* m_sensor = nullptr;
+  Sensor* m_sensor{nullptr};
 
   std::vector<Electron> m_electrons;
   std::vector<Electron> m_electrons_gpu;
@@ -330,71 +312,77 @@ class AvalancheMicroscopic {
   std::vector<Electron> m_stackStoreGPU;
 
   struct Photon {
-    int status;             ///< Status
-    double energy;          ///< Energy
-    double x0, y0, z0, t0;  ///< Starting point and time.
-    double x1, y1, z1, t1;  ///< End point and time.
+    int status{0};      ///< Status
+    double energy{0.};  ///< Energy
+    double x0{0.};
+    double y0{0.};
+    double z0{0.};
+    double t0{0.};  ///< Starting point and time.
+    double x1{0.};
+    double y1{0.};
+    double z1{0.};
+    double t1{0.};  ///< End point and time.
   };
   std::vector<Photon> m_photons;
 
   /// Number of electrons produced
-  int m_nElectrons = 0;
+  int m_nElectrons{0};
   /// Number of holes produced
-  int m_nHoles = 0;
+  int m_nHoles{0};
   /// Number of ions produced
-  int m_nIons = 0;
+  int m_nIons{0};
 
   /// Number of electrons produced
-  int m_nElectronsGPU = 0;
+  int m_nElectronsGPU{0};
   /// Number of holes produced
-  int m_nHolesGPU = 0;
+  int m_nHolesGPU{0};
   /// Number of ions produced
-  int m_nIonsGPU = 0;
+  int m_nIonsGPU{0};
 
-  ViewDrift* m_viewer = nullptr;
-  bool m_plotExcitations = true;
-  bool m_plotIonisations = true;
-  bool m_plotAttachments = true;
+  ViewDrift* m_viewer{nullptr};
+  bool m_plotExcitations{true};
+  bool m_plotIonisations{true};
+  bool m_plotAttachments{true};
 
-  TH1* m_histElectronEnergy = nullptr;
-  TH1* m_histHoleEnergy = nullptr;
-  TH1* m_histDistance = nullptr;
-  char m_distanceOption = 'r';
+  TH1* m_histElectronEnergy{nullptr};
+  TH1* m_histHoleEnergy{nullptr};
+  TH1* m_histDistance{nullptr};
+  char m_distanceOption{'r'};
   std::vector<int> m_distanceHistogramType;
 
-  TH1* m_histSecondary = nullptr;
+  TH1* m_histSecondary{nullptr};
 
-  bool m_doSignal = true;
-  bool m_useWeightingPotential = true;
-  bool m_integrateWeightingField = false;
-  bool m_doInducedCharge = false;
+  bool m_doSignal{true};
+  bool m_useWeightingPotential{true};
+  bool m_integrateWeightingField{false};
+  bool m_doInducedCharge{false};
 
-  bool m_computePathLength = false;
-  bool m_storeDriftLines = false;
-  bool m_usePhotons = false;
-  bool m_useBandStructure = true;
-  bool m_useNullCollisionSteps = false;
-  bool m_useBfieldAuto = true;
-  bool m_useBfield = false;
+  bool m_computePathLength{false};
+  bool m_storeDriftLines{false};
+  bool m_usePhotons{false};
+  bool m_useBandStructure{true};
+  bool m_useNullCollisionSteps{false};
+  bool m_useBfieldAuto{true};
+  bool m_useBfield{false};
 
-  bool m_rknSteps = false;
-  double m_rknsteperrortol = 1.e-10;
-  double m_rknMinh = 1.e-5;
-  double m_nullCollScale = 1.;
+  bool m_rknSteps{false};
+  double m_rknsteperrortol{1.e-10};
+  double m_rknMinh{1.e-5};
+  double m_nullCollScale{1.};
 
   // Transport cuts
-  double m_deltaCut = 0.;
-  double m_gammaCut = 0.;
+  double m_deltaCut{0.};
+  double m_gammaCut{0.};
 
   // Max. avalanche size
-  unsigned int m_sizeCut = 0;
+  unsigned int m_sizeCut{0};
 
-  size_t m_nCollSkip = 100;
-  size_t m_nCollPlot = 100;
+  std::size_t m_nCollSkip{100};
+  std::size_t m_nCollPlot{100};
 
-  bool m_hasTimeWindow = false;
-  double m_tMin = 0.;
-  double m_tMax = 0.;
+  bool m_hasTimeWindow{false};
+  double m_tMin{0.};
+  double m_tMax{0.};
 
   // User procedures
   void (*m_userHandleStep)(double x, double y, double z, double t, double e,
@@ -412,7 +400,7 @@ class AvalancheMicroscopic {
                                  int type, int level, Medium* m) = nullptr;
 
   // Switch on/off debugging messages
-  bool m_debug = false;
+  bool m_debug{false};
 
   bool TransportElectrons(std::vector<Seed>& stack, const bool aval);
   int TransportElectron(const Seed& seed, const bool signal,
@@ -429,7 +417,7 @@ class AvalancheMicroscopic {
                           std::vector<std::array<double, 3> >& xs,
                           std::vector<Point>& path, std::vector<Seed>& stack);
   void TransportPhoton(const double x, const double y, const double z,
-                       const double t, const double e, const size_t w,
+                       const double t, const double e, const std::size_t w,
                        std::vector<Seed>& stack);
 
   bool transportParticleStack(const bool aval, std::vector<Seed>& stack,
@@ -440,11 +428,12 @@ class AvalancheMicroscopic {
                  double& y1, double& z1, double& t1) const;
 
   void CreatePenningElectron(const double x, const double y, const double z,
-                             const double t, const size_t w, const double ds,
-                             const double dt, const double ep, const int level,
-                             std::vector<Seed>& stack) const;
-  void PlotCollision(const int cstype, const size_t did, const double x,
-                     const double y, const double z, size_t& nCollPlot) const;
+                             const double t, const std::size_t w,
+                             const double ds, const double dt, const double ep,
+                             const int level, std::vector<Seed>& stack) const;
+  void PlotCollision(const int cstype, const std::size_t did, const double x,
+                     const double y, const double z,
+                     std::size_t& nCollPlot) const;
   void CallUserHandles(const int cstype, const double x, const double y,
                        const double z, const double t, const int level,
                        Medium* medium, const double en1, const double en,

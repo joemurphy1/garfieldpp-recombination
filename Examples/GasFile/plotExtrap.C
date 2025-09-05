@@ -1,6 +1,9 @@
+#include <cmath>
+#include <cstddef>
 #include <iostream>
+#include <vector>
 
-#include "Garfield/MediumMagboltz.hh"
+#include "Garfield/MediumGas.hh"
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TGraph.h"

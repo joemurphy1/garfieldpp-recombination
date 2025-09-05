@@ -6,19 +6,17 @@
 #include <TPad.h>
 #include <TROOT.h>
 
-#include <algorithm>
 #include <array>
-#include <cstdio>
 #include <iomanip>
 #include <iostream>
-#include <limits>
 #include <numeric>
+#include <string>
+#include <vector>
 
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Geometry.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Numerics.hh"
-#include "Garfield/ViewBase.hh"
 #include "Garfield/ViewCell.hh"
 
 namespace {
@@ -331,6 +329,10 @@ Medium* ComponentAnalyticField::GetMedium(const double xin, const double yin,
     if (dx * dx + dy * dy < wire.r * wire.r) return nullptr;
   }
   return m_medium;
+}
+
+double ComponentAnalyticField::Ph2Lim(const double radius) const {
+  return -log(abs(m_zmult) * radius * (1. - 3. * m_p1 + 5. * m_p2));
 }
 
 bool ComponentAnalyticField::GetVoltageRange(double& pmin, double& pmax) {

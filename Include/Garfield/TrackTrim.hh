@@ -2,6 +2,7 @@
 #define G_TRACK_TRIM_H
 
 #include <array>
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -9,6 +10,7 @@
 
 namespace Garfield {
 
+class Sensor;
 /// Generate tracks based on TRIM output files.
 ///  - http://www.srim.org
 
@@ -19,7 +21,7 @@ class TrackTrim : public Track {
   /// Constructor
   TrackTrim(Sensor* sensor);
   /// Destructor
-  virtual ~TrackTrim() {}
+  virtual ~TrackTrim() = default;
 
   /// Load data from an EXYZ.txt file.
   bool ReadFile(const std::string& file, const unsigned int nIons = 0,
@@ -28,9 +30,7 @@ class TrackTrim : public Track {
   void Print();
 
   /// Set the projectile charge [-].
-  void SetCharge(const double q) {
-    if (fabs(q) > 0.) m_q = q;
-  }
+  void SetCharge(const double q);
   /// Set the W value [eV].
   void SetWorkFunction(const double w) { m_work = w; }
   /// Get the W value [eV].
@@ -58,11 +58,13 @@ class TrackTrim : public Track {
   void SetParticle(const std::string& part) override;
 
   struct Cluster {
-    double x, y, z;  ///< Location
-    double t;        ///< Time
-    double energy;   ///< Energy spent to make the cluster
-    double ekin;     ///< Ion energy when cluster was created
-    int n;           ///< Number of electrons in this cluster
+    double x{0.};
+    double y{0.};
+    double z{0.};       ///< Location
+    double t{0.};       ///< Time
+    double energy{0.};  ///< Energy spent to make the cluster
+    double ekin{0.};    ///< Ion energy when cluster was created
+    int n{0};           ///< Number of electrons in this cluster
   };
 
   bool NewTrack(const double x0, const double y0, const double z0,
@@ -74,28 +76,28 @@ class TrackTrim : public Track {
 
  protected:
   /// Work function [eV] of the target.
-  double m_work = -1.;
+  double m_work{-1.};
   /// Has the Fano factor been set?
-  bool m_fset = false;
+  bool m_fset{false};
   /// Fano factor [-] of the target.
-  double m_fano = -1.;
+  double m_fano{-1.};
 
   /// Projectile energy [eV].
-  double m_ekin = 0.;
+  double m_ekin{0.};
   /// List of tracks.
   std::vector<std::vector<std::array<float, 6> > > m_ions;
   /// Index of the current track.
-  size_t m_ion = 0;
+  std::size_t m_ion{0};
 
   /// Clusters on the current track.
   std::vector<Cluster> m_clusters;
   /// Index of the next cluster to be returned.
-  size_t m_cluster = 0;
+  std::size_t m_cluster{0};
 
   /// Step size limit.
-  double m_maxStepSize = -1.;
+  double m_maxStepSize{-1.};
   /// Energy loss limit per step.
-  double m_maxLossPerStep = -1.;
+  double m_maxLossPerStep{-1.};
 
   void AddIon(const std::vector<float>& x, const std::vector<float>& y,
               const std::vector<float>& z, const std::vector<float>& dedx,

@@ -1,22 +1,24 @@
 #include "Garfield/ViewFEMesh.hh"
 
 #include <TGaxis.h>
-#include <TGeoSphere.h>
+#include <TGeoManager.h>
+#include <TGeoShape.h>
 #include <TGeoTessellated.h>
+#include <TGeoVolume.h>
 #include <TGraph.h>
 #include <TH1F.h>
 #include <TPolyLine.h>
 #include <TPolyLine3D.h>
 
-#include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <iostream>
-#include <unordered_set>
+#include <vector>
 
 #include "Garfield/Component.hh"
 #include "Garfield/ComponentCST.hh"
-#include "Garfield/GarfieldConstants.hh"
+#include "Garfield/ParticleTypes.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/TGeoTet.hh"
 #include "Garfield/ViewDrift.hh"

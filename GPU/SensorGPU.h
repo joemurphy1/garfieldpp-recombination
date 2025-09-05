@@ -1,9 +1,7 @@
 #ifndef G_SENSORGPU_H
 #define G_SENSORGPU_H
 
-#ifndef __GPUCOMPILE__
-#error GPU HEADER INCLUDED WITHOUT SETTING __GPUCOMPILE__
-#endif
+#include <cstddef>
 
 #include "ComponentGPU.h"
 #include "MediumGPU.h"
@@ -12,10 +10,6 @@ namespace Garfield {
 
 class SensorGPU {
  public:
-  /// Default constructor.
-  SensorGPU() = default;
-  /// Destructor.
-  ~SensorGPU() = default;
   /// Get the drift field at (x, y, z).
   __device__ void ElectricField(const double x, const double y, const double z,
                                 double& ex, double& ey, double& ez,
@@ -31,35 +25,37 @@ class SensorGPU {
                             const bool useWeightingPotential,
                             const int particle_idx);
   /// Components
-  ComponentGPU** m_components = nullptr;
-  size_t m_numComponents;
+  ComponentGPU** m_components{nullptr};
+  std::size_t m_numComponents{0};
   friend class Sensor;
 
   struct ElectrodeGPU {
-    ComponentGPU* comp;
-    int label;
-    double* signal;
+    ComponentGPU* comp{nullptr};
+    int label{0};
+    double* signal{nullptr};
   };
 
-  ElectrodeGPU* m_electrodes = nullptr;
-  size_t m_numElectrodes;
+  ElectrodeGPU* m_electrodes{nullptr};
+  std::size_t m_numElectrodes{0};
 
   // Time window for signals
-  double m_tStart = 0.;
-  double m_tStep = 10.;
-  unsigned int m_nTimeBins = 200;
-  unsigned int m_nEvents = 0;
+  double m_tStart{0.};
+  double m_tStep{10.};
+  unsigned int m_nTimeBins{200};
+  unsigned int m_nEvents{0};
 
   // User bounding box
-  double m_xMinUser = 0., m_yMinUser = 0., m_zMinUser = 0.;
-  double m_xMaxUser = 0., m_yMaxUser = 0., m_zMaxUser = 0.;
-  bool m_hasUserArea = false;
+  double m_xMinUser{0.};
+  double m_yMinUser{0.};
+  double m_zMinUser{0.};
+  double m_xMaxUser{0.};
+  double m_yMaxUser{0.};
+  double m_zMaxUser{0.};
+  bool m_hasUserArea{false};
 
   __device__ void FillBin(ElectrodeGPU& electrode, const unsigned int bin,
                           const double signal, const bool electron,
                           const bool delayed, const int particle_idx);
-
- private:
 };
 
 }  // namespace Garfield

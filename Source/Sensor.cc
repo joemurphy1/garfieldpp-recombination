@@ -4,13 +4,13 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 #include "Garfield/Component.hh"
-#include "Garfield/FundamentalConstants.hh"
+// #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
@@ -72,6 +72,21 @@ double Trapezoid2(const std::vector<std::pair<double, double>> &f) {
 namespace Garfield {
 
 Sensor::Sensor(Component *comp) { AddComponent(comp); }
+
+void Sensor::FillBin(Electrode &electrode, const unsigned int bin,
+                     const double signal, const bool electron,
+                     const bool delayed) {
+  std::lock_guard<std::mutex> guard(m_mutex);
+  electrode.signal[bin] += signal;
+  if (delayed) electrode.delayedSignal[bin] += signal;
+  if (electron) {
+    electrode.electronSignal[bin] += signal;
+    if (delayed) electrode.delayedElectronSignal[bin] += signal;
+  } else {
+    electrode.ionSignal[bin] += signal;
+    if (delayed) electrode.delayedIonSignal[bin] += signal;
+  }
+}
 
 void Sensor::ElectricField(const double x, const double y, const double z,
                            double &ex, double &ey, double &ez, double &v,

@@ -1,7 +1,9 @@
 #ifndef G_TRACK_HEED_H
 #define G_TRACK_HEED_H
 
+#include <cstddef>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "Garfield/Track.hh"
@@ -28,37 +30,41 @@ namespace Garfield {
 class HeedChamber;
 class HeedFieldMap;
 class Medium;
+class Sensor;
 
 /// Generate tracks using Heed++.
 
 class TrackHeed : public Track {
  public:
   struct Electron {
-    double x = 0.;
-    double y = 0.;
-    double z = 0.;
-    double t = 0.;
-    double e = 0.;
-    double dx = 0.;
-    double dy = 0.;
-    double dz = 0.;
+    double x{0.};
+    double y{0.};
+    double z{0.};
+    double t{0.};
+    double e{0.};
+    double dx{0.};
+    double dy{0.};
+    double dz{0.};
   };
 
   struct Photon {
-    double x = 0.;
-    double y = 0.;
-    double z = 0.;
-    double t = 0.;
-    double e = 0.;
-    double dx = 0.;
-    double dy = 0.;
-    double dz = 0.;
+    double x{0.};
+    double y{0.};
+    double z{0.};
+    double t{0.};
+    double e{0.};
+    double dx{0.};
+    double dy{0.};
+    double dz{0.};
   };
 
   struct Cluster {
-    double x, y, z, t;
-    double energy;
-    double extra;
+    double x{0.};
+    double y{0.};
+    double z{0.};
+    double t{0.};
+    double energy{0.};
+    double extra{0.};
     std::vector<Photon> photons;
     std::vector<Electron> electrons;
     std::vector<Electron> ions;
@@ -282,24 +288,24 @@ class TrackHeed : public Track {
   TrackHeed(const TrackHeed& heed);
   TrackHeed& operator=(const TrackHeed& heed);
 
-  bool m_oneStepFly = false;
+  bool m_oneStepFly{false};
 
-  bool m_ready = false;
-  bool m_hasActiveTrack = false;
+  bool m_ready{false};
+  bool m_hasActiveTrack{false};
 
-  double m_mediumDensity = -1.;
-  std::string m_mediumName = "";
+  double m_mediumDensity{-1.};
+  std::string m_mediumName;
 
-  bool m_usePacsOutput = false;
+  bool m_usePacsOutput{false};
 
-  bool m_doPhotonReabsorption = true;
-  bool m_crossInactiveMedia = false;
-  bool m_coulombScattering = false;
-  bool m_useBfieldAuto = true;
-  bool m_doDeltaTransport = true;
+  bool m_doPhotonReabsorption{true};
+  bool m_crossInactiveMedia{false};
+  bool m_coulombScattering{false};
+  bool m_useBfieldAuto{true};
+  bool m_doDeltaTransport{true};
 
   std::vector<Cluster> m_clusters;
-  size_t m_cluster = 0;
+  std::size_t m_cluster{0};
 
   // Particle properties
   std::unique_ptr<Heed::particle_def> m_particle_def;
@@ -309,9 +315,9 @@ class TrackHeed : public Track {
   std::unique_ptr<Heed::MatterDef> m_material;
 
   // Energy mesh
-  double m_emin = 2.e-6;
-  double m_emax = 2.e-1;
-  unsigned int m_nEnergyIntervals = 200;
+  double m_emin{2.e-6};
+  double m_emax{2.e-1};
+  unsigned int m_nEnergyIntervals{200};
   std::unique_ptr<Heed::EnergyMesh> m_energyMesh;
 
   // Cross-sections
@@ -326,18 +332,22 @@ class TrackHeed : public Track {
   std::unique_ptr<HeedFieldMap> m_fieldMap;
 
   // Bounding box
-  double m_lX = 0., m_lY = 0., m_lZ = 0.;
-  double m_cX = 0., m_cY = 0., m_cZ = 0.;
+  double m_lX{0.};
+  double m_lY{0.};
+  double m_lZ{0.};
+  double m_cX{0.};
+  double m_cY{0.};
+  double m_cZ{0.};
 
   // Stepping parameters.
   /// Max. step length.
-  double m_maxStep = 100.;
+  double m_maxStep{100.};
   /// Bending radius beyond which to use straight-line approximation.
-  double m_radStraight = 1000.;
+  double m_radStraight{1000.};
   /// Angular step for curved trajectories approximated by straight-line steps.
-  double m_stepAngleStraight = 0.1;
+  double m_stepAngleStraight{0.1};
   /// Angular step for curved lines.
-  double m_stepAngleCurved = 0.2;
+  double m_stepAngleCurved{0.2};
 
   bool SetupGas(Medium* medium);
   bool SetupMaterial(Medium* medium);
