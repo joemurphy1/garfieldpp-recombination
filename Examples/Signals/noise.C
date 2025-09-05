@@ -1,19 +1,16 @@
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TH1D.h>
-#include <TROOT.h>
 #include <TSystem.h>
 
-#include <cmath>
 #include <fstream>
 #include <iostream>
-#include <sstream>
+#include <vector>
 
 #include "Garfield/ComponentUser.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/Shaper.hh"
-#include "Garfield/Utilities.hh"
 #include "Garfield/ViewSignal.hh"
 
 using namespace Garfield;

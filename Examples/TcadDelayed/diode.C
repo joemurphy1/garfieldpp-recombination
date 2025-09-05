@@ -1,11 +1,9 @@
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TROOT.h>
 #include <TSystem.h>
 
 #include <iomanip>
 #include <iostream>
-#include <sstream>
 #include <string>
 
 #include "Garfield/AvalancheMC.hh"

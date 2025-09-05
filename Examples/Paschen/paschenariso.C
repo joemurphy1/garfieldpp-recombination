@@ -5,6 +5,8 @@
 #include <TLegend.h>
 #include <TStyle.h>
 
+#include <cmath>
+
 #include "Garfield/MediumMagboltz.hh"
 
 using namespace Garfield;

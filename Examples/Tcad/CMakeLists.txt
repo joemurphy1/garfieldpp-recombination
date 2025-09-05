@@ -19,3 +19,5 @@ endif()
 foreach(_file pixel_des.dat pixel_des.grd)
   configure_file(${_file} ${_file} COPYONLY)
 endforeach()
+
+add_subdirectory(Diode3d)

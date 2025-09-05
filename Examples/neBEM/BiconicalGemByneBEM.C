@@ -1,6 +1,5 @@
 #include <TApplication.h>
 
-#include <fstream>
 #include <iostream>
 
 #include "Garfield/ComponentNeBem3d.hh"

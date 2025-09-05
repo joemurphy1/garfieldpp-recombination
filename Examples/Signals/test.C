@@ -1,20 +1,14 @@
 #include <TApplication.h>
 #include <TCanvas.h>
-#include <TROOT.h>
-#include <TSystem.h>
 
-#include <fstream>
 #include <iostream>
-#include <sstream>
 
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentAnalyticField.hh"
-#include "Garfield/FundamentalConstants.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/MediumSilicon.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/Utilities.hh"
 
 using namespace Garfield;
 

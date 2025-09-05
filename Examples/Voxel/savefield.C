@@ -1,9 +1,5 @@
 #include <TApplication.h>
-#include <TCanvas.h>
-#include <TH1D.h>
-#include <TROOT.h>
 
-#include <cmath>
 #include <fstream>
 #include <iostream>
 
