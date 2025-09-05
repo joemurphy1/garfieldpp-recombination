@@ -16,6 +16,9 @@ namespace Garfield {
 class Sensor;
 class Component;
 
+/// Set Garfield style.
+void SetDefaultStyle(const bool serif = false);
+
 /// Base class for visualization classes.
 
 class ViewBase {
