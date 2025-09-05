@@ -14,7 +14,7 @@ class MediumGaAs : public Medium {
   /// Constructor
   MediumGaAs();
   /// Destructor
-  virtual ~MediumGaAs() {}
+  virtual ~MediumGaAs() = default;
 
   bool IsSemiconductor() const override { return true; }
 

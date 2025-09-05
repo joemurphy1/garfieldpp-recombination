@@ -15,7 +15,7 @@ class AvalancheMicroscopic;
 class AvalancheGrid {
  public:
   /// Default constructor
-  AvalancheGrid() : AvalancheGrid(nullptr) {}
+  AvalancheGrid() = default;
   /// Constructor
   AvalancheGrid(Sensor *sensor);
   /// Destructor

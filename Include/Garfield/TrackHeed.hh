@@ -71,7 +71,7 @@ class TrackHeed : public Track {
   };
 
   /// Default constructor
-  TrackHeed() : TrackHeed(nullptr) {}
+  TrackHeed();
   /// Constructor
   TrackHeed(Sensor* sensor);
   /// Destructor

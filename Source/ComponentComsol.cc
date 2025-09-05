@@ -47,7 +47,7 @@ ComponentComsol::ComponentComsol(const std::string &mesh,
                                  const std::string &mplist,
                                  const std::string &field,
                                  const std::string &unit)
-    : ComponentComsol() {
+    : ComponentFieldMap("Comsol") {
   Initialise(mesh, mplist, field, unit);
 }
 

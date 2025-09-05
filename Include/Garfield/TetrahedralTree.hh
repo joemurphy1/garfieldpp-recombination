@@ -23,6 +23,7 @@ Organization: Texas A&M University at Qatar
 class TetrahedralTree {
  public:
   // Constructor
+  TetrahedralTree() = delete;
   TetrahedralTree(const Vec3& origin, const Vec3& halfDimension);
 
   /// Destructor

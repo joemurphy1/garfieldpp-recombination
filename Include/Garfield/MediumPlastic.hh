@@ -18,7 +18,7 @@ class MediumPlastic : public Medium {
     if (eps > 1.) m_epsilon = eps;
   }
   /// Destructor
-  virtual ~MediumPlastic() {}
+  virtual ~MediumPlastic() = default;
 
   void EnableDrift(const bool /*on*/) override {}
   void EnablePrimaryIonisation(const bool /*on*/) override {}

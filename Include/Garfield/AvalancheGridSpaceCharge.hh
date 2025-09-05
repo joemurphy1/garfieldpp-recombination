@@ -17,7 +17,7 @@ class ComponentParallelPlate;
 class AvalancheGridSpaceCharge {
  public:
   /// Default constructor
-  AvalancheGridSpaceCharge() : AvalancheGridSpaceCharge(nullptr) {}
+  AvalancheGridSpaceCharge();
   /// Constructor
   AvalancheGridSpaceCharge(Sensor *sensor);
   /// Destructor

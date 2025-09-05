@@ -17,7 +17,7 @@ class Medium;
 class TrackSrim : public Track {
  public:
   /// Default constructor
-  TrackSrim() : TrackSrim(nullptr) {}
+  TrackSrim();
   /// Constructor
   TrackSrim(Sensor* sensor);
   /// Destructor

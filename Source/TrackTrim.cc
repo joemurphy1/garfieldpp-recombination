@@ -87,10 +87,9 @@ double Speed(const double ekin, const double mass) {
 
 namespace Garfield {
 
-TrackTrim::TrackTrim(Sensor* sensor) : Track("Trim") {
-  m_sensor = sensor;
-  m_q = 1.;
-}
+TrackTrim::TrackTrim() : Track("Trim") { m_q = 1.; }
+
+TrackTrim::TrackTrim(Sensor* sensor) : TrackTrim() { m_sensor = sensor; }
 
 /// Set the projectile charge [-].
 void TrackTrim::SetCharge(const double q) {

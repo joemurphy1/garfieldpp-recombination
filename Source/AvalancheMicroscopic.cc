@@ -142,10 +142,15 @@ Garfield::Seed MakeSeed(const Garfield::Point point,
 
 namespace Garfield {
 
-AvalancheMicroscopic::AvalancheMicroscopic(Sensor* sensor) : m_sensor(sensor) {
+AvalancheMicroscopic::AvalancheMicroscopic() {
   m_electrons.reserve(10000);
   m_holes.reserve(10000);
   m_photons.reserve(1000);
+}
+
+AvalancheMicroscopic::AvalancheMicroscopic(Sensor* sensor)
+    : AvalancheMicroscopic() {
+  m_sensor = sensor;
 }
 
 void AvalancheMicroscopic::SetSensor(Sensor* s) {

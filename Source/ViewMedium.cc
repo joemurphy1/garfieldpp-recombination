@@ -41,11 +41,10 @@ bool NonZero(const std::vector<double>& v) {
 
 namespace Garfield {
 
-ViewMedium::ViewMedium(Medium* medium)
-    : ViewBase("ViewMedium"), m_medium(medium) {
-  m_aMax = Pi;
-  m_angle = HalfPi;
-}
+ViewMedium::ViewMedium()
+    : ViewBase("ViewMedium"), m_aMax(Pi), m_angle(HalfPi) {}
+
+ViewMedium::ViewMedium(Medium* medium) : ViewMedium() { m_medium = medium; }
 
 void ViewMedium::SetMedium(Medium* m) {
   if (!m) {

@@ -17,7 +17,7 @@ class Geometry {
   /// Constructor
   Geometry(const std::string& name) : m_className(name) {}
   /// Destructor
-  virtual ~Geometry() {}
+  virtual ~Geometry() = default;
 
   /// Retrieve the medium at a given point.
   virtual Medium* GetMedium(const double x, const double y, const double z,

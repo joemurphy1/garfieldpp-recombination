@@ -9,9 +9,9 @@
 
 namespace Garfield {
 
-TrackSimple::TrackSimple(Sensor* sensor) : Track("Simple") {
-  m_sensor = sensor;
-}
+TrackSimple::TrackSimple() : Track("Simple") {}
+
+TrackSimple::TrackSimple(Sensor* sensor) : TrackSimple() { m_sensor = sensor; }
 
 void TrackSimple::SetClusterDensity(const double d) {
   if (d < Small) {

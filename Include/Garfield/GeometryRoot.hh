@@ -17,7 +17,7 @@ class GeometryRoot : public Geometry {
   /// Constructor
   GeometryRoot();
   /// Destructor
-  ~GeometryRoot() {}
+  ~GeometryRoot() = default;
 
   /// Set the geometry (pointer to ROOT TGeoManager).
   void SetGeometry(TGeoManager* geoman);

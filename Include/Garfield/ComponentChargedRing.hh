@@ -17,7 +17,7 @@ class ComponentChargedRing : public Component {
   /// Constructor
   ComponentChargedRing();
   /// Destructor
-  ~ComponentChargedRing() {}
+  ~ComponentChargedRing() = default;
 
   /// Set the limits of the active area explicitly
   /// (instead of using a Geometry object).

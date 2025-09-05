@@ -17,7 +17,7 @@ class Sensor;
 class TrackTrim : public Track {
  public:
   /// Default constructor
-  TrackTrim() : TrackTrim(nullptr) {}
+  TrackTrim();
   /// Constructor
   TrackTrim(Sensor* sensor);
   /// Destructor
