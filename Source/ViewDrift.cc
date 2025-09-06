@@ -8,6 +8,7 @@
 #include <TView.h>
 
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <vector>
 
