@@ -70,7 +70,9 @@ std::vector<std::vector<size_t> > GetFacets(const std::vector<size_t>& nodes,
 
 namespace Garfield {
 
-ViewFEMesh::ViewFEMesh(Component* cmp) : ViewBase("ViewFEMesh"), m_cmp(cmp) {}
+ViewFEMesh::ViewFEMesh() : ViewBase("ViewFEMesh") {}
+
+ViewFEMesh::ViewFEMesh(Component* cmp) : ViewFEMesh() { m_cmp = cmp; }
 
 ViewFEMesh::~ViewFEMesh() { Reset(); }
 

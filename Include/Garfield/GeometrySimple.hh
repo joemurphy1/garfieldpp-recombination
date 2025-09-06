@@ -15,7 +15,7 @@ class GeometrySimple : public Geometry {
   /// Constructor
   GeometrySimple();
   /// Destructor
-  virtual ~GeometrySimple() {}
+  virtual ~GeometrySimple() = default;
 
   Medium* GetMedium(const double x, const double y, const double z,
                     const bool tesselated = false) const override;

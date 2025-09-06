@@ -21,8 +21,11 @@
 
 namespace Garfield {
 
-ViewGeometry::ViewGeometry(GeometrySimple* geo)
-    : ViewBase("ViewGeometry"), m_geometry(geo) {}
+ViewGeometry::ViewGeometry() : ViewBase("ViewGeometry") {}
+
+ViewGeometry::ViewGeometry(GeometrySimple* geo) : ViewGeometry() {
+  m_geometry = geo;
+}
 
 ViewGeometry::~ViewGeometry() { Reset(); }
 

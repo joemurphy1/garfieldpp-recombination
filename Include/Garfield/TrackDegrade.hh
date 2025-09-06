@@ -46,7 +46,7 @@ class TrackDegrade : public Track {
   };
 
   /// Default constructor
-  TrackDegrade() : TrackDegrade(nullptr) {}
+  TrackDegrade();
   /// Constructor
   TrackDegrade(Sensor* sensor);
   /// Destructor

@@ -20,7 +20,7 @@ class Sensor;
 class ViewSignal : public ViewBase {
  public:
   /// Default constructor.
-  ViewSignal() : ViewSignal(nullptr) {}
+  ViewSignal();
   /// Constructor.
   ViewSignal(Sensor* sensor);
   /// Destructor.

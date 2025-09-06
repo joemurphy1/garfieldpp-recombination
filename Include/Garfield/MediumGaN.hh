@@ -14,7 +14,7 @@ class MediumGaN : public Medium {
   /// Constructor
   MediumGaN();
   /// Destructor
-  virtual ~MediumGaN() {}
+  virtual ~MediumGaN() = default;
 
   bool IsSemiconductor() const override { return true; }
 

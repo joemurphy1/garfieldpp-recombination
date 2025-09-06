@@ -18,11 +18,11 @@ class Medium;
 class DriftLineRKF {
  public:
   /// Default constructor
-  DriftLineRKF() : DriftLineRKF(nullptr) {}
+  DriftLineRKF();
   /// Constructor
   DriftLineRKF(Sensor* sensor);
   /// Destructor
-  ~DriftLineRKF() {}
+  ~DriftLineRKF() = default;
 
   /// Set the sensor.
   void SetSensor(Sensor* s);

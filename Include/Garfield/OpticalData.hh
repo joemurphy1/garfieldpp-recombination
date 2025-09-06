@@ -9,11 +9,6 @@ namespace Garfield {
 
 class OpticalData {
  public:
-  /// Constructor
-  OpticalData() = default;
-  /// Destructor
-  ~OpticalData() = default;
-
   /// Check whether optical data have been implemented for a given gas.
   static bool IsAvailable(const std::string& material);
   /// Photo-absorption cross-section and ionisation yield at a given energy.

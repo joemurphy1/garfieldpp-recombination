@@ -51,14 +51,17 @@ Garfield::TrackDegrade::Excitation MakeExcitation(const double energy,
 
 namespace Garfield {
 
-TrackDegrade::TrackDegrade(Sensor* sensor) : Track("Degrade") {
-  m_sensor = sensor;
+TrackDegrade::TrackDegrade() : Track("Degrade") {
   m_q = -1;
   m_spin = 1;
   m_mass = ElectronMass;
   m_isElectron = true;
   SetBetaGamma(3.);
   m_particleName = "electron";
+}
+
+TrackDegrade::TrackDegrade(Sensor* sensor) : TrackDegrade() {
+  m_sensor = sensor;
 }
 
 void TrackDegrade::SetThresholdEnergy(const double ethr) {

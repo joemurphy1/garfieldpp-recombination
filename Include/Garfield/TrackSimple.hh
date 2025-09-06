@@ -20,7 +20,7 @@ class TrackSimple : public Track {
   };
 
   /// Default constructor
-  TrackSimple() : TrackSimple(nullptr) {}
+  TrackSimple();
   /// Constructor
   TrackSimple(Sensor* sensor);
   /// Destructor

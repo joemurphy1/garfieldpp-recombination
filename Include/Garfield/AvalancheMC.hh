@@ -19,7 +19,7 @@ class Medium;
 class AvalancheMC {
  public:
   /// Default constructor
-  AvalancheMC() : AvalancheMC(nullptr) {}
+  AvalancheMC() = default;
   /// Constructor
   AvalancheMC(Sensor* sensor);
   /// Destructor

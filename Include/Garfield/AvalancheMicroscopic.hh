@@ -24,11 +24,11 @@ class Sensor;
 class AvalancheMicroscopic {
  public:
   /// Default constructor
-  AvalancheMicroscopic() : AvalancheMicroscopic(nullptr) {}
+  AvalancheMicroscopic();
   /// Constructor
   AvalancheMicroscopic(Sensor* sensor);
   /// Destructor
-  ~AvalancheMicroscopic() {}
+  ~AvalancheMicroscopic() = default;
 
   /// Set the sensor.
   void SetSensor(Sensor* sensor);

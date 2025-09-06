@@ -27,7 +27,7 @@ class ViewDrift;
 class ViewFEMesh : public ViewBase {
  public:
   /// Default constructor.
-  ViewFEMesh() : ViewFEMesh(nullptr) {}
+  ViewFEMesh();
   /// Constructor.
   ViewFEMesh(Component* cmp);
   /// Destructor.

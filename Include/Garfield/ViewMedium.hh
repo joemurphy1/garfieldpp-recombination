@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-// #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/ViewBase.hh"
 
 namespace Garfield {
@@ -17,7 +16,7 @@ class Medium;
 class ViewMedium : public ViewBase {
  public:
   /// Default constructor.
-  ViewMedium() : ViewMedium(nullptr) {}
+  ViewMedium();
   /// Constructor.
   ViewMedium(Medium* medium);
   /// Destructor.

@@ -181,11 +181,14 @@ void GetMeanAvalancheSizeFromStep(double dx, const long nElectronIn,
 
 namespace Garfield {
 
-AvalancheGridSpaceCharge::AvalancheGridSpaceCharge(Sensor *sensor) {
+AvalancheGridSpaceCharge::AvalancheGridSpaceCharge() {
   m_zGrid.reserve(5000);
   m_rGrid.reserve(1000);
+}
 
-  SetSensor(sensor);
+AvalancheGridSpaceCharge::AvalancheGridSpaceCharge(Sensor *sensor)
+    : AvalancheGridSpaceCharge() {
+  m_sensor = sensor;
 }
 
 int AvalancheGridSpaceCharge::GetGasGapNumber(int layerIndex) {

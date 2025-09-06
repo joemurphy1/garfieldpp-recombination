@@ -75,7 +75,9 @@ void PrintSettings(const std::string& hdr, const double de, const double step,
 
 namespace Garfield {
 
-TrackSrim::TrackSrim(Sensor* sensor) : Track("Srim") { m_sensor = sensor; }
+TrackSrim::TrackSrim() : Track("Srim") {}
+
+TrackSrim::TrackSrim(Sensor* sensor) : TrackSrim() { m_sensor = sensor; }
 
 bool TrackSrim::ReadFile(const std::string& file) {
   // SRMREA

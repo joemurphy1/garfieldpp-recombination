@@ -27,7 +27,7 @@ class MediumMagboltz : public MediumGas {
                  const std::string& gas5 = "", const double f5 = 0.,
                  const std::string& gas6 = "", const double f6 = 0.);
   /// Destructor
-  virtual ~MediumMagboltz() {}
+  virtual ~MediumMagboltz() = default;
 
   /// Set the highest electron energy to be included
   /// in the table of scattering rates.
