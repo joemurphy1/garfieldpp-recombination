@@ -1,5 +1,6 @@
 #include "Garfield/Medium.hh"
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 

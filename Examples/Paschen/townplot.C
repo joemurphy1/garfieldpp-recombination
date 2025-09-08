@@ -3,6 +3,8 @@
 #include <TGraph.h>
 #include <TH1F.h>
 
+#include <cmath>
+
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/ViewBase.hh"
 

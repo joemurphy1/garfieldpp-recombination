@@ -7,6 +7,7 @@
 #include <TMarker.h>
 #include <TPolyLine.h>
 
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <string>

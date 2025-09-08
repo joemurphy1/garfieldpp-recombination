@@ -10,6 +10,7 @@
 #include <TPolyLine.h>
 #include <TPolyLine3D.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <iostream>

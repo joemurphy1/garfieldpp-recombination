@@ -4,6 +4,7 @@
 #include <TH1F.h>
 #include <TSystem.h>
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 
