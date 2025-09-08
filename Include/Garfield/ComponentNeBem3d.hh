@@ -325,11 +325,11 @@ class ComponentNeBem3d : public Component {
 
   // Weighting potential and field related Fast volume information
   unsigned int m_idWtField{0};
-  unsigned int m_optWtFldFastVol[11]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  unsigned int m_optCreateWtFldFastPF[11]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  unsigned int m_optReadWtFldFastPF[11]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  unsigned int m_versionWtFldFV[11]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  unsigned int m_nbBlocksWtFldFV[11]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  std::vector<unsigned int> m_optWtFldFastVol;
+  std::vector<unsigned int> m_optCreateWtFldFastPF;
+  std::vector<unsigned int> m_optReadWtFldFastPF;
+  std::vector<unsigned int> m_versionWtFldFV;
+  std::vector<unsigned int> m_nbBlocksWtFldFV;
 
   // Known charge options
   unsigned int m_optKnownCharge{0};

@@ -379,7 +379,15 @@ namespace Garfield {
 
 ComponentNeBem3d* gComponentNeBem3d = nullptr;
 
-ComponentNeBem3d::ComponentNeBem3d() : Component("NeBem3d") { InitValues(); }
+ComponentNeBem3d::ComponentNeBem3d() : Component("NeBem3d") { 
+
+  m_optWtFldFastVol.assign(MAXWtFld, 0);
+  m_optCreateWtFldFastPF.assign(MAXWtFld, 0);
+  m_optReadWtFldFastPF.assign(MAXWtFld, 0);
+  m_versionWtFldFV.assign(MAXWtFld, 0);
+  m_nbBlocksWtFldFV.assign(MAXWtFld, 0);
+  InitValues(); 
+}
 
 Medium* ComponentNeBem3d::GetMedium(const double x, const double y,
                                     const double z) {
