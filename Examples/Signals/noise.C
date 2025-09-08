@@ -3,6 +3,7 @@
 #include <TH1D.h>
 #include <TSystem.h>
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <vector>

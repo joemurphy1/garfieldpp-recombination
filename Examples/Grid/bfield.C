@@ -1,5 +1,7 @@
 #include <TApplication.h>
 
+#include <cmath>
+
 #include "Garfield/ComponentGrid.hh"
 #include "Garfield/ViewField.hh"
 

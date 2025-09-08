@@ -1,5 +1,6 @@
 #include <TApplication.h>
 
+#include <cmath>
 #include <cstddef>
 #include <vector>
 

@@ -6,6 +6,7 @@
 #include <TPad.h>
 #include <TROOT.h>
 
+#include <algorithm>
 #include <array>
 #include <iomanip>
 #include <iostream>
