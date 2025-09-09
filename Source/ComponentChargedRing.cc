@@ -265,14 +265,14 @@ void ComponentChargedRing::GetChargedRingField(
   }
 
   // coulomb ball
-  if (std::abs(r - ring_r) > m_dSelfFieldTolerance ||
+  if (r > m_dSelfFieldTolerance ||
       std::abs(z - ring_z) > m_dSelfFieldTolerance) {
     GetCoulombBallField(ring, r, z, eFieldZ, eFieldR);
     return;
   }
-  double offsetR = (r > ring_r ? 1.01 : -1.01) * m_dSelfFieldTolerance;
+  double offsetR = 1.01 * m_dSelfFieldTolerance;
   double offsetZ = (z > ring_z ? 1.01 : -1.01) * m_dSelfFieldTolerance;
-  GetCoulombBallField(ring, ring_r + offsetR, ring_z + offsetZ, eFieldZ,
+  GetCoulombBallField(ring, offsetR, ring_z + offsetZ, eFieldZ,
                       eFieldR);
   return;
 }
