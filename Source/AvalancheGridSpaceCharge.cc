@@ -13,6 +13,7 @@
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
+#include "Garfield/GarfieldConstants.hh"
 
 namespace {
 
