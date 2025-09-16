@@ -915,6 +915,16 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
               << "\n";
   }
 
+  // Determine the active nodes.
+  std::vector<std::array<int,2>> activeNodes;
+  for (int iz = 0; iz <= m_zSteps; iz++) {
+    for (int ir = 0; ir <= m_rSteps; ir++) {
+      const double N = -m_grid[iz][ir].nElectron + m_grid[iz][ir].nPosIon - m_grid[iz][ir].nNegIon;
+      // If there is enough charge, count as an active node
+      if (std::abs(N) > 0.1) activeNodes.push_back({iz, ir});
+    }
+  } 
+
   if (m_bSpaceCharge && m_nTotElectron > 1e5) {
     // clear existing rings
     for (auto & ringsystem:m_vRingSystems){
@@ -936,7 +946,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       num_in_gap.push_back(0.);
     }
     // for each active node
-    for (std::array<int,2> idx:m_vActiveNodeIndices){
+    for (const auto idx : activeNodes) {
       int fz = idx[0];
       int fr = idx[1];
       double zf = m_zGrid[fz];
@@ -1217,9 +1227,6 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
       double N = -nd.nElectron + nd.nPosIon -
                   nd.nNegIon;
-
-      // if there is enough charge, count as an active node  
-      if (N > 0.1) m_vActiveNodeIndices.push_back({iz,ir});
 
       // add electrons if they are not stuck
       if (!(nd.anode && m_bStick)) eOnGrid[gasGap] += nd.nElectron;

@@ -276,9 +276,6 @@ class AvalancheGridSpaceCharge {
   /// Tracking if the charges are still in the drift gap.
   bool m_run{true};
 
-  // indices with charges on them
-  std::vector<std::array<int,2>> m_vActiveNodeIndices;
-
   std::vector<std::vector<int>>
       m_zGasGapBoundaries;  ///< [k] -> {izLeft, ..., izRight}
 
