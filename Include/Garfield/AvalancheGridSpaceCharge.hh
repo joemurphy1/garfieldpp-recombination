@@ -72,9 +72,9 @@ class AvalancheGridSpaceCharge {
   ///   mirror: symmetric 3 layer single gap rpc with metal - resistive layer -
   ///   gas gap - r. l. - m.
   void SetFieldCalculation(const std::string &option = "coulomb",
-                           const int nof_approx = 1.) {
+                           const int nof_approx = 1) {
     m_sFieldOption = std::move(option);
-    m_iFieldApprox = std::move(nof_approx);
+    m_iFieldApprox = nof_approx;
   }
 
   /// Set the streamer-inception criterion constant K in the interval (0,
@@ -127,7 +127,7 @@ class AvalancheGridSpaceCharge {
   }
 
   /// Returns the total electron number evolution
-  [[nodiscard]] const std::vector<std::pair<double, long>>
+  [[nodiscard]] const std::vector<std::pair<double, long>>&
   GetElectronEvolution() const {
     return m_vNElectronEvolution;
   }
@@ -221,9 +221,6 @@ class AvalancheGridSpaceCharge {
   int GetGasGapNumber(int layerIndex);
 
   void SetRingSystems();
-
-  void SetRingSystems();
-
  private:
   std::string m_className{"AvalancheGridSpaceCharge"};
 
@@ -306,8 +303,7 @@ class AvalancheGridSpaceCharge {
   std::string m_sFieldOption{"coulomb"};
 
   /// Vector of ComponentChargedRing objects
-  /// We might need multiple ring systems, e.g.
-  /// One per gas gap.
+  /// We might need multiple ring systems, e.g. one per gas gap.
   std::vector<ComponentChargedRing> m_vRingSystems;
 };
 

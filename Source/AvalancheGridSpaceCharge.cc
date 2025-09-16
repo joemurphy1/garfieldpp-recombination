@@ -927,7 +927,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
     
     // for each gas gap (and therefore ring system) 
     // we have one mean.
-    int num_gaps = m_vIndexGasGaps.size();
+    const size_t num_gaps = m_vIndexGasGaps.size();
     std::vector<double> meanR(num_gaps, 0.);
     std::vector<double> meanZ(num_gaps, 0.);
     std::vector<double> num_in_gap(num_gaps, 0.);
@@ -940,9 +940,9 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       double rf = m_rGrid[fr];
 
       double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
-                    m_grid[fz][fr].nNegIon;
+                  m_grid[fz][fr].nNegIon;
       double num_on_node = m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon +
-                    m_grid[fz][fr].nNegIon;
+                           m_grid[fz][fr].nNegIon;
       int gasGapIndex = m_grid[fz][fr].gasGapIndex; // which gas gap does this node belong to?
         
       meanR[gasGapIndex] += num_on_node * rf;
@@ -950,7 +950,8 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       num_in_gap[gasGapIndex] += num_on_node;
 
       // add the ring to the correct system: need the index of the gasgap
-      m_vRingSystems[gasGapIndex].AddChargedRing(rf,zf,0.,N); // Direct charge interaction
+      // Direct charge interaction
+      m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf, 0., N); 
 
       if (m_sFieldOption == "mirror") {
         // assume symmetric single layer rpc with equal permittivity resistive
@@ -997,14 +998,14 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       } 
     }
 
-    for (int i=0; i<num_gaps;++i){
+    for (size_t i = 0; i < num_gaps; ++i) {
       if (num_in_gap[i] < 0.5) {
-        m_vRingSystems[i].UpdateCentre(0.,0.);
+        m_vRingSystems[i].UpdateCentre(0., 0.);
         continue;
       }
       meanR[i] /= num_in_gap[i];
       meanZ[i] /= num_in_gap[i];
-      m_vRingSystems[i].UpdateCentre(meanR[i],0.); // as we are in 2D, we set phi = 0.
+      m_vRingSystems[i].UpdateCentre(meanR[i], 0.); // as we are in 2D, we set phi = 0.
     }
   }
 
@@ -1045,9 +1046,8 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         int gasGapIndex = m_grid[iz][ir].gasGapIndex;
         m_vRingSystems[gasGapIndex].ElectricField(ri,zi,0.,nd.eFieldR,nd.eFieldZ,dummy,m,stat);
         
-        
         // check if local field reaches background field values.
-        double MagEField = Mag(nd.eFieldZ + m_ezBkg[gasGap], nd.eFieldR);
+        const double MagEField = Mag(nd.eFieldZ + m_ezBkg[gasGap], nd.eFieldR);
         if (MagEField - std::abs(m_ezBkg[gasGap]) >=
                 m_fStreamerK * std::abs(m_ezBkg[gasGap]) &&
             !m_bFieldK) {
@@ -1062,8 +1062,6 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         }
 
         // calculate the swarm parameters
-        // HS: why calculate MagEField again?
-        MagEField = Mag(nd.eFieldZ + m_ezBkg[gasGap], nd.eFieldR);
         GetSwarmParameters(MagEField, nd.townsend, nd.attachment, nd.velocity,
                            nd.dSigmaL, nd.dSigmaT, nd.Wv, nd.Wr, nd.townsendPT,
                            nd.attachmentPT, gasGap);
@@ -1214,9 +1212,6 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       nd.nElectronHolder = 0;
       nd.nPosIonHolder = 0;
       nd.nNegIonHolder = 0;
-
-      double N = -nd.nElectron + nd.nPosIon -
-                  nd.nNegIon;
 
       // add electrons if they are not stuck
       if (!(nd.anode && m_bStick)) eOnGrid[gasGap] += nd.nElectron;
@@ -1455,21 +1450,18 @@ void AvalancheGridSpaceCharge::SetRingSystems() {
                        << "::SetRingSystems: parallel plate improperly defined.\n";
   m_pp->IndexOfGasGaps(m_vIndexGasGaps);
   size_t n_gas_gaps = m_vIndexGasGaps.size();
-  Medium *m;
 
   double horizontal_max = m_rGrid.back();
   double horizontal_min = -1.*horizontal_max;
   double vertical_min = m_zGrid.front();
   double vertical_max = m_zGrid.back();
 
-  int layer_index;
-  double y_bottom,y_top;
-
   for (size_t i = 0; i < n_gas_gaps; ++i) {
     m_vRingSystems.emplace_back();
-    layer_index = m_vIndexGasGaps[i];
+    const int layer_index = m_vIndexGasGaps[i];
+    double y_bottom, y_top;
     m_pp->getZBoundFromLayer(layer_index, y_bottom, y_top);
-    m = m_pp->GetMedium(0, 0.5 * (y_top - y_bottom) + y_bottom, 0);
+    Medium* m = m_pp->GetMedium(0, 0.5 * (y_top - y_bottom) + y_bottom, 0);
     m_vRingSystems[i].SetMedium(m);
     m_vRingSystems[i].SetArea(horizontal_min, vertical_min, horizontal_min,
                               horizontal_max, vertical_max, horizontal_max);
