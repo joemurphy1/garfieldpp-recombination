@@ -575,11 +575,9 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
     return false;
   }
 
-  // HS: why make a copy?
-  auto CoN = m_vCoNGasLayer[gasLayer];
   // y in micro is z in grid space-charge
-  double r =
-      std::sqrt((x - CoN[0]) * (x - CoN[0]) + (z - CoN[2]) * (z - CoN[2]));
+  const double r = Mag(x - m_vCoNGasLayer[gasLayer][0], 
+                       z - m_vCoNGasLayer[gasLayer][2]);
   int iZ = (int)std::round((y - m_zGrid.front()) / m_zStepSize);
   int iR = (int)std::round(r / m_rStepSize);
 
@@ -906,10 +904,6 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
   // approach)
   if (!m_run) return false;
 
-  // local helper variables
-  long nElectronOut;
-  double nPosIonOut, nNegIonOut;
-
   if (m_bDebug) {
     std::cout << m_className << "::TransportTimeStep: Start time: " << m_time
               << "\n";
@@ -927,24 +921,17 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
   if (m_bSpaceCharge && m_nTotElectron > 1e5) {
     // clear existing rings
-    for (auto & ringsystem:m_vRingSystems){
+    for (auto & ringsystem : m_vRingSystems) {
       ringsystem.ClearActiveRings();
     }
     
     // for each gas gap (and therefore ring system) 
     // we have one mean.
     int num_gaps = m_vIndexGasGaps.size();
-    std::vector<double> meanR;
-    std::vector<double> meanZ;
-    std::vector<double> num_in_gap;
+    std::vector<double> meanR(num_gaps, 0.);
+    std::vector<double> meanZ(num_gaps, 0.);
+    std::vector<double> num_in_gap(num_gaps, 0.);
 
-    // cant use an array as they need to be of a predetermined size, 
-    // which m_vIndexGasGaps.size() is not.
-    for (int i = 0; i < num_gaps; ++i) {
-      meanR.push_back(0.);
-      meanZ.push_back(0.);
-      num_in_gap.push_back(0.);
-    }
     // for each active node
     for (const auto idx : activeNodes) {
       int fz = idx[0];
@@ -1130,6 +1117,9 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
       // calculate new avalanche size at X + step
       // HS: use a vector<bool> to keep track of which gaps are saturated?
+      long nElectronOut = 0;
+      double nPosIonOut = 0.;
+      double nNegIonOut = 0.;
       if (!m_bSpaceCharge &&
           (std::find(m_vSaturatedGaps.begin(), m_vSaturatedGaps.end(),
                      gasGap) != m_vSaturatedGaps.end()
