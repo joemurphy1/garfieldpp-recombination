@@ -2,6 +2,7 @@
 #define GARFIELD_AVALANCHEGRIDSPACECHARGE_HH
 
 #include <array>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
