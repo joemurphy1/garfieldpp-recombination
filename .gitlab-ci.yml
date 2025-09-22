@@ -67,10 +67,11 @@ build-ubuntu24:
     - make -j4
     - make install
 
-build-fedora36:
+build-fedora41:
   stage: build
-  image: rootproject/root:6.26.10-fedora36
+  image: fedora/fedora:41
   script:
+    - dnf install root
     - rm -rf build
     - mkdir build
     - cd build
@@ -78,10 +79,11 @@ build-fedora36:
     - make -j4
     - make install
     
-build-fedora37:
+build-fedora42:
   stage: build
-  image: rootproject/root:6.28.04-fedora37
+  image: fedora/fedora:42
   script:
+    - dnf install root
     - rm -rf build
     - mkdir build
     - cd build
