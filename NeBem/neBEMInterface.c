@@ -17,6 +17,9 @@
 #include <stdio.h>
 #include <sys/stat.h>  // use of stat function
 #include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
 
 #ifdef __cplusplus
 #include <vector>

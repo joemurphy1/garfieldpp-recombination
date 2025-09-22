@@ -10,10 +10,7 @@
 #define neBEMGLOBAL extern
 #endif
 
-#include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "Vector.h"
 

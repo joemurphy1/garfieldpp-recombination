@@ -7,7 +7,6 @@
 #define INTFACEGLOBAL extern
 #endif
 
-#include <stdio.h>
 #include <time.h>
 
 #include "Vector.h"
