@@ -58,9 +58,9 @@ int ComputeSolution(void) {
   NbEqns = NbUnknowns = NbElements;
   OptLU = 0;
   OptSVD = 0;
-  #if !defined(WITHOUT_GSL)
+#if !defined(WITHOUT_GSL)
   OptGSL = 0;
-  #endif
+#endif
 
   switch (OptInvMatProc) {
     case 0:
@@ -77,7 +77,7 @@ int ComputeSolution(void) {
     default:
       OptSVD = 1;
   }
-  #if !defined(WITHOUT_GSL)
+#if !defined(WITHOUT_GSL)
   if ((OptSVD == 0) && (OptLU == 0) && (OptGSL == 0)) {
     printf(
         "ComputeSolution: Cannot proceed with OptSVD, OptLU and OptGSL "
@@ -1321,7 +1321,7 @@ int InvertMatrix(void) {
   int DecomposeMatrixSVD(double **SVDInf, double *SVDw, double **SVDv);
 
   InvMat = dmatrix(1, NbUnknowns, 1, NbEqns);
- #if !defined(WITHOUT_GSL)
+#if !defined(WITHOUT_GSL)
   if (OptGSL) {
     printf("InvertMatrix: Matrix decomposition using GSL.\n");
     printf("              No OpenMP implementation.\n");
