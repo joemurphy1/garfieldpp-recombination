@@ -923,15 +923,9 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
     // clear existing rings
     for (auto & ringsystem : m_vRingSystems) {
       ringsystem.ClearActiveRings();
+      ringsystem.UpdateCentre(0., 0.);
     }
     
-    // for each gas gap (and therefore ring system) 
-    // we have one mean.
-    const size_t num_gaps = m_vIndexGasGaps.size();
-    std::vector<double> meanR(num_gaps, 0.);
-    std::vector<double> meanZ(num_gaps, 0.);
-    std::vector<double> num_in_gap(num_gaps, 0.);
-
     // for each active node
     for (const auto idx : activeNodes) {
       int fz = idx[0];
@@ -941,15 +935,9 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
       double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
                   m_grid[fz][fr].nNegIon;
-      double num_on_node = m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon +
-                           m_grid[fz][fr].nNegIon;
       int gasGapIndex = m_grid[fz][fr].gasGapIndex; // which gas gap does this node belong to?
         
-      meanR[gasGapIndex] += num_on_node * rf;
-      meanZ[gasGapIndex] += num_on_node * zf;
-      num_in_gap[gasGapIndex] += num_on_node;
-
-      // add the ring to the correct system: need the index of the gasgap
+      // Add the ring to the correct system: need the index of the gasgap
       // Direct charge interaction
       m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf, 0., N); 
 
@@ -992,20 +980,9 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
             continue;
           }
         }
-      }
-      else if (m_sFieldOption == "relaxation") {
+      } else if (m_sFieldOption == "relaxation") {
         // TODO: relaxation field method
       } 
-    }
-
-    for (size_t i = 0; i < num_gaps; ++i) {
-      if (num_in_gap[i] < 0.5) {
-        m_vRingSystems[i].UpdateCentre(0., 0.);
-        continue;
-      }
-      meanR[i] /= num_in_gap[i];
-      meanZ[i] /= num_in_gap[i];
-      m_vRingSystems[i].UpdateCentre(meanR[i], 0.); // as we are in 2D, we set phi = 0.
     }
   }
 
