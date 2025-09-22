@@ -44,24 +44,10 @@ build-alma9:
       
 # Docker image chosen to match build instructions at:
 # https://garfieldpp.web.cern.ch/garfieldpp/getting-started/
-#build-centos7-view97:
-#  stage: build
-#  image: rootproject/root:6.22.02-centos7
-#  before_script:
-#    - yum install libXmu-devel motif-devel -y
-#  script:
-#    - source /cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-centos7-gcc9-opt/setup.sh
-#    - rm -rf build
-#    - mkdir build
-#    - cd build
-#    - cmake  -DCMAKE_INSTALL_PREFIX=/usr/local ../
-#    - make -j4
-#    - make install
 
-build-ubuntu23:
+build-ubuntu25:
   stage: build
-  #image: rootproject/root:latest
-  image: rootproject/root:6.30.06-ubuntu23.10
+  image: rootproject/root:6.36.00-ubuntu25.04
   script:
     - rm -rf build
     - mkdir build
@@ -70,9 +56,9 @@ build-ubuntu23:
     - make -j4
     - make install
 
-build-ubuntu22:
+build-ubuntu24:
   stage: build
-  image: rootproject/root:6.30.04-ubuntu22.04
+  image: rootproject/root:6.34.00-ubuntu24.10
   script:
     - rm -rf build
     - mkdir build
@@ -81,9 +67,9 @@ build-ubuntu22:
     - make -j4
     - make install
 
-build-fedora32:
+build-fedora36:
   stage: build
-  image: rootproject/root:6.22.02-fedora32
+  image: rootproject/root:6.26.10-fedora36
   script:
     - rm -rf build
     - mkdir build
@@ -92,9 +78,9 @@ build-fedora32:
     - make -j4
     - make install
     
-build-fedora33:
+build-fedora37:
   stage: build
-  image: rootproject/root:6.22.06-fedora33
+  image: rootproject/root:6.28.04-fedora37
   script:
     - rm -rf build
     - mkdir build
