@@ -1,5 +1,6 @@
 //
 // Created by Dario Stocco (stoccod@ethz.ch) on 02.08.2023.
+// Updated by Thomas Szwarcer on 26.08.2025.
 //
 #include <TApplication.h>
 #include <TCanvas.h>
@@ -49,6 +50,7 @@ int main(int argc, char *argv[]) {
   double e_gas = 1.;
   std::vector<double> eps = {e_pet, e_bakelite, e_gas, e_bakelite,
                              e_gas, e_bakelite, e_pet};
+
   // ComponentParallelPlate
   ComponentParallelPlate cmp;
   cmp.Setup(int(layers.size()), eps, layers, voltage, {});
@@ -69,12 +71,10 @@ int main(int argc, char *argv[]) {
   avalsc.EnableStickyAnode(true);
   avalsc.EnableAdaptiveTimeStepping(true);
   avalsc.SetStopAtK(true);
-  avalsc.EnableSpaceChargeEffect(true);
-
   avalsc.Set2dGrid(y_mid - (d_bakelite / 2 + d_gas) + 1.e-8,
                    y_mid + (d_bakelite / 2 + d_gas) - 1.e-8, 3 * 400, 0.05,
                    100);
-
+  avalsc.EnableSpaceChargeEffect(true);
   // Mixed Method: AvalancheMicroscopic
   AvalancheMicroscopic avalmicro(&sens);
   avalmicro.SetTimeWindow(0., 0.5);
@@ -104,6 +104,8 @@ int main(int argc, char *argv[]) {
   LOG("Start Grid Calculation")
 
   avalsc.StartGridAvalanche();
+  
+  
   avalsc.ExportGrid("my_mrpc_grid");
   std::string filename = "my_signal";
   sens.ExportSignal(label, filename);
@@ -115,7 +117,7 @@ int main(int argc, char *argv[]) {
   signal_view->SetSensor(&sens);
   signal_view->PlotSignal(label);
   c_signal->SetTitle(label.c_str());
-  gSystem->ProcessEvents();
+  gSystem->ProcessEvents(); 
 
   app.Run();
   return 0;

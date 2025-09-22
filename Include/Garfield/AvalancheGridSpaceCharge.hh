@@ -2,9 +2,12 @@
 #define GARFIELD_AVALANCHEGRIDSPACECHARGE_HH
 
 #include <array>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "Garfield/ComponentChargedRing.hh"
 
 namespace Garfield {
 class Sensor;
@@ -41,6 +44,12 @@ class AvalancheGridSpaceCharge {
   /// Enable space charge calculations (default on)
   void EnableSpaceChargeEffect(const bool option = true) {
     m_bSpaceCharge = option;
+    if (option) {
+      if (!m_isgridset) {
+        throw std::runtime_error(m_className + "::EnableSpaceChargeEffect: use Set2dGrid() before enabling space charge.");
+      }
+      SetRingSystems();
+    }
   }
 
   /// Enable adaptive time stepping (default on)
@@ -64,9 +73,9 @@ class AvalancheGridSpaceCharge {
   ///   mirror: symmetric 3 layer single gap rpc with metal - resistive layer -
   ///   gas gap - r. l. - m.
   void SetFieldCalculation(const std::string &option = "coulomb",
-                           const int nof_approx = 1.) {
+                           const int nof_approx = 1) {
     m_sFieldOption = std::move(option);
-    m_iFieldApprox = std::move(nof_approx);
+    m_iFieldApprox = nof_approx;
   }
 
   /// Set the streamer-inception criterion constant K in the interval (0,
@@ -119,7 +128,7 @@ class AvalancheGridSpaceCharge {
   }
 
   /// Returns the total electron number evolution
-  [[nodiscard]] const std::vector<std::pair<double, long>>
+  [[nodiscard]] const std::vector<std::pair<double, long>>&
   GetElectronEvolution() const {
     return m_vNElectronEvolution;
   }
@@ -199,33 +208,6 @@ class AvalancheGridSpaceCharge {
   void DistributeCharges(long nElectron, double nPosIon, double nNegIon, int iz,
                          int ir, double stepZ, double stepR, int gasGap);
 
-  // Calculate the field from all the contributions to the bin of interest. May
-  // need much more functionalities/tables.
-  void GetLocalField(int iz, int ir, double &eFieldZ, double &eFieldR,
-                     const std::string &fieldOption, int gasGap);
-
-  // Calculate the field of charged ring in vacuum using coulomb potentials and
-  // indices
-  void GetFreeChargedRing(int iz, int ir, int fz, int fr, double &eFieldZ,
-                          double &eFieldR);
-
-  // Calculate the field of charged ring in vacuum using coulomb potentials and
-  // coordinates
-  void GetFreeChargedRing(double zi, double ri, double zf, double rf,
-                          double &eFieldZ, double &eFieldR);
-
-  // Get field at (zi, ri) from N charges at (zf, rf) either as a ring or a
-  // coulomb ball (rf = 0) if i and f are too close it is considered as self
-  // interaction and not included
-  bool AddFieldFromChargeAt(int iz, int ir, int fz, int fr, double N,
-                            double &eFieldZ, double &eFieldR);
-
-  // Get field at (zi, ri) from N charges at (zf, rf) either as a ring or a
-  // coulomb ball (rf = 0) if i and f are too close it is considered as self
-  // interaction and not included
-  bool AddFieldFromChargeAt(int iz, int ir, double zf, double rf, double N,
-                            double &eFieldZ, double &eFieldR);
-
   // Get swarm parameters at electric field magnitude
   void GetSwarmParameters(double MagEField, double &alpha, double &eta,
                           double &drift, double &dSigmaL, double &dSigmaT,
@@ -236,15 +218,10 @@ class AvalancheGridSpaceCharge {
   void GetGlobalCoordinates(double r, double z, double phi, double &xg,
                             double &yg, double &zg, int gasGap);
 
-  // Import elliptic integral values
-  void ImportEllipticIntegralValues(const std::string &filename);
-
-  // Gets elliptic integrals via list
-  void GetEllipticIntegrals(double x, double &K, double &E);
-
   // Get from index the gas gap number, else -1
   int GetGasGapNumber(int layerIndex);
 
+  void SetRingSystems();
  private:
   std::string m_className{"AvalancheGridSpaceCharge"};
 
@@ -265,7 +242,6 @@ class AvalancheGridSpaceCharge {
   long m_lElectronsK{0};
 
   bool m_bAdaptiveTime{true};
-  bool m_bImportElliptic{false};
   /// Flag if TOF parameters should be used, else Magboltz
   /// drift and SST spatial coefficients
   bool m_bUseTOF{true};
@@ -326,9 +302,10 @@ class AvalancheGridSpaceCharge {
   std::vector<int> m_vSaturatedGaps;
 
   std::string m_sFieldOption{"coulomb"};
-  enum class Elliptic : std::size_t { X, K, E };
-  static const constexpr std::size_t elliptic_size{29981};
-  static const std::array<std::array<double, 3>, elliptic_size> m_elliptic;
+
+  /// Vector of ComponentChargedRing objects
+  /// We might need multiple ring systems, e.g. one per gas gap.
+  std::vector<ComponentChargedRing> m_vRingSystems;
 };
 
 }  // namespace Garfield

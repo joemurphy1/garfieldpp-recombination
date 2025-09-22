@@ -72,17 +72,17 @@ void ComponentParallelPlate::Setup(const unsigned int N,
                 << ", epsr = " << m_epsHolder[i - 1] << ".\n";
   }
 
-  if (m_debug) std::cout << m_className << "Setup: Constructing matrices.\n";
+  if (m_debug) std::cout << m_className << "::Setup: Constructing matrices.\n";
   constructGeometryMatrices(m_N);
 
   if (m_debug)
     std::cout << m_className
-              << "Setup: Computing weighting potential functions.\n";
+              << "::Setup: Computing weighting potential functions.\n";
   setHIntegrand();
   setwpStripIntegrand();
   setwpPixelIntegrand();
 
-  std::cout << m_className << "Setup: Geometry with N = " << N
+  std::cout << m_className << "::Setup: Geometry with N = " << N
             << " layers set.\n";
 }
 

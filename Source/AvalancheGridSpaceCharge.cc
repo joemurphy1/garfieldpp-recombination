@@ -13,6 +13,7 @@
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
+#include "Garfield/GarfieldConstants.hh"
 
 namespace {
 
@@ -188,7 +189,7 @@ AvalancheGridSpaceCharge::AvalancheGridSpaceCharge() {
 
 AvalancheGridSpaceCharge::AvalancheGridSpaceCharge(Sensor *sensor)
     : AvalancheGridSpaceCharge() {
-  m_sensor = sensor;
+  SetSensor(sensor);
 }
 
 int AvalancheGridSpaceCharge::GetGasGapNumber(int layerIndex) {
@@ -574,11 +575,9 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
     return false;
   }
 
-  // HS: why make a copy?
-  auto CoN = m_vCoNGasLayer[gasLayer];
   // y in micro is z in grid space-charge
-  double r =
-      std::sqrt((x - CoN[0]) * (x - CoN[0]) + (z - CoN[2]) * (z - CoN[2]));
+  const double r = Mag(x - m_vCoNGasLayer[gasLayer][0], 
+                       z - m_vCoNGasLayer[gasLayer][2]);
   int iZ = (int)std::round((y - m_zGrid.front()) / m_zStepSize);
   int iR = (int)std::round(r / m_rStepSize);
 
@@ -905,13 +904,86 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
   // approach)
   if (!m_run) return false;
 
-  // local helper variables
-  long nElectronOut;
-  double nPosIonOut, nNegIonOut;
-
   if (m_bDebug) {
     std::cout << m_className << "::TransportTimeStep: Start time: " << m_time
               << "\n";
+  }
+
+  // Determine the active nodes.
+  std::vector<std::array<int,2>> activeNodes;
+  for (int iz = 0; iz <= m_zSteps; iz++) {
+    for (int ir = 0; ir <= m_rSteps; ir++) {
+      const double N = -m_grid[iz][ir].nElectron + m_grid[iz][ir].nPosIon - m_grid[iz][ir].nNegIon;
+      // If there is enough charge, count as an active node
+      if (std::abs(N) > 0.1) activeNodes.push_back({iz, ir});
+    }
+  } 
+
+  if (m_bSpaceCharge && m_nTotElectron > 1e5) {
+    // clear existing rings
+    for (auto & ringsystem : m_vRingSystems) {
+      ringsystem.ClearActiveRings();
+      ringsystem.UpdateCentre(0., 0.);
+    }
+    
+    // for each active node
+    for (const auto idx : activeNodes) {
+      int fz = idx[0];
+      int fr = idx[1];
+      double zf = m_zGrid[fz];
+      double rf = m_rGrid[fr];
+
+      double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
+                  m_grid[fz][fr].nNegIon;
+      int gasGapIndex = m_grid[fz][fr].gasGapIndex; // which gas gap does this node belong to?
+        
+      // Add the ring to the correct system: need the index of the gasgap
+      // Direct charge interaction
+      m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf, 0., N); 
+
+      if (m_sFieldOption == "mirror") {
+        // assume symmetric single layer rpc with equal permittivity resistive
+        // layers.
+
+        if (m_vIndexGasGaps.size() > 1) {
+          throw std::runtime_error(
+              "::TransportTimeStep: Mirror charge option implemented but not tested for "
+              "MRPC.");
+        }
+
+        // HS: this can be done at initialization time...
+        // get epsilon value from neighboring layer (assume both layers have same
+        // eps)
+        int IndexOfRightLayer = m_vIndexGasGaps[gasGapIndex] + 1;
+        // int IndexOfLeftLayer = m_vIndexGasGaps[gasGapIndex] - 1;
+        double eps = 1.;  //< neighbored resistive layer thickness from where?
+        m_pp->getPermittivityFromLayer(IndexOfRightLayer, eps);
+        double alpha12 = (1. - eps) / (1. + eps);
+
+        // Obtain bounds of current gas gap
+        double zTop, zBottom;
+        m_pp->getZBoundFromLayer(m_vIndexGasGaps[gasGapIndex], zTop, zBottom);
+
+        // mirror charge interaction
+        for (int i = 0; i < m_iFieldApprox; i++) {
+          if (i == 0) {
+            // 2a, alpha12 = delta_Q
+            double zf0 = zf + 2. * (zTop - zf);
+            m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf0, 0., N * alpha12);
+
+            // -2a', alpha12 = delta_Q
+            zf0 = zf + 2. * (zBottom - zf);
+            m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf0, 0., N * alpha12);
+          } else if (i == 1) {
+            // TODO: higher order mirror charges
+          } else {
+            continue;
+          }
+        }
+      } else if (m_sFieldOption == "relaxation") {
+        // TODO: relaxation field method
+      } 
+    }
   }
 
   // choose MC or Mean version depending on m_bMC; total electron > 1e5
@@ -926,11 +998,18 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
   // update the nodes for the next run (SC-field and swarm parameters)
   // MRPC: SC-effect only within each gas gap and option="coulomb"
   if (m_bSpaceCharge && m_nTotElectron > 1e5) {
+
+    double dummy; // dummy E field component as we are using a 2d grid
+    Medium* m = nullptr;
+    int stat;
+
     for (int iz = 0; iz <= m_zSteps; iz++) {
+      double zi = m_zGrid[iz];
       // continue if not in gas gap
       int gasGap = m_grid[iz][0].gasGapIndex;
       if (gasGap == -1) continue;
       for (int ir = 0; ir <= m_rSteps; ir++) {
+        double ri = m_rGrid[ir];
         auto &nd = m_grid[iz][ir];
 
         // reset local fields at node
@@ -940,13 +1019,12 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         // continue if: no electrons, an anode
         if ((double)nd.nElectron < 0.5 || nd.anode) continue;
 
-        // update space charge field
-        // calculate field at the current bin from all other bins containing
-        // charge
-        GetLocalField(iz, ir, nd.eFieldZ, nd.eFieldR, m_sFieldOption, gasGap);
-
+        // update space charge field on each node
+        int gasGapIndex = m_grid[iz][ir].gasGapIndex;
+        m_vRingSystems[gasGapIndex].ElectricField(ri,zi,0.,nd.eFieldR,nd.eFieldZ,dummy,m,stat);
+        
         // check if local field reaches background field values.
-        double MagEField = Mag(nd.eFieldZ + m_ezBkg[gasGap], nd.eFieldR);
+        const double MagEField = Mag(nd.eFieldZ + m_ezBkg[gasGap], nd.eFieldR);
         if (MagEField - std::abs(m_ezBkg[gasGap]) >=
                 m_fStreamerK * std::abs(m_ezBkg[gasGap]) &&
             !m_bFieldK) {
@@ -961,8 +1039,6 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         }
 
         // calculate the swarm parameters
-        // HS: why calculate MagEField again?
-        MagEField = Mag(nd.eFieldZ + m_ezBkg[gasGap], nd.eFieldR);
         GetSwarmParameters(MagEField, nd.townsend, nd.attachment, nd.velocity,
                            nd.dSigmaL, nd.dSigmaT, nd.Wv, nd.Wr, nd.townsendPT,
                            nd.attachmentPT, gasGap);
@@ -1016,6 +1092,9 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
       // calculate new avalanche size at X + step
       // HS: use a vector<bool> to keep track of which gaps are saturated?
+      long nElectronOut = 0;
+      double nPosIonOut = 0.;
+      double nNegIonOut = 0.;
       if (!m_bSpaceCharge &&
           (std::find(m_vSaturatedGaps.begin(), m_vSaturatedGaps.end(),
                      gasGap) != m_vSaturatedGaps.end()
@@ -1310,230 +1389,6 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nElectron, double nPosIon,
   }
 }
 
-void AvalancheGridSpaceCharge::GetLocalField(const int iz, const int ir,
-                                             double &eFieldZ, double &eFieldR,
-                                             const std::string &fieldOption,
-                                             int gasGap) {
-  // calculate space-charge (local field) at iz/ir
-  eFieldZ = 0;
-  eFieldR = 0;
-  // HS: use enum instead of string.
-  if (fieldOption == "coulomb") {
-    // if (!m_bImportElliptic) {
-    //   throw std::runtime_error("::GetLocalField Elliptic values not
-    //   imported.");
-    // }
-
-    // loop over all cells with particles (except itself) and add fields
-    for (int fz = 0; fz <= m_zSteps; fz++) {
-      // continue if not in gas gap; only add field from charges in same gas gap
-      int k = m_grid[fz][0].gasGapIndex;
-      if (k == -1 || k != gasGap) continue;
-      for (int fr = 0; fr <= m_rSteps; fr++) {
-        // add electric field from charge at f at position i
-        double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
-                   m_grid[fz][fr].nNegIon;
-        if (std::abs(N) < 1.) continue;  //< N too small to consider
-        AddFieldFromChargeAt(iz, ir, fz, fr, N, eFieldZ, eFieldR);
-      }
-    }
-    // Multiply by prefactor (final field units V/cm)
-    constexpr double prefactor = ElementaryCharge / (TwoPi * FourPiEpsilon0);
-    eFieldZ *= prefactor;
-    eFieldR *= prefactor;
-  } else if (fieldOption == "mirror") {
-    // assume symmetric single layer rpc with equal permittivity resistive
-    // layers.
-
-    if (m_vIndexGasGaps.size() > 1) {
-      throw std::runtime_error(
-          "::GetLocalField Mirror charge option implemented but not tested for "
-          "MRPC.");
-    }
-
-    // get the rpc (ComponentParallelPlate)
-    // HS: why?
-    auto *rpc = m_pp;
-
-    // loop over all cells with particles and add fields
-    int k;
-    for (int fz = 0; fz <= m_zSteps; fz++) {
-      // continue if not in gas gap; only add field from charges in same gas gap
-      k = m_grid[fz][0].gasGapIndex;
-      if (k == -1 || k != gasGap) continue;
-
-      // HS: this can be done at initialization time...
-      // get epsilon value from neighboring layer (assume both layers have same
-      // eps)
-      int IndexOfRightLayer = m_vIndexGasGaps[k] + 1;
-      // int IndexOfLeftLayer = m_vIndexGasGaps[k] - 1;
-      double eps = 1.;  //< neighbored resistive layer thickness from where?
-      rpc->getPermittivityFromLayer(IndexOfRightLayer, eps);
-      double alpha12 = (1. - eps) / (1. + eps);
-
-      // Obtain bounds of current gas gap
-      double zTop, zBottom;
-      rpc->getZBoundFromLayer(m_vIndexGasGaps[k], zTop, zBottom);
-
-      for (int fr = 0; fr <= m_rSteps; fr++) {
-        // charge of interest at f, point of interest at i
-        double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
-                   m_grid[fz][fr].nNegIon;
-        if (std::abs(N) < 1.0) continue;  //< N too small to consider
-
-        double zf = m_zGrid[fz];
-        double rf = m_rGrid[fr];
-
-        // direct charge interaction, delta_Q = 1 (except itself)
-        AddFieldFromChargeAt(iz, ir, fz, fr, N, eFieldZ, eFieldR);
-
-        // mirror charge interaction
-        for (int i = 0; i < m_iFieldApprox; i++) {
-          if (i == 0) {
-            // 2a, alpha12 = delta_Q
-            double zf0 = zf + 2. * (zTop - zf);
-            AddFieldFromChargeAt(iz, ir, zf0, rf, N * alpha12, eFieldZ,
-                                 eFieldR);
-
-            // -2a', alpha12 = delta_Q
-            zf0 = zf + 2. * (zBottom - zf);
-            AddFieldFromChargeAt(iz, ir, zf0, rf, N * alpha12, eFieldZ,
-                                 eFieldR);
-          } else if (i == 1) {
-            // TODO: higher order mirror charges
-          } else {
-            continue;
-          }
-        }
-      }
-    }
-    // Multiply by prefactor (final field units V/cm)
-    constexpr double prefactor = ElementaryCharge / (TwoPi * FourPiEpsilon0);
-    eFieldZ *= prefactor;
-    eFieldR *= prefactor;
-  } else if (fieldOption == "relaxation") {
-    // TODO: relaxation field method
-  } else {
-    // default
-    eFieldZ = 0;
-    eFieldR = 0;
-  }
-}
-
-bool AvalancheGridSpaceCharge::AddFieldFromChargeAt(int iz, int ir, int fz,
-                                                    int fr, double N,
-                                                    double &eFieldZ,
-                                                    double &eFieldR) {
-  // charge of interest at f, point of interest at i
-  if (fz == iz and fr == ir) return false;  //< field on itself is not included
-
-  double zi = m_zGrid[iz];
-  double ri = m_rGrid[ir];
-  double zf = m_zGrid[fz];
-  double intermediateEz = 0., intermediateEr = 0.;
-
-  if (fr == 0) {
-    // Coulomb ball of radius dr / 2
-    const double d = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
-    const double f = TwoPi / (d * d * d);
-    intermediateEr = f * ri;
-    intermediateEz = f * (zi - zf);
-  } else {  //< rf != 0
-    // charged ring
-    GetFreeChargedRing(iz, ir, fz, fr, intermediateEz, intermediateEr);
-  }
-  eFieldZ += intermediateEz * N;
-  eFieldR += intermediateEr * N;
-  return true;
-}
-
-bool AvalancheGridSpaceCharge::AddFieldFromChargeAt(int iz, int ir, double zf,
-                                                    double rf, double N,
-                                                    double &eFieldZ,
-                                                    double &eFieldR) {
-  // charge of interest at f, point of interest at i
-  double zi = m_zGrid[iz];
-  double ri = m_rGrid[ir];
-  if (std::abs(zi - zf) / m_zStepSize < 1.e-3 &&
-      std::abs(ri - rf) / m_rStepSize < 1.e-3) {
-    return false;  //< field on itself is not included
-  }
-  double intermediateEz = 0, intermediateEr = 0;
-
-  if (std::abs(rf) / m_rStepSize < 0.5) {
-    // Coulomb ball of radius dr / 2
-    const double d = std::sqrt((zi - zf) * (zi - zf) + ri * ri);
-    const double f = TwoPi / (d * d * d);
-    intermediateEr = f * ri;
-    intermediateEz = f * (zi - zf);
-  } else {  //< rf != 0
-    // charged ring
-    GetFreeChargedRing(zi, ri, zf, rf, intermediateEz, intermediateEr);
-  }
-  eFieldZ += intermediateEz * N;
-  eFieldR += intermediateEr * N;
-  return true;
-}
-
-void AvalancheGridSpaceCharge::GetFreeChargedRing(int iz, int ir, int fz,
-                                                  int fr, double &eFieldZ,
-                                                  double &eFieldR) {
-  // Calculate the electric field at point (zi, ri)
-  // from charged ring at (zf, rf)
-
-  // precondition
-  if (iz == fz && ir == fr) {
-    eFieldZ = 0;
-    eFieldR = 0;
-    return;
-  }
-
-  // transform to coordinates and get the field
-  double ri = m_rGrid[ir];
-  double rf = m_rGrid[fr];
-  double zi = m_zGrid[iz];
-  double zf = m_zGrid[fz];
-  GetFreeChargedRing(zi, ri, zf, rf, eFieldZ, eFieldR);
-}
-
-void AvalancheGridSpaceCharge::GetFreeChargedRing(double zi, double ri,
-                                                  double zf, double rf,
-                                                  double &eFieldZ,
-                                                  double &eFieldR) {
-  // Calculate the electric field at point (zi, ri)
-  // from charged ring at (zf, rf).
-
-  // precondition
-  if (zi == zf && ri == rf) {
-    eFieldZ = 0;
-    eFieldR = 0;
-    return;
-  }
-
-  double dz = zi - zf;  //< I double-checked that's the right sign
-
-  // parameters (see Lippmann Diss.)
-  const double a2 = (ri + rf) * (ri + rf) + dz * dz;
-  const double b2 = (ri - rf) * (ri - rf) + dz * dz;
-  const double b = std::sqrt(b2);
-  const double c2 = ri * ri - rf * rf - dz * dz;
-  // parameter for elliptic integrals
-  const double x =
-      -4 * ri * rf / b2;  //< x < 0, i.e. never near x = 1 (singularity)
-
-  // calculation of elliptic integrals and fields (up to prefactor)
-  double EllE, EllK;
-  GetEllipticIntegrals(x, EllK, EllE);
-  eFieldZ = EllE * 4. * dz / (a2 * b);
-  eFieldR = c2 * EllE + a2 * EllK;
-  // if ri = 0?
-  if (ri < Small) {
-    eFieldR = 0;
-  } else {
-    eFieldR *= 2. / (ri * a2 * b);
-  }
-}
-
 void AvalancheGridSpaceCharge::GetGlobalCoordinates(double r, double z,
                                                     double phi, double &xg,
                                                     double &yg, double &zg,
@@ -1550,41 +1405,6 @@ void AvalancheGridSpaceCharge::GetGlobalCoordinates(double r, double z,
   zg = m_vCoNGasLayer[gasGap][2] - yloc;
 }
 
-void AvalancheGridSpaceCharge::GetEllipticIntegrals(double x, double &K,
-                                                    double &E) {
-  // from x = 0 to 10 it is in steps of 1e-3. From 10 to 1e4 in steps of 1. Then
-  // in steps of 1000 until 1e7.
-  int arg{0};
-  double invStep{0.};
-  if (-x < 1.e1) {
-    invStep = 1000.;
-    arg = (int)(-x * invStep);
-  } else if (-x < 1.e4) {
-    invStep = 1.;
-    arg = (int)(-x - 10) + 10000;
-  } else if (-x < 1.e7) {
-    invStep = 0.001;
-    arg = (int)((-x - 1.e4) * invStep) + 19990;
-  } else {
-    // not included in list.
-    if (m_bDebug)
-      std::cerr << m_className
-                << "::GetEllipticIntegrals: Value not included in list.\n";
-    K = (m_elliptic.back())[static_cast<std::size_t>(Elliptic::K)];
-    E = (m_elliptic.back())[static_cast<std::size_t>(Elliptic::E)];
-    return;
-  }
-
-  // Linear interpolation:
-  const double f =
-      (-x - m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::X)]) *
-      invStep;
-  K = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::K)] +
-      f * m_elliptic.at(arg + 1)[static_cast<std::size_t>(Elliptic::K)];
-  E = (1. - f) * m_elliptic.at(arg)[static_cast<std::size_t>(Elliptic::E)] +
-      f * m_elliptic.at(arg + 1)[static_cast<std::size_t>(Elliptic::E)];
-}
-
 double AvalancheGridSpaceCharge::GetMeanDistance() {
   // Returns mean distance of electrons on the whole grid (doesn't work for
   // MRPCs)
@@ -1599,6 +1419,31 @@ double AvalancheGridSpaceCharge::GetMeanDistance() {
     }
   }
   return z / (double)nofElectrons;
+}
+
+void AvalancheGridSpaceCharge::SetRingSystems() {
+  // We add a charged ring system for each gas gap
+  if (!m_pp) std::cerr << m_className
+                       << "::SetRingSystems: Parallel plate improperly defined.\n";
+  m_pp->IndexOfGasGaps(m_vIndexGasGaps);
+  size_t n_gas_gaps = m_vIndexGasGaps.size();
+
+  double horizontal_max = m_rGrid.back();
+  double horizontal_min = -1.*horizontal_max;
+  double vertical_min = m_zGrid.front();
+  double vertical_max = m_zGrid.back();
+
+  for (size_t i = 0; i < n_gas_gaps; ++i) {
+    m_vRingSystems.emplace_back();
+    const int layer_index = m_vIndexGasGaps[i];
+    double y_bottom, y_top;
+    m_pp->getZBoundFromLayer(layer_index, y_bottom, y_top);
+    Medium* m = m_pp->GetMedium(0, 0.5 * (y_top - y_bottom) + y_bottom, 0);
+    m_vRingSystems[i].SetMedium(m);
+    m_vRingSystems[i].SetArea(horizontal_min, vertical_min, horizontal_min,
+                              horizontal_max, vertical_max, horizontal_max);
+    if (m_bDebug) m_vRingSystems[i].EnableDebugging();
+  }
 }
 
 }  // namespace Garfield
