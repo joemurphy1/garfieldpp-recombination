@@ -5,14 +5,18 @@
 #define DEFINE_ISLESGLOBAL
 
 #include "Isles.h"
-
-#include <complex.h>
-#include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #if !defined(WITHOUT_GSL)
 #include <gsl/gsl_sf.h>
+#endif
+
+#ifdef __cplusplus
+#include <cmath>
+using std::isinf;
+using std::isnan;
+#else
+#include <math.h>
 #endif
 
 #define SHIFT 2.0
@@ -27,11 +31,6 @@
 // #define ZNSegApprox 1000	// much better results but lot more time
 
 #ifdef __cplusplus
-#include <cmath>
-#ifdef _GLIBCXX_HAVE_OBSOLETE_ISINF_ISNAN
-using std::isinf;
-using std::isnan;
-#endif
 namespace neBEM {
 #endif
 
