@@ -189,7 +189,7 @@ AvalancheGridSpaceCharge::AvalancheGridSpaceCharge() {
 
 AvalancheGridSpaceCharge::AvalancheGridSpaceCharge(Sensor *sensor)
     : AvalancheGridSpaceCharge() {
-  m_sensor = sensor;
+  SetSensor(sensor);
 }
 
 int AvalancheGridSpaceCharge::GetGasGapNumber(int layerIndex) {
@@ -1424,7 +1424,7 @@ double AvalancheGridSpaceCharge::GetMeanDistance() {
 void AvalancheGridSpaceCharge::SetRingSystems() {
   // We add a charged ring system for each gas gap
   if (!m_pp) std::cerr << m_className
-                       << "::SetRingSystems: parallel plate improperly defined.\n";
+                       << "::SetRingSystems: Parallel plate improperly defined.\n";
   m_pp->IndexOfGasGaps(m_vIndexGasGaps);
   size_t n_gas_gaps = m_vIndexGasGaps.size();
 
