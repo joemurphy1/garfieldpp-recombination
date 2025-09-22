@@ -12,9 +12,11 @@
 #include <omp.h>
 #endif
 
+#if !defined(WITHOUT_GSL)
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
+#endif
 
 #include "Isles.h"
 #include "NR.h"
@@ -54,46 +56,54 @@ int ComputeSolution(void) {
   DebugISLES = 0;  // an integer declared in Isles header file
 
   NbEqns = NbUnknowns = NbElements;
+  OptLU = 0;
+  OptSVD = 0;
+  #if !defined(WITHOUT_GSL)
+  OptGSL = 0;
+  #endif
 
   switch (OptInvMatProc) {
     case 0:
       OptLU = 1;
-      OptSVD = 0;
-      OptGSL = 0;
       break;
     case 1:
-      OptLU = 0;
       OptSVD = 1;
-      OptGSL = 0;
       break;
+#if !defined(WITHOUT_GSL)
     case 2:
-      OptLU = 0;
-      OptSVD = 0;
       OptGSL = 1;
       break;
+#endif
     default:
-      OptLU = 1;
-      OptSVD = 0;
-      OptGSL = 0;
+      OptSVD = 1;
   }
+  #if !defined(WITHOUT_GSL)
   if ((OptSVD == 0) && (OptLU == 0) && (OptGSL == 0)) {
     printf(
         "ComputeSolution: Cannot proceed with OptSVD, OptLU and OptGSL "
         "zero.\n");
     printf("                 Assuming the safer option OptSVD = 1.\n");
-    OptLU = 0;
-    OptSVD = 1;
-    OptGSL = 0;
   }
   if ((OptSVD == 1) && (OptLU == 1) && (OptGSL == 1)) {
     printf(
         "ComputeSolution: Cannot proceed with all OptSVD, OptLU and OptGSL "
         "one.\n");
     printf("                 Assuming the safer option OptSVD = 1.\n");
-    OptLU = 0;
-    OptSVD = 1;
-    OptGSL = 0;
   }
+#else
+  if ((OptSVD == 0) && (OptLU == 0)) {
+    printf(
+        "ComputeSolution: Cannot proceed with OptSVD and OptLU "
+        "zero.\n");
+    printf("                 Assuming the safer option OptSVD = 1.\n");
+  }
+  if ((OptSVD == 1) && (OptLU == 1)) {
+    printf(
+        "ComputeSolution: Cannot proceed with all OptSVD and OptLU "
+        "one.\n");
+    printf("                 Assuming the safer option OptSVD = 1.\n");
+  }
+#endif
 
   NbConstraints = 0;
   if (OptSystemChargeZero && NbFloatingConductors) {
@@ -1311,7 +1321,7 @@ int InvertMatrix(void) {
   int DecomposeMatrixSVD(double **SVDInf, double *SVDw, double **SVDv);
 
   InvMat = dmatrix(1, NbUnknowns, 1, NbEqns);
-
+ #if !defined(WITHOUT_GSL)
   if (OptGSL) {
     printf("InvertMatrix: Matrix decomposition using GSL.\n");
     printf("              No OpenMP implementation.\n");
@@ -1341,7 +1351,7 @@ int InvertMatrix(void) {
     gsl_matrix_free(inverse);
     printf("InvertMatrix: ... completed using GSL.\n");
   }  // if OptGSL
-
+#endif
   if (OptSVD) {
     printf("InvertMatrix: Matrix decomposition using SVD.\n");
     printf("              No OpenMP implementation.\n");

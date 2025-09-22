@@ -7,10 +7,13 @@
 #include "Isles.h"
 
 #include <complex.h>
-#include <gsl/gsl_sf.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#if !defined(WITHOUT_GSL)
+#include <gsl/gsl_sf.h>
+#endif
 
 #define SHIFT 2.0
 #define ARMAX 10000.0  // Maximum aspect ratio for an element
@@ -2211,6 +2214,7 @@ ISLESGLOBAL int ExactRingPF(double a, Point3D localPt, double *potential,
   r1dot = sqrt(r1dot);
   double u = 2.0 * sqrt(a * roe) / r1dot;
 
+  #if !defined(WITHOUT_GSL)
   // K1 and K2 are complete elliptic integrals
   // K implies first kind, according to GSL (and Wikipedia) convention
   gsl_mode_t mode = GSL_PREC_DOUBLE;
@@ -2226,6 +2230,10 @@ ISLESGLOBAL int ExactRingPF(double a, Point3D localPt, double *potential,
     K1 = gsl_sf_ellint_Kcomp(u, mode);
     K2 = gsl_sf_ellint_Ecomp(u, mode);
   }
+  #else
+  double K1{std::comp_ellint_1(u)};
+  double K2{std::comp_ellint_2(u)};
+  #endif
 
   double Vring = (a / ST_PI) * K1 / r1dot;
   // field in the radial direction

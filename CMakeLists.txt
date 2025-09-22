@@ -13,6 +13,7 @@ option(GARFIELD_WITH_DEGRADE "Build Degrade." ON)
 option(GARFIELD_WITH_EXAMPLES "Build Garfield++ examples" ON)
 option(GARFIELD_WITH_DOC "Whether or not to create doxygen doc target." OFF)
 option(GARFIELD_WITH_TESTS "Build Garfield++ tests" ON)
+option(GARFIELD_WITH_GSL "Build Garfield++ with GSL (useless if C++>=17)" OFF)
 
 
 # Setting the default build type to be Release.
@@ -111,7 +112,12 @@ else()
   set(GARFIELD_CXX_STANDARD ${CMAKE_CXX_STANDARD})
 endif()
 
-find_package(GSL REQUIRED)
+if(GARFIELD_WITH_GSL OR (GARFIELD_CXX_STANDARD LESS 17))
+  unset(GARFIELD_WITH_GSL)
+  unset(GARFIELD_WITH_GSL CACHE)
+  option(GARFIELD_WITH_GSL "Build Garfield++ with GSL (useless if C++>=17)" ON)
+  find_package(GSL REQUIRED)
+endif()
 find_package(OpenMP)
 
 # Add Magboltz
@@ -324,13 +330,13 @@ target_link_libraries(Garfield PUBLIC ROOT::Tree ROOT::RIO)
 target_link_libraries(Garfield PUBLIC ROOT::Geom
                                       ROOT::Gdml
                                       ROOT::Graf3d
-                                      GSL::gsl
                                       Garfield::Heed
                                       Magboltz::Magboltz
+                                      $<$<BOOL:${GARFIELD_WITH_GSL}>:GSL::gsl>
                                       $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Degrade::Degrade>
                                       $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
                                       $<$<BOOL:${GARFIELD_WITH_CUDA}>:GarfieldGPU>)
-target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU>)
+target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU> $<$<BOOL: NOT ${GARFIELD_WITH_GSL}>:WITHOUT_GSL>)
 target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
                                     PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
                                     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
