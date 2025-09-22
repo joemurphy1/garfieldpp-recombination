@@ -69,7 +69,7 @@ build-ubuntu24:
 
 build-fedora41:
   stage: build
-  image: fedora/fedora:41
+  image: fedora:41
   script:
     - dnf install root
     - rm -rf build
@@ -81,7 +81,7 @@ build-fedora41:
     
 build-fedora42:
   stage: build
-  image: fedora/fedora:42
+  image: fedora:42
   script:
     - dnf install root
     - rm -rf build
