@@ -71,7 +71,7 @@ build-fedora41:
   stage: build
   image: fedora:41
   script:
-    - dnf --nodocs --assumeyes install root cmake gcc gcc-fortran
+    - dnf --nodocs --assumeyes install root root-cli root-io root-mathcore root-multiproc root-tree root-tree-player root-net cmake gcc gcc-fortran
     - rm -rf build
     - mkdir build
     - cd build
@@ -83,7 +83,7 @@ build-fedora42:
   stage: build
   image: fedora:42
   script:
-    - dnf --nodocs --assumeyes install root cmake gcc gcc-fortran
+    - dnf --nodocs --assumeyes install root root-cli root-io root-mathcore root-multiproc root-tree root-tree-player root-net cmake gcc gcc-fortran
     - rm -rf build
     - mkdir build
     - cd build
