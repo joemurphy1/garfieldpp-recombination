@@ -5,18 +5,20 @@
 #define DEFINE_ISLESGLOBAL
 
 #include "Isles.h"
-#include <stdio.h>
-
-#if !defined(WITHOUT_GSL)
-#include <gsl/gsl_sf.h>
-#endif
 
 #ifdef __cplusplus
+#define __STDCPP_MATH_SPEC_FUNCS__
 #include <cmath>
 using std::isinf;
 using std::isnan;
 #else
 #include <math.h>
+#endif
+
+#include <stdio.h>
+
+#if !defined(WITHOUT_GSL)
+#include <gsl/gsl_sf.h>
 #endif
 
 #define SHIFT 2.0
