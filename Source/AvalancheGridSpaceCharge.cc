@@ -269,6 +269,21 @@ void AvalancheGridSpaceCharge::Set2dGrid(const double zmin, const double zmax,
   }
 }
 
+void AvalancheGridSpaceCharge::SetFieldCalculation(const std::string& option,
+                                                   const int nof_approx) {
+  std::string opt = option;
+  std::transform(opt.begin(), opt.end(), opt.begin(), toupper); 
+  if (opt == "COULOMB") {
+    m_fieldOption = FieldOption::Coulomb;
+  } else if (opt == "MIRROR") {
+    m_fieldOption = FieldOption::Mirror;
+  } else {
+    std::cerr << m_className << "::SetFieldCalculation: Unknown option "
+              << option << ".\n";
+  }
+  m_iFieldApprox = nof_approx;
+}
+
 void AvalancheGridSpaceCharge::AddElectrons(AvalancheMicroscopic *avmc) {
   if (!avmc) return;
 
@@ -914,7 +929,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       // Direct charge interaction
       m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf, 0., N);
 
-      if (m_sFieldOption == "mirror") {
+      if (m_fieldOption == FieldOption::Mirror) {
         // assume symmetric single layer rpc with equal permittivity resistive
         // layers.
 
@@ -955,8 +970,6 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
             continue;
           }
         }
-      } else if (m_sFieldOption == "relaxation") {
-        // TODO: relaxation field method
       }
     }
   }

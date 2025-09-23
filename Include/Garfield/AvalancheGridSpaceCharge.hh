@@ -73,16 +73,12 @@ class AvalancheGridSpaceCharge {
   /// effect is turned off (default 1e8)
   void SetNCrit(const long NCrit = 1e8) { m_lNCrit = NCrit; }
 
-  /// Sets the different options to calculate the space charge field
-  ///   coulomb: free field approximation
-  ///   (relaxation: fdm-relaxation methode (with a condition to stop))
-  ///   mirror: symmetric 3 layer single gap rpc with metal - resistive layer -
-  ///   gas gap - r. l. - m.
+  /// Sets the method for calculating the space charge field.
+  ///   Coulomb: free field approximation.
+  ///   Mirror: symmetric three-layer single-gap RPC
+  ///           (metal - resistive layer - gas - resistive layer - metal).
   void SetFieldCalculation(const std::string &option = "coulomb",
-                           const int nof_approx = 1) {
-    m_sFieldOption = std::move(option);
-    m_iFieldApprox = nof_approx;
-  }
+                           const int nof_approx = 1);
 
   /// Set the streamer-inception criterion constant K in the interval (0,
   /// &infin;) s.t. 1 = 100%
@@ -305,7 +301,11 @@ class AvalancheGridSpaceCharge {
   /// Which gas gaps are saturated if saturation is on
   std::vector<int> m_vSaturatedGaps;
 
-  std::string m_sFieldOption{"coulomb"};
+  enum class FieldOption {
+    Coulomb,
+    Mirror
+  };
+  FieldOption m_fieldOption{FieldOption::Coulomb};
 
   /// Vector of ComponentChargedRing objects
   /// We might need multiple ring systems, e.g. one per gas gap.
