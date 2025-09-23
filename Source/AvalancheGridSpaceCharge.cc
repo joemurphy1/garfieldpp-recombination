@@ -291,9 +291,8 @@ void AvalancheGridSpaceCharge::AddElectrons(AvalancheMicroscopic *avmc) {
     }
     int k = 0;
     if (m_pp) {
-      int ind;
-      double eps;
-      if (!m_pp->getLayer(electron.path.back().y, ind, eps)) {
+      const int ind = m_pp->GetLayer(electron.path.back().y);
+      if (ind < 0) {
         std::cerr << m_className
                   << "::AddElectrons: Electron outside component.\n";
         continue;
@@ -327,7 +326,7 @@ void AvalancheGridSpaceCharge::AddElectron(const double x, const double y,
   if (m_pp) {
     int ind;
     double eps = -1;
-    if (!m_pp->getLayer(y, ind, eps) && eps != 1.) {
+    if (!m_pp->GetLayer(y, ind, eps) && eps != 1.) {
       std::cerr << m_className << "AddElectron: Electron is not in a gas gap.";
       return;
     }
@@ -383,7 +382,7 @@ void AvalancheGridSpaceCharge::AddExtraElectron(double y, int n) {
   if (m_pp) {
     int ind;
     double eps = -1;
-    if (!m_pp->getLayer(y, ind, eps) && eps != 1.) {
+    if (!m_pp->GetLayer(y, ind, eps) && eps != 1.) {
       std::cerr << m_className
                 << "AddExtraElectron: Electron is not in a gas gap.";
       return;
@@ -637,12 +636,9 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
   if (m_pp) {
     m_vYPointInGasGap.resize(n);
     for (int iz = 0; iz <= m_zSteps; iz++) {
-      // determine layer index
-      int layerIndex = 0;
-      double eps = 0.;
-      m_pp->getLayer(m_zGrid[iz], layerIndex, eps);
-      // determine gap number from m_iIndexGasGaps and layer index
-      int k = GetGasGapNumber(layerIndex);
+      // Determine layer and gas gap.
+      const int layerIndex = m_pp->GetLayer(m_zGrid[iz]);
+      const int k = GetGasGapNumber(layerIndex);
       if (k != -1 && k < n) m_vYPointInGasGap[k] = m_zGrid[iz];
     }
   }
@@ -692,10 +688,9 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
     // Determine layer index.
     int layerIndex = 0;
     if (m_pp) {
-      double eps = 0.;
-      m_pp->getLayer(m_zGrid[iz], layerIndex, eps);
+      layerIndex = m_pp->GetLayer(m_zGrid[iz]);
       // Determine gap number.
-      k = GetGasGapNumber(layerIndex);
+      if (layerIndex >= 0) k = GetGasGapNumber(layerIndex);
     }
     if (k != -1) {
       // store z index for gap k
@@ -935,8 +930,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         // same eps)
         int IndexOfRightLayer = m_vIndexGasGaps[gasGapIndex] + 1;
         // int IndexOfLeftLayer = m_vIndexGasGaps[gasGapIndex] - 1;
-        double eps = 1.;  //< neighbored resistive layer thickness from where?
-        m_pp->getPermittivityFromLayer(IndexOfRightLayer, eps);
+        double eps = m_pp->GetPermittivityFromLayer(IndexOfRightLayer);
         double alpha12 = (1. - eps) / (1. + eps);
 
         // Obtain bounds of current gas gap

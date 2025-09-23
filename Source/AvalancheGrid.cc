@@ -307,9 +307,7 @@ void AvalancheGrid::StartGridAvalanche() {
     m_nLayer.assign(pp->NumberOfLayers(), 0);
     for (auto &node : m_activeNodes) {
       const double y = m_ygrid[node.iy];
-      int im = 0;
-      double epsM = 0;
-      pp->getLayer(y, im, epsM);
+      const int im = pp->GetLayer(y);
       node.layer = im;
       m_nLayer[im - 1] += node.n;
     }
