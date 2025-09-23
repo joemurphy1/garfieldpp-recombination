@@ -183,8 +183,6 @@ class AvalancheGridSpaceCharge {
     double y{0.};
     double z{0.};  ///< coordinates
     double t{0.};  ///< time
-
-    int gasLayerIndex{0};
   };
 
   // Prepare grid and place stored electrons from AvalancheMicroscopic import
@@ -241,10 +239,6 @@ class AvalancheGridSpaceCharge {
   /// Flag if TOF parameters should be used, else Magboltz
   /// drift and SST spatial coefficients
   bool m_bUseTOF{true};
-  /// Flag if bulk drift velocity is available to the simulation
-  bool m_bWrAvailable{true};
-  /// Flag if temporal rates are available to the simulation
-  bool m_bRatesAvailable{true};
 
   bool m_bMC{true};
 

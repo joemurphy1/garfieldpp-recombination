@@ -840,7 +840,6 @@ void AvalancheGridSpaceCharge::GetSwarmParameters(
   if (!m_bUseTOF ||
       !m->ElectronVelocityFluxBulk(0., MagEField, 0., 0., 0., 0., wv, wr) ||
       wr < Small) {
-    m_bWrAvailable = false;
     wr = drift;
   }
   // rates, if not available we take (alpha-eta)SST and ratio of alpha/eta =
@@ -855,8 +854,6 @@ void AvalancheGridSpaceCharge::GetSwarmParameters(
       std::cerr << m_className
                 << "::GetSwarmParameters: TOF Rates not available.\n";
     }
-
-    m_bRatesAvailable = false;
 
     // Diffusionless approximation
     rion = alpha * wr;
