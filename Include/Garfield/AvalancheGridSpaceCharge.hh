@@ -213,10 +213,6 @@ class AvalancheGridSpaceCharge {
                           double &wv, double &wr, double &alphaPT,
                           double &etaPT, int gasGap);
 
-  // Change from 2dGrid to Global coordinates
-  void GetGlobalCoordinates(double r, double z, double phi, double &xg,
-                            double &yg, double &zg, int gasGap);
-
   // Get from index the gas gap number, else -1
   int GetGasGapNumber(int layerIndex);
 

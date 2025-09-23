@@ -1003,8 +1003,8 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         nd.eFieldZ = 0;
         nd.eFieldR = 0;
 
-        // continue if: no electrons, an anode
-        if ((double)nd.nElectron < 0.5 || nd.anode) continue;
+        // Skip if there are no electrons or if we are at an anode.
+        if (nd.nElectron < 1 || nd.anode) continue;
 
         // update space charge field on each node
         int gasGapIndex = m_grid[iz][ir].gasGapIndex;
@@ -1070,10 +1070,8 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
     for (int ir = 0; ir <= m_rSteps; ir++) {
       auto &nd = m_grid[iz][ir];
 
-      // continue if at anode or no electrons
-      // HS: why static_cast<double>(nd.nElectron) < 0.5 instead of
-      //     just nd.nElectron < 1?
-      if (nd.anode || static_cast<double>(nd.nElectron) < 0.5) continue;
+      // Skip if we are at the anode or if there are no electrons.
+      if (nd.anode || nd.nElectron < 1) continue;
 
       // update step distance
       double step = std::abs(nd.Wr * m_dt);
@@ -1115,17 +1113,18 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       }
 
       if (m_sensor->GetNumberOfElectrodes() > 0) {
-        // adding the movement to signal: (go to global cartesian coordinates
-        // using phi = 0)
-        // TODO: discretize phi and add signal for each with nElectron / M on
-        // each element.
-        // TODO: at anode the signal from diffusion is due to bounded plane not
-        // netto 0 because diffusion
-        //  tends more backwards, since forward they reach at earlier distance
-        //  the boundary
-        // HS: why? This means we have to compute cos(0), sin(0) every time.
-        double x0, y0, z0;
-        GetGlobalCoordinates(m_rGrid[ir], m_zGrid[iz], 0., x0, y0, z0, gasGap);
+        // For now, use a single charge at phi = 0.
+        // TODO: 
+        // - Discretize phi and add signal for each slice with nElectron / M.
+        // - At anode, the signal from diffusion is due to bounded plane not
+        //   net 0 because diffusion tends more backwards, since forward they 
+        //   reach the boundary at earlier distance.
+        constexpr double cphi = 1.;
+        constexpr double sphi = 0.;
+        const double r0 = m_rGrid[ir];
+        const double x0 = m_vCoNGasLayer[gasGap][0] + r0 * cphi;
+        const double y0 = m_zGrid[iz];
+        const double z0 = m_vCoNGasLayer[gasGap][2] - r0 * sphi;
 
         // z-step outside gasGap domain, resize to stepZ = Anode - Current
         int izMin = m_zGasGapBoundaries[gasGap].front();
@@ -1136,12 +1135,14 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
           stepZ = (m_zGrid[izMax] - m_zGrid[iz]);
         }
 
+        const double r1 = m_rGrid[ir] + stepR;
+        const double x1 = m_vCoNGasLayer[gasGap][0] + r1 * cphi;
+        const double y1 = m_zGrid[iz] + stepZ;
+        const double z1 = m_vCoNGasLayer[gasGap][2] - r1 * sphi;
+
         // Induced current from flux drift velocity i.e. introduce weight factor
-        double weight =
-            nd.velocity / nd.Wr;  //< 1 if (Wv = velocity): Wr = flux
-        double x1, y1, z1;
-        GetGlobalCoordinates(m_rGrid[ir] + stepR, m_zGrid[iz] + stepZ, 0., x1,
-                             y1, z1, gasGap);
+        //< 1 if (Wv = velocity): Wr = flux
+        const double weight = nd.velocity / nd.Wr;  
         m_sensor->AddSignalWeightingPotential(
             -weight, {nd.time, nd.time + m_dt}, {{x0, y0, z0}, {x1, y1, z1}},
             {(double)nd.nElectron, (double)nElectronOut});
@@ -1375,22 +1376,6 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nElectron, double nPosIon,
     m_grid[iz1][ir1].nPosIonHolder += nPosIon;
     m_grid[iz1][ir1].nNegIonHolder += nNegIon;
   }
-}
-
-void AvalancheGridSpaceCharge::GetGlobalCoordinates(double r, double z,
-                                                    double phi, double &xg,
-                                                    double &yg, double &zg,
-                                                    int gasGap) {
-  // wrt to where the center of electron number has been
-  // negative r is allowed and for phi = 0 is just like the x-axis.
-  // phi is wrt to local x
-  // per definition local x is in global x direction.
-  double xloc = r * std::cos(phi);
-  // per definition local y is in global -z direction.
-  double yloc = r * std::sin(phi);
-  yg = z;
-  xg = m_vCoNGasLayer[gasGap][0] + xloc;
-  zg = m_vCoNGasLayer[gasGap][2] - yloc;
 }
 
 double AvalancheGridSpaceCharge::GetMeanDistance() {
