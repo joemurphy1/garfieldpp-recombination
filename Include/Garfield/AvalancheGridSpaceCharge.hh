@@ -247,11 +247,13 @@ class AvalancheGridSpaceCharge {
 
   std::vector<double> m_zGrid;  ///< Grid points of z-coordinate.
   int m_zSteps{0};              ///< Number of grid points.
-  double m_zStepSize{0.};       /// Distance between the grid points.
+  double m_zStepSize{0.};       ///< Distance between the grid points.
+  double m_zInvStep{0.};        ///< Inverse of the grid spacing.
 
   std::vector<double> m_rGrid;  ///< Grid points of r-coordinate.
   int m_rSteps{0};              ///< Number of grid points
-  double m_rStepSize{0.};       /// Distance between the grid points.
+  double m_rStepSize{0.};       ///< Distance between the grid points.
+  double m_rInvStep{0.};        ///< Inverse of the grid spacing.
 
   bool m_isgridset{false};  ///< Keeps track if the grid has been defined.
   long m_nTotElectron{0};   ///< Total amount of electrons at time step.

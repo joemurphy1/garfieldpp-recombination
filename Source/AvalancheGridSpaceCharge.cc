@@ -246,18 +246,16 @@ void AvalancheGridSpaceCharge::Set2dGrid(const double zmin, const double zmax,
   // set z grid
   m_zSteps = zsteps;
   m_zStepSize = (zmax - zmin) / zsteps;
-  // m_zGrid.resize(zsteps + 1);
-  for (int i = 0; i < zsteps + 1;
-       i++) {  //< put one more to include the last point on the grid
+  m_zInvStep = 1. / m_zStepSize;
+  for (int i = 0; i < zsteps + 1; i++) {
     m_zGrid.push_back(zmin + i * m_zStepSize);
   }
 
   // set r grid
   m_rSteps = rsteps;
   m_rStepSize = rmax / rsteps;
-  // m_rGrid.resize(rsteps + 1);
-  for (int i = 0; i < rsteps + 1;
-       i++) {  //< put one more to include the last point on the grid
+  m_rInvStep = 1. / m_rStepSize;
+  for (int i = 0; i < rsteps + 1; i++) {  
     m_rGrid.push_back(0 + i * m_rStepSize);
   }
 
@@ -563,10 +561,10 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
   if (!m_isgridset) throw Exception("Grid is not defined");
 
   // y in micro is z in grid space-charge
-  const double r =
-      Mag(x - m_vCoNGasLayer[gasLayer][0], z - m_vCoNGasLayer[gasLayer][2]);
-  int iZ = (int)std::round((y - m_zGrid.front()) / m_zStepSize);
-  int iR = (int)std::round(r / m_rStepSize);
+  const double r = Mag(x - m_vCoNGasLayer[gasLayer][0], 
+                       z - m_vCoNGasLayer[gasLayer][2]);
+  int iZ = (int)std::round((y - m_zGrid.front()) * m_zInvStep);
+  int iR = (int)std::round(r * m_rInvStep);
 
   if (m_bDebug) {
     std::cout << m_className << "::SnapTo2dGrid: iz = " << iZ << ", ir = " << iR
@@ -1266,9 +1264,8 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nElectron, double nPosIon,
   // distributes the charges from a movement in Z and R direction
   // Compute the effective step size in r-direction
   stepR = std::abs(m_rGrid[ir] + stepR) - m_rGrid[ir];
-  double zRatio = (m_zGrid[iz] + stepZ - m_zGrid[0]) / m_zStepSize;
-  double rRatio =
-      std::abs(m_rGrid[ir] + stepR) / m_rStepSize;  // can travel through r=0
+  double zRatio = (m_zGrid[iz] + stepZ - m_zGrid[0]) * m_zInvStep;
+  double rRatio = std::abs(m_rGrid[ir] + stepR) * m_rInvStep;  // can travel through r=0
 
   int iz1, signZstep;
   if (stepZ < 0) {
