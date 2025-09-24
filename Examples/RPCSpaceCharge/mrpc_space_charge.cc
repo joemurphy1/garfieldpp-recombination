@@ -104,8 +104,7 @@ int main(int argc, char *argv[]) {
   LOG("Start Grid Calculation")
 
   avalsc.StartGridAvalanche();
-  
-  
+
   avalsc.ExportGrid("my_mrpc_grid");
   std::string filename = "my_signal";
   sens.ExportSignal(label, filename);
@@ -117,7 +116,7 @@ int main(int argc, char *argv[]) {
   signal_view->SetSensor(&sens);
   signal_view->PlotSignal(label);
   c_signal->SetTitle(label.c_str());
-  gSystem->ProcessEvents(); 
+  gSystem->ProcessEvents();
 
   app.Run();
   return 0;

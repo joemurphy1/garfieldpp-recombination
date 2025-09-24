@@ -312,14 +312,14 @@ class MediumSilicon : public Medium {
   double m_fbDosMaxC{0.};
 
   // Optical data
-  enum class optical_data: std::size_t
-  {
-    Egamma=0,
+  enum class optical_data : std::size_t {
+    Egamma = 0,
     Eps1,
     Eps2,
   };
   static constexpr std::size_t m_optical_data_size{1127};
-  static const std::array<std::array<double,4>,m_optical_data_size> m_optical_data;
+  static const std::array<std::array<double, 4>, m_optical_data_size>
+      m_optical_data;
 
   bool Update();
   void UpdateLatticeMobility();

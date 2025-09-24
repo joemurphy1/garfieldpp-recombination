@@ -50,7 +50,9 @@ class AvalancheGridSpaceCharge {
     m_bSpaceCharge = option;
     if (option) {
       if (!m_isgridset) {
-        throw std::runtime_error(m_className + "::EnableSpaceChargeEffect: use Set2dGrid() before enabling space charge.");
+        throw std::runtime_error(m_className +
+                                 "::EnableSpaceChargeEffect: use Set2dGrid() "
+                                 "before enabling space charge.");
       }
       SetRingSystems();
     }
@@ -129,7 +131,7 @@ class AvalancheGridSpaceCharge {
   }
 
   /// Returns the total electron number evolution
-  [[nodiscard]] const std::vector<std::pair<double, long>>&
+  [[nodiscard]] const std::vector<std::pair<double, long>> &
   GetElectronEvolution() const {
     return m_vNElectronEvolution;
   }
@@ -223,6 +225,7 @@ class AvalancheGridSpaceCharge {
   int GetGasGapNumber(int layerIndex);
 
   void SetRingSystems();
+
  private:
   std::string m_className{"AvalancheGridSpaceCharge"};
 

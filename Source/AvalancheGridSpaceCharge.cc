@@ -13,7 +13,6 @@
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
-#include "Garfield/GarfieldConstants.hh"
 
 namespace {
 
@@ -576,8 +575,8 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
   }
 
   // y in micro is z in grid space-charge
-  const double r = Mag(x - m_vCoNGasLayer[gasLayer][0], 
-                       z - m_vCoNGasLayer[gasLayer][2]);
+  const double r =
+      Mag(x - m_vCoNGasLayer[gasLayer][0], z - m_vCoNGasLayer[gasLayer][2]);
   int iZ = (int)std::round((y - m_zGrid.front()) / m_zStepSize);
   int iR = (int)std::round(r / m_rStepSize);
 
@@ -910,22 +909,23 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
   }
 
   // Determine the active nodes.
-  std::vector<std::array<int,2>> activeNodes;
+  std::vector<std::array<int, 2>> activeNodes;
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      const double N = -m_grid[iz][ir].nElectron + m_grid[iz][ir].nPosIon - m_grid[iz][ir].nNegIon;
+      const double N = -m_grid[iz][ir].nElectron + m_grid[iz][ir].nPosIon -
+                       m_grid[iz][ir].nNegIon;
       // If there is enough charge, count as an active node
       if (std::abs(N) > 0.1) activeNodes.push_back({iz, ir});
     }
-  } 
+  }
 
   if (m_bSpaceCharge && m_nTotElectron > 1e5) {
     // clear existing rings
-    for (auto & ringsystem : m_vRingSystems) {
+    for (auto &ringsystem : m_vRingSystems) {
       ringsystem.ClearActiveRings();
       ringsystem.UpdateCentre(0., 0.);
     }
-    
+
     // for each active node
     for (const auto idx : activeNodes) {
       int fz = idx[0];
@@ -934,12 +934,14 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       double rf = m_rGrid[fr];
 
       double N = -m_grid[fz][fr].nElectron + m_grid[fz][fr].nPosIon -
-                  m_grid[fz][fr].nNegIon;
-      int gasGapIndex = m_grid[fz][fr].gasGapIndex; // which gas gap does this node belong to?
-        
+                 m_grid[fz][fr].nNegIon;
+      int gasGapIndex =
+          m_grid[fz][fr]
+              .gasGapIndex;  // which gas gap does this node belong to?
+
       // Add the ring to the correct system: need the index of the gasgap
       // Direct charge interaction
-      m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf, 0., N); 
+      m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf, 0., N);
 
       if (m_sFieldOption == "mirror") {
         // assume symmetric single layer rpc with equal permittivity resistive
@@ -947,13 +949,14 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
         if (m_vIndexGasGaps.size() > 1) {
           throw std::runtime_error(
-              "::TransportTimeStep: Mirror charge option implemented but not tested for "
+              "::TransportTimeStep: Mirror charge option implemented but not "
+              "tested for "
               "MRPC.");
         }
 
         // HS: this can be done at initialization time...
-        // get epsilon value from neighboring layer (assume both layers have same
-        // eps)
+        // get epsilon value from neighboring layer (assume both layers have
+        // same eps)
         int IndexOfRightLayer = m_vIndexGasGaps[gasGapIndex] + 1;
         // int IndexOfLeftLayer = m_vIndexGasGaps[gasGapIndex] - 1;
         double eps = 1.;  //< neighbored resistive layer thickness from where?
@@ -969,11 +972,13 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
           if (i == 0) {
             // 2a, alpha12 = delta_Q
             double zf0 = zf + 2. * (zTop - zf);
-            m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf0, 0., N * alpha12);
+            m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf0, 0.,
+                                                       N * alpha12);
 
             // -2a', alpha12 = delta_Q
             zf0 = zf + 2. * (zBottom - zf);
-            m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf0, 0., N * alpha12);
+            m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf0, 0.,
+                                                       N * alpha12);
           } else if (i == 1) {
             // TODO: higher order mirror charges
           } else {
@@ -982,7 +987,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         }
       } else if (m_sFieldOption == "relaxation") {
         // TODO: relaxation field method
-      } 
+      }
     }
   }
 
@@ -998,9 +1003,8 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
   // update the nodes for the next run (SC-field and swarm parameters)
   // MRPC: SC-effect only within each gas gap and option="coulomb"
   if (m_bSpaceCharge && m_nTotElectron > 1e5) {
-
-    double dummy; // dummy E field component as we are using a 2d grid
-    Medium* m = nullptr;
+    double dummy;  // dummy E field component as we are using a 2d grid
+    Medium *m = nullptr;
     int stat;
 
     for (int iz = 0; iz <= m_zSteps; iz++) {
@@ -1021,8 +1025,9 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
         // update space charge field on each node
         int gasGapIndex = m_grid[iz][ir].gasGapIndex;
-        m_vRingSystems[gasGapIndex].ElectricField(ri,zi,0.,nd.eFieldR,nd.eFieldZ,dummy,m,stat);
-        
+        m_vRingSystems[gasGapIndex].ElectricField(ri, zi, 0., nd.eFieldR,
+                                                  nd.eFieldZ, dummy, m, stat);
+
         // check if local field reaches background field values.
         const double MagEField = Mag(nd.eFieldZ + m_ezBkg[gasGap], nd.eFieldR);
         if (MagEField - std::abs(m_ezBkg[gasGap]) >=
@@ -1423,13 +1428,14 @@ double AvalancheGridSpaceCharge::GetMeanDistance() {
 
 void AvalancheGridSpaceCharge::SetRingSystems() {
   // We add a charged ring system for each gas gap
-  if (!m_pp) std::cerr << m_className
-                       << "::SetRingSystems: Parallel plate improperly defined.\n";
+  if (!m_pp)
+    std::cerr << m_className
+              << "::SetRingSystems: Parallel plate improperly defined.\n";
   m_pp->IndexOfGasGaps(m_vIndexGasGaps);
   size_t n_gas_gaps = m_vIndexGasGaps.size();
 
   double horizontal_max = m_rGrid.back();
-  double horizontal_min = -1.*horizontal_max;
+  double horizontal_min = -1. * horizontal_max;
   double vertical_min = m_zGrid.front();
   double vertical_max = m_zGrid.back();
 
@@ -1438,7 +1444,7 @@ void AvalancheGridSpaceCharge::SetRingSystems() {
     const int layer_index = m_vIndexGasGaps[i];
     double y_bottom, y_top;
     m_pp->getZBoundFromLayer(layer_index, y_bottom, y_top);
-    Medium* m = m_pp->GetMedium(0, 0.5 * (y_top - y_bottom) + y_bottom, 0);
+    Medium *m = m_pp->GetMedium(0, 0.5 * (y_top - y_bottom) + y_bottom, 0);
     m_vRingSystems[i].SetMedium(m);
     m_vRingSystems[i].SetArea(horizontal_min, vertical_min, horizontal_min,
                               horizontal_max, vertical_max, horizontal_max);

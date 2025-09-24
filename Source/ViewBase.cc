@@ -2,8 +2,8 @@
 
 #include <TGraph.h>
 #include <TROOT.h>
-#include <TVirtualPad.h>
 #include <TStyle.h>
+#include <TVirtualPad.h>
 
 #include <array>
 #include <cmath>
@@ -67,10 +67,9 @@ std::string Fmt(const double x) {
 namespace Garfield {
 
 void SetDefaultStyle(const bool serif) {
-
   auto style = gROOT->GetStyle("Garfield");
-  if (style) return; 
-  style = new TStyle("Garfield",  "Garfield Style");
+  if (style) return;
+  style = new TStyle("Garfield", "Garfield Style");
   style->SetFillColor(1);
   style->SetFillStyle(1001);
   style->SetCanvasBorderMode(0);

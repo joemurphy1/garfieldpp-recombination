@@ -10,8 +10,8 @@
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
-#include "Garfield/Utilities.hh"
 #include "Garfield/SiOpticalData.hh"
+#include "Garfield/Utilities.hh"
 
 namespace Garfield {
 
@@ -985,8 +985,10 @@ bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
   }
 
   // Make sure the requested energy is within the range of the table.
-  const double emin = m_optical_data.front()[static_cast<std::size_t>(optical_data::Egamma)];
-  const double emax = m_optical_data.back()[static_cast<std::size_t>(optical_data::Egamma)];
+  const double emin =
+      m_optical_data.front()[static_cast<std::size_t>(optical_data::Egamma)];
+  const double emax =
+      m_optical_data.back()[static_cast<std::size_t>(optical_data::Egamma)];
   if (e < emin || e > emax) {
     std::cerr << m_className << "::GetDielectricFunction:\n"
               << "    Requested energy (" << e << " eV) "
@@ -998,10 +1000,15 @@ bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
 
   // Locate the requested energy in the table.
   const auto begin = m_optical_data.cbegin();
-  auto compare = [](const std::array<double,4>& x,const std::array<double,4>& y) { return x[static_cast<std::size_t>(optical_data::Egamma)] < y[static_cast<std::size_t>(optical_data::Egamma)]; };
-  const auto it1 = std::upper_bound(m_optical_data.cbegin(), m_optical_data.cend(), std::array<double,4>{e,0,0,0},compare);
-  if (it1 == begin)
-  {
+  auto compare = [](const std::array<double, 4>& x,
+                    const std::array<double, 4>& y) {
+    return x[static_cast<std::size_t>(optical_data::Egamma)] <
+           y[static_cast<std::size_t>(optical_data::Egamma)];
+  };
+  const auto it1 =
+      std::upper_bound(m_optical_data.cbegin(), m_optical_data.cend(),
+                       std::array<double, 4>{e, 0, 0, 0}, compare);
+  if (it1 == begin) {
     eps1 = m_optical_data.front()[static_cast<std::size_t>(optical_data::Eps1)];
     eps2 = m_optical_data.front()[static_cast<std::size_t>(optical_data::Eps2)];
     return true;
@@ -1009,13 +1016,17 @@ bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
   const auto it0 = std::prev(it1);
 
   // Interpolate the real part of dielectric function.
-  const double x0 = it0->operator[](static_cast<std::size_t>(optical_data::Egamma));
-  const double x1 = it1->operator[](static_cast<std::size_t>(optical_data::Egamma));
+  const double x0 =
+      it0->operator[](static_cast<std::size_t>(optical_data::Egamma));
+  const double x1 =
+      it1->operator[](static_cast<std::size_t>(optical_data::Egamma));
   const double lnx0 = log(x0);
   const double lnx1 = log(x1);
   const double lnx = log(e);
-  const double y0 = it0->operator[](static_cast<std::size_t>(optical_data::Eps1));
-  const double y1 = it1->operator[](static_cast<std::size_t>(optical_data::Eps1));
+  const double y0 =
+      it0->operator[](static_cast<std::size_t>(optical_data::Eps1));
+  const double y1 =
+      it1->operator[](static_cast<std::size_t>(optical_data::Eps1));
   if (y0 <= 0. || y1 <= 0.) {
     // Use linear interpolation if one of the values is negative.
     eps1 = y0 + (e - x0) * (y1 - y0) / (x1 - x0);
@@ -1029,8 +1040,10 @@ bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
 
   // Interpolate the imaginary part of dielectric function,
   // using log-log interpolation.
-  const double lnz0 = log(it0->operator[](static_cast<std::size_t>(optical_data::Eps2)));
-  const double lnz1 = log(it1->operator[](static_cast<std::size_t>(optical_data::Eps2)));
+  const double lnz0 =
+      log(it0->operator[](static_cast<std::size_t>(optical_data::Eps2)));
+  const double lnz1 =
+      log(it1->operator[](static_cast<std::size_t>(optical_data::Eps2)));
   eps2 = lnz0 + (lnx - lnx0) * (lnz1 - lnz0) / (lnx1 - lnx0);
   eps2 = exp(eps2);
   return true;
