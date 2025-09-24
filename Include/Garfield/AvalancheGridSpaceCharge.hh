@@ -140,33 +140,33 @@ class AvalancheGridSpaceCharge {
 
  private:
   struct GridNode {
-    long nElectron{0};   ///< electrons on node
-    double nPosIon{0.};  ///< pos ion on node (smeared values allowed)
-    double nNegIon{0.};  ///< neg ion on node (smeared values allowed)
-    // holder memories for stepping in time:
-    long nElectronHolder{0};   ///< at t+dt
-    double nPosIonHolder{0.};  ///< at t+dt
-    double nNegIonHolder{0.};  ///< at t+dt
+    long nE{0};     ///< number of electrons
+    double nP{0.};  ///< number of positive ions (smeared values allowed)
+    double nN{0.};  ///< number of negative ions (smeared values allowed)
+    // Electrons and ions at the next step in time:
+    long nEHolder{0};     ///< at t+dt
+    double nPHolder{0.};  ///< at t+dt
+    double nNHolder{0.};  ///< at t+dt
 
-    double townsend{0.};    ///< townsend at this node 1/cm
-    double attachment{0.};  ///< attachment at this node 1/cm
-    /// Magnitude of velocity of the node (not negative) cm/ns
-    double velocity{0.};
+    double townsend{0.};    ///< Townsend coefficient [1/cm]
+    double attachment{0.};  ///< Attachment coefficient [1/cm]
+    /// Magnitude of the drift velocity [cm/ns]
+    double vd{0.};
     /// Diffusion along E.
     double dSigmaL{0.};
     /// Diffusion transverse to E (radial, phi dir is net 0).
     double dSigmaT{0.};
 
-    double Wv{0.};  ///< flux drift cm/ns
-    double Wr{0.};  ///< bulk drift cm/ns
+    double wv{0.};  ///< flux drift velocity [cm/ns]
+    double wr{0.};  ///< bulk drift velocity [cm/ns]
     /// Ionization rate from TOF experiment 1/ns -> 1/cm
     double townsendPT{0.};
     /// Attachment rate from TOF experiment 1/ns -> 1/cm
     double attachmentPT{0.};
     /// Space-charge electric field in R direction (can be negative)
-    double eFieldR{0.};
+    double er{0.};
     /// Space-charge electric field in Z direction (can be negative)
-    double eFieldZ{0.};
+    double ez{0.};
 
     double time{0.};  ///< Node clock.
 
@@ -206,8 +206,8 @@ class AvalancheGridSpaceCharge {
                          int ir, double stepZ, double stepR, int gasGap);
 
   // Get swarm parameters at electric field magnitude
-  void GetSwarmParameters(double MagEField, double &alpha, double &eta,
-                          double &drift, double &dSigmaL, double &dSigmaT,
+  void GetSwarmParameters(double emag, double &alpha, double &eta,
+                          double &vd, double &dSigmaL, double &dSigmaT,
                           double &wv, double &wr, double &alphaPT,
                           double &etaPT, int gasGap);
 
