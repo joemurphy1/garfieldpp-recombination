@@ -241,11 +241,8 @@ void AvalancheGridSpaceCharge::Set2dGrid(const double zmin, const double zmax,
                                          const int rsteps) {
   m_isgridset = true;
 
-  if (zmin >= zmax || zsteps <= 0 || 0 >= rmax || rsteps <= 0) {
-    std::cerr << m_className
-              << "::Set2dGrid: Error. Grid is not properly defined.\n";
-    return;
-  }
+  if (zmin >= zmax || zsteps <= 0 || 0 >= rmax || rsteps <= 0)
+    throw Exception("Grid is not properly defined");
 
   // set z grid
   m_zSteps = zsteps;
@@ -475,10 +472,7 @@ void AvalancheGridSpaceCharge::StartGridAvalanche(double dtime) {
 
 void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   std::ofstream exportElectrons(filename + "_electrons.csv");
-  if (!exportElectrons.is_open()) {
-    std::cerr << "Error opening e- file.\n";
-    return;
-  }
+  if (!exportElectrons.is_open()) throw Exception("Error opening e- file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
       exportElectrons << m_grid[iz][ir].nElectron << " ";
@@ -488,10 +482,7 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   exportElectrons.close();
 
   std::ofstream exportPosIon(filename + "_posion.csv");
-  if (!exportPosIon.is_open()) {
-    std::cerr << "Error opening p+ file.\n";
-    return;
-  }
+  if (!exportPosIon.is_open()) throw Exception("Error opening p+ file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
       exportPosIon << std::floor(m_grid[iz][ir].nPosIon) << " ";
@@ -501,10 +492,7 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   exportPosIon.close();
 
   std::ofstream exportNegIon(filename + "_negion.csv");
-  if (!exportNegIon.is_open()) {
-    std::cerr << "Error opening n- file.\n";
-    return;
-  }
+  if (!exportNegIon.is_open()) throw Exception("Error opening n- file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
       exportNegIon << std::floor(m_grid[iz][ir].nNegIon) << " ";
@@ -514,10 +502,7 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   exportNegIon.close();
 
   std::ofstream exportZField(filename + "_eFieldZ.csv");
-  if (!exportZField.is_open()) {
-    std::cerr << "Error opening E_z file.\n";
-    return;
-  }
+  if (!exportZField.is_open()) throw Exception("Error opening E_z file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
       int gasGap = m_grid[iz][ir].gasGapIndex;
@@ -529,10 +514,7 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   exportZField.close();
 
   std::ofstream exportRField(filename + "_eFieldR.csv");
-  if (!exportRField.is_open()) {
-    std::cerr << "Error opening E_r file.\n";
-    return;
-  }
+  if (!exportRField.is_open()) throw Exception("Error opening E_r file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
       double EField = m_grid[iz][ir].eFieldR;
@@ -543,10 +525,7 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   exportRField.close();
 
   std::ofstream exportMagField(filename + "_MagField.csv");
-  if (!exportMagField.is_open()) {
-    std::cerr << "Error opening E_r file.\n";
-    return;
-  }
+  if (!exportMagField.is_open()) throw Exception("Error opening E_r file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
       int gasGap = m_grid[iz][ir].gasGapIndex;
@@ -569,10 +548,7 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
                                             const double z, const long n,
                                             const int gasLayer) {
   // Snap electron from AvalancheMicroscopic to the predefined grid
-  if (!m_isgridset) {
-    std::cerr << m_className << "::SnapTo2dGrid: Grid is not defined.\n";
-    return false;
-  }
+  if (!m_isgridset) throw Exception("Grid is not defined");
 
   // y in micro is z in grid space-charge
   const double r =

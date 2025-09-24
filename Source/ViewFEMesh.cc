@@ -102,22 +102,14 @@ void ViewFEMesh::Reset() {
 }
 
 void ViewFEMesh::SetComponent(Component* cmp) {
-  if (!cmp) {
-    std::cerr << m_className << "::SetComponent: Null pointer.\n";
-    return;
-  }
-
+  if (!cmp) throw Exception("Component* is nullptr");
   m_cmp = cmp;
 }
 
 // The plotting functionality here is ported from Garfield
 //  with some inclusion of code from ViewCell.cc
 bool ViewFEMesh::Plot(const bool twod, const bool outline) {
-  if (!m_cmp) {
-    std::cerr << m_className << "::Plot: Component is not defined.\n";
-    return false;
-  }
-
+  if (!m_cmp) throw Exception("Component is not defined");
   double pmin = 0., pmax = 0.;
   if (!m_cmp->GetVoltageRange(pmin, pmax)) {
     std::cerr << m_className << "::Plot: Component is not ready.\n";

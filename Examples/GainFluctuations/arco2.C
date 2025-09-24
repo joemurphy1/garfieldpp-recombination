@@ -68,8 +68,8 @@ int main() {
       hElectrons.Fill(ne);
       hIons.Fill(ni);
       // Retrieve the number of collisions of each type.
-      unsigned int nColl[6] = {0};
-      unsigned int nTotal = gas.GetNumberOfElectronCollisions(
+      std::size_t nColl[6] = {0};
+      std::size_t nTotal = gas.GetNumberOfElectronCollisions(
           nColl[0], nColl[1], nColl[2], nColl[3], nColl[4], nColl[5]);
       nIon += nColl[1];
       nExc += nColl[4];

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
@@ -86,14 +87,9 @@ TrackHeed::~TrackHeed() {}
 bool TrackHeed::NewTrack(const double x0, const double y0, const double z0,
                          const double t0, const double dx0, const double dy0,
                          const double dz0) {
-  m_hasActiveTrack = false;
-
   // Make sure the sensor has been set.
-  if (!m_sensor) {
-    std::cerr << m_className << "::NewTrack: Sensor is not defined.\n";
-    return false;
-  }
-
+  if (!m_sensor) throw Exception("Sensor is not defined");
+  m_hasActiveTrack = false;
   bool update = false;
   if (!UpdateBoundingBox(update)) return false;
 
@@ -428,10 +424,8 @@ bool TrackHeed::GetIon(const unsigned int i, double& x, double& y, double& z,
                        double& t) const {
   if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
   // Make sure an ion with this index exists.
-  if (i >= m_clusters[m_cluster].ions.size()) {
-    std::cerr << m_className << "::GetIon: Index out of range.\n";
-    return false;
-  }
+  if (i >= m_clusters[m_cluster].ions.size())
+    throw Exception("Index out of range");
   const auto& ion = m_clusters[m_cluster].ions[i];
   x = ion.x;
   y = ion.y;
@@ -445,10 +439,8 @@ bool TrackHeed::GetPhoton(const unsigned int i, double& x, double& y, double& z,
                           double& dz) const {
   if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
   // Make sure a photon with this index exists.
-  if (i >= m_clusters[m_cluster].photons.size()) {
-    std::cerr << m_className << "::GetPhoton: Index out of range.\n";
-    return false;
-  }
+  if (i >= m_clusters[m_cluster].photons.size())
+    throw Exception("Index out of range");
   const auto& photon = m_clusters[m_cluster].photons[i];
   x = photon.x;
   y = photon.y;
@@ -567,20 +559,11 @@ TrackHeed::Cluster TrackHeed::TransportPhoton(const double x0, const double y0,
                                               const double e0, const double dx0,
                                               const double dy0,
                                               const double dz0) {
-  Cluster cluster;
   // Make sure the energy is positive.
-  if (e0 <= 0.) {
-    std::cerr << m_className << "::TransportPhoton:\n"
-              << "    Photon energy must be positive.\n";
-    return cluster;
-  }
-
+  if (e0 <= 0.) throw Exception("Photon energy must be positive");
   // Make sure the sensor has been set.
-  if (!m_sensor) {
-    std::cerr << m_className << "::TransportPhoton: Sensor is not defined.\n";
-    return cluster;
-  }
-
+  if (!m_sensor) throw Exception("Sensor is not defined");
+  Cluster cluster;
   bool update = false;
   if (!UpdateBoundingBox(update)) return cluster;
 
@@ -746,11 +729,7 @@ void TrackHeed::SetEnergyMesh(const double e0, const double e1,
     return;
   }
 
-  if (nsteps <= 0) {
-    std::cerr << m_className << "::SetEnergyMesh:\n"
-              << "    Number of intervals must be > 0.\n";
-    return;
-  }
+  if (nsteps <= 0) throw Exception("Number of intervals must be > 0");
 
   m_emin = 1.e-6 * std::min(e0, e1);
   m_emax = 1.e-6 * std::max(e0, e1);
@@ -758,15 +737,8 @@ void TrackHeed::SetEnergyMesh(const double e0, const double e1,
 }
 
 void TrackHeed::SetParticleUser(const double m, const double z) {
-  if (fabs(z) < Small) {
-    std::cerr << m_className << "::SetParticleUser:\n"
-              << "    Particle cannot have zero charge.\n";
-    return;
-  }
-  if (m < Small) {
-    std::cerr << m_className << "::SetParticleUser:\n"
-              << "    Particle mass must be greater than zero.\n";
-  }
+  if (fabs(z) < Small) throw Exception("Particle cannot have zero charge");
+  if (m < Small) throw Exception("Particle mass must be greater than zero");
   m_q = z;
   m_mass = m;
   m_isElectron = false;
@@ -775,6 +747,8 @@ void TrackHeed::SetParticleUser(const double m, const double z) {
 }
 
 bool TrackHeed::Initialise(Medium* medium, const bool verbose) {
+  // Make sure the medium exists.
+  if (!medium) throw Exception("Medium* is nullptr");
   // Make sure the path to the Heed database is known.
   std::string databasePath;
   char* dbPath = std::getenv("HEED_DATABASE");
@@ -807,12 +781,6 @@ bool TrackHeed::Initialise(Medium* medium, const bool verbose) {
   if (m_debug || verbose) {
     std::cout << m_className << "::Initialise:\n"
               << "    Database path: " << databasePath << "\n";
-  }
-
-  // Make sure the medium exists.
-  if (!medium) {
-    std::cerr << m_className << "::Initialise: Null pointer.\n";
-    return false;
   }
 
   // Setup the energy mesh.

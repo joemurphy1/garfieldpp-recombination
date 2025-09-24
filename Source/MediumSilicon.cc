@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
@@ -116,53 +117,34 @@ void MediumSilicon::GetDoping(char& type, double& c) const {
 }
 
 void MediumSilicon::SetTrapCrossSection(const double ecs, const double hcs) {
-  if (ecs < 0.) {
-    std::cerr << m_className << "::SetTrapCrossSection:\n"
-              << "    Capture cross-section [cm2] must non-negative.\n";
-  } else {
-    m_eTrapCs = ecs;
-  }
+  if (ecs < 0.)
+    throw Exception("Capture cross-section [cm2] must non-negative");
+  m_eTrapCs = ecs;
 
-  if (hcs < 0.) {
-    std::cerr << m_className << "::SetTrapCrossSection:\n"
-              << "    Capture cross-section [cm2] must be non-negative.n";
-  } else {
-    m_hTrapCs = hcs;
-  }
+  if (hcs < 0.)
+    throw Exception("Capture cross-section [cm2] must be non-negative");
+  m_hTrapCs = hcs;
 
   m_trappingModel = 0;
   m_isChanged = true;
 }
 
 void MediumSilicon::SetTrapDensity(const double n) {
-  if (n < 0.) {
-    std::cerr << m_className << "::SetTrapDensity:\n"
-              << "    Trap density [cm-3] must be non-negative.\n";
-  } else {
-    m_eTrapDensity = n;
-    m_hTrapDensity = n;
-  }
-
+  if (n < 0.) throw Exception("Trap density [cm-3] must be non-negative");
+  m_eTrapDensity = n;
+  m_hTrapDensity = n;
   m_trappingModel = 0;
   m_isChanged = true;
 }
 
 void MediumSilicon::SetTrappingTime(const double etau, const double htau) {
-  if (etau <= 0.) {
-    std::cerr << m_className << "::SetTrappingTime:\n"
-              << "    Trapping time [ns-1] must be positive.\n";
-  } else {
-    m_eTrapTime = etau;
-    m_eTrapRate = 1. / etau;
-  }
+  if (etau <= 0.) throw Exception("Trapping time [ns-1] must be positive");
+  m_eTrapTime = etau;
+  m_eTrapRate = 1. / etau;
 
-  if (htau <= 0.) {
-    std::cerr << m_className << "::SetTrappingTime:\n"
-              << "    Trapping time [ns-1] must be positive.\n";
-  } else {
-    m_hTrapTime = htau;
-    m_hTrapRate = 1. / htau;
-  }
+  if (htau <= 0.) throw Exception("Trapping time [ns-1] must be positive");
+  m_hTrapTime = htau;
+  m_hTrapRate = 1. / htau;
 
   m_trappingModel = 1;
   m_isChanged = true;
@@ -312,17 +294,14 @@ bool MediumSilicon::HoleAttachment(const double ex, const double ey,
 }
 
 void MediumSilicon::SetLowFieldMobility(const double mue, const double muh) {
-  if (mue <= 0. || muh <= 0.) {
-    std::cerr << m_className << "::SetLowFieldMobility:\n"
-              << "    Mobility must be greater than zero.\n";
-    return;
-  }
-
+  if (mue <= 0. || muh <= 0.)
+    throw Exception("Mobilities must be greater than zero");
   m_eMu = mue;
   m_hMu = muh;
   m_hasUserMobility = true;
   m_isChanged = true;
 }
+
 void MediumSilicon::SetLatticeMobilityModel(const std::string& model) {
   std::string tmp = model;
   std::transform(tmp.begin(), tmp.end(), tmp.begin(), toupper);
@@ -372,16 +351,11 @@ void MediumSilicon::SetDopingMobilityModelMasetti() {
 
 void MediumSilicon::SetSaturationVelocity(const double vsate,
                                           const double vsath) {
-  if (vsate <= 0. || vsath <= 0.) {
-    std::cout << m_className << "::SetSaturationVelocity:\n"
-              << "    Restoring default values.\n";
-    m_hasUserSaturationVelocity = false;
-  } else {
-    m_eVs = vsate;
-    m_hVs = vsath;
-    m_hasUserSaturationVelocity = true;
-  }
-
+  if (vsate <= 0. || vsath <= 0.)
+    throw Exception("vsate vsath must be positive");
+  m_eVs = vsate;
+  m_hVs = vsath;
+  m_hasUserSaturationVelocity = true;
   m_isChanged = true;
 }
 
@@ -654,12 +628,7 @@ double MediumSilicon::GetElectronNullCollisionRate(const int band) {
 }
 
 double MediumSilicon::GetElectronCollisionRate(const double e, const int band) {
-  if (e <= 0.) {
-    std::cerr << m_className << "::GetElectronCollisionRate:\n"
-              << "    Electron energy must be positive.\n";
-    return 0.;
-  }
-
+  if (e <= 0.) throw Exception("Electron energy must be positive");
   if (e > m_cb[2].eFinal) {
     std::cerr << m_className << "::GetElectronCollisionRate:\n"
               << "    Collision rate at " << e << " eV (band " << band
@@ -929,7 +898,7 @@ void MediumSilicon::ResetCollisionCounters() {
   m_nCollElectronBand.assign(nB, 0);
 }
 
-unsigned int MediumSilicon::GetNumberOfElectronCollisions() const {
+std::size_t MediumSilicon::GetNumberOfElectronCollisions() const {
   return m_nCollElectronAcoustic + m_nCollElectronOptical +
          m_nCollElectronIntervalley + m_nCollElectronImpurity +
          m_nCollElectronIonisation;
@@ -939,8 +908,8 @@ unsigned int MediumSilicon::GetNumberOfLevels() const {
   return m_cb[0].nLevels + m_cb[1].nLevels + m_cb[2].nLevels;
 }
 
-unsigned int MediumSilicon::GetNumberOfElectronCollisions(
-    const unsigned int level) const {
+std::size_t MediumSilicon::GetNumberOfElectronCollisions(
+    const std::size_t level) const {
   if (level >= m_nCollElectronDetailed.size()) {
     std::cerr << m_className << "::GetNumberOfElectronCollisions:\n"
               << "    Scattering rate term (" << level << ") does not exist.\n";
@@ -979,10 +948,7 @@ bool MediumSilicon::GetOpticalDataRange(double& emin, double& emax,
 
 bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
                                           double& eps2, const unsigned int i) {
-  if (i != 0) {
-    std::cerr << m_className + "::GetDielectricFunction: Index out of range.\n";
-    return false;
-  }
+  if (i != 0) throw Exception("Index out of range");
 
   // Make sure the requested energy is within the range of the table.
   const double emin =

@@ -17,6 +17,7 @@
 #include <regex>
 #include <string>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/OpticalData.hh"
 #include "Garfield/Random.hh"
@@ -139,36 +140,24 @@ MediumMagboltz::MediumMagboltz(const std::string& gas1, const double f1,
 }
 
 bool MediumMagboltz::SetMaxElectronEnergy(const double e) {
-  if (e <= Small) {
-    std::cerr << m_className << "::SetMaxElectronEnergy: Invalid energy.\n";
-    return false;
-  }
+  if (e <= Small) throw Exception("Invalid energy");
   m_eMax = e;
-
   std::lock_guard<std::mutex> guard(m_mutex);
   // Determine the energy interval size.
   m_eStep = std::min(m_eMax, m_eHigh) / Magboltz::nEnergySteps;
   m_eStepInv = 1. / m_eStep;
-
   // Force recalculation of the scattering rates table.
   m_isChanged = true;
-
   return true;
 }
 
 bool MediumMagboltz::SetMaxPhotonEnergy(const double e) {
-  if (e <= Small) {
-    std::cerr << m_className << "::SetMaxPhotonEnergy: Invalid energy.\n";
-    return false;
-  }
+  if (e <= Small) throw Exception("Invalid energy");
   m_eFinalGamma = e;
-
   // Determine the energy interval size.
   m_eStepGamma = m_eFinalGamma / nEnergyStepsGamma;
-
   // Force recalculation of the scattering rates table.
   m_isChanged = true;
-
   return true;
 }
 
@@ -512,10 +501,7 @@ double MediumMagboltz::GetElectronNullCollisionRate(const int /*band*/) {
 double MediumMagboltz::GetElectronCollisionRate(const double e,
                                                 const int /*band*/) {
   // Check if the electron energy is within the currently set range.
-  if (e <= 0.) {
-    std::cerr << m_className << "::GetElectronCollisionRate: Invalid energy.\n";
-    return m_cfTot[0];
-  }
+  if (e <= 0.) throw Exception("Invalid energy");
   if (e > m_eMax) {
     std::cerr << m_className << "::GetElectronCollisionRate:\n    Rate at " << e
               << " eV is not included in the current table.\n    "
@@ -547,17 +533,9 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
                                                 const unsigned int level,
                                                 const int band) {
   // Check if the electron energy is within the currently set range.
-  if (e <= 0.) {
-    std::cerr << m_className << "::GetElectronCollisionRate: Invalid energy.\n";
-    return 0.;
-  }
-
+  if (e <= 0.) throw Exception("Invalid energy");
   // Check if the level exists.
-  if (level >= m_nTerms) {
-    std::cerr << m_className << "::GetElectronCollisionRate: Invalid level.\n";
-    return 0.;
-  }
-
+  if (level >= m_nTerms) throw Exception("Invalid level");
   // Get the total scattering rate.
   double rate = GetElectronCollisionRate(e, band);
   // Get the energy interval.
@@ -582,10 +560,7 @@ double MediumMagboltz::GetElectronCollisionRate(const double e,
 }
 
 double MediumMagboltz::GetPhotonCollisionRate(const double e) {
-  if (e <= 0.) {
-    std::cerr << m_className << "::GetPhotonCollisionRate: Invalid energy.\n";
-    return m_cfTotGamma[0];
-  }
+  if (e <= 0.) throw Exception("Invalid energy");
   if (e > m_eFinalGamma) {
     std::cerr << m_className << "::GetPhotonCollisionRate:\n    Rate at " << e
               << " eV is not included in the current table.\n"
@@ -615,10 +590,7 @@ bool MediumMagboltz::PhotonCollision(const double e, int& type, int& level,
                                      double& e1, double& ctheta,
                                      std::vector<Secondary>& secondaries) {
   secondaries.clear();
-  if (e <= 0.) {
-    std::cerr << m_className << "::GetPhotonCollision: Invalid energy.\n";
-    return false;
-  }
+  if (e <= 0.) throw Exception("Energy must be positive");
   if (e > m_eFinalGamma) {
     std::cerr << m_className << "::GetPhotonCollision:\n    Provided energy ("
               << e << " eV) exceeds current energy range.\n"
@@ -708,14 +680,14 @@ void MediumMagboltz::ResetCollisionCounters() {
   m_nPhotonCollisions.fill(0);
 }
 
-unsigned int MediumMagboltz::GetNumberOfElectronCollisions() const {
+std::size_t MediumMagboltz::GetNumberOfElectronCollisions() const {
   return std::accumulate(std::begin(m_nCollisions), std::end(m_nCollisions), 0);
 }
 
-unsigned int MediumMagboltz::GetNumberOfElectronCollisions(
-    unsigned int& nElastic, unsigned int& nIonisation,
-    unsigned int& nAttachment, unsigned int& nInelastic,
-    unsigned int& nExcitation, unsigned int& nSuperelastic) const {
+std::size_t MediumMagboltz::GetNumberOfElectronCollisions(
+    std::size_t& nElastic, std::size_t& nIonisation, std::size_t& nAttachment,
+    std::size_t& nInelastic, std::size_t& nExcitation,
+    std::size_t& nSuperelastic) const {
   nElastic = m_nCollisions[ElectronCollisionTypeElastic];
   nIonisation = m_nCollisions[ElectronCollisionTypeIonisation];
   nAttachment = m_nCollisions[ElectronCollisionTypeAttachment];
@@ -726,20 +698,15 @@ unsigned int MediumMagboltz::GetNumberOfElectronCollisions(
          nSuperelastic;
 }
 
-unsigned int MediumMagboltz::GetNumberOfLevels() {
+std::size_t MediumMagboltz::GetNumberOfLevels() {
   if (!Update()) return 0;
   return m_nTerms;
 }
 
 bool MediumMagboltz::GetLevel(const unsigned int i, int& ngas, int& type,
                               std::string& descr, double& e) {
+  if (i >= m_nTerms) throw Exception("Index out of range");
   if (!Update()) return false;
-
-  if (i >= m_nTerms) {
-    std::cerr << m_className << "::GetLevel: Index out of range.\n";
-    return false;
-  }
-
   // Collision type
   type = m_csType[i] % nCsTypes;
   ngas = int(m_csType[i] / nCsTypes);
@@ -810,8 +777,8 @@ bool MediumMagboltz::GetPenningTransfer(const unsigned int i, double& r,
   return true;
 }
 
-unsigned int MediumMagboltz::GetNumberOfElectronCollisions(
-    const unsigned int level) const {
+std::size_t MediumMagboltz::GetNumberOfElectronCollisions(
+    const std::size_t level) const {
   if (level >= m_nTerms) {
     std::cerr << m_className << "::GetNumberOfElectronCollisions: "
               << "Level " << level << " does not exist.\n";

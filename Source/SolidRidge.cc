@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/Polygon.hh"
 
 namespace Garfield {
@@ -61,26 +62,17 @@ bool SolidRidge::GetBoundingBox(double& xmin, double& ymin, double& zmin,
 }
 
 void SolidRidge::SetHalfLengthX(const double lx) {
-  if (lx <= 0.) {
-    std::cerr << "SolidRidge::SetHalfLengthX: Half-length must be > 0.\n";
-    return;
-  }
+  if (lx <= 0.) throw Exception("Half-length X must be > 0");
   m_lX = lx;
 }
 
 void SolidRidge::SetHalfLengthY(const double ly) {
-  if (ly <= 0.) {
-    std::cerr << "SolidRidge::SetHalfLengthY: Half-length must be > 0.\n";
-    return;
-  }
+  if (ly <= 0.) throw Exception("Half-length Y must be > 0");
   m_lY = ly;
 }
 
 void SolidRidge::SetRidgeHeight(const double hz) {
-  if (hz <= 0.) {
-    std::cerr << "SolidRidge::SetRidgeHeight: Height must be > 0.\n";
-    return;
-  }
+  if (hz <= 0.) throw Exception("Height must be > 0");
   m_hz = hz;
 }
 

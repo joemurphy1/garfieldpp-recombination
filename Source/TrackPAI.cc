@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
@@ -17,13 +18,9 @@ TrackPAI::TrackPAI() : Track("PAI") {}
 bool TrackPAI::NewTrack(const double x0, const double y0, const double z0,
                         const double t0, const double dx0, const double dy0,
                         const double dz0) {
-  m_clusters.clear();
   // Make sure the sensor has been set.
-  if (!m_sensor) {
-    std::cerr << m_className << "::NewTrack: Sensor is not defined.\n";
-    return false;
-  }
-
+  if (!m_sensor) throw Exception("Sensor is not defined");
+  m_clusters.clear();
   // Make sure there is an "ionisable" medium at this location.
   Medium* medium = m_sensor->GetMedium(x0, y0, z0);
   if (!medium || !medium->IsIonisable()) {
@@ -141,10 +138,7 @@ std::pair<double, double> TrackPAI::SampleEnergyDeposit(const double u) const {
 
 bool TrackPAI::SetupMedium(Medium* medium) {
   // Make sure that the medium is defined.
-  if (!medium) {
-    std::cerr << m_className << "::SetupMedium: Null pointer.\n";
-    return false;
-  }
+  if (!medium) throw Exception("Medium* is nullptr");
 
   // Get the density and effective Z.
   m_electronDensity = medium->GetNumberDensity() * medium->GetAtomicNumber();

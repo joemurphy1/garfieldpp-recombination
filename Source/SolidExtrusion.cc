@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/Polygon.hh"
 
 namespace Garfield {
@@ -59,29 +60,17 @@ bool SolidExtrusion::GetBoundingBox(double& xmin, double& ymin, double& zmin,
 }
 
 void SolidExtrusion::SetHalfLengthZ(const double lz) {
-  if (lz > 0.) {
-    m_lZ = lz;
-  } else {
-    std::cerr << "SolidExtrusion::SetHalfLengthZ: Half-length must be > 0.\n";
-  }
+  if (lz <= 0.) throw Exception("Half-length must be > 0");
+  m_lZ = lz;
 }
 
 void SolidExtrusion::SetProfile(const std::vector<double>& xp,
                                 const std::vector<double>& yp) {
-  if (xp.size() != yp.size()) {
-    std::cerr << "SolidExtrusion::SetProfile:\n"
-              << "    Mismatch between number of x and y coordinates.\n";
-    return;
-  }
+  if (xp.size() != yp.size())
+    throw Exception("Mismatch between number of x and y coordinates");
   const auto np = xp.size();
-  if (np < 3) {
-    std::cerr << "SolidExtrusion::SetProfile: Too few points; rejected.\n";
-    return;
-  }
-  if (!Polygon::NonTrivial(xp, yp)) {
-    std::cerr << "SolidExtrusion::SetProfile: Not a valid polygon.\n";
-    return;
-  }
+  if (np < 3) throw Exception("Too few points; rejected");
+  if (!Polygon::NonTrivial(xp, yp)) throw Exception("Not a valid polygon");
   const auto it = std::max_element(xp.begin(), xp.end());
   const unsigned int i0 = std::distance(xp.begin(), it);
   const unsigned int i1 = i0 < np - 1 ? i0 + 1 : 0;

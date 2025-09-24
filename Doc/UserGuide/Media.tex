@@ -641,11 +641,11 @@ For this purpose, \texttt{MediumMagboltz} keeps track of the number of times
 the individual levels are sampled in \texttt{ElectronCollision}. 
 These counters are accessible through the functions
 \begin{lstlisting}
-unsigned int GetNumberOfElectronCollisions();
-unsigned int GetNumberOfElectronCollisions(int& nElastic, int& nIonising, 
-                                           int& nAttachment, int& nInelastic, 
-                                           int& nExcitation, int& nSuperelastic);
-unsigned int GetNumberOfElectronCollisions(const unsigned int level);
+std::size_t GetNumberOfElectronCollisions();
+std::size_t GetNumberOfElectronCollisions(std::size_t& nElastic, std::size_t& nIonising, 
+                                          std::size_t& nAttachment, std::size_t& nInelastic, 
+                                          std::size_t& nExcitation, std::size_t& nSuperelastic);
+std::size_t GetNumberOfElectronCollisions(const std::size_t level);
 \end{lstlisting}
 The first function returns total number of electron collisions 
 since the last reset. 

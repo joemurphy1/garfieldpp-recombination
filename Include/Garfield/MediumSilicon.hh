@@ -160,11 +160,11 @@ class MediumSilicon : public Medium {
   // Reset the collision counters
   void ResetCollisionCounters();
   // Get the total number of electron collisions
-  unsigned int GetNumberOfElectronCollisions() const;
+  std::size_t GetNumberOfElectronCollisions() const;
   // Get number of scattering rate terms
   unsigned int GetNumberOfLevels() const;
   // Get number of collisions for a specific level
-  unsigned int GetNumberOfElectronCollisions(const unsigned int level) const;
+  std::size_t GetNumberOfElectronCollisions(const std::size_t level) const;
 
   unsigned int GetNumberOfElectronBands() const;
   int GetElectronBandPopulation(const int band);

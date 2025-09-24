@@ -160,40 +160,23 @@ void AvalancheMicroscopic::SetSensor(Sensor* sensor) {
 }
 
 void AvalancheMicroscopic::EnablePlotting(ViewDrift* view, const size_t nColl) {
-  if (!view) {
-    std::cerr << m_className << "::EnablePlotting: Null pointer.\n";
-    return;
-  }
+  if (!view) throw Exception("ViewDrift* is nullptr");
   m_viewer = view;
   m_nCollPlot = std::max(nColl, 1ul);
 }
 
 void AvalancheMicroscopic::EnableElectronEnergyHistogramming(TH1* histo) {
-  if (!histo) {
-    std::cerr << m_className << "::EnableElectronEnergyHistogramming:\n"
-              << "    Null pointer.\n";
-    return;
-  }
-
+  if (!histo) throw Exception("TH1* is nullptr");
   m_histElectronEnergy = histo;
 }
 
 void AvalancheMicroscopic::EnableHoleEnergyHistogramming(TH1* histo) {
-  if (!histo) {
-    std::cerr << m_className << "::EnableHoleEnergyHistogramming:\n"
-              << "    Null pointer.\n";
-    return;
-  }
-
+  if (!histo) throw Exception("TH1* is nullptr");
   m_histHoleEnergy = histo;
 }
 
 void AvalancheMicroscopic::SetDistanceHistogram(TH1* histo, const char opt) {
-  if (!histo) {
-    std::cerr << m_className << "::SetDistanceHistogram: Null pointer.\n";
-    return;
-  }
-
+  if (!histo) throw Exception("TH1* is nullptr");
   m_histDistance = histo;
 
   if (opt == 'x' || opt == 'y' || opt == 'z' || opt == 'r') {
@@ -254,22 +237,13 @@ void AvalancheMicroscopic::DisableDistanceHistogramming() {
 }
 
 void AvalancheMicroscopic::EnableSecondaryEnergyHistogramming(TH1* histo) {
-  if (!histo) {
-    std::cerr << m_className << "::EnableSecondaryEnergyHistogramming:\n"
-              << "    Null pointer.\n";
-    return;
-  }
-
+  if (!histo) throw Exception("TH1* is nullptr");
   m_histSecondary = histo;
 }
 
 void AvalancheMicroscopic::SetTimeWindow(const double t0, const double t1) {
-  if (fabs(t1 - t0) < Small) {
-    std::cerr << m_className << "::SetTimeWindow:\n";
-    std::cerr << "    Time interval must be greater than zero.\n";
-    return;
-  }
-
+  if (fabs(t1 - t0) < Small)
+    throw Exception("Time interval must be greater than zero");
   m_tMin = std::min(t0, t1);
   m_tMax = std::max(t0, t1);
   m_hasTimeWindow = true;
@@ -334,11 +308,7 @@ void AvalancheMicroscopic::GetElectronEndpointGPU(
 
 size_t AvalancheMicroscopic::GetNumberOfElectronDriftLinePoints(
     const size_t i) const {
-  if (i >= m_electrons.size()) {
-    std::cerr << m_className << "::GetNumberOfElectronDriftLinePoints: "
-              << "Index out of range.\n";
-    return 0;
-  }
+  if (i >= m_electrons.size()) throw Exception("Index out of range");
   return m_electrons[i].path.size();
 }
 
@@ -346,16 +316,9 @@ void AvalancheMicroscopic::GetElectronDriftLinePoint(double& x, double& y,
                                                      double& z, double& t,
                                                      const size_t ip,
                                                      const size_t ie) const {
-  if (ie >= m_electrons.size()) {
-    std::cerr << m_className << "::GetElectronDriftLinePoint:\n"
-              << "    Endpoint index (" << ie << ") out of range.\n";
-    return;
-  }
-  if (ip >= m_electrons[ie].path.size()) {
-    std::cerr << m_className << "::GetElectronDriftLinePoint:\n"
-              << "    Drift line point index (" << ip << ") out of range.\n";
-    return;
-  }
+  if (ie >= m_electrons.size()) throw Exception("Endpoint index out of range");
+  if (ip >= m_electrons[ie].path.size())
+    throw Exception("Drift line point index out of range");
   x = m_electrons[ie].path[ip].x;
   y = m_electrons[ie].path[ip].y;
   z = m_electrons[ie].path[ip].z;
@@ -366,11 +329,7 @@ void AvalancheMicroscopic::GetPhoton(const size_t i, double& e, double& x0,
                                      double& y0, double& z0, double& t0,
                                      double& x1, double& y1, double& z1,
                                      double& t1, int& status) const {
-  if (i >= m_photons.size()) {
-    std::cerr << m_className << "::GetPhoton: Index out of range.\n";
-    return;
-  }
-
+  if (i >= m_photons.size()) throw Exception("Index out of range");
   x0 = m_photons[i].x0;
   x1 = m_photons[i].x1;
   y0 = m_photons[i].y0;
@@ -386,10 +345,7 @@ void AvalancheMicroscopic::GetPhoton(const size_t i, double& e, double& x0,
 void AvalancheMicroscopic::SetUserHandleStep(
     void (*f)(double x, double y, double z, double t, double e, double dx,
               double dy, double dz, bool hole)) {
-  if (!f) {
-    std::cerr << m_className << "::SetUserHandleStep: Null pointer.\n";
-    return;
-  }
+  if (!f) throw Exception("f is nullptr");
   m_userHandleStep = f;
 }
 
@@ -397,21 +353,25 @@ void AvalancheMicroscopic::SetUserHandleCollision(
     void (*f)(double x, double y, double z, double t, int type, int level,
               Medium* m, double e0, double e1, double dx0, double dy0,
               double dz0, double dx1, double dy1, double dz1)) {
+  if (!f) throw Exception("f is nullptr");
   m_userHandleCollision = f;
 }
 
 void AvalancheMicroscopic::SetUserHandleAttachment(void (*f)(
     double x, double y, double z, double t, int type, int level, Medium* m)) {
+  if (!f) throw Exception("f is nullptr");
   m_userHandleAttachment = f;
 }
 
 void AvalancheMicroscopic::SetUserHandleInelastic(void (*f)(
     double x, double y, double z, double t, int type, int level, Medium* m)) {
+  if (!f) throw Exception("f is nullptr");
   m_userHandleInelastic = f;
 }
 
 void AvalancheMicroscopic::SetUserHandleIonisation(void (*f)(
     double x, double y, double z, double t, int type, int level, Medium* m)) {
+  if (!f) throw Exception("f is nullptr");
   m_userHandleIonisation = f;
 }
 
@@ -466,6 +426,8 @@ bool AvalancheMicroscopic::ResumeAvalanche() {
 
 bool AvalancheMicroscopic::TransportElectrons(std::vector<Seed>& stack,
                                               const bool aval) {
+  // Make sure that the sensor is defined.
+  if (!m_sensor) throw Exception("Sensor is not defined");
   // Clear the list of electrons, holes and photons.
   m_electrons.clear();
   m_holes.clear();
@@ -473,13 +435,6 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Seed>& stack,
 
   // Reset the particle counters.
   m_nElectrons = m_nHoles = m_nIons = 0;
-
-  // Make sure that the sensor is defined.
-  if (!m_sensor) {
-    std::cerr << m_className
-              << "::TransportElectrons: Sensor is not defined.\n";
-    return false;
-  }
 
   // Do we need to consider the magnetic field?
   const bool useBfield =
@@ -2078,10 +2033,7 @@ void AvalancheMicroscopic::TransportPhoton(const double x0, const double y0,
                                            const double e0, const size_t w0,
                                            std::vector<Seed>& stack) {
   // Make sure that the sensor is defined.
-  if (!m_sensor) {
-    std::cerr << m_className << "::TransportPhoton: Sensor is not defined.\n";
-    return;
-  }
+  if (!m_sensor) throw Exception("Sensor is not defined");
 
   // Make sure that the starting point is inside the active area.
   if (!m_sensor->IsInArea(x0, y0, z0)) {

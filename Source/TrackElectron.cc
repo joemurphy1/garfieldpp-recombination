@@ -5,6 +5,7 @@
 #include <numeric>
 #include <string>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
@@ -24,21 +25,17 @@ TrackElectron::TrackElectron() : Track("Electron") {
 }
 
 void TrackElectron::SetParticle(const std::string& particle) {
-  if (particle != "electron" && particle != "e" && particle != "e-") {
-    std::cerr << m_className << "::SetParticle: Only electrons are allowed.\n";
-  }
+  if (particle != "electron" && particle != "e" && particle != "e-")
+    throw Exception("Only electrons are allowed");
 }
 
 bool TrackElectron::NewTrack(const double x0, const double y0, const double z0,
                              const double t0, const double dx0,
                              const double dy0, const double dz0) {
+  // Make sure the sensor has been set.
+  if (!m_sensor) throw Exception("Sensor is not defined");
   // Reset the list of clusters.
   m_clusters.clear();
-  // Make sure the sensor has been set.
-  if (!m_sensor) {
-    std::cerr << m_className << "::NewTrack: Sensor is not defined.\n";
-    return false;
-  }
 
   // Make sure the medium at this location is an ionisable gas.
   Medium* medium = m_sensor->GetMedium(x0, y0, z0);
@@ -128,16 +125,10 @@ double TrackElectron::GetStoppingPower() { return m_dedx; }
 
 bool TrackElectron::Setup(Medium* gas, std::vector<Parameters>& par,
                           std::vector<double>& frac) {
-  if (!gas) {
-    std::cerr << "TrackElectron::Setup: Medium is not defined.\n";
-    return false;
-  }
+  if (!gas) throw Exception("Medium is not defined");
 
   const size_t nComponents = gas->GetNumberOfComponents();
-  if (nComponents == 0) {
-    std::cerr << "TrackElectron::Setup: Composition is not defined.\n";
-    return false;
-  }
+  if (nComponents == 0) throw Exception("Composition is not defined");
   par.resize(nComponents);
   frac.assign(nComponents, 0.);
 

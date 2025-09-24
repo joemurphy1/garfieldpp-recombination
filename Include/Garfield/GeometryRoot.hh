@@ -55,7 +55,6 @@ class GeometryRoot : public Geometry {
 
   // Switch on/off debugging messages.
   bool m_debug{false};
-  void PrintGeoNotDefined(const std::string& fcn) const;
 };
 }  // namespace Garfield
 

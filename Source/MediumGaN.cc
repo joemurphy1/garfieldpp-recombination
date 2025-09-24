@@ -1,8 +1,8 @@
 #include "Garfield/MediumGaN.hh"
 
 #include <cmath>
-#include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 
 namespace Garfield {
@@ -38,7 +38,8 @@ void MediumGaN::GetComponent(const unsigned int i, std::string& label,
   } else if (i == 1) {
     label = "N";
     f = 0.5;
-  }
+  } else
+    throw Exception("Index out of range");
 }
 
 bool MediumGaN::ElectronVelocity(const double ex, const double ey,
@@ -167,20 +168,13 @@ bool MediumGaN::HoleAttachment(const double ex, const double ey,
 }
 
 void MediumGaN::SetElectronConcentration(const double c) {
-  if (c < 0.) {
-    std::cerr << m_className << "::SetElectronConcentration:\n"
-              << "    Concentration cannot be negative.\n";
-    return;
-  }
+  if (c < 0.) throw Exception("Concentration cannot be negative");
   m_eDensity = c;
 }
 
 void MediumGaN::SetLowFieldMobility(const double mue, const double muh) {
-  if (mue <= 0. || muh <= 0.) {
-    std::cerr << m_className << "::SetLowFieldMobility:\n"
-              << "    Mobility must be greater than zero.\n";
-    return;
-  }
+  if (mue <= 0. || muh <= 0.)
+    throw Exception("mue muh Mobilities must be greater than zero");
   m_eMobility = mue;
   m_hMobility = muh;
   m_userMobility = true;

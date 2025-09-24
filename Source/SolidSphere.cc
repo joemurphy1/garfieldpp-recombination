@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Polygon.hh"
 
@@ -70,35 +71,22 @@ bool SolidSphere::GetBoundingBox(double& xmin, double& ymin, double& zmin,
 }
 
 void SolidSphere::SetRadius(const double r) {
-  if (r <= 0.) {
-    std::cerr << "SolidSphere::SetRadius: Radius must be > 0.\n";
-    return;
-  }
+  if (r <= 0.) throw Exception("Radius must be > 0");
   m_rMax = r;
   m_rMin = 0.;
   UpdatePanels();
 }
 
 void SolidSphere::SetRadii(const double rmin, const double rmax) {
-  if (rmax <= 0.) {
-    std::cerr << "SolidSphere::SetRadii: Outer radius must be > 0.\n";
-    return;
-  }
-  if (rmin >= rmax) {
-    std::cerr << "SolidSphere::SetRadii:\n"
-              << "    Outer radius must be > inner radius.\n";
-    return;
-  }
+  if (rmax <= 0.) throw Exception("Outer radius must be > 0");
+  if (rmin >= rmax) throw Exception("Outer radius must be > inner radius");
   m_rMin = rmin;
   m_rMax = rmax;
   UpdatePanels();
 }
 
 void SolidSphere::SetMeridians(const unsigned int n) {
-  if (n < 3) {
-    std::cerr << "SolidSphere::SetMeridians: Number must be >= 3.\n";
-    return;
-  }
+  if (n < 3) throw Exception("Number must be >= 3");
   m_n = n;
   UpdatePanels();
 }

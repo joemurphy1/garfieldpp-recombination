@@ -77,7 +77,7 @@ namespace Garfield {
 
 TrackSrim::TrackSrim() : Track("Srim") {}
 
-TrackSrim::TrackSrim(Sensor* sensor) : TrackSrim() { m_sensor = sensor; }
+TrackSrim::TrackSrim(Sensor* sensor) : TrackSrim() { SetSensor(sensor); }
 
 bool TrackSrim::ReadFile(const std::string& file) {
   // SRMREA

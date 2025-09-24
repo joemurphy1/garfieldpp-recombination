@@ -7,6 +7,7 @@
 #include <string>
 
 #include "Garfield/DegradeInterface.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
@@ -61,15 +62,13 @@ TrackDegrade::TrackDegrade() : Track("Degrade") {
 }
 
 TrackDegrade::TrackDegrade(Sensor* sensor) : TrackDegrade() {
+  if (!sensor) throw Exception("Sensor* is nullptr");
   m_sensor = sensor;
 }
 
 void TrackDegrade::SetThresholdEnergy(const double ethr) {
-  if (ethr < Small) {
-    std::cerr << m_className << "::SetThresholdEnergy: Energy must be > 0.\n";
-  } else {
-    m_ethr = ethr;
-  }
+  if (ethr < Small) throw Exception("Threshold energy must be > 0");
+  m_ethr = ethr;
 }
 
 void TrackDegrade::StoreExcitations(const bool on, const double thr) {
@@ -80,13 +79,9 @@ void TrackDegrade::StoreExcitations(const bool on, const double thr) {
 bool TrackDegrade::NewTrack(const double x0, const double y0, const double z0,
                             const double t0, const double dx0, const double dy0,
                             const double dz0) {
-  m_clusters.clear();
   // Make sure the sensor is defined.
-  if (!m_sensor) {
-    std::cerr << m_className << "::NewTrack: Sensor is not defined.\n";
-    return false;
-  }
-
+  if (!m_sensor) throw Exception("Sensor is not defined");
+  m_clusters.clear();
   // Make sure we are inside a medium.
   Medium* medium = m_sensor->GetMedium(x0, y0, z0);
   if (!medium) {
@@ -499,9 +494,8 @@ double TrackDegrade::GetStoppingPower() {
 }
 
 void TrackDegrade::SetParticle(const std::string& particle) {
-  if (particle != "electron" && particle != "e" && particle != "e-") {
-    std::cerr << m_className << "::SetParticle: Only electrons are allowed.\n";
-  }
+  if (particle != "electron" && particle != "e" && particle != "e-")
+    throw Exception("Only electrons are allowed");
 }
 
 std::pair<std::vector<TrackDegrade::Electron>,
@@ -510,15 +504,10 @@ TrackDegrade::TransportDeltaElectron(const double x0, const double y0,
                                      const double z0, const double t0,
                                      const double e0, const double dx0,
                                      const double dy0, const double dz0) {
+  if (!m_sensor) throw Exception("Sensor is not defined");
   // Based on MONTEFE subroutine.
   std::vector<Electron> thermalisedElectrons;
   std::vector<Excitation> excitations;
-
-  if (!m_sensor) {
-    std::cerr << m_className << "::TransportDeltaElectron: "
-              << "Sensor is not defined.\n";
-    return std::make_pair(thermalisedElectrons, excitations);
-  }
 
   const double eMinIon = Degrade::ionpot();
   if (m_debug) {
