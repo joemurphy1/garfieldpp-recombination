@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/Medium.hh"
 
 namespace {
@@ -75,6 +76,11 @@ void* MakePotentialFunction(const std::string& fname,
 namespace Garfield {
 
 ComponentUser::ComponentUser() : Component("User") {}
+
+void ComponentUser::SetMedium(Medium* medium) {
+  if (!medium) throw Exception("medium can't be nullptr");
+  m_medium = medium;
+}
 
 void ComponentUser::ElectricField(const double x, const double y,
                                   const double z, double& ex, double& ey,

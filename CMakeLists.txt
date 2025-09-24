@@ -317,6 +317,7 @@ Include/Garfield/Utilities.hh
 Include/Garfield/ParticleTypes.hh
 Include/Garfield/AvalancheMicroscopicTypes.hh
 Include/Garfield/ComponentChargedRing.hh
+Include/Garfield/Exceptions.hh
 )
 set_target_properties(Garfield PROPERTIES PUBLIC_HEADER "${GARFIELD_PUBLIC_HEADERS}")
 target_link_libraries(Garfield PUBLIC ROOT::Tree ROOT::RIO)

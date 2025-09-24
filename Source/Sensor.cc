@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "Garfield/Component.hh"
-// #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
@@ -72,6 +72,11 @@ double Trapezoid2(const std::vector<std::pair<double, double>> &f) {
 namespace Garfield {
 
 Sensor::Sensor(Component *comp) { AddComponent(comp); }
+
+void Sensor::AddComponent(Component *cmp) {
+  if (!cmp) throw Exception("::AddComponent: Null pointer.");
+  m_components.push_back(std::make_tuple(cmp, true, true));
+}
 
 void Sensor::FillBin(Electrode &electrode, const unsigned int bin,
                      const double signal, const bool electron,
@@ -369,15 +374,6 @@ double Sensor::IntegrateFluxLine(const double x0, const double y0,
                                              nI, isign);
   }
   return q;
-}
-
-void Sensor::AddComponent(Component *cmp) {
-  if (!cmp) {
-    std::cerr << m_className << "::AddComponent: Null pointer.\n";
-    return;
-  }
-
-  m_components.push_back(std::make_tuple(cmp, true, true));
 }
 
 Component *Sensor::GetComponent(const unsigned int i) {

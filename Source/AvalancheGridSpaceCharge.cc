@@ -8,7 +8,7 @@
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentParallelPlate.hh"
-#include "Garfield/EllipticIntegrals.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
@@ -192,6 +192,18 @@ AvalancheGridSpaceCharge::AvalancheGridSpaceCharge(Sensor *sensor)
   SetSensor(sensor);
 }
 
+void AvalancheGridSpaceCharge::SetSensor(Sensor *sensor) {
+  if (!sensor) throw Exception("Sensor can't be nullptr");
+  m_sensor = sensor;
+  // Determine if one of the components is a parallel-plate one.
+  m_pp = nullptr;
+  const size_t nCmp = m_sensor->GetNumberOfComponents();
+  for (size_t i = 0; i < nCmp; i++) {
+    m_pp = dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(i));
+    if (m_pp) break;
+  }
+}
+
 int AvalancheGridSpaceCharge::GetGasGapNumber(int layerIndex) {
   auto it =
       std::find(m_vIndexGasGaps.begin(), m_vIndexGasGaps.end(), layerIndex);
@@ -223,18 +235,6 @@ void AvalancheGridSpaceCharge::Reset() {
   m_bFieldK = false;
 
   std::cout << m_className << "::Reset: Instance reset, ready to use again.\n";
-}
-
-void AvalancheGridSpaceCharge::SetSensor(Sensor *sensor) {
-  m_sensor = sensor;
-  // Determine if one of the components is a parallel-plate one.
-  m_pp = nullptr;
-  if (!m_sensor) return;
-  const size_t nCmp = m_sensor->GetNumberOfComponents();
-  for (size_t i = 0; i < nCmp; i++) {
-    m_pp = dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(i));
-    if (m_pp) break;
-  }
 }
 
 void AvalancheGridSpaceCharge::Set2dGrid(const double zmin, const double zmax,

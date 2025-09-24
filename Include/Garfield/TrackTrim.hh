@@ -19,7 +19,8 @@ class TrackTrim : public Track {
   /// Default constructor
   TrackTrim();
   /// Constructor
-  TrackTrim(Sensor* sensor);
+  explicit TrackTrim(Sensor* sensor);
+  explicit TrackTrim(std::nullptr_t) = delete;
   /// Destructor
   virtual ~TrackTrim() = default;
 

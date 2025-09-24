@@ -25,7 +25,8 @@ class TrackBichsel : public Track {
   /// Default constructor
   TrackBichsel();
   /// Constructor
-  TrackBichsel(Sensor* sensor);
+  explicit TrackBichsel(Sensor* sensor);
+  explicit TrackBichsel(std::nullptr_t) = delete;
   /// Destructor
   virtual ~TrackBichsel() = default;
 

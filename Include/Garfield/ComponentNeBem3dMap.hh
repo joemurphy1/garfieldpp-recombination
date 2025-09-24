@@ -1,6 +1,7 @@
 #ifndef G_COMPONENT_NEBEM3DMAP_H
 #define G_COMPONENT_NEBEM3DMAP_H
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,8 @@ class ComponentNeBem3dMap : public Component {
   ComponentNeBem3dMap();
   /// Destructor
   ~ComponentNeBem3dMap() = default;
+  /// Set the medium in region i.
+  void SetMedium(const std::size_t index, Medium* medium);
 
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, double& v, Medium*& m,
@@ -96,9 +99,6 @@ class ComponentNeBem3dMap : public Component {
   bool GetElement(const unsigned int i, const unsigned int j,
                   const unsigned int k, double& v, double& ex, double& ey,
                   double& ez) const;
-
-  /// Set the medium in region i.
-  void SetMedium(const unsigned int i, Medium* m);
   /// Get the medium in region i.
   Medium* GetMedium(const unsigned int i) const;
   /// Print all regions.

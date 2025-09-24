@@ -3,6 +3,7 @@
 
 #include <array>
 #include <complex>
+#include <cstddef>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -26,7 +27,7 @@ class ComponentAnalyticField : public Component {
   ~ComponentAnalyticField() = default;
 
   /// Set the medium inside the cell.
-  void SetMedium(Medium* medium) { m_medium = medium; }
+  void SetMedium(Medium* medium);
   /// Add a wire at (x, y) .
   void AddWire(const double x, const double y, const double diameter,
                const double voltage, const std::string& label = "",
@@ -832,7 +833,7 @@ class ComponentAnalyticField : public Component {
              const std::vector<double>& yMap,
              const std::vector<std::vector<double> >& fxMap,
              const std::vector<std::vector<double> >& fyMap) const;
-  size_t SignalLayer(const int mx, const int my) const;
+  std::size_t SignalLayer(const int mx, const int my) const;
 
   void InitialiseFitParameters(
       const std::vector<std::string>& groups, std::vector<double>& vw0,

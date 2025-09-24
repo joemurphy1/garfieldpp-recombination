@@ -22,9 +22,9 @@ class ViewIsochrons : public ViewBase {
   ~ViewIsochrons() = default;
 
   /// Set the sensor.
-  void SetSensor(Sensor* s);
+  void SetSensor(Sensor* sensor);
   /// Set the component.
-  void SetComponent(Component* c);
+  void SetComponent(Component* component);
 
   /** Draw equal time contour lines.
    * \param tstep Time interval.
@@ -62,21 +62,21 @@ class ViewIsochrons : public ViewBase {
   void SetConnectionThreshold(const double thr);
 
  private:
-  Sensor* m_sensor = nullptr;
-  Component* m_component = nullptr;
+  Sensor* m_sensor{nullptr};
+  Component* m_component{nullptr};
 
   // Type of particle to be used for computing drift lines.
-  Particle m_particle = Particle::Electron;
-  bool m_positive = false;
+  Particle m_particle{Particle::Electron};
+  bool m_positive{false};
 
-  short m_markerStyle = 5;
-  short m_lineStyle = 2;
+  short m_markerStyle{5};
+  short m_lineStyle{2};
 
-  bool m_sortContours = true;
-  double m_aspectRatio = 3.;
-  double m_loopThreshold = 0.2;
-  double m_connectionThreshold = 0.2;
-  bool m_checkCrossings = true;
+  bool m_sortContours{true};
+  double m_aspectRatio{3.};
+  double m_loopThreshold{0.2};
+  double m_connectionThreshold{0.2};
+  bool m_checkCrossings{true};
 
   bool SetPlotLimits();
 

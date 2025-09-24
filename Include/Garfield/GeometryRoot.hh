@@ -4,7 +4,9 @@
 #include <TGeoManager.h>
 #include <TGeoMaterial.h>
 
+#include <cstddef>
 #include <map>
+#include <string>
 
 #include "Garfield/Geometry.hh"
 
@@ -21,6 +23,10 @@ class GeometryRoot : public Geometry {
 
   /// Set the geometry (pointer to ROOT TGeoManager).
   void SetGeometry(TGeoManager* geoman);
+  /// Associate a ROOT material with a Garfield medium.
+  void SetMedium(const std::size_t imat, Medium* medium);
+  /// Associate a ROOT material with a Garfield medium.
+  void SetMedium(const std::string& mat, Medium* medium);
 
   Medium* GetMedium(const double x, const double y, const double z,
                     const bool tesselated = false) const override;
@@ -31,10 +37,6 @@ class GeometryRoot : public Geometry {
   TGeoMaterial* GetMaterial(const unsigned int i);
   /// Get a pointer to the ROOT material with a given name.
   TGeoMaterial* GetMaterial(const char* name);
-  /// Associate a ROOT material with a Garfield medium.
-  void SetMedium(const unsigned int imat, Medium* med);
-  /// Associate a ROOT material with a Garfield medium.
-  void SetMedium(const char* mat, Medium* med);
 
   bool IsInside(const double x, const double y, const double z,
                 const bool tesselated = false) const override;
@@ -46,13 +48,13 @@ class GeometryRoot : public Geometry {
 
  protected:
   // ROOT geometry manager
-  TGeoManager* m_geoManager = nullptr;
+  TGeoManager* m_geoManager{nullptr};
 
   // List of ROOT materials associated to Garfield media
   std::map<std::string, Medium*> m_materials;
 
   // Switch on/off debugging messages.
-  bool m_debug = false;
+  bool m_debug{false};
   void PrintGeoNotDefined(const std::string& fcn) const;
 };
 }  // namespace Garfield

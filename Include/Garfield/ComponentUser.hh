@@ -19,6 +19,8 @@ class ComponentUser : public Component {
   ComponentUser();
   /// Destructor
   ~ComponentUser() = default;
+  /// Set the medium in the active area.
+  void SetMedium(Medium* medium);
 
   /// Set the function to be called for calculating the electric field.
   void SetElectricField(
@@ -85,8 +87,6 @@ class ComponentUser : public Component {
                const double xmax, const double ymax, const double zmax);
   /// Remove the explicit limits of the active area.
   void UnsetArea();
-  /// Set the medium in the active area.
-  void SetMedium(Medium* medium) { m_medium = medium; }
 
   Medium* GetMedium(const double x, const double y, const double z) override {
     return !m_hasArea        ? Component::GetMedium(x, y, z)
@@ -157,9 +157,9 @@ class ComponentUser : public Component {
   std::array<double, 3> m_xmin = {{0., 0., 0.}};
   std::array<double, 3> m_xmax = {{0., 0., 0.}};
   // Did we specify the active area explicitly?
-  bool m_hasArea = false;
+  bool m_hasArea{false};
   // Medium in the active area.
-  Medium* m_medium = nullptr;
+  Medium* m_medium{nullptr};
 
   /// Reset the component
   void Reset() override;

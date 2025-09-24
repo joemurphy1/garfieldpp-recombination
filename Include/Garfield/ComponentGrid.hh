@@ -19,6 +19,9 @@ class ComponentGrid : public Component {
   /// Destructor
   ~ComponentGrid() = default;
 
+  /// Set the medium.
+  void SetMedium(Medium* medium);
+
   /** Define the grid.
    * \param nx,ny,nz number of nodes along \f$x, y, z\f$.
    * \param xmin,xmax range along \f$x\f$.
@@ -115,8 +118,6 @@ class ComponentGrid : public Component {
                         const unsigned int k, double& v, double& ex, double& ey,
                         double& ez) const;
 
-  /// Set the medium.
-  void SetMedium(Medium* m);
   /// Get the medium.
   Medium* GetMedium() const { return m_medium; }
 

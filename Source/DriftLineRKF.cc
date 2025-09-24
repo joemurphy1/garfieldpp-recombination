@@ -7,6 +7,7 @@
 #include <string>
 
 #include "Garfield/Component.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Numerics.hh"
@@ -55,15 +56,12 @@ DriftLineRKF::DriftLineRKF() {
 }
 
 DriftLineRKF::DriftLineRKF(Sensor* sensor) : DriftLineRKF() {
-  m_sensor = sensor;
+  SetSensor(sensor);
 }
 
-void DriftLineRKF::SetSensor(Sensor* s) {
-  if (!s) {
-    std::cerr << m_className << "::SetSensor: Null pointer.\n";
-    return;
-  }
-  m_sensor = s;
+void DriftLineRKF::SetSensor(Sensor* sensor) {
+  if (!sensor) throw Exception("sensor can't be nullptr");
+  m_sensor = sensor;
 }
 
 void DriftLineRKF::SetIntegrationAccuracy(const double eps) {

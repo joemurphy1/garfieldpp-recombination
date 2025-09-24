@@ -19,9 +19,10 @@ class ViewCell : public ViewBase {
   /// Default constructor
   ViewCell();
   /// Constructor from analytic-field component.
-  ViewCell(ComponentAnalyticField* cmp);
+  explicit ViewCell(ComponentAnalyticField* cmp);
   /// Constructor from two-dimenstional neBEM component.
-  ViewCell(ComponentNeBem2d* cmp);
+  explicit ViewCell(ComponentNeBem2d* cmp);
+  explicit ViewCell(std::nullptr_t) = delete;
   /// Destructor
   ~ViewCell() = default;
 
@@ -40,10 +41,10 @@ class ViewCell : public ViewBase {
   void DisableWireMarkers() { EnableWireMarkers(false); }
 
  private:
-  bool m_useWireMarker = true;
+  bool m_useWireMarker{true};
 
-  ComponentAnalyticField* m_component = nullptr;
-  ComponentNeBem2d* m_nebem = nullptr;
+  ComponentAnalyticField* m_component{nullptr};
+  ComponentNeBem2d* m_nebem{nullptr};
 
   // 3D geometry.
   std::unique_ptr<TGeoManager> m_geo;

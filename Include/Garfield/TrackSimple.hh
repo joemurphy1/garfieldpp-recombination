@@ -22,7 +22,8 @@ class TrackSimple : public Track {
   /// Default constructor
   TrackSimple();
   /// Constructor
-  TrackSimple(Sensor* sensor);
+  explicit TrackSimple(Sensor* sensor);
+  explicit TrackSimple(std::nullptr_t) = delete;
   /// Destructor
   virtual ~TrackSimple() = default;
 

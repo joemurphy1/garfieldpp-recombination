@@ -17,6 +17,8 @@ class ComponentConstant : public Component {
   ComponentConstant();
   /// Destructor
   ~ComponentConstant() = default;
+  /// Set the medium in the active area.
+  void SetMedium(Medium* medium);
 
   /// Set the components of the electric field [V / cm].
   void SetElectricField(const double ex, const double ey, const double ez);
@@ -37,8 +39,6 @@ class ComponentConstant : public Component {
                const double xmax, const double ymax, const double zmax);
   /// Remove the explicit limits of the active area.
   void UnsetArea();
-  /// Set the medium in the active area.
-  void SetMedium(Medium* medium) { m_medium = medium; }
 
   Medium* GetMedium(const double x, const double y, const double z) override;
   void ElectricField(const double x, const double y, const double z, double& ex,

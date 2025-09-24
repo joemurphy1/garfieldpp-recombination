@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Utilities.hh"
@@ -1812,26 +1813,18 @@ void ComponentTcadBase<N>::UnsetDriftRegion(const size_t i) {
   m_regions[i].drift = false;
 }
 
-template <size_t N>
-void ComponentTcadBase<N>::SetMedium(const size_t i, Medium* medium) {
-  if (i >= m_regions.size()) {
-    std::cerr << m_className << "::SetMedium: Index out of range.\n";
-    return;
-  }
-  if (!medium) {
-    std::cerr << m_className << "::SetMedium: Null pointer.\n";
-    return;
-  }
-  m_regions[i].medium = medium;
+template <std::size_t N>
+void ComponentTcadBase<N>::SetMedium(const std::size_t index, Medium* medium) {
+  if (index >= m_regions.size())
+    throw Exception("::SetMedium: Index out of range");
+  if (!medium) throw Exception("::SetMedium: Null pointer");
+  m_regions[index].medium = medium;
 }
 
-template <size_t N>
+template <std::size_t N>
 void ComponentTcadBase<N>::SetMedium(const std::string& material,
                                      Medium* medium) {
-  if (!medium) {
-    std::cerr << m_className << "::SetMedium: Null pointer.\n";
-    return;
-  }
+  if (!medium) throw Exception("::SetMedium: Null pointer");
   size_t nMatch = 0;
   const auto nRegions = m_regions.size();
   for (size_t i = 0; i < nRegions; ++i) {

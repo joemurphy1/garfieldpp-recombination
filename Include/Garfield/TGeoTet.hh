@@ -4,6 +4,7 @@
 #include <TGeoBBox.h>
 
 #include <array>
+#include <string>
 
 namespace Garfield {
 
@@ -11,7 +12,7 @@ class TGeoTet : public TGeoBBox {
  public:
   TGeoTet() = default;
   /// Constructor
-  TGeoTet(const char* name,
+  TGeoTet(const std::string& name,
           const std::array<std::array<double, 3>, 4>& vertices);
   /// Destructor
   virtual ~TGeoTet() = default;

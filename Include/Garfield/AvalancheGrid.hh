@@ -17,12 +17,13 @@ class AvalancheGrid {
   /// Default constructor
   AvalancheGrid() = default;
   /// Constructor
-  AvalancheGrid(Sensor *sensor);
+  explicit AvalancheGrid(Sensor *sensor);
+  explicit AvalancheGrid(std::nullptr_t) = delete;
   /// Destructor
   ~AvalancheGrid() = default;
 
   /// Set the sensor.
-  void SetSensor(Sensor *sensor) { m_sensor = sensor; }
+  void SetSensor(Sensor *sensor);
 
   /// Start grid based avalanche simulation.
   void StartGridAvalanche();

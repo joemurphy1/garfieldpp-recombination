@@ -6,12 +6,18 @@
 #include <string>
 #include <vector>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Geometry.hh"
 
 namespace Garfield {
 
 ComponentParallelPlate::ComponentParallelPlate() : Component("ParallelPlate") {}
+
+void ComponentParallelPlate::SetMedium(Medium *medium) {
+  if (!medium) throw Exception("Medium can't be nullptr");
+  m_medium = medium;
+}
 
 void ComponentParallelPlate::LoadWeightingPotentialGrid(
     const std::string &label) {

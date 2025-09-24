@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/Medium.hh"
 
 namespace Garfield {
@@ -11,12 +12,64 @@ namespace Garfield {
 GeometryRoot::GeometryRoot() : Geometry("GeometryRoot") {}
 
 void GeometryRoot::SetGeometry(TGeoManager* geoman) {
-  if (!geoman) {
-    std::cerr << m_className << "::SetGeometry: Null pointer.\n";
-    return;
-  }
+  if (!geoman) throw Exception("geoman can't be null");
   m_geoManager = geoman;
   m_materials.clear();
+}
+
+void GeometryRoot::SetMedium(const std::size_t imat, Medium* medium) {
+  if (!m_geoManager)
+    throw Exception(
+        (m_className + std::string("::SetMedium: ROOT geometry is not "
+                                   "defined. Call SetGeometry first."))
+            .c_str());
+  if (!medium) throw Exception("medium can't be nullptr");
+  TGeoMaterial* mat = m_geoManager->GetMaterial(imat);
+  if (!mat) {
+    std::cerr << m_className << "::SetMedium:\n"
+              << "    ROOT material " << imat << " does not exist.\n";
+    return;
+  }
+
+  std::string name(mat->GetName());
+
+  // Check if this material has already been associated with a medium.
+  if (m_materials.count(name) > 0) {
+    std::cout << m_className << "::SetMedium:\n"
+              << "    Replacing existing association of material " << name
+              << " with medium " << medium->GetName() << ".\n";
+  }
+  m_materials[name] = medium;
+
+  // Check if material properties match
+  const double rho1 = mat->GetDensity();
+  const double rho2 = medium->GetMassDensity();
+  std::cout << m_className << "::SetMedium:\n"
+            << "    ROOT material: " << name << "\n"
+            << "      Density: " << rho1 << " g / cm3\n"
+            << "    Medium: " << medium->GetName() << "\n"
+            << "      Density: " << rho2 << " g / cm3\n";
+  if (rho1 > 0 && fabs(rho1 - rho2) / rho1 > 0.01) {
+    std::cout << "    WARNING: Densities differ by > 1%.\n";
+  }
+}
+
+void GeometryRoot::SetMedium(const std::string& name, Medium* medium) {
+  if (!m_geoManager)
+    throw Exception(
+        (m_className + std::string("::SetMedium: ROOT geometry is not "
+                                   "defined. Call SetGeometry first."))
+            .c_str());
+  if (!medium) throw Exception("medium can't be nullptr");
+
+  const int imat = m_geoManager->GetMaterialIndex(name.c_str());
+  if (imat < 0) {
+    std::cerr << m_className << "::SetMedium:\n"
+              << "    ROOT material " << name << " does not exist.\n";
+    return;
+  }
+
+  SetMedium(imat, medium);
 }
 
 Medium* GeometryRoot::GetMedium(const double x, const double y, const double z,
@@ -57,68 +110,6 @@ TGeoMaterial* GeometryRoot::GetMaterial(const char* name) {
   }
 
   return m_geoManager->GetMaterial(name);
-}
-
-void GeometryRoot::SetMedium(const unsigned int imat, Medium* med) {
-  if (!m_geoManager) {
-    PrintGeoNotDefined("SetMedium");
-    return;
-  }
-
-  if (!med) {
-    std::cerr << m_className << "::SetMedium: Null pointer.\n";
-    return;
-  }
-
-  TGeoMaterial* mat = m_geoManager->GetMaterial(imat);
-  if (!mat) {
-    std::cerr << m_className << "::SetMedium:\n"
-              << "    ROOT material " << imat << " does not exist.\n";
-    return;
-  }
-
-  std::string name(mat->GetName());
-
-  // Check if this material has already been associated with a medium.
-  if (m_materials.count(name) > 0) {
-    std::cout << m_className << "::SetMedium:\n"
-              << "    Replacing existing association of material " << name
-              << " with medium " << med->GetName() << ".\n";
-  }
-  m_materials[name] = med;
-
-  // Check if material properties match
-  const double rho1 = mat->GetDensity();
-  const double rho2 = med->GetMassDensity();
-  std::cout << m_className << "::SetMedium:\n"
-            << "    ROOT material: " << name << "\n"
-            << "      Density: " << rho1 << " g / cm3\n"
-            << "    Medium: " << med->GetName() << "\n"
-            << "      Density: " << rho2 << " g / cm3\n";
-  if (rho1 > 0 && fabs(rho1 - rho2) / rho1 > 0.01) {
-    std::cout << "    WARNING: Densities differ by > 1%.\n";
-  }
-}
-
-void GeometryRoot::SetMedium(const char* name, Medium* med) {
-  if (!m_geoManager) {
-    PrintGeoNotDefined("SetMedium");
-    return;
-  }
-
-  if (!med) {
-    std::cerr << m_className << "::SetMedium: Null pointer.\n";
-    return;
-  }
-
-  const int imat = m_geoManager->GetMaterialIndex(name);
-  if (imat < 0) {
-    std::cerr << m_className << "::SetMedium:\n"
-              << "    ROOT material " << name << " does not exist.\n";
-    return;
-  }
-
-  SetMedium(imat, med);
 }
 
 bool GeometryRoot::IsInside(const double x, const double y, const double z,

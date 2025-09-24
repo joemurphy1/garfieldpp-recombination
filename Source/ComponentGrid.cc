@@ -12,6 +12,7 @@
 #include <set>
 #include <string>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Utilities.hh"
@@ -56,6 +57,11 @@ bool IsComment(const std::string& line) {
 namespace Garfield {
 
 ComponentGrid::ComponentGrid() : Component("Grid") {}
+
+void ComponentGrid::SetMedium(Medium* medium) {
+  if (!medium) throw Exception("sensor can't be nullptr");
+  m_medium = medium;
+}
 
 void ComponentGrid::ElectricField(const double x, const double y,
                                   const double z, double& ex, double& ey,
@@ -1825,13 +1831,6 @@ bool ComponentGrid::GetElectricFieldRange(double& exmin, double& exmax,
     }
   }
   return true;
-}
-
-void ComponentGrid::SetMedium(Medium* m) {
-  if (!m) {
-    std::cerr << m_className << "::SetMedium: Null pointer.\n";
-  }
-  m_medium = m;
 }
 
 bool ComponentGrid::GetField(

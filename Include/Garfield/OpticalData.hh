@@ -23,8 +23,8 @@ class OpticalData {
                                      const double energy);
 
  private:
-  static constexpr double OscToPacs = 8.067283e-18;
-  static constexpr double Mbarn = 1.e-18;
+  static constexpr double OscToPacs{8.067283e-18};
+  static constexpr double Mbarn{1.e-18};
 
   static bool PhotoAbsorptionCsNeon(const double e, double& cs, double& eta);
   static bool PhotoAbsorptionCsArgon(const double e, double& cs, double& eta);

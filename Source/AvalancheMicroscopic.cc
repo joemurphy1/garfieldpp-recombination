@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
@@ -150,15 +151,12 @@ AvalancheMicroscopic::AvalancheMicroscopic() {
 
 AvalancheMicroscopic::AvalancheMicroscopic(Sensor* sensor)
     : AvalancheMicroscopic() {
-  m_sensor = sensor;
+  SetSensor(sensor);
 }
 
-void AvalancheMicroscopic::SetSensor(Sensor* s) {
-  if (!s) {
-    std::cerr << m_className << "::SetSensor: Null pointer.\n";
-    return;
-  }
-  m_sensor = s;
+void AvalancheMicroscopic::SetSensor(Sensor* sensor) {
+  if (!m_sensor) throw Exception("sensor can't be nullptr");
+  m_sensor = sensor;
 }
 
 void AvalancheMicroscopic::EnablePlotting(ViewDrift* view, const size_t nColl) {

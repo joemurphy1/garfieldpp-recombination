@@ -22,9 +22,13 @@ class AvalancheGridSpaceCharge {
   /// Default constructor
   AvalancheGridSpaceCharge();
   /// Constructor
-  AvalancheGridSpaceCharge(Sensor *sensor);
+  explicit AvalancheGridSpaceCharge(Sensor *sensor);
+  explicit AvalancheGridSpaceCharge(std::nullptr_t) = delete;
   /// Destructor
   ~AvalancheGridSpaceCharge() = default;
+
+  /// Set the sensor (and determine if it includes a parallel-plate component).
+  void SetSensor(Sensor *sensor);
 
   /// Reset the charges.
   void Reset();
@@ -84,9 +88,6 @@ class AvalancheGridSpaceCharge {
 
   /// Stop the avalanche if K % field is reached
   void SetStopAtK(bool option = true) { m_bStopAtK = option; }
-
-  /// Set the sensor (and determine if it includes a parallel-plate component).
-  void SetSensor(Sensor *sensor);
 
   /**
    *

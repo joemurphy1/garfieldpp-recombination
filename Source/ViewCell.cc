@@ -14,31 +14,28 @@
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/ComponentNeBem2d.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/FundamentalConstants.hh"
 
 namespace Garfield {
 
 ViewCell::ViewCell() : ViewBase("ViewCell") {}
 
-ViewCell::ViewCell(ComponentAnalyticField* cmp)
-    : ViewBase("ViewCell"), m_component(cmp) {}
+ViewCell::ViewCell(ComponentAnalyticField* cmp) : ViewBase("ViewCell") {
+  SetComponent(cmp);
+}
 
-ViewCell::ViewCell(ComponentNeBem2d* cmp)
-    : ViewBase("ViewCell"), m_nebem(cmp) {}
+ViewCell::ViewCell(ComponentNeBem2d* cmp) : ViewBase("ViewCell") {
+  SetComponent(cmp);
+}
 
 void ViewCell::SetComponent(ComponentAnalyticField* cmp) {
-  if (!cmp) {
-    std::cerr << m_className << "::SetComponent: Null pointer.\n";
-    return;
-  }
+  if (!cmp) throw Exception("::SetComponent: Null pointer");
   m_component = cmp;
 }
 
 void ViewCell::SetComponent(ComponentNeBem2d* cmp) {
-  if (!cmp) {
-    std::cerr << m_className << "::SetComponent: Null pointer.\n";
-    return;
-  }
+  if (!cmp) throw Exception("::SetComponent: Null pointer");
   m_nebem = cmp;
 }
 

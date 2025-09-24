@@ -12,6 +12,7 @@
 
 #include "Garfield/Component.hh"
 #include "Garfield/DriftLineRKF.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 
@@ -66,27 +67,23 @@ namespace Garfield {
 
 ViewField::ViewField() : ViewBase("ViewField") {}
 
-ViewField::ViewField(Sensor* sensor)
-    : ViewBase("ViewField"), m_sensor(sensor) {}
+ViewField::ViewField(Sensor* sensor) : ViewBase("ViewField") {
+  SetSensor(sensor);
+}
 
-ViewField::ViewField(Component* component)
-    : ViewBase("ViewField"), m_component(component) {}
+ViewField::ViewField(Component* component) : ViewBase("ViewField") {
+  SetComponent(component);
+}
 
-void ViewField::SetSensor(Sensor* s) {
-  if (!s) {
-    std::cerr << m_className << "::SetSensor: Null pointer.\n";
-    return;
-  }
-  m_sensor = s;
+void ViewField::SetSensor(Sensor* sensor) {
+  if (!sensor) throw Exception("ViewField::SetSensor: Null pointer");
+  m_sensor = sensor;
   m_component = nullptr;
 }
 
-void ViewField::SetComponent(Component* c) {
-  if (!c) {
-    std::cerr << m_className << "::SetComponent: Null pointer.\n";
-    return;
-  }
-  m_component = c;
+void ViewField::SetComponent(Component* component) {
+  if (!component) throw Exception("ViewField::SetComponent: Null pointer");
+  m_component = component;
   m_sensor = nullptr;
 }
 

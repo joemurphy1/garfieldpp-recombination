@@ -73,7 +73,8 @@ class TrackHeed : public Track {
   /// Default constructor
   TrackHeed();
   /// Constructor
-  TrackHeed(Sensor* sensor);
+  explicit TrackHeed(Sensor* sensor);
+  explicit TrackHeed(std::nullptr_t) = delete;
   /// Destructor
   virtual ~TrackHeed();
 

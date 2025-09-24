@@ -16,6 +16,7 @@
 #include <iostream>
 #include <vector>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GeometrySimple.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Solid.hh"
@@ -24,19 +25,15 @@ namespace Garfield {
 
 ViewGeometry::ViewGeometry() : ViewBase("ViewGeometry") {}
 
-ViewGeometry::ViewGeometry(GeometrySimple* geo) : ViewGeometry() {
-  m_geometry = geo;
+ViewGeometry::ViewGeometry(GeometrySimple* geometry) : ViewGeometry() {
+  SetGeometry(geometry);
 }
 
 ViewGeometry::~ViewGeometry() { Reset(); }
 
-void ViewGeometry::SetGeometry(GeometrySimple* geo) {
-  if (!geo) {
-    std::cerr << m_className << "::SetGeometry: Null pointer.\n";
-    return;
-  }
-
-  m_geometry = geo;
+void ViewGeometry::SetGeometry(GeometrySimple* geometry) {
+  if (!geometry) throw Exception("::SetGeometry: Null pointer");
+  m_geometry = geometry;
 }
 
 void ViewGeometry::Plot(const bool twod) {

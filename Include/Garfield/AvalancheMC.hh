@@ -21,7 +21,8 @@ class AvalancheMC {
   /// Default constructor
   AvalancheMC() = default;
   /// Constructor
-  AvalancheMC(Sensor* sensor);
+  explicit AvalancheMC(Sensor* sensor);
+  explicit AvalancheMC(std::nullptr_t) = delete;
   /// Destructor
   ~AvalancheMC() = default;
 

@@ -27,6 +27,10 @@ class ComponentTcadBase : public Component {
   }
   /// Destructor
   virtual ~ComponentTcadBase() = default;
+  /// Set the medium to be associated to a given region.
+  void SetMedium(const std::size_t index, Medium* medium);
+  /// Set the medium to be associated to all regions with a given material.
+  void SetMedium(const std::string& material, Medium* medium);
 
   /** Import mesh and field map from files.
    * \param gridfilename name of the .grd file containing the mesh
@@ -80,10 +84,6 @@ class ComponentTcadBase : public Component {
   void SetDriftRegion(const std::size_t ireg);
   /// Make a region inactive.
   void UnsetDriftRegion(const std::size_t ireg);
-  /// Set the medium to be associated to a given region.
-  void SetMedium(const std::size_t ireg, Medium* m);
-  /// Set the medium to be associated to all regions with a given material.
-  void SetMedium(const std::string& material, Medium* m);
 
   std::size_t GetNumberOfElements() const override { return m_elements.size(); }
   bool GetElementNodes(const std::size_t i,

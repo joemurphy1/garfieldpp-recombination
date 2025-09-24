@@ -7,12 +7,20 @@
 #include <sstream>
 #include <string>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Utilities.hh"
 
 namespace Garfield {
 
 ComponentNeBem3dMap::ComponentNeBem3dMap() : Component("NeBem3dMap") {}
+
+void ComponentNeBem3dMap::SetMedium(const std::size_t index, Medium* medium) {
+  if (!medium) throw Exception("medium can't be nullptr");
+  if (m_media.empty()) return;  // TODO useful ??
+  if (index >= m_media.size()) m_media.resize(index + 1, nullptr);
+  m_media[index] = medium;
+}
 
 void ComponentNeBem3dMap::ElectricField(const double x, const double y,
                                         const double z, double& ex, double& ey,
@@ -1126,15 +1134,6 @@ void ComponentNeBem3dMap::PrintRegions() const {
     const std::string name = m_media[i] ? m_media[i]->GetName() : "none";
     std::cout << "      " << i << "            " << name << "\n";
   }
-}
-
-void ComponentNeBem3dMap::SetMedium(const unsigned int i, Medium* m) {
-  if (!m) {
-    std::cerr << m_className << "::SetMedium: Null pointer.\n";
-    if (m_media.empty()) return;
-  }
-  if (i >= m_media.size()) m_media.resize(i + 1, nullptr);
-  m_media[i] = m;
 }
 
 Medium* ComponentNeBem3dMap::GetMedium(const unsigned int i) const {

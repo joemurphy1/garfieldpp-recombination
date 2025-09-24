@@ -22,12 +22,13 @@ class ViewSignal : public ViewBase {
   /// Default constructor.
   ViewSignal();
   /// Constructor.
-  ViewSignal(Sensor* sensor);
+  explicit ViewSignal(Sensor* sensor);
+  explicit ViewSignal(std::nullptr_t) = delete;
   /// Destructor.
   ~ViewSignal() = default;
 
   /// Set the sensor from which to retrieve the signal.
-  void SetSensor(Sensor* s);
+  void SetSensor(Sensor* sensor);
 
   /** Plot the signal.
    * \param label Identifier (weighting field) of the signal to be plotted.
@@ -92,7 +93,7 @@ class ViewSignal : public ViewBase {
   bool m_userRangeX{false};
   double m_ymin{0.};
   double m_ymax{0.};
-  bool m_userRangeY = false;
+  bool m_userRangeY{false};
 
   // Axis label.
   std::string m_labelY;

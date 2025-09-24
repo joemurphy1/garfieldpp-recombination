@@ -14,6 +14,7 @@
 
 #include "Garfield/Component.hh"
 #include "Garfield/DriftLineRKF.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/Sensor.hh"
 
 namespace {
@@ -136,6 +137,18 @@ namespace Garfield {
 
 ViewIsochrons::ViewIsochrons() : ViewBase("ViewIsochrons") {}
 
+void ViewIsochrons::SetSensor(Sensor* sensor) {
+  if (!sensor) throw Exception("::SetSensor: Null pointer");
+  m_sensor = sensor;
+  m_component = nullptr;
+}
+
+void ViewIsochrons::SetComponent(Component* component) {
+  if (!component) throw Exception("::SetComponent: Null pointer");
+  m_component = component;
+  m_sensor = nullptr;
+}
+
 void ViewIsochrons::DriftElectrons(const bool positive) {
   m_particle = Particle::Electron;
   m_positive = positive;
@@ -144,26 +157,6 @@ void ViewIsochrons::DriftElectrons(const bool positive) {
 void ViewIsochrons::DriftIons(const bool negative) {
   m_particle = Particle::Ion;
   m_positive = !negative;
-}
-
-void ViewIsochrons::SetSensor(Sensor* s) {
-  if (!s) {
-    std::cerr << m_className << "::SetSensor: Null pointer.\n";
-    return;
-  }
-
-  m_sensor = s;
-  m_component = nullptr;
-}
-
-void ViewIsochrons::SetComponent(Component* c) {
-  if (!c) {
-    std::cerr << m_className << "::SetComponent: Null pointer.\n";
-    return;
-  }
-
-  m_component = c;
-  m_sensor = nullptr;
 }
 
 void ViewIsochrons::SetAspectRatioSwitch(const double ar) {

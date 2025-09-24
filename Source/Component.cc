@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Geometry.hh"
 #include "Garfield/Numerics.hh"
@@ -15,13 +16,14 @@ Component::Component(const std::string& name) {
   m_className = "Component" + name;
 }
 
-void Component::SetGeometry(Geometry* geo) {
-  // Make sure the geometry is defined
-  if (!geo) {
-    std::cerr << m_className << "::SetGeometry: Null pointer.\n";
-    return;
-  }
-  m_geometry = geo;
+Component::Component(const std::string& name, Geometry* geometry)
+    : Component(name) {
+  SetGeometry(geometry);
+}
+
+void Component::SetGeometry(Geometry* geometry) {
+  if (!m_geometry) throw Exception("geometry can't be nullptr");
+  m_geometry = geometry;
 }
 
 Medium* Component::GetMedium(const double x, const double y, const double z) {

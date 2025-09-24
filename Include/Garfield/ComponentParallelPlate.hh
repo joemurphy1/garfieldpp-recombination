@@ -23,6 +23,8 @@ class ComponentParallelPlate : public Component {
   ComponentParallelPlate();
   /// Destructor
   ~ComponentParallelPlate() = default;
+  /// Setting the medium
+  void SetMedium(Medium *medium);
 
   /** Define the geometry.
    * \param N amount of layers in the geometry, this includes the gas gaps
@@ -68,9 +70,6 @@ class ComponentParallelPlate : public Component {
   /// Add plane electrode, if you want to read the signal from the cathode set
   /// the second argument to false.
   void AddPlane(const std::string &label, bool fromAnode = true);
-
-  /// Setting the medium
-  void SetMedium(Medium *medium) { m_medium = medium; }
 
   /** Calculate time-dependent weighting potential on a grid.
    * \param xmin,ymin,zmin minimum value of the interval in the \f$x\f$-,
