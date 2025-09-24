@@ -168,8 +168,6 @@ class AvalancheGridSpaceCharge {
     /// Space-charge electric field in Z direction (can be negative)
     double ez{0.};
 
-    double time{0.};  ///< Node clock.
-
     bool anode{false};  ///< init the anode
     /// Gas gap index: -1 if not gas gap; starts with 0, 1, ...
     int gasGapIndex{0};
