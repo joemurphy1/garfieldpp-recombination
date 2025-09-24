@@ -171,11 +171,8 @@ class AvalancheGridSpaceCharge {
     double time{0.};  ///< Node clock.
 
     bool anode{false};  ///< init the anode
-    /// LayerIndex in ParallelPlate convention != gas gap index
-    int layerIndex{0};
     /// Gas gap index: -1 if not gas gap; starts with 0, 1, ...
     int gasGapIndex{0};
-    bool isGasGap{true};
   };
 
   struct Point {

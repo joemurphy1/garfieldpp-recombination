@@ -697,12 +697,10 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
   m_zGasGapBoundaries.resize(n);
   for (int iz = 0; iz <= m_zSteps; iz++) {
     m_grid[iz].resize(m_rSteps + 1);
+    // Determine the gas gap.
     int k = 0;
-    // Determine layer index.
-    int layerIndex = 0;
     if (m_pp) {
-      layerIndex = m_pp->GetLayer(m_zGrid[iz]);
-      // Determine gap number.
+      const int layerIndex = m_pp->GetLayer(m_zGrid[iz]);
       if (layerIndex >= 0) k = GetGasGapNumber(layerIndex);
     }
     if (k != -1) {
@@ -710,15 +708,11 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
       m_zGasGapBoundaries[k].push_back(iz);
     }
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      // Set layer index
-      m_grid[iz][ir].layerIndex = layerIndex;
+      // Set gas gap index.
       m_grid[iz][ir].gasGapIndex = k;
-      // Continue if nodes are not in gas (eps != 1 or k == -1)
-      if (k == -1) {
-        m_grid[iz][ir].isGasGap = false;
-        continue;
-      }
-      // set swarm parameters & time
+      // Continue if nodes are not in a gas gap.
+      if (k == -1) continue;
+      // Set swarm parameters & time
       m_grid[iz][ir].townsend = alpha[k];
       m_grid[iz][ir].attachment = eta[k];
       m_grid[iz][ir].vd = vd[k];  //< magnitude! direction against E field
