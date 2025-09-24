@@ -240,7 +240,6 @@ class AvalancheGridSpaceCharge {
   bool m_bMC{true};
 
   int m_iFieldApprox{1};    //< order of approximation in Set(1,2,3,...)
-  double m_dMinGroups{50};  //< same values as lippmann
 
   ComponentParallelPlate *m_pp{nullptr};
   Sensor *m_sensor{nullptr};
@@ -262,8 +261,6 @@ class AvalancheGridSpaceCharge {
   double m_time{0.};   ///< Clock.
   double m_time0{0.};  ///< Initial time.
   double m_dt{0.};     ///< Time step.
-  /// Tracking if the charges are still in the drift gap.
-  bool m_run{true};
 
   std::vector<std::vector<int>>
       m_zGasGapBoundaries;  ///< [k] -> {izLeft, ..., izRight}
@@ -273,9 +270,6 @@ class AvalancheGridSpaceCharge {
   std::vector<std::vector<Point>> m_vElectrons;
 
   std::vector<std::pair<double, long>> m_vNElectronEvolution;
-  std::vector<long> m_vGroupSizes = {
-      1500, 800, 400, 200, 100,
-      50,   20,  10,  5,   2};  ///< same values as Lippmann & Riegler
   /// Which layer indices are gas layers
   std::vector<int> m_vIndexGasGaps = {0};
 

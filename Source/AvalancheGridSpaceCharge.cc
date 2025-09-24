@@ -216,7 +216,6 @@ void AvalancheGridSpaceCharge::Reset() {
   m_dt = 0.;
   m_nTotElectron = 0;
   m_nTotPosIons = 0;
-  m_run = true;
 
   m_vCoNGasLayer.resize(0);
   m_vElectrons.resize(0);
@@ -870,9 +869,9 @@ void AvalancheGridSpaceCharge::GetSwarmParameters(
 }
 
 bool AvalancheGridSpaceCharge::TransportTimeStep() {
-  // Transport GridMesh one time-step with updated E-fields (Lippmann et al.
-  // approach)
-  if (!m_run) return false;
+  // Propagate grid nodes by one time step with updated electric fields 
+  // (Lippmann et al. approach).
+  if (m_nTotElectron <= 0) return false;
 
   if (m_bDebug) {
     std::cout << m_className << "::TransportTimeStep: Start time: " << m_time
@@ -1168,8 +1167,6 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
   // add total electrons in gap to grid and to evolution vector
   m_nTotElectron = std::accumulate(eOnGrid.begin(), eOnGrid.end(), 0.);
   m_vNElectronEvolution.push_back(std::make_pair(m_time, m_nTotElectron));
-  // continue run if electrons left on grid
-  m_run = m_nTotElectron > 0;
 
   // determine saturated gaps at each time step
   // clear: anode-absorption activates avalanche to grow again
@@ -1191,16 +1188,20 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 void AvalancheGridSpaceCharge::DiffuseTimeStep(double dx, long nElectron,
                                                double nPosIon, double nNegIon,
                                                int iz, int ir, int gasGap) {
-  // add diffusion onto the step dx
+  // Add diffusion onto the step dx
+
+  // Minimum number of groups (same values as Lippmann).
+  constexpr long nMinGroups = 50; 
+  // Same values as Lippmann & Riegler
+  constexpr std::array<long, 10> groupSizes = {
+    1500, 800, 400, 200, 100,
+      50,   20,  10,  5,   2};  
+
+  // Diffuse in at least nMinGroups groups of size groupSize:
   long rest = 0, groups = 0, groupSize = 0;
-  double sqrtdx = std::sqrt(dx);
-  double r = m_rGrid[ir];
 
-  auto &nd = m_grid[iz][ir];
-
-  // Diffuse in Groups of minimum m_dMinGroups groups a size groupSize:
-  for (auto &size : m_vGroupSizes) {
-    if (nElectron > m_dMinGroups * size) {
+  for (const auto size : groupSizes) {
+    if (nElectron > nMinGroups * size) {
       groupSize = size;                            //< size of a single group
       groups = std::floor(nElectron / groupSize);  //< real # groups
       rest = nElectron - groups * groupSize;       //< rest
@@ -1208,9 +1209,9 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(double dx, long nElectron,
     }
   }
 
-  // if electron are less than m_dMinGroups * GroupSize(-1) then we diffuse each
+  // if electron are less than nMinGroups * GroupSize(-1) then we diffuse each
   // electron by itself:
-  if (nElectron <= m_dMinGroups * m_vGroupSizes.back()) {
+  if (nElectron <= nMinGroups * groupSizes.back()) {
     groupSize = 1;
     groups = nElectron;
     rest = 0;
@@ -1219,6 +1220,7 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(double dx, long nElectron,
   // calculate diffusion and add to transport step
   double sinTheta = 0.;
   double cosTheta = 1.;
+  auto &nd = m_grid[iz][ir];
   double emag = Mag(nd.ez + m_ezBkg[gasGap], nd.er);
   if (emag > 1.e-8) {
     cosTheta = (-(nd.ez + m_ezBkg[gasGap]) / emag);
@@ -1226,6 +1228,9 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(double dx, long nElectron,
   }
 
   double f = (double)groupSize / (double)nElectron;
+  const double r = m_rGrid[ir];
+  const double sqrtdx = std::sqrt(dx);
+
   for (int group = 0; group < groups; group++) {
     // In the last loop we add the rest to the groupSize.
     if (group == groups - 1) {
