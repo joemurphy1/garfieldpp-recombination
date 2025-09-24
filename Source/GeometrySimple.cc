@@ -2,12 +2,18 @@
 
 #include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Solid.hh"
 
 namespace Garfield {
 
 GeometrySimple::GeometrySimple() : Geometry("GeometrySimple") {}
+
+void GeometrySimple::SetMedium(Medium* medium) {
+  if (!medium) throw Exception("medium can't be nullptr");
+  m_medium = medium;
+}
 
 void GeometrySimple::AddSolid(Solid* solid, Medium* medium) {
   // Make sure the solid and the medium are defined.

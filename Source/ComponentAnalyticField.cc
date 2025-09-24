@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Geometry.hh"
 #include "Garfield/Medium.hh"
@@ -277,6 +278,11 @@ using DMatrix = std::vector<std::vector<double> >;
 
 ComponentAnalyticField::ComponentAnalyticField() : Component("AnalyticField") {
   CellInit();
+}
+
+void ComponentAnalyticField::SetMedium(Medium* medium) {
+  if (!medium) throw Exception("sensor can't be nullptr");
+  m_medium = medium;
 }
 
 Medium* ComponentAnalyticField::GetMedium(const double xin, const double yin,

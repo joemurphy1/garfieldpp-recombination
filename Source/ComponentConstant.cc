@@ -4,12 +4,18 @@
 #include <iostream>
 #include <numeric>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 
 namespace Garfield {
 
 ComponentConstant::ComponentConstant() : Component("Constant") {}
+
+void ComponentConstant::SetMedium(Medium* medium) {
+  if (!medium) throw Exception("medium can't be nullptr");
+  m_medium = medium;
+}
 
 Medium* ComponentConstant::GetMedium(const double x, const double y,
                                      const double z) {

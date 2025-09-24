@@ -65,7 +65,7 @@ Medium::Medium() : m_id(++m_idCounter) {
   SetFieldGrid(100., 100000., 20, true, 0., 0., 1, HalfPi, HalfPi, 1);
 }
 
-Medium::~Medium() {}
+Medium::~Medium() = default;
 
 void Medium::SetTemperature(const double t) {
   if (t <= 0.) {

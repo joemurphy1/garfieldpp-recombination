@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Sensor.hh"
@@ -16,6 +17,11 @@ namespace Garfield {
 Track::Track(const std::string& name) : m_mass(MuonMass) {
   m_className = "Track" + name;
   SetBetaGamma(3.);
+}
+
+void Track::SetSensor(Sensor* sensor) {
+  if (!sensor) throw Exception("::SetSensor: Null pointer.");
+  m_sensor = sensor;
 }
 
 double Track::GetBetaGamma() const { return sqrt(m_beta2 / (1. - m_beta2)); }
@@ -176,15 +182,6 @@ void Track::SetKineticEnergy(const double ekin) {
   const double gamma = 1. + ekin / m_mass;
   m_beta2 = 1. - 1. / (gamma * gamma);
   m_isChanged = true;
-}
-
-void Track::SetSensor(Sensor* s) {
-  if (!s) {
-    std::cerr << m_className << "::SetSensor: Null pointer.\n";
-    return;
-  }
-
-  m_sensor = s;
 }
 
 void Track::EnablePlotting(ViewDrift* view) {

@@ -18,6 +18,8 @@ class ComponentChargedRing : public Component {
   ComponentChargedRing();
   /// Destructor
   ~ComponentChargedRing() = default;
+  /// Set the medium in the active area.
+  void SetMedium(Medium* medium);
 
   /// Set the limits of the active area explicitly
   /// (instead of using a Geometry object).
@@ -25,8 +27,6 @@ class ComponentChargedRing : public Component {
                const double xmax, const double ymax, const double zmax);
   /// Remove the explicit limits of the active area.
   void UnsetArea();
-  /// Set the medium in the active area.
-  void SetMedium(Medium* medium) { m_medium = medium; }
 
   Medium* GetMedium(const double x, const double y, const double z) override;
   void ElectricField(const double x, const double y, const double z, double& ex,

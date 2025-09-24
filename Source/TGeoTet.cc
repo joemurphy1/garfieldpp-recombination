@@ -30,8 +30,9 @@ double Dot(const Vec& a, const Vec& b) {
 
 }  // namespace
 
-Garfield::TGeoTet::TGeoTet(const char* name, const std::array<Vec, 4>& vertices)
-    : TGeoBBox(name, 0, 0, 0) {
+Garfield::TGeoTet::TGeoTet(const std::string& name,
+                           const std::array<Vec, 4>& vertices)
+    : TGeoBBox(name.c_str(), 0, 0, 0) {
   fVertices = vertices;
 
   Vec u;

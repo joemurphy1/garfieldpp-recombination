@@ -60,8 +60,8 @@ class ComponentTcad3d : public ComponentTcadBase<3> {
     m_ready = false;
   }
 
-  size_t FindElement(const double x, const double y, const double z,
-                     std::array<double, nMaxVertices>& w) const;
+  std::size_t FindElement(const double x, const double y, const double z,
+                          std::array<double, nMaxVertices>& w) const;
   bool InElement(const double x, const double y, const double z,
                  const Element& element,
                  std::array<double, nMaxVertices>& w) const;

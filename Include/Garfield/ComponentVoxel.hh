@@ -1,6 +1,7 @@
 #ifndef G_COMPONENT_VOXEL_H
 #define G_COMPONENT_VOXEL_H
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,8 @@ class ComponentVoxel : public Component {
   ComponentVoxel();
   /// Destructor
   ~ComponentVoxel() = default;
+  /// Set the medium in region i.
+  void SetMedium(const std::size_t index, Medium* medium);
 
   /// Interpolate between field values at the element centres.
   void EnableInterpolation(const bool on = true) { m_interpolate = on; }
@@ -69,9 +72,6 @@ class ComponentVoxel : public Component {
   /// Import magnetic field values from a file.
   bool LoadMagneticField(const std::string& filename, const std::string& format,
                          const double scaleX = 1., const double scaleB = 1.);
-
-  /// Set the medium in region i.
-  void SetMedium(const unsigned int i, Medium* m);
   /// Get the medium in region i.
   Medium* GetMedium(const unsigned int i) const;
   /// Print all regions.

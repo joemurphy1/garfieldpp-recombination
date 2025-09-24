@@ -48,7 +48,8 @@ class TrackDegrade : public Track {
   /// Default constructor
   TrackDegrade();
   /// Constructor
-  TrackDegrade(Sensor* sensor);
+  explicit TrackDegrade(Sensor* sensor);
+  explicit TrackDegrade(std::nullptr_t) = delete;
   /// Destructor
   virtual ~TrackDegrade() = default;
 

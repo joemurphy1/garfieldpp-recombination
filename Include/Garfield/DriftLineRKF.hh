@@ -20,7 +20,8 @@ class DriftLineRKF {
   /// Default constructor
   DriftLineRKF();
   /// Constructor
-  DriftLineRKF(Sensor* sensor);
+  explicit DriftLineRKF(Sensor* sensor);
+  explicit DriftLineRKF(std::nullptr_t) = delete;
   /// Destructor
   ~DriftLineRKF() = default;
 
@@ -89,30 +90,30 @@ class DriftLineRKF {
 
   /// Simulate the drift line of an electron with a given starting point.
   bool DriftElectron(const double x, const double y, const double z,
-                     const double t, const size_t w = 1);
+                     const double t, const std::size_t w = 1);
   /// Simulate the drift line of a hole with a given starting point.
   bool DriftHole(const double x, const double y, const double z, const double t,
-                 const size_t w = 1);
+                 const std::size_t w = 1);
   /// Simulate the drift line of an ion with a given starting point.
   bool DriftIon(const double x, const double y, const double z, const double t,
-                const size_t w = 1);
+                const std::size_t w = 1);
   /// Simulate the drift line of an electron with a given starting point,
   /// assuming that it has positive charge.
   bool DriftPositron(const double x, const double y, const double z,
-                     const double t, const size_t w = 1);
+                     const double t, const std::size_t w = 1);
   /// Simulate the drift line of an ion with a given starting point,
   /// assuming that it has negative charge.
   bool DriftNegativeIon(const double x, const double y, const double z,
-                        const double t, const size_t w = 1);
+                        const double t, const std::size_t w = 1);
 
   /// Print the trajectory of the most recent drift line.
   void PrintDriftLine() const;
   /// Get the end point and status flag of the most recent drift line.
   void GetEndPoint(double& x, double& y, double& z, double& t, int& st) const;
   /// Get the number of points of the most recent drift line.
-  size_t GetNumberOfDriftLinePoints() const { return m_x.size(); }
+  std::size_t GetNumberOfDriftLinePoints() const { return m_x.size(); }
   /// Get the coordinates and time of a point along the most recent drift line.
-  void GetDriftLinePoint(const size_t i, double& x, double& y, double& z,
+  void GetDriftLinePoint(const std::size_t i, double& x, double& y, double& z,
                          double& t) const;
 
   /// Compute the sigma of the arrival time distribution for the current
@@ -152,73 +153,74 @@ class DriftLineRKF {
   void EnableDebugging(const bool on = true) { m_debug = on; }
 
  private:
-  std::string m_className = "DriftLineRKF";
+  std::string m_className{"DriftLineRKF"};
 
   // Pointer to sensor.
-  Sensor* m_sensor = nullptr;
+  Sensor* m_sensor{nullptr};
 
   // Particle type of the most recent drift line.
-  Particle m_particle = Particle::Electron;
+  Particle m_particle{Particle::Electron};
 
   // Maximum allowed step size.
-  double m_maxStepSize = 0.;
+  double m_maxStepSize{0.};
   // Precision of the stepping algorithm.
-  double m_accuracy = 1.e-8;
+  double m_accuracy{1.e-8};
   // Flag to reject bends > 90 degrees or not.
-  bool m_rejectKinks = true;
+  bool m_rejectKinks{true};
   // Flag to apply a cut on the maximum allowed step size or not.
-  bool m_useStepSizeLimit = false;
+  bool m_useStepSizeLimit{false};
 
   // Pointer to the drift viewer.
-  ViewDrift* m_view = nullptr;
+  ViewDrift* m_view{nullptr};
 
   // Points along the current drift line.
   std::vector<std::array<double, 3> > m_x;
   // Times corresponding to the points along the current drift line.
   std::vector<double> m_t;
   // Status flag of the current drift line.
-  int m_status = 0;
+  int m_status{0};
 
   // Flag whether to calculate induced signals or not.
-  bool m_doSignal = true;
+  bool m_doSignal{true};
   // Averaging order used when projecting the signal on the time bins.
-  unsigned int m_navg = 2;
+  unsigned int m_navg{2};
   // Use weighting potential or weighting field for calculating the signal.
-  bool m_useWeightingPotential = true;
+  bool m_useWeightingPotential{true};
 
   // Scaling factor for electron signals.
-  double m_scaleE = 1.;
+  double m_scaleE{1.};
   // Scaling factor for hole signals.
-  double m_scaleH = 1.;
+  double m_scaleH{1.};
   // Scaling factor for ion signals.
-  double m_scaleI = 1.;
+  double m_scaleI{1.};
 
   // Use drift velocity maps?
-  bool m_useVelocityMap = false;
+  bool m_useVelocityMap{false};
   // Use maps for the Townsend coefficient?
-  bool m_useTownsendMap = false;
+  bool m_useTownsendMap{false};
 
   // Flag wether to simulate electron multiplication or not.
-  bool m_doAvalanche = true;
+  bool m_doAvalanche{true};
   enum class GainFluctuations { None = 0, Polya };
   // Model to be used for randomizing the avalanche size.
-  GainFluctuations m_gainFluctuations = GainFluctuations::None;
+  GainFluctuations m_gainFluctuations{GainFluctuations::None};
   // Polya shape parameter.
-  double m_theta = 0.;
+  double m_theta{0.};
   // Mean avalanche size (only used if > 1).
-  double m_gain = -1.;
+  double m_gain{-1.};
 
   // Flag whether to simulate the ion tail or not.
-  bool m_doIonTail = true;
+  bool m_doIonTail{true};
   // Simulate the ion tail automatically if the medium has mobility data?
-  bool m_doIonTailAuto = true;
+  bool m_doIonTailAuto{true};
   // Flag whether to simulate the negative ion tail or not.
-  bool m_doNegativeIonTail = false;
+  bool m_doNegativeIonTail{false};
   // Avalanche size.
-  double m_nE = 0., m_nI = 0.;
+  double m_nE{0.};
+  double m_nI{0.};
 
   // Debug flag.
-  bool m_debug = false;
+  bool m_debug{false};
 
   // Calculate a drift line starting at a given position.
   bool DriftLine(const std::array<double, 3>& x0, const double t0,

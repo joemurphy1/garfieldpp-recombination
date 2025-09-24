@@ -40,7 +40,7 @@ class Geometry {
                               double& xmax, double& ymax, double& zmax) = 0;
 
  protected:
-  std::string m_className = "Geometry";
+  std::string m_className{"Geometry"};
 };
 }  // namespace Garfield
 

@@ -195,11 +195,11 @@ class MediumMagboltz : public MediumGas {
   double CreateGPUTransferObject(MediumGPU*& med_gpu) override;
 
  private:
-  static constexpr int nEnergyStepsLog = 1000;
-  static constexpr int nEnergyStepsGamma = 5000;
-  static constexpr int nCsTypes = 7;
+  static constexpr int nEnergyStepsLog{1000};
+  static constexpr int nEnergyStepsGamma{5000};
+  static constexpr int nCsTypes{7};
 
-  static constexpr int nCsTypesGamma = 4;
+  static constexpr int nCsTypesGamma{4};
 
   static const int DxcTypeRad;
   static const int DxcTypeCollIon;
@@ -209,23 +209,24 @@ class MediumMagboltz : public MediumGas {
   std::mutex m_mutex;
 
   /// Simulate thermal motion of the gas or not (when running Magboltz).
-  bool m_useGasMotion = false;
+  bool m_useGasMotion{false};
   /// Automatic calculation of the energy limit by Magboltz or not.
-  bool m_autoEnergyLimit = true;
+  bool m_autoEnergyLimit{true};
 
   /// Max. electron energy in the collision rate tables.
-  double m_eMax;
+  double m_eMax{0.};
   /// Energy spacing in the linear part of the collision rate tables.
-  double m_eStep;
+  double m_eStep{0.};
   /// Inverse energy spacing.
-  double m_eStepInv;
-  double m_eHigh, m_eHighLog;
-  double m_lnStep;
+  double m_eStepInv{0.};
+  double m_eHigh{0.};
+  double m_eHighLog{0.};
+  double m_lnStep{0.};
 
   /// Flag enabling/disabling output of cross-section table to file
-  bool m_useCsOutput = false;
+  bool m_useCsOutput{false};
   /// Number of different cross-section types in the current gas mixture
-  unsigned int m_nTerms = 0;
+  unsigned int m_nTerms{0};
 
   /// Mass
   std::array<double, m_nMaxGases> m_mgas;
@@ -239,9 +240,9 @@ class MediumMagboltz : public MediumGas {
   std::array<std::array<double, 5>, m_nMaxGases> m_parGreenSawada;
   std::array<bool, m_nMaxGases> m_hasGreenSawada;
   /// Sample secondary electron energies using Opal-Beaty parameterisation
-  bool m_useOpalBeaty = true;
+  bool m_useOpalBeaty{true};
   /// Sample secondary electron energies using Green-Sawada parameterisation
-  bool m_useGreenSawada = false;
+  bool m_useGreenSawada{false};
 
   /// Energy loss
   std::array<double, Magboltz::nMaxLevels> m_energyLoss;
@@ -276,9 +277,9 @@ class MediumMagboltz : public MediumGas {
   std::vector<std::vector<double> > m_cf;
   std::vector<std::vector<double> > m_cfLog;
 
-  bool m_useAnisotropic = true;
+  bool m_useAnisotropic{true};
   /// Null-collision frequency
-  double m_cfNull = 0.;
+  double m_cfNull{0.};
 
   /// Collision counters
   /// 0: elastic
@@ -297,24 +298,24 @@ class MediumMagboltz : public MediumGas {
   /// Mean distance of Penning ionisation (by level)
   std::array<double, Magboltz::nMaxLevels> m_lambdaPenning;
   /// Number of Penning ionisations
-  unsigned int m_nPenning = 0;
+  unsigned int m_nPenning{0};
 
   // Deexcitation
   /// Flag enabling/disabling detailed simulation of de-excitation process
-  bool m_useDeexcitation = false;
+  bool m_useDeexcitation{false};
   /// Flag enabling/disable radiation trapping
   /// (absorption of photons discrete excitation lines)
-  bool m_useRadTrap = true;
+  bool m_useRadTrap{true};
 
   struct Deexcitation {
     // Gas component
-    int gas;
+    int gas{0};
     // Associated cross-section term
-    int level;
+    int level{0};
     // Level description
     std::string label;
     // Energy
-    double energy;
+    double energy{0.};
     // Branching ratios
     std::vector<double> p;
     // Final levels
@@ -322,17 +323,17 @@ class MediumMagboltz : public MediumGas {
     // Type of transition
     std::vector<int> type;
     // Oscillator strength
-    double osc;
+    double osc{0.};
     // Total decay rate
-    double rate;
+    double rate{0.};
     // Doppler broadening
-    double sDoppler;
+    double sDoppler{0.};
     // Pressure broadening
-    double gPressure;
+    double gPressure{0.};
     // Effective width
-    double width;
+    double width{0.};
     // Integrated absorption collision rate
-    double cf;
+    double cf{0.};
   };
   std::vector<Deexcitation> m_deexcitations;
   // Mapping between deexcitations and cross-section terms.
@@ -340,20 +341,21 @@ class MediumMagboltz : public MediumGas {
   // Number of emission widths within which to conosider discrete line
   // absorption.
   // TODO: default value?
-  double m_nAbsWidths = 1000.;
+  double m_nAbsWidths{1000.};
 
   /// Ionisation potentials of each component
   std::array<double, m_nMaxGases> m_ionPot;
   /// Minimum ionisation potential
-  double m_minIonPot = -1.;
+  double m_minIonPot{-1.};
 
   // Scaling factor for excitation cross-sections
   std::array<double, m_nMaxGases> m_scaleExc;
 
   // Energy spacing of photon collision rates table
-  double m_eFinalGamma, m_eStepGamma;
+  double m_eFinalGamma{0.};
+  double m_eStepGamma{0.};
   // Number of photon collision cross-section terms
-  unsigned int m_nPhotonTerms = 0;
+  unsigned int m_nPhotonTerms{0};
   // Total photon collision frequencies
   std::vector<double> m_cfTotGamma;
   // Photon collision frequencies

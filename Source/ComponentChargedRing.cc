@@ -4,6 +4,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "Garfield/EllipticIntegrals.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 
@@ -22,6 +24,11 @@ void GetCartesianLocalField(const double eFieldR, double& eFieldX,
 namespace Garfield {
 
 ComponentChargedRing::ComponentChargedRing() : Component("ChargedRing") {}
+
+void ComponentChargedRing::SetMedium(Medium* medium) {
+  if (!medium) throw Exception("medium can't be nullptr");
+  m_medium = medium;
+}
 
 Medium* ComponentChargedRing::GetMedium(const double x, const double y,
                                         const double z) {
@@ -272,8 +279,7 @@ void ComponentChargedRing::GetChargedRingField(
   }
   double offsetR = 1.01 * m_dSelfFieldTolerance;
   double offsetZ = (z > ring_z ? 1.01 : -1.01) * m_dSelfFieldTolerance;
-  GetCoulombBallField(ring, offsetR, ring_z + offsetZ, eFieldZ,
-                      eFieldR);
+  GetCoulombBallField(ring, offsetR, ring_z + offsetZ, eFieldZ, eFieldR);
   return;
 }
 

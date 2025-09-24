@@ -19,7 +19,7 @@ class ComponentNeBem2d : public Component {
   ~ComponentNeBem2d() = default;
 
   /// Set the "background" medium.
-  void SetMedium(Medium* medium) { m_medium = medium; }
+  void SetMedium(Medium* medium);
 
   /** Add a conducting straight-line segment.
    * \param x0,y0,x1,y1 coordinates of start and end point.

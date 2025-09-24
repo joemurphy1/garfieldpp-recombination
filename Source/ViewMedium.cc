@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
@@ -44,15 +45,11 @@ namespace Garfield {
 ViewMedium::ViewMedium()
     : ViewBase("ViewMedium"), m_aMax(Pi), m_angle(HalfPi) {}
 
-ViewMedium::ViewMedium(Medium* medium) : ViewMedium() { m_medium = medium; }
+ViewMedium::ViewMedium(Medium* medium) : ViewMedium() { SetMedium(medium); }
 
-void ViewMedium::SetMedium(Medium* m) {
-  if (!m) {
-    std::cerr << m_className << "::SetMedium: Null pointer.\n";
-    return;
-  }
-
-  m_medium = m;
+void ViewMedium::SetMedium(Medium* medium) {
+  if (!medium) throw Exception("::SetMedium: Null pointer");
+  m_medium = medium;
 }
 
 void ViewMedium::SetRangeE(const double emin, const double emax,

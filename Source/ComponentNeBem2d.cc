@@ -6,6 +6,7 @@
 #include <iostream>
 #include <numeric>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Geometry.hh"
@@ -206,6 +207,11 @@ const double ComponentNeBem2d::InvEpsilon0 = 1. / VacuumPermittivity;
 const double ComponentNeBem2d::InvTwoPiEpsilon0 = 1. / TwoPiEpsilon0;
 
 ComponentNeBem2d::ComponentNeBem2d() : Component("NeBem2d") {}
+
+void ComponentNeBem2d::SetMedium(Medium* medium) {
+  if (!medium) throw Exception("medium can't be nullptr");
+  m_medium = medium;
+}
 
 void ComponentNeBem2d::ElectricField(const double x, const double y,
                                      const double z, double& ex, double& ey,

@@ -5,6 +5,7 @@
 
 #include "Garfield/AvalancheMicroscopic.hh"
 #include "Garfield/ComponentParallelPlate.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
@@ -49,7 +50,12 @@ int AvalancheSize(const double dx, const int ni, const double alpha,
 
 namespace Garfield {
 
-AvalancheGrid::AvalancheGrid(Sensor *sensor) : m_sensor(sensor) {}
+AvalancheGrid::AvalancheGrid(Sensor *sensor) { SetSensor(sensor); }
+
+void AvalancheGrid::SetSensor(Sensor *sensor) {
+  if (!m_sensor) throw Exception("sensor can't be nullptr");
+  m_sensor = sensor;
+}
 
 void AvalancheGrid::SetElectronVelocity(const double vx, const double vy,
                                         const double vz) {

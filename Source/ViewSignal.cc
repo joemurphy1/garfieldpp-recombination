@@ -7,6 +7,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Sensor.hh"
 
@@ -14,14 +15,11 @@ namespace Garfield {
 
 ViewSignal::ViewSignal() : ViewBase("ViewSignal") {}
 
-ViewSignal::ViewSignal(Sensor* sensor) : ViewSignal() { m_sensor = sensor; }
+ViewSignal::ViewSignal(Sensor* sensor) : ViewSignal() { SetSensor(sensor); }
 
-void ViewSignal::SetSensor(Sensor* s) {
-  if (!s) {
-    std::cerr << m_className << "::SetSensor: Null pointer.\n";
-    return;
-  }
-  m_sensor = s;
+void ViewSignal::SetSensor(Sensor* sensor) {
+  if (!sensor) throw Exception("::SetSensor: Null pointer");
+  m_sensor = sensor;
 }
 
 void ViewSignal::SetRangeX(const double xmin, const double xmax) {

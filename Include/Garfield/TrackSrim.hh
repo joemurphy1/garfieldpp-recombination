@@ -19,7 +19,8 @@ class TrackSrim : public Track {
   /// Default constructor
   TrackSrim();
   /// Constructor
-  TrackSrim(Sensor* sensor);
+  explicit TrackSrim(Sensor* sensor);
+  explicit TrackSrim(std::nullptr_t) = delete;
   /// Destructor
   virtual ~TrackSrim() = default;
 

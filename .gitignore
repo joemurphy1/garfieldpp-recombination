@@ -13,6 +13,8 @@ Build
 .build
 .cache
 
+.codacy
+
 Doc/UserGuide/UserGuide.aux
 Doc/UserGuide/UserGuide.bbl
 Doc/UserGuide/UserGuide.blg

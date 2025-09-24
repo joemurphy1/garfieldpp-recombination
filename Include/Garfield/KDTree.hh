@@ -23,8 +23,8 @@ class KDTreeNode;
 /// Search result
 
 struct KDTreeResult {
-  double dis;       //< square Euclidean distance
-  std::size_t idx;  //< index
+  double dis{0.};      //< square Euclidean distance
+  std::size_t idx{0};  //< index
 };
 
 /// Main k-d tree class.
@@ -35,8 +35,8 @@ class KDTree {
   // Reference to the underlying data to be included in the tree.
   const KDTreeArray& m_data;
 
-  std::size_t m_dim = 3;
-  bool sort_results = false;
+  std::size_t m_dim{3};
+  bool sort_results{false};
 
  public:
   KDTree() = delete;
@@ -110,20 +110,20 @@ class KDTreeNode {
   friend class KDTree;
 
   // Dimension to cut.
-  std::size_t cut_dim = 0;
+  std::size_t cut_dim{0};
   // Cut value.
-  double cut_val = 0.;
-  double cut_val_left = 0.;
-  double cut_val_right = 0.;
+  double cut_val{0.};
+  double cut_val_left{0.};
+  double cut_val_right{0.};
   // Extents in index array for searching
-  int m_l = 0;
-  int m_u = 0;
+  int m_l{0};
+  int m_u{0};
   // [min,max] of the box enclosing all points
   std::vector<std::array<double, 2> > box;
 
   // Pointers to left and right nodes.
-  KDTreeNode* left = nullptr;
-  KDTreeNode* right = nullptr;
+  KDTreeNode* left{nullptr};
+  KDTreeNode* right{nullptr};
 
   // Recursive innermost core routines for searching.
   void search_n(const int idx0, const int nd, const unsigned int nn, double& r2,

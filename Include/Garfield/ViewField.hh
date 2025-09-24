@@ -20,16 +20,17 @@ class ViewField : public ViewBase {
   /// Default constructor.
   ViewField();
   /// Constructor from sensor.
-  ViewField(Sensor* sensor);
+  explicit ViewField(Sensor* sensor);
+  explicit ViewField(std::nullptr_t) = delete;
   /// Constructor from component.
-  ViewField(Component* component);
+  explicit ViewField(Component* component);
   /// Destructor.
   ~ViewField() = default;
 
   /// Set the sensor for which to plot the field.
-  void SetSensor(Sensor* s);
+  void SetSensor(Sensor* sensor);
   /// Set the component for which to plot the field.
-  void SetComponent(Component* c);
+  void SetComponent(Component* component);
 
   /// Set the plot limits for the potential.
   void SetVoltageRange(const double vmin, const double vmax);

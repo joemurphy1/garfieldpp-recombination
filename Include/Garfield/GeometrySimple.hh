@@ -2,6 +2,8 @@
 #define G_GEOMETRY_SIMPLE_H
 
 #include <array>
+#include <cstddef>
+#include <utility>
 #include <vector>
 
 #include "Garfield/Geometry.hh"
@@ -16,22 +18,21 @@ class GeometrySimple : public Geometry {
   GeometrySimple();
   /// Destructor
   virtual ~GeometrySimple() = default;
+  /// Set a background medium.
+  void SetMedium(Medium* medium);  // TODO rename this !
 
   Medium* GetMedium(const double x, const double y, const double z,
                     const bool tesselated = false) const override;
 
-  size_t GetNumberOfSolids() const override { return m_solids.size(); }
-  Solid* GetSolid(const size_t i) const override;
-  Solid* GetSolid(const size_t i, Medium*& medium) const override;
+  std::size_t GetNumberOfSolids() const override { return m_solids.size(); }
+  Solid* GetSolid(const std::size_t i) const override;
+  Solid* GetSolid(const std::size_t i, Medium*& medium) const override;
 
   /// Add a solid to the geometry, together with the medium inside.
   void AddSolid(Solid* s, Medium* m);
   /// Get the solid at a given location (x, y, z).
   Solid* GetSolid(const double x, const double y, const double z,
                   const bool tesselated = false) const;
-
-  /// Set a background medium.
-  void SetMedium(Medium* medium) { m_medium = medium; }
 
   /// Reset the geometry.
   void Clear();
@@ -60,15 +61,15 @@ class GeometrySimple : public Geometry {
   /// List of solids and associated media.
   std::vector<std::pair<Solid*, Medium*> > m_solids;
   /// Background medium.
-  Medium* m_medium = nullptr;
+  Medium* m_medium{nullptr};
 
   // Bounding box ranges
-  bool m_hasBoundingBox = false;
+  bool m_hasBoundingBox{false};
   std::array<double, 3> m_bbMin = {{0., 0., 0.}};
   std::array<double, 3> m_bbMax = {{0., 0., 0.}};
 
   /// Switch on/off debugging messages.
-  bool m_debug = false;
+  bool m_debug{false};
 };
 }  // namespace Garfield
 

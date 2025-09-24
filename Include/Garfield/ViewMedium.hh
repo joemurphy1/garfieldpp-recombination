@@ -18,7 +18,8 @@ class ViewMedium : public ViewBase {
   /// Default constructor.
   ViewMedium();
   /// Constructor.
-  ViewMedium(Medium* medium);
+  explicit ViewMedium(Medium* medium);
+  explicit ViewMedium(std::nullptr_t) = delete;
   /// Destructor.
   ~ViewMedium() = default;
 

@@ -6,6 +6,7 @@
 #include <string>
 
 #include "Garfield/Component.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
 #include "Garfield/Numerics.hh"
@@ -85,14 +86,10 @@ void AvalancheMC::GetAvalancheSize(unsigned int& ne, unsigned int& ni) const {
   ni = std::max(m_nIons, m_nHoles);
 }
 
-AvalancheMC::AvalancheMC(Sensor* sensor) : m_sensor(sensor) {}
+AvalancheMC::AvalancheMC(Sensor* sensor) { SetSensor(sensor); }
 
 void AvalancheMC::SetSensor(Sensor* sensor) {
-  if (!sensor) {
-    std::cerr << m_className << "::SetSensor: Null pointer.\n";
-    return;
-  }
-
+  if (!m_sensor) throw Exception("sensor can't be nullptr");
   m_sensor = sensor;
 }
 

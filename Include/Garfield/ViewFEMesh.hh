@@ -29,7 +29,8 @@ class ViewFEMesh : public ViewBase {
   /// Default constructor.
   ViewFEMesh();
   /// Constructor.
-  ViewFEMesh(Component* cmp);
+  explicit ViewFEMesh(Component* cmp);
+  explicit ViewFEMesh(std::nullptr_t) = delete;
   /// Destructor.
   ~ViewFEMesh();
 

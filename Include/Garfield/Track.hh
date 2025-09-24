@@ -19,6 +19,8 @@ class Track {
   Track(const std::string& name);
   /// Destructor
   virtual ~Track() = default;
+  /// Set the sensor through which to transport the particle.
+  void SetSensor(Sensor* sensor);
 
   /// Set the type of charged particle.
   /// - electron,e-
@@ -65,9 +67,6 @@ class Track {
   double GetCharge() const { return m_q; }
   /// Get the mass [eV / c2] of the projectile.
   double GetMass() const { return m_mass; }
-
-  /// Set the sensor through which to transport the particle.
-  void SetSensor(Sensor* s);
 
   /// Calculate a new track starting from (x0, y0, z0) at time t0
   /// in direction (dx0, dy0, dz0).

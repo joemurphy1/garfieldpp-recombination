@@ -18,6 +18,7 @@
 
 #include "Garfield/Component.hh"
 #include "Garfield/ComponentCST.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/ParticleTypes.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/TGeoTet.hh"
@@ -72,7 +73,10 @@ namespace Garfield {
 
 ViewFEMesh::ViewFEMesh() : ViewBase("ViewFEMesh") {}
 
-ViewFEMesh::ViewFEMesh(Component* cmp) : ViewFEMesh() { m_cmp = cmp; }
+ViewFEMesh::ViewFEMesh(Component* cmp) : ViewFEMesh() {
+  if (!cmp) throw Exception("component can't be null");
+  m_cmp = cmp;
+}
 
 ViewFEMesh::~ViewFEMesh() { Reset(); }
 

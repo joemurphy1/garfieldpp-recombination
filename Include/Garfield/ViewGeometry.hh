@@ -21,12 +21,13 @@ class ViewGeometry : public ViewBase {
   /// Default constructor.
   ViewGeometry();
   /// Constructor.
-  ViewGeometry(GeometrySimple* geo);
+  explicit ViewGeometry(GeometrySimple* geometry);
+  explicit ViewGeometry(std::nullptr_t) = delete;
   /// Destructor.
   ~ViewGeometry();
 
   /// Set the geometry to be drawn.
-  void SetGeometry(GeometrySimple* geo);
+  void SetGeometry(GeometrySimple* geometry);
   /// Draw the geometry.
   void Plot(const bool twod = false);
   /// Draw a cut through the geometry at the current viewing plane.

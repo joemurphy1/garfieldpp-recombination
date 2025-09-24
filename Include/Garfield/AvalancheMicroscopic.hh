@@ -26,7 +26,8 @@ class AvalancheMicroscopic {
   /// Default constructor
   AvalancheMicroscopic();
   /// Constructor
-  AvalancheMicroscopic(Sensor* sensor);
+  explicit AvalancheMicroscopic(Sensor* sensor);
+  explicit AvalancheMicroscopic(std::nullptr_t) = delete;
   /// Destructor
   ~AvalancheMicroscopic() = default;
 

@@ -28,7 +28,9 @@ class Sensor {
   ~Sensor() = default;
 
   /// Constructor from a single component.
-  Sensor(Component* comp);
+  explicit Sensor(Component* comp);
+  explicit Sensor(std::nullptr_t) = delete;
+
   /// Add a component.
   void AddComponent(Component* comp);
   /// Get the number of components attached to the sensor.
