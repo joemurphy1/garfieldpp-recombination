@@ -1082,7 +1082,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
       if (m_bDiffusion) {
         // correct the stepping from diffusion + charge distribution
-        DiffuseTimeStep(step, nEOut, std::round(nPOut),
+        DiffuseTimeStep(step, emag, nEOut, std::round(nPOut),
                         std::round(nNOut), iz, ir, gasGap);
       } else {
         // calculate steps and distribute charges (no diffusion)
@@ -1185,9 +1185,10 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
   return true;
 }
 
-void AvalancheGridSpaceCharge::DiffuseTimeStep(double dx, long nElectron,
-                                               double nPosIon, double nNegIon,
-                                               int iz, int ir, int gasGap) {
+void AvalancheGridSpaceCharge::DiffuseTimeStep(
+    const double dx, const double emag,
+    const long nE, const double nP, const double nN,
+    const int iz, const int ir, const int gasGap) {
   // Add diffusion onto the step dx
 
   // Minimum number of groups (same values as Lippmann).
@@ -1201,19 +1202,19 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(double dx, long nElectron,
   long rest = 0, groups = 0, groupSize = 0;
 
   for (const auto size : groupSizes) {
-    if (nElectron > nMinGroups * size) {
+    if (nE > nMinGroups * size) {
       groupSize = size;                            //< size of a single group
-      groups = std::floor(nElectron / groupSize);  //< real # groups
-      rest = nElectron - groups * groupSize;       //< rest
+      groups = std::floor(nE / groupSize);  //< real # groups
+      rest = nE - groups * groupSize;       //< rest
       break;
     }
   }
 
   // if electron are less than nMinGroups * GroupSize(-1) then we diffuse each
   // electron by itself:
-  if (nElectron <= nMinGroups * groupSizes.back()) {
+  if (nE <= nMinGroups * groupSizes.back()) {
     groupSize = 1;
-    groups = nElectron;
+    groups = nE;
     rest = 0;
   }
 
@@ -1221,13 +1222,13 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(double dx, long nElectron,
   double sinTheta = 0.;
   double cosTheta = 1.;
   auto &nd = m_grid[iz][ir];
-  double emag = Mag(nd.ez + m_ezBkg[gasGap], nd.er);
   if (emag > 1.e-8) {
-    cosTheta = (-(nd.ez + m_ezBkg[gasGap]) / emag);
-    sinTheta = (-(nd.er) / emag);
+    const double einv = 1. / emag;
+    cosTheta = (-(nd.ez + m_ezBkg[gasGap]) * einv);
+    sinTheta = (-(nd.er) * einv);
   }
 
-  double f = (double)groupSize / (double)nElectron;
+  double f = (double)groupSize / (double)nE;
   const double r = m_rGrid[ir];
   const double sqrtdx = std::sqrt(dx);
 
@@ -1235,7 +1236,7 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(double dx, long nElectron,
     // In the last loop we add the rest to the groupSize.
     if (group == groups - 1) {
       groupSize += rest;
-      f = (double)groupSize / (double)nElectron;
+      f = (double)groupSize / (double)nE;
     }
     // diffuse each group as if it is a particle.
     // (U,V,W) Local coord system along E field.
@@ -1257,13 +1258,13 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(double dx, long nElectron,
 
     // Distribute nodes and add electrons/ions to Holder.
     // Fractional ion number is allowed otherwise loss of ions.
-    DistributeCharges(groupSize, nPosIon * f, nNegIon * f, iz, ir, stepZ, stepR,
+    DistributeCharges(groupSize, nP * f, nN * f, iz, ir, stepZ, stepR,
                       gasGap);
   }
 }
 
-void AvalancheGridSpaceCharge::DistributeCharges(long nElectron, double nPosIon,
-                                                 double nNegIon, int iz, int ir,
+void AvalancheGridSpaceCharge::DistributeCharges(long nE, double nP,
+                                                 double nN, int iz, int ir,
                                                  double stepZ, double stepR,
                                                  int gasGap) {
   // distributes the charges from a movement in Z and R direction
@@ -1329,25 +1330,25 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nElectron, double nPosIon,
   if (ir1 > m_rSteps) ir1 = m_rSteps;
   if (ir2 > m_rSteps) ir2 = m_rSteps;
 
-  // add to the nodes the electrons travelled to (into nElectronHolder as they
+  // add to the nodes the electrons travelled to (into nEHolder as they
   // will mix)
-  if (nElectron > 200) {
-    m_grid[iz1][ir1].nEHolder += (long)std::round(nElectron * az * ar);
-    m_grid[iz1][ir2].nEHolder += (long)std::round(nElectron * az * br);
-    m_grid[iz2][ir1].nEHolder += (long)std::round(nElectron * bz * ar);
-    m_grid[iz2][ir2].nEHolder += (long)std::round(nElectron * bz * br);
+  if (nE > 200) {
+    m_grid[iz1][ir1].nEHolder += (long)std::round(nE * az * ar);
+    m_grid[iz1][ir2].nEHolder += (long)std::round(nE * az * br);
+    m_grid[iz2][ir1].nEHolder += (long)std::round(nE * bz * ar);
+    m_grid[iz2][ir2].nEHolder += (long)std::round(nE * bz * br);
 
     // add positive ions to the nodes (smeared values allowed)
-    m_grid[iz1][ir1].nPHolder += nPosIon * az * ar;
-    m_grid[iz1][ir2].nPHolder += nPosIon * az * br;
-    m_grid[iz2][ir1].nPHolder += nPosIon * bz * ar;
-    m_grid[iz2][ir2].nPHolder += nPosIon * bz * br;
+    m_grid[iz1][ir1].nPHolder += nP * az * ar;
+    m_grid[iz1][ir2].nPHolder += nP * az * br;
+    m_grid[iz2][ir1].nPHolder += nP * bz * ar;
+    m_grid[iz2][ir2].nPHolder += nP * bz * br;
 
     // add negative ions to the nodes (smeared values allowed)
-    m_grid[iz1][ir1].nNHolder += nNegIon * az * ar;
-    m_grid[iz1][ir2].nNHolder += nNegIon * az * br;
-    m_grid[iz2][ir1].nNHolder += nNegIon * bz * ar;
-    m_grid[iz2][ir2].nNHolder += nNegIon * bz * br;
+    m_grid[iz1][ir1].nNHolder += nN * az * ar;
+    m_grid[iz1][ir2].nNHolder += nN * az * br;
+    m_grid[iz2][ir1].nNHolder += nN * bz * ar;
+    m_grid[iz2][ir2].nNHolder += nN * bz * br;
 
   } else {
     // Too large movement of few electrons,
@@ -1355,9 +1356,9 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nElectron, double nPosIon,
     iz1 = (az >= bz) ? iz1 : iz2;
     ir1 = (ar >= br) ? ir1 : ir2;
 
-    m_grid[iz1][ir1].nEHolder += nElectron;
-    m_grid[iz1][ir1].nPHolder += nPosIon;
-    m_grid[iz1][ir1].nNHolder += nNegIon;
+    m_grid[iz1][ir1].nEHolder += nE;
+    m_grid[iz1][ir1].nPHolder += nP;
+    m_grid[iz1][ir1].nNHolder += nN;
   }
 }
 

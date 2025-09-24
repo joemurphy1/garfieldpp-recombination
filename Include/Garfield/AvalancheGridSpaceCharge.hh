@@ -195,8 +195,9 @@ class AvalancheGridSpaceCharge {
   bool TransportTimeStep();
 
   // Diffuses the electrons/nodes a timestep
-  void DiffuseTimeStep(double dx, long nElectron, double nPosIon,
-                       double nNegIon, int iz, int ir, int gasGap);
+  void DiffuseTimeStep(const double dx, const double emag,
+                       const long nE, const double nP, const double nN,
+                       const int iz, const int ir, const int gasGap);
 
   // Redistributes the charges
   void DistributeCharges(long nElectron, double nPosIon, double nNegIon, int iz,
