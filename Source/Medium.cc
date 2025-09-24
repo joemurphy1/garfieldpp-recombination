@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Numerics.hh"
 #include "Garfield/Random.hh"
@@ -68,31 +69,19 @@ Medium::Medium() : m_id(++m_idCounter) {
 Medium::~Medium() = default;
 
 void Medium::SetTemperature(const double t) {
-  if (t <= 0.) {
-    std::cerr << m_className << "::SetTemperature:\n"
-              << "    Temperature [K] must be greater than zero.\n";
-    return;
-  }
+  if (t <= 0.) throw Exception("Temperature [K] must be greater than zero");
   m_temperature = t;
   m_isChanged = true;
 }
 
 void Medium::SetPressure(const double p) {
-  if (p <= 0.) {
-    std::cerr << m_className << "::SetPressure:\n"
-              << "    Pressure [Torr] must be greater than zero.\n";
-    return;
-  }
+  if (p <= 0.) throw Exception("Pressure [Torr] must be greater than zero");
   m_pressure = p;
   m_isChanged = true;
 }
 
 void Medium::SetDielectricConstant(const double eps) {
-  if (eps < 1.) {
-    std::cerr << m_className << "::SetDielectricConstant:\n"
-              << "    Dielectric constant must be >= 1.\n";
-    return;
-  }
+  if (eps < 1.) throw Exception("Dielectric constant must be >= 1");
   m_epsilon = eps;
   m_isChanged = true;
 }
@@ -102,56 +91,32 @@ double Medium::GetMassDensity() const {
 }
 
 void Medium::GetComponent(const unsigned int i, std::string& label, double& f) {
-  if (i >= m_nComponents) {
-    std::cerr << m_className << "::GetComponent: Index out of range.\n";
-  }
-
+  if (i >= m_nComponents) throw Exception("Index out of range");
   label = m_name;
   f = 1.;
 }
 
 void Medium::SetAtomicNumber(const double z) {
-  if (z < 1.) {
-    std::cerr << m_className << "::SetAtomicNumber:\n"
-              << "    Atomic number must be >= 1.\n";
-    return;
-  }
+  if (z < 1.) throw Exception("Atomic number must be >= 1");
   m_z = z;
   m_isChanged = true;
 }
 
 void Medium::SetAtomicWeight(const double a) {
-  if (a <= 0.) {
-    std::cerr << m_className << "::SetAtomicWeight:\n"
-              << "    Atomic weight must be greater than zero.\n";
-    return;
-  }
+  if (a <= 0.) throw Exception("Atomic weight must be greater than zero");
   m_a = a;
   m_isChanged = true;
 }
 
 void Medium::SetNumberDensity(const double n) {
-  if (n <= 0.) {
-    std::cerr << m_className << "::SetNumberDensity:\n"
-              << "    Density [cm-3] must be greater than zero.\n";
-    return;
-  }
+  if (n <= 0.) throw Exception("Density [cm-3] must be greater than zero");
   m_density = n;
   m_isChanged = true;
 }
 
 void Medium::SetMassDensity(const double rho) {
-  if (rho <= 0.) {
-    std::cerr << m_className << "::SetMassDensity:\n"
-              << "    Density [g/cm3] must be greater than zero.\n";
-    return;
-  }
-
-  if (m_a <= 0.) {
-    std::cerr << m_className << "::SetMassDensity:\n"
-              << "    Atomic weight is not defined.\n";
-    return;
-  }
+  if (rho <= 0.) throw Exception("Density [g/cm3] must be greater than zero");
+  if (m_a <= 0.) throw Exception("Atomic weight is not defined");
   m_density = rho / (AtomicMassUnit * m_a);
   m_isChanged = true;
 }
