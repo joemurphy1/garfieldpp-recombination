@@ -155,7 +155,7 @@ AvalancheMicroscopic::AvalancheMicroscopic(Sensor* sensor)
 }
 
 void AvalancheMicroscopic::SetSensor(Sensor* sensor) {
-  if (!m_sensor) throw Exception("sensor can't be nullptr");
+  if (!sensor) throw Exception("sensor can't be nullptr");
   m_sensor = sensor;
 }
 

@@ -3,6 +3,7 @@
 #include <limits>
 
 #include "Garfield/Medium.hh"
+#include "Garfield/Exceptions.hh"
 #include "wcpplib/clhep_units/WSystemOfUnits.h"
 #include "wcpplib/geometry/vec.h"
 #include "wcpplib/particle/fieldmap.h"
@@ -15,8 +16,12 @@ class Sensor;
 class HeedFieldMap : public Heed::fieldmap {
  public:
   HeedFieldMap() = default;
-
-  void SetSensor(Sensor* sensor) { m_sensor = sensor; }
+  HeedFieldMap(Sensor* sensor) { SetSensor(sensor); }
+  void SetSensor(Sensor* sensor)
+  { 
+    if(!sensor) throw Exception("Sensor* is nullptr");
+    m_sensor = sensor;
+  }
   void SetCentre(const double x, const double y, const double z) {
     m_x = x;
     m_y = y;
