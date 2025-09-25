@@ -220,7 +220,7 @@ void AvalancheGridSpaceCharge::Reset() {
   m_vCoNGasLayer.resize(0);
   m_vElectrons.resize(0);
   m_vNElectronEvolution.resize(0);
-  m_grid.resize(0);
+  m_grid.clear();
   m_vYPointInGasGap.resize(0);
   m_vIndexGasGaps = {0};
   m_ezBkg = {0};
@@ -237,10 +237,9 @@ void AvalancheGridSpaceCharge::Reset() {
 void AvalancheGridSpaceCharge::Set2dGrid(const double zmin, const double zmax,
                                          const int zsteps, const double rmax,
                                          const int rsteps) {
-  m_isgridset = true;
-
-  if (zmin >= zmax || zsteps <= 0 || 0 >= rmax || rsteps <= 0)
+  if (zmin >= zmax || zsteps <= 0 || 0 >= rmax || rsteps <= 0) {
     throw Exception("Grid is not properly defined");
+  }
 
   // set z grid
   m_zSteps = zsteps;
@@ -557,7 +556,7 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
                                             const double z, const long n,
                                             const int gasLayer) {
   // Snap electron from AvalancheMicroscopic to the predefined grid
-  if (!m_isgridset) throw Exception("Grid is not defined");
+  if (m_grid.empty()) throw Exception("Grid is not defined");
 
   // y in micro is z in grid space-charge
   const double r = Mag(x - m_vCoNGasLayer[gasLayer][0], 
@@ -971,7 +970,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
         // update space charge field on each node
         int gasGapIndex = m_grid[iz][ir].gasGapIndex;
-        m_vRingSystems[gasGapIndex].ElectricField(ri,zi,0.,nd.er,nd.ez,dummy,m,stat);
+        m_vRingSystems[gasGapIndex].ElectricField(ri, zi, 0., nd.er, nd.ez, dummy, m, stat);
         
         // check if local field reaches background field values.
         const double emag = Mag(nd.ez + m_ezBkg[gasGap], nd.er);
@@ -1066,12 +1065,12 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
       if (m_bDiffusion) {
         // correct the stepping from diffusion + charge distribution
-        DiffuseTimeStep(step, emag, nEOut, std::round(nPOut),
-                        std::round(nNOut), iz, ir, gasGap);
+        DiffuseTimeStep(step, emag, nEOut, std::round(nPOut), std::round(nNOut),
+                        iz, ir, gasGap);
       } else {
         // calculate steps and distribute charges (no diffusion)
-        DistributeCharges(nEOut, std::round(nPOut),
-                          std::round(nNOut), iz, ir, stepZ, stepR, gasGap);
+        DistributeCharges(nEOut, std::round(nPOut), std::round(nNOut), 
+                          iz, ir, stepZ, stepR, gasGap);
       }
 
       if (m_sensor->GetNumberOfElectrodes() > 0) {
@@ -1179,7 +1178,7 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(
     1500, 800, 400, 200, 100,
       50,   20,  10,  5,   2};  
 
-  // Diffuse in at least nMinGroups groups of size groupSize:
+  // Split in at least nMinGroups groups of size groupSize.
   long rest = 0, groups = 0, groupSize = 0;
   for (const auto size : groupSizes) {
     if (nE > nMinGroups * size) {
@@ -1190,15 +1189,14 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(
     }
   }
 
-  // if electron are less than nMinGroups * GroupSize(-1) then we diffuse each
-  // electron by itself:
+  // If there are too few electrons we diffuse each electron individually.
   if (nE <= nMinGroups * groupSizes.back()) {
     groupSize = 1;
     groups = nE;
     rest = 0;
   }
 
-  // calculate diffusion and add to transport step
+  // Calculate diffusion and add to transport step.
   double sinTheta = 0.;
   double cosTheta = 1.;
   auto &nd = m_grid[iz][ir];
@@ -1219,13 +1217,14 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(
       f = (double)groupSize / (double)nE;
     }
     // Diffuse each group as if it is a particle.
-    // (U,V,W) Local coord system along E field.
-    // W is along E field, V is along e_phi and U perpendicular V and W
+    // Calculate a diffusion step in a local coordinate system (U,V,W)
+    // where W is along the E field, V is along e_phi,
+    // and U is perpendicular to V and W.
     const double dU = RndmGaussian(0, nd.dSigmaT * sqrtdx);
     const double dV = RndmGaussian(0, nd.dSigmaT * sqrtdx);
     const double dW = RndmGaussian(dx, nd.dSigmaL * sqrtdx);
 
-    // transform to avalanche coordinate system
+    // Transform to avalanche coordinate system
     // (Z,R,Y) where R mimics an X axis and Y is perpendicular to R and Z
     const double dX = cosTheta * dU + sinTheta * dW;
     // dY = dV
@@ -1235,7 +1234,6 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(
     // calculate the change of radius
     // sign correct and stepR >= -r
     const double stepR = std::sqrt((r + dX) * (r + dX) + dV * dV) - r; 
-
 
     // Distribute nodes and add electrons/ions to Holder.
     // Fractional ion number is allowed otherwise loss of ions.
@@ -1331,8 +1329,8 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nE, double nP,
     m_grid[iz2][ir2].nNHolder += nN * bz * br;
 
   } else {
-    // Too large movement of few electrons,
-    // only move them to 1 node (instead of 4).
+    // Too few electrons.
+    // Only move them to 1 node (instead of 4).
     iz1 = (az >= bz) ? iz1 : iz2;
     ir1 = (ar >= br) ? ir1 : ir2;
 

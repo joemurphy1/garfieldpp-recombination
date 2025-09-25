@@ -49,7 +49,7 @@ class AvalancheGridSpaceCharge {
   void EnableSpaceChargeEffect(const bool option = true) {
     m_bSpaceCharge = option;
     if (option) {
-      if (!m_isgridset) {
+      if (m_grid.empty()) {
         throw std::runtime_error(m_className +
                                  "::EnableSpaceChargeEffect: use Set2dGrid() "
                                  "before enabling space charge.");
@@ -253,7 +253,6 @@ class AvalancheGridSpaceCharge {
   double m_rStepSize{0.};       ///< Distance between the grid points.
   double m_rInvStep{0.};        ///< Inverse of the grid spacing.
 
-  bool m_isgridset{false};  ///< Keeps track if the grid has been defined.
   long m_nTotElectron{0};   ///< Total amount of electrons at time step.
   long m_nTotPosIons{0};    ///< total amount of charge created
 
