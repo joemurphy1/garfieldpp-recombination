@@ -89,7 +89,7 @@ void AvalancheMC::GetAvalancheSize(unsigned int& ne, unsigned int& ni) const {
 AvalancheMC::AvalancheMC(Sensor* sensor) { SetSensor(sensor); }
 
 void AvalancheMC::SetSensor(Sensor* sensor) {
-  if (!m_sensor) throw Exception("sensor can't be nullptr");
+  if (!sensor) throw Exception("sensor can't be nullptr");
   m_sensor = sensor;
 }
 

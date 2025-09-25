@@ -53,7 +53,7 @@ namespace Garfield {
 AvalancheGrid::AvalancheGrid(Sensor *sensor) { SetSensor(sensor); }
 
 void AvalancheGrid::SetSensor(Sensor *sensor) {
-  if (!m_sensor) throw Exception("sensor can't be nullptr");
+  if (!sensor) throw Exception("sensor can't be nullptr");
   m_sensor = sensor;
 }
 
