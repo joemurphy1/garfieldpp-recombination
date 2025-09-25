@@ -1027,7 +1027,12 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
     // continue if not in gas gap
     const int gasGap = m_grid[iz][0].gasGapIndex;
     if (gasGap == -1) continue;
-
+    bool saturated = false;
+    if (!m_bSpaceCharge &&
+        (std::find(m_vSaturatedGaps.begin(), m_vSaturatedGaps.end(),
+                   gasGap) != m_vSaturatedGaps.end())) {
+      saturated = true;
+    }
     for (int ir = 0; ir <= m_rSteps; ir++) {
       auto &nd = m_grid[iz][ir];
 
@@ -1042,16 +1047,12 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       long nEOut = 0;
       double nPOut = 0.;
       double nNOut = 0.;
-      if (!m_bSpaceCharge &&
-          (std::find(m_vSaturatedGaps.begin(), m_vSaturatedGaps.end(),
-                     gasGap) != m_vSaturatedGaps.end()
-               ? true
-               : false)) {
+      if (saturated) {
         // Saturated case, don't evolve electrons in size
         nEOut = nd.nE;
         nPOut = 0,
         nNOut = 0;  //< strictly this is completely wrong because
-                         // SC-bremsung creates huge amounts of ions
+                    // SC-bremsung creates huge amounts of ions
       } else {
         AvalancheGain(step, nd.nE, nd.townsendPT, nd.attachmentPT,
                       nEOut, nPOut, nNOut);
