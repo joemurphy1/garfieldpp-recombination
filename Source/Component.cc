@@ -22,7 +22,7 @@ Component::Component(const std::string& name, Geometry* geometry)
 }
 
 void Component::SetGeometry(Geometry* geometry) {
-  if (!m_geometry) throw Exception("geometry can't be nullptr");
+  if (!geometry) throw Exception("geometry can't be nullptr");
   m_geometry = geometry;
 }
 
