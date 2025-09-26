@@ -78,7 +78,7 @@ void SolidRidge::SetRidgeHeight(const double hz) {
 
 bool SolidRidge::SolidPanels(std::vector<Panel>& panels) {
   const auto id = GetId();
-  const unsigned int nPanels = panels.size();
+  const std::size_t nPanels = panels.size();
   // Direction vector.
   const double fnorm = sqrt(m_dX * m_dX + m_dY * m_dY + m_dZ * m_dZ);
   if (fnorm <= 0) {
@@ -109,7 +109,7 @@ bool SolidRidge::SolidPanels(std::vector<Panel>& panels) {
   panels.push_back(std::move(base));
 
   // Side triangles at y=ymin and y=ymax.
-  for (unsigned int i = 0; i < 2; ++i) {
+  for (std::size_t i = 0; i < 2; ++i) {
     const double y = i == 0 ? -m_lY : +m_lY;
     ToGlobal(-m_lX, y, 0, xv0, yv0, zv0);
     ToGlobal(+m_lX, y, 0, xv1, yv1, zv1);
@@ -130,7 +130,7 @@ bool SolidRidge::SolidPanels(std::vector<Panel>& panels) {
   }
 
   // The roof, parts at +x and -x.
-  for (unsigned int i = 0; i < 2; ++i) {
+  for (std::size_t i = 0; i < 2; ++i) {
     const double x = i == 0 ? +m_lX : -m_lX;
     ToGlobal(x, -m_lY, 0, xv0, yv0, zv0);
     ToGlobal(x, +m_lY, 0, xv1, yv1, zv1);

@@ -72,9 +72,9 @@ void SolidExtrusion::SetProfile(const std::vector<double>& xp,
   if (np < 3) throw Exception("Too few points; rejected");
   if (!Polygon::NonTrivial(xp, yp)) throw Exception("Not a valid polygon");
   const auto it = std::max_element(xp.begin(), xp.end());
-  const unsigned int i0 = std::distance(xp.begin(), it);
-  const unsigned int i1 = i0 < np - 1 ? i0 + 1 : 0;
-  const unsigned int i2 = i1 < np - 1 ? i1 + 1 : 0;
+  const std::size_t i0 = std::distance(xp.begin(), it);
+  const std::size_t i1 = i0 < np - 1 ? i0 + 1 : 0;
+  const std::size_t i2 = i1 < np - 1 ? i1 + 1 : 0;
   const double det = (xp[i1] - xp[i0]) * (yp[i2] - yp[i0]) -
                      (xp[i2] - xp[i0]) * (yp[i1] - yp[i0]);
   if (det < 0.) {
@@ -112,14 +112,14 @@ bool SolidExtrusion::SolidPanels(std::vector<Panel>& panels) {
   const double b = m_dY / fnorm;
   const double c = m_dZ / fnorm;
   // Number of points
-  const unsigned int np = m_xp.size();
+  const std::size_t np = m_xp.size();
   // Create the top lid.
   if (m_toplid) {
     Panel panel;
     panel.a = a;
     panel.b = b;
     panel.c = c;
-    for (unsigned int i = 0; i < np; ++i) {
+    for (std::size_t i = 0; i < np; ++i) {
       // Rotate into place.
       double x, y, z;
       ToGlobal(m_xp[i], m_yp[i], m_lZ, x, y, z);
@@ -137,7 +137,7 @@ bool SolidExtrusion::SolidPanels(std::vector<Panel>& panels) {
     panel.a = -a;
     panel.b = -b;
     panel.c = -c;
-    for (unsigned int i = 0; i < np; ++i) {
+    for (std::size_t i = 0; i < np; ++i) {
       // Rotate into place.
       double x, y, z;
       ToGlobal(m_xp[i], m_yp[i], -m_lZ, x, y, z);
@@ -156,14 +156,14 @@ bool SolidExtrusion::SolidPanels(std::vector<Panel>& panels) {
     double x1, y1, z1;
     ToGlobal(m_xp.back(), m_yp.back(), +m_lZ, x1, y1, z1);
     // Go around the extrusion.
-    for (unsigned int i = 0; i < np; ++i) {
+    for (std::size_t i = 0; i < np; ++i) {
       // Bottom and top of the line along the axis of the extrusion.
       double x2, y2, z2;
       ToGlobal(m_xp[i], m_yp[i], +m_lZ, x2, y2, z2);
       double x3, y3, z3;
       ToGlobal(m_xp[i], m_yp[i], -m_lZ, x3, y3, z3);
       // Compute the normal vector.
-      const unsigned int k = i == 0 ? np - 1 : i - 1;
+      const std::size_t k = i == 0 ? np - 1 : i - 1;
       double xn = m_yp[k] - m_yp[i];
       double yn = m_xp[i] - m_xp[k];
       const double fn = sqrt(xn * xn + yn * yn);
@@ -226,12 +226,12 @@ void SolidExtrusion::Cut(const double x0, const double y0, const double z0,
   std::vector<double> xv;
   std::vector<double> yv;
   std::vector<double> zv;
-  const unsigned int np = m_xp.size();
+  const std::size_t np = m_xp.size();
   // Go through the lines of the top lid, first point.
   double x1, y1, z1;
   ToGlobal(m_xp.back(), m_yp.back(), m_lZ, x1, y1, z1);
   // Loop over the points.
-  for (unsigned int i = 0; i < np; ++i) {
+  for (std::size_t i = 0; i < np; ++i) {
     double x2, y2, z2;
     ToGlobal(m_xp[i], m_yp[i], m_lZ, x2, y2, z2);
     // Cut with the plane.
@@ -251,7 +251,7 @@ void SolidExtrusion::Cut(const double x0, const double y0, const double z0,
     // Go through the lines of the bottom lid, first point.
     ToGlobal(m_xp.back(), m_yp.back(), -m_lZ, x1, y1, z1);
     // Loop over the points.
-    for (unsigned int i = 0; i < np; ++i) {
+    for (std::size_t i = 0; i < np; ++i) {
       double x2, y2, z2;
       ToGlobal(m_xp[i], m_yp[i], -m_lZ, x2, y2, z2);
       double xc, yc, zc;
@@ -267,7 +267,7 @@ void SolidExtrusion::Cut(const double x0, const double y0, const double z0,
       z1 = z2;
     }
     // Go through the ribs.
-    for (unsigned int i = 0; i < np; ++i) {
+    for (std::size_t i = 0; i < np; ++i) {
       // Bottom and top of the line along the axis of the extrusion.
       ToGlobal(m_xp[i], m_yp[i], +m_lZ, x1, y1, z1);
       double x2, y2, z2;

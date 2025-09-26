@@ -35,7 +35,7 @@ SolidTube::SolidTube(const double cx, const double cy, const double cz,
 
 void SolidTube::UpdatePolygon() {
   std::lock_guard<std::mutex> guard(m_mutex);
-  const unsigned int nP = 4. * (m_n - 1);
+  const std::size_t nP = 4. * (m_n - 1);
   const double alpha = Pi / nP;
   const double calpha = cos(alpha);
   // Set the radius of the approximating polygon.
@@ -54,7 +54,7 @@ void SolidTube::UpdatePolygon() {
   m_ypO.clear();
   m_xpI.clear();
   m_ypI.clear();
-  for (unsigned int i = 0; i < nP; ++i) {
+  for (std::size_t i = 0; i < nP; ++i) {
     const double phi = m_rot + HalfPi * i / (m_n - 1.);
     const double cphi = cos(phi);
     const double sphi = sin(phi);
@@ -124,7 +124,7 @@ void SolidTube::SetHalfLength(const double lz) {
   UpdatePolygon();
 }
 
-void SolidTube::SetSectors(const unsigned int n) {
+void SolidTube::SetSectors(const std::size_t n) {
   if (n < 1) throw Exception("Number must be > 0");
   m_n = n;
   UpdatePolygon();
@@ -141,7 +141,7 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
     return false;
   }
 
-  const unsigned int nPoints = 4 * (m_n - 1);
+  const std::size_t nPoints = 4 * (m_n - 1);
   // Create the top lid(s).
   if (m_toplid) {
     const double a = m_cPhi * m_sTheta;
@@ -156,7 +156,7 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
       double xv1, yv1, zv1;
       ToGlobal(m_rpO * calpha, m_rpO * salpha, +m_lZ, xv1, yv1, zv1);
       // Go around the cylinder.
-      for (unsigned int i = 0; i < nPoints; ++i) {
+      for (std::size_t i = 0; i < nPoints; ++i) {
         alpha += HalfPi / (m_n - 1.);
         calpha = cos(alpha);
         salpha = sin(alpha);
@@ -190,7 +190,7 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
       std::vector<double> yv;
       std::vector<double> zv;
       const double r = m_rpO;
-      for (unsigned int i = 1; i <= nPoints; i++) {
+      for (std::size_t i = 1; i <= nPoints; i++) {
         const double alpha = m_rot + HalfPi * (i - 1.) / (m_n - 1.);
         // Rotate into place.
         double x, y, z;
@@ -225,7 +225,7 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
       double xv1, yv1, zv1;
       ToGlobal(m_rpO * calpha, m_rpO * salpha, -m_lZ, xv1, yv1, zv1);
       // Go around the cylinder.
-      for (unsigned int i = 0; i < nPoints; ++i) {
+      for (std::size_t i = 0; i < nPoints; ++i) {
         alpha += HalfPi / (m_n - 1.);
         calpha = cos(alpha);
         salpha = sin(alpha);
@@ -259,7 +259,7 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
       std::vector<double> yv;
       std::vector<double> zv;
       const double r = m_rpO;
-      for (unsigned int i = 1; i <= nPoints; i++) {
+      for (std::size_t i = 1; i <= nPoints; i++) {
         const double alpha = m_rot + HalfPi * (i - 1.) / (m_n - 1.);
         // Rotate into place.
         double x, y, z;
@@ -281,8 +281,8 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
     }
   }
   // Create the side panels.
-  const unsigned int n = m_rpI > 0. ? 2 : 1;
-  for (unsigned int j = 0; j < n; ++j) {
+  const std::size_t n = m_rpI > 0. ? 2 : 1;
+  for (std::size_t j = 0; j < n; ++j) {
     const double r = j == 0 ? m_rpO : m_rpI;
     double u = r * cos(m_rot);
     double v = r * sin(m_rot);
@@ -292,7 +292,7 @@ bool SolidTube::SolidPanels(std::vector<Panel>& panels) {
     double xv1, yv1, zv1;
     ToGlobal(u, v, +m_lZ, xv1, yv1, zv1);
     // Go around the cylinder.
-    for (unsigned int i = 2; i <= nPoints + 1; i++) {
+    for (std::size_t i = 2; i <= nPoints + 1; i++) {
       // Bottom and top of the line along the axis of the cylinder.
       double alpha = m_rot + HalfPi * (i - 1.) / (m_n - 1.);
       u = r * cos(alpha);
@@ -358,14 +358,14 @@ void SolidTube::Cut(const double x0, const double y0, const double z0,
   std::vector<double> yv;
   std::vector<double> zv;
   double r = m_rpO;
-  const unsigned int nPoints = 4 * (m_n - 1);
+  const std::size_t nPoints = 4 * (m_n - 1);
   const double dphi = HalfPi / (m_n - 1.);
   // Go through the lines of the top and bottom lids.
   for (const auto zLid : {-m_lZ, +m_lZ}) {
     double x1, y1, z1;
     ToGlobal(r * cos(m_rot), r * sin(m_rot), zLid, x1, y1, z1);
     // Loop over the points.
-    for (unsigned int i = 2; i <= nPoints + 1; ++i) {
+    for (std::size_t i = 2; i <= nPoints + 1; ++i) {
       const double phi = m_rot + (i - 1.) * dphi;
       double x2, y2, z2;
       ToGlobal(r * cos(phi), r * sin(phi), zLid, x2, y2, z2);
@@ -384,7 +384,7 @@ void SolidTube::Cut(const double x0, const double y0, const double z0,
     }
   }
   // Go through the ribs.
-  for (unsigned int i = 2; i <= nPoints + 1; ++i) {
+  for (std::size_t i = 2; i <= nPoints + 1; ++i) {
     // Bottom and top of the line along the axis of the cylinder.
     const double phi = m_rot + (i - 1.) * dphi;
     const double u = r * cos(phi);
