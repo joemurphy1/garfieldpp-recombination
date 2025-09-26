@@ -12,7 +12,7 @@ class Shaper {
   /// Default constructor.
   Shaper() = delete;
   /// Constructor.
-  Shaper(const unsigned int n, const double tau, const double g,
+  Shaper(const std::size_t n, const double tau, const double g,
          std::string shaperType);
   /// Destructor.
   ~Shaper() = default;
@@ -34,7 +34,7 @@ class Shaper {
   /// Is it a bipolar shaper?
   bool IsBipolar() const { return (m_type == ShaperType::Bipolar); }
   /// Retrieve the parameters.
-  void GetParameters(unsigned int& n, double& tp) {
+  void GetParameters(std::size_t& n, double& tp) {
     n = m_n;
     tp = m_tp;
   }
@@ -46,7 +46,7 @@ class Shaper {
   enum class ShaperType { Unipolar = 0, Bipolar };
   ShaperType m_type{ShaperType::Unipolar};
   // Order of the shaper.
-  unsigned int m_n{1};
+  std::size_t m_n{1};
   // Time constant.
   double m_tau{1.};
   // Peaking time.

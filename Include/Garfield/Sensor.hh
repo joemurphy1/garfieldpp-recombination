@@ -36,11 +36,11 @@ class Sensor {
   /// Get the number of components attached to the sensor.
   std::size_t GetNumberOfComponents() const { return m_components.size(); }
   /// Retrieve the pointer to a given component.
-  Component* GetComponent(const unsigned int i);
+  Component* GetComponent(const std::size_t i);
   /// Activate/deactivate a given component.
-  void EnableComponent(const unsigned int i, const bool on);
+  void EnableComponent(const std::size_t i, const bool on);
   /// Activate/deactivate use of the magnetic field of a given component.
-  void EnableMagneticField(const unsigned int i, const bool on);
+  void EnableMagneticField(const std::size_t i, const bool on);
   /// Does the sensor have a non-zero magnetic field?
   bool HasMagneticField() const;
 
@@ -112,7 +112,7 @@ class Sensor {
    * \param nsteps number of bins
    */
   void SetTimeWindow(const double tstart, const double tstep,
-                     const unsigned int nsteps);
+                     const std::size_t nsteps);
   /// Retrieve the time window and binning.
   void GetTimeWindow(double& tstart, double& tstep, std::size_t& nsteps) const {
     tstart = m_tStart;
@@ -128,34 +128,34 @@ class Sensor {
   /// signal vector over a time bin (default: 0).
   /// The averaging is done with a \f$2\times navg + 1\f$ point
   /// Newton-Raphson integration.
-  void SetDelayedSignalAveragingOrder(const unsigned int navg) {
+  void SetDelayedSignalAveragingOrder(const std::size_t navg) {
     m_nAvgDelayedSignal = navg;
   }
 
   /// Set/override the signal in a given time bin explicitly.
-  void SetSignal(const std::string& label, const unsigned int bin,
+  void SetSignal(const std::string& label, const std::size_t bin,
                  const double signal);
   /// Set/override the signal.
   void SetSignal(const std::string& label, const std::vector<double>& ts,
                  const std::vector<double>& is);
   /// Retrieve the total signal for a given electrode and time bin.
-  double GetSignal(const std::string& label, const unsigned int bin);
+  double GetSignal(const std::string& label, const std::size_t bin);
   /// Retrieve the electron signal for a given electrode and time bin.
-  double GetSignal(const std::string& label, const unsigned int bin,
+  double GetSignal(const std::string& label, const std::size_t bin,
                    const int comp);
   /// Retrieve the prompt signal for a given electrode and time bin.
-  double GetPromptSignal(const std::string& label, const unsigned int bin);
+  double GetPromptSignal(const std::string& label, const std::size_t bin);
   /// Retrieve the delayed signal for a given electrode and time bin.
-  double GetDelayedSignal(const std::string& label, const unsigned int bin);
+  double GetDelayedSignal(const std::string& label, const std::size_t bin);
   /// Retrieve the electron signal for a given electrode and time bin.
-  double GetElectronSignal(const std::string& label, const unsigned int bin);
+  double GetElectronSignal(const std::string& label, const std::size_t bin);
   /// Retrieve the ion or hole signal for a given electrode and time bin.
-  double GetIonSignal(const std::string& label, const unsigned int bin);
+  double GetIonSignal(const std::string& label, const std::size_t bin);
   /// Retrieve the delayed electron signal for a given electrode and time bin.
   double GetDelayedElectronSignal(const std::string& label,
-                                  const unsigned int bin);
+                                  const std::size_t bin);
   /// Retrieve the delayed ion/hole signal for a given electrode and time bin.
-  double GetDelayedIonSignal(const std::string& label, const unsigned int bin);
+  double GetDelayedIonSignal(const std::string& label, const std::size_t bin);
   /// Calculated using the weighting potentials at the start and end points.
   double GetInducedCharge(const std::string& label);
 
@@ -233,7 +233,7 @@ class Sensor {
    * \param level threshold (should correspond to the value requested).
    * \param rise flag whether the crossing is on a rising or falling slope.
    */
-  bool GetThresholdCrossing(const unsigned int i, double& time, double& level,
+  bool GetThresholdCrossing(const std::size_t i, double& time, double& level,
                             bool& rise) const;
 
   /// Calculate the signal from a drift line using the
@@ -294,7 +294,7 @@ class Sensor {
   double IntegrateFluxLine(const double x0, const double y0, const double z0,
                            const double x1, const double y1, const double z1,
                            const double xp, const double yp, const double zp,
-                           const unsigned int nI, const int isign = 0);
+                           const std::size_t nI, const int isign = 0);
   // TODO!
   double GetTotalInducedCharge(const std::string& label);
 
@@ -333,12 +333,12 @@ class Sensor {
   // Time window for signals
   double m_tStart{0.};
   double m_tStep{10.};
-  unsigned int m_nTimeBins{200};
-  unsigned int m_nEvents{0};
+  std::size_t m_nTimeBins{200};
+  std::size_t m_nEvents{0};
 
   bool m_delayedSignal{false};
   std::vector<double> m_delayedSignalTimes;
-  unsigned int m_nAvgDelayedSignal{0};
+  std::size_t m_nAvgDelayedSignal{0};
 
   // Transfer function
   std::function<double(double)> m_fTransfer;
@@ -375,15 +375,15 @@ class Sensor {
   void FillSignal(Electrode& electrode, const double q,
                   const std::vector<double>& ts, const std::vector<double>& is,
                   const int navg, const bool delayed = false);
-  void FillBin(Electrode& electrode, const unsigned int bin,
-               const double signal, const bool electron, const bool delayed);
+  void FillBin(Electrode& electrode, const std::size_t bin, const double signal,
+               const bool electron, const bool delayed);
 
   void IntegrateSignal(Electrode& electrode);
   void ConvoluteSignal(Electrode& electrode, const std::vector<double>& tab);
   bool ConvoluteSignalFFT();
   bool ConvoluteSignalFFT(const std::string& label);
   void ConvoluteSignalFFT(Electrode& electrode, const std::vector<double>& tab,
-                          const unsigned int nn);
+                          const std::size_t nn);
   // Evaluate the integral over the transfer function squared.
   double TransferFunctionSq();
   double InterpolateTransferFunctionTable(const double t) const;
