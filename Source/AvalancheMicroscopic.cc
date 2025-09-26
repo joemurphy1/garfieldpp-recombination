@@ -521,9 +521,9 @@ bool AvalancheMicroscopic::TransportElectrons(std::vector<Seed>& stack,
   double stack_time_cpu{0};
   double process_time_gpu{0};
   double stack_time_gpu{0};
-  unsigned int num_curr_particles{0};
-  unsigned int num_new_particles_gpu{0};
-  unsigned int num_curr_particles_gpu{0};
+  std::size_t num_curr_particles{0};
+  std::size_t num_new_particles_gpu{0};
+  std::size_t num_curr_particles_gpu{0};
 
   while ((m_maxNumShowerLoops == -1) || (loop_count < m_maxNumShowerLoops)) {
     if (m_showProgress) {

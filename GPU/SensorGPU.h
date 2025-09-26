@@ -41,8 +41,8 @@ class SensorGPU {
   // Time window for signals
   double m_tStart{0.};
   double m_tStep{10.};
-  unsigned int m_nTimeBins{200};
-  unsigned int m_nEvents{0};
+  std::size_t m_nTimeBins{200};
+  std::size_t m_nEvents{0};
 
   // User bounding box
   double m_xMinUser{0.};
@@ -53,7 +53,7 @@ class SensorGPU {
   double m_zMaxUser{0.};
   bool m_hasUserArea{false};
 
-  __device__ void FillBin(ElectrodeGPU& electrode, const unsigned int bin,
+  __device__ void FillBin(ElectrodeGPU& electrode, const std::size_t bin,
                           const double signal, const bool electron,
                           const bool delayed, const int particle_idx);
 };

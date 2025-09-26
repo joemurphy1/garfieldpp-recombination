@@ -20,7 +20,7 @@ double m_lnStep{0.};
 /// Flag enabling/disabling output of cross-section table to file
 bool m_useCsOutput{false};
 /// Number of different cross-section types in the current gas mixture
-unsigned int m_nTerms{0};
+std::size_t m_nTerms{0};
 /// Sample secondary electron energies using Opal-Beaty parameterisation
 bool m_useOpalBeaty{true};
 /// Sample secondary electron energies using Green-Sawada parameterisation
@@ -65,13 +65,13 @@ double m_cfNull{0.};
 double m_wOpalBeaty[Garfield::Magboltz::nMaxLevels];
 double m_yFluorescence[Garfield::Magboltz::nMaxLevels];
 
-unsigned int m_nAuger1[Garfield::Magboltz::nMaxLevels];
-unsigned int m_nAuger2[Garfield::Magboltz::nMaxLevels];
+std::size_t m_nAuger1[Garfield::Magboltz::nMaxLevels];
+std::size_t m_nAuger2[Garfield::Magboltz::nMaxLevels];
 /// Energy imparted to Auger electrons
 double m_eAuger1[Garfield::Magboltz::nMaxLevels];
 double m_eAuger2[Garfield::Magboltz::nMaxLevels];
 
-unsigned int m_nFluorescence[Garfield::Magboltz::nMaxLevels];
+std::size_t m_nFluorescence[Garfield::Magboltz::nMaxLevels];
 double m_eFluorescence[Garfield::Magboltz::nMaxLevels];
 double m_rgas[Garfield::Magboltz::MaxNumberGas];
 double m_s2[Garfield::Magboltz::MaxNumberGas];

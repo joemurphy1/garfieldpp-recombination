@@ -30,8 +30,7 @@ __device__ void RndmDirectionGPU(cuda_t& dx, cuda_t& dy, cuda_t& dz,
   dz = length * ctheta;
 }
 
-__global__ void initCURandStates_d(curandState* state,
-                                   const unsigned int seed) {
+__global__ void initCURandStates_d(curandState* state, const std::size_t seed) {
   int tid = threadIdx.x + blockIdx.x * blockDim.x;
   if (tid < MAXSTACKSIZE) curand_init(seed, tid, 0, &state[tid]);
 }
@@ -40,7 +39,7 @@ RandomEngineGPU::RandomEngineGPU() {}
 
 RandomEngineGPU::~RandomEngineGPU() {}
 
-double RandomEngineGPU::initCURandStates(const unsigned int seed) {
+double RandomEngineGPU::initCURandStates(const std::size_t seed) {
   checkCudaErrors(
       cudaMalloc(&d_curand_states, MAXSTACKSIZE * sizeof(curandState)));
   initCURandStates_d<<<1 + MAXSTACKSIZE / 256, 256>>>(
@@ -53,7 +52,7 @@ void RandomEngineGPU::setRandomEngineOnDevice() {
 }
 
 __device__ cuda_t RandomEngineGPU::Draw() {
-  unsigned int tid = (threadIdx.x + blockIdx.x * blockDim.x);
+  std::size_t tid = (threadIdx.x + blockIdx.x * blockDim.x);
   return curand_uniform(&(d_curand_states[tid]));
 }
 
