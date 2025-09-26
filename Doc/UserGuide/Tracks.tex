@@ -349,8 +349,8 @@ The class \texttt{TrackTrim} allows one to import these data in Garfield
 and use them for simulating tracks. The function for 
 reading ion trajectories from an \texttt{EXYZ.txt} file is 
 \begin{lstlisting}
-bool ReadFile(const std::string& file, const unsigned int nIons = 0,
-              const unsigned int nSkip = 0);
+bool ReadFile(const std::string& file, const std::size_t nIons = 0,
+              const std::size_t nSkip = 0);
 \end{lstlisting}
 \begin{description}
   \item[file] name/path of the \texttt{EXYZ.txt} file to be loaded,

@@ -130,7 +130,7 @@ When determining the surface panels (\eg for use in neBEM),
 the cylinder is approximated as a polygon with a finite number of panels.
 The type of polygon to be used can be set using
 \begin{lstlisting}
-void SetSectors(const unsigned int n);
+void SetSectors(const std::size_t n);
 \end{lstlisting}
 The number of corners of the polygon equals $4(n - 1)$.
 Thus, $n = 2$ will produce a square, $n = 3$ an octagon.
@@ -195,7 +195,7 @@ When calculating surface panels (\eg for use in neBEM),
 the sphere is approximated by a set of parallelograms.
 The parameter $n$, set using
 \begin{lstlisting}
-void SetMeridians(const unsigned int n);
+void SetMeridians(const std::size_t n);
 \end{lstlisting} 
 specifies the number of meridians and also the number of parallels.
 
@@ -270,7 +270,7 @@ is available.
 Like in \texttt{SolidTube}, the type of polygon used for approximating the 
 hole when calculating the surface panels can be specified using 
 \begin{lstlisting}
-void SetSectors(const unsigned int n);
+void SetSectors(const std::size_t n);
 \end{lstlisting}
 
 \section{Ridge}

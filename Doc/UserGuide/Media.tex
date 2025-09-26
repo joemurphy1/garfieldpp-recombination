@@ -7,8 +7,8 @@ const std::string& GetName() const;
 For compound media (\textit{e.\,g.} gas mixtures), 
 the identifiers and fractions of the constituents are available via
 \begin{lstlisting}
-unsigned int GetNumberOfComponents();
-void GetComponent(const unsigned int i, std::string& label, double& f);
+std::size_t GetNumberOfComponents();
+void GetComponent(const std::size_t i, std::string& label, double& f);
 \end{lstlisting} 
 
 \section{Transport parameters}
@@ -168,12 +168,12 @@ are stored in the tables.
 The gas tables are interpolated using Newton polynomials. 
 The order of the interpolation polynomials can be set by means of
 \begin{lstlisting}
-void SetInterpolationMethodVelocity(const unsigned int intrp);
-void SetInterpolationMethodDiffusion(const unsigned int intrp);
-void SetInterpolationMethodTownsend(const unsigned int intrp);
-void SetInterpolationMethodAttachment(const unsigned int intrp);
-void SetInterpolationMethodIonMobility(const unsigned int intrp);
-void SetInterpolationMethodIonDissociation(const unsigned int intrp);
+void SetInterpolationMethodVelocity(const std::size_t intrp);
+void SetInterpolationMethodDiffusion(const std::size_t intrp);
+void SetInterpolationMethodTownsend(const std::size_t intrp);
+void SetInterpolationMethodAttachment(const std::size_t intrp);
+void SetInterpolationMethodIonMobility(const std::size_t intrp);
+void SetInterpolationMethodIonDissociation(const std::size_t intrp);
 \end{lstlisting}
 \begin{description}
 \item[intrp]
@@ -605,7 +605,7 @@ The parameters of the cross-section terms in the present gas mixture
 can be retrieved via
 \begin{lstlisting}
 int GetNumberOfLevels();
-bool GetLevel(const unsigned int i, int& ngas, int& type, std::string& descr, double& e);
+bool GetLevel(const std::size_t i, int& ngas, int& type, std::string& descr, double& e);
 \end{lstlisting}
 \begin{description}
   \item[i] index of the cross-section term

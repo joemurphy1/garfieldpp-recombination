@@ -151,8 +151,8 @@ in each time bin, the array of $\left(t_{j}, i_{j}\right)$ is interpolated
 (linearly) and then integrated using Simpson's rule over $2n_\text{avg} + 1$ points. The parameter $n_\text{avg}$ defaults to 2 for \texttt{DriftLineRKF} 
 and 1 for \texttt{AvalancheMC} and can be set using
 \begin{lstlisting}
-void DriftLineRKF::SetSignalAveragingOrder(const unsigned int navg);
-void AvalancheMC::SetSignalAveragingOrder(const unsigned int navg);
+void DriftLineRKF::SetSignalAveragingOrder(const std::size_t navg);
+void AvalancheMC::SetSignalAveragingOrder(const std::size_t navg);
 \end{lstlisting} 
 
 \section{Readout electronics}
@@ -175,7 +175,7 @@ interpolation of the values provided in the table.
 A third option is to use a predefined expression, implemented in 
 the helper class \texttt{Shaper}. Its constructor,
 \begin{lstlisting}
-Shaper(const unsigned int n, const double tau, const double g, std::string shaperType);
+Shaper(const std::size_t n, const double tau, const double g, std::string shaperType);
 \end{lstlisting}
 takes four arguments: $n$ is the order of the shaper, 
 $\tau$ is the time constant, $g$ is the gain factor, 
