@@ -106,14 +106,14 @@ class TrackHeed : public Track {
    * \param e kinetic energy (only meaningful for delta-electrons)
    * \param dx,dy,dz direction vector (only meaningful for delta-electrons)
    **/
-  bool GetElectron(const unsigned int i, double& x, double& y, double& z,
+  bool GetElectron(const std::size_t i, double& x, double& y, double& z,
                    double& t, double& e, double& dx, double& dy, double& dz);
   /** Retrieve the properties of an ion in the current cluster.
    * \param i index of the ion
    * \param x,y,z coordinates of the ion
    * \param t time
    **/
-  bool GetIon(const unsigned int i, double& x, double& y, double& z,
+  bool GetIon(const std::size_t i, double& x, double& y, double& z,
               double& t) const;
 
   /** Retrieve the properties of an unabsorbed photon.
@@ -123,7 +123,7 @@ class TrackHeed : public Track {
    * \param e photon energy
    * \param dx,dy,dz direction vector
    **/
-  bool GetPhoton(const unsigned int i, double& x, double& y, double& z,
+  bool GetPhoton(const std::size_t i, double& x, double& y, double& z,
                  double& t, double& e, double& dx, double& dy,
                  double& dz) const;
 
@@ -318,7 +318,7 @@ class TrackHeed : public Track {
   // Energy mesh
   double m_emin{2.e-6};
   double m_emax{2.e-1};
-  unsigned int m_nEnergyIntervals{200};
+  std::size_t m_nEnergyIntervals{200};
   std::unique_ptr<Heed::EnergyMesh> m_energyMesh;
 
   // Cross-sections

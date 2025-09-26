@@ -25,8 +25,8 @@ class TrackTrim : public Track {
   virtual ~TrackTrim() = default;
 
   /// Load data from an EXYZ.txt file.
-  bool ReadFile(const std::string& file, const unsigned int nIons = 0,
-                const unsigned int nSkip = 0);
+  bool ReadFile(const std::string& file, const std::size_t nIons = 0,
+                const std::size_t nSkip = 0);
   /// Print a summary of the available TRIM data.
   void Print();
 

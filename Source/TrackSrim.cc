@@ -90,7 +90,7 @@ bool TrackSrim::ReadFile(const std::string& file) {
               << " for reading.\n    The file perhaps does not exist.\n";
     return false;
   }
-  unsigned int nread = 0;
+  std::size_t nread = 0;
 
   // Read the header
   if (m_debug) {
@@ -174,7 +174,7 @@ bool TrackSrim::ReadFile(const std::string& file) {
   m_range.clear();
   m_transstraggle.clear();
   m_longstraggle.clear();
-  unsigned int ntable = 0;
+  std::size_t ntable = 0;
   while (fsrim.getline(line, size, '\n')) {
     nread++;
     if (strstr(line, "-----------") != NULL) break;
@@ -274,7 +274,7 @@ bool TrackSrim::ReadFile(const std::string& file) {
     return false;
   }
   scale *= 1.e3;
-  for (unsigned int i = 0; i < ntable; ++i) {
+  for (std::size_t i = 0; i < ntable; ++i) {
     m_emloss[i] *= scale;
     m_hdloss[i] *= scale;
   }
@@ -293,8 +293,8 @@ void TrackSrim::Print() {
             << "l straggle  t straggle\n"
             << "     [MeV]    [MeV/cm]    [MeV/cm]        [cm] "
             << "      [cm]        [cm]\n\n";
-  const unsigned int nPoints = m_emloss.size();
-  for (unsigned int i = 0; i < nPoints; ++i) {
+  const std::size_t nPoints = m_emloss.size();
+  for (std::size_t i = 0; i < nPoints; ++i) {
     printf("%10g  %10g  %10g  %10g  %10g  %10g\n", m_ekin[i],
            m_emloss[i] * m_rho, m_hdloss[i] * m_rho, m_range[i],
            m_longstraggle[i], m_transstraggle[i]);
@@ -321,11 +321,11 @@ void TrackSrim::Print() {
 }
 
 void TrackSrim::PlotEnergyLoss() {
-  const unsigned int nPoints = m_ekin.size();
+  const std::size_t nPoints = m_ekin.size();
   std::vector<double> yE;
   std::vector<double> yH;
   std::vector<double> yT;
-  for (unsigned int i = 0; i < nPoints; ++i) {
+  for (std::size_t i = 0; i < nPoints; ++i) {
     const double em = m_emloss[i] * m_rho;
     const double hd = m_hdloss[i] * m_rho;
     yE.push_back(em);
@@ -417,7 +417,7 @@ void TrackSrim::PlotStraggling() {
                        ";Ion energy [MeV];Straggling [cm]");
 
   // Make a graph for the 2 curves to plot.
-  const unsigned int nPoints = m_ekin.size();
+  const std::size_t nPoints = m_ekin.size();
   TGraph gr;
   gr.SetLineStyle(kSolid);
   gr.SetLineWidth(2);
@@ -469,18 +469,18 @@ bool TrackSrim::PreciseLoss(const double step, const double estart,
   // Precision aimed for.
   const double eps = 1.0e-2;
   // Number of intervals.
-  unsigned int ndiv = 1;
+  std::size_t ndiv = 1;
   // Loop until precision achieved
-  const unsigned int nMaxIter = 10;
+  const std::size_t nMaxIter = 10;
   bool converged = false;
-  for (unsigned int iter = 0; iter < nMaxIter; ++iter) {
+  for (std::size_t iter = 0; iter < nMaxIter; ++iter) {
     double e4 = estart;
     double e2 = estart;
     deem = 0.;
     dehd = 0.;
     // Compute rk2 and rk4 over the number of sub-divisions
     const double s = m_rho * step / ndiv;
-    for (unsigned int i = 0; i < ndiv; i++) {
+    for (std::size_t i = 0; i < ndiv; i++) {
       // rk2: initial point
       const double de21 = s * (DedxEM(e2) + DedxHD(e2));
       // Mid-way point
@@ -511,7 +511,7 @@ bool TrackSrim::PreciseLoss(const double step, const double estart,
       e4 -= (de41 + de44) / 6. + (de42 + de43) / 3.;
     }
     if (m_debug) {
-      printf("    Iteration %u has %u division(s). Losses:\n", iter, ndiv);
+      printf("    Iteration %lu has %lu division(s). Losses:\n", iter, ndiv);
       printf("      de4 = %12g, de2 = %12g MeV\n", estart - e2, estart - e4);
       printf("      em4 = %12g, hd4 = %12g MeV\n", deem, dehd);
     }
@@ -559,8 +559,8 @@ bool TrackSrim::EstimateRange(const double ekin, const double step,
   // Find a smaller step for which the energy loss is less than EKIN.
   double st2 = 0.5 * step;
   double de2 = de1;
-  const unsigned int nMaxIter = 20;
-  for (unsigned int iter = 0; iter < nMaxIter; ++iter) {
+  const std::size_t nMaxIter = 20;
+  for (std::size_t iter = 0; iter < nMaxIter; ++iter) {
     // See where we stand
     PreciseLoss(st2, ekin, deem, dehd);
     de2 = deem + dehd;
@@ -582,7 +582,7 @@ bool TrackSrim::EstimateRange(const double ekin, const double step,
     printf("    Step 2 = %g cm, dE 2 = %g MeV\n", st2, de2 - ekin);
   }
   // Now perform a bisection
-  for (unsigned int iter = 0; iter < nMaxIter; ++iter) {
+  for (std::size_t iter = 0; iter < nMaxIter; ++iter) {
     // Avoid division by zero.
     if (de2 == de1) {
       if (m_debug) {
@@ -727,8 +727,8 @@ bool TrackSrim::NewTrack(const double x0, const double y0, const double z0,
   // Header of debugging output.
   if (m_debug) {
     std::cout << hdr << "Track generation with the following parameters:\n";
-    const unsigned int nTable = m_ekin.size();
-    printf("      Table size           %u\n", nTable);
+    const std::size_t nTable = m_ekin.size();
+    printf("      Table size           %lu\n", nTable);
     printf("      Particle kin. energy %g MeV\n", ekin0);
     printf("      Particle mass        %g MeV\n", 1.e-6 * m_mion);
     printf("      Particle charge      %g\n", m_qion);
@@ -1102,8 +1102,8 @@ bool TrackSrim::SmallestStep(const double ekin, const double edens, double de,
   // Step size and energy loss
   double denow = de;
   double stpnow = step;
-  constexpr unsigned int nMaxIter = 10;
-  for (unsigned int iter = 0; iter < nMaxIter; ++iter) {
+  constexpr std::size_t nMaxIter = 10;
+  for (std::size_t iter = 0; iter < nMaxIter; ++iter) {
     bool retry = false;
     // Debugging output.
     if (m_debug) {
@@ -1309,7 +1309,7 @@ double TrackSrim::RndmEnergyLoss(const double ekin, const double de,
                          par[6] * xlmean * xlmean * xlmean +
                          (par[3] + xlmean * par[4]) * exp(par[5] * xlmean);
     double xlan = RndmLandau();
-    for (unsigned int iter = 0; iter < 100; ++iter) {
+    for (std::size_t iter = 0; iter < 100; ++iter) {
       if (xlan < xlmax) break;
       xlan = RndmLandau();
     }
