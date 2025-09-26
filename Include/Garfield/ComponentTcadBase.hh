@@ -205,7 +205,7 @@ class ComponentTcadBase : public Component {
   // Elements
   struct Element {
     // Indices of vertices
-    unsigned int vertex[nMaxVertices]{0, 0, 0, 0};
+    std::size_t vertex[nMaxVertices]{0, 0, 0, 0};
     // Type of element
     // 0: Point
     // 1: Segment (line)
@@ -220,9 +220,9 @@ class ComponentTcadBase : public Component {
     // 10: Polyhedron
     // In 2D, types 1 - 3 are supported.
     // In 3D, only types 2 and 5 are supported.
-    unsigned int type{0};
+    std::size_t type{0};
     // Associated region
-    unsigned int region{0};
+    std::size_t region{0};
     // Bounding box
     std::array<float, N> bbMin;
     std::array<float, N> bbMax;
@@ -298,8 +298,8 @@ class ComponentTcadBase : public Component {
 
   void Cleanup();
 
-  static unsigned int ElementVertices(const Element& element) {
-    return std::min(element.type + 1, 4U);
+  static std::size_t ElementVertices(const Element& element) {
+    return std::min(element.type + 1, static_cast<std::size_t>(4));
   }
   virtual bool Interpolate(const double x, const double y, const double z,
                            const std::vector<double>& field, double& f) = 0;

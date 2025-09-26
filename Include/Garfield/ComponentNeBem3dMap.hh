@@ -51,8 +51,8 @@ class ComponentNeBem3dMap : public Component {
 
   /// Map related information.
   bool LoadMapInfo(const std::string& MapInfoFile, std::string& MapVersion,
-                   int& OptMap, int& OptStaggerMap, unsigned int& NbOfXCells,
-                   unsigned int& NbOfYCells, unsigned int& NbOfZCells,
+                   int& OptMap, int& OptStaggerMap, std::size_t& NbOfXCells,
+                   std::size_t& NbOfYCells, std::size_t& NbOfZCells,
                    double& Xmin, double& Xmax, double& Ymin, double& Ymax,
                    double& Zmin, double& Zmax, double& XStagger,
                    double& YStagger, double& ZStagger,
@@ -63,10 +63,9 @@ class ComponentNeBem3dMap : public Component {
    * \param ymin,ymax range along \f$y\f$.
    * \param zmin,zmax range along \f$z\f$.
    */
-  void SetMesh(const unsigned int nx, const unsigned int ny,
-               const unsigned int nz, const double xmin, const double xmax,
-               const double ymin, const double ymax, const double zmin,
-               const double zmax);
+  void SetMesh(const std::size_t nx, const std::size_t ny, const std::size_t nz,
+               const double xmin, const double xmax, const double ymin,
+               const double ymax, const double zmin, const double zmax);
   /** Import electric field and potential values from a file.
    * The file is supposed to contain one line for each mesh point starting with
    *   - either two or three floating point numbers,
@@ -93,14 +92,13 @@ class ComponentNeBem3dMap : public Component {
 
   /// Return the indices of the element at a given point.
   bool GetElement(const double xi, const double yi, const double zi,
-                  unsigned int& i, unsigned int& j, unsigned int& k,
+                  std::size_t& i, std::size_t& j, std::size_t& k,
                   bool& xMirrored, bool& yMirrored, bool& zMirrored) const;
   /// Return the field for an element with given index.
-  bool GetElement(const unsigned int i, const unsigned int j,
-                  const unsigned int k, double& v, double& ex, double& ey,
-                  double& ez) const;
+  bool GetElement(const std::size_t i, const std::size_t j, const std::size_t k,
+                  double& v, double& ex, double& ey, double& ez) const;
   /// Get the medium in region i.
-  Medium* GetMedium(const unsigned int i) const;
+  Medium* GetMedium(const std::size_t i) const;
   /// Print all regions.
   void PrintRegions() const;
 
@@ -119,9 +117,9 @@ class ComponentNeBem3dMap : public Component {
   /// Region indices.
   std::vector<std::vector<std::vector<int> > > m_regions;
   // Dimensions of the mesh
-  unsigned int m_nX{0};
-  unsigned int m_nY{0};
-  unsigned int m_nZ{0};
+  std::size_t m_nX{0};
+  std::size_t m_nY{0};
+  std::size_t m_nZ{0};
   double m_xMin{0.};
   double m_yMin{0.};
   double m_zMin{0.};

@@ -161,7 +161,7 @@ class ComponentFieldMap : public Component {
     // Nodes
     int emap[10]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     // Material
-    unsigned int matmap{0};
+    std::size_t matmap{0};
   };
 
   std::vector<Element> m_elements;
@@ -244,7 +244,7 @@ class ComponentFieldMap : public Component {
 
   // Warnings flag
   bool m_warning{false};
-  unsigned int m_nWarnings{0};
+  std::size_t m_nWarnings{0};
 
   // Print warnings about failed convergence when refining
   // isoparametric coordinates.

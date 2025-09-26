@@ -29,10 +29,9 @@ class ComponentGrid : public Component {
    * \param ymin,ymax range along \f$y\f$.
    * \param zmin,zmax range along \f$z\f$.
    */
-  bool SetMesh(const unsigned int nx, const unsigned int ny,
-               const unsigned int nz, const double xmin, const double xmax,
-               const double ymin, const double ymax, const double zmin,
-               const double zmax);
+  bool SetMesh(const std::size_t nx, const std::size_t ny, const std::size_t nz,
+               const double xmin, const double xmax, const double ymin,
+               const double ymax, const double zmin, const double zmax);
   /// Retrieve the parameters of the grid.
   bool GetMesh(std::size_t& nx, std::size_t& ny, std::size_t& nz, double& xmin,
                double& xmax, double& ymin, double& ymax, double& zmin,
@@ -115,8 +114,8 @@ class ComponentGrid : public Component {
                           const std::string& filename, const std::string& fmt);
 
   /// Return the field at a given node.
-  bool GetElectricField(const unsigned int i, const unsigned int j,
-                        const unsigned int k, double& v, double& ex, double& ey,
+  bool GetElectricField(const std::size_t i, const std::size_t j,
+                        const std::size_t k, double& v, double& ex, double& ey,
                         double& ez) const;
 
   /// Get the medium.
@@ -132,10 +131,10 @@ class ComponentGrid : public Component {
    * \param scaleX scaling factor to be applied to the coordinates.
    */
   bool LoadElectronAttachment(const std::string& fname, const std::string& fmt,
-                              const unsigned int col, const double scaleX = 1.);
+                              const std::size_t col, const double scaleX = 1.);
   /// Import hole attachment coefficients from a file.
   bool LoadHoleAttachment(const std::string& fname, const std::string& fmt,
-                          const unsigned int col, const double scaleX = 1.);
+                          const std::size_t col, const double scaleX = 1.);
 
   /** Import a map of electron drift velocities from a file.
    * \param fname name of the text file.
@@ -253,8 +252,8 @@ class ComponentGrid : public Component {
   bool AddElectricField(Component* cmp, const double scale);
 
   /// Gives the closest node index (i, j, k) to coordinate (x, y, z).
-  bool GetNodeIndex(double x, const double y, const double z, unsigned int& i,
-                    unsigned int& j, unsigned int& k);
+  bool GetNodeIndex(double x, const double y, const double z, std::size_t& i,
+                    std::size_t& j, std::size_t& k);
 
  private:
   enum class Format { Unknown, XY, XZ, XYZ, IJ, IK, IJK, YXZ };
@@ -291,7 +290,7 @@ class ComponentGrid : public Component {
   std::vector<std::vector<std::vector<bool>>> m_active;
 
   // Dimensions of the mesh
-  std::array<unsigned int, 3> m_nX{{1, 1, 1}};
+  std::array<std::size_t, 3> m_nX{{1, 1, 1}};
   std::array<double, 3> m_xMin{{0., 0., 0.}};
   std::array<double, 3> m_xMax{{0., 0., 0.}};
   std::array<double, 3> m_sX{{0., 0., 0.}};
@@ -319,7 +318,7 @@ class ComponentGrid : public Component {
   bool LoadData(const std::string& filename, std::string format,
                 const double scaleX,
                 std::vector<std::vector<std::vector<double>>>& tab,
-                const unsigned int col);
+                const std::size_t col);
 
   void Reset() override;
   void UpdatePeriodicity() override;

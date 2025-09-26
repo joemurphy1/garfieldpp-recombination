@@ -31,32 +31,32 @@ class ComponentNeBem3d : public Component {
   /// Add a plane at constant z.
   void AddPlaneZ(const double z, const double voltage);
   /// Get the number of equipotential planes at constant x.
-  unsigned int GetNumberOfPlanesX() const;
+  std::size_t GetNumberOfPlanesX() const;
   /// Get the number of equipotential planes at constant y.
-  unsigned int GetNumberOfPlanesY() const;
+  std::size_t GetNumberOfPlanesY() const;
   /// Get the number of equipotential planes at constant z.
-  unsigned int GetNumberOfPlanesZ() const;
+  std::size_t GetNumberOfPlanesZ() const;
   /// Retrieve the parameters of a plane at constant x.
-  bool GetPlaneX(const unsigned int i, double& x, double& v) const;
+  bool GetPlaneX(const std::size_t i, double& x, double& v) const;
   /// Retrieve the parameters of a plane at constant y.
-  bool GetPlaneY(const unsigned int i, double& y, double& v) const;
+  bool GetPlaneY(const std::size_t i, double& y, double& v) const;
   /// Retrieve the parameters of a plane at constant z.
-  bool GetPlaneZ(const unsigned int i, double& z, double& v) const;
+  bool GetPlaneZ(const std::size_t i, double& z, double& v) const;
 
   std::size_t GetNumberOfPrimitives() const { return m_primitives.size(); }
-  bool GetPrimitive(const unsigned int i, double& a, double& b, double& c,
+  bool GetPrimitive(const std::size_t i, double& a, double& b, double& c,
                     std::vector<double>& xv, std::vector<double>& yv,
                     std::vector<double>& zv, int& interface, double& v,
                     double& q, double& lambda) const;
-  bool GetPrimitive(const unsigned int i, double& a, double& b, double& c,
+  bool GetPrimitive(const std::size_t i, double& a, double& b, double& c,
                     std::vector<double>& xv, std::vector<double>& yv,
                     std::vector<double>& zv, int& vol1, int& vol2) const;
-  bool GetVolume(const unsigned int vol, int& shape, int& material, double& eps,
+  bool GetVolume(const std::size_t vol, int& shape, int& material, double& eps,
                  double& potential, double& charge, int& bc);
   int GetVolume(const double x, const double y, const double z);
 
   std::size_t GetNumberOfElements() const override { return m_elements.size(); }
-  bool GetElement(const unsigned int i, std::vector<double>& xv,
+  bool GetElement(const std::size_t i, std::vector<double>& xv,
                   std::vector<double>& yv, std::vector<double>& zv,
                   int& interface, double& bc, double& lambda) const;
 
@@ -69,41 +69,37 @@ class ComponentNeBem3d : public Component {
   void SetTargetElementSize(const double length);
   /// Set the smallest and largest allowed number of elements along
   /// the lenght of a primitive.
-  void SetMinMaxNumberOfElements(const unsigned int nmin,
-                                 const unsigned int nmax);
+  void SetMinMaxNumberOfElements(const std::size_t nmin,
+                                 const std::size_t nmax);
 
-  void SetNewModel(const unsigned int NewModel);
-  void SetNewMesh(const unsigned int NewMesh);
-  void SetNewBC(const unsigned int NewBC);
-  void SetNewPP(const unsigned int NewPP);
-  void SetModelOptions(const unsigned int NewModel, const unsigned int NewMesh,
-                       const unsigned int NewBC, const unsigned int NewPP);
+  void SetNewModel(const std::size_t NewModel);
+  void SetNewMesh(const std::size_t NewMesh);
+  void SetNewBC(const std::size_t NewBC);
+  void SetNewPP(const std::size_t NewPP);
+  void SetModelOptions(const std::size_t NewModel, const std::size_t NewMesh,
+                       const std::size_t NewBC, const std::size_t NewPP);
 
   /// Set storing options (OptStoreInflMatrix, OptStoreInvMatrix,
   /// OptStoreInvMatrix, OptStoreInvMatrix)
   /// OptStorePrimitives, OptStorePrimitives)
   /// OptStoreElements, OptStoreElements)
   /// OptFormattedFile, OptUnformattedFile)
-  void SetStoreInflMatrix(const unsigned int OptStoreInflMatrix);
-  void SetReadInflMatrix(const unsigned int OptReadInflMatrix);
-  void SetStoreInvMatrix(const unsigned int OptStoreInvMatrix);
-  void SetReadInvMatrix(const unsigned int OptReadInvMatrix);
-  void SetStorePrimitives(const unsigned int OptStorePrimitives);
-  void SetReadPrimitives(const unsigned int OptReadPrimitives);
-  void SetStoreElements(const unsigned int OptStoreElements);
-  void SetReadElements(const unsigned int OptReadElements);
-  void SetFormattedFile(const unsigned int OptFormattedFile);
-  void SetUnformattedFile(const unsigned int OptUnformattedFile);
-  void SetStoreReadOptions(const unsigned int OptStoreInflMatrix,
-                           const unsigned int OptReadInflMatrix,
-                           const unsigned int OptStoreInvMatrix,
-                           const unsigned int OptReadInvMatrix,
-                           const unsigned int OptStorePrimitives,
-                           const unsigned int OptReadPrimitives,
-                           const unsigned int OptStoreElements,
-                           const unsigned int OptReadElements,
-                           const unsigned int OptFormattedFile,
-                           const unsigned int OptUnformattedFile);
+  void SetStoreInflMatrix(const std::size_t OptStoreInflMatrix);
+  void SetReadInflMatrix(const std::size_t OptReadInflMatrix);
+  void SetStoreInvMatrix(const std::size_t OptStoreInvMatrix);
+  void SetReadInvMatrix(const std::size_t OptReadInvMatrix);
+  void SetStorePrimitives(const std::size_t OptStorePrimitives);
+  void SetReadPrimitives(const std::size_t OptReadPrimitives);
+  void SetStoreElements(const std::size_t OptStoreElements);
+  void SetReadElements(const std::size_t OptReadElements);
+  void SetFormattedFile(const std::size_t OptFormattedFile);
+  void SetUnformattedFile(const std::size_t OptUnformattedFile);
+  void SetStoreReadOptions(
+      const std::size_t OptStoreInflMatrix, const std::size_t OptReadInflMatrix,
+      const std::size_t OptStoreInvMatrix, const std::size_t OptReadInvMatrix,
+      const std::size_t OptStorePrimitives, const std::size_t OptReadPrimitives,
+      const std::size_t OptStoreElements, const std::size_t OptReadElements,
+      const std::size_t OptFormattedFile, const std::size_t OptUnformattedFile);
 
   // Set whether an older model is to be re-used. Expects an inverted matrix
   // stored during an earlier computation that had identical model and mesh.
@@ -116,38 +112,38 @@ class ComponentNeBem3d : public Component {
   /// OptPrimitiveFiles=0, OptElementFiles=0)
 
   // Functions that set computation details and constraints
-  void SetSystemChargeZero(const unsigned int OptSystemChargeZero);
-  void SetValidateSolution(const unsigned int OptValidateSolution);
-  void SetForceValidation(const unsigned int OptForceValidation);
-  void SetRepeatLHMatrix(const unsigned int OptRepeatLHMatrix);
-  void SetComputeOptions(const unsigned int OptSystemChargeZero,
-                         const unsigned int OptValidateSolution,
-                         const unsigned int OptForceValidation,
-                         const unsigned int OptRepeatLHMatrix);
+  void SetSystemChargeZero(const std::size_t OptSystemChargeZero);
+  void SetValidateSolution(const std::size_t OptValidateSolution);
+  void SetForceValidation(const std::size_t OptForceValidation);
+  void SetRepeatLHMatrix(const std::size_t OptRepeatLHMatrix);
+  void SetComputeOptions(const std::size_t OptSystemChargeZero,
+                         const std::size_t OptValidateSolution,
+                         const std::size_t OptForceValidation,
+                         const std::size_t OptRepeatLHMatrix);
 
   // Fast volume related information (physical potential and fields)
-  void SetFastVolOptions(const unsigned int OptFastVol,
-                         const unsigned int OptCreateFastPF,
-                         const unsigned int OptReadFastPF);
-  void SetFastVolVersion(const unsigned int VersionFV);
-  void SetFastVolBlocks(const unsigned int NbBlocksFV);
+  void SetFastVolOptions(const std::size_t OptFastVol,
+                         const std::size_t OptCreateFastPF,
+                         const std::size_t OptReadFastPF);
+  void SetFastVolVersion(const std::size_t VersionFV);
+  void SetFastVolBlocks(const std::size_t NbBlocksFV);
 
   // Needs to include IdWtField information for each of these WtFld functions
   // Weighting potential and field related Fast volume information
-  void SetWtFldFastVolOptions(const unsigned int IdWtField,
-                              const unsigned int OptWtFldFastVol,
-                              const unsigned int OptCreateWtFldFastPF,
-                              const unsigned int OptReadWtFldFastPF);
-  void SetWtFldFastVolVersion(const unsigned int IdWtField,
-                              const unsigned int VersionWtFldFV);
-  void SetWtFldFastVolBlocks(const unsigned int IdWtField,
-                             const unsigned int NbBlocksWtFldFV);
+  void SetWtFldFastVolOptions(const std::size_t IdWtField,
+                              const std::size_t OptWtFldFastVol,
+                              const std::size_t OptCreateWtFldFastPF,
+                              const std::size_t OptReadWtFldFastPF);
+  void SetWtFldFastVolVersion(const std::size_t IdWtField,
+                              const std::size_t VersionWtFldFV);
+  void SetWtFldFastVolBlocks(const std::size_t IdWtField,
+                             const std::size_t NbBlocksWtFldFV);
 
   // Known charge options
-  void SetKnownChargeOptions(const unsigned int OptKnownCharge);
+  void SetKnownChargeOptions(const std::size_t OptKnownCharge);
 
   // Charging up options
-  void SetChargingUpOptions(const unsigned int OptChargingUp);
+  void SetChargingUpOptions(const std::size_t OptChargingUp);
 
   /// Invert the influence matrix using lower-upper (LU) decomposition.
   void UseLUInversion() { m_inversion = Inversion::LU; }
@@ -157,11 +153,11 @@ class ComponentNeBem3d : public Component {
   /// Set the parameters \f$n_x, n_y, n_z\f$ defining the number of periodic
   /// copies that neBEM will use when dealing with periodic configurations.
   /// neBEM will use \f$2 \times n + 1\f$ copies (default: \f$n = 5\f$).
-  void SetPeriodicCopies(const unsigned int nx, const unsigned int ny,
-                         const unsigned int nz);
+  void SetPeriodicCopies(const std::size_t nx, const std::size_t ny,
+                         const std::size_t nz);
   /// Retrieve the number of periodic copies used by neBEM.
-  void GetPeriodicCopies(unsigned int& nx, unsigned int& ny,
-                         unsigned int& nz) const {
+  void GetPeriodicCopies(std::size_t& nx, std::size_t& ny,
+                         std::size_t& nz) const {
     nx = m_nCopiesX;
     ny = m_nCopiesY;
     nz = m_nCopiesZ;
@@ -186,7 +182,7 @@ class ComponentNeBem3d : public Component {
   bool GetPeriodicityZ(double& s) const;
 
   /// Set the number of threads to be used by neBEM.
-  void SetNumberOfThreads(const unsigned int n) { m_nThreads = n > 0 ? n : 1; }
+  void SetNumberOfThreads(const std::size_t n) { m_nThreads = n > 0 ? n : 1; }
 
   /// Set the number of repetitions after which primitive properties are used
   /// for the physical field.
@@ -199,7 +195,7 @@ class ComponentNeBem3d : public Component {
   void SetWtFldPrimAfter(const int n) { m_wtFldPrimAfter = n; }
 
   /// Set option related to removal of primitives.
-  void SetOptRmPrim(const unsigned int n) { m_optRmPrim = n; }
+  void SetOptRmPrim(const std::size_t n) { m_optRmPrim = n; }
 
   void ElectricField(const double x, const double y, const double z, double& ex,
                      double& ey, double& ez, Medium*& m, int& status) override;
@@ -287,58 +283,58 @@ class ComponentNeBem3d : public Component {
   std::array<double, 6> m_vtplan{{0., 0., 0., 0., 0., 0.}};
 
   // Model specifications
-  unsigned int m_newModel{1};
-  unsigned int m_newMesh{1};
-  unsigned int m_newBC{1};
-  unsigned int m_newPP{1};
+  std::size_t m_newModel{1};
+  std::size_t m_newMesh{1};
+  std::size_t m_newBC{1};
+  std::size_t m_newPP{1};
 
   // Store and read options
-  unsigned int m_optStoreInflMatrix{0};
-  unsigned int m_optReadInflMatrix{0};
-  unsigned int m_optStoreInvMatrix{1};
-  unsigned int m_optReadInvMatrix{0};
-  unsigned int m_optStorePrimitives{0};
-  unsigned int m_optReadPrimitives{0};
-  unsigned int m_optStoreElements{0};
-  unsigned int m_optReadElements{0};
-  unsigned int m_optStoreFormatted{1};
-  unsigned int m_optStoreUnformatted{0};
+  std::size_t m_optStoreInflMatrix{0};
+  std::size_t m_optReadInflMatrix{0};
+  std::size_t m_optStoreInvMatrix{1};
+  std::size_t m_optReadInvMatrix{0};
+  std::size_t m_optStorePrimitives{0};
+  std::size_t m_optReadPrimitives{0};
+  std::size_t m_optStoreElements{0};
+  std::size_t m_optReadElements{0};
+  std::size_t m_optStoreFormatted{1};
+  std::size_t m_optStoreUnformatted{0};
 
   // Plot options
-  // unsigned int m_optGnuplotPrimitives = 0;
-  // unsigned int m_optGnuplotElements = 0;
-  // unsigned int m_optPrimitiveFiles = 0;
-  // unsigned int m_optElementFiles = 0;
+  // std::size_t m_optGnuplotPrimitives = 0;
+  // std::size_t m_optGnuplotElements = 0;
+  // std::size_t m_optPrimitiveFiles = 0;
+  // std::size_t m_optElementFiles = 0;
 
   // Compute options
-  unsigned int m_optSystemChargeZero{1};
-  unsigned int m_optValidateSolution{1};
-  unsigned int m_optForceValidation{0};
-  unsigned int m_optRepeatLHMatrix{0};
+  std::size_t m_optSystemChargeZero{1};
+  std::size_t m_optValidateSolution{1};
+  std::size_t m_optForceValidation{0};
+  std::size_t m_optRepeatLHMatrix{0};
 
   // Fast volume information (physical potential and fields)
-  unsigned int m_optFastVol{0};
-  unsigned int m_optCreateFastPF{0};
-  unsigned int m_optReadFastPF{0};
-  unsigned int m_versionFV{0};
-  unsigned int m_nbBlocksFV{0};
+  std::size_t m_optFastVol{0};
+  std::size_t m_optCreateFastPF{0};
+  std::size_t m_optReadFastPF{0};
+  std::size_t m_versionFV{0};
+  std::size_t m_nbBlocksFV{0};
 
   // Weighting potential and field related Fast volume information
-  unsigned int m_idWtField{0};
-  std::vector<unsigned int> m_optWtFldFastVol;
-  std::vector<unsigned int> m_optCreateWtFldFastPF;
-  std::vector<unsigned int> m_optReadWtFldFastPF;
-  std::vector<unsigned int> m_versionWtFldFV;
-  std::vector<unsigned int> m_nbBlocksWtFldFV;
+  std::size_t m_idWtField{0};
+  std::vector<std::size_t> m_optWtFldFastVol;
+  std::vector<std::size_t> m_optCreateWtFldFastPF;
+  std::vector<std::size_t> m_optReadWtFldFastPF;
+  std::vector<std::size_t> m_versionWtFldFV;
+  std::vector<std::size_t> m_nbBlocksWtFldFV;
 
   // Known charge options
-  unsigned int m_optKnownCharge{0};
+  std::size_t m_optKnownCharge{0};
 
   // Charging up options
-  unsigned int m_optChargingUp{0};
+  std::size_t m_optChargingUp{0};
 
   // Number of threads to be used by neBEM.
-  unsigned int m_nThreads{1};
+  std::size_t m_nThreads{1};
 
   // Number of repetitions, after which only primitive properties are used.
   // a negative value implies elements are used always.
@@ -351,23 +347,23 @@ class ComponentNeBem3d : public Component {
 
   // Option for removing primitives from a device geometry.
   // Zero implies none to be removed.
-  unsigned int m_optRmPrim{0};
+  std::size_t m_optRmPrim{0};
 
   static constexpr double MinDist{1.e-6};
   /// Target size of elements [cm].
   double m_targetElementSize{50.0e-4};
   /// Smallest number of elements produced along the axis of a primitive.
-  unsigned int m_minNbElementsOnLength{1};
+  std::size_t m_minNbElementsOnLength{1};
   /// Largest number of elements produced along the axis of a primitive.
-  unsigned int m_maxNbElementsOnLength{100};
+  std::size_t m_maxNbElementsOnLength{100};
   /// Periodic lengths.
   std::array<double, 3> m_periodicLength{{0., 0., 0.}};
   /// Number of periodic copies along x.
-  unsigned int m_nCopiesX{5};
+  std::size_t m_nCopiesX{5};
   /// Number of periodic copies along y.
-  unsigned int m_nCopiesY{5};
+  std::size_t m_nCopiesY{5};
   /// Number of periodic copies along z.
-  unsigned int m_nCopiesZ{5};
+  std::size_t m_nCopiesZ{5};
 
   enum class Inversion { LU = 0, SVD };
   Inversion m_inversion{Inversion::LU};
@@ -416,7 +412,7 @@ class ComponentNeBem3d : public Component {
   bool SplitTrapezium(const Panel panelIn, std::vector<Panel>& stack,
                       std::vector<Panel>& panelsOut, const double epsang) const;
 
-  unsigned int NbOfSegments(const double length, const double target) const;
+  std::size_t NbOfSegments(const double length, const double target) const;
   bool DiscretizeWire(const Primitive& primitive, const double targetSize,
                       std::vector<Element>& elements) const;
   bool DiscretizeTriangle(const Primitive& primitive, const double targetSize,

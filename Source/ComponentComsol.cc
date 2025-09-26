@@ -23,8 +23,8 @@ bool isComment(const std::string &line) {
 
 void PrintProgress(const double f) {
   if (f < 0.) return;
-  constexpr unsigned int width = 70;
-  const unsigned int n = static_cast<unsigned int>(std::floor(width * f));
+  constexpr std::size_t width = 70;
+  const std::size_t n = static_cast<std::size_t>(std::floor(width * f));
   std::string bar = "[";
   if (n < 1) {
     bar += std::string(width, ' ');
@@ -73,9 +73,9 @@ bool ComponentComsol::Initialise(const std::string &mesh,
     PrintCouldNotOpen("Initialise", mplist);
     return false;
   }
-  unsigned int nMaterials;
+  std::size_t nMaterials;
   fmplist >> nMaterials;
-  for (unsigned int i = 0; i < nMaterials; ++i) {
+  for (std::size_t i = 0; i < nMaterials; ++i) {
     Material material;
     material.driftmedium = false;
     material.medium = nullptr;
@@ -274,8 +274,8 @@ bool ComponentComsol::Initialise(const std::string &mesh,
   }
   const size_t nWeightingFields = wfields.size();
 
-  const unsigned int nPrint =
-      std::pow(10, static_cast<unsigned int>(
+  const std::size_t nPrint =
+      std::pow(10, static_cast<std::size_t>(
                        std::max(std::floor(std::log10(nNodes)) - 1, 1.)));
   std::cout << m_className << "::Initialise: Reading potentials.\n";
   PrintProgress(0.);
@@ -380,8 +380,8 @@ bool ComponentComsol::LoadPotentials(const std::string &field,
   std::string line;
   int nLines = 1;
   const int nNodes = m_nodes.size();
-  const unsigned int nPrint =
-      std::pow(10, static_cast<unsigned int>(
+  const std::size_t nPrint =
+      std::pow(10, static_cast<std::size_t>(
                        std::max(std::floor(std::log10(nNodes)) - 1, 1.)));
   PrintProgress(0.);
 
@@ -478,8 +478,8 @@ bool ComponentComsol::SetDynamicWeightingPotential(const std::string &field,
   std::string line;
   int nLines = 1;
   const int nNodes = m_nodes.size();
-  const unsigned int nPrint =
-      std::pow(10, static_cast<unsigned int>(
+  const std::size_t nPrint =
+      std::pow(10, static_cast<std::size_t>(
                        std::max(std::floor(std::log10(nNodes)) - 1, 1.)));
   std::cout << m_className << "::SetDynamicWeightingPotential:\n"
             << "    Reading weighting potentials for " << label << ".\n";

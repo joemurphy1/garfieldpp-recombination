@@ -256,7 +256,7 @@ int neBEMGetPeriodicities(int /*prim*/, int* ix, int* jx, double* sx, int* iy,
   *jy = 0;
   *jz = 0;
   if (*ix > 0 || *iy > 0 || *iz > 0) {
-    unsigned int nx = 0, ny = 0, nz = 0;
+    std::size_t nx = 0, ny = 0, nz = 0;
     Garfield::gComponentNeBem3d->GetPeriodicCopies(nx, ny, nz);
     *jx = nx;
     *jy = ny;

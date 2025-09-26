@@ -19,7 +19,7 @@
 
 namespace {
 
-void PrintError(const std::string& fcn, const unsigned int line,
+void PrintError(const std::string& fcn, const std::size_t line,
                 const std::string& par) {
   std::cerr << fcn << ": Error reading line " << line << ".\n"
             << "    Could not read " << par << ".\n";
@@ -31,8 +31,8 @@ void PrintNotReady(const std::string& fcn) {
 
 void PrintProgress(const double f) {
   if (f < 0.) return;
-  constexpr unsigned int width = 70;
-  const unsigned int n = static_cast<unsigned int>(std::floor(width * f));
+  constexpr std::size_t width = 70;
+  const std::size_t n = static_cast<std::size_t>(std::floor(width * f));
   std::string bar = "[";
   if (n < 1) {
     bar += std::string(width, ' ');
@@ -112,9 +112,9 @@ void ComponentGrid::SetUniformElectricField(const double ex, const double ey,
   m_active.assign(m_nX[0], std::vector<std::vector<bool>>(
                                m_nX[1], std::vector<bool>(m_nX[2], true)));
 
-  for (unsigned int i = 0; i < m_nX[0]; ++i) {
-    for (unsigned int j = 0; j < m_nX[1]; ++j) {
-      for (unsigned int k = 0; k < m_nX[2]; ++k) {
+  for (std::size_t i = 0; i < m_nX[0]; ++i) {
+    for (std::size_t j = 0; j < m_nX[1]; ++j) {
+      for (std::size_t k = 0; k < m_nX[2]; ++k) {
         m_efields[i][j][k].fx = ex;
         m_efields[i][j][k].fy = ey;
         m_efields[i][j][k].fz = ez;
@@ -168,7 +168,7 @@ void ComponentGrid::DelayedWeightingField(const double x, const double y,
 
   const double dt = t - *it0;
   double wp = 0.;
-  const unsigned int i0 = it0 - m_wdtimes.cbegin();
+  const std::size_t i0 = it0 - m_wdtimes.cbegin();
   double wx0 = 0., wy0 = 0., wz0 = 0.;
   bool active = true;
   if (!GetField(xx, yy, zz, m_wdfields[i0], wx0, wy0, wz0, wp, active)) return;
@@ -179,7 +179,7 @@ void ComponentGrid::DelayedWeightingField(const double x, const double y,
     wz = wz0;
     return;
   }
-  const unsigned int i1 = it1 - m_wdtimes.cbegin();
+  const std::size_t i1 = it1 - m_wdtimes.cbegin();
   double wx1 = 0., wy1 = 0., wz1 = 0.;
   if (!GetField(xx, yy, zz, m_wdfields[i1], wx1, wy1, wz1, wp, active)) return;
 
@@ -205,7 +205,7 @@ double ComponentGrid::DelayedWeightingPotential(const double x, const double y,
   const auto it0 = std::prev(it1);
 
   const double dt = t - *it0;
-  const unsigned int i0 = it0 - m_wdtimes.cbegin();
+  const std::size_t i0 = it0 - m_wdtimes.cbegin();
   double wp0 = 0., wx0 = 0., wy0 = 0., wz0 = 0.;
   bool active = true;
   if (!GetField(xx, yy, zz, m_wdfields[i0], wx0, wy0, wz0, wp0, active))
@@ -213,7 +213,7 @@ double ComponentGrid::DelayedWeightingPotential(const double x, const double y,
 
   if (dt < Small || it1 == m_wdtimes.cend()) return wp0;
 
-  const unsigned int i1 = it1 - m_wdtimes.cbegin();
+  const std::size_t i1 = it1 - m_wdtimes.cbegin();
   double wp1 = 0., wx1 = 0., wy1 = 0., wz1 = 0.;
   if (!GetField(xx, yy, zz, m_wdfields[i1], wx1, wy1, wz1, wp1, active))
     return 0.;
@@ -276,12 +276,12 @@ Medium* ComponentGrid::GetMedium(const double x, const double y,
   const double sx = (xx[0] - m_xMin[0]) * m_sX[0];
   const double sy = (xx[1] - m_xMin[1]) * m_sX[1];
   const double sz = (xx[2] - m_xMin[2]) * m_sX[2];
-  const unsigned int i0 = static_cast<unsigned int>(std::floor(sx));
-  const unsigned int j0 = static_cast<unsigned int>(std::floor(sy));
-  const unsigned int k0 = static_cast<unsigned int>(std::floor(sz));
-  const unsigned int i1 = std::min(i0 + 1, m_nX[0] - 1);
-  const unsigned int j1 = std::min(j0 + 1, m_nX[1] - 1);
-  const unsigned int k1 = std::min(k0 + 1, m_nX[2] - 1);
+  const std::size_t i0 = static_cast<std::size_t>(std::floor(sx));
+  const std::size_t j0 = static_cast<std::size_t>(std::floor(sy));
+  const std::size_t k0 = static_cast<std::size_t>(std::floor(sz));
+  const std::size_t i1 = std::min(i0 + 1, m_nX[0] - 1);
+  const std::size_t j1 = std::min(j0 + 1, m_nX[1] - 1);
+  const std::size_t k1 = std::min(k0 + 1, m_nX[2] - 1);
   if (m_active[i0][j0][k0] && m_active[i0][j0][k1] && m_active[i0][j1][k0] &&
       m_active[i0][j1][k1] && m_active[i1][j0][k0] && m_active[i1][j0][k1] &&
       m_active[i1][j1][k0] && m_active[i1][j1][k1]) {
@@ -290,8 +290,8 @@ Medium* ComponentGrid::GetMedium(const double x, const double y,
   return nullptr;
 }
 
-bool ComponentGrid::SetMesh(const unsigned int nx, const unsigned int ny,
-                            const unsigned int nz, const double xmin,
+bool ComponentGrid::SetMesh(const std::size_t nx, const std::size_t ny,
+                            const std::size_t nz, const double xmin,
                             const double xmax, const double ymin,
                             const double ymax, const double zmin,
                             const double zmax) {
@@ -485,21 +485,21 @@ bool ComponentGrid::SaveElectricField(Component* cmp,
   outfile << "# ZMIN = " << m_xMin[2] << ", ZMAX = " << m_xMax[2]
           << ", NZ = " << m_nX[2] << "\n";
 
-  const unsigned int nValues = m_nX[0] * m_nX[1] * m_nX[2];
-  const unsigned int nPrint =
-      std::pow(10, static_cast<unsigned int>(
+  const std::size_t nValues = m_nX[0] * m_nX[1] * m_nX[2];
+  const std::size_t nPrint =
+      std::pow(10, static_cast<std::size_t>(
                        std::max(std::floor(std::log10(nValues)) - 1, 1.)));
-  unsigned int nLines = 0;
+  std::size_t nLines = 0;
   Medium* medium = nullptr;
   int status = 0;
   const double dx = (m_xMax[0] - m_xMin[0]) / std::max(m_nX[0] - 1., 1.);
   const double dy = (m_xMax[1] - m_xMin[1]) / std::max(m_nX[1] - 1., 1.);
   const double dz = (m_xMax[2] - m_xMin[2]) / std::max(m_nX[2] - 1., 1.);
-  for (unsigned int i = 0; i < m_nX[0]; ++i) {
+  for (std::size_t i = 0; i < m_nX[0]; ++i) {
     const double x = m_xMin[0] + i * dx;
-    for (unsigned int j = 0; j < m_nX[1]; ++j) {
+    for (std::size_t j = 0; j < m_nX[1]; ++j) {
       const double y = m_xMin[1] + j * dy;
-      for (unsigned int k = 0; k < m_nX[2]; ++k) {
+      for (std::size_t k = 0; k < m_nX[2]; ++k) {
         const double z = m_xMin[2] + k * dz;
         if (fmt == Format::XY) {
           outfile << x << "  " << y << "  ";
@@ -630,23 +630,23 @@ bool ComponentGrid::SaveElectricFieldROOT(Component* cmp,
     tree.Branch("v", &v);
   }
 
-  const unsigned int nValues = m_nX[0] * m_nX[1] * m_nX[2];
-  const unsigned int nPrint =
-      std::pow(10, static_cast<unsigned int>(
+  const std::size_t nValues = m_nX[0] * m_nX[1] * m_nX[2];
+  const std::size_t nPrint =
+      std::pow(10, static_cast<std::size_t>(
                        std::max(std::floor(std::log10(nValues)) - 1, 1.)));
-  unsigned int nLines = 0;
+  std::size_t nLines = 0;
   Medium* medium = nullptr;
   int status = 0;
   const double dx = (m_xMax[0] - m_xMin[0]) / std::max(m_nX[0] - 1., 1.);
   const double dy = (m_xMax[1] - m_xMin[1]) / std::max(m_nX[1] - 1., 1.);
   const double dz = (m_xMax[2] - m_xMin[2]) / std::max(m_nX[2] - 1., 1.);
-  for (unsigned int i = 0; i < m_nX[0]; ++i) {
+  for (std::size_t i = 0; i < m_nX[0]; ++i) {
     iS = i;
     x = m_xMin[0] + i * dx;
-    for (unsigned int j = 0; j < m_nX[1]; ++j) {
+    for (std::size_t j = 0; j < m_nX[1]; ++j) {
       jS = j;
       y = m_xMin[1] + j * dy;
-      for (unsigned int k = 0; k < m_nX[2]; ++k) {
+      for (std::size_t k = 0; k < m_nX[2]; ++k) {
         kS = k;
         z = m_xMin[2] + k * dz;
         if (m_coordinates == Coordinates::Cylindrical) {
@@ -698,21 +698,21 @@ bool ComponentGrid::SaveElectricField(Component* cmp) {
             << "    Be patient...\n";
   PrintProgress(0.);
 
-  const unsigned int nValues = m_nX[0] * m_nX[1] * m_nX[2];
-  const unsigned int nPrint =
-      std::pow(10, static_cast<unsigned int>(
+  const std::size_t nValues = m_nX[0] * m_nX[1] * m_nX[2];
+  const std::size_t nPrint =
+      std::pow(10, static_cast<std::size_t>(
                        std::max(std::floor(std::log10(nValues)) - 1, 1.)));
-  unsigned int nLines = 0;
+  std::size_t nLines = 0;
   Medium* medium = nullptr;
   int status = 0;
   const double dx = (m_xMax[0] - m_xMin[0]) / std::max(m_nX[0] - 1., 1.);
   const double dy = (m_xMax[1] - m_xMin[1]) / std::max(m_nX[1] - 1., 1.);
   const double dz = (m_xMax[2] - m_xMin[2]) / std::max(m_nX[2] - 1., 1.);
-  for (unsigned int i = 0; i < m_nX[0]; ++i) {
+  for (std::size_t i = 0; i < m_nX[0]; ++i) {
     const double x = m_xMin[0] + i * dx;
-    for (unsigned int j = 0; j < m_nX[1]; ++j) {
+    for (std::size_t j = 0; j < m_nX[1]; ++j) {
       const double y = m_xMin[1] + j * dy;
-      for (unsigned int k = 0; k < m_nX[2]; ++k) {
+      for (std::size_t k = 0; k < m_nX[2]; ++k) {
         const double z = m_xMin[2] + k * dz;
         double ex = 0., ey = 0., ez = 0., v = 0.;
         if (m_coordinates == Coordinates::Cylindrical) {
@@ -772,7 +772,7 @@ bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale,
         const double y = m_xMin[1] + j * dy - yShift;
         const double z = m_xMin[2] + k * dz - zShift;
 
-        unsigned int iCopy, jCopy, kCopy;
+        std::size_t iCopy, jCopy, kCopy;
         const bool inArea = cmp->GetNodeIndex(x, y, z, iCopy, jCopy, kCopy);
         if (!inArea) continue;
 
@@ -862,19 +862,19 @@ bool ComponentGrid::SaveWeightingField(Component* cmp, const std::string& id,
           << ", NY = " << m_nX[1] << "\n";
   outfile << "# ZMIN = " << m_xMin[2] << ", ZMAX = " << m_xMax[2]
           << ", NZ = " << m_nX[2] << "\n";
-  const unsigned int nValues = m_nX[0] * m_nX[1] * m_nX[2];
-  const unsigned int nPrint =
-      std::pow(10, static_cast<unsigned int>(
+  const std::size_t nValues = m_nX[0] * m_nX[1] * m_nX[2];
+  const std::size_t nPrint =
+      std::pow(10, static_cast<std::size_t>(
                        std::max(std::floor(std::log10(nValues)) - 1, 1.)));
-  unsigned int nLines = 0;
+  std::size_t nLines = 0;
   const double dx = (m_xMax[0] - m_xMin[0]) / std::max(m_nX[0] - 1., 1.);
   const double dy = (m_xMax[1] - m_xMin[1]) / std::max(m_nX[1] - 1., 1.);
   const double dz = (m_xMax[2] - m_xMin[2]) / std::max(m_nX[2] - 1., 1.);
-  for (unsigned int i = 0; i < m_nX[0]; ++i) {
+  for (std::size_t i = 0; i < m_nX[0]; ++i) {
     const double x = m_xMin[0] + i * dx;
-    for (unsigned int j = 0; j < m_nX[1]; ++j) {
+    for (std::size_t j = 0; j < m_nX[1]; ++j) {
       const double y = m_xMin[1] + j * dy;
-      for (unsigned int k = 0; k < m_nX[2]; ++k) {
+      for (std::size_t k = 0; k < m_nX[2]; ++k) {
         const double z = m_xMin[2] + k * dz;
         if (fmt == Format::XY) {
           outfile << x << "  " << y << "  ";
@@ -930,7 +930,7 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
   found.reset();
   double xmin = 0., ymin = 0., zmin = 0.;
   double xmax = 0., ymax = 0., zmax = 0.;
-  unsigned int nx = 0, ny = 0, nz = 0;
+  std::size_t nx = 0, ny = 0, nz = 0;
   bool cylindrical = (m_coordinates == Coordinates::Cylindrical);
   // Parse the comment lines in the file.
 
@@ -974,7 +974,7 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
     return false;
   }
   std::string line;
-  unsigned int nLines = 0;
+  std::size_t nLines = 0;
   // Read the file line by line.
   while (std::getline(infile, line)) {
     ++nLines;
@@ -1107,7 +1107,7 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
     return false;
   }
 
-  unsigned int nValues = 0;
+  std::size_t nValues = 0;
   infile.open(filename, std::ios::in);
   if (!infile) {
     std::cerr << m_className << "::LoadMesh:\n"
@@ -1193,7 +1193,7 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
       yLines.insert(y);
       zLines.insert(z);
     } else if (fmt == Format::IJ) {
-      unsigned int i = 0, j = 0;
+      std::size_t i = 0, j = 0;
       data >> i >> j;
       if (data.fail()) {
         PrintError(m_className + "::LoadMesh", nLines, "indices");
@@ -1203,7 +1203,7 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
       if (!found[6]) nx = std::max(nx, i);
       if (!found[7]) ny = std::max(ny, j);
     } else if (fmt == Format::IK) {
-      unsigned int i = 0, k = 0;
+      std::size_t i = 0, k = 0;
       data >> i >> k;
       if (data.fail()) {
         PrintError(m_className + "::LoadMesh", nLines, "indices");
@@ -1213,7 +1213,7 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
       if (!found[6]) nx = std::max(nx, i);
       if (!found[8]) nz = std::max(nz, k);
     } else if (fmt == Format::IJK) {
-      unsigned int i = 0, j = 0, k = 0;
+      std::size_t i = 0, j = 0, k = 0;
       data >> i >> j >> k;
       if (data.fail()) {
         PrintError(m_className + "::LoadMesh", nLines, "indices");
@@ -1270,7 +1270,7 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
     std::printf("%12.6f < y [cm] < %12.6f, %5u points\n", ymin, ymax, ny);
   }
   std::printf("%12.6f < z [cm] < %12.6f, %5u points\n", zmin, zmax, nz);
-  unsigned int nExpected = nx;
+  std::size_t nExpected = nx;
   if (fmt == Format::XZ || fmt == Format::IK) {
     nExpected *= nz;
   } else {
@@ -1313,7 +1313,7 @@ bool ComponentGrid::LoadData(
   // Set up the grid.
   Initialise(fields);
 
-  unsigned int nValues = 0;
+  std::size_t nValues = 0;
   // Keep track of which elements have been read.
   std::vector<std::vector<std::vector<bool>>> isSet(
       m_nX[0], std::vector<std::vector<bool>>(
@@ -1330,7 +1330,7 @@ bool ComponentGrid::LoadData(
 
   if (!isRoot) {
     std::string line;
-    unsigned int nLines = 0;
+    std::size_t nLines = 0;
     bool bad = false;
     // Read the file line by line.
     while (std::getline(infile, line)) {
@@ -1341,9 +1341,9 @@ bool ComponentGrid::LoadData(
       if (line.empty()) continue;
       // Skip comments.
       if (IsComment(line)) continue;
-      unsigned int i = 0;
-      unsigned int j = 0;
-      unsigned int k = 0;
+      std::size_t i = 0;
+      std::size_t j = 0;
+      std::size_t k = 0;
       double fx = 0.;
       double fy = 0.;
       double fz = 0.;
@@ -1361,12 +1361,12 @@ bool ComponentGrid::LoadData(
         y *= scaleX;
         if (m_nX[0] > 1) {
           const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          i = u < 0. ? 0 : static_cast<std::size_t>(u);
           if (i >= m_nX[0]) i = m_nX[0] - 1;
         }
         if (m_nX[1] > 1) {
           const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-          j = v < 0. ? 0 : static_cast<unsigned int>(v);
+          j = v < 0. ? 0 : static_cast<std::size_t>(v);
           if (j >= m_nX[1]) j = m_nX[1] - 1;
         }
       } else if (fmt == Format::XZ) {
@@ -1381,12 +1381,12 @@ bool ComponentGrid::LoadData(
         z *= scaleX;
         if (m_nX[0] > 1) {
           const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          i = u < 0. ? 0 : static_cast<std::size_t>(u);
           if (i >= m_nX[0]) i = m_nX[0] - 1;
         }
         if (m_nX[2] > 1) {
           const double v = std::round((z - m_xMin[2]) * m_sX[2]);
-          k = v < 0. ? 0 : static_cast<unsigned int>(v);
+          k = v < 0. ? 0 : static_cast<std::size_t>(v);
           if (j >= m_nX[1]) j = m_nX[1] - 1;
         }
       } else if (fmt == Format::XYZ) {
@@ -1403,17 +1403,17 @@ bool ComponentGrid::LoadData(
 
         if (m_nX[0] > 1) {
           const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          i = u < 0. ? 0 : static_cast<std::size_t>(u);
           if (i >= m_nX[0]) i = m_nX[0] - 1;
         }
         if (m_nX[1] > 1) {
           const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-          j = v < 0. ? 0 : static_cast<unsigned int>(v);
+          j = v < 0. ? 0 : static_cast<std::size_t>(v);
           if (j >= m_nX[1]) j = m_nX[1] - 1;
         }
         if (m_nX[2] > 1) {
           const double w = std::round((z - m_xMin[2]) * m_sX[2]);
-          k = w < 0. ? 0 : static_cast<unsigned int>(w);
+          k = w < 0. ? 0 : static_cast<std::size_t>(w);
           if (k >= m_nX[2]) k = m_nX[2] - 1;
         }
       } else if (fmt == Format::IJ) {
@@ -1443,17 +1443,17 @@ bool ComponentGrid::LoadData(
         z *= scaleX;
         if (m_nX[0] > 1) {
           const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          i = u < 0. ? 0 : static_cast<std::size_t>(u);
           if (i >= m_nX[0]) i = m_nX[0] - 1;
         }
         if (m_nX[1] > 1) {
           const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-          j = v < 0. ? 0 : static_cast<unsigned int>(v);
+          j = v < 0. ? 0 : static_cast<std::size_t>(v);
           if (j >= m_nX[1]) j = m_nX[1] - 1;
         }
         if (m_nX[2] > 1) {
           const double w = std::round((z - m_xMin[2]) * m_sX[2]);
-          k = w < 0. ? 0 : static_cast<unsigned int>(w);
+          k = w < 0. ? 0 : static_cast<std::size_t>(w);
           if (k >= m_nX[2]) k = m_nX[2] - 1;
         }
       }
@@ -1523,7 +1523,7 @@ bool ComponentGrid::LoadData(
       const bool isActive = flag == 0 ? false : true;
       if (fmt == Format::XY || fmt == Format::IJ) {
         // Two-dimensional map.
-        for (unsigned int kk = 0; kk < m_nX[2]; ++kk) {
+        for (std::size_t kk = 0; kk < m_nX[2]; ++kk) {
           fields[i][j][kk].fx = fx;
           fields[i][j][kk].fy = fy;
           fields[i][j][kk].fz = fz;
@@ -1533,7 +1533,7 @@ bool ComponentGrid::LoadData(
         }
       } else if (fmt == Format::XZ || fmt == Format::IK) {
         // Two-dimensional map.
-        for (unsigned int jj = 0; jj < m_nX[1]; ++jj) {
+        for (std::size_t jj = 0; jj < m_nX[1]; ++jj) {
           fields[i][jj][k].fx = fx;
           fields[i][jj][k].fy = fy;
           fields[i][jj][k].fz = fz;
@@ -1604,9 +1604,9 @@ bool ComponentGrid::LoadData(
     tree->SetBranchAddress("ez", &ez);
     tree->SetBranchAddress("v", &p);
 
-    unsigned int i = 0;
-    unsigned int j = 0;
-    unsigned int k = 0;
+    std::size_t i = 0;
+    std::size_t j = 0;
+    std::size_t k = 0;
 
     const Long64_t nEntries = tree->GetEntries();
     for (Long64_t iEntries = 0; iEntries < nEntries; ++iEntries) {
@@ -1616,12 +1616,12 @@ bool ComponentGrid::LoadData(
         y *= scaleX;
         if (m_nX[0] > 1) {
           const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          i = u < 0. ? 0 : static_cast<std::size_t>(u);
           if (i >= m_nX[0]) i = m_nX[0] - 1;
         }
         if (m_nX[1] > 1) {
           const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-          j = v < 0. ? 0 : static_cast<unsigned int>(v);
+          j = v < 0. ? 0 : static_cast<std::size_t>(v);
           if (j >= m_nX[1]) j = m_nX[1] - 1;
         }
       } else if (fmt == Format::XZ) {
@@ -1629,12 +1629,12 @@ bool ComponentGrid::LoadData(
         z *= scaleX;
         if (m_nX[0] > 1) {
           const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          i = u < 0. ? 0 : static_cast<std::size_t>(u);
           if (i >= m_nX[0]) i = m_nX[0] - 1;
         }
         if (m_nX[2] > 1) {
           const double v = std::round((z - m_xMin[2]) * m_sX[2]);
-          k = v < 0. ? 0 : static_cast<unsigned int>(v);
+          k = v < 0. ? 0 : static_cast<std::size_t>(v);
           if (j >= m_nX[1]) j = m_nX[1] - 1;
         }
       } else if (fmt == Format::XYZ || fmt == Format::YXZ) {
@@ -1643,17 +1643,17 @@ bool ComponentGrid::LoadData(
         z *= scaleX;
         if (m_nX[0] > 1) {
           const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-          i = u < 0. ? 0 : static_cast<unsigned int>(u);
+          i = u < 0. ? 0 : static_cast<std::size_t>(u);
           if (i >= m_nX[0]) i = m_nX[0] - 1;
         }
         if (m_nX[1] > 1) {
           const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-          j = v < 0. ? 0 : static_cast<unsigned int>(v);
+          j = v < 0. ? 0 : static_cast<std::size_t>(v);
           if (j >= m_nX[1]) j = m_nX[1] - 1;
         }
         if (m_nX[2] > 1) {
           const double w = std::round((z - m_xMin[2]) * m_sX[2]);
-          k = w < 0. ? 0 : static_cast<unsigned int>(w);
+          k = w < 0. ? 0 : static_cast<std::size_t>(w);
           if (k >= m_nX[2]) k = m_nX[2] - 1;
         }
       }
@@ -1690,7 +1690,7 @@ bool ComponentGrid::LoadData(
       // TO-DO: flag option
       if (fmt == Format::XY || fmt == Format::IJ) {
         // Two-dimensional map.
-        for (unsigned int kk = 0; kk < m_nX[2]; ++kk) {
+        for (std::size_t kk = 0; kk < m_nX[2]; ++kk) {
           fields[i][j][kk].fx = ex;
           fields[i][j][kk].fy = ey;
           fields[i][j][kk].fz = ez;
@@ -1699,7 +1699,7 @@ bool ComponentGrid::LoadData(
         }
       } else if (fmt == Format::XZ || fmt == Format::IK) {
         // Two-dimensional map.
-        for (unsigned int jj = 0; jj < m_nX[1]; ++jj) {
+        for (std::size_t jj = 0; jj < m_nX[1]; ++jj) {
           fields[i][jj][k].fx = ex;
           fields[i][jj][k].fy = ey;
           fields[i][jj][k].fz = ez;
@@ -1719,7 +1719,7 @@ bool ComponentGrid::LoadData(
   }
   std::cout << m_className << "::LoadData:\n"
             << "    Read " << nValues << " values from " << filename << ".\n";
-  unsigned int nExpected = m_nX[0];
+  std::size_t nExpected = m_nX[0];
   if (fmt == Format::XY || fmt == Format::IJ) {
     nExpected *= m_nX[1];
   } else if (fmt == Format::XZ || fmt == Format::IK) {
@@ -1816,9 +1816,9 @@ bool ComponentGrid::GetElectricFieldRange(double& exmin, double& exmax,
   exmin = exmax = m_efields[0][0][0].fx;
   eymin = eymax = m_efields[0][0][0].fy;
   ezmin = ezmax = m_efields[0][0][0].fz;
-  for (unsigned int i = 0; i < m_nX[0]; ++i) {
-    for (unsigned int j = 0; j < m_nX[1]; ++j) {
-      for (unsigned int k = 0; k < m_nX[2]; ++k) {
+  for (std::size_t i = 0; i < m_nX[0]; ++i) {
+    for (std::size_t j = 0; j < m_nX[1]; ++j) {
+      for (std::size_t k = 0; k < m_nX[2]; ++k) {
         const Node& node = m_efields[i][j][k];
         if (node.fx < exmin) exmin = node.fx;
         if (node.fx > exmax) exmax = node.fx;
@@ -1863,15 +1863,15 @@ bool ComponentGrid::GetField(
   const double sy = (xx[1] - m_xMin[1]) * m_sX[1];
   const double sz = (xx[2] - m_xMin[2]) * m_sX[2];
   // Get the indices.
-  const unsigned int i0 = static_cast<unsigned int>(std::floor(sx));
-  const unsigned int j0 = static_cast<unsigned int>(std::floor(sy));
-  const unsigned int k0 = static_cast<unsigned int>(std::floor(sz));
+  const std::size_t i0 = static_cast<std::size_t>(std::floor(sx));
+  const std::size_t j0 = static_cast<std::size_t>(std::floor(sy));
+  const std::size_t k0 = static_cast<std::size_t>(std::floor(sz));
   const double ux = sx - i0;
   const double uy = sy - j0;
   const double uz = sz - k0;
-  const unsigned int i1 = std::min(i0 + 1, m_nX[0] - 1);
-  const unsigned int j1 = std::min(j0 + 1, m_nX[1] - 1);
-  const unsigned int k1 = std::min(k0 + 1, m_nX[2] - 1);
+  const std::size_t i1 = std::min(i0 + 1, m_nX[0] - 1);
+  const std::size_t j1 = std::min(j0 + 1, m_nX[1] - 1);
+  const std::size_t k1 = std::min(k0 + 1, m_nX[2] - 1);
   const double vx = 1. - ux;
   const double vy = 1. - uy;
   const double vz = 1. - uz;
@@ -1936,9 +1936,9 @@ bool ComponentGrid::GetField(
   return true;
 }
 
-bool ComponentGrid::GetElectricField(const unsigned int i, const unsigned int j,
-                                     const unsigned int k, double& v,
-                                     double& ex, double& ey, double& ez) const {
+bool ComponentGrid::GetElectricField(const std::size_t i, const std::size_t j,
+                                     const std::size_t k, double& v, double& ex,
+                                     double& ey, double& ez) const {
   v = ex = ey = ez = 0.;
   if (m_efields.empty()) {
     if (!m_hasMesh) {
@@ -2111,11 +2111,11 @@ double ComponentGrid::Reduce(const double xin, const double xmin,
 void ComponentGrid::Initialise(
     std::vector<std::vector<std::vector<Node>>>& fields) {
   fields.resize(m_nX[0]);
-  for (unsigned int i = 0; i < m_nX[0]; ++i) {
+  for (std::size_t i = 0; i < m_nX[0]; ++i) {
     fields[i].resize(m_nX[1]);
-    for (unsigned int j = 0; j < m_nX[1]; ++j) {
+    for (std::size_t j = 0; j < m_nX[1]; ++j) {
       fields[i][j].resize(m_nX[2]);
-      for (unsigned int k = 0; k < m_nX[2]; ++k) {
+      for (std::size_t k = 0; k < m_nX[2]; ++k) {
         fields[i][j][k].fx = 0.;
         fields[i][j][k].fy = 0.;
         fields[i][j][k].fz = 0.;
@@ -2165,9 +2165,9 @@ void ComponentGrid::AddParticle(
   }
 
   // Get voxel indices.
-  const unsigned int i = std::round((x - m_xMin[0]) * m_sX[0]);
-  const unsigned int j = std::round((y - m_xMin[1]) * m_sX[1]);
-  const unsigned int k = std::round((z - m_xMin[2]) * m_sX[2]);
+  const std::size_t i = std::round((x - m_xMin[0]) * m_sX[0]);
+  const std::size_t j = std::round((y - m_xMin[1]) * m_sX[1]);
+  const std::size_t k = std::round((z - m_xMin[2]) * m_sX[2]);
 
   if (i >= m_nX[0] || j >= m_nX[1] || k >= m_nX[2]) return;
 
@@ -2223,7 +2223,7 @@ bool ComponentGrid::HoleVelocity(const double x, const double y, const double z,
 
 bool ComponentGrid::LoadElectronAttachment(const std::string& fname,
                                            const std::string& fmt,
-                                           const unsigned int col,
+                                           const std::size_t col,
                                            const double scaleX) {
   // Read the file.
   return LoadData(fname, fmt, scaleX, m_eAttachment, col);
@@ -2231,7 +2231,7 @@ bool ComponentGrid::LoadElectronAttachment(const std::string& fname,
 
 bool ComponentGrid::LoadHoleAttachment(const std::string& fname,
                                        const std::string& fmt,
-                                       const unsigned int col,
+                                       const std::size_t col,
                                        const double scaleX) {
   // Read the file.
   return LoadData(fname, fmt, scaleX, m_hAttachment, col);
@@ -2240,7 +2240,7 @@ bool ComponentGrid::LoadHoleAttachment(const std::string& fname,
 bool ComponentGrid::LoadData(const std::string& filename, std::string format,
                              const double scaleX,
                              std::vector<std::vector<std::vector<double>>>& tab,
-                             const unsigned int col) {
+                             const std::size_t col) {
   if (!m_hasMesh) {
     if (!LoadMesh(filename, format, scaleX)) {
       std::cerr << m_className << "::LoadData: Mesh not set.\n";
@@ -2255,7 +2255,7 @@ bool ComponentGrid::LoadData(const std::string& filename, std::string format,
     return false;
   }
   // Check the column index.
-  unsigned int offset = 0;
+  std::size_t offset = 0;
   if (fmt == Format::XY || fmt == Format::IJ) {
     if (col < 2) {
       std::cerr << m_className << "::LoadData:\n"
@@ -2276,7 +2276,7 @@ bool ComponentGrid::LoadData(const std::string& filename, std::string format,
   tab.assign(m_nX[0], std::vector<std::vector<double>>(
                           m_nX[1], std::vector<double>(m_nX[2], 0.)));
 
-  unsigned int nValues = 0;
+  std::size_t nValues = 0;
   // Keep track of which elements have been read.
   std::vector<std::vector<std::vector<bool>>> isSet(
       m_nX[0], std::vector<std::vector<bool>>(
@@ -2290,7 +2290,7 @@ bool ComponentGrid::LoadData(const std::string& filename, std::string format,
   }
 
   std::string line;
-  unsigned int nLines = 0;
+  std::size_t nLines = 0;
   bool bad = false;
   // Read the file line by line.
   while (std::getline(infile, line)) {
@@ -2301,9 +2301,9 @@ bool ComponentGrid::LoadData(const std::string& filename, std::string format,
     if (line.empty()) continue;
     // Skip comments.
     if (IsComment(line)) continue;
-    unsigned int i = 0;
-    unsigned int j = 0;
-    unsigned int k = 0;
+    std::size_t i = 0;
+    std::size_t j = 0;
+    std::size_t k = 0;
     double val = 0;
     std::istringstream data(line);
     if (fmt == Format::XY) {
@@ -2318,12 +2318,12 @@ bool ComponentGrid::LoadData(const std::string& filename, std::string format,
       y *= scaleX;
       if (m_nX[0] > 1) {
         const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-        i = u < 0. ? 0 : static_cast<unsigned int>(u);
+        i = u < 0. ? 0 : static_cast<std::size_t>(u);
         if (i >= m_nX[0]) i = m_nX[0] - 1;
       }
       if (m_nX[1] > 1) {
         const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-        j = v < 0. ? 0 : static_cast<unsigned int>(v);
+        j = v < 0. ? 0 : static_cast<std::size_t>(v);
         if (j >= m_nX[1]) j = m_nX[1] - 1;
       }
     } else if (fmt == Format::XYZ) {
@@ -2339,17 +2339,17 @@ bool ComponentGrid::LoadData(const std::string& filename, std::string format,
       z *= scaleX;
       if (m_nX[0] > 1) {
         const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-        i = u < 0. ? 0 : static_cast<unsigned int>(u);
+        i = u < 0. ? 0 : static_cast<std::size_t>(u);
         if (i >= m_nX[0]) i = m_nX[0] - 1;
       }
       if (m_nX[1] > 1) {
         const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-        j = v < 0. ? 0 : static_cast<unsigned int>(v);
+        j = v < 0. ? 0 : static_cast<std::size_t>(v);
         if (j >= m_nX[1]) j = m_nX[1] - 1;
       }
       if (m_nX[2] > 1) {
         const double w = std::round((z - m_xMin[2]) * m_sX[2]);
-        k = w < 0. ? 0 : static_cast<unsigned int>(w);
+        k = w < 0. ? 0 : static_cast<std::size_t>(w);
         if (k >= m_nX[2]) k = m_nX[2] - 1;
       }
     } else if (fmt == Format::IJ) {
@@ -2379,17 +2379,17 @@ bool ComponentGrid::LoadData(const std::string& filename, std::string format,
       z *= scaleX;
       if (m_nX[0] > 1) {
         const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-        i = u < 0. ? 0 : static_cast<unsigned int>(u);
+        i = u < 0. ? 0 : static_cast<std::size_t>(u);
         if (i >= m_nX[0]) i = m_nX[0] - 1;
       }
       if (m_nX[1] > 1) {
         const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-        j = v < 0. ? 0 : static_cast<unsigned int>(v);
+        j = v < 0. ? 0 : static_cast<std::size_t>(v);
         if (j >= m_nX[1]) j = m_nX[1] - 1;
       }
       if (m_nX[2] > 1) {
         const double w = std::round((z - m_xMin[2]) * m_sX[2]);
-        k = w < 0. ? 0 : static_cast<unsigned int>(w);
+        k = w < 0. ? 0 : static_cast<std::size_t>(w);
         if (k >= m_nX[2]) k = m_nX[2] - 1;
       }
     }
@@ -2410,7 +2410,7 @@ bool ComponentGrid::LoadData(const std::string& filename, std::string format,
     }
 
     // Skip to the requested column.
-    for (unsigned int ii = 0; ii < col - offset; ++ii) {
+    for (std::size_t ii = 0; ii < col - offset; ++ii) {
       double dummy = 0.;
       data >> dummy;
       if (data.fail()) {
@@ -2434,7 +2434,7 @@ bool ComponentGrid::LoadData(const std::string& filename, std::string format,
 
     if (fmt == Format::XY || fmt == Format::IJ) {
       // Two-dimensional map
-      for (unsigned int kk = 0; kk < m_nX[2]; ++kk) {
+      for (std::size_t kk = 0; kk < m_nX[2]; ++kk) {
         tab[i][j][kk] = val;
         isSet[i][j][kk] = true;
       }
@@ -2448,7 +2448,7 @@ bool ComponentGrid::LoadData(const std::string& filename, std::string format,
   if (bad) return false;
   std::cout << m_className << "::LoadData:\n"
             << "    Read " << nValues << " values from " << filename << ".\n";
-  unsigned int nExpected = m_nX[0] * m_nX[1];
+  std::size_t nExpected = m_nX[0] * m_nX[1];
   if (fmt == Format::XYZ || fmt == Format::IJK || fmt == Format::YXZ) {
     nExpected *= m_nX[2];
   }
@@ -2486,15 +2486,15 @@ bool ComponentGrid::GetData(
   const double sx = (x - m_xMin[0]) * m_sX[0];
   const double sy = (y - m_xMin[1]) * m_sX[1];
   const double sz = (z - m_xMin[2]) * m_sX[2];
-  const unsigned int i0 = static_cast<unsigned int>(std::floor(sx));
-  const unsigned int j0 = static_cast<unsigned int>(std::floor(sy));
-  const unsigned int k0 = static_cast<unsigned int>(std::floor(sz));
+  const std::size_t i0 = static_cast<std::size_t>(std::floor(sx));
+  const std::size_t j0 = static_cast<std::size_t>(std::floor(sy));
+  const std::size_t k0 = static_cast<std::size_t>(std::floor(sz));
   const double ux = sx - i0;
   const double uy = sy - j0;
   const double uz = sz - k0;
-  const unsigned int i1 = std::min(i0 + 1, m_nX[0] - 1);
-  const unsigned int j1 = std::min(j0 + 1, m_nX[1] - 1);
-  const unsigned int k1 = std::min(k0 + 1, m_nX[2] - 1);
+  const std::size_t i1 = std::min(i0 + 1, m_nX[0] - 1);
+  const std::size_t j1 = std::min(j0 + 1, m_nX[1] - 1);
+  const std::size_t k1 = std::min(k0 + 1, m_nX[2] - 1);
   const double vx = 1. - ux;
   const double vy = 1. - uy;
   const double vz = 1. - uz;
@@ -2634,24 +2634,24 @@ ComponentGrid::Format ComponentGrid::GetFormat(std::string format) {
 }
 
 bool ComponentGrid::GetNodeIndex(double x, const double y, const double z,
-                                 unsigned int& i, unsigned int& j,
-                                 unsigned int& k) {
+                                 std::size_t& i, std::size_t& j,
+                                 std::size_t& k) {
   if (x < m_xMin[0] || y < m_xMin[1] || z < m_xMin[2]) return false;
   if (x > m_xMax[0] || y > m_xMax[1] || z > m_xMax[2]) return false;
 
   if (m_nX[0] > 1) {
     const double u = std::round((x - m_xMin[0]) * m_sX[0]);
-    i = u < 0. ? 0 : static_cast<unsigned int>(u);
+    i = u < 0. ? 0 : static_cast<std::size_t>(u);
     if (i >= m_nX[0]) i = m_nX[0] - 1;
   }
   if (m_nX[1] > 1) {
     const double v = std::round((y - m_xMin[1]) * m_sX[1]);
-    j = v < 0. ? 0 : static_cast<unsigned int>(v);
+    j = v < 0. ? 0 : static_cast<std::size_t>(v);
     if (j >= m_nX[1]) j = m_nX[1] - 1;
   }
   if (m_nX[2] > 1) {
     const double w = std::round((z - m_xMin[2]) * m_sX[2]);
-    k = w < 0. ? 0 : static_cast<unsigned int>(w);
+    k = w < 0. ? 0 : static_cast<std::size_t>(w);
     if (k >= m_nX[2]) k = m_nX[2] - 1;
   }
   return true;

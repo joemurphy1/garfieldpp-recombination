@@ -36,7 +36,7 @@ bool ComponentAnsys121::Initialise(const std::string& elist,
 
   // Read the material list.
   int il = 0;
-  unsigned int icurrmat = 0;
+  std::size_t icurrmat = 0;
   bool readerror = false;
   while (fmplist.getline(line, size, '\n')) {
     il++;
@@ -449,7 +449,7 @@ bool ComponentAnsys121::LoadPotentials(const std::string& prnsol,
   // Read the voltage list.
   bool ok = true;
   long il = 0;
-  unsigned int nread = 0;
+  std::size_t nread = 0;
   bool readerror = false;
   while (fprnsol.getline(line, size, '\n')) {
     il++;

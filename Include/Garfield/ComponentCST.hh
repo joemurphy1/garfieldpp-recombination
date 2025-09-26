@@ -37,7 +37,7 @@ class ComponentCST : public ComponentFieldMap {
   bool GetNode(const std::size_t i, double& x, double& y,
                double& z) const override;
 
-  void GetElementBoundaries(unsigned int element, double& xmin, double& xmax,
+  void GetElementBoundaries(std::size_t element, double& xmin, double& xmax,
                             double& ymin, double& ymax, double& zmin,
                             double& zmax) const;
 
@@ -193,8 +193,8 @@ class ComponentCST : public ComponentFieldMap {
    * (m_xlines, m_ylines, m_zlines).
    * This is public since it is used in ViewFEMesh::DrawCST.
    */
-  int Index2Element(const unsigned int i, const unsigned int j,
-                    const unsigned int k) const;
+  int Index2Element(const std::size_t i, const std::size_t j,
+                    const std::size_t k) const;
   /**
    * Find the positions in the x/y/z position vectors (m_xlines, m_ylines,
    * m_zlines) for a given point.
@@ -244,9 +244,9 @@ class ComponentCST : public ComponentFieldMap {
   /// Material id for each element (unsigned char since it uses only 1 byte)
   std::vector<unsigned char> m_elementMaterial;
 
-  unsigned int m_nx{0};        ///< Number of mesh lines in x direction
-  unsigned int m_ny{0};        ///< Number of mesh lines in y direction
-  unsigned int m_nz{0};        ///< Number of mesh lines in z direction
+  std::size_t m_nx{0};         ///< Number of mesh lines in x direction
+  std::size_t m_ny{0};         ///< Number of mesh lines in y direction
+  std::size_t m_nz{0};         ///< Number of mesh lines in z direction
   std::size_t m_nElements{0};  ///< Number of elements
   std::size_t m_nNodes{0};     ///< Number of nodes
   // If true x,y,z fields of this component are disabled (e=0 V/cm).
@@ -257,34 +257,33 @@ class ComponentCST : public ComponentFieldMap {
                            double& ex, double& ey, double& ez, double& v,
                            Medium*& m, int& status,
                            const bool calculatePotential = false) const;
-  float GetFieldComponent(const unsigned int i, const unsigned int j,
-                          const unsigned int k, const double rx,
-                          const double ry, const double rz,
-                          const char component,
+  float GetFieldComponent(const std::size_t i, const std::size_t j,
+                          const std::size_t k, const double rx, const double ry,
+                          const double rz, const char component,
                           const std::vector<float>& potentials) const;
 
-  float GetPotential(const unsigned int i, const unsigned int j,
-                     const unsigned int k, const double rx, const double ry,
+  float GetPotential(const std::size_t i, const std::size_t j,
+                     const std::size_t k, const double rx, const double ry,
                      const double rz,
                      const std::vector<float>& potentials) const;
 
   void ShapeField(float& ex, float& ey, float& ez, const double rx,
-                  const double ry, const double rz, const unsigned int i,
-                  const unsigned int j, const unsigned int k,
+                  const double ry, const double rz, const std::size_t i,
+                  const std::size_t j, const std::size_t k,
                   const std::vector<float>& potentials) const;
 
   /* Calculate the index (i,j,k) along x,y,z direction of the given element.
    * i,j,k start at 0 and reach at maximum
    * m_xlines-1,m_ylines-1,m_zlines-1
    */
-  void Element2Index(const std::size_t element, unsigned int& i,
-                     unsigned int& j, unsigned int& k) const;
+  void Element2Index(const std::size_t element, std::size_t& i, std::size_t& j,
+                     std::size_t& k) const;
 
-  int Index2Node(const unsigned int i, const unsigned int j,
-                 const unsigned int k) const;
+  int Index2Node(const std::size_t i, const std::size_t j,
+                 const std::size_t k) const;
 
-  void Node2Index(const std::size_t node, unsigned int& i, unsigned int& j,
-                  unsigned int& k) const;
+  void Node2Index(const std::size_t node, std::size_t& i, std::size_t& j,
+                  std::size_t& k) const;
 };
 
 }  // namespace Garfield

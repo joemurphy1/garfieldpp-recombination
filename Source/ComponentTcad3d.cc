@@ -45,8 +45,8 @@ void ComponentTcad3d::ElectricField(const double xin, const double yin,
     return;
   }
   const Element& element = m_elements[i];
-  const unsigned int nVertices = ElementVertices(element);
-  for (unsigned int j = 0; j < nVertices; ++j) {
+  const std::size_t nVertices = ElementVertices(element);
+  for (std::size_t j = 0; j < nVertices; ++j) {
     const auto index = element.vertex[j];
     ex += w[j] * m_efield[index][0];
     ey += w[j] * m_efield[index][1];

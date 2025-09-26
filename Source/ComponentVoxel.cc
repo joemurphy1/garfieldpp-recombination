@@ -106,7 +106,7 @@ void ComponentVoxel::DelayedWeightingField(const double x, const double y,
   const double dt = t - *it0;
   double wp = 0.;
   int region = 0;
-  const unsigned int i0 = it0 - m_wdtimes.cbegin();
+  const std::size_t i0 = it0 - m_wdtimes.cbegin();
   double wx0 = 0., wy0 = 0., wz0 = 0.;
   if (!GetField(xx, yy, zz, m_wdfields[i0], wx0, wy0, wz0, wp, region)) {
     return;
@@ -117,7 +117,7 @@ void ComponentVoxel::DelayedWeightingField(const double x, const double y,
     wz = wz0;
     return;
   }
-  const unsigned int i1 = it1 - m_wdtimes.cbegin();
+  const std::size_t i1 = it1 - m_wdtimes.cbegin();
   double wx1 = 0., wy1 = 0., wz1 = 0.;
   if (!GetField(xx, yy, zz, m_wdfields[i1], wx1, wy1, wz1, wp, region)) {
     return;
@@ -145,14 +145,14 @@ double ComponentVoxel::DelayedWeightingPotential(const double x, const double y,
 
   const double dt = t - *it0;
   int region = 0;
-  const unsigned int i0 = it0 - m_wdtimes.cbegin();
+  const std::size_t i0 = it0 - m_wdtimes.cbegin();
   double wp0 = 0., wx0 = 0., wy0 = 0., wz0 = 0.;
   if (!GetField(xx, yy, zz, m_wdfields[i0], wx0, wy0, wz0, wp0, region)) {
     return 0.;
   }
   if (dt < Small || it1 == m_wdtimes.cend()) return 0.;
 
-  const unsigned int i1 = it1 - m_wdtimes.cbegin();
+  const std::size_t i1 = it1 - m_wdtimes.cbegin();
   double wp1 = 0., wx1 = 0., wy1 = 0., wz1 = 0.;
   if (!GetField(xx, yy, zz, m_wdfields[i1], wx1, wy1, wz1, wp1, region)) {
     return 0.;
@@ -197,7 +197,7 @@ Medium* ComponentVoxel::GetMedium(const double x, const double y,
     return nullptr;
   }
 
-  unsigned int i, j, k;
+  std::size_t i, j, k;
   bool xMirrored, yMirrored, zMirrored;
   if (!GetElement(x, y, z, i, j, k, xMirrored, yMirrored, zMirrored)) {
     return nullptr;
@@ -207,8 +207,8 @@ Medium* ComponentVoxel::GetMedium(const double x, const double y,
   return m_media[region];
 }
 
-void ComponentVoxel::SetMesh(const unsigned int nx, const unsigned int ny,
-                             const unsigned int nz, const double xmin,
+void ComponentVoxel::SetMesh(const std::size_t nx, const std::size_t ny,
+                             const std::size_t nz, const double xmin,
                              const double xmax, const double ymin,
                              const double ymax, const double zmin,
                              const double zmax) {
@@ -362,7 +362,7 @@ bool ComponentVoxel::LoadData(
     return false;
   }
 
-  unsigned int nValues = 0;
+  std::size_t nValues = 0;
   // Keep track of which elements have been read.
   std::vector<std::vector<std::vector<bool> > > isSet(
       m_nX,
@@ -376,7 +376,7 @@ bool ComponentVoxel::LoadData(
   }
 
   std::transform(format.begin(), format.end(), format.begin(), toupper);
-  unsigned int fmt = 0;
+  std::size_t fmt = 0;
   if (format == "XY") {
     fmt = 1;
   } else if (format == "XYZ") {
@@ -393,7 +393,7 @@ bool ComponentVoxel::LoadData(
     return false;
   }
   std::string line;
-  unsigned int nLines = 0;
+  std::size_t nLines = 0;
   bool bad = false;
   // Read the file line by line.
   while (std::getline(infile, line)) {
@@ -405,9 +405,9 @@ bool ComponentVoxel::LoadData(
     // Skip comments.
     if (line[0] == '#') continue;
     if (line[0] == '/' && line[1] == '/') continue;
-    unsigned int i = 0;
-    unsigned int j = 0;
-    unsigned int k = 0;
+    std::size_t i = 0;
+    std::size_t j = 0;
+    std::size_t k = 0;
     double fx = 0.;
     double fy = 0.;
     double fz = 0.;
@@ -571,7 +571,7 @@ bool ComponentVoxel::LoadData(
     }
     if (fmt == 1 || fmt == 3) {
       // Two-dimensional field-map
-      for (unsigned int kk = 0; kk < m_nZ; ++kk) {
+      for (std::size_t kk = 0; kk < m_nZ; ++kk) {
         fields[i][j][kk].fx = fx;
         fields[i][j][kk].fy = fy;
         fields[i][j][kk].fz = fz;
@@ -592,7 +592,7 @@ bool ComponentVoxel::LoadData(
   if (bad) return false;
   std::cout << m_className << "::LoadData:\n"
             << "    Read " << nValues << " values from " << filename << ".\n";
-  unsigned int nExpected = m_nX * m_nY;
+  std::size_t nExpected = m_nX * m_nY;
   if (fmt == 2 || fmt == 4 || fmt == 5) nExpected *= m_nZ;
   if (nExpected != nValues) {
     std::cerr << m_className << "::LoadData:\n"
@@ -662,9 +662,9 @@ bool ComponentVoxel::GetElectricFieldRange(double& exmin, double& exmax,
   exmin = exmax = m_efields[0][0][0].fx;
   eymin = eymax = m_efields[0][0][0].fy;
   ezmin = ezmax = m_efields[0][0][0].fz;
-  for (unsigned int i = 0; i < m_nX; ++i) {
-    for (unsigned int j = 0; j < m_nY; ++j) {
-      for (unsigned int k = 0; k < m_nZ; ++k) {
+  for (std::size_t i = 0; i < m_nX; ++i) {
+    for (std::size_t j = 0; j < m_nY; ++j) {
+      for (std::size_t k = 0; k < m_nZ; ++k) {
         const Element& element = m_efields[i][j][k];
         if (element.fx < exmin) exmin = element.fx;
         if (element.fx > exmax) exmax = element.fx;
@@ -693,14 +693,14 @@ void ComponentVoxel::PrintRegions() const {
 
   std::cout << m_className << "::PrintRegions:\n";
   std::cout << "      Index     Medium\n";
-  const unsigned int nMedia = m_media.size();
-  for (unsigned int i = 0; i < nMedia; ++i) {
+  const std::size_t nMedia = m_media.size();
+  for (std::size_t i = 0; i < nMedia; ++i) {
     const std::string name = m_media[i] ? m_media[i]->GetName() : "none";
     std::cout << "      " << i << "            " << name << "\n";
   }
 }
 
-Medium* ComponentVoxel::GetMedium(const unsigned int i) const {
+Medium* ComponentVoxel::GetMedium(const std::size_t i) const {
   if (i >= m_media.size()) {
     std::cerr << m_className << "::GetMedium: Index out of range.\n";
     return nullptr;
@@ -736,9 +736,9 @@ bool ComponentVoxel::GetField(
   const double sx = (x - m_xMin) / m_dx;
   const double sy = (y - m_yMin) / m_dy;
   const double sz = (z - m_zMin) / m_dz;
-  unsigned int i = static_cast<unsigned int>(sx);
-  unsigned int j = static_cast<unsigned int>(sy);
-  unsigned int k = static_cast<unsigned int>(sz);
+  std::size_t i = static_cast<std::size_t>(sx);
+  std::size_t j = static_cast<std::size_t>(sy);
+  std::size_t k = static_cast<std::size_t>(sz);
   if (i >= m_nX) i = m_nX - 1;
   if (j >= m_nY) j = m_nY - 1;
   if (k >= m_nZ) k = m_nZ - 1;
@@ -756,9 +756,9 @@ bool ComponentVoxel::GetField(
     double vx = tx - i0;
     double vy = ty - j0;
     double vz = tz - k0;
-    unsigned int i1 = i0 + 1;
-    unsigned int j1 = j0 + 1;
-    unsigned int k1 = k0 + 1;
+    std::size_t i1 = i0 + 1;
+    std::size_t j1 = j0 + 1;
+    std::size_t k1 = k0 + 1;
     const bool perx = m_periodic[0] || m_mirrorPeriodic[0];
     const bool pery = m_periodic[1] || m_mirrorPeriodic[1];
     const bool perz = m_periodic[2] || m_mirrorPeriodic[2];
@@ -847,10 +847,9 @@ bool ComponentVoxel::GetField(
 }
 
 bool ComponentVoxel::GetElement(const double xi, const double yi,
-                                const double zi, unsigned int& i,
-                                unsigned int& j, unsigned int& k,
-                                bool& xMirrored, bool& yMirrored,
-                                bool& zMirrored) const {
+                                const double zi, std::size_t& i, std::size_t& j,
+                                std::size_t& k, bool& xMirrored,
+                                bool& yMirrored, bool& zMirrored) const {
   if (!m_hasMesh) {
     std::cerr << m_className << "::GetElement: Mesh is not set.\n";
     return false;
@@ -869,17 +868,17 @@ bool ComponentVoxel::GetElement(const double xi, const double yi,
   if (z < m_zMin || z > m_zMax) return false;
 
   // Get the indices.
-  i = (unsigned int)((x - m_xMin) / m_dx);
-  j = (unsigned int)((y - m_yMin) / m_dy);
-  k = (unsigned int)((z - m_zMin) / m_dz);
+  i = (std::size_t)((x - m_xMin) / m_dx);
+  j = (std::size_t)((y - m_yMin) / m_dy);
+  k = (std::size_t)((z - m_zMin) / m_dz);
   if (i >= m_nX) i = m_nX - 1;
   if (j >= m_nY) j = m_nY - 1;
   if (k >= m_nZ) k = m_nZ - 1;
   return true;
 }
 
-bool ComponentVoxel::GetElement(const unsigned int i, const unsigned int j,
-                                const unsigned int k, double& v, double& ex,
+bool ComponentVoxel::GetElement(const std::size_t i, const std::size_t j,
+                                const std::size_t k, double& v, double& ex,
                                 double& ey, double& ez) const {
   v = ex = ey = ez = 0.;
   if (!m_ready) {
@@ -937,7 +936,7 @@ void ComponentVoxel::UpdatePeriodicity() {
   }
 
   // Check for conflicts.
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (std::size_t i = 0; i < 3; ++i) {
     if (m_periodic[i] && m_mirrorPeriodic[i]) {
       std::cerr << m_className << "::UpdatePeriodicity:\n"
                 << "    Both simple and mirror periodicity requested. Reset.\n";
@@ -984,11 +983,11 @@ double ComponentVoxel::Reduce(const double xin, const double xmin,
 void ComponentVoxel::Initialise(
     std::vector<std::vector<std::vector<Element> > >& fields) {
   fields.resize(m_nX);
-  for (unsigned int i = 0; i < m_nX; ++i) {
+  for (std::size_t i = 0; i < m_nX; ++i) {
     fields[i].resize(m_nY);
-    for (unsigned int j = 0; j < m_nY; ++j) {
+    for (std::size_t j = 0; j < m_nY; ++j) {
       fields[i][j].resize(m_nZ);
-      for (unsigned int k = 0; k < m_nZ; ++k) {
+      for (std::size_t k = 0; k < m_nZ; ++k) {
         fields[i][j][k].fx = 0.;
         fields[i][j][k].fy = 0.;
         fields[i][j][k].fz = 0.;
@@ -1001,9 +1000,9 @@ void ComponentVoxel::Initialise(
 void ComponentVoxel::InitialiseRegions() {
   if (!m_hasMesh) return;
   m_regions.resize(m_nX);
-  for (unsigned int i = 0; i < m_nX; ++i) {
+  for (std::size_t i = 0; i < m_nX; ++i) {
     m_regions[i].resize(m_nY);
-    for (unsigned int j = 0; j < m_nY; ++j) {
+    for (std::size_t j = 0; j < m_nY; ++j) {
       m_regions[i][j].assign(m_nZ, 0);
     }
   }
