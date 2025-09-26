@@ -185,7 +185,7 @@ void Inside(const std::vector<double>& xpl, const std::vector<double>& ypl,
   // Initial settings.
   inside = false;
   edge = false;
-  const unsigned int npl = xpl.size();
+  const std::size_t npl = xpl.size();
   if (ypl.size() != npl) return;
   // Special treatment for few points.
   if (npl < 2) {
@@ -226,14 +226,14 @@ void Inside(const std::vector<double>& xpl, const std::vector<double>& ypl,
   double xinf = xmin - fabs(xmax - xmin);
   double yinf = ymin - fabs(ymax - ymin);
 
-  unsigned int nIter = 0;
+  std::size_t nIter = 0;
   bool ok = false;
   while (!ok && nIter < 100) {
     ok = true;
     // Loop over the edges counting intersections.
-    unsigned int nCross = 0;
-    for (unsigned int j = 0; j < npl; ++j) {
-      const unsigned int jj = j < npl - 1 ? j + 1 : 0;
+    std::size_t nCross = 0;
+    for (std::size_t j = 0; j < npl; ++j) {
+      const std::size_t jj = j < npl - 1 ? j + 1 : 0;
       // Flag points located on one of the edges.
       if (OnLine(xpl[j], ypl[j], xpl[jj], ypl[jj], x, y)) {
         edge = true;
@@ -269,9 +269,9 @@ void Inside(const std::vector<double>& xpl, const std::vector<double>& ypl,
 
 double Area(const std::vector<double>& xp, const std::vector<double>& yp) {
   double f = 0.;
-  const unsigned int n = xp.size();
-  for (unsigned int i = 0; i < n; ++i) {
-    const unsigned int ii = i < n - 1 ? i + 1 : 0;
+  const std::size_t n = xp.size();
+  for (std::size_t i = 0; i < n; ++i) {
+    const std::size_t ii = i < n - 1 ? i + 1 : 0;
     f += xp[i] * yp[ii] - xp[ii] * yp[i];
   }
   return 0.5 * f;
@@ -285,18 +285,18 @@ bool NonTrivial(const std::vector<double>& xp, const std::vector<double>& yp) {
 
   // First check number of points.
   if (xp.size() != yp.size()) return false;
-  const unsigned int np = xp.size();
+  const std::size_t np = xp.size();
   if (xp.size() < 3) return false;
   // Find a second point at maximum distance of the first.
   double d1 = 0.;
   double x1 = 0.;
   double y1 = 0.;
-  unsigned int i1 = 0;
+  std::size_t i1 = 0;
   double xmin = xp[0];
   double ymin = yp[0];
   double xmax = xp[0];
   double ymax = yp[0];
-  for (unsigned int i = 1; i < np; ++i) {
+  for (std::size_t i = 1; i < np; ++i) {
     xmin = std::min(xmin, xp[i]);
     ymin = std::min(ymin, yp[i]);
     xmax = std::max(xmax, xp[i]);
@@ -326,8 +326,8 @@ bool NonTrivial(const std::vector<double>& xp, const std::vector<double>& yp) {
 
   // Find a third point maximising the external product.
   double d2 = 0.;
-  unsigned int i2 = 0;
-  for (unsigned int i = 1; i < np; ++i) {
+  std::size_t i2 = 0;
+  for (std::size_t i = 1; i < np; ++i) {
     if (i == i1) continue;
     const double dx = xp[i] - xp[0];
     const double dy = yp[i] - yp[0];
@@ -351,7 +351,7 @@ void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
   //   BUTFLD - Tries to eliminate "butterflies", i.e. the crossing of 2
   //            adjacent segments of a polygon, by point exchanges.
   //----------------------------------------------------------------------
-  unsigned int np = xp.size();
+  std::size_t np = xp.size();
   if (np <= 3) return;
   // Compute range.
   const double xmin = *std::min_element(std::begin(xp), std::end(xp));
@@ -367,7 +367,7 @@ void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
   double xsurf = 0.;
   double ysurf = 0.;
   double zsurf = 0.;
-  for (unsigned int i = 2; i < np; ++i) {
+  for (std::size_t i = 2; i < np; ++i) {
     const double x1 = xp[i - 1] - xp[0];
     const double y1 = yp[i - 1] - yp[0];
     const double z1 = zp[i - 1] - zp[0];
@@ -378,9 +378,9 @@ void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
   // Eliminate points appearing twice, initialise marks.
   std::vector<bool> mark(np, false);
   // Scan the list.
-  for (unsigned int i = 0; i < np; ++i) {
+  for (std::size_t i = 0; i < np; ++i) {
     if (mark[i]) continue;
-    for (unsigned int j = i + 1; j < np; ++j) {
+    for (std::size_t j = i + 1; j < np; ++j) {
       if (std::abs(xp[i] - xp[j]) <= epsx && std::abs(yp[i] - yp[j]) <= epsy &&
           std::abs(zp[i] - zp[j]) <= epsz) {
         mark[j] = true;
@@ -388,8 +388,8 @@ void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
     }
   }
   // And remove the duplicate points.
-  unsigned int nNew = 0;
-  for (unsigned int i = 0; i < np; ++i) {
+  std::size_t nNew = 0;
+  for (std::size_t i = 0; i < np; ++i) {
     if (mark[i]) continue;
     xp[nNew] = xp[i];
     yp[nNew] = yp[i];
@@ -406,7 +406,7 @@ void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
   // No risk of having a butterfly with less than 4 points.
   if (np <= 3) return;
   // Select the axis with the largest norm.
-  unsigned int iaxis = 0;
+  std::size_t iaxis = 0;
   if (xsurf > ysurf && xsurf > zsurf) {
     iaxis = 1;
   } else if (ysurf > zsurf) {
@@ -415,16 +415,16 @@ void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
     iaxis = 3;
   }
   // Set number of passes to avoid endless loop.
-  unsigned int nPass = 0;
+  std::size_t nPass = 0;
   bool repass = true;
   while (repass) {
     // Make a pass.
     ++nPass;
     repass = false;
-    for (unsigned int i = 0; i < np; ++i) {
-      const unsigned int ii = (i + 1) % np;
-      for (unsigned int j = i + 2; j < np; ++j) {
-        const unsigned int jj = (j + 1) % np;
+    for (std::size_t i = 0; i < np; ++i) {
+      const std::size_t ii = (i + 1) % np;
+      for (std::size_t j = i + 2; j < np; ++j) {
+        const std::size_t jj = (j + 1) % np;
         if (j + 1 >= np && jj >= i) continue;
         // Check for a crossing.
         if (iaxis == 1 && !Crossing(yp[i], zp[i], yp[ii], zp[ii], yp[j], zp[j],
@@ -438,9 +438,9 @@ void EliminateButterflies(std::vector<double>& xp, std::vector<double>& yp,
           continue;
         }
         // If there is a crossing, exchange the portion in between.
-        for (unsigned int k = 0; k < (j - i) / 2; ++k) {
-          const unsigned int k1 = (i + k + 1) % np;
-          const unsigned int k2 = (j - k) % np;
+        for (std::size_t k = 0; k < (j - i) / 2; ++k) {
+          const std::size_t k1 = (i + k + 1) % np;
+          const std::size_t k2 = (j - k) % np;
           std::swap(xp[k1], xp[k2]);
           std::swap(yp[k1], yp[k2]);
           std::swap(zp[k1], zp[k2]);
