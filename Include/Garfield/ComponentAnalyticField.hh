@@ -165,7 +165,7 @@ class ComponentAnalyticField : public Component {
   /// for a given group of wires or planes.
   void AddReadout(const std::string& label, const bool silent = false);
 
-  void SetNumberOfCellCopies(const unsigned int nfourier);
+  void SetNumberOfCellCopies(const std::size_t nfourier);
 
   /** Calculate multipole moments for a given wire.
    * \param iw Index of the wire.
@@ -177,41 +177,41 @@ class ComponentAnalyticField : public Component {
    * \param eps Used in the fit for calculating the covariance matrix.
    * \param nMaxIter Maximum number of iterations in the fit.
    **/
-  bool MultipoleMoments(const unsigned int iw, const unsigned int order = 4,
+  bool MultipoleMoments(const std::size_t iw, const std::size_t order = 4,
                         const bool print = false, const bool plot = false,
                         const double rmult = 1., const double eps = 1.e-4,
-                        const unsigned int nMaxIter = 20);
+                        const std::size_t nMaxIter = 20);
   /// Request dipole terms be included for each of the wires (default: off).
   void EnableDipoleTerms(const bool on = true);
   /// Check the quality of the capacitance matrix inversion (default: off).
   void EnableChargeCheck(const bool on = true) { m_chargeCheck = on; }
 
   /// Get the number of wires.
-  unsigned int GetNumberOfWires() const { return m_nWires; }
+  std::size_t GetNumberOfWires() const { return m_nWires; }
   /// Retrieve the parameters of a wire.
-  bool GetWire(const unsigned int i, double& x, double& y, double& diameter,
+  bool GetWire(const std::size_t i, double& x, double& y, double& diameter,
                double& voltage, std::string& label, double& length,
                double& charge, int& ntrap) const;
 
   /// Get the number of equipotential planes at constant x.
-  unsigned int GetNumberOfPlanesX() const;
+  std::size_t GetNumberOfPlanesX() const;
   /// Get the number of equipotential planes at constant y.
-  unsigned int GetNumberOfPlanesY() const;
+  std::size_t GetNumberOfPlanesY() const;
   /// Get the number of equipotential planes at constant radius.
-  unsigned int GetNumberOfPlanesR() const;
+  std::size_t GetNumberOfPlanesR() const;
   /// Get the number of equipotential planes at constant phi.
-  unsigned int GetNumberOfPlanesPhi() const;
+  std::size_t GetNumberOfPlanesPhi() const;
   /// Retrieve the parameters of a plane at constant x.
-  bool GetPlaneX(const unsigned int i, double& x, double& voltage,
+  bool GetPlaneX(const std::size_t i, double& x, double& voltage,
                  std::string& label) const;
   /// Retrieve the parameters of a plane at constant y.
-  bool GetPlaneY(const unsigned int i, double& y, double& voltage,
+  bool GetPlaneY(const std::size_t i, double& y, double& voltage,
                  std::string& label) const;
   /// Retrieve the parameters of a plane at constant radius.
-  bool GetPlaneR(const unsigned int i, double& r, double& voltage,
+  bool GetPlaneR(const std::size_t i, double& r, double& voltage,
                  std::string& label) const;
   /// Retrieve the parameters of a plane at constant phi.
-  bool GetPlanePhi(const unsigned int i, double& phi, double& voltage,
+  bool GetPlanePhi(const std::size_t i, double& phi, double& voltage,
                    std::string& label) const;
   /// Retrieve the tube parameters.
   bool GetTube(double& r, double& voltage, int& nEdges,
@@ -233,20 +233,20 @@ class ComponentAnalyticField : public Component {
   bool OptimiseOnTrack(const std::vector<std::string>& groups,
                        const std::string& field_function, const double target,
                        const double x0, const double y0, const double x1,
-                       const double y1, const unsigned int nP = 20,
+                       const double y1, const std::size_t nP = 20,
                        const bool print = true);
   /// Vary the potential of selected electrodes to match (a function of)
   /// the potential or field on an x-y (or r-phi) grid of points.
   bool OptimiseOnGrid(const std::vector<std::string>& groups,
                       const std::string& field_function, const double target,
                       const double x0, const double y0, const double x1,
-                      const double y1, const unsigned int nX = 10,
-                      const unsigned int nY = 10, const bool print = true);
+                      const double y1, const std::size_t nX = 10,
+                      const std::size_t nY = 10, const bool print = true);
   /// Vary the potential of selected electrodes to match (a function of)
   /// the potential or field on the surfaces of a set of wires.
   bool OptimiseOnWires(const std::vector<std::string>& groups,
                        const std::string& field_function, const double target,
-                       const std::vector<unsigned int>& wires,
+                       const std::vector<std::size_t>& wires,
                        const bool print = true);
 
   /** Set the conditions at which to allow the iteration to stop.
@@ -257,15 +257,15 @@ class ComponentAnalyticField : public Component {
    **/
   void SetOptimisationParameters(const double dist = 1.,
                                  const double eps = 1.e-4,
-                                 const unsigned int nMaxIter = 10);
+                                 const std::size_t nMaxIter = 10);
 
   /// Calculate the electric field at a given wire position, as if the wire
   /// itself were not there, but with the presence of its mirror images.
-  bool ElectricFieldAtWire(const unsigned int iw, double& ex, double& ey);
+  bool ElectricFieldAtWire(const std::size_t iw, double& ex, double& ey);
 
   /// Set the number of grid lines at which the electrostatic force
   /// as function of the wire displacement is computed.
-  void SetScanningGrid(const unsigned int nX, const unsigned int nY);
+  void SetScanningGrid(const std::size_t nX, const std::size_t nY);
   /// Specify explicitly the boundaries of the the scanning area (i. e. the
   /// area in which the electrostatic force acting on a wire is computed).
   void SetScanningArea(const double xmin, const double xmax, const double ymin,
@@ -297,7 +297,7 @@ class ComponentAnalyticField : public Component {
    * \param fxMap x-components of the force at the grid points
    * \param fyMap y-components of the force at the grid points
    **/
-  bool ForcesOnWire(const unsigned int iw, std::vector<double>& xMap,
+  bool ForcesOnWire(const std::size_t iw, std::vector<double>& xMap,
                     std::vector<double>& yMap,
                     std::vector<std::vector<double> >& fxMap,
                     std::vector<std::vector<double> >& fyMap);
@@ -311,15 +311,15 @@ class ComponentAnalyticField : public Component {
     * \param stretch relative elongation.
     * \param print flag to print the calculation results or not.
     **/
-  bool WireDisplacement(const unsigned int iw, const bool detailed,
+  bool WireDisplacement(const std::size_t iw, const bool detailed,
                         std::vector<double>& csag, std::vector<double>& xsag,
                         std::vector<double>& ysag, double& stretch,
                         const bool print = true);
   /// Set the number of shots used for numerically solving the wire sag
   /// differential equation.
-  void SetNumberOfShots(const unsigned int n) { m_nShots = n; }
+  void SetNumberOfShots(const std::size_t n) { m_nShots = n; }
   /// Set the number of integration steps within each shot (must be >= 1).
-  void SetNumberOfSteps(const unsigned int n);
+  void SetNumberOfSteps(const std::size_t n);
 
   Medium* GetMedium(const double x, const double y, const double z) override;
   void ElectricField(const double x, const double y, const double z, double& ex,
@@ -429,7 +429,7 @@ class ComponentAnalyticField : public Component {
   std::vector<std::string> m_readout;
 
   // Wires
-  unsigned int m_nWires{0};
+  std::size_t m_nWires{0};
   struct Wire {
     double x{0.};
     double y{0.};      ///< Location.
@@ -539,17 +539,17 @@ class ComponentAnalyticField : public Component {
     double e{0.};  ///< Charge.
   };
   std::vector<Charge3d> m_ch3d;
-  unsigned int m_nTermBessel{10};
-  unsigned int m_nTermPoly{100};
+  std::size_t m_nTermBessel{10};
+  std::size_t m_nTermPoly{100};
 
   bool m_useElectrostaticForce{true};
   bool m_useGravitationalForce{true};
   // Gravity
   std::array<double, 3> m_down{{0, 0, 1}};
   // Number of shots used for solving the wire sag differential equations
-  unsigned int m_nShots{2};
+  std::size_t m_nShots{2};
   // Number of integration steps within each shot.
-  unsigned int m_nSteps{20};
+  std::size_t m_nSteps{20};
   // Options for setting the range of wire shifts
   // for which the forces are computed.
   enum class ScanningRange { Largest = 0, FirstOrder, User };
@@ -562,8 +562,8 @@ class ComponentAnalyticField : public Component {
   // Scaling factor for first-order estimate of the scanning range.
   double m_scaleRange{2.};
   // Number of grid lines at which the forces are stored.
-  unsigned int m_nScanX{11};
-  unsigned int m_nScanY{11};
+  std::size_t m_nScanX{11};
+  std::size_t m_nScanY{11};
   // Extrapolate beyond the scanning range or not.
   bool m_extrapolateForces{false};
 
@@ -574,7 +574,7 @@ class ComponentAnalyticField : public Component {
   // field function at which to allow the iteration to stop.
   double m_optEps{1.e-4};
   // Maximum number of iterations in the optimisation fit.
-  unsigned int m_optNitmax{10};
+  std::size_t m_optNitmax{10};
 
   void UpdatePeriodicity() override;
   void Reset() override {
@@ -838,8 +838,8 @@ class ComponentAnalyticField : public Component {
   void InitialiseFitParameters(
       const std::vector<std::string>& groups, std::vector<double>& vw0,
       std::array<double, 5>& vp0, std::vector<double>& aFit,
-      std::vector<std::vector<unsigned int> >& wiresInGroup,
-      std::vector<std::vector<unsigned int> >& planesInGroup);
+      std::vector<std::vector<std::size_t> >& wiresInGroup,
+      std::vector<std::vector<std::size_t> >& planesInGroup);
 };
 }  // namespace Garfield
 
