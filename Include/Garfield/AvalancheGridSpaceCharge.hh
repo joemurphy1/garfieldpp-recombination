@@ -49,7 +49,7 @@ class AvalancheGridSpaceCharge {
   void EnableSpaceChargeEffect(const bool option = true) {
     m_bSpaceCharge = option;
     if (option) {
-      if (m_grid.empty()) {
+      if (m_zGrid.empty() || m_rGrid.empty()) {
         throw std::runtime_error(m_className +
                                  "::EnableSpaceChargeEffect: use Set2dGrid() "
                                  "before enabling space charge.");
@@ -201,11 +201,12 @@ class AvalancheGridSpaceCharge {
   void DistributeCharges(long nElectron, double nPosIon, double nNegIon, int iz,
                          int ir, double stepZ, double stepR, int gasGap);
 
-  // Get swarm parameters at electric field magnitude
-  void GetSwarmParameters(double emag, double &alpha, double &eta,
+  // Get swarm parameters.
+  void GetSwarmParameters(const double x, const double y, const double z, 
+                          const double emag, double &alpha, double &eta,
                           double &vd, double &dSigmaL, double &dSigmaT,
                           double &wv, double &wr, double &alphaPT,
-                          double &etaPT, int gasGap);
+                          double &etaPT) const;
 
   // Get from index the gas gap number, else -1
   int GetGasGapNumber(int layerIndex);

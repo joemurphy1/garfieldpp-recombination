@@ -290,13 +290,14 @@ void AvalancheGridSpaceCharge::AddElectrons(AvalancheMicroscopic *avmc) {
     m_vElectrons.resize(m_vIndexGasGaps.size());
   }
 
+  if (m_bDebug) std::cout << m_className << "::AddElectrons:\n";
   for (const auto &electron : avmc->GetElectrons()) {
-    // StatusOutsideTimeWindow (if electrons has been transported until reaching
-    // status -17 ~ still active)
-    if (electron.status != -17) {
-      if (m_bDebug)
-        std::cerr << m_className
-                  << "::AddElectrons: Status is not -17, continue.\n";
+    // Skip electrons that don't have status code "outside time window".
+    if (electron.status != StatusOutsideTimeWindow) {
+      if (m_bDebug) { 
+        std::cout << "    Skipping electron with status " 
+                  << electron.status << ".\n";
+      }
       continue;
     }
     int k = 0;
@@ -314,7 +315,7 @@ void AvalancheGridSpaceCharge::AddElectrons(AvalancheMicroscopic *avmc) {
         continue;
       }
     }
-    // add electrons to a vector-list
+    // Add the electron to a vector.
     Point pt{};
     pt.x = electron.path.back().x;
     pt.y = electron.path.back().y;
@@ -652,12 +653,12 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
 
   std::vector<double> alpha(n), eta(n), vd(n), dSigmaL(n), dSigmaT(n), wv(n),
       wr(n), alphaPT(n), etaPT(n);
-  double e[3], v;
+  double e[3];
   int status;
   Medium *m = nullptr;
   // iterate through the gas gaps
   for (int k = 0; k < n; k++) {
-    m_sensor->ElectricField(0, m_vYPointInGasGap[k], 0, e[0], e[1], e[2], v, m,
+    m_sensor->ElectricField(0, m_vYPointInGasGap[k], 0, e[0], e[1], e[2], m,
                             status);
 
     if (status != 0) {
@@ -671,8 +672,9 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
     // along y-axis
     //  i.e. Z-axis in our coordinate system.
     m_ezBkg[k] = e[1];
-    GetSwarmParameters(std::abs(e[1]), alpha[k], eta[k], vd[k], dSigmaL[k],
-                       dSigmaT[k], wv[k], wr[k], alphaPT[k], etaPT[k], k);
+    GetSwarmParameters(0., m_vYPointInGasGap[k], 0., std::abs(e[1]), 
+                       alpha[k], eta[k], vd[k], dSigmaL[k], dSigmaT[k], 
+                       wv[k], wr[k], alphaPT[k], etaPT[k]);
 
     // print-out to double-check the swarm parameters
     std::cout << m_className << "::Prepare2dMesh:\n"
@@ -797,9 +799,9 @@ void AvalancheGridSpaceCharge::PrepareElectronsFromMicroscopicAvalanche() {
 }
 
 void AvalancheGridSpaceCharge::GetSwarmParameters(
-    const double emag, double &alpha, double &eta, double &vd,
-    double &dSigmaL, double &dSigmaT, double &wv, double &wr, double &alphaPT,
-    double &etaPT, int gasGap) {
+    const double x, const double y, const double z, const double emag, 
+    double &alpha, double &eta, double &vd, double &dSigmaL, double &dSigmaT, 
+    double &wv, double &wr, double &alphaPT, double &etaPT) const {
   if (m_bDebug && false)
     std::cerr << m_className
               << "::GetSwarmParameters: Getting parameters at "
@@ -807,7 +809,7 @@ void AvalancheGridSpaceCharge::GetSwarmParameters(
               << emag << ".\n";
 
   // medium from sensor
-  Medium *m = m_sensor->GetMedium(0, m_vYPointInGasGap[gasGap], 0);
+  Medium *m = m_sensor->GetMedium(x, y, z);
 
   // alpha
   m->ElectronTownsend(0., emag, 0., 0., 0., 0., alpha);
@@ -988,9 +990,9 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         }
 
         // calculate the swarm parameters
-        GetSwarmParameters(emag, nd.townsend, nd.attachment, nd.vd,
+        GetSwarmParameters(0., zi, 0., emag, nd.townsend, nd.attachment, nd.vd,
                            nd.dSigmaL, nd.dSigmaT, nd.wv, nd.wr, nd.townsendPT,
-                           nd.attachmentPT, gasGap);
+                           nd.attachmentPT);
 
         // get new step distance
         double step = std::abs(nd.wr * m_dt);
