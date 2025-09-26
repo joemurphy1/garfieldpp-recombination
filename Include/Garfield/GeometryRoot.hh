@@ -32,9 +32,9 @@ class GeometryRoot : public Geometry {
                     const bool tesselated = false) const override;
 
   /// Get the number of materials defined in the ROOT geometry.
-  unsigned int GetNumberOfMaterials();
+  std::size_t GetNumberOfMaterials();
   /// Get a pointer to the ROOT material with a given index.
-  TGeoMaterial* GetMaterial(const unsigned int i);
+  TGeoMaterial* GetMaterial(const std::size_t i);
   /// Get a pointer to the ROOT material with a given name.
   TGeoMaterial* GetMaterial(const char* name);
 

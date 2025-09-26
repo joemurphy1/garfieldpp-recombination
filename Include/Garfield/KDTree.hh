@@ -50,7 +50,7 @@ class KDTree {
    * \param nn number of nearest neighbours
    * \param result indices and distances of the nearest neighbours
    */
-  void n_nearest(const std::vector<double>& qv, const unsigned int nn,
+  void n_nearest(const std::vector<double>& qv, const std::size_t nn,
                  std::vector<KDTreeResult>& result) const;
 
   /** Search for nn nearest neighbours around a node of the input data,
@@ -60,9 +60,8 @@ class KDTree {
    * \param nn number of nearest neighbours
    * \param result indices and distances of the nearest neighbours
    */
-  void n_nearest_around_point(const unsigned int idx,
-                              const unsigned int ndecorrel,
-                              const unsigned int nn,
+  void n_nearest_around_point(const std::size_t idx,
+                              const std::size_t ndecorrel, const std::size_t nn,
                               std::vector<KDTreeResult>& result) const;
 
   /** Search for all neighbors in a ball of size r2
@@ -75,8 +74,8 @@ class KDTree {
 
   /// Like r_nearest, but around an existing point,
   /// with decorrelation interval.
-  void r_nearest_around_point(const unsigned int idx,
-                              const unsigned int ndecorrel, const double r2,
+  void r_nearest_around_point(const std::size_t idx,
+                              const std::size_t ndecorrel, const double r2,
                               std::vector<KDTreeResult>& result) const;
 
   friend class KDTreeNode;
@@ -126,7 +125,7 @@ class KDTreeNode {
   KDTreeNode* right{nullptr};
 
   // Recursive innermost core routines for searching.
-  void search_n(const int idx0, const int nd, const unsigned int nn, double& r2,
+  void search_n(const int idx0, const int nd, const std::size_t nn, double& r2,
                 const std::vector<double>& qv, const KDTree& tree,
                 std::priority_queue<KDTreeResult>& res) const;
   void search_r(const int idx0, const int nd, const double r2,
@@ -140,7 +139,7 @@ class KDTreeNode {
 
   // For processing final buckets.
   void process_terminal_node_n(const int idx0, const int nd,
-                               const unsigned int nn, double& r2,
+                               const std::size_t nn, double& r2,
                                const std::vector<double>& qv,
                                const KDTree& tree,
                                std::priority_queue<KDTreeResult>& res) const;

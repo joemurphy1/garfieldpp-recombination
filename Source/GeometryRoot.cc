@@ -85,13 +85,13 @@ Medium* GeometryRoot::GetMedium(const double x, const double y, const double z,
   return it->second;
 }
 
-unsigned int GeometryRoot::GetNumberOfMaterials() {
+std::size_t GeometryRoot::GetNumberOfMaterials() {
   if (!m_geoManager)
     throw Exception("ROOT geometry is not defined. Call SetGeometry first");
   return m_geoManager->GetListOfMaterials()->GetEntries();
 }
 
-TGeoMaterial* GeometryRoot::GetMaterial(const unsigned int i) {
+TGeoMaterial* GeometryRoot::GetMaterial(const std::size_t i) {
   if (!m_geoManager)
     throw Exception("ROOT geometry is not defined. Call SetGeometry first");
   return m_geoManager->GetMaterial(i);

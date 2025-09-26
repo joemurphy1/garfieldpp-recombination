@@ -3380,7 +3380,7 @@ double neBEMTimeElapsed(clock_t t0, clock_t t1) {
 // returns number of lines in file fname
 // Interface.h
 int neBEMGetNbOfLines(const char fname[]) {
-  unsigned int number_of_lines = 0;
+  std::size_t number_of_lines = 0;
 
   FILE *infile = fopen(fname, "r");
 

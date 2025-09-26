@@ -19,7 +19,7 @@ namespace {
 
 double integrate(const Heed::PointCoorMesh<double, const double*>& mesh,
                  const std::vector<double>& y, double x1, double x2,
-                 const unsigned int xpower) {
+                 const std::size_t xpower) {
   if (xpower > 1) return 0.;
   if (x1 >= x2) return 0.;
   const long qi = mesh.get_qi();

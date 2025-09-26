@@ -307,8 +307,8 @@ int neBEMGetBoundingPlanes(int* ixmin, double* cxmin, double* vxmin, int* ixmax,
   *ixmin = *ixmax = 0;
   *vxmin = *vxmax = 0.;
   *cxmin = *cxmax = 0.;
-  const unsigned int nx = Garfield::gComponentNeBem3d->GetNumberOfPlanesX();
-  for (unsigned int i = 0; i < nx; ++i) {
+  const std::size_t nx = Garfield::gComponentNeBem3d->GetNumberOfPlanesX();
+  for (std::size_t i = 0; i < nx; ++i) {
     double x = 0., v = 0.;
     Garfield::gComponentNeBem3d->GetPlaneX(i, x, v);
     if (i == 0) {
@@ -324,8 +324,8 @@ int neBEMGetBoundingPlanes(int* ixmin, double* cxmin, double* vxmin, int* ixmax,
   *iymin = *iymax = 0;
   *vymin = *vymax = 0.;
   *cymin = *cymax = 0.;
-  const unsigned int ny = Garfield::gComponentNeBem3d->GetNumberOfPlanesY();
-  for (unsigned int i = 0; i < ny; ++i) {
+  const std::size_t ny = Garfield::gComponentNeBem3d->GetNumberOfPlanesY();
+  for (std::size_t i = 0; i < ny; ++i) {
     double y = 0., v = 0.;
     Garfield::gComponentNeBem3d->GetPlaneY(i, y, v);
     if (i == 0) {
@@ -341,8 +341,8 @@ int neBEMGetBoundingPlanes(int* ixmin, double* cxmin, double* vxmin, int* ixmax,
   *izmin = *izmax = 0;
   *vzmin = *vzmax = 0.;
   *czmin = *czmax = 0.;
-  const unsigned int nz = Garfield::gComponentNeBem3d->GetNumberOfPlanesZ();
-  for (unsigned int i = 0; i < nz; ++i) {
+  const std::size_t nz = Garfield::gComponentNeBem3d->GetNumberOfPlanesZ();
+  for (std::size_t i = 0; i < nz; ++i) {
     double z = 0., v = 0.;
     Garfield::gComponentNeBem3d->GetPlaneZ(i, z, v);
     if (i == 0) {
