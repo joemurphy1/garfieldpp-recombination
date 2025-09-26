@@ -17,14 +17,14 @@
 
 namespace {
 
-std::string FmtFloat(const double x, const std::size_t width = 15,
-                     const std::size_t precision = 8) {
+std::string FmtFloat(const double x, const int width = 15,
+                     const int precision = 8) {
   char buffer[256];
   std::snprintf(buffer, width + 1, "%*.*E", width, precision, x);
   return std::string(buffer);
 }
 
-std::string FmtInt(const int n, const std::size_t width) {
+std::string FmtInt(const int n, const int width) {
   char buffer[256];
   if (std::snprintf(buffer, width + 1, "%*d", width, n) < 0.) {
     std::cout << "    Warning: error formatting integer number " << n << "\n";
