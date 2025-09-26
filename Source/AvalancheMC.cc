@@ -77,11 +77,11 @@ std::array<double, 3> MidPoint(const std::array<double, 3>& x0,
 namespace Garfield {
 
 /// Return the number of electrons and ions/holes in the avalanche.
-std::pair<unsigned int, unsigned int> AvalancheMC::GetAvalancheSize() const {
+std::pair<std::size_t, std::size_t> AvalancheMC::GetAvalancheSize() const {
   return std::make_pair(m_nElectrons, std::max(m_nIons, m_nHoles));
 }
 /// Return the number of electrons and ions/holes in the avalanche.
-void AvalancheMC::GetAvalancheSize(unsigned int& ne, unsigned int& ni) const {
+void AvalancheMC::GetAvalancheSize(std::size_t& ne, std::size_t& ni) const {
   ne = m_nElectrons;
   ni = std::max(m_nIons, m_nHoles);
 }
@@ -128,7 +128,7 @@ void AvalancheMC::SetDistanceSteps(const double d) {
   m_dMc = d;
 }
 
-void AvalancheMC::SetCollisionSteps(const unsigned int n) {
+void AvalancheMC::SetCollisionSteps(const std::size_t n) {
   m_stepModel = StepModel::CollisionTime;
   if (n < 1) {
     std::cerr << m_className << "::SetCollisionSteps:\n    "

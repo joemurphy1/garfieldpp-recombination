@@ -137,7 +137,7 @@ class AvalancheMC {
   /// signal vector over a time bin in the Sensor class.
   /// The averaging is done with a \f$2\times navg + 1\f$ point
   /// Newton-Raphson integration. Default: 1.
-  void SetSignalAveragingOrder(const unsigned int navg) { m_navg = navg; }
+  void SetSignalAveragingOrder(const std::size_t navg) { m_navg = navg; }
   /// Use the weighting potential (as opposed to the weighting field)
   /// for calculating the induced signal.
   void UseWeightingPotential(const bool on = true) {
@@ -184,7 +184,7 @@ class AvalancheMC {
 
   /** Set a maximum avalanche size (ignore further multiplication
       once this size has been reached). */
-  void EnableAvalancheSizeLimit(const unsigned int size) { m_sizeCut = size; }
+  void EnableAvalancheSizeLimit(const std::size_t size) { m_sizeCut = size; }
   /// Do not limit the maximum avalanche size.
   void DisableAvalancheSizeLimit() { m_sizeCut = 0; }
   /// Return the currently set avalanche size limit.
@@ -196,7 +196,7 @@ class AvalancheMC {
   void SetDistanceSteps(const double d = 0.001);
   /** Use exponentially distributed time steps with mean equal
    * to the specified multiple of the collision time (default model).*/
-  void SetCollisionSteps(const unsigned int n = 100);
+  void SetCollisionSteps(const std::size_t n = 100);
   /// Retrieve the step distance from a user-supplied function.
   void SetStepDistanceFunction(double (*f)(double x, double y, double z));
 
@@ -213,9 +213,9 @@ class AvalancheMC {
   void SetIonSignalScalingFactor(const double scale) { m_scaleI = scale; }
 
   /// Return the number of electrons and ions/holes in the avalanche.
-  void GetAvalancheSize(unsigned int& ne, unsigned int& ni) const;
+  void GetAvalancheSize(std::size_t& ne, std::size_t& ni) const;
   /// Return the number of electrons and ions/holes in the avalanche.
-  std::pair<unsigned int, unsigned int> GetAvalancheSize() const;
+  std::pair<std::size_t, std::size_t> GetAvalancheSize() const;
   /// Switch debugging messages on/off (default: off).
   void EnableDebugging(const bool on = true) { m_debug = on; }
 
@@ -238,7 +238,7 @@ class AvalancheMC {
   /// Fixed distance step
   double m_dMc{0.001};
   /// Sample step size according to collision time
-  int m_nMc{100};
+  std::size_t m_nMc{100};
   /// User function returning the step size
   double (*m_fStep)(double x, double y, double z) = nullptr;
 
@@ -250,16 +250,16 @@ class AvalancheMC {
   double m_tMax{0.};
 
   /// Max. avalanche size.
-  unsigned int m_sizeCut{0};
+  std::size_t m_sizeCut{0};
 
   /// Number of electrons produced
-  unsigned int m_nElectrons{0};
+  std::size_t m_nElectrons{0};
   /// Number of holes produced
-  unsigned int m_nHoles{0};
+  std::size_t m_nHoles{0};
   /// Number of ions produced
-  unsigned int m_nIons{0};
+  std::size_t m_nIons{0};
   /// Number of negative ions produced
-  unsigned int m_nNegativeIons{0};
+  std::size_t m_nNegativeIons{0};
 
   /// Start/end points of all electrons in the avalanche
   /// (including captured ones).
@@ -276,7 +276,7 @@ class AvalancheMC {
 
   bool m_storeDriftLines{false};
   bool m_doSignal{true};
-  unsigned int m_navg{1};
+  std::size_t m_navg{1};
   bool m_useWeightingPotential{true};
   bool m_doInducedCharge{false};
   bool m_doEquilibration{true};
