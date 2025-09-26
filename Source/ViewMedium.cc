@@ -54,11 +54,7 @@ void ViewMedium::SetMedium(Medium* medium) {
 
 void ViewMedium::SetRangeE(const double emin, const double emax,
                            const bool logscale) {
-  if (emin >= emax || emin < 0.) {
-    std::cerr << m_className << "::SetRangeE: Incorrect range.\n";
-    return;
-  }
-
+  if (emin >= emax || emin < 0.) throw Exception("Incorrect range");
   m_eMin = emin;
   m_eMax = emax;
   m_logE = logscale;
@@ -66,11 +62,7 @@ void ViewMedium::SetRangeE(const double emin, const double emax,
 
 void ViewMedium::SetRangeB(const double bmin, const double bmax,
                            const bool logscale) {
-  if (bmin >= bmax || bmin < 0.) {
-    std::cerr << m_className << "::SetRangeB: Incorrect range.\n";
-    return;
-  }
-
+  if (bmin >= bmax || bmin < 0.) throw Exception("Incorrect range");
   m_bMin = bmin;
   m_bMax = bmax;
   m_logB = logscale;
@@ -78,11 +70,7 @@ void ViewMedium::SetRangeB(const double bmin, const double bmax,
 
 void ViewMedium::SetRangeA(const double amin, const double amax,
                            const bool logscale) {
-  if (amin >= amax || amin < 0.) {
-    std::cerr << m_className << "::SetRangeA: Incorrect range.\n";
-    return;
-  }
-
+  if (amin >= amax || amin < 0.) throw Exception("Incorrect range");
   m_aMin = amin;
   m_aMax = amax;
   m_logA = logscale;
@@ -90,11 +78,7 @@ void ViewMedium::SetRangeA(const double amin, const double amax,
 
 void ViewMedium::SetRangeY(const double ymin, const double ymax,
                            const bool logscale) {
-  if (ymin >= ymax || ymin < 0.) {
-    std::cerr << m_className << "::SetRangeY: Incorrect range.\n";
-    return;
-  }
-
+  if (ymin >= ymax || ymin < 0.) throw Exception("Incorrect range");
   m_yMin = ymin;
   m_yMax = ymax;
   m_logY = logscale;
@@ -102,11 +86,7 @@ void ViewMedium::SetRangeY(const double ymin, const double ymax,
 
 void ViewMedium::SetRangeEN(const double emin, const double emax,
                             const bool logscale) {
-  if (emin >= emax || emin < 0.) {
-    std::cerr << m_className << "::SetRangeEN: Incorrect range.\n";
-    return;
-  }
-
+  if (emin >= emax || emin < 0.) throw Exception("Incorrect range");
   m_enMin = emin;
   m_enMax = emax;
   m_logEN = logscale;
@@ -114,11 +94,7 @@ void ViewMedium::SetRangeEN(const double emin, const double emax,
 
 void ViewMedium::SetRangeEP(const double emin, const double emax,
                             const bool logscale) {
-  if (emin >= emax || emin < 0.) {
-    std::cerr << m_className << "::SetRangeEP: Incorrect range.\n";
-    return;
-  }
-
+  if (emin >= emax || emin < 0.) throw Exception("Incorrect range");
   m_epMin = emin;
   m_epMax = emax;
   m_logEP = logscale;
@@ -606,10 +582,7 @@ void ViewMedium::ResetX(const Axis xaxis) {
 
 void ViewMedium::PlotDiffusion(const Axis xaxis, const Charge charge,
                                const bool same) {
-  if (!m_medium) {
-    std::cerr << m_className << "::PlotDiffusion: Medium is not defined.\n";
-    return;
-  }
+  if (!m_medium) throw Exception("Medium is not defined");
   if (xaxis != m_xaxis) {
     ResetX(xaxis);
     ResetY();
@@ -935,11 +908,7 @@ void ViewMedium::PlotVelocity(const Axis xaxis, const Charge charge,
 
 void ViewMedium::PlotVelocityFluxBulk(const Axis xaxis, const Charge charge,
                                       const bool same) {
-  if (!m_medium) {
-    std::cerr << m_className
-              << "::PlotFluxBulkVelocity: Medium is not defined.\n";
-    return;
-  }
+  if (!m_medium) throw Exception("Medium is not defined");
   if (xaxis != m_xaxis) {
     ResetX(xaxis);
     ResetY();
@@ -1038,10 +1007,7 @@ void ViewMedium::PlotVelocityFluxBulk(const Axis xaxis, const Charge charge,
 void ViewMedium::Plot(const Axis xaxis, const Charge charge,
                       const Parameter par, const bool same) {
   // Make sure the medium is set.
-  if (!m_medium) {
-    std::cerr << m_className << "::Plot: Medium is not defined.\n";
-    return;
-  }
+  if (!m_medium) throw Exception("Medium is not defined");
   if (xaxis != m_xaxis) {
     ResetX(xaxis);
     ResetY();
@@ -1197,10 +1163,7 @@ void ViewMedium::Plot(const Axis xaxis, const Charge charge,
 void ViewMedium::PlotLorentzAngle(const Axis xaxis, const Charge charge,
                                   const bool same) {
   // Make sure the medium is set.
-  if (!m_medium) {
-    std::cerr << m_className << "::PlotLorentzAngle: Medium is not defined.\n";
-    return;
-  }
+  if (!m_medium) throw Exception("Medium is not defined");
   if (xaxis != m_xaxis) {
     ResetX(xaxis);
     ResetY();

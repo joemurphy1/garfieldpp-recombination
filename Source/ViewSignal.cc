@@ -23,20 +23,14 @@ void ViewSignal::SetSensor(Sensor* sensor) {
 }
 
 void ViewSignal::SetRangeX(const double xmin, const double xmax) {
-  if (std::fabs(xmax - xmin) < Small) {
-    std::cerr << m_className << "::SetRangeX: Invalid range.\n";
-    return;
-  }
+  if (std::fabs(xmax - xmin) < Small) throw Exception("Invalid range");
   m_xmin = std::min(xmin, xmax);
   m_xmax = std::max(xmin, xmax);
   m_userRangeX = true;
 }
 
 void ViewSignal::SetRangeY(const double ymin, const double ymax) {
-  if (std::fabs(ymax - ymin) < Small) {
-    std::cerr << m_className << "::SetRangeY: Invalid range.\n";
-    return;
-  }
+  if (std::fabs(ymax - ymin) < Small) throw Exception("Invalid range");
   m_ymin = std::min(ymin, ymax);
   m_ymax = std::max(ymin, ymax);
   m_userRangeY = true;
@@ -61,6 +55,7 @@ TH1* ViewSignal::DrawHistogram(TH1D& h, const std::string& opt,
 void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
                             const std::string& optP, const std::string& optD,
                             const bool same) {
+  if (!m_sensor) throw Exception("Sensor is not defined");
   const bool totT = true;
   const bool totP = optP.find("t") != std::string::npos ? true : false;
   const bool totD = optD.find("t") != std::string::npos ? true : false;
@@ -72,11 +67,6 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
   const bool ionD = optD.find("i") != std::string::npos ? true : false;
 
   constexpr double tol = 1e-50;
-
-  if (!m_sensor) {
-    std::cerr << m_className << "::PlotSignal: Sensor is not defined.\n";
-    return;
-  }
 
   auto canvas = GetCanvas();
   canvas->cd();

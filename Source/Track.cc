@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <iostream>
 #include <string>
 
 #include "Garfield/Exceptions.hh"
@@ -102,19 +101,13 @@ void Track::SetParticle(const std::string& part) {
     m_mass = 3.727379240e9;
     m_spin = 0;
     m_particleName = "alpha";
-  } else {
-    std::cerr << m_className << "::SetParticle:\n"
-              << "    Particle " << part << " is not defined.\n";
-  }
+  } else
+    throw Exception("Unknown particle");
 }
 
 void Track::SetEnergy(const double e) {
-  if (e <= m_mass) {
-    std::cerr << m_className << "::SetEnergy:\n"
-              << "    Particle energy must be greater than the mass.\n";
-    return;
-  }
-
+  if (e <= m_mass)
+    throw Exception("Particle energy must be greater than the mass");
   m_energy = e;
   const double gamma = m_energy / m_mass;
   m_beta2 = 1. - 1. / (gamma * gamma);
@@ -122,12 +115,7 @@ void Track::SetEnergy(const double e) {
 }
 
 void Track::SetBetaGamma(const double bg) {
-  if (bg <= 0.) {
-    std::cerr << m_className << "::SetBetaGamma:\n"
-              << "    Particle speed must be greater than zero.\n";
-    return;
-  }
-
+  if (bg <= 0.) throw Exception("Particle speed must be greater than zero");
   const double bg2 = bg * bg;
   m_energy = m_mass * sqrt(1. + bg2);
   m_beta2 = bg2 / (1. + bg2);
@@ -135,36 +123,22 @@ void Track::SetBetaGamma(const double bg) {
 }
 
 void Track::SetBeta(const double beta) {
-  if (beta <= 0. || beta >= 1.) {
-    std::cerr << m_className << "::SetBeta:\n"
-              << "    Beta must be between zero and one.\n";
-    return;
-  }
-
+  if (beta <= 0. || beta >= 1.)
+    throw Exception("Beta must be between zero and one");
   m_beta2 = beta * beta;
   m_energy = m_mass * sqrt(1. / (1. - m_beta2));
   m_isChanged = true;
 }
 
 void Track::SetGamma(const double gamma) {
-  if (gamma <= 1.) {
-    std::cerr << m_className << "::SetGamma:\n"
-              << "    Gamma must be greater than one.\n";
-    return;
-  }
-
+  if (gamma <= 1.) throw Exception("Gamma must be greater than one");
   m_energy = m_mass * gamma;
   m_beta2 = 1. - 1. / (gamma * gamma);
   m_isChanged = true;
 }
 
 void Track::SetMomentum(const double p) {
-  if (p <= 0.) {
-    std::cerr << m_className << "::SetMomentum:\n"
-              << "    Particle momentum must be greater than zero.\n";
-    return;
-  }
-
+  if (p <= 0.) throw Exception("Particle momentum must be greater than zero");
   m_energy = sqrt(m_mass * m_mass + p * p);
   const double bg = p / m_mass;
   m_beta2 = bg * bg / (1. + bg * bg);
@@ -172,12 +146,7 @@ void Track::SetMomentum(const double p) {
 }
 
 void Track::SetKineticEnergy(const double ekin) {
-  if (ekin <= 0.) {
-    std::cerr << m_className << "::SetKineticEnergy:\n"
-              << "    Kinetic energy must be greater than zero.\n";
-    return;
-  }
-
+  if (ekin <= 0.) throw Exception("Kinetic energy must be greater than zero");
   m_energy = m_mass + ekin;
   const double gamma = 1. + ekin / m_mass;
   m_beta2 = 1. - 1. / (gamma * gamma);
@@ -185,10 +154,7 @@ void Track::SetKineticEnergy(const double ekin) {
 }
 
 void Track::EnablePlotting(ViewDrift* view) {
-  if (!view) {
-    std::cerr << m_className << "::EnablePlotting: Null pointer.\n";
-    return;
-  }
+  if (!view) throw Exception("ViewDrift* is nullptr");
   m_viewer = view;
 }
 

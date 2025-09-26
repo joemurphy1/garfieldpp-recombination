@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 
+#include "Garfield/Exceptions.hh"
+
 namespace Garfield {
 
 SolidWire::SolidWire(const double cx, const double cy, const double cz,
@@ -52,18 +54,12 @@ bool SolidWire::GetBoundingBox(double& xmin, double& ymin, double& zmin,
 }
 
 void SolidWire::SetRadius(const double r) {
-  if (r <= 0.) {
-    std::cerr << "SolidWire::SetRadius: Radius must be > 0.\n";
-    return;
-  }
+  if (r <= 0.) throw Exception("Radius must be > 0");
   m_r = r;
 }
 
 void SolidWire::SetHalfLength(const double lz) {
-  if (lz <= 0.) {
-    std::cerr << "SolidWire::SetHalfLength: Half-length must be > 0.\n";
-    return;
-  }
+  if (lz <= 0.) throw Exception("Half-length must be > 0");
   m_lZ = lz;
 }
 

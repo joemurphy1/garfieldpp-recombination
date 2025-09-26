@@ -108,16 +108,16 @@ class MediumMagboltz : public MediumGas {
   /// Reset the collision counters.
   void ResetCollisionCounters();
   /// Get the total number of electron collisions.
-  unsigned int GetNumberOfElectronCollisions() const;
+  std::size_t GetNumberOfElectronCollisions() const;
   /// Get the number of collisions broken down by cross-section type.
-  unsigned int GetNumberOfElectronCollisions(unsigned int& nElastic,
-                                             unsigned int& nIonising,
-                                             unsigned int& nAttachment,
-                                             unsigned int& nInelastic,
-                                             unsigned int& nExcitation,
-                                             unsigned int& nSuperelastic) const;
+  std::size_t GetNumberOfElectronCollisions(std::size_t& nElastic,
+                                            std::size_t& nIonising,
+                                            std::size_t& nAttachment,
+                                            std::size_t& nInelastic,
+                                            std::size_t& nExcitation,
+                                            std::size_t& nSuperelastic) const;
   /// Get the number of cross-section terms.
-  unsigned int GetNumberOfLevels();
+  std::size_t GetNumberOfLevels();
   /// Get detailed information about a given cross-section term i.
   bool GetLevel(const unsigned int i, int& ngas, int& type, std::string& descr,
                 double& e);
@@ -125,7 +125,7 @@ class MediumMagboltz : public MediumGas {
   bool GetPenningTransfer(const unsigned int i, double& r, double& lambda);
 
   /// Get the number of collisions for a specific cross-section term.
-  unsigned int GetNumberOfElectronCollisions(const unsigned int level) const;
+  std::size_t GetNumberOfElectronCollisions(const std::size_t level) const;
 
   /// Get the number of Penning transfers that occured since the last reset.
   unsigned int GetNumberOfPenningTransfers() const { return m_nPenning; }

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Polygon.hh"
 
@@ -112,28 +113,19 @@ bool SolidTube::GetBoundingBox(double& xmin, double& ymin, double& zmin,
 }
 
 void SolidTube::SetRadius(const double r) {
-  if (r <= 0.) {
-    std::cerr << "SolidTube::SetRadius: Radius must be > 0.\n";
-    return;
-  }
+  if (r <= 0.) throw Exception("Radius must be > 0");
   m_rO = r;
   UpdatePolygon();
 }
 
 void SolidTube::SetHalfLength(const double lz) {
-  if (lz <= 0.) {
-    std::cerr << "SolidTube::SetHalfLength: Half-length must be > 0.\n";
-    return;
-  }
+  if (lz <= 0.) throw Exception("Half-length must be > 0");
   m_lZ = lz;
   UpdatePolygon();
 }
 
 void SolidTube::SetSectors(const unsigned int n) {
-  if (n < 1) {
-    std::cerr << "SolidTube::SetSectors: Number must be > 0.\n";
-    return;
-  }
+  if (n < 1) throw Exception("Number must be > 0");
   m_n = n;
   UpdatePolygon();
 }

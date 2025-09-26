@@ -86,44 +86,35 @@ Medium* GeometryRoot::GetMedium(const double x, const double y, const double z,
 }
 
 unsigned int GeometryRoot::GetNumberOfMaterials() {
-  if (!m_geoManager) {
-    PrintGeoNotDefined("GetNumberOfMaterials");
-    return 0;
-  }
-
+  if (!m_geoManager)
+    throw Exception("ROOT geometry is not defined. Call SetGeometry first");
   return m_geoManager->GetListOfMaterials()->GetEntries();
 }
 
 TGeoMaterial* GeometryRoot::GetMaterial(const unsigned int i) {
-  if (!m_geoManager) {
-    PrintGeoNotDefined("GetMaterial");
-    return nullptr;
-  }
-
+  if (!m_geoManager)
+    throw Exception("ROOT geometry is not defined. Call SetGeometry first");
   return m_geoManager->GetMaterial(i);
 }
 
 TGeoMaterial* GeometryRoot::GetMaterial(const char* name) {
-  if (!m_geoManager) {
-    PrintGeoNotDefined("GetMaterial");
-    return nullptr;
-  }
-
+  if (!m_geoManager)
+    throw Exception("ROOT geometry is not defined. Call SetGeometry first");
   return m_geoManager->GetMaterial(name);
 }
 
 bool GeometryRoot::IsInside(const double x, const double y, const double z,
                             const bool /*tesselated*/) const {
-  if (m_geoManager) {
-    m_geoManager->SetCurrentPoint(x, y, z);
-    return !m_geoManager->IsOutside();
-  }
-  return false;
+  if (!m_geoManager)
+    throw Exception("ROOT geometry is not defined. Call SetGeometry first");
+  m_geoManager->SetCurrentPoint(x, y, z);
+  return !m_geoManager->IsOutside();
 }
 
 bool GeometryRoot::GetBoundingBox(double& xmin, double& ymin, double& zmin,
                                   double& xmax, double& ymax, double& zmax) {
-  if (!m_geoManager) return false;
+  if (!m_geoManager)
+    throw Exception("ROOT geometry is not defined. Call SetGeometry first");
   auto top = m_geoManager->GetTopVolume();
   if (!top) return false;
   if (!top->GetShape()) return false;
@@ -142,11 +133,6 @@ bool GeometryRoot::GetBoundingBox(double& xmin, double& ymin, double& zmin,
   zmin = oz - dz;
   zmax = oz + dz;
   return true;
-}
-
-void GeometryRoot::PrintGeoNotDefined(const std::string& fcn) const {
-  std::cerr << m_className + "::" + fcn << ":\n"
-            << "    ROOT geometry is not defined. Call SetGeometry first.\n";
 }
 
 }  // namespace Garfield

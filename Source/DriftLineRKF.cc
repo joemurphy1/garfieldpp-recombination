@@ -65,12 +65,8 @@ void DriftLineRKF::SetSensor(Sensor* sensor) {
 }
 
 void DriftLineRKF::SetIntegrationAccuracy(const double eps) {
-  if (eps > 0.) {
-    m_accuracy = eps;
-  } else {
-    std::cerr << m_className << "::SetIntegrationAccuracy:\n"
-              << "    Accuracy must be greater than zero.\n";
-  }
+  if (eps <= 0.) throw Exception("Accuracy must be greater than zero");
+  m_accuracy = eps;
 }
 
 void DriftLineRKF::SetMaximumStepSize() {
@@ -79,20 +75,13 @@ void DriftLineRKF::SetMaximumStepSize() {
 }
 
 void DriftLineRKF::SetMaximumStepSize(const double ms) {
-  if (ms > 0.) {
-    m_maxStepSize = ms;
-    m_useStepSizeLimit = true;
-  } else {
-    std::cerr << m_className << "::SetMaximumStepSize:\n"
-              << "    Step size must be greater than zero.\n";
-  }
+  if (ms <= 0.) throw Exception("Step size must be greater than zero");
+  m_maxStepSize = ms;
+  m_useStepSizeLimit = true;
 }
 
 void DriftLineRKF::EnablePlotting(ViewDrift* view) {
-  if (!view) {
-    std::cerr << m_className << "::EnablePlotting: Null pointer.\n";
-    return;
-  }
+  if (!view) throw Exception("ViewDrift* is nullptr");
   m_view = view;
 }
 
@@ -114,11 +103,7 @@ void DriftLineRKF::SetGainFluctuationsFixed(const double gain) {
 void DriftLineRKF::SetGainFluctuationsPolya(const double theta,
                                             const double mean,
                                             const bool quiet) {
-  if (theta < 0.) {
-    std::cerr << m_className << "::SetGainFluctuationsPolya: "
-              << "Shape parameter must be >= 0.\n";
-    return;
-  }
+  if (theta < 0.) throw Exception("Shape parameter must be >= 0");
   if (!quiet) {
     if (mean > 1.) {
       std::cout << m_className << "::SetGainFluctuationsPolya: "

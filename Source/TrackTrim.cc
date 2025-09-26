@@ -89,7 +89,7 @@ namespace Garfield {
 
 TrackTrim::TrackTrim() : Track("Trim") { m_q = 1.; }
 
-TrackTrim::TrackTrim(Sensor* sensor) : TrackTrim() { m_sensor = sensor; }
+TrackTrim::TrackTrim(Sensor* sensor) : TrackTrim() { SetSensor(sensor); }
 
 /// Set the projectile charge [-].
 void TrackTrim::SetCharge(const double q) {

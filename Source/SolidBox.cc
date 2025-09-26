@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/Polygon.hh"
 
 namespace Garfield {
@@ -54,27 +55,18 @@ bool SolidBox::GetBoundingBox(double& xmin, double& ymin, double& zmin,
 }
 
 void SolidBox::SetHalfLengthX(const double lx) {
-  if (lx > 0.) {
-    m_lX = lx;
-  } else {
-    std::cerr << "SolidBox::SetHalfLengthX: Half-length must be > 0.\n";
-  }
+  if (lx <= 0.) throw Exception("Half-length must be > 0");
+  m_lX = lx;
 }
 
 void SolidBox::SetHalfLengthY(const double ly) {
-  if (ly > 0.) {
-    m_lY = ly;
-  } else {
-    std::cerr << "SolidBox::SetHalfLengthY: Half-length must be > 0.\n";
-  }
+  if (ly <= 0.) throw Exception("Half-length must be > 0");
+  m_lY = ly;
 }
 
 void SolidBox::SetHalfLengthZ(const double lz) {
-  if (lz > 0.) {
-    m_lZ = lz;
-  } else {
-    std::cerr << "SolidBox::SetHalfLengthZ: Half-length must be > 0.\n";
-  }
+  if (lz <= 0.) throw Exception("Half-length must be > 0");
+  m_lZ = lz;
 }
 
 bool SolidBox::SolidPanels(std::vector<Panel>& panels) {

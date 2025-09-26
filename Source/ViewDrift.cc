@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/ParticleTypes.hh"
 
 namespace Garfield {
@@ -34,19 +35,13 @@ void ViewDrift::Clear() {
 }
 
 void ViewDrift::SetClusterMarkerSize(const double size) {
-  if (size > 0.) {
-    m_markerSizeCluster = size;
-  } else {
-    std::cerr << m_className << "::SetClusterMarkerSize: Size must be > 0.\n";
-  }
+  if (size <= 0.) throw Exception("Size must be > 0");
+  m_markerSizeCluster = size;
 }
 
 void ViewDrift::SetCollisionMarkerSize(const double size) {
-  if (size > 0.) {
-    m_markerSizeCollision = size;
-  } else {
-    std::cerr << m_className << "::SetCollisionMarkerSize: Size must be > 0.\n";
-  }
+  if (size <= 0.) throw Exception("Size must be > 0");
+  m_markerSizeCollision = size;
 }
 
 void ViewDrift::GetDriftLine(const size_t i,

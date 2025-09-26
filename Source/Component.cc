@@ -27,7 +27,7 @@ void Component::SetGeometry(Geometry* geometry) {
 }
 
 Medium* Component::GetMedium(const double x, const double y, const double z) {
-  if (!m_geometry) return nullptr;
+  if (!m_geometry) throw Exception("geometry is not set");
   return m_geometry->GetMedium(x, y, z);
 }
 
@@ -202,11 +202,7 @@ bool Component::HasMagneticField() const {
 double Component::IntegrateFluxCircle(const double xc, const double yc,
                                       const double r, const unsigned int nI) {
   // FLDIN2, FCHK3
-  if (nI == 0) {
-    std::cerr << m_className << "::IntegrateFluxCircle:\n"
-              << "    Number of intervals must be > 0.\n";
-    return 0.;
-  }
+  if (nI == 0) throw Exception("Number of intervals must be > 0");
   // Number of Gaussian quadrature points per interval.
   constexpr size_t nG = 6;
   auto tg = Numerics::GaussLegendreNodes6();
@@ -238,11 +234,7 @@ double Component::IntegrateFluxSphere(const double xc, const double yc,
                                       const double zc, const double r,
                                       const unsigned int nI) {
   // FLDIN3, FCHK2, FCHK1
-  if (nI == 0) {
-    std::cerr << m_className << "::IntegrateFluxSphere:\n"
-              << "    Number of intervals must be > 0.\n";
-    return 0.;
-  }
+  if (nI == 0) throw Exception("Number of intervals must be > 0");
   // Number of Gaussian quadrature points.
   constexpr size_t nG = 6;
   auto tg = Numerics::GaussLegendreNodes6();
@@ -312,11 +304,8 @@ double Component::IntegrateFluxParallelogram(
     const double dz2, const unsigned int nU, const unsigned int nV,
     const bool wfield, const std::string& label) {
   // FLDIN4, FCHK4, FCHK5
-  if (nU <= 1 || nV <= 1) {
-    std::cerr << m_className << "::IntegrateFluxParallelogram:\n"
-              << "    Number of points to integrate over must be > 1.\n";
-    return 0.;
-  }
+  if (nU <= 1 || nV <= 1)
+    throw Exception("Number of points to integrate over (nU, nV) must be > 1");
   // Number of Gaussian quadrature points.
   constexpr size_t nG = 6;
   auto tg = Numerics::GaussLegendreNodes6();
@@ -398,11 +387,8 @@ double Component::IntegrateFluxLine(const double x0, const double y0,
   const double zn = zp / pmag;
 
   // Check integration points.
-  if (nI <= 1) {
-    std::cerr << m_className << "::IntegrateFluxLine:\n"
-              << "    Number of points to integrate over must be > 1.\n";
-    return 0.;
-  }
+  if (nI <= 1)
+    throw Exception("Number of points to integrate over must be > 1");
   // Ensure the segment has non-zero length.
   const double vx = x1 - x0;
   const double vy = y1 - y0;

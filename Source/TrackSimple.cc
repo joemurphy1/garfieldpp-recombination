@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
@@ -11,27 +12,21 @@ namespace Garfield {
 
 TrackSimple::TrackSimple() : Track("Simple") {}
 
-TrackSimple::TrackSimple(Sensor* sensor) : TrackSimple() { m_sensor = sensor; }
+TrackSimple::TrackSimple(Sensor* sensor) : TrackSimple() { SetSensor(sensor); }
 
 void TrackSimple::SetClusterDensity(const double d) {
-  if (d < Small) {
-    std::cerr << m_className << "::SetClusterDensity:\n"
-              << "    Cluster density (number of clusters per cm)"
-              << " must be positive.\n";
-    return;
-  }
+  if (d < Small)
+    throw Exception(
+        "Cluster density (number of clusters per cm) must be positive");
   m_mfp = 1. / d;
 }
 
 double TrackSimple::GetClusterDensity() { return 1. / m_mfp; }
 
 void TrackSimple::SetStoppingPower(const double dedx) {
-  if (dedx < Small) {
-    std::cerr << m_className << "::SetStoppingPower:\n"
-              << "    Stopping power (average energy loss [eV] per cm)"
-              << " must be positive.\n";
-    return;
-  }
+  if (dedx < Small)
+    throw Exception(
+        "Stopping power (average energy loss [eV] per cm) must be positive");
   m_eloss = dedx;
 }
 
@@ -40,13 +35,9 @@ double TrackSimple::GetStoppingPower() { return m_eloss; }
 bool TrackSimple::NewTrack(const double x0, const double y0, const double z0,
                            const double t0, const double dx0, const double dy0,
                            const double dz0) {
-  m_clusters.clear();
   // Make sure the sensor is defined.
-  if (!m_sensor) {
-    std::cerr << m_className << "::NewTrack: Sensor is not defined.\n";
-    return false;
-  }
-
+  if (!m_sensor) throw Exception("Sensor is not defined");
+  m_clusters.clear();
   // Make sure we are inside a medium.
   Medium* medium = m_sensor->GetMedium(x0, y0, z0);
   if (!medium) {

@@ -94,11 +94,7 @@ void AvalancheMC::SetSensor(Sensor* sensor) {
 }
 
 void AvalancheMC::EnablePlotting(ViewDrift* view) {
-  if (!view) {
-    std::cerr << m_className << "::EnablePlotting: Null pointer.\n";
-    return;
-  }
-
+  if (!view) throw Exception("ViewDrift* is nullptr");
   m_viewer = view;
 }
 
@@ -149,21 +145,14 @@ void AvalancheMC::SetCollisionSteps(const unsigned int n) {
 
 void AvalancheMC::SetStepDistanceFunction(double (*f)(double x, double y,
                                                       double z)) {
-  if (!f) {
-    std::cerr << m_className << "::SetStepDistanceFunction: Null pointer.\n";
-    return;
-  }
+  if (!f) throw Exception("f is nullptr");
   m_fStep = f;
   m_stepModel = StepModel::UserDistance;
 }
 
 void AvalancheMC::SetTimeWindow(const double t0, const double t1) {
-  if (fabs(t1 - t0) < Small) {
-    std::cerr << m_className << "::SetTimeWindow:\n"
-              << "    Time interval must be greater than zero.\n";
-    return;
-  }
-
+  if (fabs(t1 - t0) < Small)
+    throw Exception("Time interval must be greater than zero");
   m_tMin = std::min(t0, t1);
   m_tMax = std::max(t0, t1);
   m_hasTimeWindow = true;
@@ -172,11 +161,7 @@ void AvalancheMC::SetTimeWindow(const double t0, const double t1) {
 void AvalancheMC::GetIonEndpoint(const size_t i, double& x0, double& y0,
                                  double& z0, double& t0, double& x1, double& y1,
                                  double& z1, double& t1, int& status) const {
-  if (i >= m_ions.size()) {
-    std::cerr << m_className << "::GetIonEndpoint: Index out of range.\n";
-    return;
-  }
-
+  if (i >= m_ions.size()) throw Exception("Index out of range");
   x0 = m_ions[i].path.front().x;
   y0 = m_ions[i].path.front().y;
   z0 = m_ions[i].path.front().z;
@@ -192,12 +177,7 @@ void AvalancheMC::GetNegativeIonEndpoint(const size_t i, double& x0, double& y0,
                                          double& z0, double& t0, double& x1,
                                          double& y1, double& z1, double& t1,
                                          int& status) const {
-  if (i >= m_negativeIons.size()) {
-    std::cerr << m_className
-              << "::GetNegativeIonEndpoint: Index out of range.\n";
-    return;
-  }
-
+  if (i >= m_negativeIons.size()) throw Exception("Index out of range");
   x0 = m_negativeIons[i].path.front().x;
   y0 = m_negativeIons[i].path.front().y;
   z0 = m_negativeIons[i].path.front().z;
@@ -213,11 +193,7 @@ void AvalancheMC::GetElectronEndpoint(const size_t i, double& x0, double& y0,
                                       double& z0, double& t0, double& x1,
                                       double& y1, double& z1, double& t1,
                                       int& status) const {
-  if (i >= m_electrons.size()) {
-    std::cerr << m_className << "::GetElectronEndpoint: Index out of range.\n";
-    return;
-  }
-
+  if (i >= m_electrons.size()) throw Exception("Index out of range");
   x0 = m_electrons[i].path.front().x;
   y0 = m_electrons[i].path.front().y;
   z0 = m_electrons[i].path.front().z;
@@ -709,11 +685,7 @@ bool AvalancheMC::TransportParticles(std::vector<Seed>& stack, const bool withE,
   m_negativeIons.clear();
 
   // Make sure the sensor is defined.
-  if (!m_sensor) {
-    std::cerr << m_className
-              << "::TransportParticles: Sensor is not defined.\n";
-    return false;
-  }
+  if (!m_sensor) throw Exception("Sensor is not defined");
 
   // Count the number of particles.
   m_nElectrons = 0;

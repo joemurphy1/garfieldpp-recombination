@@ -76,11 +76,8 @@ void AvalancheGrid::SetGrid(const double xmin, const double xmax,
   m_gridset = true;
 
   if (zmin >= zmax || zsteps <= 0 || xmin > xmax || xsteps <= 0 ||
-      ymin > ymax || ysteps <= 0) {
-    std::cerr << m_className
-              << "::SetGrid: Error. Grid is not properly defined.\n";
-    return;
-  }
+      ymin > ymax || ysteps <= 0)
+    throw Exception("Grid is not properly defined");
 
   // Creating the z-coordinate grid.
   m_zStepSize = (zmax - zmin) / zsteps;
@@ -114,10 +111,7 @@ void AvalancheGrid::SetGrid(const double xmin, const double xmax,
 bool AvalancheGrid::SnapToGrid(const double x, const double y, const double z,
                                const double /*v*/, const int n) {
   // Snap electron from AvalancheMicroscopic to the predefined grid.
-  if (!m_gridset) {
-    std::cerr << m_className << "::SnapToGrid: Error. Grid is not defined.\n";
-    return false;
-  }
+  if (!m_gridset) throw Exception("Grid is not defined");
   // Finding the position on the grid.
   // TODO: Snap must be dependent on the direction of drift.
   int iX = round((x - m_xgrid.front()) / m_xStepSize);

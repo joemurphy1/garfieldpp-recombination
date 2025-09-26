@@ -160,11 +160,11 @@ class MediumSilicon : public Medium {
   // Reset the collision counters
   void ResetCollisionCounters();
   // Get the total number of electron collisions
-  unsigned int GetNumberOfElectronCollisions() const;
+  std::size_t GetNumberOfElectronCollisions() const;
   // Get number of scattering rate terms
   unsigned int GetNumberOfLevels() const;
   // Get number of collisions for a specific level
-  unsigned int GetNumberOfElectronCollisions(const unsigned int level) const;
+  std::size_t GetNumberOfElectronCollisions(const std::size_t level) const;
 
   unsigned int GetNumberOfElectronBands() const;
   int GetElectronBandPopulation(const int band);
@@ -312,14 +312,14 @@ class MediumSilicon : public Medium {
   double m_fbDosMaxC{0.};
 
   // Optical data
-  enum class optical_data: std::size_t
-  {
-    Egamma=0,
+  enum class optical_data : std::size_t {
+    Egamma = 0,
     Eps1,
     Eps2,
   };
   static constexpr std::size_t m_optical_data_size{1127};
-  static const std::array<std::array<double,4>,m_optical_data_size> m_optical_data;
+  static const std::array<std::array<double, 4>, m_optical_data_size>
+      m_optical_data;
 
   bool Update();
   void UpdateLatticeMobility();

@@ -1,8 +1,8 @@
 #include "Garfield/MediumCdTe.hh"
 
 #include <cmath>
-#include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 
 namespace Garfield {
@@ -33,9 +33,8 @@ void MediumCdTe::GetComponent(const unsigned int i, std::string& label,
   } else if (i == 1) {
     label = "Te";
     f = 0.5;
-  } else {
-    std::cerr << m_className << "::GetComponent: Index out of range.\n";
-  }
+  } else
+    throw Exception("Index out of range");
 }
 
 bool MediumCdTe::ElectronVelocity(const double ex, const double ey,
@@ -136,11 +135,8 @@ bool MediumCdTe::HoleAttachment(const double ex, const double ey,
 }
 
 void MediumCdTe::SetLowFieldMobility(const double mue, const double muh) {
-  if (mue <= 0. || muh <= 0.) {
-    std::cerr << m_className << "::SetLowFieldMobility:\n"
-              << "    Mobility must be greater than zero.\n";
-    return;
-  }
+  if (mue <= 0. || muh <= 0.)
+    throw Exception("mue and muh Mobilities must be greater than zero");
   m_eMobility = mue;
   m_hMobility = muh;
   m_userMobility = true;

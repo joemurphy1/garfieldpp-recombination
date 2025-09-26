@@ -1,8 +1,8 @@
 #include "Garfield/MediumGaAs.hh"
 
 #include <cmath>
-#include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 
 namespace Garfield {
@@ -33,7 +33,8 @@ void MediumGaAs::GetComponent(const unsigned int i, std::string& label,
   } else if (i == 1) {
     label = "As";
     f = 0.5;
-  }
+  } else
+    throw Exception("Index out of range");
 }
 
 bool MediumGaAs::ElectronVelocity(const double ex, const double ey,
@@ -163,11 +164,8 @@ bool MediumGaAs::HoleAttachment(const double ex, const double ey,
 }
 
 void MediumGaAs::SetLowFieldMobility(const double mue, const double muh) {
-  if (mue <= 0. || muh <= 0.) {
-    std::cerr << m_className << "::SetLowFieldMobility:\n"
-              << "    Mobility must be greater than zero.\n";
-    return;
-  }
+  if (mue <= 0. || muh <= 0.)
+    throw Exception("mue muh Mobilities must be greater than zero");
   m_eMobility = mue;
   m_hMobility = muh;
   m_userMobility = true;

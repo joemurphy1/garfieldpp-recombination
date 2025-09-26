@@ -17,10 +17,7 @@ void GeometrySimple::SetMedium(Medium* medium) {
 
 void GeometrySimple::AddSolid(Solid* solid, Medium* medium) {
   // Make sure the solid and the medium are defined.
-  if (!solid || !medium) {
-    std::cerr << m_className << "::AddSolid: Null pointer.\n";
-    return;
-  }
+  if (!solid || !medium) throw Exception("Solid* or Medium* is nullptr");
 
   // Update the bounding box ranges
   double xmin, ymin, zmin;
@@ -70,18 +67,12 @@ Medium* GeometrySimple::GetMedium(const double x, const double y,
 }
 
 Solid* GeometrySimple::GetSolid(const size_t i) const {
-  if (i >= m_solids.size()) {
-    std::cerr << m_className << "::GetSolid: Index out of range.\n";
-    return nullptr;
-  }
+  if (i >= m_solids.size()) throw Exception("Index out of range");
   return m_solids[i].first;
 }
 
 Solid* GeometrySimple::GetSolid(const size_t i, Medium*& medium) const {
-  if (i >= m_solids.size()) {
-    std::cerr << m_className << "::GetSolid: Index out of range.\n";
-    return nullptr;
-  }
+  if (i >= m_solids.size()) throw Exception("Index out of range");
   medium = m_solids[i].second;
   return m_solids[i].first;
 }

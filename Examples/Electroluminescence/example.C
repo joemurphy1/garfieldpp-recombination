@@ -88,12 +88,12 @@ int main(int argc, char* argv[]) {
         std::cout << "Unexpected status (" << electron.status << ").\n";
       }
     }
-    unsigned int nEl = 0;
-    unsigned int nIon = 0;
-    unsigned int nAtt = 0;
-    unsigned int nInel = 0;
-    unsigned int nExc = 0;
-    unsigned int nSup = 0;
+    std::size_t nEl = 0;
+    std::size_t nIon = 0;
+    std::size_t nAtt = 0;
+    std::size_t nInel = 0;
+    std::size_t nExc = 0;
+    std::size_t nSup = 0;
     gas.GetNumberOfElectronCollisions(nEl, nIon, nAtt, nInel, nExc, nSup);
     gas.ResetCollisionCounters();
     nVUV.push_back(nExc + ni);

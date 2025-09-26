@@ -2,8 +2,8 @@
 
 #include <TGraph.h>
 #include <TROOT.h>
-#include <TVirtualPad.h>
 #include <TStyle.h>
+#include <TVirtualPad.h>
 
 #include <array>
 #include <cmath>
@@ -11,6 +11,7 @@
 #include <string>
 
 #include "Garfield/Component.hh"
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Sensor.hh"
 
@@ -67,10 +68,9 @@ std::string Fmt(const double x) {
 namespace Garfield {
 
 void SetDefaultStyle(const bool serif) {
-
   auto style = gROOT->GetStyle("Garfield");
-  if (style) return; 
-  style = new TStyle("Garfield",  "Garfield Style");
+  if (style) return;
+  style = new TStyle("Garfield", "Garfield Style");
   style->SetFillColor(1);
   style->SetFillStyle(1001);
   style->SetCanvasBorderMode(0);
@@ -188,12 +188,8 @@ void ViewBase::SetRange(TVirtualPad* pad, const double x0, const double y0,
 void ViewBase::SetArea(const double xmin, const double ymin, const double xmax,
                        const double ymax) {
   // Check range, assign if non-null.
-  if (xmin == xmax || ymin == ymax) {
-    std::cerr << m_className << "::SetArea: Null area is not permitted.\n"
-              << "      " << xmin << " < x < " << xmax << "\n"
-              << "      " << ymin << " < y < " << ymax << "\n";
-    return;
-  }
+  if (xmin == xmax || ymin == ymax)
+    throw Exception("Null area range not permitted");
   m_xMinPlot = std::min(xmin, xmax);
   m_yMinPlot = std::min(ymin, ymax);
   m_xMaxPlot = std::max(xmin, xmax);
@@ -205,10 +201,8 @@ void ViewBase::SetArea(const double xmin, const double ymin, const double zmin,
                        const double xmax, const double ymax,
                        const double zmax) {
   // Check range, assign if non-null
-  if (xmin == xmax || ymin == ymax || zmin == zmax) {
-    std::cerr << m_className << "::SetArea: Null area range not permitted.\n";
-    return;
-  }
+  if (xmin == xmax || ymin == ymax || zmin == zmax)
+    throw Exception("Null area range not permitted");
   m_xMinBox = std::min(xmin, xmax);
   m_yMinBox = std::min(ymin, ymax);
   m_zMinBox = std::min(zmin, zmax);

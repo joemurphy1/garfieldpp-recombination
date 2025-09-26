@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/Polygon.hh"
 
@@ -144,50 +145,32 @@ bool SolidHole::GetBoundingBox(double& xmin, double& ymin, double& zmin,
 }
 
 void SolidHole::SetUpperRadius(const double r) {
-  if (r <= 0.) {
-    std::cerr << "SolidHole::SetUpperRadius: Radius must be > 0.\n";
-    return;
-  }
+  if (r <= 0.) throw Exception("Radius must be > 0");
   m_rUp = r;
 }
 
 void SolidHole::SetLowerRadius(const double r) {
-  if (r <= 0.) {
-    std::cerr << "SolidHole::SetLowerRadius: Radius must be > 0.\n";
-    return;
-  }
+  if (r <= 0.) throw Exception("Radius must be > 0");
   m_rLow = r;
 }
 
 void SolidHole::SetHalfLengthX(const double lx) {
-  if (lx <= 0.) {
-    std::cerr << "SolidHole::SetHalfLengthX: Half-length must be > 0.\n";
-    return;
-  }
+  if (lx <= 0.) throw Exception("Half-length must be > 0");
   m_lX = lx;
 }
 
 void SolidHole::SetHalfLengthY(const double ly) {
-  if (ly <= 0.) {
-    std::cerr << "SolidHole::SetHalfLengthY: Half-length must be > 0.\n";
-    return;
-  }
+  if (ly <= 0.) throw Exception("Half-length must be > 0");
   m_lY = ly;
 }
 
 void SolidHole::SetHalfLengthZ(const double lz) {
-  if (lz <= 0.) {
-    std::cerr << "SolidHole::SetHalfLengthZ: Half-length must be > 0.\n";
-    return;
-  }
+  if (lz <= 0.) throw Exception("Half-length must be > 0");
   m_lZ = lz;
 }
 
 void SolidHole::SetSectors(const unsigned int n) {
-  if (n < 1) {
-    std::cerr << "SolidHole::SetSectors: Number must be > 0.\n";
-    return;
-  }
+  if (n < 1) throw Exception("Number must be > 0");
   m_n = n;
   Update();
 }

@@ -1,8 +1,8 @@
 #include "Garfield/MediumDiamond.hh"
 
 #include <cmath>
-#include <iostream>
 
+#include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 
 namespace Garfield {
@@ -31,9 +31,8 @@ void MediumDiamond::GetComponent(const unsigned int i, std::string& label,
   if (i == 0) {
     label = "C";
     f = 1.;
-  } else {
-    std::cerr << m_className << "::GetComponent: Index out of range.\n";
-  }
+  } else
+    throw Exception("Index out of range");
 }
 
 bool MediumDiamond::ElectronVelocity(const double ex, const double ey,
@@ -139,11 +138,8 @@ bool MediumDiamond::HoleAttachment(const double ex, const double ey,
 }
 
 void MediumDiamond::SetLowFieldMobility(const double mue, const double muh) {
-  if (mue <= 0. || muh <= 0.) {
-    std::cerr << m_className << "::SetLowFieldMobility:\n"
-              << "    Mobility must be greater than zero.\n";
-    return;
-  }
+  if (mue <= 0. || muh <= 0.)
+    throw Exception("mue muh Mobilities must be greater than zero");
   m_eMobility = mue;
   m_hMobility = muh;
   m_userMobility = true;
@@ -158,11 +154,8 @@ void MediumDiamond::UnsetLowFieldMobility() {
 void MediumDiamond::SetSaturationVelocity(const double vsate,
                                           const double vsath) {
   std::lock_guard<std::mutex> guard(m_mutex);
-  if (vsate <= 0. || vsath <= 0.) {
-    std::cerr << m_className << "::SetSaturationVelocity:\n"
-              << "    Velocity must be greater than zero.\n";
-    return;
-  }
+  if (vsate <= 0. || vsath <= 0.)
+    throw Exception("vsate vsath Velocities must be greater than zero");
   m_eSatVel = vsate;
   m_hSatVel = vsath;
 }
