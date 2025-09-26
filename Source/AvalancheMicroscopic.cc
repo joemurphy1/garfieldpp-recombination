@@ -96,10 +96,10 @@ void RotationMatrix(double bx, double by, double bz, const double bmag,
     rX[1][2] = -fy / ft;
     rX[2][1] = -rX[1][2];
   }
-  for (unsigned int i = 0; i < 3; ++i) {
-    for (unsigned int j = 0; j < 3; ++j) {
+  for (std::size_t i = 0; i < 3; ++i) {
+    for (std::size_t j = 0; j < 3; ++j) {
       rot[i][j] = 0.;
-      for (unsigned int k = 0; k < 3; ++k) {
+      for (std::size_t k = 0; k < 3; ++k) {
         rot[i][j] += rX[i][k] * rB[k][j];
       }
     }
@@ -198,9 +198,9 @@ void AvalancheMicroscopic::SetDistanceHistogram(TH1* histo, const char opt) {
 void AvalancheMicroscopic::EnableDistanceHistogramming(const int type) {
   // Check if this type of collision is already registered
   // for histogramming.
-  const unsigned int nDistanceHistogramTypes = m_distanceHistogramType.size();
+  const std::size_t nDistanceHistogramTypes = m_distanceHistogramType.size();
   if (nDistanceHistogramTypes > 0) {
-    for (unsigned int i = 0; i < nDistanceHistogramTypes; ++i) {
+    for (std::size_t i = 0; i < nDistanceHistogramTypes; ++i) {
       if (m_distanceHistogramType[i] != type) continue;
       std::cout << m_className << "::EnableDistanceHistogramming:\n";
       std::cout << "    Collision type " << type

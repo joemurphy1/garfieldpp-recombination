@@ -131,7 +131,7 @@ class AvalancheMicroscopic {
 
   /** Set a max. avalanche size (i. e. ignore ionising collisions
    once this size has been reached). */
-  void EnableAvalancheSizeLimit(const unsigned int size) { m_sizeCut = size; }
+  void EnableAvalancheSizeLimit(const std::size_t size) { m_sizeCut = size; }
   /// Do not apply a limit on the avalanche size.
   void DisableAvalancheSizeLimit() { m_sizeCut = 0; }
   /// Retrieve the currently set size limit.
@@ -144,7 +144,7 @@ class AvalancheMicroscopic {
   }
 
   /// Set number of collisions to be skipped for storing drift lines.
-  void SetCollisionSteps(const unsigned int n) { m_nCollSkip = n; }
+  void SetCollisionSteps(const std::size_t n) { m_nCollSkip = n; }
 
   /// Define a time interval (only carriers inside the interval are simulated).
   void SetTimeWindow(const double t0, const double t1);
@@ -376,7 +376,7 @@ class AvalancheMicroscopic {
   double m_gammaCut{0.};
 
   // Max. avalanche size
-  unsigned int m_sizeCut{0};
+  std::size_t m_sizeCut{0};
 
   std::size_t m_nCollSkip{100};
   std::size_t m_nCollPlot{100};
