@@ -1380,12 +1380,12 @@ bool ComponentNeBem2d::Solve(const std::vector<std::vector<double> >& invmat,
   if (m_debug) {
     std::cout << m_className << "::Solve:\n  Element  Solution\n";
     for (std::size_t i = 0; i < nElements; ++i) {
-      std::printf(" %8u   %15.5f\n", i, m_elements[i].q);
+      std::printf(" %8lu   %15.5f\n", i, m_elements[i].q);
     }
     if (!m_wires.empty()) {
       std::cout << "   Wire    Solution\n";
       for (std::size_t i = 0; i < nWires; ++i) {
-        std::printf("  %8u   %15.5f\n", i, m_wires[i].q);
+        std::printf("  %8lu   %15.5f\n", i, m_wires[i].q);
       }
     }
   }
@@ -1470,14 +1470,14 @@ bool ComponentNeBem2d::CheckConvergence(const double tol,
       const double dv = v0 - tgt.bc.second;
       if (fabs(dv) > tol) ok[i] = false;
       if (m_debug) {
-        std::printf(" %8u  cond.  %15.5f  %15.5f %15.5f\n", i, v0,
+        std::printf(" %8lu  cond.  %15.5f  %15.5f %15.5f\n", i, v0,
                     tgt.bc.second, dv);
       }
     } else if (tgt.bc.first == Dielectric) {
       // Dielectric-dielectric interface
       // TODO.
       n1 = n0 + 0.5 * InvEpsilon0 * tgt.q / tgt.lambda;
-      if (m_debug) std::printf(" %8u  diel.  %15.5f  %15.5f\n", i, n0, n1);
+      if (m_debug) std::printf(" %8lu  diel.  %15.5f  %15.5f\n", i, n0, n1);
     }
     ++i;
   }
@@ -1510,7 +1510,7 @@ bool ComponentNeBem2d::CheckConvergence(const double tol,
     }
     const double v0 = scale * std::accumulate(v.begin(), v.end(), 0.);
     if (m_debug) {
-      std::printf(" %8u  wire   %15.5f  %15.5f\n", i, v0, tgt.v);
+      std::printf(" %8lu  wire   %15.5f  %15.5f\n", i, v0, tgt.v);
     }
     ++i;
   }

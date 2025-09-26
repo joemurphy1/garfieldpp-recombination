@@ -90,7 +90,7 @@ class MediumMagboltz : public MediumGas {
   /// Get the (real) collision rate [ns-1] at a given electron energy e [eV].
   double GetElectronCollisionRate(const double e, const int band) override;
   /// Get the collision rate [ns-1] for a specific level.
-  double GetElectronCollisionRate(const double e, const unsigned int level,
+  double GetElectronCollisionRate(const double e, const std::size_t level,
                                   const int band);
   /// Sample the collision type.
   bool ElectronCollision(const double e, int& type, int& level, double& e1,
@@ -119,23 +119,23 @@ class MediumMagboltz : public MediumGas {
   /// Get the number of cross-section terms.
   std::size_t GetNumberOfLevels();
   /// Get detailed information about a given cross-section term i.
-  bool GetLevel(const unsigned int i, int& ngas, int& type, std::string& descr,
+  bool GetLevel(const std::size_t i, int& ngas, int& type, std::string& descr,
                 double& e);
   /// Get the Penning transfer probability and distance of a specific level.
-  bool GetPenningTransfer(const unsigned int i, double& r, double& lambda);
+  bool GetPenningTransfer(const std::size_t i, double& r, double& lambda);
 
   /// Get the number of collisions for a specific cross-section term.
   std::size_t GetNumberOfElectronCollisions(const std::size_t level) const;
 
   /// Get the number of Penning transfers that occured since the last reset.
-  unsigned int GetNumberOfPenningTransfers() const { return m_nPenning; }
+  std::size_t GetNumberOfPenningTransfers() const { return m_nPenning; }
 
   /// Get the total number of photon collisions.
-  unsigned int GetNumberOfPhotonCollisions() const;
+  std::size_t GetNumberOfPhotonCollisions() const;
   /// Get number of photon collisions by collision type.
-  unsigned int GetNumberOfPhotonCollisions(unsigned int& nElastic,
-                                           unsigned int& nIonising,
-                                           unsigned int& nInelastic) const;
+  std::size_t GetNumberOfPhotonCollisions(std::size_t& nElastic,
+                                          std::size_t& nIonising,
+                                          std::size_t& nInelastic) const;
 
   /// Take the thermal motion of the gas at the selected temperature
   /// into account in the calculations done by Magboltz.
@@ -187,7 +187,7 @@ class MediumMagboltz : public MediumGas {
   void GenerateGasTable(const int numCollisions = 10,
                         const bool verbose = true);
 
-  void PlotElectronCrossSections(const unsigned int i, TPad* pad);
+  void PlotElectronCrossSections(const std::size_t i, TPad* pad);
   void PlotElectronCollisionRates(TPad* pad);
   void PlotElectronInverseMeanFreePath(TPad* pad);
 
@@ -226,7 +226,7 @@ class MediumMagboltz : public MediumGas {
   /// Flag enabling/disabling output of cross-section table to file
   bool m_useCsOutput{false};
   /// Number of different cross-section types in the current gas mixture
-  unsigned int m_nTerms{0};
+  std::size_t m_nTerms{0};
 
   /// Mass
   std::array<double, m_nMaxGases> m_mgas;
@@ -252,12 +252,12 @@ class MediumMagboltz : public MediumGas {
   /// Fluorescence yield
   std::array<double, Magboltz::nMaxLevels> m_yFluorescence;
   /// Number of Auger electrons produced in a collision
-  std::array<unsigned int, Magboltz::nMaxLevels> m_nAuger1;
-  std::array<unsigned int, Magboltz::nMaxLevels> m_nAuger2;
+  std::array<std::size_t, Magboltz::nMaxLevels> m_nAuger1;
+  std::array<std::size_t, Magboltz::nMaxLevels> m_nAuger2;
   /// Energy imparted to Auger electrons
   std::array<double, Magboltz::nMaxLevels> m_eAuger1;
   std::array<double, Magboltz::nMaxLevels> m_eAuger2;
-  std::array<unsigned int, Magboltz::nMaxLevels> m_nFluorescence;
+  std::array<std::size_t, Magboltz::nMaxLevels> m_nFluorescence;
   std::array<double, Magboltz::nMaxLevels> m_eFluorescence;
 
   // Parameters for calculation of scattering angles
@@ -288,9 +288,9 @@ class MediumMagboltz : public MediumGas {
   /// 3: inelastic
   /// 4: excitation
   /// 5: super-elastic
-  std::array<unsigned int, nCsTypes> m_nCollisions;
+  std::array<std::size_t, nCsTypes> m_nCollisions;
   /// Number of collisions for each cross-section term
-  std::vector<unsigned int> m_nCollisionsDetailed;
+  std::vector<std::size_t> m_nCollisionsDetailed;
 
   // Penning transfer
   /// Penning transfer probability (by level)
@@ -298,7 +298,7 @@ class MediumMagboltz : public MediumGas {
   /// Mean distance of Penning ionisation (by level)
   std::array<double, Magboltz::nMaxLevels> m_lambdaPenning;
   /// Number of Penning ionisations
-  unsigned int m_nPenning{0};
+  std::size_t m_nPenning{0};
 
   // Deexcitation
   /// Flag enabling/disabling detailed simulation of de-excitation process
@@ -355,7 +355,7 @@ class MediumMagboltz : public MediumGas {
   double m_eFinalGamma{0.};
   double m_eStepGamma{0.};
   // Number of photon collision cross-section terms
-  unsigned int m_nPhotonTerms{0};
+  std::size_t m_nPhotonTerms{0};
   // Total photon collision frequencies
   std::vector<double> m_cfTotGamma;
   // Photon collision frequencies
@@ -366,7 +366,7 @@ class MediumMagboltz : public MediumGas {
   // 1: ionisation
   // 2: inelastic
   // 3: excitation
-  std::array<unsigned int, nCsTypesGamma> m_nPhotonCollisions;
+  std::array<std::size_t, nCsTypesGamma> m_nPhotonCollisions;
 
   bool Update(const bool verbose = false);
   bool Mixer(const bool verbose = false);

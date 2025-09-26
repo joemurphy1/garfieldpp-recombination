@@ -1083,9 +1083,9 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
       return false;
     }
     std::cout << m_className << "::LoadMesh:\n";
-    std::printf("%12.6f < x [cm] < %12.6f, %5u points\n", xmin, xmax, nx);
-    std::printf("%12.6f < y [cm] < %12.6f, %5u points\n", ymin, ymax, ny);
-    std::printf("%12.6f < z [cm] < %12.6f, %5u points\n", zmin, zmax, nz);
+    std::printf("%12.6f < x [cm] < %12.6f, %5lu points\n", xmin, xmax, nx);
+    std::printf("%12.6f < y [cm] < %12.6f, %5lu points\n", ymin, ymax, ny);
+    std::printf("%12.6f < z [cm] < %12.6f, %5lu points\n", zmin, zmax, nz);
     if (cylindrical) {
       m_coordinates = Coordinates::Cylindrical;
     } else {
@@ -1263,13 +1263,13 @@ bool ComponentGrid::LoadMesh(const std::string& filename, std::string format,
   }
   std::cout << m_className << "::LoadMesh:\n";
   if (cylindrical) {
-    std::printf("%12.6f < r [cm] < %12.6f, %5u points\n", xmin, xmax, nx);
-    std::printf("%12.6f < theta  < %12.6f, %5u points\n", ymin, ymax, ny);
+    std::printf("%12.6f < r [cm] < %12.6f, %5lu points\n", xmin, xmax, nx);
+    std::printf("%12.6f < theta  < %12.6f, %5lu points\n", ymin, ymax, ny);
   } else {
-    std::printf("%12.6f < x [cm] < %12.6f, %5u points\n", xmin, xmax, nx);
-    std::printf("%12.6f < y [cm] < %12.6f, %5u points\n", ymin, ymax, ny);
+    std::printf("%12.6f < x [cm] < %12.6f, %5lu points\n", xmin, xmax, nx);
+    std::printf("%12.6f < y [cm] < %12.6f, %5lu points\n", ymin, ymax, ny);
   }
-  std::printf("%12.6f < z [cm] < %12.6f, %5u points\n", zmin, zmax, nz);
+  std::printf("%12.6f < z [cm] < %12.6f, %5lu points\n", zmin, zmax, nz);
   std::size_t nExpected = nx;
   if (fmt == Format::XZ || fmt == Format::IK) {
     nExpected *= nz;
@@ -1966,11 +1966,11 @@ void ComponentGrid::Print() {
     std::cout << "    Mesh not set.\n";
     return;
   }
-  std::printf("    %15.8f < x [cm] < %15.8f, %10u nodes\n", m_xMin[0],
+  std::printf("    %15.8f < x [cm] < %15.8f, %10lu nodes\n", m_xMin[0],
               m_xMax[0], m_nX[0]);
-  std::printf("    %15.8f < y [cm] < %15.8f, %10u nodes\n", m_xMin[1],
+  std::printf("    %15.8f < y [cm] < %15.8f, %10lu nodes\n", m_xMin[1],
               m_xMax[1], m_nX[1]);
-  std::printf("    %15.8f < z [cm] < %15.8f, %10u nodes\n", m_xMin[2],
+  std::printf("    %15.8f < z [cm] < %15.8f, %10lu nodes\n", m_xMin[2],
               m_xMax[2], m_nX[2]);
   if (m_efields.empty() && m_bfields.empty() && m_wfields.empty() &&
       m_wdfields.empty() && m_eAttachment.empty() && m_hAttachment.empty() &&

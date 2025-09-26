@@ -11,16 +11,16 @@ namespace Garfield {
 
 namespace Magboltz {
 
-constexpr unsigned int nEnergySteps = 4000;
-constexpr unsigned int nMaxIonisationTerms = 30;
-constexpr unsigned int nMaxInelasticTerms = 250;
-constexpr unsigned int nMaxAttachmentTerms = 8;
-constexpr unsigned int nMaxNullTerms = 10;
-constexpr unsigned int nMaxLevelsPerComponent = 300;
-constexpr unsigned int nCharName = 25;
-constexpr unsigned int nCharDescr = 50;
-constexpr unsigned int nMaxLevels = 960;
-constexpr unsigned int nMaxComponents = 6;
+constexpr std::size_t nEnergySteps = 4000;
+constexpr std::size_t nMaxIonisationTerms = 30;
+constexpr std::size_t nMaxInelasticTerms = 250;
+constexpr std::size_t nMaxAttachmentTerms = 8;
+constexpr std::size_t nMaxNullTerms = 10;
+constexpr std::size_t nMaxLevelsPerComponent = 300;
+constexpr std::size_t nCharName = 25;
+constexpr std::size_t nCharDescr = 50;
+constexpr std::size_t nMaxLevels = 960;
+constexpr std::size_t nMaxComponents = 6;
 constexpr std::size_t MaxNumberGas{6};
 
 extern "C" {
