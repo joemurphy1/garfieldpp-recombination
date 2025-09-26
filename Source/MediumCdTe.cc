@@ -25,7 +25,7 @@ MediumCdTe::MediumCdTe() : Medium() {
   m_fano = 0.1;
 }
 
-void MediumCdTe::GetComponent(const unsigned int i, std::string& label,
+void MediumCdTe::GetComponent(const std::size_t i, std::string& label,
                               double& f) {
   if (i == 0) {
     label = "Cd";

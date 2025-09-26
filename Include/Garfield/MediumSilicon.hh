@@ -162,17 +162,17 @@ class MediumSilicon : public Medium {
   // Get the total number of electron collisions
   std::size_t GetNumberOfElectronCollisions() const;
   // Get number of scattering rate terms
-  unsigned int GetNumberOfLevels() const;
+  std::size_t GetNumberOfLevels() const;
   // Get number of collisions for a specific level
   std::size_t GetNumberOfElectronCollisions(const std::size_t level) const;
 
-  unsigned int GetNumberOfElectronBands() const;
+  std::size_t GetNumberOfElectronBands() const;
   int GetElectronBandPopulation(const int band);
 
   bool GetOpticalDataRange(double& emin, double& emax,
-                           const unsigned int i = 0) override;
+                           const std::size_t i = 0) override;
   bool GetDielectricFunction(const double e, double& eps1, double& eps2,
-                             const unsigned int i = 0) override;
+                             const std::size_t i = 0) override;
 
   void ComputeSecondaries(const double e0, double& ee, double& eh);
 
@@ -295,13 +295,13 @@ class MediumSilicon : public Medium {
   Band m_vb;
 
   // Collision counters
-  unsigned int m_nCollElectronAcoustic{0};
-  unsigned int m_nCollElectronOptical{0};
-  unsigned int m_nCollElectronIntervalley{0};
-  unsigned int m_nCollElectronImpurity{0};
-  unsigned int m_nCollElectronIonisation{0};
-  std::vector<unsigned int> m_nCollElectronDetailed;
-  std::vector<unsigned int> m_nCollElectronBand;
+  std::size_t m_nCollElectronAcoustic{0};
+  std::size_t m_nCollElectronOptical{0};
+  std::size_t m_nCollElectronIntervalley{0};
+  std::size_t m_nCollElectronImpurity{0};
+  std::size_t m_nCollElectronIonisation{0};
+  std::vector<std::size_t> m_nCollElectronDetailed;
+  std::vector<std::size_t> m_nCollElectronBand;
 
   // Density of states tables
   double m_eStepDos{0.};

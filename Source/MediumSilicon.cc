@@ -904,7 +904,7 @@ std::size_t MediumSilicon::GetNumberOfElectronCollisions() const {
          m_nCollElectronIonisation;
 }
 
-unsigned int MediumSilicon::GetNumberOfLevels() const {
+std::size_t MediumSilicon::GetNumberOfLevels() const {
   return m_cb[0].nLevels + m_cb[1].nLevels + m_cb[2].nLevels;
 }
 
@@ -918,7 +918,7 @@ std::size_t MediumSilicon::GetNumberOfElectronCollisions(
   return m_nCollElectronDetailed[level];
 }
 
-unsigned int MediumSilicon::GetNumberOfElectronBands() const {
+std::size_t MediumSilicon::GetNumberOfElectronBands() const {
   return m_cb[0].nValleys + m_cb[1].nValleys + 1;
 }
 
@@ -932,7 +932,7 @@ int MediumSilicon::GetElectronBandPopulation(const int band) {
 }
 
 bool MediumSilicon::GetOpticalDataRange(double& emin, double& emax,
-                                        const unsigned int i) {
+                                        const std::size_t i) {
   if (i != 0) {
     std::cerr << m_className << "::GetOpticalDataRange: Index out of range.\n";
   }
@@ -947,7 +947,7 @@ bool MediumSilicon::GetOpticalDataRange(double& emin, double& emax,
 }
 
 bool MediumSilicon::GetDielectricFunction(const double e, double& eps1,
-                                          double& eps2, const unsigned int i) {
+                                          double& eps2, const std::size_t i) {
   if (i != 0) throw Exception("Index out of range");
 
   // Make sure the requested energy is within the range of the table.

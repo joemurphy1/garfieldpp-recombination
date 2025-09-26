@@ -18,7 +18,7 @@ class MediumGaAs : public Medium {
 
   bool IsSemiconductor() const override { return true; }
 
-  void GetComponent(const unsigned int i, std::string& label,
+  void GetComponent(const std::size_t i, std::string& label,
                     double& f) override;
 
   // Electron transport parameters

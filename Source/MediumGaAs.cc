@@ -25,7 +25,7 @@ MediumGaAs::MediumGaAs() : Medium() {
   m_fano = 0.1;
 }
 
-void MediumGaAs::GetComponent(const unsigned int i, std::string& label,
+void MediumGaAs::GetComponent(const std::size_t i, std::string& label,
                               double& f) {
   if (i == 0) {
     label = "Ga";
