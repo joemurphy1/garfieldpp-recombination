@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
   // Create a sensor.
   Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "pad");
-  const unsigned int nBins = 100;
+  const std::size_t nBins = 100;
   sensor.SetTimeWindow(0, 0.1, nBins);
   AvalancheMicroscopic aval(&sensor);
   aval.UseWeightingPotential(true);

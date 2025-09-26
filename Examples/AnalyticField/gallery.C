@@ -141,9 +141,9 @@ void circle(ComponentAnalyticField* cmp, double& xmin, double& xmax,
   cmp->AddPlaneY(-50., 0.);
   cmp->AddPlaneY(50., 0.);
   const double r = 5.;
-  const unsigned int n = 16;
+  const std::size_t n = 16;
   const double d = 0.01;
-  for (unsigned int i = 0; i < 16; ++i) {
+  for (std::size_t i = 0; i < 16; ++i) {
     const double f = double(i) / n;
     const double phi = TwoPi * f;
     const double x = r * cos(phi);

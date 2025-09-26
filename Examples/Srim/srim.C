@@ -61,8 +61,8 @@ int main(int argc, char* argv[]) {
   TH1F* hNe = new TH1F("hNe", ";electrons;entries", 100, 54000, 56000);
 
   // Generate tracks.
-  const unsigned int nTracks = 1000;
-  for (unsigned int i = 0; i < nTracks; ++i) {
+  const std::size_t nTracks = 1000;
+  for (std::size_t i = 0; i < nTracks; ++i) {
     if (!tr.NewTrack(0., 0., 0., 0., 1., 0., 0.)) {
       std::cerr << "Generating clusters failed; skipping this track.\n";
       continue;
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
     const auto& clusters = tr.GetClusters();
     if (clusters.empty()) continue;
     // Count the total number of electrons.
-    unsigned int netot = 0;
+    std::size_t netot = 0;
     for (const auto& cluster : clusters) netot += cluster.n;
     const auto& last = clusters.back();
     hX->Fill(last.x);

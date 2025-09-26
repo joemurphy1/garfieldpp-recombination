@@ -38,8 +38,8 @@ int main() {
   TH1F hDeltaZ("hDeltaZ", "Distance between collisions", 150, 0., 150.e-4);
   aval.SetDistanceHistogram(&hDeltaZ, 'z');
   aval.EnableDistanceHistogramming(1);
-  constexpr unsigned int nEvents = 10;
-  for (unsigned int j = 0; j < nEvents; ++j) {
+  constexpr std::size_t nEvents = 10;
+  for (std::size_t j = 0; j < nEvents; ++j) {
     // Initial electron energy [eV].
     constexpr double e0 = 1.;
     aval.AvalancheElectron(0, 0, gap, 0, e0, 0, 0, 0);

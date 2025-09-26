@@ -348,10 +348,9 @@ bool ComponentGrid::SetMesh(const unsigned int nx, const unsigned int ny,
   return true;
 }
 
-bool ComponentGrid::GetMesh(unsigned int& nx, unsigned int& ny,
-                            unsigned int& nz, double& xmin, double& xmax,
-                            double& ymin, double& ymax, double& zmin,
-                            double& zmax) const {
+bool ComponentGrid::GetMesh(std::size_t& nx, std::size_t& ny, std::size_t& nz,
+                            double& xmin, double& xmax, double& ymin,
+                            double& ymax, double& zmin, double& zmax) const {
   if (!m_hasMesh) return false;
   nx = m_nX[0];
   ny = m_nX[1];
@@ -747,7 +746,7 @@ bool ComponentGrid::AddElectricField(ComponentGrid* cmp, const double scale,
   if (!m_hasMesh) {
     std::cerr << m_className << "::AddElectricField: Taking mesh from input\n";
 
-    unsigned int nx, ny, nz;
+    std::size_t nx, ny, nz;
     double xmin, xmax, ymin;
     double ymax, zmin, zmax;
     cmp->GetMesh(nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax);

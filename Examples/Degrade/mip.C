@@ -37,10 +37,10 @@ int main(int argc, char* argv[]) {
   TrackDegrade track(&sensor);
   track.SetBetaGamma(3.);
   track.Initialise(&gas, true);
-  for (unsigned int i = 0; i < 1000; ++i) {
+  for (std::size_t i = 0; i < 1000; ++i) {
     if (i % 10 == 0) std::cout << "Track " << i << "...\n";
     track.NewTrack(0., 0., 0., 0., 1., 0., 0.);
-    unsigned int nsum = 0;
+    std::size_t nsum = 0;
     for (const auto& cluster : track.GetClusters()) {
       nsum += cluster.electrons.size();
       hClusterSize.Fill(cluster.electrons.size());

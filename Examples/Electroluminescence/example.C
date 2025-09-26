@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 
   // Simulation parameters
   // Number of primary electrons (avalanches) to simulate
-  constexpr unsigned int npe = 10;
+  constexpr std::size_t npe = 10;
   // Electric field [V cm-1]
   constexpr double ef = 8000.;
   // Width of the parallel gap [cm]
@@ -53,9 +53,9 @@ int main(int argc, char* argv[]) {
   aval.EnableElectronEnergyHistogramming(&hEn);
 
   constexpr bool print = false;
-  std::vector<unsigned int> nVUV;
+  std::vector<std::size_t> nVUV;
   // Calculate a few avalanches.
-  for (unsigned int i = 0; i < npe; ++i) {
+  for (std::size_t i = 0; i < npe; ++i) {
     // Release the primary electron 0.2 cm away from the bottom electrode.
     const double x0 = 0.;
     const double y0 = 0.2;
@@ -74,8 +74,8 @@ int main(int argc, char* argv[]) {
     int ne = 0, ni = 0;
     aval.GetAvalancheSize(ne, ni);
     // Get information about all the electrons produced in the avalanche.
-    unsigned int nBottomPlane = 0;
-    unsigned int nTopPlane = 0;
+    std::size_t nBottomPlane = 0;
+    std::size_t nTopPlane = 0;
     for (const auto& electron : aval.GetElectrons()) {
       if (electron.status == -5) {
         // The electron left the drift medium.

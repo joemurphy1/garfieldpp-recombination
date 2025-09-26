@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
   // if (!readTransferFunction(sensor)) return 0;
 
   // Set the time bins.
-  const unsigned int nTimeBins = 1000;
+  const std::size_t nTimeBins = 1000;
   const double tmin = 0.;
   const double tmax = 200.;
   const double tstep = (tmax - tmin) / nTimeBins;
@@ -77,8 +77,8 @@ int main(int argc, char* argv[]) {
   ViewSignal signalView(&sensor);
 
   constexpr bool fft = false;
-  constexpr unsigned int nEvents = 1000;
-  for (unsigned int i = 0; i < nEvents; ++i) {
+  constexpr std::size_t nEvents = 1000;
+  for (std::size_t i = 0; i < nEvents; ++i) {
     // Reset the signal.
     sensor.ClearSignal();
     if (i % 10 == 0) std::cout << i << "/" << nEvents << "\n";
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
       signalView.PlotSignal(label, "t");
       gSystem->ProcessEvents();
     }
-    for (unsigned int j = 400; j < nTimeBins; ++j) {
+    for (std::size_t j = 400; j < nTimeBins; ++j) {
       hN.Fill(q * sensor.GetSignal(label, j));
     }
   }

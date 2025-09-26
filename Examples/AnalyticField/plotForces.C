@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
   cmp.SetPeriodicityX(0.4);
   cmp.PrintCell();
 
-  const unsigned int nX = 25;
-  const unsigned int nY = 25;
+  const std::size_t nX = 25;
+  const std::size_t nY = 25;
   cmp.SetScanningGrid(nX, nY);
   cmp.SetScanningArea(-0.15, 0.15, -0.15, 0.15);
   std::vector<double> x;
@@ -40,8 +40,8 @@ int main(int argc, char* argv[]) {
 
   TH2D hFY("hFY", "y-component;x [mm];y [mm];F_{y} [N]", nX, -1.5, 1.5, nY,
            -1.5, 1.5);
-  for (unsigned int i = 0; i < nX; ++i) {
-    for (unsigned int j = 0; j < nY; ++j) {
+  for (std::size_t i = 0; i < nX; ++i) {
+    for (std::size_t j = 0; j < nY; ++j) {
       hFY.SetBinContent(i, j, fy[i][j]);
     }
   }

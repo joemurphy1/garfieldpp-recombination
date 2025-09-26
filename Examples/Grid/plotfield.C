@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
   ViewField view(&sensor);
   view.SetElectricFieldRange(0.0, 200000.0);
   // Get the mesh parameters.
-  unsigned int nx = 0, ny = 0, nz = 0;
+  std::size_t nx = 0, ny = 0, nz = 0;
   double xMin = 0., yMin = 0., zMin = 0., xMax = 0., yMax = 0., zMax = 0.;
   efield.GetMesh(nx, ny, nz, xMin, xMax, yMin, yMax, zMin, zMax);
   view.SetArea(-xMax, yMin, xMax, yMax);

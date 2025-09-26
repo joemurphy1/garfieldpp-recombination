@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
   // Sensor
   Sensor sens(&cmp);
   sens.AddElectrode(&cmp, label);
-  const unsigned int nBins = 200;
+  const std::size_t nBins = 200;
   const double tMax = 25.;
   sens.SetTimeWindow(0., tMax / nBins, nBins);
 

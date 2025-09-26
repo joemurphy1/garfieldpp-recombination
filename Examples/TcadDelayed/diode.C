@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
   sensor.SetArea(xP, -0.5 * w, -0.5 * w, 0, 0.5 * w, 0.5 * w);
 
   // Set the time bins.
-  const unsigned int nTimeBins = 1000;
+  const std::size_t nTimeBins = 1000;
   const double tmin = 0.;
   const double tmax = 100.;
   const double tstep = (tmax - tmin) / nTimeBins;

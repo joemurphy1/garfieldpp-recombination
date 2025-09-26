@@ -2,6 +2,7 @@
 #define G_COMPONENT_GRID_H
 
 #include <array>
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -33,9 +34,9 @@ class ComponentGrid : public Component {
                const double ymin, const double ymax, const double zmin,
                const double zmax);
   /// Retrieve the parameters of the grid.
-  bool GetMesh(unsigned int& nx, unsigned int& ny, unsigned int& nz,
-               double& xmin, double& xmax, double& ymin, double& ymax,
-               double& zmin, double& zmax) const;
+  bool GetMesh(std::size_t& nx, std::size_t& ny, std::size_t& nz, double& xmin,
+               double& xmax, double& ymin, double& ymax, double& zmin,
+               double& zmax) const;
   /// Use Cartesian coordinates (default).
   void SetCartesianCoordinates() { m_coordinates = Coordinates::Cartesian; }
   /// Use cylindrical coordinates.

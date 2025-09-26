@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
   gRange95.SetMarkerColor(kBlue + 2);
   TCanvas c1;
 
-  const unsigned int nEvents = 1e6;
+  const std::size_t nEvents = 1e6;
   double de = 1000.;
   constexpr double emin = 1000.;
   constexpr double emax = 5000.;
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
     hLong.ResetStats();
     std::cout << "Primary energy: " << e0 << " eV" << std::endl;
     double nEntries = 0.;
-    for (unsigned int i = 0; i < nEvents; ++i) {
+    for (std::size_t i = 0; i < nEvents; ++i) {
       if (i % 1000 == 0) std::printf("  %10d\r", i);
       auto cluster = track.TransportDeltaElectron(0, 0, 0, 0, e0, 0, 0, 1);
       if (cluster.electrons.empty()) continue;

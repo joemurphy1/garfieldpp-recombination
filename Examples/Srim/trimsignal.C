@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
   Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "readout");
   // Set the time bins for the induced current.
-  const unsigned int nTimeBins = 1000;
+  const std::size_t nTimeBins = 1000;
   const double tmin = 0.;
   const double tmax = 10.;
   const double tstep = (tmax - tmin) / nTimeBins;

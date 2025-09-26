@@ -34,12 +34,12 @@ int main(int argc, char* argv[]) {
   track.SetParticle("pion");
   track.SetBetaGamma(10.);
   track.Initialise(&si, true);
-  const unsigned int nTracks = 10000;
-  for (unsigned int i = 0; i < nTracks; ++i) {
+  const std::size_t nTracks = 10000;
+  for (std::size_t i = 0; i < nTracks; ++i) {
     if (i % 1000 == 0) std::cout << "Track " << i << "\n";
     track.NewTrack(0., 0., 0., 0., 0., 0., 1.);
-    unsigned int nsum = 0;
-    unsigned int ncls = 0;
+    std::size_t nsum = 0;
+    std::size_t ncls = 0;
     for (const auto& cluster : track.GetClusters()) {
       nsum += cluster.electrons.size();
       ++ncls;

@@ -19,7 +19,7 @@ int main() {
             << cmp.IntegrateFluxCircle(1.1, 0.5, 0.8) * 1.e-3 << " pC/cm.\n";
 
   cmp.PrintCharges();
-  constexpr unsigned int nI = 50;
+  constexpr std::size_t nI = 50;
   std::cout << "Both point charges: "
             << cmp.IntegrateFluxSphere(5, 2, 2.5, 3.5, nI) << " fC.\n";
 

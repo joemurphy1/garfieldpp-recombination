@@ -90,8 +90,8 @@ int main(int argc, char* argv[]) {
     track.EnablePlotting(&vDrift);
   }
 
-  const unsigned int nEvents = 1;
-  for (unsigned int j = 0; j < nEvents; ++j) {
+  const std::size_t nEvents = 1;
+  for (std::size_t j = 0; j < nEvents; ++j) {
     sensor.ClearSignal();
     const double x0 = 0.5 * width + (RndmUniform() - 0.5) * pitch;
     const double t0 = 0.1;

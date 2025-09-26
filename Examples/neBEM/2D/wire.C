@@ -16,10 +16,10 @@ int main(int argc, char* argv[]) {
 
   ComponentNeBem2d cmp;
   constexpr double r = 2.;
-  constexpr unsigned int n = 6;
+  constexpr std::size_t n = 6;
   std::vector<double> xv(n, 0.);
   std::vector<double> yv(n, 0.);
-  for (unsigned int i = 0; i < n; ++i) {
+  for (std::size_t i = 0; i < n; ++i) {
     const double phi = i * TwoPi / n;
     xv[i] = r * cos(phi);
     yv[i] = r * sin(phi);

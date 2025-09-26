@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Set the time bins.
-  const unsigned int nTimeBins = 1000;
+  const std::size_t nTimeBins = 1000;
   const double tmin = 0.;
   const double tmax = 10.;
   const double tstep = (tmax - tmin) / nTimeBins;
@@ -128,10 +128,10 @@ int main(int argc, char* argv[]) {
   }
   // Flag to randomise the position of the track.
   constexpr bool smearx = true;
-  constexpr unsigned int nEvents = 10;
+  constexpr std::size_t nEvents = 10;
   // Flag to save the signal to a file.
   constexpr bool writeSignal = true;
-  for (unsigned int i = 0; i < nEvents; ++i) {
+  for (std::size_t i = 0; i < nEvents; ++i) {
     if (plotDrift) driftView->Clear();
     // Reset the signal.
     sensor.ClearSignal();
@@ -170,7 +170,7 @@ int main(int argc, char* argv[]) {
       snprintf(filename, 50, "signal_%05d.txt", i);
       std::ofstream outfile;
       outfile.open(filename, std::ios::out);
-      for (unsigned int j = 0; j < nTimeBins; ++j) {
+      for (std::size_t j = 0; j < nTimeBins; ++j) {
         const double t = (j + 0.5) * tstep;
         const double f = sensor.GetSignal(label, j);
         const double fe = sensor.GetElectronSignal(label, j);

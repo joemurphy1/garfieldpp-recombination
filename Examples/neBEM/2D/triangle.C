@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 
   ComponentNeBem2d cmp;
   cmp.SetMedium(&gas);
-  constexpr unsigned int nDiv = 200;
+  constexpr std::size_t nDiv = 200;
   cmp.SetNumberOfDivisions(nDiv);
   cmp.AddSegment(-1., 0., 0., 1., 1.);
   cmp.AddSegment(1., 0., 0., 1., 1.);

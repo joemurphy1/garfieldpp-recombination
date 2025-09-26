@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
   // Set the signal time window.
   const double tstep = 0.5;
   const double tmin = -0.5 * tstep;
-  const unsigned int nbins = 1000;
+  const std::size_t nbins = 1000;
   sensor.SetTimeWindow(tmin, tstep, nbins);
   // Set the delta reponse function.
   if (!readTransferFunction(sensor)) return 0;
@@ -92,8 +92,8 @@ int main(int argc, char* argv[]) {
   const double rTrack = 0.3;
   const double x0 = rTrack;
   const double y0 = -sqrt(rTube * rTube - rTrack * rTrack);
-  const unsigned int nTracks = 1;
-  for (unsigned int j = 0; j < nTracks; ++j) {
+  const std::size_t nTracks = 1;
+  for (std::size_t j = 0; j < nTracks; ++j) {
     sensor.ClearSignal();
     std::vector<std::array<double, 4> > electrons;
     track.NewTrack(x0, y0, 0, 0, 0, 1, 0);

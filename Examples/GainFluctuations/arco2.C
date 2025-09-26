@@ -17,7 +17,7 @@ int main() {
 
   // Electric field [kV / cm].
   double field = 20.;
-  for (unsigned int i = 0; i < 8; ++i) {
+  for (std::size_t i = 0; i < 8; ++i) {
     // Initial electron energy [eV].
     const double e0 = 1.;
 
@@ -53,10 +53,10 @@ int main() {
     aval.EnableElectronEnergyHistogramming(&hEnergy);
     std::cout << field << " kV/cm\n";
     // Count the ionisations and excitations in the avalanche.
-    unsigned int nIon = 0;
-    unsigned int nExc = 0;
-    constexpr unsigned int nEvents = 100;
-    for (unsigned int j = 0; j < nEvents; ++j) {
+    std::size_t nIon = 0;
+    std::size_t nExc = 0;
+    constexpr std::size_t nEvents = 100;
+    for (std::size_t j = 0; j < nEvents; ++j) {
       gas.ResetCollisionCounters();
       aval.AvalancheElectron(0, 0, gap, 0, e0, 0, 0, 0);
       int ne = 0, ni = 0;
