@@ -26,8 +26,8 @@ class ComponentCST : public ComponentFieldMap {
   void ShiftComponent(const double xShift, const double yShift,
                       const double zShift);
 
-  void GetNumberOfMeshLines(unsigned int& nx, unsigned int& ny,
-                            unsigned int& nz) const;
+  void GetNumberOfMeshLines(std::size_t& nx, std::size_t& ny,
+                            std::size_t& nz) const;
   std::size_t GetNumberOfElements() const override { return m_nElements; }
   bool GetElementNodes(const std::size_t i,
                        std::vector<std::size_t>& nodes) const override;
@@ -203,8 +203,7 @@ class ComponentCST : public ComponentFieldMap {
    * returned for a point inside the mesh.
    */
   bool Coordinate2Index(const double x, const double y, const double z,
-                        unsigned int& i, unsigned int& j,
-                        unsigned int& k) const;
+                        std::size_t& i, std::size_t& j, std::size_t& k) const;
 
  protected:
   void SetRange() override;
@@ -231,7 +230,7 @@ class ComponentCST : public ComponentFieldMap {
    * \param mirrored Information if x, y, or z direction is mirrored.
    */
   bool Coordinate2Index(const double x, const double y, const double z,
-                        unsigned int& i, unsigned int& j, unsigned int& k,
+                        std::size_t& i, std::size_t& j, std::size_t& k,
                         double* position_mapped, bool* mirrored) const;
 
  private:

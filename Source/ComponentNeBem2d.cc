@@ -710,9 +710,9 @@ void ComponentNeBem2d::SetMaxNumberOfIterations(const unsigned int niter) {
   m_nMaxIterations = niter;
 }
 
-bool ComponentNeBem2d::GetRegion(const unsigned int i, std::vector<double>& xv,
+bool ComponentNeBem2d::GetRegion(const std::size_t i, std::vector<double>& xv,
                                  std::vector<double>& yv, Medium*& medium,
-                                 unsigned int& bctype, double& v) {
+                                 std::size_t& bctype, double& v) {
   if (i >= m_regions.size()) return false;
   if (!m_ready) {
     if (!Initialise()) return false;

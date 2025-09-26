@@ -72,7 +72,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
   canvas->cd();
   canvas->SetTitle("Signal");
 
-  unsigned int nBins = 100;
+  std::size_t nBins = 100;
   double t0 = 0., dt = 1.;
   m_sensor->GetTimeWindow(t0, dt, nBins);
   const double t1 = t0 + nBins * dt;
@@ -81,7 +81,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
   if (ylabel.empty()) {
     ylabel = m_sensor->IsIntegrated(label) ? "signal [fC]" : "signal [fC / ns]";
   }
-  unsigned int nPlots = same ? 1 : 0;
+  std::size_t nPlots = same ? 1 : 0;
   if (!RangeSet(gPad)) nPlots = 0;
 
   TLegend* legend = nullptr;
@@ -94,7 +94,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
     const auto hname = FindUnusedHistogramName("hSignal_");
     TH1D h(hname.c_str(), "", nBins, t0, t1);
     h.SetLineColor(m_colTotal);
-    for (unsigned int i = 0; i < nBins; ++i) {
+    for (std::size_t i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetSignal(label, i, 0);
       if (std::isnan(sig) || std::abs(sig) < tol) continue;
       h.SetBinContent(i + 1, sig);
@@ -112,7 +112,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
       std::vector<double> yp;
       double time = 0., level = 0.;
       bool rise = true;
-      for (unsigned int i = 0; i < nCrossings; ++i) {
+      for (std::size_t i = 0; i < nCrossings; ++i) {
         if (m_sensor->GetThresholdCrossing(i, time, level, rise)) {
           xp.push_back(time);
           yp.push_back(level);
@@ -129,7 +129,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
     TH1D h(hname.c_str(), "", nBins, t0, t1);
     h.SetLineColor(m_colDelayed[3]);
     h.SetLineStyle(7);
-    for (unsigned int i = 0; i < nBins; ++i) {
+    for (std::size_t i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetSignal(label, i, 2);
       if (std::isnan(sig) || std::abs(sig) < tol) continue;
       h.SetBinContent(i + 1, sig);
@@ -145,7 +145,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
     TH1D h(hname.c_str(), "", nBins, t0, t1);
     h.SetLineColor(m_colPrompt[0]);
     h.SetLineStyle(2);
-    for (unsigned int i = 0; i < nBins; ++i) {
+    for (std::size_t i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetSignal(label, i, 1);
       if (std::isnan(sig) || std::abs(sig) < tol) continue;
       h.SetBinContent(i + 1, sig);
@@ -160,7 +160,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
     const auto hname = FindUnusedHistogramName("hSignalElectrons_");
     TH1D h(hname.c_str(), "", nBins, t0, t1);
     h.SetLineColor(m_colElectrons);
-    for (unsigned int i = 0; i < nBins; ++i) {
+    for (std::size_t i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetElectronSignal(label, i);
       h.SetBinContent(i + 1, sig);
     }
@@ -175,7 +175,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
     TH1D h(hname.c_str(), "", nBins, t0, t1);
     h.SetLineColor(m_colDelayed[4]);
     h.SetLineStyle(7);
-    for (unsigned int i = 0; i < nBins; ++i) {
+    for (std::size_t i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetDelayedElectronSignal(label, i);
       if (std::isnan(sig) || std::abs(sig) < tol) continue;
       h.SetBinContent(i + 1, sig);
@@ -191,7 +191,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
     TH1D h(hname.c_str(), "", nBins, t0, t1);
     h.SetLineColor(m_colPrompt[1]);
     h.SetLineStyle(2);
-    for (unsigned int i = 0; i < nBins; ++i) {
+    for (std::size_t i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetElectronSignal(label, i) -
                          m_sensor->GetDelayedElectronSignal(label, i);
       if (std::isnan(sig) || std::abs(sig) < tol) continue;
@@ -207,7 +207,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
     const auto hname = FindUnusedHistogramName("hSignalIons_");
     TH1D h(hname.c_str(), "", nBins, t0, t1);
     h.SetLineColor(m_colIons);
-    for (unsigned int i = 0; i < nBins; ++i) {
+    for (std::size_t i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetIonSignal(label, i);
       h.SetBinContent(i + 1, sig);
     }
@@ -222,7 +222,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
     TH1D h(hname.c_str(), "", nBins, t0, t1);
     h.SetLineColor(m_colDelayed[5]);
     h.SetLineStyle(7);
-    for (unsigned int i = 0; i < nBins; ++i) {
+    for (std::size_t i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetDelayedIonSignal(label, i);
       if (std::isnan(sig) || std::abs(sig) < tol) continue;
       h.SetBinContent(i + 1, sig);
@@ -238,7 +238,7 @@ void ViewSignal::PlotSignal(const std::string& label, const std::string& optT,
     TH1D h(hname.c_str(), "", nBins, t0, t1);
     h.SetLineColor(m_colPrompt[2]);
     h.SetLineStyle(2);
-    for (unsigned int i = 0; i < nBins; ++i) {
+    for (std::size_t i = 0; i < nBins; ++i) {
       const double sig = m_sensor->GetIonSignal(label, i) -
                          m_sensor->GetDelayedIonSignal(label, i);
       if (std::isnan(sig) || std::abs(sig) < tol) continue;

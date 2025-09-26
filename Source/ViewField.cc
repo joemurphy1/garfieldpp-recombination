@@ -20,12 +20,12 @@ namespace {
 
 void SampleRange(const double xmin, const double ymin, const double xmax,
                  const double ymax, TF2* f, double& zmin, double& zmax) {
-  constexpr unsigned int n = 1000;
+  constexpr std::size_t n = 1000;
   const double dx = xmax - xmin;
   const double dy = ymax - ymin;
   zmin = std::numeric_limits<double>::max();
   zmax = -zmin;
-  for (unsigned int i = 0; i < n; ++i) {
+  for (std::size_t i = 0; i < n; ++i) {
     const double z = f->Eval(xmin + Garfield::RndmUniform() * dx,
                              ymin + Garfield::RndmUniform() * dy);
     if (z < zmin) zmin = z;
@@ -34,14 +34,14 @@ void SampleRange(const double xmin, const double ymin, const double xmax,
 }
 
 void SampleRange(TF1* f, double& ymin, double& ymax) {
-  constexpr unsigned int n = 1000;
+  constexpr std::size_t n = 1000;
   ymin = std::numeric_limits<double>::max();
   ymax = -ymin;
   double xmin = 0.;
   double xmax = 1.;
   f->GetRange(xmin, xmax);
   const double dx = xmax - xmin;
-  for (unsigned int i = 0; i < n; ++i) {
+  for (std::size_t i = 0; i < n; ++i) {
     const double y = f->Eval(xmin + dx * Garfield::RndmUniform());
     if (y < ymin) ymin = y;
     if (y > ymax) ymax = y;
@@ -111,18 +111,18 @@ void ViewField::SetMagneticFieldRange(const double bmin, const double bmax) {
   m_useAutoRange = false;
 }
 
-void ViewField::SetNumberOfContours(const unsigned int n) {
+void ViewField::SetNumberOfContours(const std::size_t n) {
   if (n > 0) m_nContours = n;
 }
 
-void ViewField::SetNumberOfSamples1d(const unsigned int n) {
-  m_nSamples1d = std::max(4u, n);
+void ViewField::SetNumberOfSamples1d(const std::size_t n) {
+  m_nSamples1d = std::max(static_cast<std::size_t>(4), n);
 }
 
-void ViewField::SetNumberOfSamples2d(const unsigned int nx,
-                                     const unsigned int ny) {
-  m_nSamples2dX = std::max(4u, nx);
-  m_nSamples2dY = std::max(4u, ny);
+void ViewField::SetNumberOfSamples2d(const std::size_t nx,
+                                     const std::size_t ny) {
+  m_nSamples2dX = std::max(static_cast<std::size_t>(4), nx);
+  m_nSamples2dY = std::max(static_cast<std::size_t>(4), ny);
 }
 
 void ViewField::PlotContour(const std::string& option) {
@@ -319,7 +319,7 @@ void ViewField::Draw2d(const std::string& option, const bool contour,
     std::vector<double> level(m_nContours, 0.);
     if (m_nContours > 1) {
       const double step = (zmax - zmin) / (m_nContours - 1.);
-      for (unsigned int i = 0; i < m_nContours; ++i) {
+      for (std::size_t i = 0; i < m_nContours; ++i) {
         level[i] = zmin + i * step;
       }
     } else {
@@ -328,7 +328,7 @@ void ViewField::Draw2d(const std::string& option, const bool contour,
     if (m_debug) {
       std::cout << m_className << "::Draw2d:\n"
                 << "    Number of contours: " << m_nContours << "\n";
-      for (unsigned int i = 0; i < m_nContours; ++i) {
+      for (std::size_t i = 0; i < m_nContours; ++i) {
         std::cout << "        Level " << i << " = " << level[i] << "\n";
       }
     }
@@ -379,7 +379,7 @@ void ViewField::DrawProfile(const double x0, const double y0, const double z0,
 
   double t0 = 0.;
   double t1 = 1.;
-  unsigned int dir = 3;
+  std::size_t dir = 3;
   if (fabs(dy) + fabs(dz) < 1.e-6 * fabs(dx)) {
     t0 = x0;
     t1 = x1;
@@ -743,7 +743,7 @@ bool ViewField::EqualFluxIntervals(const double x0, const double y0,
                                    std::vector<double>& xf,
                                    std::vector<double>& yf,
                                    std::vector<double>& zf,
-                                   const unsigned int nPoints) const {
+                                   const std::size_t nPoints) const {
   if (nPoints < 2) {
     std::cerr << m_className << "::EqualFluxIntervals:\n"
               << "    Number of flux lines must be > 1.\n";
@@ -751,7 +751,7 @@ bool ViewField::EqualFluxIntervals(const double x0, const double y0,
   }
 
   // Set integration intervals.
-  constexpr unsigned int nV = 5;
+  constexpr std::size_t nV = 5;
   // Compute the inplane vector normal to the track.
   const double xp = (y1 - y0) * m_plane[2] - (z1 - z0) * m_plane[1];
   const double yp = (z1 - z0) * m_plane[0] - (x1 - x0) * m_plane[2];
@@ -772,7 +772,7 @@ bool ViewField::EqualFluxIntervals(const double x0, const double y0,
   }
   // Compute the 1-sided flux in a number of steps.
   double fsum = 0.;
-  unsigned int nOtherSign = 0;
+  std::size_t nOtherSign = 0;
   double s0 = -1.;
   double s1 = -1.;
   constexpr size_t nSteps = 1000;
@@ -847,7 +847,7 @@ bool ViewField::FixedFluxIntervals(const double x0, const double y0,
   }
 
   // Set integration intervals.
-  constexpr unsigned int nV = 5;
+  constexpr std::size_t nV = 5;
   // Compute the inplane vector normal to the track.
   const double xp = (y1 - y0) * m_plane[2] - (z1 - z0) * m_plane[1];
   const double yp = (z1 - z0) * m_plane[0] - (x1 - x0) * m_plane[2];
@@ -868,7 +868,7 @@ bool ViewField::FixedFluxIntervals(const double x0, const double y0,
   }
   // Compute the 1-sided flux in a number of steps.
   double fsum = 0.;
-  unsigned int nOtherSign = 0;
+  std::size_t nOtherSign = 0;
   double s0 = -1.;
   constexpr size_t nSteps = 1000;
   std::array<double, nSteps> sTab;

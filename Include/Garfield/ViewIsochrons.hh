@@ -87,7 +87,7 @@ class ViewIsochrons : public ViewBase {
       std::vector<std::array<double, 3> >& endPoints,
       std::vector<int>& statusCodes, const bool rev = false);
   void SortContour(
-      std::vector<std::pair<std::array<double, 4>, unsigned int> >& contour,
+      std::vector<std::pair<std::array<double, 4>, std::size_t> >& contour,
       bool& circle);
 };
 }  // namespace Garfield

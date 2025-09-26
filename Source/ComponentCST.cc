@@ -841,7 +841,7 @@ void ComponentCST::WeightingField(const double xin, const double yin,
 
   // Map the coordinates onto field map coordinates and get indexes
   bool mirrored[3];
-  unsigned int i, j, k;
+  std::size_t i, j, k;
   double pos[3] = {0., 0., 0.};
   if (!Coordinate2Index(x, y, z, i, j, k, pos, mirrored)) {
     return;
@@ -896,7 +896,7 @@ double ComponentCST::WeightingPotential(const double xin, const double yin,
 
   // Map the coordinates onto field map coordinates
   bool mirrored[3];
-  unsigned int i, j, k;
+  std::size_t i, j, k;
   double pos[3] = {0., 0., 0.};
   if (!Coordinate2Index(x, y, z, i, j, k, pos, mirrored)) {
     return 0.;
@@ -940,8 +940,8 @@ double ComponentCST::WeightingPotential(const double xin, const double yin,
   return potential;
 }
 
-void ComponentCST::GetNumberOfMeshLines(unsigned int& n_x, unsigned int& n_y,
-                                        unsigned int& n_z) const {
+void ComponentCST::GetNumberOfMeshLines(std::size_t& n_x, std::size_t& n_y,
+                                        std::size_t& n_z) const {
   n_x = m_xlines.size();
   n_y = m_ylines.size();
   n_z = m_zlines.size();
@@ -1011,7 +1011,7 @@ void ComponentCST::GetElementBoundaries(unsigned int element, double& xmin,
 
 Medium* ComponentCST::GetMedium(const double x, const double y,
                                 const double z) {
-  unsigned int i, j, k;
+  std::size_t i, j, k;
   Coordinate2Index(x, y, z, i, j, k);
   if (m_debug) {
     std::cout << m_className << "::GetMedium:\n"
@@ -1064,17 +1064,17 @@ void ComponentCST::SetRangeZ(const double zmin, const double zmax) {
 }
 
 bool ComponentCST::Coordinate2Index(const double x, const double y,
-                                    const double z, unsigned int& i,
-                                    unsigned int& j, unsigned int& k) const {
+                                    const double z, std::size_t& i,
+                                    std::size_t& j, std::size_t& k) const {
   bool mirrored[3] = {false, false, false};
   double pos[3] = {0., 0., 0.};
   return Coordinate2Index(x, y, z, i, j, k, pos, mirrored);
 }
 
 bool ComponentCST::Coordinate2Index(const double xin, const double yin,
-                                    const double zin, unsigned int& i,
-                                    unsigned int& j, unsigned int& k,
-                                    double* pos, bool* mirrored) const {
+                                    const double zin, std::size_t& i,
+                                    std::size_t& j, std::size_t& k, double* pos,
+                                    bool* mirrored) const {
   // Map the coordinates onto field map coordinates
   pos[0] = xin;
   pos[1] = yin;
@@ -1165,7 +1165,7 @@ void ComponentCST::ElectricFieldBinary(const double xin, const double yin,
   ex = ey = ez = 0;
 
   bool mirrored[3];
-  unsigned int i, j, k;
+  std::size_t i, j, k;
   double pos[3] = {0., 0., 0.};
   if (!Coordinate2Index(x, y, z, i, j, k, pos, mirrored)) {
     return;

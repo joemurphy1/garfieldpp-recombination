@@ -224,7 +224,7 @@ void ViewIsochrons::PlotIsochrons(
   // Accumulate drift lines.
   ComputeDriftLines(tstep, points, driftLines, startPoints, endPoints,
                     statusCodes, rev);
-  const unsigned int nDriftLines = driftLines.size();
+  const std::size_t nDriftLines = driftLines.size();
   if (nDriftLines < 2) {
     std::cerr << m_className << "::PlotIsochrons: Too few drift lines.\n";
     return;
@@ -274,16 +274,16 @@ void ViewIsochrons::PlotIsochrons(
   graph.SetLineStyle(m_lineStyle);
   graph.SetMarkerStyle(m_markerStyle);
   const double colRange = double(gStyle->GetNumberOfColors()) / nContours;
-  for (unsigned int ic = 0; ic < nContours; ++ic) {
+  for (std::size_t ic = 0; ic < nContours; ++ic) {
     if (colour) {
       const auto col = gStyle->GetColorPalette(int((ic + 0.99) * colRange));
       graph.SetLineColor(col);
       graph.SetMarkerColor(col);
     }
     for (int stat : allStats) {
-      std::vector<std::pair<std::array<double, 4>, unsigned int> > contour;
+      std::vector<std::pair<std::array<double, 4>, std::size_t> > contour;
       // Loop over the drift lines, picking up the points when OK.
-      for (unsigned int k = 0; k < nDriftLines; ++k) {
+      for (std::size_t k = 0; k < nDriftLines; ++k) {
         const auto& dl = driftLines[k];
         // Reject any undesirable combinations.
         if (statusCodes[k] != stat || ic >= dl.size()) continue;
@@ -323,8 +323,8 @@ void ViewIsochrons::PlotIsochrons(
       std::vector<double> xp;
       std::vector<double> yp;
       std::vector<double> zp;
-      const unsigned int nP = contour.size();
-      for (unsigned int i = 0; i < nP; ++i) {
+      const std::size_t nP = contour.size();
+      for (std::size_t i = 0; i < nP; ++i) {
         gap = false;
         const auto x0 = contour[i].first[0];
         const auto y0 = contour[i].first[1];
@@ -343,9 +343,9 @@ void ViewIsochrons::PlotIsochrons(
         const auto i1 = contour[i + 1].second;
         // Set the BREAK flag if it crosses some stored drift line segment.
         if (m_checkCrossings && !gap) {
-          for (unsigned int k = 0; k < nDriftLines; ++k) {
+          for (std::size_t k = 0; k < nDriftLines; ++k) {
             const auto& dl = driftLines[k];
-            for (unsigned int jc = 0; jc < dl.size(); ++jc) {
+            for (std::size_t jc = 0; jc < dl.size(); ++jc) {
               if ((i0 == k || i1 == k) && (jc == ic || jc + 1 == ic)) {
                 continue;
               }
@@ -397,7 +397,7 @@ void ViewIsochrons::PlotIsochrons(
   } else {
     graph.SetLineColor(kRed + 1);
   }
-  for (unsigned int i = 0; i < nDriftLines; ++i) {
+  for (std::size_t i = 0; i < nDriftLines; ++i) {
     std::vector<double> xp;
     std::vector<double> yp;
     const double x0 = startPoints[i][0];
@@ -457,20 +457,20 @@ void ViewIsochrons::ComputeDriftLines(
         drift.DriftNegativeIon(point[0], point[1], point[2], 0.);
       }
     }
-    const unsigned int nu = drift.GetNumberOfDriftLinePoints();
+    const std::size_t nu = drift.GetNumberOfDriftLinePoints();
     // Check that the drift line has enough points.
     if (nu < 3) continue;
     int status = 0;
     double xf = 0., yf = 0., zf = 0., tf = 0.;
     drift.GetEndPoint(xf, yf, zf, tf, status);
     // Find the number of points to be stored.
-    const unsigned int nSteps = static_cast<unsigned int>(tf / tstep);
+    const std::size_t nSteps = static_cast<std::size_t>(tf / tstep);
     if (nSteps == 0) continue;
     std::vector<double> xu(nu, 0.);
     std::vector<double> yu(nu, 0.);
     std::vector<double> zu(nu, 0.);
     std::vector<double> tu(nu, 0.);
-    for (unsigned int i = 0; i < nu; ++i) {
+    for (std::size_t i = 0; i < nu; ++i) {
       drift.GetDriftLinePoint(i, xu[i], yu[i], zu[i], tu[i]);
     }
     if (rev) {
@@ -482,7 +482,7 @@ void ViewIsochrons::ComputeDriftLines(
     }
     std::vector<std::array<double, 3> > tab;
     // Interpolate at regular time intervals.
-    for (unsigned int i = 0; i < nSteps; ++i) {
+    for (std::size_t i = 0; i < nSteps; ++i) {
       const double t = (i + 1) * tstep;
       // tab.push_back(PLACO3(Interpolate(xu, tu, t),
       //                      Interpolate(yu, tu, t),
@@ -535,7 +535,7 @@ bool ViewIsochrons::SetPlotLimits() {
 }
 
 void ViewIsochrons::SortContour(
-    std::vector<std::pair<std::array<double, 4>, unsigned int> >& contour,
+    std::vector<std::pair<std::array<double, 4>, std::size_t> >& contour,
     bool& circle) {
   if (contour.size() < 2) return;
   // First compute the centre of gravity.
@@ -595,9 +595,9 @@ void ViewIsochrons::SortContour(
   // Compute breakpoint, total distance and maximum distance.
   double dsum = 0.;
   double dmax = -1.;
-  unsigned int imax = 0;
-  const unsigned int nPoints = contour.size();
-  for (unsigned int j = 0; j < nPoints; ++j) {
+  std::size_t imax = 0;
+  const std::size_t nPoints = contour.size();
+  for (std::size_t j = 0; j < nPoints; ++j) {
     const auto& p1 = contour[j];
     const auto& p0 = j > 0 ? contour[j - 1] : contour.back();
     const double dx = p1.first[0] - p0.first[0];

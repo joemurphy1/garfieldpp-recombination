@@ -114,8 +114,7 @@ class Sensor {
   void SetTimeWindow(const double tstart, const double tstep,
                      const unsigned int nsteps);
   /// Retrieve the time window and binning.
-  void GetTimeWindow(double& tstart, double& tstep,
-                     unsigned int& nsteps) const {
+  void GetTimeWindow(double& tstart, double& tstep, std::size_t& nsteps) const {
     tstart = m_tStart;
     tstep = m_tStep;
     nsteps = m_nTimeBins;

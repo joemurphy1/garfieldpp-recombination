@@ -484,7 +484,7 @@ void ViewFEMesh::DrawElements2d() {
           if (std::abs(cnt) == (int)nNodes) continue;
           // Cut the sides that are not in the plane.
           if (cst) {
-            const std::array<std::array<unsigned int, 3>, 8> neighbours = {
+            const std::array<std::array<std::size_t, 3>, 8> neighbours = {
                 {{1, 2, 4},
                  {0, 3, 5},
                  {0, 3, 6},
@@ -494,7 +494,7 @@ void ViewFEMesh::DrawElements2d() {
                  {2, 4, 7},
                  {3, 5, 6}}};
             for (size_t j = 0; j < nNodes; ++j) {
-              for (unsigned int k : neighbours[j]) {
+              for (std::size_t k : neighbours[j]) {
                 if (in[j] || in[k]) continue;
                 if (PlaneCut(vx[j], vy[j], vz[j], vx[k], vy[k], vz[k], xMat)) {
                   vX.push_back(xMat(0, 0));
@@ -1270,7 +1270,7 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
   double su = 0., sv = 0.;
   bool mirroru = false, mirrorv = false;
   double uMin, vMin, uMax, vMax;
-  unsigned int n_x, n_y, n_z;
+  std::size_t n_x, n_y, n_z;
   cst->GetNumberOfMeshLines(n_x, n_y, n_z);
 
   const double fx = m_plane[0];
@@ -1281,7 +1281,7 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
     // xy view
     std::cout << m_className << "::DrawCST: Creating x-y mesh view.\n";
     // Calculate the z position.
-    unsigned int i, j, z;
+    std::size_t i, j, z;
     const double z0 = m_plane[3] * fz;
     if (!cst->Coordinate2Index(0, 0, z0, i, j, z)) {
       std::cerr << "    Could not determine the z-index of the plane.\n";
@@ -1305,8 +1305,8 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
     sv = sy;
     mirroru = perX;
     mirrorv = perY;
-    for (unsigned int y = 0; y < (n_y - 1); y++) {
-      for (unsigned int x = 0; x < (n_x - 1); x++) {
+    for (std::size_t y = 0; y < (n_y - 1); y++) {
+      for (std::size_t x = 0; x < (n_x - 1); x++) {
         auto elem = cst->Index2Element(x, y, z);
         double e_xmin, e_xmax, e_ymin, e_ymax, e_zmin, e_zmax;
         cst->GetElementBoundaries(elem, e_xmin, e_xmax, e_ymin, e_ymax, e_zmin,
@@ -1328,7 +1328,7 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
     // xz-view
     std::cout << m_className << "::DrawCST: Creating x-z mesh view.\n";
     // Calculate the y position.
-    unsigned int i = 0, j = 0, y = 0;
+    std::size_t i = 0, j = 0, y = 0;
     const double y0 = m_plane[3] * fy;
     if (!cst->Coordinate2Index(0, y0, 0, i, y, j)) {
       std::cerr << "    Could not determine the y-index of the plane.\n";
@@ -1353,8 +1353,8 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
     sv = sz;
     mirroru = perX;
     mirrorv = perZ;
-    for (unsigned int z = 0; z < (n_z - 1); z++) {
-      for (unsigned int x = 0; x < (n_x - 1); x++) {
+    for (std::size_t z = 0; z < (n_z - 1); z++) {
+      for (std::size_t x = 0; x < (n_x - 1); x++) {
         auto elem = cst->Index2Element(x, y, z);
         double e_xmin, e_xmax, e_ymin, e_ymax, e_zmin, e_zmax;
         cst->GetElementBoundaries(elem, e_xmin, e_xmax, e_ymin, e_ymax, e_zmin,
@@ -1376,7 +1376,7 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
     // yz-view
     std::cout << m_className << "::DrawCST: Creating z-y mesh view.\n";
     // Calculate the x position.
-    unsigned int i, j, x;
+    std::size_t i, j, x;
     const double x0 = m_plane[3] * fx;
     if (!cst->Coordinate2Index(x0, 0, 0, x, i, j)) {
       std::cerr << "    Could not determine the x-index of the plane.\n";
@@ -1400,8 +1400,8 @@ void ViewFEMesh::DrawCST(ComponentCST* cst) {
     sv = sy;
     mirroru = perZ;
     mirrorv = perY;
-    for (unsigned int z = 0; z < (n_z - 1); z++) {
-      for (unsigned int y = 0; y < (n_y - 1); y++) {
+    for (std::size_t z = 0; z < (n_z - 1); z++) {
+      for (std::size_t y = 0; y < (n_y - 1); y++) {
         auto elem = cst->Index2Element(x, y, z);
         double e_xmin, e_xmax, e_ymin, e_ymax, e_zmin, e_zmax;
         cst->GetElementBoundaries(elem, e_xmin, e_xmax, e_ymin, e_ymax, e_zmin,

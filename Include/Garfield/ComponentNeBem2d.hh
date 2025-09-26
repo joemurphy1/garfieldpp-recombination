@@ -68,8 +68,8 @@ class ComponentNeBem2d : public Component {
   /// Return the number of regions.
   std::size_t GetNumberOfRegions() const { return m_regions.size(); }
   /// Return the properties of a given region.
-  bool GetRegion(const unsigned int i, std::vector<double>& xv,
-                 std::vector<double>& yv, Medium*& medium, unsigned int& bctype,
+  bool GetRegion(const std::size_t i, std::vector<double>& xv,
+                 std::vector<double>& yv, Medium*& medium, std::size_t& bctype,
                  double& v);
   /// Return the number of conducting straight-line segments.
   std::size_t GetNumberOfSegments() const { return m_segments.size(); }

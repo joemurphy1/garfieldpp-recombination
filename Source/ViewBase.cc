@@ -310,7 +310,7 @@ void ViewBase::SetPlane(const double fx, const double fy, const double fz,
   m_prmat[1][2] = wy;
   m_prmat[2][2] = wz;
 
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (std::size_t i = 0; i < 3; ++i) {
     m_proj[0][i] = m_prmat[i][0];
     m_proj[1][i] = m_prmat[i][1];
   }
@@ -482,7 +482,7 @@ void ViewBase::DrawLine(const std::vector<std::array<float, 3> >& xl,
     xgr.push_back(xp);
     ygr.push_back(yp);
   }
-  for (unsigned int j = 1; j < nP; ++j) {
+  for (std::size_t j = 1; j < nP; ++j) {
     auto x1 = xl[j];
     bool in1 = InBox(x1);
     if (in1 != in0) {
@@ -760,10 +760,10 @@ bool ViewBase::PlotLimits(std::array<double, 3>& bbmin,
                     -std::numeric_limits<double>::max()};
   double umax[2] = {std::numeric_limits<double>::max(),
                     std::numeric_limits<double>::max()};
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (std::size_t i = 0; i < 3; ++i) {
     bbmin[i] -= m_proj[2][i];
     bbmax[i] -= m_proj[2][i];
-    for (unsigned int j = 0; j < 2; ++j) {
+    for (std::size_t j = 0; j < 2; ++j) {
       if (fabs(m_proj[j][i]) < tol) continue;
       const double t1 = bbmin[i] / m_proj[j][i];
       const double t2 = bbmax[i] / m_proj[j][i];

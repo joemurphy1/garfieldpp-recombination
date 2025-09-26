@@ -1785,7 +1785,7 @@ void ComponentTcadBase<N>::PrintRegions() const {
 }
 
 template <size_t N>
-void ComponentTcadBase<N>::GetRegion(const size_t i, std::string& name,
+void ComponentTcadBase<N>::GetRegion(const std::size_t i, std::string& name,
                                      bool& active) const {
   if (i >= m_regions.size()) {
     std::cerr << m_className << "::GetRegion: Index out of range.\n";

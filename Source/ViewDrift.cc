@@ -412,7 +412,7 @@ bool ViewDrift::SetPlotLimits2d() {
   bbmax.fill(-std::numeric_limits<double>::max());
   for (const auto& driftLine : m_driftLines) {
     for (const auto& p : driftLine.first) {
-      for (unsigned int i = 0; i < 3; ++i) {
+      for (std::size_t i = 0; i < 3; ++i) {
         bbmin[i] = std::min(bbmin[i], double(p[i]));
         bbmax[i] = std::max(bbmax[i], double(p[i]));
       }
@@ -420,7 +420,7 @@ bool ViewDrift::SetPlotLimits2d() {
   }
   for (const auto& track : m_tracks) {
     for (const auto& p : track) {
-      for (unsigned int i = 0; i < 3; ++i) {
+      for (std::size_t i = 0; i < 3; ++i) {
         bbmin[i] = std::min(bbmin[i], double(p[i]));
         bbmax[i] = std::max(bbmax[i], double(p[i]));
       }
@@ -440,7 +440,7 @@ bool ViewDrift::SetPlotLimits3d() {
   bbmax.fill(-std::numeric_limits<double>::max());
   for (const auto& driftLine : m_driftLines) {
     for (const auto& p : driftLine.first) {
-      for (unsigned int i = 0; i < 3; ++i) {
+      for (std::size_t i = 0; i < 3; ++i) {
         bbmin[i] = std::min(bbmin[i], double(p[i]));
         bbmax[i] = std::max(bbmax[i], double(p[i]));
       }
@@ -448,7 +448,7 @@ bool ViewDrift::SetPlotLimits3d() {
   }
   for (const auto& track : m_tracks) {
     for (const auto& p : track) {
-      for (unsigned int i = 0; i < 3; ++i) {
+      for (std::size_t i = 0; i < 3; ++i) {
         bbmin[i] = std::min(bbmin[i], double(p[i]));
         bbmax[i] = std::max(bbmax[i], double(p[i]));
       }
