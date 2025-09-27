@@ -24,7 +24,7 @@ double Heaviside(const double t, const double t0) {
 
 namespace Garfield {
 
-Shaper::Shaper(const unsigned int n, const double tau, const double g,
+Shaper::Shaper(const std::size_t n, const double tau, const double g,
                std::string shaperType)
     : m_n(n), m_tau(tau), m_g(g) {
   std::transform(shaperType.begin(), shaperType.end(), shaperType.begin(),

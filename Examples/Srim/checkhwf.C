@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
   const double work = 30.;
   const double fano = 0.3;
   TH1F hwf("hwf", ";number of electrons;entries", 200, 0, 200);
-  for (unsigned int i = 0; i < 10000000; ++i) {
+  for (std::size_t i = 0; i < 10000000; ++i) {
     const double rnd = 1.e6 * (RndmHeedWF(1.e-6 * work, fano));
     hwf.Fill(rnd);
   }

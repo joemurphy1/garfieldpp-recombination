@@ -50,8 +50,8 @@ int main(int argc, char* argv[]) {
   // Histogram of the z coordinates of the excitations.
   hZ = new TH1F("hZ", "", 50, 0., gap);
 
-  const unsigned int nEvents = 10;
-  for (unsigned int i = 0; i < nEvents; ++i) {
+  const std::size_t nEvents = 10;
+  for (std::size_t i = 0; i < nEvents; ++i) {
     constexpr double e0 = 1.;
     std::cout << i << "/" << nEvents << "\n";
     aval.AvalancheElectron(0, 0, 0, 0, e0, 0, 0, 0);

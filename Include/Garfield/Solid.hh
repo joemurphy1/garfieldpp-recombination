@@ -136,7 +136,7 @@ class Solid {
                           std::vector<double>& yv) const;
 
   /// Get the ID of the solid.
-  unsigned int GetId() const { return m_id; }
+  std::size_t GetId() const { return m_id; }
 
   /// Retrieve the surface panels of the solid.
   virtual bool SolidPanels(std::vector<Panel>& panels) = 0;
@@ -270,9 +270,9 @@ class Solid {
  private:
   double NotImplemented(const std::string& fcn) const;
   /// ID counter.
-  static unsigned int s_id;
+  static std::size_t s_id;
   /// ID of the solid.
-  unsigned int m_id{0};
+  std::size_t m_id{0};
 };
 }  // namespace Garfield
 

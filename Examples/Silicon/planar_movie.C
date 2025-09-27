@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
   sensor.AddElectrode(&wField, label);
 
   // Set the time bins.
-  const unsigned int nTimeBins = 1000;
+  const std::size_t nTimeBins = 1000;
   const double tmin = 0.;
   const double tmax = 10.;
   const double tstep = (tmax - tmin) / nTimeBins;
@@ -103,8 +103,8 @@ int main(int argc, char* argv[]) {
   }
   double t0 = 0.;
   double dt = 0.05;
-  const unsigned int nFrames = 120;
-  for (unsigned int i = 0; i < 120; ++i) {
+  const std::size_t nFrames = 120;
+  for (std::size_t i = 0; i < 120; ++i) {
     driftView.Clear();
     drift.SetTimeWindow(t0, t0 + dt);
     drift.ResumeAvalanche();

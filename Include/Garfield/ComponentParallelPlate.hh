@@ -38,7 +38,7 @@ class ComponentParallelPlate : public Component {
    * \param V applied potential difference between the
    *        parallel plates.
    */
-  void Setup(const unsigned int N, std::vector<double> eps,
+  void Setup(const std::size_t N, std::vector<double> eps,
              std::vector<double> d, const double V,
              std::vector<int> sigmaIndex = {});
 

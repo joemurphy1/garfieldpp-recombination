@@ -100,8 +100,8 @@ void TrackTrim::SetParticle(const std::string& /*particle*/) {
   std::cerr << m_className << "::SetParticle: Not applicable.\n";
 }
 
-bool TrackTrim::ReadFile(const std::string& filename, const unsigned int nIons,
-                         const unsigned int nSkip) {
+bool TrackTrim::ReadFile(const std::string& filename, const std::size_t nIons,
+                         const std::size_t nSkip) {
   // TRMREE - Reads the TRIM EXYZ file.
 
   // Reset.
@@ -119,8 +119,8 @@ bool TrackTrim::ReadFile(const std::string& filename, const unsigned int nIons,
   }
 
   constexpr double Angstrom = 1.e-8;
-  unsigned int nRead = 0;
-  unsigned int ionNumber = 0;
+  std::size_t nRead = 0;
+  std::size_t ionNumber = 0;
   bool header = true;
   double mass = 0.;
   std::vector<float> x;
@@ -326,7 +326,7 @@ bool TrackTrim::NewTrack(const double x0, const double y0, const double z0,
     double eloss = path[i][4];
     std::array<double, 3> d = {dmag * v[0], dmag * v[1], dmag * v[2]};
     // Subdivide the step if necessary.
-    unsigned int nSteps = 1;
+    std::size_t nSteps = 1;
     if (m_maxStepSize > 0. && dmag > m_maxStepSize) {
       nSteps = std::ceil(dmag / m_maxStepSize);
     }
@@ -343,7 +343,7 @@ bool TrackTrim::NewTrack(const double x0, const double y0, const double z0,
     const double vmag = Speed(ekin, m_mass);
     // Compute the timestep.
     const double dt = vmag > 0. ? dmag / vmag : 0.;
-    for (unsigned int j = 0; j < nSteps; ++j) {
+    for (std::size_t j = 0; j < nSteps; ++j) {
       Cluster cluster;
       if (m_sensor->HasMagneticField()) {
         double bx = 0., by = 0., bz = 0.;

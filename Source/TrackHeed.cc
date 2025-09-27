@@ -399,7 +399,7 @@ bool TrackHeed::GetCluster(double& xc, double& yc, double& zc, double& tc,
   return true;
 }
 
-bool TrackHeed::GetElectron(const unsigned int i, double& x, double& y,
+bool TrackHeed::GetElectron(const std::size_t i, double& x, double& y,
                             double& z, double& t, double& e, double& dx,
                             double& dy, double& dz) {
   if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
@@ -420,7 +420,7 @@ bool TrackHeed::GetElectron(const unsigned int i, double& x, double& y,
   return true;
 }
 
-bool TrackHeed::GetIon(const unsigned int i, double& x, double& y, double& z,
+bool TrackHeed::GetIon(const std::size_t i, double& x, double& y, double& z,
                        double& t) const {
   if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
   // Make sure an ion with this index exists.
@@ -434,7 +434,7 @@ bool TrackHeed::GetIon(const unsigned int i, double& x, double& y, double& z,
   return true;
 }
 
-bool TrackHeed::GetPhoton(const unsigned int i, double& x, double& y, double& z,
+bool TrackHeed::GetPhoton(const std::size_t i, double& x, double& y, double& z,
                           double& t, double& e, double& dx, double& dy,
                           double& dz) const {
   if (m_clusters.empty() || m_cluster >= m_clusters.size()) return false;
@@ -833,7 +833,7 @@ bool TrackHeed::SetupGas(Medium* medium) {
   pressure = (pressure / AtmosphericPressure) * Heed::CLHEP::atmosphere;
   double temperature = medium->GetTemperature();
 
-  const unsigned int nComponents = medium->GetNumberOfComponents();
+  const std::size_t nComponents = medium->GetNumberOfComponents();
   if (nComponents < 1) {
     std::cerr << m_className << "::SetupGas:\n"
               << "    Gas " << medium->GetName() << " has zero constituents.\n";
@@ -843,7 +843,7 @@ bool TrackHeed::SetupGas(Medium* medium) {
   std::vector<Heed::MolecPhotoAbsCS> mpacs;
   std::vector<std::string> notations;
   std::vector<double> fractions;
-  for (unsigned int i = 0; i < nComponents; ++i) {
+  for (std::size_t i = 0; i < nComponents; ++i) {
     std::string gasname;
     double frac;
     medium->GetComponent(i, gasname, frac);
@@ -974,7 +974,7 @@ bool TrackHeed::SetupGas(Medium* medium) {
       for (int i = 0; i < nValues; ++i) {
         double e = m_energyMesh->get_e(i);
         pacsfile << 1.e6 * e << "  ";
-        for (unsigned int j = 0; j < nComponents; ++j) {
+        for (std::size_t j = 0; j < nComponents; ++j) {
           pacsfile << mpacs[j].get_ACS(e) << "  " << mpacs[j].get_ICS(e)
                    << "  ";
         }
@@ -1003,11 +1003,11 @@ bool TrackHeed::SetupMaterial(Medium* medium) {
   const double density =
       medium->GetMassDensity() * Heed::CLHEP::gram / Heed::CLHEP::cm3;
 
-  const unsigned int nComponents = medium->GetNumberOfComponents();
+  const std::size_t nComponents = medium->GetNumberOfComponents();
   std::vector<Heed::AtomPhotoAbsCS*> atPacs(nComponents, nullptr);
   std::vector<std::string> notations;
   std::vector<double> fractions;
-  for (unsigned int i = 0; i < nComponents; ++i) {
+  for (std::size_t i = 0; i < nComponents; ++i) {
     std::string materialName;
     double frac;
     medium->GetComponent(i, materialName, frac);
@@ -1047,7 +1047,7 @@ bool TrackHeed::SetupMaterial(Medium* medium) {
       for (int i = 0; i < nValues; ++i) {
         double e = m_energyMesh->get_e(i);
         pacsfile << 1.e6 * e << "  ";
-        for (unsigned int j = 0; j < nComponents; ++j) {
+        for (std::size_t j = 0; j < nComponents; ++j) {
           pacsfile << atPacs[j]->get_ACS(e) << "  " << atPacs[j]->get_ICS(e)
                    << "  ";
         }

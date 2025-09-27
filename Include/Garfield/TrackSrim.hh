@@ -149,7 +149,7 @@ class TrackSrim : public Track {
   std::size_t m_currcluster{0};
   /// Fluctuation model (0 = none, 1 = Landau, 2 = Vavilov,
   ///                    3 = Gaussian, 4 = Combined)
-  unsigned int m_model{4};
+  std::size_t m_model{4};
   /// Targeted cluster size
   int m_nsize{-1};
   std::vector<Cluster> m_clusters;

@@ -30,7 +30,7 @@ MediumGaN::MediumGaN() : Medium() {
   m_fano = 0.1;
 }
 
-void MediumGaN::GetComponent(const unsigned int i, std::string& label,
+void MediumGaN::GetComponent(const std::size_t i, std::string& label,
                              double& f) {
   if (i == 0) {
     label = "Ga";

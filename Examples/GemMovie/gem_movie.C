@@ -96,8 +96,8 @@ int main(int argc, char* argv[]) {
   std::vector<std::array<double, 5> > prev = {{x0, y0, z0, t0, e0}};
   double tmin = 0.;
   double dt = 0.1;
-  const unsigned int nFrames = 207;
-  for (unsigned int i = 0; i < nFrames; ++i) {
+  const std::size_t nFrames = 207;
+  for (std::size_t i = 0; i < nFrames; ++i) {
     if (i % 10 == 0) std::cout << "Frame " << i << "\n";
     driftView.Clear();
     if (!aval.GetElectrons().empty()) {

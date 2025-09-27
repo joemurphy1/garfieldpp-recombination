@@ -94,14 +94,14 @@ int main(int argc, char* argv[]) {
     track.EnablePlotting(&vDrift);
   }
 
-  const unsigned int nEvents = 1;
-  for (unsigned int j = 0; j < nEvents; ++j) {
+  const std::size_t nEvents = 1;
+  for (std::size_t j = 0; j < nEvents; ++j) {
     sensor.ClearSignal();
     const double x0 = 0.5 * width + (RndmUniform() - 0.5) * pitch;
     const double t0 = 0.1;
     track.NewTrack(x0, 0., 0., t0, 0., 1., 0.);
-    unsigned int nesum = 0;
-    unsigned int nc = 0;
+    std::size_t nesum = 0;
+    std::size_t nc = 0;
     for (const auto& cluster : track.GetClusters()) {
       ++nc;
       nesum += cluster.electrons.size();

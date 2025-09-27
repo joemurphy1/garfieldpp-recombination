@@ -85,7 +85,7 @@ void SolidSphere::SetRadii(const double rmin, const double rmax) {
   UpdatePanels();
 }
 
-void SolidSphere::SetMeridians(const unsigned int n) {
+void SolidSphere::SetMeridians(const std::size_t n) {
   if (n < 3) throw Exception("Number must be >= 3");
   m_n = n;
   UpdatePanels();
@@ -116,14 +116,14 @@ void SolidSphere::MakePanels(const int vol, const double r, const bool out,
   const double dphi = TwoPi / m_n;
   const double dtheta = Pi / m_n;
   // Loop over the sphere.
-  for (unsigned int i = 1; i <= m_n; ++i) {
+  for (std::size_t i = 1; i <= m_n; ++i) {
     const double phi0 = (i - 1.) * dphi;
     const double phi1 = phi0 + dphi;
     const double cphi0 = cos(phi0);
     const double sphi0 = sin(phi0);
     const double cphi1 = cos(phi1);
     const double sphi1 = sin(phi1);
-    for (unsigned int j = 1; j <= m_n; ++j) {
+    for (std::size_t j = 1; j <= m_n; ++j) {
       const double theta0 = -HalfPi + (j - 1.) * dtheta;
       const double theta1 = theta0 + dtheta;
       const double ctheta0 = cos(theta0);
@@ -213,11 +213,11 @@ void SolidSphere::Cut(const double x0, const double y0, const double z0,
   std::vector<double> zv;
   // Loop over the sphere.
   const double r = m_rMax;
-  for (unsigned int i = 1; i <= m_n; ++i) {
+  for (std::size_t i = 1; i <= m_n; ++i) {
     // phi-Coordinates.
     const double phi0 = TwoPi * (i - 1.) / m_n;
     const double phi1 = TwoPi * i / m_n;
-    for (unsigned int j = 1; j <= m_n; ++j) {
+    for (std::size_t j = 1; j <= m_n; ++j) {
       // theta-Coordinates.
       const double theta0 = -HalfPi + Pi * (j - 1.) / m_n;
       const double theta1 = -HalfPi + Pi * j / m_n;

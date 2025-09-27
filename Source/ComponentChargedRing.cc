@@ -143,7 +143,7 @@ void ComponentChargedRing::GetEllipticIntegrals(double x, double& K,
   // from x = 0 to 10 it is in steps of 1e-3. From 10 to 1e4 in steps of 1. Then
   // in steps of 1000 until 1e7.
 
-  unsigned int arg;
+  std::size_t arg;
   double invStep;
 
   if (x < 1.e1) {

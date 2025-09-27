@@ -88,7 +88,7 @@ class TrackDegrade : public Track {
   double m_pressure{-1.};
   double m_temperature{-1.};
   std::string m_mediumName;
-  unsigned int m_nGas{0};
+  std::size_t m_nGas{0};
 
   double m_dedx{-1.};
   double m_clusterDensity{-1.};

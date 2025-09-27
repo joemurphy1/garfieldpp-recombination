@@ -36,8 +36,8 @@ int deqnGen(const int n, std::vector<std::vector<double> >& a,
 ///               result and the three previous results.
 /// \param lastRes last three results.
 /// \param nres number of calls to the function.
-void qelg(unsigned int& n, std::array<double, 52>& epstab, double& result,
-          double& abserr, std::array<double, 3>& lastRes, unsigned int& nres) {
+void qelg(std::size_t& n, std::array<double, 52>& epstab, double& result,
+          double& abserr, std::array<double, 3>& lastRes, std::size_t& nres) {
   constexpr double eps = std::numeric_limits<double>::epsilon();
 
   ++nres;
@@ -50,10 +50,10 @@ void qelg(unsigned int& n, std::array<double, 52>& epstab, double& result,
   epstab[n + 1] = epstab[n - 1];
   epstab[n - 1] = std::numeric_limits<double>::max();
   // Number of elements to be computed in the new diagonal.
-  const unsigned int nnew = (n - 1) / 2;
-  const unsigned int nold = n;
-  unsigned int k = n;
-  for (unsigned int i = 1; i <= nnew; ++i) {
+  const std::size_t nnew = (n - 1) / 2;
+  const std::size_t nold = n;
+  std::size_t k = n;
+  for (std::size_t i = 1; i <= nnew; ++i) {
     double res = epstab[k + 1];
     // e0 - e3 are the four elements on which the computation of a new
     // element in the epsilon table is based.
@@ -105,15 +105,15 @@ void qelg(unsigned int& n, std::array<double, 52>& epstab, double& result,
     }
   }
   // Shift the table.
-  constexpr unsigned int limexp = 50;
+  constexpr std::size_t limexp = 50;
   if (n == limexp) n = 2 * (limexp / 2) - 1;
-  unsigned int ib = (nold % 2 == 0) ? 1 : 0;
-  for (unsigned int i = 0; i <= nnew; ++i) {
+  std::size_t ib = (nold % 2 == 0) ? 1 : 0;
+  for (std::size_t i = 0; i <= nnew; ++i) {
     epstab[ib] = epstab[ib + 2];
     ib += 2;
   }
   if (nold != n) {
-    for (unsigned int i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       epstab[i] = epstab[nold - n + i];
     }
   }
@@ -141,7 +141,7 @@ namespace QUADPACK {
 
 void qagi(std::function<double(double)> f, double bound, const int inf,
           const double epsabs, const double epsrel, double& result,
-          double& abserr, unsigned int& status) {
+          double& abserr, std::size_t& status) {
   status = 0;
   result = 0.;
   abserr = 0.;
@@ -179,8 +179,8 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
   intervals[0].b = 1.;
   intervals[0].r = result;
   intervals[0].e = abserr;
-  constexpr unsigned int nMaxIntervals = 500;
-  unsigned int nIntervals = 1;
+  constexpr std::size_t nMaxIntervals = 500;
+  std::size_t nIntervals = 1;
   // Interval to be bisected.
   auto it = intervals.begin();
   size_t nrmax = 0;
@@ -189,16 +189,16 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
   std::array<double, 52> epstab;
   epstab[0] = result;
   // Count the number of elements currently in the epsilon table.
-  unsigned int nEps = 2;
+  std::size_t nEps = 2;
   // Keep track of the last three results.
   std::array<double, 3> lastRes = {0., 0., 0.};
   // Count the number of calls to the epsilon extrapolation function.
-  unsigned int nRes = 0;
+  std::size_t nRes = 0;
   // Flag denoting that we are attempting to perform extrapolation.
   bool extrap = false;
   // Flag indicating that extrapolation is no longer allowed.
   bool noext = false;
-  unsigned int ktmin = 0;
+  std::size_t ktmin = 0;
 
   // Initialize the sum of the integrals over the subintervals.
   double area = result;
@@ -215,7 +215,7 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
   abserr = std::numeric_limits<double>::max();
 
   // Count roundoff errors.
-  std::array<unsigned int, 3> nRoundOff = {0, 0, 0};
+  std::array<std::size_t, 3> nRoundOff = {0, 0, 0};
   bool roundOffErrors = false;
   double correc = 0.;
 
@@ -326,7 +326,7 @@ void qagi(std::function<double(double)> f, double bound, const int inf,
         k1 = nMaxIntervals + 3 - nIntervals;
       }
       bool found = false;
-      for (unsigned int k = k0; k < k1; ++k) {
+      for (std::size_t k = k0; k < k1; ++k) {
         it = intervals.begin() + nrmax;
         errMax = (*it).e;
         if (std::abs((*it).b - (*it).a) > small) {
@@ -445,7 +445,7 @@ void qk15i(std::function<double(double)> f, double bound, const int inf,
   double resk = wgk[7] * fc;
   resabs = std::abs(resk);
   std::array<double, 7> fv1, fv2;
-  for (unsigned int j = 0; j < 7; ++j) {
+  for (std::size_t j = 0; j < 7; ++j) {
     const double x = h * xgk[j];
     const double x1 = xc - x;
     const double x2 = xc + x;
@@ -469,7 +469,7 @@ void qk15i(std::function<double(double)> f, double bound, const int inf,
   // Approximation to the mean value of the transformed integrand over (a,b).
   const double reskh = resk * 0.5;
   resasc = wgk[7] * std::abs(fc - reskh);
-  for (unsigned int j = 0; j < 7; ++j) {
+  for (std::size_t j = 0; j < 7; ++j) {
     resasc += wgk[j] * (std::abs(fv1[j] - reskh) + std::abs(fv2[j] - reskh));
   }
   result = resk * h;
@@ -522,8 +522,8 @@ void qk15(std::function<double(double)> f, const double a, const double b,
   double resk = fc * wgk[7];
   resabs = std::abs(resk);
   std::array<double, 7> fv1, fv2;
-  for (unsigned int j = 0; j < 3; ++j) {
-    const unsigned int k = j * 2 + 1;
+  for (std::size_t j = 0; j < 3; ++j) {
+    const std::size_t k = j * 2 + 1;
     const double x = h * xgk[k];
     double y1 = f(xc - x);
     double y2 = f(xc + x);
@@ -534,8 +534,8 @@ void qk15(std::function<double(double)> f, const double a, const double b,
     resk += wgk[k] * fsum;
     resabs += wgk[k] * (std::abs(y1) + std::abs(y2));
   }
-  for (unsigned int j = 0; j < 4; ++j) {
-    const unsigned int k = j * 2;
+  for (std::size_t j = 0; j < 4; ++j) {
+    const std::size_t k = j * 2;
     const double x = h * xgk[k];
     const double y1 = f(xc - x);
     const double y2 = f(xc + x);
@@ -548,7 +548,7 @@ void qk15(std::function<double(double)> f, const double a, const double b,
   // Approximation to the mean value of f over (a,b), i.e. to i/(b-a).
   const double reskh = resk * 0.5;
   resasc = wgk[7] * std::abs(fc - reskh);
-  for (unsigned int j = 0; j < 7; ++j) {
+  for (std::size_t j = 0; j < 7; ++j) {
     resasc += wgk[j] * (std::abs(fv1[j] - reskh) + std::abs(fv2[j] - reskh));
   }
   result = resk * h;
@@ -591,7 +591,7 @@ int deqn(const int n, std::vector<std::vector<double> >& a,
     const double t1 = std::abs(a[0][0]);
     const double t2 = std::abs(a[1][0]);
     const double t3 = std::abs(a[2][0]);
-    unsigned int m1 = 0, m2 = 0, m3 = 0;
+    std::size_t m1 = 0, m2 = 0, m3 = 0;
     if (t1 < t2 && t3 < t2) {
       // Pivot is A21
       m1 = 1;
@@ -1871,7 +1871,7 @@ bool LeastSquaresFit(
     std::function<double(double, const std::vector<double>&)> f,
     std::vector<double>& par, std::vector<double>& epar,
     const std::vector<double>& x, const std::vector<double>& y,
-    const std::vector<double>& ey, const unsigned int nMaxIter,
+    const std::vector<double>& ey, const std::size_t nMaxIter,
     const double diff, double& chi2, const double eps, const bool debug,
     const bool verbose) {
   //-----------------------------------------------------------------------
@@ -1889,8 +1889,8 @@ bool LeastSquaresFit(
   //   (Last updated on 23/ 5/11.)
   //-----------------------------------------------------------------------
 
-  const unsigned int n = par.size();
-  const unsigned int m = x.size();
+  const std::size_t n = par.size();
+  const std::size_t m = x.size();
   // Make sure that the # degrees of freedom < the number of data points.
   if (n > m) {
     std::cerr << "LeastSquaresFit: Number of parameters to be varied\n"
@@ -1908,7 +1908,7 @@ bool LeastSquaresFit(
   double diffc = -1.;
   // Initialise the difference vector R.
   std::vector<double> r(m, 0.);
-  for (unsigned int i = 0; i < m; ++i) {
+  for (std::size_t i = 0; i < m; ++i) {
     // Compute initial residuals.
     r[i] = (y[i] - f(x[i], par)) / ey[i];
     // Compute initial maximum difference.
@@ -1919,13 +1919,13 @@ bool LeastSquaresFit(
   if (debug) {
     std::cout << "  Input data points:\n"
               << "                 X              Y          Y - F(X)\n";
-    for (unsigned int i = 0; i < m; ++i) {
-      std::printf(" %9u %15.8e %15.8e %15.8e\n", i, x[i], y[i], r[i]);
+    for (std::size_t i = 0; i < m; ++i) {
+      std::printf(" %9lu %15.8e %15.8e %15.8e\n", i, x[i], y[i], r[i]);
     }
     std::cout << "  Initial values of the fit parameters:\n"
               << "    Parameter            Value\n";
-    for (unsigned int i = 0; i < n; ++i) {
-      std::printf("    %9u  %15.8e\n", i, par[i]);
+    for (std::size_t i = 0; i < n; ++i) {
+      std::printf("    %9lu  %15.8e\n", i, par[i]);
     }
   }
   if (verbose) {
@@ -1939,7 +1939,7 @@ bool LeastSquaresFit(
   // Start optimising loop.
   bool converged = false;
   double chi2L = 0.;
-  for (unsigned int iter = 1; iter <= nMaxIter; ++iter) {
+  for (std::size_t iter = 1; iter <= nMaxIter; ++iter) {
     // Check the stopping criteria: (1) max norm, (2) change in chi-squared.
     if ((diffc < diff) || (iter > 1 && std::abs(chi2L - chi2) < eps * chi2)) {
       if (debug || verbose) {
@@ -1956,12 +1956,12 @@ bool LeastSquaresFit(
     }
     // Calculate the derivative matrix.
     std::vector<std::vector<double> > d(n, std::vector<double>(m, 0.));
-    for (unsigned int i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       const double epsdif = eps * (1. + std::abs(par[i]));
       par[i] += 0.5 * epsdif;
-      for (unsigned int j = 0; j < m; ++j) d[i][j] = f(x[j], par);
+      for (std::size_t j = 0; j < m; ++j) d[i][j] = f(x[j], par);
       par[i] -= epsdif;
-      for (unsigned int j = 0; j < m; ++j) {
+      for (std::size_t j = 0; j < m; ++j) {
         d[i][j] = (d[i][j] - f(x[j], par)) / (epsdif * ey[j]);
       }
       par[i] += 0.5 * epsdif;
@@ -1969,7 +1969,7 @@ bool LeastSquaresFit(
     // Invert the matrix in Householder style.
     std::vector<double> colsum(n, 0.);
     std::vector<int> pivot(n, 0);
-    for (unsigned int i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       colsum[i] =
           std::inner_product(d[i].cbegin(), d[i].cend(), d[i].cbegin(), 0.);
       pivot[i] = i;
@@ -1977,10 +1977,10 @@ bool LeastSquaresFit(
     // Decomposition.
     std::vector<double> alpha(n, 0.);
     bool singular = false;
-    for (unsigned int k = 0; k < n; ++k) {
+    for (std::size_t k = 0; k < n; ++k) {
       double sigma = colsum[k];
-      unsigned int jbar = k;
-      for (unsigned int j = k + 1; j < n; ++j) {
+      std::size_t jbar = k;
+      for (std::size_t j = k + 1; j < n; ++j) {
         if (sigma < colsum[j]) {
           sigma = colsum[j];
           jbar = j;
@@ -1993,7 +1993,7 @@ bool LeastSquaresFit(
         std::swap(d[k], d[jbar]);
       }
       sigma = 0.;
-      for (unsigned int i = k; i < m; ++i) sigma += d[k][i] * d[k][i];
+      for (std::size_t i = k; i < m; ++i) sigma += d[k][i] * d[k][i];
       if (sigma == 0. || sqrt(sigma) < 1.e-8 * std::abs(d[k][k])) {
         singular = true;
         break;
@@ -2002,12 +2002,12 @@ bool LeastSquaresFit(
       const double beta = 1. / (sigma - d[k][k] * alpha[k]);
       d[k][k] -= alpha[k];
       std::vector<double> b(n, 0.);
-      for (unsigned int j = k + 1; j < n; ++j) {
-        for (unsigned int i = k; i < n; ++i) b[j] += d[k][i] * d[j][i];
+      for (std::size_t j = k + 1; j < n; ++j) {
+        for (std::size_t i = k; i < n; ++i) b[j] += d[k][i] * d[j][i];
         b[j] *= beta;
       }
-      for (unsigned int j = k + 1; j < n; ++j) {
-        for (unsigned int i = k; i < m; ++i) {
+      for (std::size_t j = k + 1; j < n; ++j) {
+        for (std::size_t i = k; i < m; ++i) {
           d[j][i] -= d[k][i] * b[j];
           colsum[j] -= d[j][k] * d[j][k];
         }
@@ -2021,36 +2021,36 @@ bool LeastSquaresFit(
       break;
     }
     // Solve.
-    for (unsigned int j = 0; j < n; ++j) {
+    for (std::size_t j = 0; j < n; ++j) {
       double gamma = 0.;
-      for (unsigned int i = j; i < m; ++i) gamma += d[j][i] * r[i];
+      for (std::size_t i = j; i < m; ++i) gamma += d[j][i] * r[i];
       gamma *= 1. / (alpha[j] * d[j][j]);
-      for (unsigned int i = j; i < m; ++i) r[i] += gamma * d[j][i];
+      for (std::size_t i = j; i < m; ++i) r[i] += gamma * d[j][i];
     }
     std::vector<double> z(n, 0.);
     z[n - 1] = r[n - 1] / alpha[n - 1];
     for (int i = n - 1; i >= 1; --i) {
       double sum = 0.;
-      for (unsigned int j = i + 1; j <= n; ++j) {
+      for (std::size_t j = i + 1; j <= n; ++j) {
         sum += d[j - 1][i - 1] * z[j - 1];
       }
       z[i - 1] = (r[i - 1] - sum) / alpha[i - 1];
     }
     // Correction vector.
     std::vector<double> s(n, 0.);
-    for (unsigned int i = 0; i < n; ++i) s[pivot[i]] = z[i];
+    for (std::size_t i = 0; i < n; ++i) s[pivot[i]] = z[i];
     // Generate some debugging output.
     if (debug) {
       std::cout << "  Correction vector in iteration " << iter << ":\n";
-      for (unsigned int i = 0; i < n; ++i) {
-        std::printf("    %5u  %15.8e\n", i, s[i]);
+      for (std::size_t i = 0; i < n; ++i) {
+        std::printf("    %5lu  %15.8e\n", i, s[i]);
       }
     }
     // Add part of the correction vector to the estimate to improve chi2.
     chi2L = chi2;
     chi2 *= 2;
-    for (unsigned int i = 0; i < n; ++i) par[i] += s[i] * 2;
-    for (unsigned int i = 0; i <= 10; ++i) {
+    for (std::size_t i = 0; i < n; ++i) par[i] += s[i] * 2;
+    for (std::size_t i = 0; i <= 10; ++i) {
       if (chi2 <= chi2L) break;
       if (std::abs(chi2L - chi2) < eps * chi2) {
         if (debug) {
@@ -2060,30 +2060,30 @@ bool LeastSquaresFit(
       }
       chi2 = 0.;
       const double scale = 1. / pow(2, i);
-      for (unsigned int j = 0; j < n; ++j) par[j] -= s[j] * scale;
-      for (unsigned int j = 0; j < m; ++j) {
+      for (std::size_t j = 0; j < n; ++j) par[j] -= s[j] * scale;
+      for (std::size_t j = 0; j < m; ++j) {
         r[j] = (y[j] - f(x[j], par)) / ey[j];
         chi2 += r[j] * r[j];
       }
       if (debug) {
-        std::printf("    Reduction loop %3i: chi2 = %15.8e\n", i, chi2);
+        std::printf("    Reduction loop %3lu: chi2 = %15.8e\n", i, chi2);
       }
     }
     // Calculate the max. norm.
     diffc = std::abs(r[0]);
-    for (unsigned int i = 1; i < m; ++i) {
+    for (std::size_t i = 1; i < m; ++i) {
       diffc = std::max(std::abs(r[i]), diffc);
     }
     // Print some debugging output.
     if (debug) {
       std::cout << "  Values of the fit parameters after iteration " << iter
                 << "\n    Parameter            Value\n";
-      for (unsigned int i = 0; i < n; ++i) {
-        std::printf("    %9u  %15.8e\n", i, par[i]);
+      for (std::size_t i = 0; i < n; ++i) {
+        std::printf("    %9lu  %15.8e\n", i, par[i]);
       }
       std::printf("  for which chi2 = %15.8e and diff = %15.8e\n", chi2, diffc);
     } else if (verbose) {
-      std::printf("  Step %3u: largest deviation = %15.8e, chi2 = %15.8e\n",
+      std::printf("  Step %3lu: largest deviation = %15.8e, chi2 = %15.8e\n",
                   iter, diffc, chi2);
     }
   }
@@ -2093,20 +2093,20 @@ bool LeastSquaresFit(
   }
   // Calculate the derivative matrix for the final settings.
   std::vector<std::vector<double> > d(n, std::vector<double>(m, 0.));
-  for (unsigned int i = 0; i < n; ++i) {
+  for (std::size_t i = 0; i < n; ++i) {
     const double epsdif = eps * (1. + std::abs(par[i]));
     par[i] += 0.5 * epsdif;
-    for (unsigned int j = 0; j < m; ++j) d[i][j] = f(x[j], par);
+    for (std::size_t j = 0; j < m; ++j) d[i][j] = f(x[j], par);
     par[i] -= epsdif;
-    for (unsigned int j = 0; j < m; ++j) {
+    for (std::size_t j = 0; j < m; ++j) {
       d[i][j] = (d[i][j] - f(x[j], par)) / (epsdif * ey[j]);
     }
     par[i] += 0.5 * epsdif;
   }
   // Calculate the error matrix.
   std::vector<std::vector<double> > cov(n, std::vector<double>(n, 0.));
-  for (unsigned int i = 0; i < n; ++i) {
-    for (unsigned int j = 0; j < n; ++j) {
+  for (std::size_t i = 0; i < n; ++i) {
+    for (std::size_t j = 0; j < n; ++j) {
       cov[i][j] =
           std::inner_product(d[i].cbegin(), d[i].cend(), d[j].cbegin(), 0.);
     }
@@ -2119,8 +2119,8 @@ bool LeastSquaresFit(
     std::cerr << "LeastSquaresFit: Singular covariance matrix; "
               << "no error calculation.\n";
   } else {
-    for (unsigned int i = 0; i < n; ++i) {
-      for (unsigned int j = 0; j < n; ++j) cov[i][j] *= scale;
+    for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) cov[i][j] *= scale;
       epar[i] = sqrt(std::max(0., cov[i][i]));
     }
   }
@@ -2128,29 +2128,29 @@ bool LeastSquaresFit(
   if (debug) {
     std::cout << "  Comparison between input and fit:\n"
               << "            X            Y      F(X)\n";
-    for (unsigned int i = 0; i < m; ++i) {
+    for (std::size_t i = 0; i < m; ++i) {
       const double fit = f(x[i], par);
-      std::printf(" %5u %15.8e %15.8e %15.8e\n", i, x[i], y[i], fit);
+      std::printf(" %5lu %15.8e %15.8e %15.8e\n", i, x[i], y[i], fit);
     }
   }
   if (verbose) {
     std::cout << "  Final values of the fit parameters:\n"
               << "    Parameter            Value            Error\n";
-    for (unsigned int i = 0; i < n; ++i) {
-      std::printf("    %9u  %15.8e  %15.8e\n", i, par[i], epar[i]);
+    for (std::size_t i = 0; i < n; ++i) {
+      std::printf("    %9lu  %15.8e  %15.8e\n", i, par[i], epar[i]);
     }
     std::cout << "  The errors have been scaled by a factor of " << sqrt(scale)
               << ".\n";
     std::cout << "  Covariance matrix:\n";
-    for (unsigned int i = 0; i < n; ++i) {
-      for (unsigned int j = 0; j < n; ++j) {
+    for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
         std::printf(" %15.8e", cov[i][j]);
       }
       std::cout << "\n";
     }
     std::cout << "  Correlation matrix:\n";
-    for (unsigned int i = 0; i < n; ++i) {
-      for (unsigned int j = 0; j < n; ++j) {
+    for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
         double cor = 0.;
         if (cov[i][i] > 0. && cov[j][j] > 0.) {
           cor = cov[i][j] / sqrt(cov[i][i] * cov[j][j]);

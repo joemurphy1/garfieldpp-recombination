@@ -21,7 +21,7 @@
 namespace {
 
 double Interpolate(const std::vector<double> &y, const std::vector<double> &x,
-                   const double xx, const unsigned int order) {
+                   const double xx, const std::size_t order) {
   if (xx < x.front() || xx > x.back()) return 0.;
   if (order > 1) {
     return Garfield::Numerics::Divdif(y, x, x.size(), xx, order);
@@ -78,7 +78,7 @@ void Sensor::AddComponent(Component *cmp) {
   m_components.push_back(std::make_tuple(cmp, true, true));
 }
 
-void Sensor::FillBin(Electrode &electrode, const unsigned int bin,
+void Sensor::FillBin(Electrode &electrode, const std::size_t bin,
                      const double signal, const bool electron,
                      const bool delayed) {
   std::lock_guard<std::mutex> guard(m_mutex);
@@ -365,7 +365,7 @@ double Sensor::IntegrateFluxLine(const double x0, const double y0,
                                  const double z0, const double x1,
                                  const double y1, const double z1,
                                  const double xp, const double yp,
-                                 const double zp, const unsigned int nI,
+                                 const double zp, const std::size_t nI,
                                  const int isign) {
   double q = 0.;
   for (const auto &cmp : m_components) {
@@ -376,7 +376,7 @@ double Sensor::IntegrateFluxLine(const double x0, const double y0,
   return q;
 }
 
-Component *Sensor::GetComponent(const unsigned int i) {
+Component *Sensor::GetComponent(const std::size_t i) {
   if (i >= m_components.size()) {
     std::cerr << m_className << "::GetComponent: Index out of range.\n";
     return nullptr;
@@ -384,7 +384,7 @@ Component *Sensor::GetComponent(const unsigned int i) {
   return std::get<0>(m_components[i]);
 }
 
-void Sensor::EnableComponent(const unsigned int i, const bool on) {
+void Sensor::EnableComponent(const std::size_t i, const bool on) {
   if (i >= m_components.size()) {
     std::cerr << m_className << "::EnableComponent: Index out of range.\n";
     return;
@@ -392,7 +392,7 @@ void Sensor::EnableComponent(const unsigned int i, const bool on) {
   std::get<1>(m_components[i]) = on;
 }
 
-void Sensor::EnableMagneticField(const unsigned int i, const bool on) {
+void Sensor::EnableMagneticField(const std::size_t i, const bool on) {
   if (i >= m_components.size()) {
     std::cerr << m_className << "::EnableMagneticField: Index out of range.\n";
     return;
@@ -867,8 +867,8 @@ void Sensor::FillSignal(Electrode &electrode, const double q,
                         const bool delayed) {
   const bool electron = q < 0.;
   // Interpolation order.
-  constexpr unsigned int k = 1;
-  for (unsigned int i = 0; i < m_nTimeBins; ++i) {
+  constexpr std::size_t k = 1;
+  for (std::size_t i = 0; i < m_nTimeBins; ++i) {
     const double t0 = m_tStart + i * m_tStep;
     const double t1 = t0 + m_tStep;
     if (ts.front() > t1) continue;
@@ -925,7 +925,7 @@ void Sensor::AddInducedCharge(const double q, const double x0, const double y0,
 }
 
 void Sensor::SetTimeWindow(const double tstart, const double tstep,
-                           const unsigned int nsteps) {
+                           const std::size_t nsteps) {
   m_tStart = tstart;
   if (tstep <= 0.) {
     std::cerr << m_className << "::SetTimeWindow: Start time out of range.\n";
@@ -962,7 +962,7 @@ void Sensor::SetTimeWindow(const double tstart, const double tstep,
 }
 
 double Sensor::GetElectronSignal(const std::string &label,
-                                 const unsigned int bin) {
+                                 const std::size_t bin) {
   if (m_nEvents == 0) return 0.;
   if (bin >= m_nTimeBins) return 0.;
   double sig = 0.;
@@ -972,7 +972,7 @@ double Sensor::GetElectronSignal(const std::string &label,
   return ElementaryCharge * sig / (m_nEvents * m_tStep);
 }
 
-double Sensor::GetIonSignal(const std::string &label, const unsigned int bin) {
+double Sensor::GetIonSignal(const std::string &label, const std::size_t bin) {
   if (m_nEvents == 0) return 0.;
   if (bin >= m_nTimeBins) return 0.;
   double sig = 0.;
@@ -983,7 +983,7 @@ double Sensor::GetIonSignal(const std::string &label, const unsigned int bin) {
 }
 
 double Sensor::GetDelayedElectronSignal(const std::string &label,
-                                        const unsigned int bin) {
+                                        const std::size_t bin) {
   if (m_nEvents == 0) return 0.;
   if (bin >= m_nTimeBins) return 0.;
   double sig = 0.;
@@ -994,7 +994,7 @@ double Sensor::GetDelayedElectronSignal(const std::string &label,
 }
 
 double Sensor::GetDelayedIonSignal(const std::string &label,
-                                   const unsigned int bin) {
+                                   const std::size_t bin) {
   if (m_nEvents == 0) return 0.;
   if (bin >= m_nTimeBins) return 0.;
   double sig = 0.;
@@ -1004,7 +1004,7 @@ double Sensor::GetDelayedIonSignal(const std::string &label,
   return ElementaryCharge * sig / (m_nEvents * m_tStep);
 }
 
-void Sensor::SetSignal(const std::string &label, const unsigned int bin,
+void Sensor::SetSignal(const std::string &label, const std::size_t bin,
                        const double signal) {
   if (bin >= m_nTimeBins) return;
   if (m_nEvents == 0) m_nEvents = 1;
@@ -1029,7 +1029,7 @@ void Sensor::SetSignal(const std::string &label, const std::vector<double> &ts,
   }
 }
 
-double Sensor::GetSignal(const std::string &label, const unsigned int bin) {
+double Sensor::GetSignal(const std::string &label, const std::size_t bin) {
   if (m_nEvents == 0) return 0.;
   if (bin >= m_nTimeBins) return 0.;
   double sig = 0.;
@@ -1039,7 +1039,7 @@ double Sensor::GetSignal(const std::string &label, const unsigned int bin) {
   return ElementaryCharge * sig / (m_nEvents * m_tStep);
 }
 
-double Sensor::GetSignal(const std::string &label, const unsigned int bin,
+double Sensor::GetSignal(const std::string &label, const std::size_t bin,
                          const int comp) {
   if (m_nEvents == 0) return 0.;
   if (bin >= m_nTimeBins) return 0.;
@@ -1064,7 +1064,7 @@ double Sensor::GetSignal(const std::string &label, const unsigned int bin,
 }
 
 double Sensor::GetPromptSignal(const std::string &label,
-                               const unsigned int bin) {
+                               const std::size_t bin) {
   if (m_nEvents == 0) return 0.;
   if (bin >= m_nTimeBins) return 0.;
   double sig = 0.;
@@ -1076,7 +1076,7 @@ double Sensor::GetPromptSignal(const std::string &label,
 }
 
 double Sensor::GetDelayedSignal(const std::string &label,
-                                const unsigned int bin) {
+                                const std::size_t bin) {
   if (m_nEvents == 0) return 0.;
   if (bin >= m_nTimeBins) return 0.;
   double sig = 0.;
@@ -1120,7 +1120,7 @@ void Sensor::SetTransferFunction(const std::vector<double> &times,
   }
   const auto n = times.size();
   m_fTransferTab.clear();
-  for (unsigned int i = 0; i < n; ++i) {
+  for (std::size_t i = 0; i < n; ++i) {
     m_fTransferTab.emplace_back(std::make_pair(times[i], values[i]));
   }
   std::sort(m_fTransferTab.begin(), m_fTransferTab.end());
@@ -1142,7 +1142,7 @@ void Sensor::PlotTransferFunction() {
   const std::string name = ViewBase::FindUnusedCanvasName("cTransferFunction");
   std::vector<double> t;
   std::vector<double> f;
-  for (unsigned int i = 0; i < m_nTimeBins; ++i) {
+  for (std::size_t i = 0; i < m_nTimeBins; ++i) {
     // Positive time part.
     t.push_back(i * m_tStep);
     f.push_back(GetTransferFunction(i * m_tStep));
@@ -1211,10 +1211,10 @@ void Sensor::PrintTransferFunction() {
     } else if (m_shaper->IsBipolar()) {
       shaperType = "Bipolar";
     }
-    unsigned int n = 1;
+    std::size_t n = 1;
     double tp = 0.;
     m_shaper->GetParameters(n, tp);
-    std::printf("    %s shaper with order %u and %5.1f ns peaking time.\n",
+    std::printf("    %s shaper with order %lu and %5.1f ns peaking time.\n",
                 shaperType.c_str(), n, tp);
   } else if (!m_fTransferTab.empty()) {
     std::cout << "    Table with " << m_fTransferTab.size() << " entries.\n";
@@ -1279,9 +1279,9 @@ void Sensor::MakeTransferFunctionTable(std::vector<double> &cnvTab) {
   constexpr double cnvMax = 1.e10;
 
   cnvTab.assign(2 * m_nTimeBins - 1, 0.);
-  const unsigned int offset = m_nTimeBins - 1;
+  const std::size_t offset = m_nTimeBins - 1;
   // Evaluate the transfer function.
-  for (unsigned int i = 0; i < m_nTimeBins; ++i) {
+  for (std::size_t i = 0; i < m_nTimeBins; ++i) {
     // Negative time part.
     double t = (-int(i)) * m_tStep;
     if (t < cnvMin || t > cnvMax) {
@@ -1305,10 +1305,10 @@ void Sensor::ConvoluteSignal(Electrode &electrode,
   // Do the convolution.
   std::vector<double> tmpSignal(m_nTimeBins, 0.);
   std::vector<double> tmpSignalDelayed(m_nTimeBins, 0.);
-  const unsigned int offset = m_nTimeBins - 1;
-  for (unsigned int j = 0; j < m_nTimeBins; ++j) {
+  const std::size_t offset = m_nTimeBins - 1;
+  for (std::size_t j = 0; j < m_nTimeBins; ++j) {
     tmpSignal[j] = tmpSignalDelayed[j] = 0.;
-    for (unsigned int k = 0; k < m_nTimeBins; ++k) {
+    for (std::size_t k = 0; k < m_nTimeBins; ++k) {
       tmpSignal[j] += m_tStep * tab[offset + j - k] * electrode.signal[k];
       tmpSignalDelayed[j] +=
           m_tStep * tab[offset + j - k] * electrode.delayedSignal[k];
@@ -1321,12 +1321,12 @@ void Sensor::ConvoluteSignal(Electrode &electrode,
 
 bool Sensor::ConvoluteSignalFFT() {
   // Number of bins must be a power of 2.
-  const unsigned int nn = exp2(ceil(log2(m_nTimeBins)));
+  const std::size_t nn = exp2(ceil(log2(m_nTimeBins)));
 
   if (!m_cacheTransferFunction || m_fTransferFFT.size() != 2 * (nn + 1)) {
     // (Re-)compute the FFT of the transfer function.
     m_fTransferFFT.assign(2 * (nn + 1), 0.);
-    for (unsigned int i = 0; i < m_nTimeBins; ++i) {
+    for (std::size_t i = 0; i < m_nTimeBins; ++i) {
       m_fTransferFFT[2 * i + 1] = GetTransferFunction(i * m_tStep);
     }
     FFT(m_fTransferFFT, false, nn);
@@ -1340,12 +1340,12 @@ bool Sensor::ConvoluteSignalFFT() {
 
 bool Sensor::ConvoluteSignalFFT(const std::string &label) {
   // Number of bins must be a power of 2.
-  const unsigned int nn = exp2(ceil(log2(m_nTimeBins)));
+  const std::size_t nn = exp2(ceil(log2(m_nTimeBins)));
 
   if (!m_cacheTransferFunction || m_fTransferFFT.size() != 2 * (nn + 1)) {
     // (Re-)compute the FFT of the transfer function.
     m_fTransferFFT.assign(2 * (nn + 1), 0.);
-    for (unsigned int i = 0; i < m_nTimeBins; ++i) {
+    for (std::size_t i = 0; i < m_nTimeBins; ++i) {
       m_fTransferFFT[2 * i + 1] = GetTransferFunction(i * m_tStep);
     }
     FFT(m_fTransferFFT, false, nn);
@@ -1361,13 +1361,13 @@ bool Sensor::ConvoluteSignalFFT(const std::string &label) {
 
 void Sensor::ConvoluteSignalFFT(Electrode &electrode,
                                 const std::vector<double> &tab,
-                                const unsigned int nn) {
+                                const std::size_t nn) {
   std::vector<double> g(2 * (nn + 1), 0.);
-  for (unsigned int i = 0; i < m_nTimeBins; ++i) {
+  for (std::size_t i = 0; i < m_nTimeBins; ++i) {
     g[2 * i + 1] = electrode.signal[i];
   }
   FFT(g, false, nn);
-  for (unsigned int i = 0; i < nn; ++i) {
+  for (std::size_t i = 0; i < nn; ++i) {
     const double fr = tab[2 * i + 1];
     const double fi = tab[2 * i + 2];
     const double gr = g[2 * i + 1];
@@ -1377,7 +1377,7 @@ void Sensor::ConvoluteSignalFFT(Electrode &electrode,
   }
   FFT(g, true, nn);
   const double scale = m_tStep / nn;
-  for (unsigned int i = 0; i < m_nTimeBins; ++i) {
+  for (std::size_t i = 0; i < m_nTimeBins; ++i) {
     electrode.signal[i] = scale * g[2 * i + 1];
   }
   electrode.integrated = true;
@@ -1410,7 +1410,7 @@ bool Sensor::IntegrateSignal(const std::string &label) {
 }
 
 void Sensor::IntegrateSignal(Electrode &electrode) {
-  for (unsigned int j = 0; j < m_nTimeBins; ++j) {
+  for (std::size_t j = 0; j < m_nTimeBins; ++j) {
     electrode.signal[j] *= m_tStep;
     electrode.electronSignal[j] *= m_tStep;
     electrode.ionSignal[j] *= m_tStep;
@@ -1437,13 +1437,13 @@ bool Sensor::DelayAndSubtractFraction(const double td, const double f) {
   for (auto &electrode : m_electrodes) {
     std::vector<double> signal1(m_nTimeBins, 0.);
     std::vector<double> signal2(m_nTimeBins, 0.);
-    for (unsigned int j = 0; j < m_nTimeBins; ++j) {
+    for (std::size_t j = 0; j < m_nTimeBins; ++j) {
       signal2[j] = f * electrode.signal[j];
       const int bin = j - offset;
       if (bin < 0 || bin >= (int)m_nTimeBins) continue;
       signal1[j] = electrode.signal[bin];
     }
-    for (unsigned int j = 0; j < m_nTimeBins; ++j) {
+    for (std::size_t j = 0; j < m_nTimeBins; ++j) {
       electrode.signal[j] = signal1[j] - signal2[j];
     }
   }
@@ -1467,7 +1467,7 @@ void Sensor::AddNoise(const bool total, const bool electron, const bool ion) {
 
   for (auto &electrode : m_electrodes) {
     double t = m_tStart + 0.5 * m_tStep;
-    for (unsigned int j = 0; j < m_nTimeBins; ++j) {
+    for (std::size_t j = 0; j < m_nTimeBins; ++j) {
       const double noise = m_fNoise(t);
       if (total) electrode.signal[j] += noise;
       if (electron) electrode.electronSignal[j] += noise;
@@ -1506,7 +1506,7 @@ void Sensor::AddWhiteNoise(const std::string &label, const double enc,
         electrode.signal[bin] += q0;
       }
       const double offset = q0 * nu * m_tStep;
-      for (unsigned int j = 0; j < m_nTimeBins; ++j) {
+      for (std::size_t j = 0; j < m_nTimeBins; ++j) {
         electrode.signal[j] -= offset;
       }
       break;
@@ -1516,7 +1516,7 @@ void Sensor::AddWhiteNoise(const std::string &label, const double enc,
     const double sigma = enc * sqrt(m_tStep / f2);
     for (auto &electrode : m_electrodes) {
       if (label != electrode.label) continue;
-      for (unsigned int j = 0; j < m_nTimeBins; ++j) {
+      for (std::size_t j = 0; j < m_nTimeBins; ++j) {
         electrode.signal[j] += RndmGaussian(0., sigma);
       }
       break;
@@ -1552,7 +1552,7 @@ void Sensor::AddWhiteNoise(const double enc, const bool poisson,
         electrode.signal[bin] += q0;
       }
       const double offset = q0 * nu * m_tStep;
-      for (unsigned int j = 0; j < m_nTimeBins; ++j) {
+      for (std::size_t j = 0; j < m_nTimeBins; ++j) {
         electrode.signal[j] -= offset;
       }
     }
@@ -1560,7 +1560,7 @@ void Sensor::AddWhiteNoise(const double enc, const bool poisson,
     // Gaussian approximation.
     const double sigma = enc * sqrt(m_tStep / f2);
     for (auto &electrode : m_electrodes) {
-      for (unsigned int j = 0; j < m_nTimeBins; ++j) {
+      for (std::size_t j = 0; j < m_nTimeBins; ++j) {
         electrode.signal[j] += RndmGaussian(0., sigma);
       }
     }
@@ -1577,12 +1577,12 @@ double Sensor::TransferFunctionSq() {
     };
     constexpr double epsrel = 1.e-8;
     double err = 0.;
-    unsigned int stat = 0;
+    std::size_t stat = 0;
     Numerics::QUADPACK::qagi(fsq, 0., 1, 0., epsrel, integral, err, stat);
     // Find the peak value.
-    unsigned int imax = 0;
+    std::size_t imax = 0;
     double ymax = m_fTransfer(0.);
-    for (unsigned int i = 0; i < m_nTimeBins; ++i) {
+    for (std::size_t i = 0; i < m_nTimeBins; ++i) {
       const double y = m_fTransfer(m_tStep * (i + 0.5));
       if (y > ymax) {
         ymax = y;
@@ -1590,7 +1590,7 @@ double Sensor::TransferFunctionSq() {
       }
     }
     double tmax = m_tStep * imax;
-    for (unsigned int i = 0; i < 10; ++i) {
+    for (std::size_t i = 0; i < 10; ++i) {
       const double y = m_fTransfer(tmax);
       if (y > ymax) ymax = y;
       tmax += 0.1 * m_tStep;
@@ -1634,7 +1634,7 @@ bool Sensor::ComputeThresholdCrossings(const double thr,
                 << "Warning: signal on electrode " << label
                 << " has not been integrated/convoluted.\n";
     }
-    for (unsigned int i = 0; i < m_nTimeBins; ++i) {
+    for (std::size_t i = 0; i < m_nTimeBins; ++i) {
       signal[i] += electrode.signal[i];
     }
   }
@@ -1644,7 +1644,7 @@ bool Sensor::ComputeThresholdCrossings(const double thr,
     return false;
   }
   const double scale = ElementaryCharge / (m_nEvents * m_tStep);
-  for (unsigned int i = 0; i < m_nTimeBins; ++i) signal[i] *= scale;
+  for (std::size_t i = 0; i < m_nTimeBins; ++i) signal[i] *= scale;
 
   // Establish the range.
   const double vMin = *std::min_element(std::begin(signal), std::end(signal));
@@ -1673,7 +1673,7 @@ bool Sensor::ComputeThresholdCrossings(const double thr,
     std::vector<double> ts = {m_tStart + 0.5 * m_tStep};
     std::vector<double> vs = {signal[0]};
     // Scan the signal.
-    for (unsigned int i = 1; i < m_nTimeBins; ++i) {
+    for (std::size_t i = 1; i < m_nTimeBins; ++i) {
       // Compute the vector element.
       const double tNew = m_tStart + (i + 0.5) * m_tStep;
       const double vNew = signal[i];
@@ -1722,7 +1722,7 @@ bool Sensor::ComputeThresholdCrossings(const double thr,
   return true;
 }
 
-bool Sensor::GetThresholdCrossing(const unsigned int i, double &time,
+bool Sensor::GetThresholdCrossing(const std::size_t i, double &time,
                                   double &level, bool &rise) const {
   level = m_thresholdLevel;
 
@@ -1866,7 +1866,7 @@ void Sensor::ExportSignal(const std::string &label, const std::string &name,
     }
     myfile << "\n";
     myfile << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
-    for (unsigned int i = 0; i < m_nTimeBins; i++) {
+    for (std::size_t i = 0; i < m_nTimeBins; i++) {
       myfile << m_tStart + i * m_tStep << ","
              << scale * (electrode.signal[i] - electrode.delayedSignal[i])
              << "," << scale * electrode.delayedSignal[i] << ","

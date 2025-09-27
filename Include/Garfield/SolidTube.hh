@@ -53,7 +53,7 @@ class SolidTube : public Solid {
   /// approximated as a polygon with a finite number of panels.
   /// The number of corners of the polygon equals \f$4(n - 1)\f$.
   /// Thus, \f$n = 2\f$ will produce a square, \f$n = 3\f$ an octagon etc.
-  void SetSectors(const unsigned int n);
+  void SetSectors(const std::size_t n);
   /// Specify a rotation angle (radian) of the cylinder.
   /// Such a rotation is meaningful only if the number of sectors
   /// (when approximating the circle with a polygon) has been chosen small.
@@ -70,7 +70,7 @@ class SolidTube : public Solid {
   void SetBottomLid(const bool closed) { m_botlid = closed; }
 
   /// Return the number of sectors.
-  unsigned int GetSectors() const { return m_n; }
+  std::size_t GetSectors() const { return m_n; }
   /// Return the current rotation angle.
   double GetRotation() const { return m_rot; }
   /// Return the status of the "average-radius" flag.
@@ -98,7 +98,7 @@ class SolidTube : public Solid {
   /// Rotation angle
   double m_rot{0.};
   /// Number of sectors
-  unsigned int m_n{2};
+  std::size_t m_n{2};
   /// Average chord over the sectors.
   bool m_average{false};
   /// Radius of the outer approximating polygon.

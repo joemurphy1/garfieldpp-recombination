@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
   sensor.AddElectrode(RPC, label);
 
   // Set the time bins.
-  const unsigned int nTimeBins = 200;
+  const std::size_t nTimeBins = 200;
   const double tmin = 0.;
   const double tmax = 4;
   const double tstep = (tmax - tmin) / nTimeBins;

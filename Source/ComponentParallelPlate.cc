@@ -35,8 +35,7 @@ void ComponentParallelPlate::LoadWeightingPotentialGrid(
             << ".\n";
 }
 
-void ComponentParallelPlate::Setup(const unsigned int N,
-                                   std::vector<double> eps,
+void ComponentParallelPlate::Setup(const std::size_t N, std::vector<double> eps,
                                    std::vector<double> d, const double V,
                                    std::vector<int> sigmaIndex) {
   // Here I switch conventions with the z-axis the direction of drift.
@@ -62,7 +61,7 @@ void ComponentParallelPlate::Setup(const unsigned int N,
 
   m_conductive.assign(N + 1, false);
   if (sigmaIndex.empty()) {
-    for (unsigned int i = 0; i < N; i++) {
+    for (std::size_t i = 0; i < N; i++) {
       if (eps[i] != 1) m_conductive[i + 1] = true;
     }
   } else {
@@ -70,7 +69,7 @@ void ComponentParallelPlate::Setup(const unsigned int N,
   }
 
   m_z.assign(N + 1, 0.);
-  for (unsigned int i = 1; i <= N; i++) {
+  for (std::size_t i = 1; i <= N; i++) {
     m_z[i] = m_z[i - 1] + m_d[i - 1];
 
     if (m_debug)

@@ -77,11 +77,11 @@ std::array<double, 3> MidPoint(const std::array<double, 3>& x0,
 namespace Garfield {
 
 /// Return the number of electrons and ions/holes in the avalanche.
-std::pair<unsigned int, unsigned int> AvalancheMC::GetAvalancheSize() const {
+std::pair<std::size_t, std::size_t> AvalancheMC::GetAvalancheSize() const {
   return std::make_pair(m_nElectrons, std::max(m_nIons, m_nHoles));
 }
 /// Return the number of electrons and ions/holes in the avalanche.
-void AvalancheMC::GetAvalancheSize(unsigned int& ne, unsigned int& ni) const {
+void AvalancheMC::GetAvalancheSize(std::size_t& ne, std::size_t& ni) const {
   ne = m_nElectrons;
   ni = std::max(m_nIons, m_nHoles);
 }
@@ -128,7 +128,7 @@ void AvalancheMC::SetDistanceSteps(const double d) {
   m_dMc = d;
 }
 
-void AvalancheMC::SetCollisionSteps(const unsigned int n) {
+void AvalancheMC::SetCollisionSteps(const std::size_t n) {
   m_stepModel = StepModel::CollisionTime;
   if (n < 1) {
     std::cerr << m_className << "::SetCollisionSteps:\n    "
@@ -424,8 +424,8 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
       std::array<double, 3> v1 = v0;
       std::array<double, 3> e1 = e0;
       std::array<double, 3> b1 = b0;
-      constexpr unsigned int nMaxIter = 3;
-      for (unsigned int i = 0; i < nMaxIter; ++i) {
+      constexpr std::size_t nMaxIter = 3;
+      for (std::size_t i = 0; i < nMaxIter; ++i) {
         Medium* m1 = nullptr;
         status = GetField(x1, e1, b1, m1);
         if (status != 0) {
@@ -1031,7 +1031,7 @@ void AvalancheMC::Terminate(const std::array<double, 3>& x0, const double t0,
   double ds = Mag(dx);
   if (ds > 0.) {
     const double scale = 1. / ds;
-    for (unsigned int k = 0; k < 3; ++k) dx[k] *= scale;
+    for (std::size_t k = 0; k < 3; ++k) dx[k] *= scale;
   }
   x1 = x0;
   t1 = t0;
@@ -1039,7 +1039,7 @@ void AvalancheMC::Terminate(const std::array<double, 3>& x0, const double t0,
     dt *= 0.5;
     ds *= 0.5;
     std::array<double, 3> xm = x1;
-    for (unsigned int k = 0; k < 3; ++k) xm[k] += dx[k] * ds;
+    for (std::size_t k = 0; k < 3; ++k) xm[k] += dx[k] * ds;
     // Check if the mid-point is inside the drift medium and the drift area.
     double ex = 0., ey = 0., ez = 0.;
     int status = 0;

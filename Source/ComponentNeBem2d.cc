@@ -141,16 +141,16 @@ bool Intersecting(const std::vector<double>& xp1,
   if (xmax1 + epsx < xmin2 || xmax2 + epsx < xmin1) return false;
   if (ymax1 + epsy < ymin2 || ymax2 + epsy < ymin1) return false;
 
-  const unsigned int n1 = xp1.size();
-  const unsigned int n2 = xp2.size();
-  for (unsigned int i = 0; i < n1; ++i) {
+  const std::size_t n1 = xp1.size();
+  const std::size_t n2 = xp2.size();
+  for (std::size_t i = 0; i < n1; ++i) {
     const double x0 = xp1[i];
     const double y0 = yp1[i];
-    const unsigned int ii = i < n1 - 1 ? i + 1 : 0;
+    const std::size_t ii = i < n1 - 1 ? i + 1 : 0;
     const double x1 = xp1[ii];
     const double y1 = yp1[ii];
-    for (unsigned int j = 0; j < n2; ++j) {
-      const unsigned int jj = j < n2 - 1 ? j + 1 : 0;
+    for (std::size_t j = 0; j < n2; ++j) {
+      const std::size_t jj = j < n2 - 1 ? j + 1 : 0;
       const double u0 = xp2[j];
       const double v0 = yp2[j];
       const double u1 = xp2[jj];
@@ -190,8 +190,8 @@ bool Enclosed(const std::vector<double>& xp1, const std::vector<double>& yp1,
   if (xmin1 + epsx < xmin2 || xmax1 > xmax2 + epsx) return false;
   if (ymin1 + epsy < ymin2 || ymax1 > ymax2 + epsy) return false;
 
-  const unsigned int n1 = xp1.size();
-  for (unsigned int i = 0; i < n1; ++i) {
+  const std::size_t n1 = xp1.size();
+  for (std::size_t i = 0; i < n1; ++i) {
     bool inside = false, edge = false;
     Garfield::Polygon::Inside(xp2, yp2, xp1[i], yp1[i], inside, edge);
     if (!inside) return false;
@@ -261,8 +261,8 @@ int ComponentNeBem2d::Field(const double x, const double y, const double z,
   }
 
   // See whether we are inside a wire.
-  const unsigned int nWires = m_wires.size();
-  for (unsigned int i = 0; i < nWires; ++i) {
+  const std::size_t nWires = m_wires.size();
+  for (std::size_t i = 0; i < nWires; ++i) {
     const double dx = x - m_wires[i].x;
     const double dy = y - m_wires[i].y;
     if (dx * dx + dy * dy < m_wires[i].r * m_wires[i].r) {
@@ -581,7 +581,7 @@ bool ComponentNeBem2d::AddWire(const double x, const double y, const double d,
 
 bool ComponentNeBem2d::AddRegion(const std::vector<double>& xp,
                                  const std::vector<double>& yp, Medium* medium,
-                                 const unsigned int bctype, const double v,
+                                 const std::size_t bctype, const double v,
                                  const int ndiv) {
   if (xp.size() != yp.size()) {
     std::cerr << m_className << "::AddRegion:\n"
@@ -598,13 +598,13 @@ bool ComponentNeBem2d::AddRegion(const std::vector<double>& xp,
   }
 
   // Check if this is a valid polygon (no self-crossing).
-  const unsigned int np = xp.size();
+  const std::size_t np = xp.size();
   if (np > 3) {
-    for (unsigned int i0 = 0; i0 < np; ++i0) {
-      const unsigned int i1 = i0 < np - 1 ? i0 + 1 : 0;
-      for (unsigned int j = 0; j < np - 3; ++j) {
-        const unsigned int j0 = i1 < np - 1 ? i1 + 1 : 0;
-        const unsigned int j1 = j0 < np - 1 ? j0 + 1 : 0;
+    for (std::size_t i0 = 0; i0 < np; ++i0) {
+      const std::size_t i1 = i0 < np - 1 ? i0 + 1 : 0;
+      for (std::size_t j = 0; j < np - 3; ++j) {
+        const std::size_t j0 = i1 < np - 1 ? i1 + 1 : 0;
+        const std::size_t j1 = j0 < np - 1 ? j0 + 1 : 0;
         double xc = 0., yc = 0.;
         if (Crossing(xp[i0], yp[i0], xp[i1], yp[i1], xp[j0], yp[j0], xp[j1],
                      yp[j1], xc, yc)) {
@@ -679,7 +679,7 @@ void ComponentNeBem2d::AddChargeDistribution(const double x, const double y,
   m_spaceCharge.push_back(std::move(box));
 }
 
-void ComponentNeBem2d::SetNumberOfDivisions(const unsigned int ndiv) {
+void ComponentNeBem2d::SetNumberOfDivisions(const std::size_t ndiv) {
   if (ndiv == 0) {
     std::cerr << m_className << "::SetNumberOfDivisions:\n"
               << "    Number of divisions must be greater than zero.\n";
@@ -690,7 +690,7 @@ void ComponentNeBem2d::SetNumberOfDivisions(const unsigned int ndiv) {
   m_ready = false;
 }
 
-void ComponentNeBem2d::SetNumberOfCollocationPoints(const unsigned int ncoll) {
+void ComponentNeBem2d::SetNumberOfCollocationPoints(const std::size_t ncoll) {
   if (ncoll == 0) {
     std::cerr << m_className << "::SetNumberOfCollocationPoints:\n"
               << "    Number of points must be greater than zero.\n";
@@ -701,7 +701,7 @@ void ComponentNeBem2d::SetNumberOfCollocationPoints(const unsigned int ncoll) {
   m_ready = false;
 }
 
-void ComponentNeBem2d::SetMaxNumberOfIterations(const unsigned int niter) {
+void ComponentNeBem2d::SetMaxNumberOfIterations(const std::size_t niter) {
   if (niter == 0) {
     std::cerr << m_className << "::SetMaxNumberOfIterations:\n"
               << "    Number of iterations must be greater than zero.\n";
@@ -710,9 +710,9 @@ void ComponentNeBem2d::SetMaxNumberOfIterations(const unsigned int niter) {
   m_nMaxIterations = niter;
 }
 
-bool ComponentNeBem2d::GetRegion(const unsigned int i, std::vector<double>& xv,
+bool ComponentNeBem2d::GetRegion(const std::size_t i, std::vector<double>& xv,
                                  std::vector<double>& yv, Medium*& medium,
-                                 unsigned int& bctype, double& v) {
+                                 std::size_t& bctype, double& v) {
   if (i >= m_regions.size()) return false;
   if (!m_ready) {
     if (!Initialise()) return false;
@@ -726,7 +726,7 @@ bool ComponentNeBem2d::GetRegion(const unsigned int i, std::vector<double>& xv,
   return true;
 }
 
-bool ComponentNeBem2d::GetSegment(const unsigned int i, double& x0, double& y0,
+bool ComponentNeBem2d::GetSegment(const std::size_t i, double& x0, double& y0,
                                   double& x1, double& y1, double& v) const {
   if (i >= m_segments.size()) return false;
   const auto& seg = m_segments[i];
@@ -738,7 +738,7 @@ bool ComponentNeBem2d::GetSegment(const unsigned int i, double& x0, double& y0,
   return true;
 }
 
-bool ComponentNeBem2d::GetWire(const unsigned int i, double& x, double& y,
+bool ComponentNeBem2d::GetWire(const std::size_t i, double& x, double& y,
                                double& d, double& v, double& q) const {
   if (i >= m_wires.size()) return false;
   const auto& wire = m_wires[i];
@@ -750,7 +750,7 @@ bool ComponentNeBem2d::GetWire(const unsigned int i, double& x, double& y,
   return true;
 }
 
-bool ComponentNeBem2d::GetElement(const unsigned int i, double& x0, double& y0,
+bool ComponentNeBem2d::GetElement(const std::size_t i, double& x0, double& y0,
                                   double& x1, double& y1, double& q) const {
   if (i >= m_elements.size()) return false;
   const auto& element = m_elements[i];
@@ -782,13 +782,13 @@ bool ComponentNeBem2d::Initialise() {
 
   if (m_debug) std::cout << m_className << "::Initialise:\n";
   // Loop over the regions.
-  const unsigned int nRegions = m_regions.size();
+  const std::size_t nRegions = m_regions.size();
   if (m_debug) std::cout << "    " << nRegions << " regions.\n";
-  std::vector<std::vector<unsigned int> > motherRegions(nRegions);
-  for (unsigned int i = 0; i < nRegions; ++i) {
+  std::vector<std::vector<std::size_t> > motherRegions(nRegions);
+  for (std::size_t i = 0; i < nRegions; ++i) {
     auto& region = m_regions[i];
     // Check if the region is fully enclosed by other ones.
-    for (unsigned int j = 0; j < nRegions; ++j) {
+    for (std::size_t j = 0; j < nRegions; ++j) {
       if (i == j) continue;
       const auto& other = m_regions[j];
       if (!Enclosed(region.xv, region.yv, other.xv, other.yv)) continue;
@@ -802,10 +802,10 @@ bool ComponentNeBem2d::Initialise() {
   }
 
   std::vector<Segment> segments;
-  for (unsigned int i = 0; i < nRegions; ++i) {
+  for (std::size_t i = 0; i < nRegions; ++i) {
     const auto& region = m_regions[i];
     int outerRegion = -1;
-    for (const unsigned int k : motherRegions[i]) {
+    for (const std::size_t k : motherRegions[i]) {
       if (outerRegion < 0) {
         outerRegion = k;
       } else if (m_regions[outerRegion].depth < m_regions[k].depth) {
@@ -813,9 +813,9 @@ bool ComponentNeBem2d::Initialise() {
       }
     }
     // Add the segments bounding this region.
-    const unsigned int n = region.xv.size();
-    for (unsigned int j = 0; j < n; ++j) {
-      const unsigned int k = j < n - 1 ? j + 1 : 0;
+    const std::size_t n = region.xv.size();
+    for (std::size_t j = 0; j < n; ++j) {
+      const std::size_t k = j < n - 1 ? j + 1 : 0;
       Segment seg;
       seg.x0 = {region.xv[j], region.yv[j]};
       seg.x1 = {region.xv[k], region.yv[k]};
@@ -828,11 +828,11 @@ bool ComponentNeBem2d::Initialise() {
   }
   // Add the segments specified by the user.
   segments.insert(segments.end(), m_segments.begin(), m_segments.end());
-  const unsigned int nSegments = segments.size();
+  const std::size_t nSegments = segments.size();
   if (m_debug) std::cout << "    " << nSegments << " segments.\n";
   std::vector<bool> done(nSegments, false);
   // Look for overlaps.
-  for (unsigned int i = 0; i < nSegments; ++i) {
+  for (std::size_t i = 0; i < nSegments; ++i) {
     if (done[i]) continue;
     if (m_debug) {
       std::cout << "    Segment " << i << ". (" << segments[i].x0[0] << ", "
@@ -845,7 +845,7 @@ bool ComponentNeBem2d::Initialise() {
     const double y1 = segments[i].x1[1];
     // Pick up all collinear segments.
     std::vector<Segment> newSegments;
-    for (unsigned int j = i + 1; j < nSegments; ++j) {
+    for (std::size_t j = i + 1; j < nSegments; ++j) {
       const double u0 = segments[j].x0[0];
       const double u1 = segments[j].x1[0];
       const double v0 = segments[j].x0[1];
@@ -915,14 +915,14 @@ bool ComponentNeBem2d::Initialise() {
   std::vector<std::vector<double> > inverseMatrix;
 
   bool converged = false;
-  unsigned int nIter = 0;
+  std::size_t nIter = 0;
   while (!converged) {
     ++nIter;
     if (m_autoSize) {
       std::cout << m_className << "::Initialise: Iteration " << nIter << "\n";
     }
-    const unsigned int nElements = m_elements.size();
-    const unsigned int nEntries = nElements + m_wires.size() + 1;
+    const std::size_t nElements = m_elements.size();
+    const std::size_t nEntries = nElements + m_wires.size() + 1;
     if (m_debug) {
       std::cout << "    " << nElements << " elements.\n"
                 << "    Matrix has " << nEntries << " rows/columns.\n";
@@ -945,7 +945,7 @@ bool ComponentNeBem2d::Initialise() {
 
     // Compute the right hand side vector (boundary conditions).
     std::vector<double> boundaryConditions(nEntries, 0.);
-    for (unsigned int i = 0; i < nElements; ++i) {
+    for (std::size_t i = 0; i < nElements; ++i) {
       if (m_elements[i].bc.first == Voltage) {
         boundaryConditions[i] = m_elements[i].bc.second;
         for (const auto& box : m_spaceCharge) {
@@ -966,8 +966,8 @@ bool ComponentNeBem2d::Initialise() {
         }
       }
     }
-    const unsigned int nWires = m_wires.size();
-    for (unsigned int i = 0; i < nWires; ++i) {
+    const std::size_t nWires = m_wires.size();
+    for (std::size_t i = 0; i < nWires; ++i) {
       boundaryConditions[nElements + i] = m_wires[i].v;
       for (const auto& box : m_spaceCharge) {
         const double x = m_wires[i].x - box.x;
@@ -994,7 +994,7 @@ bool ComponentNeBem2d::Initialise() {
     converged = CheckConvergence(tol, ok);
     if (!m_autoSize) break;
     if (nIter >= m_nMaxIterations) break;
-    for (unsigned int j = 0; j < nElements; ++j) {
+    for (std::size_t j = 0; j < nElements; ++j) {
       if (!ok[j]) {
         SplitElement(m_elements[j], m_elements);
         if (m_debug) std::cout << "    Splitting element " << j << ".\n";
@@ -1012,14 +1012,14 @@ bool ComponentNeBem2d::Initialise() {
 
 void ComponentNeBem2d::EliminateOverlaps(std::vector<Segment>& segments) {
   if (segments.empty()) return;
-  const unsigned int nIn = segments.size();
+  const std::size_t nIn = segments.size();
   // Find the first/last point along the line.
   std::array<double, 2> x0 = segments[0].x0;
   std::array<double, 2> x1 = segments[0].x1;
   // Use x or y coordinate depending on the orientation of the line.
-  const unsigned int ic = fabs(x1[1] - x0[1]) > fabs(x1[0] - x0[0]) ? 1 : 0;
+  const std::size_t ic = fabs(x1[1] - x0[1]) > fabs(x1[0] - x0[0]) ? 1 : 0;
   std::vector<bool> swapped(nIn, false);
-  for (unsigned int i = 0; i < nIn; ++i) {
+  for (std::size_t i = 0; i < nIn; ++i) {
     const auto& seg = segments[i];
     std::array<double, 2> u0 = seg.x0;
     std::array<double, 2> u1 = seg.x1;
@@ -1034,8 +1034,8 @@ void ComponentNeBem2d::EliminateOverlaps(std::vector<Segment>& segments) {
   const std::array<double, 2> d = {x1[0] - x0[0], x1[1] - x0[1]};
 
   // Make a list of all points and their linear coordinate.
-  std::vector<std::pair<double, std::vector<unsigned int> > > points;
-  for (unsigned int i = 0; i < nIn; ++i) {
+  std::vector<std::pair<double, std::vector<std::size_t> > > points;
+  for (std::size_t i = 0; i < nIn; ++i) {
     for (const auto& xl : {segments[i].x0, segments[i].x1}) {
       const std::array<double, 2> d0 = {xl[0] - x0[0], xl[1] - x0[1]};
       const std::array<double, 2> d1 = {x1[0] - xl[0], x1[1] - xl[1]};
@@ -1057,18 +1057,18 @@ void ComponentNeBem2d::EliminateOverlaps(std::vector<Segment>& segments) {
         }
       }
       if (found) continue;
-      points.push_back(std::make_pair(lambda, std::vector<unsigned int>({i})));
+      points.push_back(std::make_pair(lambda, std::vector<std::size_t>({i})));
     }
   }
   // Sort the points by linear coordinate.
   std::sort(std::begin(points), std::end(points));
 
   std::vector<Segment> newSegments;
-  const unsigned int nPoints = points.size();
+  const std::size_t nPoints = points.size();
   std::array<double, 2> xl = {x0[0] + points[0].first * d[0],
                               x0[1] + points[0].first * d[1]};
-  std::vector<unsigned int> left = points[0].second;
-  for (unsigned int i = 1; i < nPoints; ++i) {
+  std::vector<std::size_t> left = points[0].second;
+  for (std::size_t i = 1; i < nPoints; ++i) {
     Segment seg = segments[left.front()];
     seg.x0 = xl;
     xl = {x0[0] + points[i].first * d[0], x0[1] + points[i].first * d[1]};
@@ -1076,7 +1076,7 @@ void ComponentNeBem2d::EliminateOverlaps(std::vector<Segment>& segments) {
     if (swapped[left.front()]) std::swap(seg.x0, seg.x1);
     // Sort out the boundary conditions.
     if (left.size() > 1) {
-      for (unsigned int j = 1; j < left.size(); ++j) {
+      for (std::size_t j = 1; j < left.size(); ++j) {
         const auto& other = segments[left[j]];
         if (seg.bc.first == Dielectric) {
           if (other.bc.first == Dielectric) {
@@ -1096,7 +1096,7 @@ void ComponentNeBem2d::EliminateOverlaps(std::vector<Segment>& segments) {
       }
     }
     newSegments.push_back(std::move(seg));
-    for (unsigned int k : points[i].second) {
+    for (std::size_t k : points[i].second) {
       const auto it = std::find(left.begin(), left.end(), k);
       if (it == left.end()) {
         left.push_back(k);
@@ -1110,8 +1110,7 @@ void ComponentNeBem2d::EliminateOverlaps(std::vector<Segment>& segments) {
 
 bool ComponentNeBem2d::Discretise(const Segment& seg,
                                   std::vector<Element>& elements,
-                                  const double lambda,
-                                  const unsigned int ndiv) {
+                                  const double lambda, const std::size_t ndiv) {
   if (ndiv < 1) {
     std::cerr << m_className << "::Discretise: Number of elements < 1.\n";
     return false;
@@ -1124,7 +1123,7 @@ bool ComponentNeBem2d::Discretise(const Segment& seg,
   const double a = 0.5 * sqrt(dx * dx + dy * dy);
   double x = seg.x0[0] - 0.5 * dx;
   double y = seg.x0[1] - 0.5 * dy;
-  for (unsigned int i = 0; i < ndiv; ++i) {
+  for (std::size_t i = 0; i < ndiv; ++i) {
     x += dx;
     y += dy;
     Element element;
@@ -1142,10 +1141,10 @@ bool ComponentNeBem2d::Discretise(const Segment& seg,
 
 bool ComponentNeBem2d::ComputeInfluenceMatrix(
     std::vector<std::vector<double> >& infmat) const {
-  const unsigned int nL = m_elements.size();
-  const unsigned int nE = nL + m_wires.size();
+  const std::size_t nL = m_elements.size();
+  const std::size_t nE = nL + m_wires.size();
   // Loop over the target elements (F).
-  for (unsigned int iF = 0; iF < nE; ++iF) {
+  for (std::size_t iF = 0; iF < nE; ++iF) {
     const auto bcF = iF < nL ? m_elements[iF].bc.first : Voltage;
     const double cphiF = iF < nL ? m_elements[iF].cphi : 1.;
     const double sphiF = iF < nL ? m_elements[iF].sphi : 0.;
@@ -1154,7 +1153,7 @@ bool ComponentNeBem2d::ComputeInfluenceMatrix(
     const double yF = iF < nL ? m_elements[iF].y : m_wires[iF - nL].y;
 
     // Loop over the source elements (S).
-    for (unsigned int jS = 0; jS < nE; ++jS) {
+    for (std::size_t jS = 0; jS < nE; ++jS) {
       // Calculate the influence coefficient.
       double infCoeff = 0.;
       if (jS < nL) {
@@ -1198,7 +1197,7 @@ bool ComponentNeBem2d::ComputeInfluenceMatrix(
   }
 
   // Add charge neutrality condition.
-  for (unsigned int i = 0; i < nE; ++i) {
+  for (std::size_t i = 0; i < nE; ++i) {
     if (i < nL) {
       infmat[nE][i] = m_elements[i].a;
     } else {
@@ -1229,7 +1228,7 @@ void ComponentNeBem2d::SplitElement(Element& oldElement,
 bool ComponentNeBem2d::InvertMatrix(
     std::vector<std::vector<double> >& influenceMatrix,
     std::vector<std::vector<double> >& inverseMatrix) const {
-  const unsigned int nEntries = influenceMatrix.size();
+  const std::size_t nEntries = influenceMatrix.size();
 
   // Temporary arrays for LU decomposition/substitution
   std::vector<double> col(nEntries, 0.);
@@ -1244,11 +1243,11 @@ bool ComponentNeBem2d::InvertMatrix(
   // Initialise the inverse influence matrix
   inverseMatrix.assign(nEntries, std::vector<double>(nEntries, 0.));
   // Invert the matrix.
-  for (unsigned int j = 0; j < nEntries; ++j) {
+  for (std::size_t j = 0; j < nEntries; ++j) {
     col.assign(nEntries, 0.);
     col[j] = 1.;
     LUSubstitution(influenceMatrix, index, col);
-    for (unsigned int i = 0; i < nEntries; ++i) inverseMatrix[i][j] = col[i];
+    for (std::size_t i = 0; i < nEntries; ++i) inverseMatrix[i][j] = col[i];
   }
 
   // Clear the influence matrix.
@@ -1264,14 +1263,14 @@ bool ComponentNeBem2d::LUDecomposition(std::vector<std::vector<double> >& mat,
   // W. H. Press,
   // Numerical recipes in C++: the Art of Scientific Computing (version 2.11)
 
-  const unsigned int n = m_elements.size() + m_wires.size();
+  const std::size_t n = m_elements.size() + m_wires.size();
   // v stores the implicit scaling of each row
   std::vector<double> v(n, 0.);
 
   // Loop over rows to get the implicit scaling information.
-  for (unsigned int i = 0; i < n; ++i) {
+  for (std::size_t i = 0; i < n; ++i) {
     double big = 0.;
-    for (unsigned int j = 0; j < n; ++j) {
+    for (std::size_t j = 0; j < n; ++j) {
       big = std::max(big, fabs(mat[i][j]));
     }
     if (big == 0.) return false;
@@ -1280,20 +1279,20 @@ bool ComponentNeBem2d::LUDecomposition(std::vector<std::vector<double> >& mat,
   }
 
   // Loop over columns
-  unsigned int imax = 0;
-  for (unsigned int j = 0; j < n; ++j) {
-    for (unsigned int i = 0; i < j; ++i) {
+  std::size_t imax = 0;
+  for (std::size_t j = 0; j < n; ++j) {
+    for (std::size_t i = 0; i < j; ++i) {
       double sum = mat[i][j];
-      for (unsigned int k = 0; k < i; ++k) {
+      for (std::size_t k = 0; k < i; ++k) {
         sum -= mat[i][k] * mat[k][j];
       }
       mat[i][j] = sum;
     }
     // Initialise for the search for the largest pivot element
     double big = 0.;
-    for (unsigned int i = j; i < n; ++i) {
+    for (std::size_t i = j; i < n; ++i) {
       double sum = mat[i][j];
-      for (unsigned int k = 0; k < j; ++k) {
+      for (std::size_t k = 0; k < j; ++k) {
         sum -= mat[i][k] * mat[k][j];
       }
       mat[i][j] = sum;
@@ -1319,7 +1318,7 @@ bool ComponentNeBem2d::LUDecomposition(std::vector<std::vector<double> >& mat,
     if (j != n - 1) {
       // Divide by the pivot element
       const double dum = 1. / mat[j][j];
-      for (unsigned int i = j + 1; i < n; ++i) {
+      for (std::size_t i = j + 1; i < n; ++i) {
         mat[i][j] *= dum;
       }
     }
@@ -1331,11 +1330,11 @@ bool ComponentNeBem2d::LUDecomposition(std::vector<std::vector<double> >& mat,
 void ComponentNeBem2d::LUSubstitution(
     const std::vector<std::vector<double> >& mat, const std::vector<int>& index,
     std::vector<double>& col) const {
-  const unsigned int n = m_elements.size() + m_wires.size();
-  unsigned int ii = 0;
+  const std::size_t n = m_elements.size() + m_wires.size();
+  std::size_t ii = 0;
   // Forward substitution
   for (unsigned i = 0; i < n; ++i) {
-    const unsigned int ip = index[i];
+    const std::size_t ip = index[i];
     double sum = col[ip];
     col[ip] = col[i];
     if (ii != 0) {
@@ -1360,19 +1359,19 @@ void ComponentNeBem2d::LUSubstitution(
 
 bool ComponentNeBem2d::Solve(const std::vector<std::vector<double> >& invmat,
                              const std::vector<double>& bc) {
-  const unsigned int nEntries = bc.size();
-  const unsigned int nElements = m_elements.size();
-  for (unsigned int i = 0; i < nElements; ++i) {
+  const std::size_t nEntries = bc.size();
+  const std::size_t nElements = m_elements.size();
+  for (std::size_t i = 0; i < nElements; ++i) {
     double solution = 0.;
-    for (unsigned int j = 0; j < nEntries; ++j) {
+    for (std::size_t j = 0; j < nEntries; ++j) {
       solution += invmat[i][j] * bc[j];
     }
     m_elements[i].q = solution;
   }
-  const unsigned int nWires = m_wires.size();
-  for (unsigned int i = 0; i < nWires; ++i) {
+  const std::size_t nWires = m_wires.size();
+  for (std::size_t i = 0; i < nWires; ++i) {
     double solution = 0.;
-    for (unsigned int j = 0; j < nEntries; ++j) {
+    for (std::size_t j = 0; j < nEntries; ++j) {
       solution += invmat[nElements + i][j] * bc[j];
     }
     m_wires[i].q = solution;
@@ -1380,13 +1379,13 @@ bool ComponentNeBem2d::Solve(const std::vector<std::vector<double> >& invmat,
 
   if (m_debug) {
     std::cout << m_className << "::Solve:\n  Element  Solution\n";
-    for (unsigned int i = 0; i < nElements; ++i) {
-      std::printf(" %8u   %15.5f\n", i, m_elements[i].q);
+    for (std::size_t i = 0; i < nElements; ++i) {
+      std::printf(" %8lu   %15.5f\n", i, m_elements[i].q);
     }
     if (!m_wires.empty()) {
       std::cout << "   Wire    Solution\n";
-      for (unsigned int i = 0; i < nWires; ++i) {
-        std::printf("  %8u   %15.5f\n", i, m_wires[i].q);
+      for (std::size_t i = 0; i < nWires; ++i) {
+        std::printf("  %8lu   %15.5f\n", i, m_wires[i].q);
       }
     }
   }
@@ -1405,7 +1404,7 @@ bool ComponentNeBem2d::CheckConvergence(const double tol,
               << "  element #  type          LHS              RHS\n";
   }
   const double scale = 1. / m_nCollocationPoints;
-  unsigned int i = 0;
+  std::size_t i = 0;
   for (const auto& tgt : m_elements) {
     v.assign(m_nCollocationPoints, 0.);
     n.assign(m_nCollocationPoints, 0.);
@@ -1414,7 +1413,7 @@ bool ComponentNeBem2d::CheckConvergence(const double tol,
     const double x0 = tgt.x - 0.5 * dx;
     const double y0 = tgt.y - 0.5 * dy;
     // Loop over the collocation points.
-    for (unsigned int k = 0; k < m_nCollocationPoints; ++k) {
+    for (std::size_t k = 0; k < m_nCollocationPoints; ++k) {
       double xG = x0;
       double yG = y0;
       if (m_randomCollocation) {
@@ -1471,14 +1470,14 @@ bool ComponentNeBem2d::CheckConvergence(const double tol,
       const double dv = v0 - tgt.bc.second;
       if (fabs(dv) > tol) ok[i] = false;
       if (m_debug) {
-        std::printf(" %8u  cond.  %15.5f  %15.5f %15.5f\n", i, v0,
+        std::printf(" %8lu  cond.  %15.5f  %15.5f %15.5f\n", i, v0,
                     tgt.bc.second, dv);
       }
     } else if (tgt.bc.first == Dielectric) {
       // Dielectric-dielectric interface
       // TODO.
       n1 = n0 + 0.5 * InvEpsilon0 * tgt.q / tgt.lambda;
-      if (m_debug) std::printf(" %8u  diel.  %15.5f  %15.5f\n", i, n0, n1);
+      if (m_debug) std::printf(" %8lu  diel.  %15.5f  %15.5f\n", i, n0, n1);
     }
     ++i;
   }
@@ -1488,7 +1487,7 @@ bool ComponentNeBem2d::CheckConvergence(const double tol,
     double x0 = tgt.x;
     double y0 = tgt.y;
     // Loop over the collocation points.
-    for (unsigned int k = 0; k < m_nCollocationPoints; ++k) {
+    for (std::size_t k = 0; k < m_nCollocationPoints; ++k) {
       const double phi = TwoPi * RndmUniform();
       const double xG = x0 + tgt.r * cos(phi);
       const double yG = y0 + tgt.r * sin(phi);
@@ -1511,7 +1510,7 @@ bool ComponentNeBem2d::CheckConvergence(const double tol,
     }
     const double v0 = scale * std::accumulate(v.begin(), v.end(), 0.);
     if (m_debug) {
-      std::printf(" %8u  wire   %15.5f  %15.5f\n", i, v0, tgt.v);
+      std::printf(" %8lu  wire   %15.5f  %15.5f\n", i, v0, tgt.v);
     }
     ++i;
   }

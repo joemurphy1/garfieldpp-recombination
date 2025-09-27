@@ -39,7 +39,7 @@ class DriftLineRKF {
   /// signal vector over a time bin in the Sensor class.
   /// The averaging is done with a \f$2\times navg + 1\f$ point
   /// Newton-Raphson integration. Default: 2.
-  void SetSignalAveragingOrder(const unsigned int navg) { m_navg = navg; }
+  void SetSignalAveragingOrder(const std::size_t navg) { m_navg = navg; }
   /// Use the weighting potential (as opposed to the weighting field)
   /// for calculating the induced signal.
   /// By default, the weighting potential is used.
@@ -183,7 +183,7 @@ class DriftLineRKF {
   // Flag whether to calculate induced signals or not.
   bool m_doSignal{true};
   // Averaging order used when projecting the signal on the time bins.
-  unsigned int m_navg{2};
+  std::size_t m_navg{2};
   // Use weighting potential or weighting field for calculating the signal.
   bool m_useWeightingPotential{true};
 

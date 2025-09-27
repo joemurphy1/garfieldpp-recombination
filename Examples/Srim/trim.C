@@ -34,8 +34,8 @@ int main(int argc, char* argv[]) {
   // Read the TRIM output file.
   const std::string filename = "EXYZ.txt";
   // Import 100 ions, skip the first 200 in the list.
-  const unsigned int nIons = 100;
-  const unsigned int nSkip = 200;
+  const std::size_t nIons = 100;
+  const std::size_t nSkip = 200;
   if (!tr.ReadFile(filename, nIons, nSkip)) {
     std::cerr << "Reading TRIM EXYZ file failed.\n";
     return 1;
@@ -47,13 +47,13 @@ int main(int argc, char* argv[]) {
   tr.EnablePlotting(&driftView);
 
   // Generate tracks.
-  for (unsigned int i = 0; i < nIons; ++i) {
+  for (std::size_t i = 0; i < nIons; ++i) {
     if (!tr.NewTrack(0., 0., 0., 0., 0., 1., 0.)) {
       std::cerr << "Generating clusters failed; skipping this track.\n";
       continue;
     }
     // Count the total number of electrons.
-    unsigned int netot = 0;
+    std::size_t netot = 0;
     for (const auto& cluster : tr.GetClusters()) {
       netot += cluster.n;
     }

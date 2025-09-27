@@ -2437,7 +2437,7 @@ void ComponentFieldMap::SetRange() {
 
   for (const auto& node : m_nodes) {
     const std::array<double, 3> pos = {{node.x, node.y, node.z}};
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (std::size_t i = 0; i < 3; ++i) {
       m_mapmin[i] = std::min(m_mapmin[i], pos[i]);
       m_mapmax[i] = std::max(m_mapmax[i], pos[i]);
     }
@@ -2477,7 +2477,7 @@ void ComponentFieldMap::SetRange() {
   }
 
   // Fix the angular ranges.
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (std::size_t i = 0; i < 3; ++i) {
     if (m_mapamax[i] - m_mapamin[i] > Pi) {
       const double aux = m_mapamin[i];
       m_mapamin[i] = m_mapamax[i];
@@ -2513,7 +2513,7 @@ void ComponentFieldMap::PrintRange() {
 
   std::cout << "        Periodicities\n";
   const std::array<std::string, 3> axes = {{"x", "y", "z"}};
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (std::size_t i = 0; i < 3; ++i) {
     std::cout << "            " << axes[i] << ":";
     if (m_periodic[i]) {
       std::cout << " simple with length " << m_cells[i] << " cm";
@@ -2537,7 +2537,7 @@ void ComponentFieldMap::PrintRange() {
                   [](bool val) { return val; });
   if (triangleSymm) {
     const std::array<std::string, 3> planes = {{"xy", "xz", "yz"}};
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (std::size_t i = 0; i < 3; ++i) {
       if (m_triangleSymmetric[i]) {
         std::cout << "            " << planes[i] << "-plane:";
         std::cout << " triangle with right sides of " << m_cells[i] << " cm";
@@ -2915,7 +2915,7 @@ bool ComponentFieldMap::InitializeTetrahedralTree() {
   if (m_debug) std::cout << "    Tree instantiated.\n";
 
   // Insert all mesh nodes in the tree
-  for (unsigned int i = 0; i < m_nodes.size(); i++) {
+  for (std::size_t i = 0; i < m_nodes.size(); i++) {
     const Node& n = m_nodes[i];
     m_octree->InsertMeshNode(Vec3(n.x, n.y, n.z), i);
   }
@@ -2923,7 +2923,7 @@ bool ComponentFieldMap::InitializeTetrahedralTree() {
   if (m_debug) std::cout << "    Tree nodes initialized successfully.\n";
 
   // Insert all mesh elements (tetrahedrons) in the tree
-  for (unsigned int i = 0; i < m_elements.size(); i++) {
+  for (std::size_t i = 0; i < m_elements.size(); i++) {
     const double bb[6] = {m_bbMin[i][0], m_bbMin[i][1], m_bbMin[i][2],
                           m_bbMax[i][0], m_bbMax[i][1], m_bbMax[i][2]};
     m_octree->InsertMeshElement(bb, i);
@@ -2962,7 +2962,7 @@ void ComponentFieldMap::PrintElement(const std::string& header, const double x,
             << ")\n";
   if (m_degenerate[i]) std::cout << "    Element is degenerate.\n";
   std::cout << " Node             x            y            z            V\n";
-  unsigned int nN = 0;
+  std::size_t nN = 0;
   if (m_elementType == ElementType::Serendipity) {
     if (m_degenerate[i]) {
       nN = 6;
@@ -2973,7 +2973,7 @@ void ComponentFieldMap::PrintElement(const std::string& header, const double x,
     nN = 10;
   }
   const auto& element = m_elements[i];
-  for (unsigned int ii = 0; ii < nN; ++ii) {
+  for (std::size_t ii = 0; ii < nN; ++ii) {
     const Node& node = m_nodes[element.emap[ii]];
     const double v = pot[element.emap[ii]];
     printf("      %-5d %12g %12g %12g %12g\n", element.emap[ii], node.x, node.y,

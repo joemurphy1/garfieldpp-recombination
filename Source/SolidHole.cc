@@ -23,9 +23,9 @@ void CutBox(const std::array<double, 8>& xbox,
   ycut.clear();
   zcut.clear();
   // Compute the, at most 6, crossings between plane and box.
-  for (unsigned int i = 0; i < 8; ++i) {
+  for (std::size_t i = 0; i < 8; ++i) {
     double xc, yc, zc;
-    unsigned int j = i + 1;
+    std::size_t j = i + 1;
     if (i == 3) {
       j = 0;
     } else if (i == 7) {
@@ -38,9 +38,9 @@ void CutBox(const std::array<double, 8>& xbox,
       zcut.push_back(zc);
     }
   }
-  for (unsigned int i = 0; i < 4; ++i) {
+  for (std::size_t i = 0; i < 4; ++i) {
     double xc, yc, zc;
-    const unsigned int j = i + 4;
+    const std::size_t j = i + 4;
     if (Garfield::Solid::Intersect(xbox[i], ybox[i], zbox[i], xbox[j], ybox[j],
                                    zbox[j], x0, y0, z0, a, b, c, xc, yc, zc)) {
       xcut.push_back(xc);
@@ -109,8 +109,8 @@ bool SolidHole::IsInside(const double x, const double y, const double z,
   std::vector<double> yp;
   const double phi0 = -0.5 * HalfPi;
   const double dphi = HalfPi / double(m_n - 1);
-  const unsigned int nP = 4 * (m_n - 1);
-  for (unsigned int i = 0; i < nP; ++i) {
+  const std::size_t nP = 4 * (m_n - 1);
+  for (std::size_t i = 0; i < nP; ++i) {
     // Bottom and top of the line along the axis of the cylinder.
     const double phi = phi0 + dphi * i;
     xp.push_back(r * cos(phi));
@@ -169,7 +169,7 @@ void SolidHole::SetHalfLengthZ(const double lz) {
   m_lZ = lz;
 }
 
-void SolidHole::SetSectors(const unsigned int n) {
+void SolidHole::SetSectors(const std::size_t n) {
   if (n < 1) throw Exception("Number must be > 0");
   m_n = n;
   Update();
@@ -279,7 +279,7 @@ bool SolidHole::SolidPanels(std::vector<Panel>& panels) {
     panel.colour = m_colour;
     panel.volume = id;
     // Loop over the panels.
-    for (unsigned int i = 0; i < m_n - 1; ++i) {
+    for (std::size_t i = 0; i < m_n - 1; ++i) {
       // The panels for x=xmax.
       const double phi1 = phi0 + dphi * i;
       const double phi2 = phi1 + dphi;
@@ -336,8 +336,8 @@ bool SolidHole::SolidPanels(std::vector<Panel>& panels) {
   ToGlobal(r1 * cos(phi0), r1 * sin(phi0), -m_lZ, xv0, yv0, zv0);
   ToGlobal(r2 * cos(phi0), r2 * sin(phi0), +m_lZ, xv1, yv1, zv1);
   // Go around the cylinder.
-  const unsigned int nPoints = 4 * m_n - 3;
-  for (unsigned int i = 1; i < nPoints; ++i) {
+  const std::size_t nPoints = 4 * m_n - 3;
+  for (std::size_t i = 1; i < nPoints; ++i) {
     // Bottom and top of the line along the axis of the cylinder.
     const double phi = phi0 + dphi * i;
     ToGlobal(r2 * cos(phi), r2 * sin(phi), +m_lZ, xv2, yv2, zv2);
@@ -420,7 +420,7 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
   std::array<double, 8> zbox;
   // Loop over the boxes that make up the hole.
   const double dphi = HalfPi / (m_n - 1.);
-  for (unsigned int i = 1; i <= m_n - 1; ++i) {
+  for (std::size_t i = 1; i <= m_n - 1; ++i) {
     const double phi1 = dphi * (i - 1.);
     const double phi2 = dphi * i;
     const double t1 = tan(-0.5 * HalfPi + phi1);
@@ -429,7 +429,7 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
     for (int iside : {-1, 1}) {
       const double r = iside < 0 ? r1 : r2;
       const double w = iside * m_lZ;
-      const unsigned int k = iside < 0 ? 0 : 4;
+      const std::size_t k = iside < 0 ? 0 : 4;
       const double phi0 = -0.5 * HalfPi;
       ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, xbox[k], ybox[k],
                zbox[k]);
@@ -461,7 +461,7 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
     for (int iside : {-1, 1}) {
       const double r = iside < 0 ? r1 : r2;
       const double w = iside * m_lZ;
-      const unsigned int k = iside < 0 ? 0 : 4;
+      const std::size_t k = iside < 0 ? 0 : 4;
       const double phi0 = 0.5 * HalfPi;
       ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, xbox[k], ybox[k],
                zbox[k]);
@@ -490,7 +490,7 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
     for (int iside : {-1, 1}) {
       const double r = iside < 0 ? r1 : r2;
       const double w = iside * m_lZ;
-      const unsigned int k = iside < 0 ? 0 : 4;
+      const std::size_t k = iside < 0 ? 0 : 4;
       const double phi0 = 1.5 * HalfPi;
       ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, xbox[k], ybox[k],
                zbox[k]);
@@ -519,7 +519,7 @@ void SolidHole::Cut(const double x0, const double y0, const double z0,
     for (int iside : {-1, 1}) {
       const double r = iside < 0 ? r1 : r2;
       const double w = iside * m_lZ;
-      const unsigned int k = iside < 0 ? 0 : 4;
+      const std::size_t k = iside < 0 ? 0 : 4;
       const double phi0 = -1.5 * HalfPi;
       ToGlobal(r * cos(phi0 + phi1), r * sin(phi0 + phi1), w, xbox[k], ybox[k],
                zbox[k]);

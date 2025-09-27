@@ -20,7 +20,7 @@ class RandomEngineGPU {
 
   // cuRAND specifics
   curandState* d_curand_states{nullptr};
-  double initCURandStates(const unsigned int seed);
+  double initCURandStates(const std::size_t seed);
 };
 
 }  // namespace Garfield

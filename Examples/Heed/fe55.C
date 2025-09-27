@@ -58,8 +58,8 @@ int main(int argc, char* argv[]) {
   TH1::StatOverflows(true);
   TH1F hElectrons("hElectrons", ";Number of electrons;", nBins, -0.5,
                   nBins - 0.5);
-  const unsigned int nEvents = 100000;
-  for (unsigned int i = 0; i < nEvents; ++i) {
+  const std::size_t nEvents = 100000;
+  for (std::size_t i = 0; i < nEvents; ++i) {
     if (i % 1000 == 0) std::cout << i << "/" << nEvents << "\n";
     // Initial coordinates of the photon.
     const double x0 = 0.;

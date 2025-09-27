@@ -258,7 +258,7 @@ class AtomPhotoAbsCS {
   /// Get the atomic number.
   int get_Z() const { return Z; }
   /// Get the number of shells.
-  inline unsigned int get_qshell() const { return qshell; }
+  inline std::size_t get_qshell() const { return qshell; }
   /// Get the ionization threshold for a given shell.
   virtual double get_threshold(int nshell) const = 0;
   /// Get the lowest ionization threshold among all shells.

@@ -76,7 +76,7 @@ AvalancheMicroscopicGPU::~AvalancheMicroscopicGPU() {
 }
 
 double AvalancheMicroscopicGPU::InitialiseGPUParticleStack(ParticleStack &stack,
-                                                           unsigned int num) {
+                                                           std::size_t num) {
   // initialise all the memory
   checkCudaErrors(cudaMalloc(&stack.x, (num) * sizeof(double)));
   checkCudaErrors(cudaMalloc(&stack.y, (num) * sizeof(double)));
@@ -120,7 +120,7 @@ void AvalancheMicroscopicGPU::FreeGPUParticleStack(ParticleStack &stack) {
 }
 
 void AvalancheMicroscopicGPU::InitialiseCPUParticleStack(ParticleStack &stack,
-                                                         unsigned int num) {
+                                                         std::size_t num) {
   // initialise all the memory
   stack.x = new double[num];
   stack.y = new double[num];
@@ -163,8 +163,8 @@ void AvalancheMicroscopicGPU::FreeCPUParticleStack(ParticleStack &stack) {
 // device function to transfer the whole current stack to the given transfer
 // stack
 void AvalancheMicroscopicGPU::transferParticleStack(
-    ParticleStack dest, unsigned int offset, ParticleStack source,
-    unsigned int num, TransferType type, bool init_dest) {
+    ParticleStack dest, std::size_t offset, ParticleStack source,
+    std::size_t num, TransferType type, bool init_dest) {
   cudaMemcpyKind cuda_type;
   switch (type) {
     case TransferType::HostToDevice:
@@ -237,7 +237,7 @@ void AvalancheMicroscopicGPU::TransferStackFromCPUToGPU(
   // the stackTransfer object is used here to shift from array of structures to
   // structure of arrays a memcpy can then be done from stackTransfer to the
   // device stackOldGPU
-  unsigned int i{0};
+  std::size_t i{0};
 
   // temporary vector to hold the indices of the active particles. Allows a
   // memcpy below.
@@ -313,8 +313,8 @@ void AvalancheMicroscopicGPU::TransferClassInternalInfo(
 }
 
 // process the particle stack
-size_t AvalancheMicroscopicGPU::processParticleStack(unsigned int &num_active,
-                                                     unsigned int &num_new) {
+size_t AvalancheMicroscopicGPU::processParticleStack(std::size_t &num_active,
+                                                     std::size_t &num_new) {
   // remove any active particles that now have status of -1 (should probably be
   // < 0) do this on the activeIndexArray as stackOld will contain *all*
   // particles, even those that have terminated sort the index/status array
@@ -376,7 +376,7 @@ void AvalancheMicroscopicGPU::TransferStackFromGPUToCPU(
   stack.clear();
   transferParticleStack(stackTransfer, 0, stackOldGPU, stackOldGPU.stack_size,
                         AvalancheMicroscopicGPU::TransferType::DeviceToHost);
-  for (unsigned int i = 0; i < stackOldGPU.stack_size; i++) {
+  for (std::size_t i = 0; i < stackOldGPU.stack_size; i++) {
     if (((!end_points) && (stackTransfer.status[i] == 0)) ||
         ((end_points) && (stackTransfer.status[i] != 0))) {
       elec.path.back().x = stackTransfer.x[i];
@@ -426,11 +426,11 @@ __device__ void Update(AvalancheMicroscopicGPU::ParticleStack &raw_ptr_stack,
 
 __device__ void AddToStack(
     AvalancheMicroscopicGPU::ParticleStack &raw_ptr_stack,
-    unsigned int &num_new_particles, int thread_idx, int *new_status_array,
+    std::size_t &num_new_particles, int thread_idx, int *new_status_array,
     const cuda_t x, const cuda_t y, const cuda_t z, const cuda_t t,
     const cuda_t energy, const cuda_t kx, const cuda_t ky, const cuda_t kz,
     const int band, const Particle ptype) {
-  unsigned int step = MAXCREATEDPARTICLES;
+  std::size_t step = MAXCREATEDPARTICLES;
 
   // only record the values that can be sorted
   raw_ptr_stack.x0[thread_idx * step + num_new_particles] = x;
@@ -451,7 +451,7 @@ __device__ void AddToStack(
 
 __device__ void AddToStack(
     AvalancheMicroscopicGPU::ParticleStack &raw_ptr_stack,
-    unsigned int &num_new_particles, int thread_idx, int *new_status_array,
+    std::size_t &num_new_particles, int thread_idx, int *new_status_array,
     const cuda_t x, const cuda_t y, const cuda_t z, const cuda_t t,
     const cuda_t energy, const Particle ptype) {
   cuda_t dx = 0., dy = 0., dz = 1.;
@@ -497,7 +497,7 @@ __global__ void TransportElectron(
     AvalancheMicroscopicGPU::ParticleStack raw_ptr_stack_new,
     int *all_status_array, int *new_status_array, SensorGPU *m_sensor,
     cuda_t m_deltaCut, int /*id*/, cuda_t c1, cuda_t c2, cuda_t /*fLim*/,
-    cuda_t /*fInv*/, unsigned int max_thread_idx, bool doSignal,
+    cuda_t /*fInv*/, std::size_t max_thread_idx, bool doSignal,
     bool integrateWeightingField, int debug_electron = -1) {
   // GPU_REMOVE: std::vector<std::pair<double, double> > stackPhotons;
   // GPU_REMOVE: std::vector<std::pair<int, double> > secondaries;
@@ -520,7 +520,7 @@ __global__ void TransportElectron(
   }
 
   // reset new particles
-  unsigned int num_new_particles{0};
+  std::size_t num_new_particles{0};
 
   // initialiase some things
   MediumGPU *medium{nullptr};
@@ -545,7 +545,7 @@ __global__ void TransportElectron(
   //}
 
   // Count number of collisions between updates.
-  unsigned int nCollTemp = 0;
+  std::size_t nCollTemp = 0;
 
   // Get the local electric field and medium.
   cuda_t ex = 0., ey = 0., ez = 0.;

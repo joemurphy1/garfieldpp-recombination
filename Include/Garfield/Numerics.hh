@@ -97,7 +97,7 @@ namespace QUADPACK {
 ///     - 6: invalid input.
 void qagi(std::function<double(double)> f, double bound, const int inf,
           const double epsabs, const double epsrel, double& result,
-          double& abserr, unsigned int& status);
+          double& abserr, std::size_t& status);
 
 /// 15-point Gauss-Kronrod integration with (semi-)infinite integration range.
 /// \param f function to be integrated.
@@ -156,13 +156,13 @@ void cfft(std::vector<std::complex<double> >& a, const int msign);
 }  // namespace CERNLIB
 
 /// Legendre polynomials.
-inline double Legendre(const unsigned int n, const double x) {
+inline double Legendre(const std::size_t n, const double x) {
   if (std::abs(x) > 1.) return 0.;
   double p0 = 1.;
   double p1 = x;
   if (n == 0) return p0;
   if (n == 1) return p1;
-  for (unsigned int k = 1; k < n; ++k) {
+  for (std::size_t k = 1; k < n; ++k) {
     p0 = ((2 * k + 1) * x * p1 - k * p0) / (k + 1);
     std::swap(p0, p1);
   }
@@ -248,7 +248,7 @@ bool LeastSquaresFit(
     std::function<double(double, const std::vector<double>&)> f,
     std::vector<double>& par, std::vector<double>& epar,
     const std::vector<double>& x, const std::vector<double>& y,
-    const std::vector<double>& ey, const unsigned int nMaxIter,
+    const std::vector<double>& ey, const std::size_t nMaxIter,
     const double diff, double& chi2, const double eps, const bool debug,
     const bool verbose);
 

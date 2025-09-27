@@ -73,8 +73,8 @@ int main(int argc, char* argv[]) {
     drift.EnablePlotting(&driftView);
   }
 
-  constexpr unsigned int nEvents = 10;
-  for (unsigned int i = 0; i < nEvents; ++i) {
+  constexpr std::size_t nEvents = 10;
+  for (std::size_t i = 0; i < nEvents; ++i) {
     std::cout << i << "/" << nEvents << "\n";
     // Randomize the initial position.
     const double x0 = -0.5 * pitch + RndmUniform() * pitch;

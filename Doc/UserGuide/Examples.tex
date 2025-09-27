@@ -122,7 +122,7 @@ In this example, we use use 1000 bins with a width of 0.5\,ns.
 \begin{lstlisting}
 const double tstep = 0.5;
 const double tmin = -0.5 * tstep;
-const unsigned int nbins = 1000;
+const std::size_t nbins = 1000;
 sensor.SetTimeWindow(tmin, tstep, nbins);
 \end{lstlisting}
 
@@ -593,7 +593,7 @@ and we need to set the granularity with which we want to record the signal
 
 \begin{lstlisting}
 // Set the time bins.
-const unsigned int nTimeBins = 1000;
+const std::size_t nTimeBins = 1000;
 const double tmin =  0.;
 const double tmax = 10.;
 const double tstep = (tmax - tmin) / nTimeBins;
@@ -677,7 +677,7 @@ An example for doing so is given in the code snippet below.
 \begin{lstlisting}
 std::ofstream outfile;
 outfile.open("signal.txt", std::ios::out);
-for (unsigned int i = 0; i < nTimeBins; ++i) {
+for (std::size_t i = 0; i < nTimeBins; ++i) {
   const double t = (i + 0.5) * tstep;
   const double f = sensor.GetSignal(label, i);
   const double fe = sensor.GetElectronSignal(label, i);

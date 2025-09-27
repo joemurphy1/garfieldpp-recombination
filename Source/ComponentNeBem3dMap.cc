@@ -39,7 +39,7 @@ void ComponentNeBem3dMap::ElectricField(const double x, const double y,
 
   // Get the mesh element - values of the lowest corner, i,j,k are returned
   // For trilinear interpolation, we need to use till the i+1, j+1, k+1 corner
-  unsigned int i = 0, j = 0, k = 0;
+  std::size_t i = 0, j = 0, k = 0;
   bool xMirrored = false, yMirrored = false, zMirrored = false;
   if (!GetElement(x, y, z, i, j, k, xMirrored, yMirrored, zMirrored)) {
     status = -11;
@@ -386,7 +386,7 @@ void ComponentNeBem3dMap::MagneticField(const double x, const double y,
   }
 
   // Get the mesh element.
-  unsigned int i = 0, j = 0, k = 0;
+  std::size_t i = 0, j = 0, k = 0;
   bool xMirrored = false, yMirrored = false, zMirrored = false;
   if (!GetElement(x, y, z, i, j, k, xMirrored, yMirrored, zMirrored)) {
     status = -11;
@@ -412,7 +412,7 @@ Medium* ComponentNeBem3dMap::GetMedium(const double x, const double y,
     return nullptr;
   }
 
-  unsigned int i, j, k;
+  std::size_t i, j, k;
   bool xMirrored, yMirrored, zMirrored;
   if (!GetElement(x, y, z, i, j, k, xMirrored, yMirrored, zMirrored)) {
     return nullptr;
@@ -425,8 +425,8 @@ Medium* ComponentNeBem3dMap::GetMedium(const double x, const double y,
 /// Read map information from file.
 bool ComponentNeBem3dMap::LoadMapInfo(
     const std::string& MapInfoFile, std::string& MapVersion, int& OptMap,
-    int& OptStaggerMap, unsigned int& NbOfXCells, unsigned int& NbOfYCells,
-    unsigned int& NbOfZCells, double& Xmin, double& Xmax, double& Ymin,
+    int& OptStaggerMap, std::size_t& NbOfXCells, std::size_t& NbOfYCells,
+    std::size_t& NbOfZCells, double& Xmin, double& Xmax, double& Ymin,
     double& Ymax, double& Zmin, double& Zmax, double& XStagger,
     double& YStagger, double& ZStagger, std::string& MapDataFile) {
   std::ifstream infile;
@@ -438,7 +438,7 @@ bool ComponentNeBem3dMap::LoadMapInfo(
   }
 
   std::string line;
-  unsigned int nLines = 0;
+  std::size_t nLines = 0;
 
   // read version string
   if (!infile.fail()) {
@@ -677,8 +677,8 @@ bool ComponentNeBem3dMap::LoadMapInfo(
   return true;
 }  // end of LoadMapInfo
 
-void ComponentNeBem3dMap::SetMesh(const unsigned int nx, const unsigned int ny,
-                                  const unsigned int nz, const double xmin,
+void ComponentNeBem3dMap::SetMesh(const std::size_t nx, const std::size_t ny,
+                                  const std::size_t nz, const double xmin,
                                   const double xmax, const double ymin,
                                   const double ymax, const double zmin,
                                   const double zmax) {
@@ -725,13 +725,13 @@ bool ComponentNeBem3dMap::LoadElectricField(
   // Set up the grid.
   m_efields.resize(m_nX);
   m_regions.resize(m_nX);
-  for (unsigned int i = 0; i < m_nX; ++i) {
+  for (std::size_t i = 0; i < m_nX; ++i) {
     m_efields[i].resize(m_nY);
     m_regions[i].resize(m_nY);
-    for (unsigned int j = 0; j < m_nY; ++j) {
+    for (std::size_t j = 0; j < m_nY; ++j) {
       m_efields[i][j].resize(m_nZ);
       m_regions[i][j].resize(m_nZ);
-      for (unsigned int k = 0; k < m_nZ; ++k) {
+      for (std::size_t k = 0; k < m_nZ; ++k) {
         m_efields[i][j][k].fx = 0.;
         m_efields[i][j][k].fy = 0.;
         m_efields[i][j][k].fz = 0.;
@@ -763,11 +763,11 @@ bool ComponentNeBem3dMap::LoadMagneticField(const std::string& filename,
 
   // Set up the grid.
   m_bfields.resize(m_nX);
-  for (unsigned int i = 0; i < m_nX; ++i) {
+  for (std::size_t i = 0; i < m_nX; ++i) {
     m_bfields[i].resize(m_nY);
-    for (unsigned int j = 0; j < m_nY; ++j) {
+    for (std::size_t j = 0; j < m_nY; ++j) {
       m_bfields[i][j].resize(m_nZ);
-      for (unsigned int k = 0; k < m_nZ; ++k) {
+      for (std::size_t k = 0; k < m_nZ; ++k) {
         m_bfields[i][j][k].fx = 0.;
         m_bfields[i][j][k].fy = 0.;
         m_bfields[i][j][k].fz = 0.;
@@ -789,7 +789,7 @@ bool ComponentNeBem3dMap::LoadData(const std::string& filename,
     return false;
   }
 
-  unsigned int nValues = 0;
+  std::size_t nValues = 0;
   // Keep track of which elements have been read.
   std::vector<std::vector<std::vector<bool> > > isSet(
       m_nX,
@@ -804,7 +804,7 @@ bool ComponentNeBem3dMap::LoadData(const std::string& filename,
   }
 
   std::transform(format.begin(), format.end(), format.begin(), toupper);
-  unsigned int fmt = 0;
+  std::size_t fmt = 0;
   if (format == "XY") {
     fmt = 1;
   } else if (format == "XYZ") {
@@ -821,7 +821,7 @@ bool ComponentNeBem3dMap::LoadData(const std::string& filename,
     return false;
   }
   std::string line;
-  unsigned int nLines = 0;
+  std::size_t nLines = 0;
   bool bad = false;
   // Read the file line by line.
   while (std::getline(infile, line)) {
@@ -833,9 +833,9 @@ bool ComponentNeBem3dMap::LoadData(const std::string& filename,
     // Skip comments.
     if (line[0] == '#') continue;
     if (line[0] == '/' && line[1] == '/') continue;
-    unsigned int i = 0;
-    unsigned int j = 0;
-    unsigned int k = 0;
+    std::size_t i = 0;
+    std::size_t j = 0;
+    std::size_t k = 0;
     double fx = 0.;
     double fy = 0.;
     double fz = 0.;
@@ -1000,7 +1000,7 @@ bool ComponentNeBem3dMap::LoadData(const std::string& filename,
     }
     if (fmt == 1 || fmt == 3) {
       // Two-dimensional field-map
-      for (unsigned int kk = 0; kk < m_nZ; ++kk) {
+      for (std::size_t kk = 0; kk < m_nZ; ++kk) {
         if (field == 'e') {
           m_efields[i][j][kk].fx = fx;
           m_efields[i][j][kk].fy = fy;
@@ -1033,7 +1033,7 @@ bool ComponentNeBem3dMap::LoadData(const std::string& filename,
   if (bad) return false;
   std::cout << m_className << "::LoadData:\n"
             << "    Read " << nValues << " values from " << filename << ".\n";
-  unsigned int nExpected = m_nX * m_nY;
+  std::size_t nExpected = m_nX * m_nY;
   if (fmt == 2 || fmt == 4 || fmt == 5) nExpected *= m_nZ;
   if (nExpected != nValues) {
     std::cerr << m_className << "::LoadData:\n"
@@ -1098,9 +1098,9 @@ bool ComponentNeBem3dMap::GetElectricFieldRange(double& exmin, double& exmax,
   exmin = exmax = m_efields[0][0][0].fx;
   eymin = eymax = m_efields[0][0][0].fy;
   ezmin = ezmax = m_efields[0][0][0].fz;
-  for (unsigned int i = 0; i < m_nX; ++i) {
-    for (unsigned int j = 0; j < m_nY; ++j) {
-      for (unsigned int k = 0; k < m_nZ; ++k) {
+  for (std::size_t i = 0; i < m_nX; ++i) {
+    for (std::size_t j = 0; j < m_nY; ++j) {
+      for (std::size_t k = 0; k < m_nZ; ++k) {
         const Element& element = m_efields[i][j][k];
         if (element.fx < exmin) exmin = element.fx;
         if (element.fx > exmax) exmax = element.fx;
@@ -1129,14 +1129,14 @@ void ComponentNeBem3dMap::PrintRegions() const {
 
   std::cout << m_className << "::PrintRegions:\n";
   std::cout << "      Index     Medium\n";
-  const unsigned int nMedia = m_media.size();
-  for (unsigned int i = 0; i < nMedia; ++i) {
+  const std::size_t nMedia = m_media.size();
+  for (std::size_t i = 0; i < nMedia; ++i) {
     const std::string name = m_media[i] ? m_media[i]->GetName() : "none";
     std::cout << "      " << i << "            " << name << "\n";
   }
 }
 
-Medium* ComponentNeBem3dMap::GetMedium(const unsigned int i) const {
+Medium* ComponentNeBem3dMap::GetMedium(const std::size_t i) const {
   if (i >= m_media.size()) {
     std::cerr << m_className << "::GetMedium: Index out of range.\n";
     return nullptr;
@@ -1145,8 +1145,8 @@ Medium* ComponentNeBem3dMap::GetMedium(const unsigned int i) const {
 }
 
 bool ComponentNeBem3dMap::GetElement(const double xi, const double yi,
-                                     const double zi, unsigned int& i,
-                                     unsigned int& j, unsigned int& k,
+                                     const double zi, std::size_t& i,
+                                     std::size_t& j, std::size_t& k,
                                      bool& xMirrored, bool& yMirrored,
                                      bool& zMirrored) const {
   if (!m_hasMesh) {
@@ -1172,9 +1172,9 @@ bool ComponentNeBem3dMap::GetElement(const double xi, const double yi,
       (m_nX - 1);  // m_nX is number of nodes, (m_nX-1) number of elements
   const double dy = (m_yMax - m_yMin) / (m_nY - 1);
   const double dz = (m_zMax - m_zMin) / (m_nZ - 1);
-  i = (unsigned int)((x - m_xMin) / dx);
-  j = (unsigned int)((y - m_yMin) / dy);
-  k = (unsigned int)((z - m_zMin) / dz);
+  i = (std::size_t)((x - m_xMin) / dx);
+  j = (std::size_t)((y - m_yMin) / dy);
+  k = (std::size_t)((z - m_zMin) / dz);
   if (i >= m_nX) i = m_nX - 1;
   if (j >= m_nY) j = m_nY - 1;
   if (k >= m_nZ) k = m_nZ - 1;
@@ -1196,9 +1196,9 @@ bool ComponentNeBem3dMap::GetElement(const double xi, const double yi,
   return true;
 }
 
-bool ComponentNeBem3dMap::GetElement(const unsigned int i, const unsigned int j,
-                                     const unsigned int k, double& v,
-                                     double& ex, double& ey, double& ez) const {
+bool ComponentNeBem3dMap::GetElement(const std::size_t i, const std::size_t j,
+                                     const std::size_t k, double& v, double& ex,
+                                     double& ey, double& ez) const {
   v = ex = ey = ez = 0.;
   if (!m_ready) {
     if (!m_hasMesh) {
@@ -1245,7 +1245,7 @@ void ComponentNeBem3dMap::UpdatePeriodicity() {
   }
 
   // Check for conflicts.
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (std::size_t i = 0; i < 3; ++i) {
     if (m_periodic[i] && m_mirrorPeriodic[i]) {
       std::cerr << m_className << "::UpdatePeriodicity:\n"
                 << "    Both simple and mirror periodicity requested. Reset.\n";

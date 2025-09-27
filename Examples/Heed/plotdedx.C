@@ -23,10 +23,10 @@ int main(int argc, char* argv[]) {
   std::vector<double> bg = {0.5, 0.8, 1.,  2.,  3.,  4.,   5.,   8.,
                             10., 12., 15., 20., 50., 100., 200., 500.};
 
-  const unsigned int nPoints = bg.size();
+  const std::size_t nPoints = bg.size();
   TGraph gStoppingPower(nPoints);
   TGraph gClusterDensity(nPoints);
-  for (unsigned int i = 0; i < nPoints; ++i) {
+  for (std::size_t i = 0; i < nPoints; ++i) {
     track.SetBetaGamma(bg[i]);
     track.Initialise(&gas);
     const double dedx = track.GetStoppingPower();

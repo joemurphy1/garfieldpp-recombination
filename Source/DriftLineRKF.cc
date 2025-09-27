@@ -385,7 +385,7 @@ bool DriftLineRKF::DriftLine(const Vec& xi, const double ti,
   while (ok) {
     // Get the velocity at the first probe point.
     Vec x1 = x0;
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (std::size_t i = 0; i < 3; ++i) {
       x1[i] += h * b10 * v0[i];
     }
     int stat = 0;
@@ -404,7 +404,7 @@ bool DriftLineRKF::DriftLine(const Vec& xi, const double ti,
     }
     // Get the velocity at the second probe point.
     Vec x2 = x0;
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (std::size_t i = 0; i < 3; ++i) {
       x2[i] += h * (b20 * v0[i] + b21 * v1[i]);
     }
     const Vec v2 = GetVelocity(x2, particle, stat);
@@ -422,7 +422,7 @@ bool DriftLineRKF::DriftLine(const Vec& xi, const double ti,
     }
     // Get the velocity at the third probe point.
     Vec x3 = x0;
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (std::size_t i = 0; i < 3; ++i) {
       x3[i] += h * (b30 * v0[i] + b31 * v1[i] + b32 * v2[i]);
     }
     const Vec v3 = GetVelocity(x3, particle, stat);
@@ -523,7 +523,7 @@ bool DriftLineRKF::DriftLine(const Vec& xi, const double ti,
         continue;
       }
     } else if (m_rejectKinks && xs.size() > 1) {
-      const unsigned int np = xs.size();
+      const std::size_t np = xs.size();
       const auto& x = xs[np - 1];
       const auto& xprev = xs[np - 2];
       if (phi1[0] * (x[0] - xprev[0]) + phi1[1] * (x[1] - xprev[1]) +
@@ -695,7 +695,7 @@ bool DriftLineRKF::Avalanche(const Particle particle,
     const double gain = m_gain > 1. ? m_gain : ComputeGain(xs, particle, eps);
     double q1 = gain;
     if (m_gainFluctuations == GainFluctuations::Polya) {
-      for (unsigned int i = 0; i < 100; ++i) {
+      for (std::size_t i = 0; i < 100; ++i) {
         q1 = gain * RndmPolya(m_theta);
         if (q1 >= 1.) break;
       }
@@ -712,8 +712,8 @@ bool DriftLineRKF::Avalanche(const Particle particle,
               << "Number of negative ions:   " << qn << "\n    "
               << "Charge scaling factor:     " << scale << "\n    "
               << "Avalanche development:\n Step      Electrons     Ions\n";
-    for (unsigned int i = 0; i < nPoints; ++i) {
-      std::printf("%6u %15.7f %15.7f\n", i, scale * ne[i], scale * ni[i]);
+    for (std::size_t i = 0; i < nPoints; ++i) {
+      std::printf("%6lu %15.7f %15.7f\n", i, scale * ne[i], scale * ni[i]);
     }
   }
   return true;
@@ -896,7 +896,7 @@ Vec DriftLineRKF::GetVelocity(const std::array<double, 3>& x,
       if (!ok) continue;
       // Seems to have worked.
       if (particle == Particle::Positron) {
-        for (unsigned int k = 0; k < 3; ++k) v[k] *= -1;
+        for (std::size_t k = 0; k < 3; ++k) v[k] *= -1;
       }
       return v;
     }
@@ -916,7 +916,7 @@ Vec DriftLineRKF::GetVelocity(const std::array<double, 3>& x,
     ok = medium->HoleVelocity(ex, ey, ez, bx, by, bz, v[0], v[1], v[2]);
   } else if (particle == Particle::Positron) {
     ok = medium->ElectronVelocity(ex, ey, ez, bx, by, bz, v[0], v[1], v[2]);
-    for (unsigned int i = 0; i < 3; ++i) v[i] *= -1;
+    for (std::size_t i = 0; i < 3; ++i) v[i] *= -1;
   } else if (particle == Particle::NegativeIon) {
     ok = medium->NegativeIonVelocity(ex, ey, ez, bx, by, bz, v[0], v[1], v[2]);
   }
@@ -1053,11 +1053,11 @@ bool DriftLineRKF::Terminate(const std::array<double, 3>& xx0,
   // Final point just outside the medium.
   Vec x1 = xx1;
   // Perform some bisections.
-  constexpr unsigned int nBisections = 20;
-  for (unsigned int i = 0; i < nBisections; ++i) {
+  constexpr std::size_t nBisections = 20;
+  for (std::size_t i = 0; i < nBisections; ++i) {
     // Quit bisection when interval becomes too small.
     bool small = true;
-    for (unsigned int j = 0; j < 3; ++j) {
+    for (std::size_t j = 0; j < 3; ++j) {
       if (fabs(x1[j] - x0[j]) > 1.e-6 * (fabs(x0[j]) + fabs(x1[j]))) {
         small = false;
         break;
@@ -1134,15 +1134,15 @@ bool DriftLineRKF::DriftToWire(const double xw, const double yw,
               << " ns.\n";
   }
 
-  constexpr unsigned int nMaxSplit = 10;
-  unsigned int nSplit = 0;
+  constexpr std::size_t nMaxSplit = 10;
+  std::size_t nSplit = 0;
   // Move towards the wire.
   bool onwire = false;
   const double r2 = rw * rw;
   while (!onwire && dt > 1.e-6 * t0) {
     // Calculate the estimated end point.
     Vec x1 = x0;
-    for (unsigned int j = 0; j < 3; ++j) x1[j] += dt * v0[j];
+    for (std::size_t j = 0; j < 3; ++j) x1[j] += dt * v0[j];
     // Make sure we are not moving away from the wire.
     const double xinp0 =
         (x1[0] - x0[0]) * (xw - x0[0]) + (x1[1] - x0[1]) * (yw - x0[1]);
@@ -1247,9 +1247,9 @@ void DriftLineRKF::PrintDriftLine() const {
   std::cout << "    Status: " << m_status << "\n"
             << "  Step       time [ns]        "
             << "x [cm]          y [cm]          z [cm]\n";
-  const unsigned int nPoints = m_x.size();
-  for (unsigned int i = 0; i < nPoints; ++i) {
-    std::printf("%6u %15.7f %15.7f %15.7f %15.7f\n", i, m_t[i], m_x[i][0],
+  const std::size_t nPoints = m_x.size();
+  for (std::size_t i = 0; i < nPoints; ++i) {
+    std::printf("%6lu %15.7f %15.7f %15.7f %15.7f\n", i, m_t[i], m_x[i][0],
                 m_x[i][1], m_x[i][2]);
   }
 }
@@ -1561,7 +1561,7 @@ bool DriftLineRKF::FieldLine(const double xi, const double yi, const double zi,
   while (ok) {
     // Get the field at the first probe point.
     Vec x1 = x0;
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (std::size_t i = 0; i < 3; ++i) {
       x1[i] += h * b10 * f0[i];
     }
     m_sensor->ElectricField(x1[0], x1[1], x1[2], ex, ey, ez, medium, stat);
@@ -1575,7 +1575,7 @@ bool DriftLineRKF::FieldLine(const double xi, const double yi, const double zi,
       for (auto& f : f1) f *= -1;
     // Get the field at the second probe point.
     Vec x2 = x0;
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (std::size_t i = 0; i < 3; ++i) {
       x2[i] += h * (b20 * f0[i] + b21 * f1[i]);
     }
     m_sensor->ElectricField(x2[0], x2[1], x2[2], ex, ey, ez, medium, stat);
@@ -1589,7 +1589,7 @@ bool DriftLineRKF::FieldLine(const double xi, const double yi, const double zi,
       for (auto& f : f2) f *= -1;
     // Get the field at the third probe point.
     Vec x3 = x0;
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (std::size_t i = 0; i < 3; ++i) {
       x3[i] += h * (b30 * f0[i] + b31 * f1[i] + b32 * f2[i]);
     }
     m_sensor->ElectricField(x3[0], x3[1], x3[2], ex, ey, ez, medium, stat);
@@ -1624,7 +1624,7 @@ bool DriftLineRKF::FieldLine(const double xi, const double yi, const double zi,
     // Calculate the correction terms.
     Vec phi1 = {0., 0., 0.};
     Vec phi2 = {0., 0., 0.};
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (std::size_t i = 0; i < 3; ++i) {
       phi1[i] = c10 * f0[i] + c11 * f1[i] + c12 * f2[i];
       phi2[i] = c20 * f0[i] + c22 * f2[i] + c23 * f3[i];
     }
@@ -1718,11 +1718,11 @@ void DriftLineRKF::Terminate(const std::array<double, 3>& xx0,
   // Final point just outside the medium.
   Vec x1 = xx1;
   // Perform some bisections.
-  constexpr unsigned int nBisections = 20;
-  for (unsigned int i = 0; i < nBisections; ++i) {
+  constexpr std::size_t nBisections = 20;
+  for (std::size_t i = 0; i < nBisections; ++i) {
     // Quit bisection when interval becomes too small.
     bool small = true;
-    for (unsigned int j = 0; j < 3; ++j) {
+    for (std::size_t j = 0; j < 3; ++j) {
       if (fabs(x1[j] - x0[j]) > 1.e-6 * (fabs(x0[j]) + fabs(x1[j]))) {
         small = false;
         break;

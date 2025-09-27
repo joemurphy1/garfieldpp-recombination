@@ -52,7 +52,7 @@ class SolidHole : public Solid {
   /// approximated as a polygon with a finite number of panels.
   /// The number of corners of the polygon equals \f$4(n - 1)\f$.
   /// Thus, \f$n = 2\f$ will produce a square, \f$n = 3\f$ an octagon etc.
-  void SetSectors(const unsigned int n);
+  void SetSectors(const std::size_t n);
   /// By default, the polygon used for approximating the hole when
   /// calculating surface panels is inscribed in a circle
   /// of the specified radius. If the "average-radius" flag is activated,
@@ -64,7 +64,7 @@ class SolidHole : public Solid {
   }
 
   /// Return the order of the approximating polygon.
-  unsigned int GetSectors() const { return m_n; }
+  std::size_t GetSectors() const { return m_n; }
   /// Return the state of the "average-radius" flag.
   bool GetAverage() const { return m_average; }
 
@@ -92,7 +92,7 @@ class SolidHole : public Solid {
   double m_lZ{0.};
 
   /// Number of sectors.
-  unsigned int m_n{2};
+  std::size_t m_n{2};
   /// Average chord over the sectors.
   bool m_average{false};
 

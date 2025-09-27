@@ -49,10 +49,9 @@ class Medium {
   double GetDielectricConstant() const { return m_epsilon; }
 
   /// Get number of components of the medium.
-  unsigned int GetNumberOfComponents() const { return m_nComponents; }
+  std::size_t GetNumberOfComponents() const { return m_nComponents; }
   /// Get the name and fraction of a given component.
-  virtual void GetComponent(const unsigned int i, std::string& label,
-                            double& f);
+  virtual void GetComponent(const std::size_t i, std::string& label, double& f);
   /// Set the effective atomic number.
   virtual void SetAtomicNumber(const double z);
   /// Get the effective atomic number.
@@ -570,12 +569,12 @@ class Medium {
                                              const std::string& extrHigh);
 
   /// Set the degree of polynomial interpolation (usually 2).
-  void SetInterpolationMethodVelocity(const unsigned int intrp);
-  void SetInterpolationMethodDiffusion(const unsigned int intrp);
-  void SetInterpolationMethodTownsend(const unsigned int intrp);
-  void SetInterpolationMethodAttachment(const unsigned int intrp);
-  void SetInterpolationMethodIonMobility(const unsigned int intrp);
-  void SetInterpolationMethodIonDissociation(const unsigned int intrp);
+  void SetInterpolationMethodVelocity(const std::size_t intrp);
+  void SetInterpolationMethodDiffusion(const std::size_t intrp);
+  void SetInterpolationMethodTownsend(const std::size_t intrp);
+  void SetInterpolationMethodAttachment(const std::size_t intrp);
+  void SetInterpolationMethodIonMobility(const std::size_t intrp);
+  void SetInterpolationMethodIonDissociation(const std::size_t intrp);
 
   // Scaling of fields and transport parameters.
   virtual double ScaleElectricField(const double e) const { return e; }
@@ -591,13 +590,13 @@ class Medium {
   // Optical properties
   /// Get the energy range [eV] of the available optical data.
   virtual bool GetOpticalDataRange(double& emin, double& emax,
-                                   const unsigned int i = 0);
+                                   const std::size_t i = 0);
   /// Get the complex dielectric function at a given energy.
   virtual bool GetDielectricFunction(const double e, double& eps1, double& eps2,
-                                     const unsigned int i = 0);
+                                     const std::size_t i = 0);
   // Get the photoabsorption cross-section [cm2] at a given energy.
   virtual bool GetPhotoAbsorptionCrossSection(const double e, double& sigma,
-                                              const unsigned int i = 0);
+                                              const std::size_t i = 0);
   virtual double GetPhotonCollisionRate(const double e);
   virtual bool PhotonCollision(const double e, int& type, int& level,
                                double& e1, double& ctheta,
@@ -616,7 +615,7 @@ class Medium {
   static int m_idCounter;
 
   // Number of components
-  unsigned int m_nComponents{1};
+  std::size_t m_nComponents{1};
   // Name
   std::string m_name;
   // Temperature [K]
@@ -697,29 +696,29 @@ class Medium {
   std::vector<std::vector<std::vector<double> > > m_nVel;
 
   // Thresholds for Townsend, attachment and dissociation coefficients.
-  unsigned int m_eThrAlp{0};
-  unsigned int m_eThrAtt{0};
-  unsigned int m_hThrAlp{0};
-  unsigned int m_hThrAtt{0};
-  unsigned int m_iThrDis{0};
+  std::size_t m_eThrAlp{0};
+  std::size_t m_eThrAtt{0};
+  std::size_t m_hThrAlp{0};
+  std::size_t m_hThrAtt{0};
+  std::size_t m_iThrDis{0};
 
   // Extrapolation methods (TODO: enum).
-  std::pair<unsigned int, unsigned int> m_extrVel = {0, 1};
-  std::pair<unsigned int, unsigned int> m_extrDif = {0, 1};
-  std::pair<unsigned int, unsigned int> m_extrAlp = {0, 1};
-  std::pair<unsigned int, unsigned int> m_extrAtt = {0, 1};
-  std::pair<unsigned int, unsigned int> m_extrLor = {0, 1};
-  std::pair<unsigned int, unsigned int> m_extrMob = {0, 1};
-  std::pair<unsigned int, unsigned int> m_extrDis = {0, 1};
+  std::pair<std::size_t, std::size_t> m_extrVel = {0, 1};
+  std::pair<std::size_t, std::size_t> m_extrDif = {0, 1};
+  std::pair<std::size_t, std::size_t> m_extrAlp = {0, 1};
+  std::pair<std::size_t, std::size_t> m_extrAtt = {0, 1};
+  std::pair<std::size_t, std::size_t> m_extrLor = {0, 1};
+  std::pair<std::size_t, std::size_t> m_extrMob = {0, 1};
+  std::pair<std::size_t, std::size_t> m_extrDis = {0, 1};
 
   // Interpolation methods
-  unsigned int m_intpVel{2};
-  unsigned int m_intpDif{2};
-  unsigned int m_intpAlp{2};
-  unsigned int m_intpAtt{2};
-  unsigned int m_intpLor{2};
-  unsigned int m_intpMob{2};
-  unsigned int m_intpDis{2};
+  std::size_t m_intpVel{2};
+  std::size_t m_intpDif{2};
+  std::size_t m_intpAlp{2};
+  std::size_t m_intpAtt{2};
+  std::size_t m_intpLor{2};
+  std::size_t m_intpMob{2};
+  std::size_t m_intpDis{2};
 
   bool Velocity(const double ex, const double ey, const double ez,
                 const double bx, const double by, const double bz,
@@ -752,22 +751,22 @@ class Medium {
   bool Alpha(const double ex, const double ey, const double ez, const double bx,
              const double by, const double bz,
              const std::vector<std::vector<std::vector<double> > >& tab,
-             unsigned int intp, const unsigned int thr,
-             const std::pair<unsigned int, unsigned int>& extr,
+             std::size_t intp, const std::size_t thr,
+             const std::pair<std::size_t, std::size_t>& extr,
              double& alpha) const;
   double GetAngle(const double ex, const double ey, const double ez,
                   const double bx, const double by, const double bz,
                   const double e, const double b) const;
   bool Interpolate(const double e, const double b, const double a,
                    const std::vector<std::vector<std::vector<double> > >& table,
-                   double& y, const unsigned int intp,
-                   const std::pair<unsigned int, unsigned int>& extr,
+                   double& y, const std::size_t intp,
+                   const std::pair<std::size_t, std::size_t>& extr,
                    const bool logval = false) const;
 
   double Interpolate1D(const double e, const std::vector<double>& table,
                        const std::vector<double>& fields,
-                       const unsigned int intpMeth,
-                       const std::pair<unsigned int, unsigned int>& extr,
+                       const std::size_t intpMeth,
+                       const std::pair<std::size_t, std::size_t>& extr,
                        const bool logval = false) const;
 
   bool SetEntry(const std::size_t i, const std::size_t j, const std::size_t k,
@@ -780,24 +779,24 @@ class Medium {
                 double& val) const;
 
   void SetExtrapolationMethod(const std::string& low, const std::string& high,
-                              std::pair<unsigned int, unsigned int>& extr,
+                              std::pair<std::size_t, std::size_t>& extr,
                               const std::string& fcn);
-  bool GetExtrapolationIndex(std::string str, unsigned int& nb) const;
+  bool GetExtrapolationIndex(std::string str, std::size_t& nb) const;
   std::size_t SetThreshold(
       const std::vector<std::vector<std::vector<double> > >& tab) const;
 
   void Clone(std::vector<std::vector<std::vector<double> > >& tab,
              const std::vector<double>& efields,
              const std::vector<double>& bfields,
-             const std::vector<double>& angles, const unsigned int intp,
-             const std::pair<unsigned int, unsigned int>& extr,
-             const double init, const std::string& label);
+             const std::vector<double>& angles, const std::size_t intp,
+             const std::pair<std::size_t, std::size_t>& extr, const double init,
+             const std::string& label);
   void Clone(std::vector<std::vector<std::vector<std::vector<double> > > >& tab,
              const std::size_t n, const std::vector<double>& efields,
              const std::vector<double>& bfields,
-             const std::vector<double>& angles, const unsigned int intp,
-             const std::pair<unsigned int, unsigned int>& extr,
-             const double init, const std::string& label);
+             const std::vector<double>& angles, const std::size_t intp,
+             const std::pair<std::size_t, std::size_t>& extr, const double init,
+             const std::string& label);
 
   void Init(const std::size_t nE, const std::size_t nB, const std::size_t nA,
             std::vector<std::vector<std::vector<double> > >& tab,

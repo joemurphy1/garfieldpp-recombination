@@ -37,7 +37,7 @@ class AvalancheMicroscopicGPU {
     double* z0{nullptr};
     double* t0{nullptr};
     double* e0{nullptr};
-    unsigned int stack_size{0};
+    std::size_t stack_size{0};
   };
 
   // Stores *all* electrons
@@ -55,22 +55,22 @@ class AvalancheMicroscopicGPU {
   int* activeIndexArray{nullptr};
   int* newIndexArray{nullptr};
   int numActiveParticles{0};
-  unsigned int m_nElectrons{0};
+  std::size_t m_nElectrons{0};
 
   enum class TransferType { HostToDevice = 0, DeviceToDevice, DeviceToHost };
 
-  double InitialiseGPUParticleStack(ParticleStack& stack, unsigned int num);
+  double InitialiseGPUParticleStack(ParticleStack& stack, std::size_t num);
   void FreeGPUParticleStack(ParticleStack& stack);
-  void InitialiseCPUParticleStack(ParticleStack& stack, unsigned int num);
+  void InitialiseCPUParticleStack(ParticleStack& stack, std::size_t num);
   void FreeCPUParticleStack(ParticleStack& stack);
   void TransferStackFromCPUToGPU(std::vector<Seed>& particles);
   void TransferStackFromGPUToCPU(std::vector<Electron>& stack, bool end_points);
   void TransferClassInternalInfo(AvalancheMicroscopic* src);
-  void transferParticleStack(ParticleStack dest, unsigned int offset,
-                             ParticleStack source, unsigned int num,
+  void transferParticleStack(ParticleStack dest, std::size_t offset,
+                             ParticleStack source, std::size_t num,
                              TransferType type, bool init_dest = false);
-  std::size_t processParticleStack(unsigned int& num_active,
-                                   unsigned int& num_new);
+  std::size_t processParticleStack(std::size_t& num_active,
+                                   std::size_t& num_new);
   bool transportParticleStack(const bool aval, AvalancheMicroscopic* aval_ptr,
                               int id, double fLim, double fInv, bool useBfield,
                               bool sc, int debug_electron = -1);

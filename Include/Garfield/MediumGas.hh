@@ -99,7 +99,7 @@ class MediumGas : public Medium {
 
   bool IsGas() const override { return true; }
 
-  void GetComponent(const unsigned int i, std::string& label,
+  void GetComponent(const std::size_t i, std::string& label,
                     double& f) override;
 
   void SetAtomicNumber(const double z) override;
@@ -121,10 +121,10 @@ class MediumGas : public Medium {
                                              const std::string& high) {
     SetExtrapolationMethod(low, high, m_extrIon, "IonisationRates");
   }
-  void SetInterpolationMethodExcitationRates(const unsigned int intrp) {
+  void SetInterpolationMethodExcitationRates(const std::size_t intrp) {
     if (intrp > 0) m_intpExc = intrp;
   }
-  void SetInterpolationMethodIonisationRates(const unsigned int intrp) {
+  void SetInterpolationMethodIonisationRates(const std::size_t intrp) {
     if (intrp > 0) m_intpIon = intrp;
   }
 
@@ -151,7 +151,7 @@ class MediumGas : public Medium {
   }
 
   bool GetPhotoAbsorptionCrossSection(const double e, double& sigma,
-                                      const unsigned int i) override;
+                                      const std::size_t i) override;
 
   /// Create and initialise GPU Transfer class
   virtual double CreateGPUTransferObject(MediumGPU*& med_gpu) override;
@@ -206,10 +206,10 @@ class MediumGas : public Medium {
   std::vector<IonLevel> m_ionLevels;
 
   // Extrapolation/interpolation for excitation and ionisation rates.
-  std::pair<unsigned int, unsigned int> m_extrExc = {0, 1};
-  std::pair<unsigned int, unsigned int> m_extrIon = {0, 1};
-  unsigned int m_intpExc{2};
-  unsigned int m_intpIon{2};
+  std::pair<std::size_t, std::size_t> m_extrExc = {0, 1};
+  std::pair<std::size_t, std::size_t> m_extrIon = {0, 1};
+  std::size_t m_intpExc{2};
+  std::size_t m_intpIon{2};
 
   bool LoadMobility(const std::string& filename, const bool quiet,
                     const bool negative);
@@ -218,10 +218,10 @@ class MediumGas : public Medium {
                   std::vector<double>& efields, std::vector<double>& bfields,
                   std::vector<double>& angles, std::vector<ExcLevel>& excLevels,
                   std::vector<IonLevel>& ionLevels);
-  void ReadFooter(std::ifstream& gasfile, std::array<unsigned int, 13>& extrapH,
-                  std::array<unsigned int, 13>& extrapL,
-                  std::array<unsigned int, 13>& interp, unsigned int& thrAlp,
-                  unsigned int& thrAtt, unsigned int& thrDis, double& ionDiffL,
+  void ReadFooter(std::ifstream& gasfile, std::array<std::size_t, 13>& extrapH,
+                  std::array<std::size_t, 13>& extrapL,
+                  std::array<std::size_t, 13>& interp, std::size_t& thrAlp,
+                  std::size_t& thrAtt, std::size_t& thrDis, double& ionDiffL,
                   double& ionDiffT, double& pgas, double& tgas);
   void ReadRecord3D(std::ifstream& gasfile, double& ve, double& vb, double& vx,
                     double& dl, double& dt, double& alpha, double& alpha0,

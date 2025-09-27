@@ -42,11 +42,11 @@ class ViewField : public ViewBase {
   void SetMagneticFieldRange(const double bmin, const double bmax);
 
   /// Set the number of contour levels.
-  void SetNumberOfContours(const unsigned int n);
+  void SetNumberOfContours(const std::size_t n);
   /// Set the number of points used for drawing 1D functions.
-  void SetNumberOfSamples1d(const unsigned int n);
+  void SetNumberOfSamples1d(const std::size_t n);
   /// Set the number of points used for drawing 2D functions.
-  void SetNumberOfSamples2d(const unsigned int nx, const unsigned int ny);
+  void SetNumberOfSamples2d(const std::size_t nx, const std::size_t ny);
 
   /** Make a contour plot of the electric potential, electric field,
    * or magnetic field.
@@ -135,7 +135,7 @@ class ViewField : public ViewBase {
                           const double x1, const double y1, const double z1,
                           std::vector<double>& xf, std::vector<double>& yf,
                           std::vector<double>& zf,
-                          const unsigned int nPoints = 20) const;
+                          const std::size_t nPoints = 20) const;
   /// Generate points along a line, spaced by a given flux interval.
   bool FixedFluxIntervals(const double x0, const double y0, const double z0,
                           const double x1, const double y1, const double z1,
@@ -177,11 +177,11 @@ class ViewField : public ViewBase {
   double m_bmax{10.};
 
   // Number of contours
-  unsigned int m_nContours{20};
+  std::size_t m_nContours{20};
   // Number of points used to draw the functions
-  unsigned int m_nSamples1d{1000};
-  unsigned int m_nSamples2dX{200};
-  unsigned int m_nSamples2dY{200};
+  std::size_t m_nSamples1d{1000};
+  std::size_t m_nSamples2dX{200};
+  std::size_t m_nSamples2dY{200};
 
   bool SetPlotLimits();
   void Draw2d(const std::string& option, const bool contour, const bool wfield,

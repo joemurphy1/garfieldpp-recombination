@@ -65,18 +65,18 @@ int main(int argc, char* argv[]) {
   aval.SetShowProgress(false);
   aval.SetMaxNumShowerLoops(-1);
 
-  const unsigned int nEvents = 10;
+  const std::size_t nEvents = 10;
   // Use 1000 initial electrons where the GPU is better
-  const unsigned int nInitElectrons = 1000;
+  const std::size_t nInitElectrons = 1000;
 
   int total_endpoints = 0;
-  for (unsigned int i = 0; i < nEvents; ++i) {
+  for (std::size_t i = 0; i < nEvents; ++i) {
     std::cout << i << "/" << nEvents << "\n";
     const double z0 = 0.02;
     const double t0 = 0.;
     const double e0 = 0.1;
     // Allows for multiple electrons to start in a single event
-    for (unsigned int j = 0; j < nInitElectrons; ++j) {
+    for (std::size_t j = 0; j < nInitElectrons; ++j) {
       // Randomize the initial position.
       double x0 = -0.5 * pitch + RndmUniform() * pitch;
       double y0 = -0.5 * pitch + RndmUniform() * pitch;

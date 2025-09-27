@@ -167,7 +167,7 @@ int KDTree::select_on_coordinate_value(int c, double alpha, int l, int u) {
   return m_data[m_ind[lb]][c] <= alpha ? lb : lb - 1;
 }
 
-void KDTree::n_nearest(const std::vector<double>& qv, const unsigned int nn,
+void KDTree::n_nearest(const std::vector<double>& qv, const std::size_t nn,
                        std::vector<KDTreeResult>& result) const {
   // Search for n nearest to a given query vector 'qv'.
   std::priority_queue<KDTreeResult> res;
@@ -181,9 +181,9 @@ void KDTree::n_nearest(const std::vector<double>& qv, const unsigned int nn,
   if (sort_results) sort(result.begin(), result.end());
 }
 
-void KDTree::n_nearest_around_point(const unsigned int idx,
-                                    const unsigned int ndecorrel,
-                                    const unsigned int nn,
+void KDTree::n_nearest_around_point(const std::size_t idx,
+                                    const std::size_t ndecorrel,
+                                    const std::size_t nn,
                                     std::vector<KDTreeResult>& result) const {
   std::priority_queue<KDTreeResult> res;
   double r2 = std::numeric_limits<double>::max();
@@ -204,8 +204,8 @@ void KDTree::r_nearest(const std::vector<double>& qv, const double r2,
   if (sort_results) sort(result.begin(), result.end());
 }
 
-void KDTree::r_nearest_around_point(const unsigned int idx,
-                                    const unsigned int ndecorrel,
+void KDTree::r_nearest_around_point(const std::size_t idx,
+                                    const std::size_t ndecorrel,
                                     const double r2,
                                     std::vector<KDTreeResult>& result) const {
   result.clear();
@@ -222,7 +222,7 @@ KDTreeNode::~KDTreeNode() {
   if (right) delete right;
 }
 
-void KDTreeNode::search_n(const int idx0, const int nd, const unsigned int nn,
+void KDTreeNode::search_n(const int idx0, const int nd, const std::size_t nn,
                           double& r2, const std::vector<double>& qv,
                           const KDTree& tree,
                           std::priority_queue<KDTreeResult>& res) const {
@@ -303,7 +303,7 @@ inline bool KDTreeNode::box_in_search_range(
 }
 
 void KDTreeNode::process_terminal_node_n(
-    const int idx0, const int nd, const unsigned int nn, double& r2,
+    const int idx0, const int nd, const std::size_t nn, double& r2,
     const std::vector<double>& qv, const KDTree& tree,
     std::priority_queue<KDTreeResult>& res) const {
   const size_t dim = tree.m_dim;

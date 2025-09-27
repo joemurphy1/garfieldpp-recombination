@@ -19,12 +19,12 @@
 
 namespace {
 
-unsigned int NextPoint(const unsigned int i, const unsigned int n) {
-  const unsigned int j = i + 1;
+std::size_t NextPoint(const std::size_t i, const std::size_t n) {
+  const std::size_t j = i + 1;
   return j < n ? j : 0;
 }
 
-unsigned int PrevPoint(const unsigned int i, const unsigned int n) {
+std::size_t PrevPoint(const std::size_t i, const std::size_t n) {
   return i > 0 ? i - 1 : n - 1;
 }
 
@@ -232,9 +232,9 @@ void AddPoints(const std::vector<double>& xp1, const std::vector<double>& yp1,
 
   std::vector<Point> points;
 
-  const unsigned int np1 = xp1.size();
-  const unsigned int np2 = xp2.size();
-  for (unsigned int i = 0; i < np1; ++i) {
+  const std::size_t np1 = xp1.size();
+  const std::size_t np2 = xp2.size();
+  for (std::size_t i = 0; i < np1; ++i) {
     const double xi0 = xp1[i];
     const double yi0 = yp1[i];
     const double xi1 = xp1[NextPoint(i, np1)];
@@ -246,7 +246,7 @@ void AddPoints(const std::vector<double>& xp1, const std::vector<double>& yp1,
     p1.flag = 1;
     p1.q = 0.;
     // If also on 2 or vertex of 2, flag it as crossing or foreign.
-    for (unsigned int j = 0; j < np2; ++j) {
+    for (std::size_t j = 0; j < np2; ++j) {
       const double xj0 = xp2[j];
       const double yj0 = yp2[j];
       if (fabs(xj0 - xi0) < epsx && fabs(yj0 - yi0) < epsy) {
@@ -263,7 +263,7 @@ void AddPoints(const std::vector<double>& xp1, const std::vector<double>& yp1,
     points.push_back(std::move(p1));
     // Go over the line segments of the other polygon.
     std::vector<Point> pointsOther;
-    for (unsigned int j = 0; j < np2; ++j) {
+    for (std::size_t j = 0; j < np2; ++j) {
       const double xj0 = xp2[j];
       const double yj0 = yp2[j];
       // Add vertices of 2 that are on this line.
@@ -330,19 +330,19 @@ bool Equal(const Garfield::Panel& panel1, const Garfield::Panel& panel2,
   const auto& xp2 = panel2.xv;
   const auto& yp2 = panel2.yv;
   if (xp1.empty() || xp2.empty()) return false;
-  const unsigned int np1 = xp1.size();
-  const unsigned int np2 = xp2.size();
+  const std::size_t np1 = xp1.size();
+  const std::size_t np2 = xp2.size();
 
   // Compare all points of 1 with all points of 2.
-  for (unsigned int i = 0; i < np1; ++i) {
+  for (std::size_t i = 0; i < np1; ++i) {
     // Loop over 2 until a match is found.
     bool match = false;
-    for (unsigned int j = 0; j < np2; ++j) {
+    for (std::size_t j = 0; j < np2; ++j) {
       if (fabs(xp2[j] - xp1[i]) < epsx && fabs(yp2[j] - yp1[i]) < epsy) {
         match = true;
         break;
       }
-      const unsigned int jj = NextPoint(j, np2);
+      const std::size_t jj = NextPoint(j, np2);
       if (OnLine(xp2[j], yp2[j], xp2[jj], yp2[jj], xp1[i], yp1[i])) {
         match = true;
         break;
@@ -352,15 +352,15 @@ bool Equal(const Garfield::Panel& panel1, const Garfield::Panel& panel2,
   }
 
   // Compare all points of 2 with all points of 1.
-  for (unsigned int i = 0; i < np2; ++i) {
+  for (std::size_t i = 0; i < np2; ++i) {
     // Loop over 1 until a match is found.
     bool match = false;
-    for (unsigned int j = 0; j < np1; ++j) {
+    for (std::size_t j = 0; j < np1; ++j) {
       if (fabs(xp2[i] - xp1[j]) < epsx && fabs(yp2[i] - yp1[j]) < epsy) {
         match = true;
         break;
       }
-      const unsigned int jj = NextPoint(j, np1);
+      const std::size_t jj = NextPoint(j, np1);
       if (OnLine(xp1[j], yp1[j], xp1[jj], yp1[jj], xp2[i], yp2[i])) {
         match = true;
         break;
@@ -572,7 +572,7 @@ void ComponentNeBem3d::AddPlaneZ(const double z, const double v) {
   m_ready = false;
 }
 
-unsigned int ComponentNeBem3d::GetNumberOfPlanesX() const {
+std::size_t ComponentNeBem3d::GetNumberOfPlanesX() const {
   if (m_ynplan[0] && m_ynplan[1]) {
     return 2;
   } else if (m_ynplan[0] || m_ynplan[1]) {
@@ -581,7 +581,7 @@ unsigned int ComponentNeBem3d::GetNumberOfPlanesX() const {
   return 0;
 }
 
-unsigned int ComponentNeBem3d::GetNumberOfPlanesY() const {
+std::size_t ComponentNeBem3d::GetNumberOfPlanesY() const {
   if (m_ynplan[2] && m_ynplan[3]) {
     return 2;
   } else if (m_ynplan[2] || m_ynplan[3]) {
@@ -590,7 +590,7 @@ unsigned int ComponentNeBem3d::GetNumberOfPlanesY() const {
   return 0;
 }
 
-unsigned int ComponentNeBem3d::GetNumberOfPlanesZ() const {
+std::size_t ComponentNeBem3d::GetNumberOfPlanesZ() const {
   if (m_ynplan[4] && m_ynplan[5]) {
     return 2;
   } else if (m_ynplan[4] || m_ynplan[5]) {
@@ -599,7 +599,7 @@ unsigned int ComponentNeBem3d::GetNumberOfPlanesZ() const {
   return 0;
 }
 
-bool ComponentNeBem3d::GetPlaneX(const unsigned int i, double& x,
+bool ComponentNeBem3d::GetPlaneX(const std::size_t i, double& x,
                                  double& v) const {
   if (i >= 2 || (i == 1 && !m_ynplan[1])) {
     std::cerr << m_className << "::GetPlaneX: Index out of range.\n";
@@ -610,7 +610,7 @@ bool ComponentNeBem3d::GetPlaneX(const unsigned int i, double& x,
   return true;
 }
 
-bool ComponentNeBem3d::GetPlaneY(const unsigned int i, double& y,
+bool ComponentNeBem3d::GetPlaneY(const std::size_t i, double& y,
                                  double& v) const {
   if (i >= 2 || (i == 1 && !m_ynplan[3])) {
     std::cerr << m_className << "::GetPlaneY: Index out of range.\n";
@@ -621,7 +621,7 @@ bool ComponentNeBem3d::GetPlaneY(const unsigned int i, double& y,
   return true;
 }
 
-bool ComponentNeBem3d::GetPlaneZ(const unsigned int i, double& z,
+bool ComponentNeBem3d::GetPlaneZ(const std::size_t i, double& z,
                                  double& v) const {
   if (i >= 2 || (i == 1 && !m_ynplan[5])) {
     std::cerr << m_className << "::GetPlaneZ: Index out of range.\n";
@@ -641,8 +641,8 @@ void ComponentNeBem3d::SetTargetElementSize(const double length) {
   m_targetElementSize = length;
 }
 
-void ComponentNeBem3d::SetMinMaxNumberOfElements(const unsigned int nmin,
-                                                 const unsigned int nmax) {
+void ComponentNeBem3d::SetMinMaxNumberOfElements(const std::size_t nmin,
+                                                 const std::size_t nmax) {
   if (nmin == 0 || nmax == 0) {
     std::cerr << m_className << "::SetMinMaxNumberOfElements:\n"
               << "    Values must be non-zero.\n";
@@ -652,22 +652,22 @@ void ComponentNeBem3d::SetMinMaxNumberOfElements(const unsigned int nmin,
   m_maxNbElementsOnLength = std::max(nmin, nmax);
 }
 
-void ComponentNeBem3d::SetNewModel(const unsigned int NewModel) {
+void ComponentNeBem3d::SetNewModel(const std::size_t NewModel) {
   m_newModel = NewModel;
 }
 
-void ComponentNeBem3d::SetNewMesh(const unsigned int NewMesh) {
+void ComponentNeBem3d::SetNewMesh(const std::size_t NewMesh) {
   m_newMesh = NewMesh;
 }
 
-void ComponentNeBem3d::SetNewBC(const unsigned int NewBC) { m_newBC = NewBC; }
+void ComponentNeBem3d::SetNewBC(const std::size_t NewBC) { m_newBC = NewBC; }
 
-void ComponentNeBem3d::SetNewPP(const unsigned int NewPP) { m_newPP = NewPP; }
+void ComponentNeBem3d::SetNewPP(const std::size_t NewPP) { m_newPP = NewPP; }
 
-void ComponentNeBem3d::SetModelOptions(const unsigned int NewModel,
-                                       const unsigned int NewMesh,
-                                       const unsigned int NewBC,
-                                       const unsigned int NewPP) {
+void ComponentNeBem3d::SetModelOptions(const std::size_t NewModel,
+                                       const std::size_t NewMesh,
+                                       const std::size_t NewBC,
+                                       const std::size_t NewPP) {
   m_newModel = NewModel;
   m_newMesh = NewMesh;
   m_newBC = NewBC;
@@ -675,55 +675,54 @@ void ComponentNeBem3d::SetModelOptions(const unsigned int NewModel,
 }
 
 void ComponentNeBem3d::SetStoreInflMatrix(
-    const unsigned int OptStoreInflMatrix) {
+    const std::size_t OptStoreInflMatrix) {
   m_optStoreInflMatrix = OptStoreInflMatrix;
 }
 
-void ComponentNeBem3d::SetReadInflMatrix(const unsigned int OptReadInflMatrix) {
+void ComponentNeBem3d::SetReadInflMatrix(const std::size_t OptReadInflMatrix) {
   m_optReadInflMatrix = OptReadInflMatrix;
 }
 
-void ComponentNeBem3d::SetStoreInvMatrix(const unsigned int OptStoreInvMatrix) {
+void ComponentNeBem3d::SetStoreInvMatrix(const std::size_t OptStoreInvMatrix) {
   m_optStoreInvMatrix = OptStoreInvMatrix;
 }
 
-void ComponentNeBem3d::SetReadInvMatrix(const unsigned int OptReadInvMatrix) {
+void ComponentNeBem3d::SetReadInvMatrix(const std::size_t OptReadInvMatrix) {
   m_optReadInvMatrix = OptReadInvMatrix;
 }
 
 void ComponentNeBem3d::SetStorePrimitives(
-    const unsigned int OptStorePrimitives) {
+    const std::size_t OptStorePrimitives) {
   m_optStorePrimitives = OptStorePrimitives;
 }
 
-void ComponentNeBem3d::SetReadPrimitives(const unsigned int OptReadPrimitives) {
+void ComponentNeBem3d::SetReadPrimitives(const std::size_t OptReadPrimitives) {
   m_optReadPrimitives = OptReadPrimitives;
 }
 
-void ComponentNeBem3d::SetStoreElements(const unsigned int OptStoreElements) {
+void ComponentNeBem3d::SetStoreElements(const std::size_t OptStoreElements) {
   m_optStoreElements = OptStoreElements;
 }
 
-void ComponentNeBem3d::SetReadElements(const unsigned int OptReadElements) {
+void ComponentNeBem3d::SetReadElements(const std::size_t OptReadElements) {
   m_optReadElements = OptReadElements;
 }
 
-void ComponentNeBem3d::SetFormattedFile(const unsigned int OptFormattedFile) {
+void ComponentNeBem3d::SetFormattedFile(const std::size_t OptFormattedFile) {
   m_optStoreFormatted = OptFormattedFile;
 }
 
 void ComponentNeBem3d::SetUnformattedFile(
-    const unsigned int OptUnformattedFile) {
+    const std::size_t OptUnformattedFile) {
   m_optStoreUnformatted = OptUnformattedFile;
 }
 
 void ComponentNeBem3d::SetStoreReadOptions(
-    const unsigned int OptStoreInflMatrix, const unsigned int OptReadInflMatrix,
-    const unsigned int OptStoreInvMatrix, const unsigned int OptReadInvMatrix,
-    const unsigned int OptStorePrimitives, const unsigned int OptReadPrimitives,
-    const unsigned int OptStoreElements, const unsigned int OptReadElements,
-    const unsigned int OptFormattedFile,
-    const unsigned int OptUnformattedFile) {
+    const std::size_t OptStoreInflMatrix, const std::size_t OptReadInflMatrix,
+    const std::size_t OptStoreInvMatrix, const std::size_t OptReadInvMatrix,
+    const std::size_t OptStorePrimitives, const std::size_t OptReadPrimitives,
+    const std::size_t OptStoreElements, const std::size_t OptReadElements,
+    const std::size_t OptFormattedFile, const std::size_t OptUnformattedFile) {
   m_optStoreInflMatrix = OptStoreInflMatrix;
   m_optReadInflMatrix = OptReadInflMatrix;
   m_optStoreInvMatrix = OptStoreInvMatrix;
@@ -744,28 +743,28 @@ void ComponentNeBem3d::SetReuseModel() {
 }
 
 void ComponentNeBem3d::SetSystemChargeZero(
-    const unsigned int OptSystemChargeZero) {
+    const std::size_t OptSystemChargeZero) {
   m_optSystemChargeZero = OptSystemChargeZero;
 }
 
 void ComponentNeBem3d::SetValidateSolution(
-    const unsigned int OptValidateSolution) {
+    const std::size_t OptValidateSolution) {
   m_optValidateSolution = OptValidateSolution;
 }
 
 void ComponentNeBem3d::SetForceValidation(
-    const unsigned int OptForceValidation) {
+    const std::size_t OptForceValidation) {
   m_optForceValidation = OptForceValidation;
 }
 
-void ComponentNeBem3d::SetRepeatLHMatrix(const unsigned int OptRepeatLHMatrix) {
+void ComponentNeBem3d::SetRepeatLHMatrix(const std::size_t OptRepeatLHMatrix) {
   m_optRepeatLHMatrix = OptRepeatLHMatrix;
 }
 
-void ComponentNeBem3d::SetComputeOptions(const unsigned int OptSystemChargeZero,
-                                         const unsigned int OptValidateSolution,
-                                         const unsigned int OptForceVaildation,
-                                         const unsigned int OptRepeatLHMatrix) {
+void ComponentNeBem3d::SetComputeOptions(const std::size_t OptSystemChargeZero,
+                                         const std::size_t OptValidateSolution,
+                                         const std::size_t OptForceVaildation,
+                                         const std::size_t OptRepeatLHMatrix) {
   m_optSystemChargeZero = OptSystemChargeZero;
   m_optValidateSolution = OptValidateSolution;
   m_optForceValidation = OptForceVaildation;
@@ -773,30 +772,30 @@ void ComponentNeBem3d::SetComputeOptions(const unsigned int OptSystemChargeZero,
 }
 
 // Fast volume options (Physical potential and field)
-void ComponentNeBem3d::SetFastVolOptions(const unsigned int OptFastVol,
-                                         const unsigned int OptCreateFastPF,
-                                         const unsigned int OptReadFastPF) {
+void ComponentNeBem3d::SetFastVolOptions(const std::size_t OptFastVol,
+                                         const std::size_t OptCreateFastPF,
+                                         const std::size_t OptReadFastPF) {
   m_optFastVol = OptFastVol;
   m_optCreateFastPF = OptCreateFastPF;
   m_optReadFastPF = OptReadFastPF;
 }
 
 // Fast volume version
-void ComponentNeBem3d::SetFastVolVersion(const unsigned int VersionFV) {
+void ComponentNeBem3d::SetFastVolVersion(const std::size_t VersionFV) {
   m_versionFV = VersionFV;
 }
 
 // Fast volume blocks
-void ComponentNeBem3d::SetFastVolBlocks(const unsigned int NbBlocksFV) {
+void ComponentNeBem3d::SetFastVolBlocks(const std::size_t NbBlocksFV) {
   m_nbBlocksFV = NbBlocksFV;
 }
 
 // Needs to include IdWtField information for each of these WtFld functions
 // Weighting potential and field related Fast volume options
 void ComponentNeBem3d::SetWtFldFastVolOptions(
-    const unsigned int IdWtField, const unsigned int OptWtFldFastVol,
-    const unsigned int OptCreateWtFldFastPF,
-    const unsigned int OptReadWtFldFastPF) {
+    const std::size_t IdWtField, const std::size_t OptWtFldFastVol,
+    const std::size_t OptCreateWtFldFastPF,
+    const std::size_t OptReadWtFldFastPF) {
   m_idWtField = IdWtField;
   m_optWtFldFastVol[IdWtField] = OptWtFldFastVol;
   m_optCreateWtFldFastPF[IdWtField] = OptCreateWtFldFastPF;
@@ -805,32 +804,31 @@ void ComponentNeBem3d::SetWtFldFastVolOptions(
 
 // Weighting field Fast volume version
 void ComponentNeBem3d::SetWtFldFastVolVersion(
-    const unsigned int IdWtField, const unsigned int VersionWtFldFV) {
+    const std::size_t IdWtField, const std::size_t VersionWtFldFV) {
   m_idWtField = IdWtField;
   m_versionWtFldFV[IdWtField] = VersionWtFldFV;
 }
 
 // Weighting field Fast volume blocks
 void ComponentNeBem3d::SetWtFldFastVolBlocks(
-    const unsigned int IdWtField, const unsigned int NbBlocksWtFldFV) {
+    const std::size_t IdWtField, const std::size_t NbBlocksWtFldFV) {
   m_idWtField = IdWtField;
   m_nbBlocksWtFldFV[IdWtField] = NbBlocksWtFldFV;
 }
 
 // Known charge options
-void ComponentNeBem3d::SetKnownChargeOptions(
-    const unsigned int OptKnownCharge) {
+void ComponentNeBem3d::SetKnownChargeOptions(const std::size_t OptKnownCharge) {
   m_optKnownCharge = OptKnownCharge;
 }
 
 // Charging up options
-void ComponentNeBem3d::SetChargingUpOptions(const unsigned int OptChargingUp) {
+void ComponentNeBem3d::SetChargingUpOptions(const std::size_t OptChargingUp) {
   m_optChargingUp = OptChargingUp;
 }
 
-void ComponentNeBem3d::SetPeriodicCopies(const unsigned int nx,
-                                         const unsigned int ny,
-                                         const unsigned int nz) {
+void ComponentNeBem3d::SetPeriodicCopies(const std::size_t nx,
+                                         const std::size_t ny,
+                                         const std::size_t nz) {
   m_nCopiesX = nx;
   m_nCopiesY = ny;
   m_nCopiesZ = nz;
@@ -952,9 +950,9 @@ bool ComponentNeBem3d::Initialise() {
   std::map<int, double> volt;
   std::map<int, double> eps;
   std::map<int, double> charge;
-  const unsigned int nSolids = m_geometry->GetNumberOfSolids();
+  const std::size_t nSolids = m_geometry->GetNumberOfSolids();
   std::vector<Panel> panelsIn;
-  for (unsigned int i = 0; i < nSolids; ++i) {
+  for (std::size_t i = 0; i < nSolids; ++i) {
     Medium* medium = nullptr;
     const auto solid = m_geometry->GetSolid(i, medium);
     if (!solid) continue;
@@ -1001,7 +999,7 @@ bool ComponentNeBem3d::Initialise() {
   const double epsxyz = 1.e-6;  // BEMEPD
   // CALL EPSSET('SET',EPSXYZ,EPSXYZ,EPSXYZ)
 
-  const unsigned int nIn = panelsIn.size();
+  const std::size_t nIn = panelsIn.size();
   if (m_debug) {
     std::cout << m_className << "::Initialise: Retrieved " << nIn
               << " panels from the solids.\n";
@@ -1009,11 +1007,11 @@ bool ComponentNeBem3d::Initialise() {
   // Keep track of which panels have been processed.
   std::vector<bool> mark(nIn, false);
   // Count the number of interface panels that have been discarded.
-  unsigned int nTrivial = 0;
-  unsigned int nConflicting = 0;
-  unsigned int nNotImplemented = 0;
+  std::size_t nTrivial = 0;
+  std::size_t nConflicting = 0;
+  std::size_t nNotImplemented = 0;
   // Pick up panels which coincide potentially.
-  for (unsigned int i = 0; i < nIn; ++i) {
+  for (std::size_t i = 0; i < nIn; ++i) {
     // Skip panels already done.
     if (mark[i]) continue;
     // Fetch panel parameters.
@@ -1023,7 +1021,7 @@ bool ComponentNeBem3d::Initialise() {
     const auto& xp1 = panelsIn[i].xv;
     const auto& yp1 = panelsIn[i].yv;
     const auto& zp1 = panelsIn[i].zv;
-    const unsigned int np1 = xp1.size();
+    const std::size_t np1 = xp1.size();
     // Establish its norm and offset.
     const double d1 = a1 * xp1[0] + b1 * yp1[0] + c1 * zp1[0];
     if (m_debug) {
@@ -1058,7 +1056,7 @@ bool ComponentNeBem3d::Initialise() {
     std::vector<double> xp(np1, 0.);
     std::vector<double> yp(np1, 0.);
     std::vector<double> zp(np1, 0.);
-    for (unsigned int k = 0; k < np1; ++k) {
+    for (std::size_t k = 0; k < np1; ++k) {
       xp[k] = rot[0][0] * xp1[k] + rot[0][1] * yp1[k] + rot[0][2] * zp1[k];
       yp[k] = rot[1][0] * xp1[k] + rot[1][1] * yp1[k] + rot[1][2] * zp1[k];
       zp[k] = rot[2][0] * xp1[k] + rot[2][1] * yp1[k] + rot[2][2] * zp1[k];
@@ -1075,7 +1073,7 @@ bool ComponentNeBem3d::Initialise() {
     vol2.push_back(-1);
     newPanels.push_back(std::move(panel1));
     // Pick up all matching planes.
-    for (unsigned int j = i + 1; j < nIn; ++j) {
+    for (std::size_t j = i + 1; j < nIn; ++j) {
       if (mark[j]) continue;
       const double a2 = panelsIn[j].a;
       const double b2 = panelsIn[j].b;
@@ -1083,7 +1081,7 @@ bool ComponentNeBem3d::Initialise() {
       const auto& xp2 = panelsIn[j].xv;
       const auto& yp2 = panelsIn[j].yv;
       const auto& zp2 = panelsIn[j].zv;
-      const unsigned int np2 = xp2.size();
+      const std::size_t np2 = xp2.size();
       // See whether this matches the first.
       const double d2 = a2 * xp2[0] + b2 * yp2[0] + c2 * zp2[0];
       // Inner product.
@@ -1098,7 +1096,7 @@ bool ComponentNeBem3d::Initialise() {
       xp.assign(np2, 0.);
       yp.assign(np2, 0.);
       zp.assign(np2, 0.);
-      for (unsigned int k = 0; k < np2; ++k) {
+      for (std::size_t k = 0; k < np2; ++k) {
         xp[k] = rot[0][0] * xp2[k] + rot[0][1] * yp2[k] + rot[0][2] * zp2[k];
         yp[k] = rot[1][0] * xp2[k] + rot[1][1] * yp2[k] + rot[1][2] * zp2[k];
         zp[k] = rot[2][0] * xp2[k] + rot[2][1] * yp2[k] + rot[2][2] * zp2[k];
@@ -1114,16 +1112,16 @@ bool ComponentNeBem3d::Initialise() {
     }
     std::vector<bool> obsolete(newPanels.size(), false);
     // Cut them as long as needed till no contacts remain.
-    unsigned int jmin = 0;
+    std::size_t jmin = 0;
     bool change = true;
     while (change) {
       change = false;
-      const unsigned int n = newPanels.size();
-      for (unsigned int j = 0; j < n; ++j) {
+      const std::size_t n = newPanels.size();
+      for (std::size_t j = 0; j < n; ++j) {
         if (obsolete[j] || j < jmin) continue;
         if (vol1[j] >= 0 && vol2[j] >= 0) continue;
         const auto& panelj = newPanels[j];
-        for (unsigned int k = j + 1; k < n; ++k) {
+        for (std::size_t k = j + 1; k < n; ++k) {
           if (obsolete[k]) continue;
           if (vol1[k] >= 0 && vol2[k] >= 0) continue;
           const auto& panelk = newPanels[k];
@@ -1132,7 +1130,7 @@ bool ComponentNeBem3d::Initialise() {
           std::vector<Panel> panelsOut;
           std::vector<int> itypo;
           EliminateOverlaps(panelj, panelk, panelsOut, itypo);
-          const unsigned int nOut = panelsOut.size();
+          const std::size_t nOut = panelsOut.size();
           if (nOut == 2) {
             // TODO: retrieve epsx, epsy from overlap finding?
             const double epsx = epsxyz;
@@ -1160,7 +1158,7 @@ bool ComponentNeBem3d::Initialise() {
           obsolete[k] = true;
 
           // Add the new panels.
-          for (unsigned int l = 0; l < nOut; ++l) {
+          for (std::size_t l = 0; l < nOut; ++l) {
             if (itypo[l] == 1) {
               vol1.push_back(std::max(vol1[j], vol2[j]));
               vol2.push_back(-1);
@@ -1182,8 +1180,8 @@ bool ComponentNeBem3d::Initialise() {
       }
     }
     // And rotate the panels back in place.
-    const unsigned int nNew = newPanels.size();
-    for (unsigned int j = 0; j < nNew; ++j) {
+    const std::size_t nNew = newPanels.size();
+    for (std::size_t j = 0; j < nNew; ++j) {
       if (obsolete[j]) continue;
       // Examine the boundary conditions.
       int interfaceType = 0;
@@ -1286,12 +1284,12 @@ bool ComponentNeBem3d::Initialise() {
         const auto& up = panel.xv;
         const auto& vp = panel.yv;
         const auto& wp = panel.zv;
-        const unsigned int np = up.size();
+        const std::size_t np = up.size();
         // Rotate.
         xp.assign(np, 0.);
         yp.assign(np, 0.);
         zp.assign(np, 0.);
-        for (unsigned int k = 0; k < np; ++k) {
+        for (std::size_t k = 0; k < np; ++k) {
           xp[k] = rot[0][0] * up[k] + rot[1][0] * vp[k] + rot[2][0] * wp[k];
           yp[k] = rot[0][1] * up[k] + rot[1][1] * vp[k] + rot[2][1] * wp[k];
           zp[k] = rot[0][2] * up[k] + rot[1][2] * vp[k] + rot[2][2] * wp[k];
@@ -1323,7 +1321,7 @@ bool ComponentNeBem3d::Initialise() {
   }
 
   // Add the wires.
-  for (unsigned int i = 0; i < nSolids; ++i) {
+  for (std::size_t i = 0; i < nSolids; ++i) {
     const auto solid = m_geometry->GetSolid(i);
     if (!solid) continue;
     if (!solid->IsWire()) continue;
@@ -1597,7 +1595,7 @@ bool ComponentNeBem3d::Initialise() {
   }
   // Now the weighting fields.
   std::set<std::string> labels;
-  for (unsigned int i = 0; i < nSolids; ++i) {
+  for (std::size_t i = 0; i < nSolids; ++i) {
     const auto solid = m_geometry->GetSolid(i);
     if (!solid) continue;
     const std::string label = solid->GetLabel();
@@ -1605,7 +1603,7 @@ bool ComponentNeBem3d::Initialise() {
   }
   for (const auto& label : labels) {
     std::vector<int> primitives;
-    for (unsigned int i = 0; i < nSolids; ++i) {
+    for (std::size_t i = 0; i < nSolids; ++i) {
       const auto solid = m_geometry->GetSolid(i);
       if (!solid) continue;
       if (solid->GetLabel() != label) continue;
@@ -1754,7 +1752,7 @@ bool ComponentNeBem3d::DiscretizeWire(const Primitive& primitive,
   const double dz = primitive.zv[1] - primitive.zv[0];
   const double lw = sqrt(dx * dx + dy * dy + dz * dz);
   // Determine the number of segments along the wire.
-  unsigned int nSegments = NbOfSegments(lw, targetSize);
+  std::size_t nSegments = NbOfSegments(lw, targetSize);
   const double elementSize = lw / nSegments;
 
   // Determine the direction cosines.
@@ -1781,7 +1779,7 @@ bool ComponentNeBem3d::DiscretizeWire(const Primitive& primitive,
   // TODO!
   const double radius = 1.;
   const double dA = TwoPi * radius * elementSize;
-  for (unsigned int i = 0; i < nSegments; ++i) {
+  for (std::size_t i = 0; i < nSegments; ++i) {
     const double x0 = primitive.xv[0] + i * xincr;
     const double y0 = primitive.yv[0] + i * yincr;
     const double z0 = primitive.zv[0] + i * zincr;
@@ -1851,8 +1849,8 @@ bool ComponentNeBem3d::DiscretizeTriangle(
   */
 
   // Determine the number of elements.
-  unsigned int nx = NbOfSegments(lx, targetSize);
-  unsigned int nz = NbOfSegments(lz, targetSize);
+  std::size_t nx = NbOfSegments(lx, targetSize);
+  std::size_t nz = NbOfSegments(lz, targetSize);
   double elementSizeX = lx / nx;
   double elementSizeZ = lz / nz;
 
@@ -1871,7 +1869,7 @@ bool ComponentNeBem3d::DiscretizeTriangle(
     elementSizeX = lx / nx;
   }
   const double dxdz = lx / lz;
-  for (unsigned int k = 0; k < nz; ++k) {
+  for (std::size_t k = 0; k < nz; ++k) {
     // Consider the k-th row.
     const double zlo = k * elementSizeZ;
     const double zhi = (k + 1) * elementSizeZ;
@@ -1971,8 +1969,8 @@ bool ComponentNeBem3d::DiscretizeRectangle(
   const std::array<std::array<double, 3>, 3> dcos = {xu, yu, zu};
 
   // Determine the number of elements.
-  unsigned int nx = NbOfSegments(lx, targetSize);
-  unsigned int nz = NbOfSegments(lz, targetSize);
+  std::size_t nx = NbOfSegments(lx, targetSize);
+  std::size_t nz = NbOfSegments(lz, targetSize);
 
   double elementSizeX = lx / nx;
   double elementSizeZ = lz / nz;
@@ -1993,10 +1991,10 @@ bool ComponentNeBem3d::DiscretizeRectangle(
   }
 
   const double dA = elementSizeX * elementSizeZ;
-  for (unsigned int i = 0; i < nx; ++i) {
+  for (std::size_t i = 0; i < nx; ++i) {
     // Centroid of the element.
     const double xav = -0.5 * lx + (i + 0.5) * elementSizeX;
-    for (unsigned int k = 0; k < nz; ++k) {
+    for (std::size_t k = 0; k < nz; ++k) {
       const double zav = -0.5 * lz + (k + 0.5) * elementSizeZ;
 
       std::array<double, 3> centre = LocalToGlobal(xav, 0., zav, dcos, origin);
@@ -2024,17 +2022,17 @@ bool ComponentNeBem3d::DiscretizeRectangle(
   return true;
 }
 
-unsigned int ComponentNeBem3d::NbOfSegments(const double length,
-                                            const double target) const {
+std::size_t ComponentNeBem3d::NbOfSegments(const double length,
+                                           const double target) const {
   // Check whether the length of the primitive is long enough.
   if (length < MinDist) return 1;
-  unsigned int n = static_cast<unsigned int>(length / target);
+  std::size_t n = static_cast<std::size_t>(length / target);
   if (n < m_minNbElementsOnLength) {
     // Need to have a minimum number of elements per primitive...
     n = m_minNbElementsOnLength;
     if (length < n * MinDist) {
       // ...which may not be possible if the length is small.
-      n = static_cast<unsigned int>(length / MinDist);
+      n = static_cast<std::size_t>(length / MinDist);
       if (n < 1) {
         // However, it is necessary to have at least one element!
         n = 1;
@@ -2097,14 +2095,14 @@ bool ComponentNeBem3d::EliminateOverlaps(const Panel& panel1,
   bool ok = true;
   // Look up the cross-links: from plane 1 (2) to plane 2 (1).
   std::array<std::vector<int>, 2> links;
-  for (unsigned int ic = 0; ic < 2; ++ic) {
-    const unsigned int n1 = xl[ic].size();
+  for (std::size_t ic = 0; ic < 2; ++ic) {
+    const std::size_t n1 = xl[ic].size();
     links[ic].assign(n1, -1);
-    const unsigned int jc = ic == 0 ? 1 : 0;
-    const unsigned int n2 = xl[jc].size();
-    for (unsigned int i = 0; i < n1; ++i) {
-      unsigned int nFound = 0;
-      for (unsigned int j = 0; j < n2; ++j) {
+    const std::size_t jc = ic == 0 ? 1 : 0;
+    const std::size_t n2 = xl[jc].size();
+    for (std::size_t i = 0; i < n1; ++i) {
+      std::size_t nFound = 0;
+      for (std::size_t j = 0; j < n2; ++j) {
         if (fabs(xl[ic][i] - xl[jc][j]) < epsx &&
             fabs(yl[ic][i] - yl[jc][j]) < epsy) {
           ++nFound;
@@ -2129,23 +2127,23 @@ bool ComponentNeBem3d::EliminateOverlaps(const Panel& panel1,
 
   // List the points for debugging.
   if (m_debug) {
-    for (unsigned int j = 0; j < 2; ++j) {
+    for (std::size_t j = 0; j < 2; ++j) {
       std::cout << "      Polygon " << j << "\n      "
                 << " No Type            x            y        Q   links\n";
-      const unsigned int n = xl[j].size();
-      for (unsigned int i = 0; i < n; ++i) {
-        printf("        %3u %5d %13.6f %13.6f %5.3f %3d\n", i, flags[j][i],
+      const std::size_t n = xl[j].size();
+      for (std::size_t i = 0; i < n; ++i) {
+        printf("        %3lu %5d %13.6f %13.6f %5.3f %3d\n", i, flags[j][i],
                xl[j][i], yl[j][i], qs[j][i], links[j][i]);
       }
     }
   }
   if (!ok) return false;
 
-  for (unsigned int ic = 0; ic < 2; ++ic) {
+  for (std::size_t ic = 0; ic < 2; ++ic) {
     // See whether all of 1 (2) is inside 2 (1).
     bool allInside = true;
-    const unsigned int np = xl[ic].size();
-    for (unsigned int i = 0; i < np; ++i) {
+    const std::size_t np = xl[ic].size();
+    for (std::size_t i = 0; i < np; ++i) {
       if (flags[ic][i] != 1) {
         allInside = false;
         break;
@@ -2197,9 +2195,9 @@ bool ComponentNeBem3d::EliminateOverlaps(const Panel& panel1,
     }
   }
 
-  for (unsigned int ic = 0; ic < 2; ++ic) {
+  for (std::size_t ic = 0; ic < 2; ++ic) {
     std::vector<Panel> newPanels;
-    const unsigned int n = xl[ic].size();
+    const std::size_t n = xl[ic].size();
     // Identify the parts of 1 (2) that are not overlapped, first mark.
     std::vector<bool> mark(n, false);
     bool done = false;
@@ -2209,8 +2207,8 @@ bool ComponentNeBem3d::EliminateOverlaps(const Panel& panel1,
       }
       done = true;
       // Try and find a new starting point
-      for (unsigned int i = 0; i < n; ++i) {
-        const unsigned int ii = NextPoint(i, n);
+      for (std::size_t i = 0; i < n; ++i) {
+        const std::size_t ii = NextPoint(i, n);
         // Skip parts already processed.
         if (mark[i] || mark[ii]) continue;
         // Skip if mid point is inside other volume.
@@ -2252,7 +2250,7 @@ bool ComponentNeBem3d::EliminateOverlaps(const Panel& panel1,
 
   // Look for the overlapped parts.
   std::vector<Panel> newPanels;
-  const unsigned int n1 = xl[0].size();
+  const std::size_t n1 = xl[0].size();
   std::vector<bool> mark1(n1, false);
   bool done = false;
   while (!done) {
@@ -2260,7 +2258,7 @@ bool ComponentNeBem3d::EliminateOverlaps(const Panel& panel1,
     if (m_debug) {
       std::cout << "      Searching for starting point on overlap.\n";
     }
-    for (unsigned int i = 0; i < n1; ++i) {
+    for (std::size_t i = 0; i < n1; ++i) {
       // Skip points already processed.
       if (mark1[i]) continue;
       // Skip if not an edge point on both 1 and 2 or internal in 2.
@@ -2299,7 +2297,7 @@ bool ComponentNeBem3d::TraceEnclosed(const std::vector<double>& xl1,
   const int n1 = xl1.size();
   const int n2 = xl2.size();
   // Find 2 non-crossing connections: JP1-JP2 and KP1-KP2.
-  unsigned int nFound = 0;
+  std::size_t nFound = 0;
   int jp1 = 0, jp2 = 0;
   int kp1 = 0, kp2 = 0;
   for (int ip1 = 0; ip1 < n1; ++ip1) {
@@ -2456,8 +2454,8 @@ void ComponentNeBem3d::TraceNonOverlap(
     const std::vector<int>& links1, const std::vector<int>& links2,
     std::vector<bool>& mark1, int ip1, const Panel& panel1,
     std::vector<Panel>& panelsOut) const {
-  const unsigned int n1 = xl1.size();
-  const unsigned int n2 = xl2.size();
+  const std::size_t n1 = xl1.size();
+  const std::size_t n2 = xl2.size();
 
   // Remember the starting point.
   const int is1 = ip1;
@@ -2480,7 +2478,7 @@ void ComponentNeBem3d::TraceNonOverlap(
   }
 
   // Keep track of the curve we are currently following.
-  unsigned int il = 1;
+  std::size_t il = 1;
   // Direction flag (-1: backward, 0: not set, 1: forward).
   int dir = 0;
   // End-of-curve flag.
@@ -2618,8 +2616,8 @@ void ComponentNeBem3d::TraceOverlap(
   int ip1L = -1;
   int ip1LL = -1;
 
-  const unsigned int n1 = xl1.size();
-  const unsigned int n2 = xl2.size();
+  const std::size_t n1 = xl1.size();
+  const std::size_t n2 = xl2.size();
 
   // Remember the starting points.
   const int is1 = ip1;
@@ -2631,7 +2629,7 @@ void ComponentNeBem3d::TraceOverlap(
   mark1[ip1] = true;
 
   // Keep track of the curve we are currently following.
-  unsigned int il = 1;
+  std::size_t il = 1;
   // Direction flag (-1: backward, 0: not set, 1: forward).
   int dir = 0;
   // End-of-curve flag.
@@ -2837,11 +2835,11 @@ bool ComponentNeBem3d::MakePrimitives(const Panel& panelIn,
   std::vector<Panel> stack;
   stack.push_back(panelIn);
   stack.back().zv.clear();
-  for (unsigned int k = 0; k < stack.size(); ++k) {
+  for (std::size_t k = 0; k < stack.size(); ++k) {
     // Next polygon.
     const auto& xp1 = stack[k].xv;
     const auto& yp1 = stack[k].yv;
-    const unsigned int np = xp1.size();
+    const std::size_t np = xp1.size();
     if (m_debug) {
       std::cout << "    Polygon " << k << " with " << np << " nodes.\n";
     }
@@ -2932,10 +2930,10 @@ bool ComponentNeBem3d::MakePrimitives(const Panel& panelIn,
     // Find a right-angled corner we can cut off.
     if (m_debug) std::cout << "      Trying to find a right-angle\n";
     bool corner = false;
-    for (unsigned int ip = 0; ip < np; ++ip) {
+    for (std::size_t ip = 0; ip < np; ++ip) {
       // Take only right angles.
-      const unsigned int inext = NextPoint(ip, np);
-      const unsigned int iprev = PrevPoint(ip, np);
+      const std::size_t inext = NextPoint(ip, np);
+      const std::size_t iprev = PrevPoint(ip, np);
 
       const double dxprev = xp1[iprev] - xp1[ip];
       const double dyprev = yp1[iprev] - yp1[ip];
@@ -2956,9 +2954,9 @@ bool ComponentNeBem3d::MakePrimitives(const Panel& panelIn,
       }
       // Check all vertex crossings.
       bool cross = false;
-      for (unsigned int jp = 0; jp < np; ++jp) {
+      for (std::size_t jp = 0; jp < np; ++jp) {
         // Accept immediate contact.
-        const unsigned int jnext = NextPoint(jp, np);
+        const std::size_t jnext = NextPoint(jp, np);
         if (jp == iprev || jp == ip || jp == inext || jnext == iprev ||
             jnext == ip || jnext == inext)
           continue;
@@ -2994,9 +2992,9 @@ bool ComponentNeBem3d::MakePrimitives(const Panel& panelIn,
     // Find any corner we can cut off.
     if (m_debug) std::cout << "      Trying to find a corner\n";
     corner = false;
-    for (unsigned int ip = 0; ip < np; ++ip) {  // 20
-      const unsigned int iprev = PrevPoint(ip, np);
-      const unsigned int inext = NextPoint(ip, np);
+    for (std::size_t ip = 0; ip < np; ++ip) {  // 20
+      const std::size_t iprev = PrevPoint(ip, np);
+      const std::size_t inext = NextPoint(ip, np);
       // Ensure the midpoint is internal.
       if (np > 3) {
         const double xm = 0.5 * (xp1[iprev] + xp1[inext]);
@@ -3007,8 +3005,8 @@ bool ComponentNeBem3d::MakePrimitives(const Panel& panelIn,
       }
       // Check all vertex crossings.
       bool cross = false;
-      for (unsigned int jp = 0; jp < np; ++jp) {
-        const unsigned int jj = NextPoint(jp, np);
+      for (std::size_t jp = 0; jp < np; ++jp) {
+        const std::size_t jj = NextPoint(jp, np);
         // Accept immediate contact.
         if (jp == iprev || jp == ip || jp == inext || jj == iprev || jj == ip ||
             jj == inext)
@@ -3132,9 +3130,9 @@ bool ComponentNeBem3d::SplitTrapezium(const Panel panelIn,
                                       const double epsang) const {
   const auto xp1 = panelIn.xv;
   const auto yp1 = panelIn.yv;
-  const unsigned int np = xp1.size();
-  for (unsigned int ip = 0; ip < np; ++ip) {
-    const unsigned int inext = NextPoint(ip, np);
+  const std::size_t np = xp1.size();
+  for (std::size_t ip = 0; ip < np; ++ip) {
+    const std::size_t inext = NextPoint(ip, np);
     const double xi0 = xp1[ip];
     const double yi0 = yp1[ip];
     const double xi1 = xp1[inext];
@@ -3142,8 +3140,8 @@ bool ComponentNeBem3d::SplitTrapezium(const Panel panelIn,
     const double dxi = xi0 - xi1;
     const double dyi = yi0 - yi1;
     const double si2 = dxi * dxi + dyi * dyi;
-    for (unsigned int jp = ip + 2; jp < np; ++jp) {
-      const unsigned int jnext = NextPoint(jp, np);
+    for (std::size_t jp = ip + 2; jp < np; ++jp) {
+      const std::size_t jnext = NextPoint(jp, np);
       // Skip adjacent segments.
       if (ip == jp || ip == jnext || inext == jp || inext == jnext) {
         continue;
@@ -3232,15 +3230,15 @@ bool ComponentNeBem3d::SplitTrapezium(const Panel panelIn,
         continue;
       }
 
-      const unsigned int iprev = PrevPoint(ip, np);
-      const unsigned int jprev = PrevPoint(jp, np);
+      const std::size_t iprev = PrevPoint(ip, np);
+      const std::size_t jprev = PrevPoint(jp, np);
       // Ensure there are no crossings, accepting contact.
       bool cross = false;
-      for (unsigned int i = 0; i < np; ++i) {
+      for (std::size_t i = 0; i < np; ++i) {
         if ((i == iprev && r1 >= 0) || i == ip || (i == inext && r2 >= 0) ||
             (i == jprev && r3 >= 0) || i == jp || (i == jnext && r4 >= 0))
           continue;
-        const unsigned int ii = NextPoint(i, np);
+        const std::size_t ii = NextPoint(i, np);
         double xc = 0., yc = 0.;
         if (Crossing(xp1[i], yp1[i], xp1[ii], yp1[ii], xpl[0], ypl[0], xpl[1],
                      ypl[1], xc, yc) ||
@@ -3270,8 +3268,8 @@ bool ComponentNeBem3d::SplitTrapezium(const Panel panelIn,
       xpl.clear();
       ypl.clear();
       if (m_debug) std::cout << "      First non-rectangular section.\n";
-      for (unsigned int i = jp + 1; i <= ip + np; ++i) {
-        const unsigned int ii = i % np;
+      for (std::size_t i = jp + 1; i <= ip + np; ++i) {
+        const std::size_t ii = i % np;
         xpl.push_back(xp1[ii]);
         ypl.push_back(yp1[ii]);
       }
@@ -3307,8 +3305,8 @@ bool ComponentNeBem3d::SplitTrapezium(const Panel panelIn,
       xpl.clear();
       ypl.clear();
       if (m_debug) std::cout << "      Second non-rectangular section.\n";
-      for (unsigned int i = ip + 1; i <= jp; ++i) {
-        const unsigned int ii = i % np;
+      for (std::size_t i = ip + 1; i <= jp; ++i) {
+        const std::size_t ii = i % np;
         xpl.push_back(xp1[ii]);
         ypl.push_back(yp1[ii]);
       }
@@ -3346,7 +3344,7 @@ bool ComponentNeBem3d::SplitTrapezium(const Panel panelIn,
   return false;
 }
 
-bool ComponentNeBem3d::GetPrimitive(const unsigned int i, double& a, double& b,
+bool ComponentNeBem3d::GetPrimitive(const std::size_t i, double& a, double& b,
                                     double& c, std::vector<double>& xv,
                                     std::vector<double>& yv,
                                     std::vector<double>& zv, int& interface,
@@ -3370,7 +3368,7 @@ bool ComponentNeBem3d::GetPrimitive(const unsigned int i, double& a, double& b,
   return true;
 }
 
-bool ComponentNeBem3d::GetPrimitive(const unsigned int i, double& a, double& b,
+bool ComponentNeBem3d::GetPrimitive(const std::size_t i, double& a, double& b,
                                     double& c, std::vector<double>& xv,
                                     std::vector<double>& yv,
                                     std::vector<double>& zv, int& vol1,
@@ -3391,12 +3389,12 @@ bool ComponentNeBem3d::GetPrimitive(const unsigned int i, double& a, double& b,
   return true;
 }
 
-bool ComponentNeBem3d::GetVolume(const unsigned int vol, int& shape,
+bool ComponentNeBem3d::GetVolume(const std::size_t vol, int& shape,
                                  int& material, double& epsilon,
                                  double& potential, double& charge, int& bc) {
   if (!m_geometry) return false;
-  const unsigned int nSolids = m_geometry->GetNumberOfSolids();
-  for (unsigned int i = 0; i < nSolids; ++i) {
+  const std::size_t nSolids = m_geometry->GetNumberOfSolids();
+  for (std::size_t i = 0; i < nSolids; ++i) {
     Medium* medium = nullptr;
     const auto solid = m_geometry->GetSolid(i, medium);
     if (!solid) continue;
@@ -3430,8 +3428,8 @@ bool ComponentNeBem3d::GetVolume(const unsigned int vol, int& shape,
 int ComponentNeBem3d::GetVolume(const double x, const double y,
                                 const double z) {
   if (!m_geometry) return -1;
-  const unsigned int nSolids = m_geometry->GetNumberOfSolids();
-  for (unsigned int i = 0; i < nSolids; ++i) {
+  const std::size_t nSolids = m_geometry->GetNumberOfSolids();
+  for (std::size_t i = 0; i < nSolids; ++i) {
     Medium* medium = nullptr;
     const auto solid = m_geometry->GetSolid(i, medium);
     if (!solid) continue;
@@ -3440,7 +3438,7 @@ int ComponentNeBem3d::GetVolume(const double x, const double y,
   return -1;
 }
 
-bool ComponentNeBem3d::GetElement(const unsigned int i, std::vector<double>& xv,
+bool ComponentNeBem3d::GetElement(const std::size_t i, std::vector<double>& xv,
                                   std::vector<double>& yv,
                                   std::vector<double>& zv, int& interface,
                                   double& bc, double& lambda) const {
@@ -3468,7 +3466,7 @@ void ComponentNeBem3d::Reset() {
 }
 
 void ComponentNeBem3d::UpdatePeriodicity() {
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (std::size_t i = 0; i < 3; ++i) {
     // Cannot have regular and mirror periodicity at the same time.
     if (m_periodic[i] && m_mirrorPeriodic[i]) {
       std::cerr << m_className << "::UpdatePeriodicity:\n"

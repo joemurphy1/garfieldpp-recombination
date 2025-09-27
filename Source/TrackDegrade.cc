@@ -420,15 +420,15 @@ bool TrackDegrade::Initialise(Medium* medium, const bool verbose) {
   // Get the gas composition.
   std::array<int64_t, 6> ngas;
   std::array<double, 6> frac;
-  const unsigned int nComponents = medium->GetNumberOfComponents();
+  const std::size_t nComponents = medium->GetNumberOfComponents();
   if (nComponents < 1) {
     std::cerr << m_className << "::Initialise: Invalid gas mixture.\n";
     return false;
   }
-  std::vector<unsigned int> notdone = {13, 17, 20, 22, 24, 26, 27, 28,
-                                       32, 33, 37, 38, 39, 40, 41, 42,
-                                       43, 50, 51, 53, 54, 55, 56, 57};
-  for (unsigned int i = 0; i < nComponents; ++i) {
+  std::vector<std::size_t> notdone = {13, 17, 20, 22, 24, 26, 27, 28,
+                                      32, 33, 37, 38, 39, 40, 41, 42,
+                                      43, 50, 51, 53, 54, 55, 56, 57};
+  for (std::size_t i = 0; i < nComponents; ++i) {
     std::string name;
     double f;
     medium->GetComponent(i, name, f);
@@ -885,9 +885,9 @@ void TrackDegrade::SetupPenning(Medium* medium, std::array<double, 6>& rP,
   dP.fill(0.);
   auto gas = dynamic_cast<MediumGas*>(medium);
   if (!gas) return;
-  const unsigned int nComponents = medium->GetNumberOfComponents();
+  const std::size_t nComponents = medium->GetNumberOfComponents();
   if (m_debug) std::cout << m_className << "::SetupPenning:\n";
-  for (unsigned int i = 0; i < nComponents; ++i) {
+  for (std::size_t i = 0; i < nComponents; ++i) {
     std::string name;
     double f;
     medium->GetComponent(i, name, f);

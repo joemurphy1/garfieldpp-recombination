@@ -45,7 +45,7 @@ class ComponentNeBem2d : public Component {
    * \param ndiv number of elements on each edge segment.
    */
   bool AddRegion(const std::vector<double>& xp, const std::vector<double>& yp,
-                 Medium* medium, const unsigned int bctype = 4,
+                 Medium* medium, const std::size_t bctype = 4,
                  const double v = 0., const int ndiv = -1);
   void AddChargeDistribution(const double x, const double y, const double a,
                              const double b, const double rho);
@@ -56,35 +56,35 @@ class ComponentNeBem2d : public Component {
   bool Initialise();
 
   /// Set the default number of elements per segment.
-  void SetNumberOfDivisions(const unsigned int ndiv);
+  void SetNumberOfDivisions(const std::size_t ndiv);
 
-  void SetNumberOfCollocationPoints(const unsigned int ncoll);
+  void SetNumberOfCollocationPoints(const std::size_t ncoll);
   void EnableAutoResizing(const bool on = true) { m_autoSize = on; }
   void EnableRandomCollocation(const bool on = true) {
     m_randomCollocation = on;
   }
-  void SetMaxNumberOfIterations(const unsigned int niter);
+  void SetMaxNumberOfIterations(const std::size_t niter);
 
   /// Return the number of regions.
   std::size_t GetNumberOfRegions() const { return m_regions.size(); }
   /// Return the properties of a given region.
-  bool GetRegion(const unsigned int i, std::vector<double>& xv,
-                 std::vector<double>& yv, Medium*& medium, unsigned int& bctype,
+  bool GetRegion(const std::size_t i, std::vector<double>& xv,
+                 std::vector<double>& yv, Medium*& medium, std::size_t& bctype,
                  double& v);
   /// Return the number of conducting straight-line segments.
   std::size_t GetNumberOfSegments() const { return m_segments.size(); }
   /// Return the coordinates and voltage of a given straight-line segment.
-  bool GetSegment(const unsigned int i, double& x0, double& y0, double& x1,
+  bool GetSegment(const std::size_t i, double& x0, double& y0, double& x1,
                   double& x2, double& v) const;
   /// Return the number of wires.
   std::size_t GetNumberOfWires() const { return m_wires.size(); }
   /// Return the coordinates, diameter, potential and charge of a given wire.
-  bool GetWire(const unsigned int i, double& x, double& y, double& d, double& v,
+  bool GetWire(const std::size_t i, double& x, double& y, double& d, double& v,
                double& q) const;
   /// Return the number of boundary elements.
   std::size_t GetNumberOfElements() const override { return m_elements.size(); }
   /// Return the coordinates and charge of a given boundary element.
-  bool GetElement(const unsigned int i, double& x0, double& y0, double& x1,
+  bool GetElement(const std::size_t i, double& x0, double& y0, double& x1,
                   double& y1, double& q) const;
 
   Medium* GetMedium(const double x, const double y, const double z) override;
@@ -115,11 +115,11 @@ class ComponentNeBem2d : public Component {
   static const double InvTwoPiEpsilon0;
 
   /// Default number elements per segment.
-  unsigned int m_nDivisions{5};
-  unsigned int m_nCollocationPoints{1};
+  std::size_t m_nDivisions{5};
+  std::size_t m_nCollocationPoints{1};
   bool m_autoSize{false};
   bool m_randomCollocation{false};
-  unsigned int m_nMaxIterations{3};
+  std::size_t m_nMaxIterations{3};
 
   /// Background medium.
   Medium* m_medium{nullptr};
@@ -141,7 +141,7 @@ class ComponentNeBem2d : public Component {
     std::vector<double> yv;    ///< y-coordinates of the vertices.
     Medium* medium{nullptr};   ///< Medium associated to the region.
     std::pair<BC, double> bc;  ///< Applied boundary condition.
-    unsigned int depth{0};     ///< Level in the hierarchy.
+    std::size_t depth{0};      ///< Level in the hierarchy.
     int ndiv{0};               ///< Number of elements per edge segment.
   };
   /// Regions.
@@ -196,7 +196,7 @@ class ComponentNeBem2d : public Component {
   void EliminateOverlaps(std::vector<Segment>& segments);
   /// Create elements from a straight-line segment.
   bool Discretise(const Segment& segment, std::vector<Element>& elements,
-                  const double lambda, const unsigned int ndiv);
+                  const double lambda, const std::size_t ndiv);
 
   bool ComputeInfluenceMatrix(std::vector<std::vector<double> >& infmat) const;
   bool InvertMatrix(std::vector<std::vector<double> >& influenceMatrix,

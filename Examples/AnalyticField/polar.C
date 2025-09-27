@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
   // Radial position of the wires [cm].
   const double rw = 0.5;
   // Number of wires.
-  const unsigned int nWires = 10;
+  const std::size_t nWires = 10;
   const bool polar = false;
   if (polar) {
     // Describe the cell layout in polar coordinates.
@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     // Describe the cell layout in Cartesian coordinates,
     // using wires and a circular tube.
     cmp.AddTube(ro, 0., 0, "t");
-    for (unsigned int i = 0; i < 10; ++i) {
+    for (std::size_t i = 0; i < 10; ++i) {
       const double phi = i * TwoPi / nWires;
       cmp.AddWire(rw * cos(phi), rw * sin(phi), 50.e-4, 500., "f");
     }

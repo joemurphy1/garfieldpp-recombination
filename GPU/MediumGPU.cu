@@ -192,21 +192,21 @@ __device__ bool MediumGPU::ElectronCollision(
     if (fluorescence) {
       if (m_nAuger2[level] > 0) {
         const double eav = m_eAuger2[level] / m_nAuger2[level];
-        for (unsigned int i = 0; i < m_nAuger2[level]; ++i) {
+        for (std::size_t i = 0; i < m_nAuger2[level]; ++i) {
           secondaries_type[num_secondaries] = Particle::Electron;
           secondaries_energy[num_secondaries++] = eav;
         }
       }
       if (m_nFluorescence[level] > 0) {
         const double eav = m_eFluorescence[level] / m_nFluorescence[level];
-        for (unsigned int i = 0; i < m_nFluorescence[level]; ++i) {
+        for (std::size_t i = 0; i < m_nFluorescence[level]; ++i) {
           secondaries_type[num_secondaries] = Particle::Electron;
           secondaries_energy[num_secondaries++] = eav;
         }
       }
     } else if (m_nAuger1[level] > 0) {
       const double eav = m_eAuger1[level] / m_nAuger1[level];
-      for (unsigned int i = 0; i < m_nAuger1[level]; ++i) {
+      for (std::size_t i = 0; i < m_nAuger1[level]; ++i) {
         secondaries_type[num_secondaries] = Particle::Electron;
         secondaries_energy[num_secondaries++] = eav;
       }

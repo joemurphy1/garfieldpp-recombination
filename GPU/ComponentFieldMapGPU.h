@@ -16,7 +16,7 @@ struct Element {
   // Nodes
   int emap[10]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   // Material
-  unsigned int matmap{0};
+  std::size_t matmap{0};
 };
 
 Element* m_elements{nullptr};

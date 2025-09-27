@@ -200,7 +200,7 @@ bool Component::HasMagneticField() const {
 }
 
 double Component::IntegrateFluxCircle(const double xc, const double yc,
-                                      const double r, const unsigned int nI) {
+                                      const double r, const std::size_t nI) {
   // FLDIN2, FCHK3
   if (nI == 0) throw Exception("Number of intervals must be > 0");
   // Number of Gaussian quadrature points per interval.
@@ -219,7 +219,7 @@ double Component::IntegrateFluxCircle(const double xc, const double yc,
   double s = 0.;
   for (size_t i = 0; i < nG; ++i) {
     const double phi0 = h * (1. + tg[i]);
-    for (unsigned int k = 0; k < nI; ++k) {
+    for (std::size_t k = 0; k < nI; ++k) {
       const double phi = phi0 + k * d;
       const double cp = cos(phi);
       const double sp = sin(phi);
@@ -232,7 +232,7 @@ double Component::IntegrateFluxCircle(const double xc, const double yc,
 
 double Component::IntegrateFluxSphere(const double xc, const double yc,
                                       const double zc, const double r,
-                                      const unsigned int nI) {
+                                      const std::size_t nI) {
   // FLDIN3, FCHK2, FCHK1
   if (nI == 0) throw Exception("Number of intervals must be > 0");
   // Number of Gaussian quadrature points.
@@ -254,18 +254,18 @@ double Component::IntegrateFluxSphere(const double xc, const double yc,
   // Perform the integration.
   double s2 = 0.;
   // Loop over theta.
-  for (size_t i = 0; i < nG; ++i) {
+  for (std::size_t i = 0; i < nG; ++i) {
     const double theta0 = ht * (1. + tg[i]) - HalfPi;
-    for (unsigned int k = 0; k < nI; ++k) {
+    for (std::size_t k = 0; k < nI; ++k) {
       const double theta = theta0 + k * dt;
       const double ct = cos(theta);
       const double st = sin(theta);
       const double z = zc + st * r;
       double s1 = 0.;
       // Loop over phi.
-      for (size_t ii = 0; ii < nG; ++ii) {
+      for (std::size_t ii = 0; ii < nG; ++ii) {
         const double phi0 = hp * (1. + tg[ii]);
-        for (unsigned int kk = 0; kk < nI; ++kk) {
+        for (std::size_t kk = 0; kk < nI; ++kk) {
           const double phi = phi0 + kk * dp;
           const double cp = cos(phi);
           const double sp = sin(phi);
@@ -284,7 +284,7 @@ double Component::IntegrateFluxSphere(const double xc, const double yc,
 double Component::IntegrateFluxParallelogram(
     const double x0, const double y0, const double z0, const double dx1,
     const double dy1, const double dz1, const double dx2, const double dy2,
-    const double dz2, const unsigned int nU, const unsigned int nV) {
+    const double dz2, const std::size_t nU, const std::size_t nV) {
   return IntegrateFluxParallelogram(x0, y0, z0, dx1, dy1, dz1, dx2, dy2, dz2,
                                     nU, nV, false, "");
 }
@@ -292,8 +292,8 @@ double Component::IntegrateFluxParallelogram(
 double Component::IntegrateWeightingFluxParallelogram(
     const std::string& id, const double x0, const double y0, const double z0,
     const double dx1, const double dy1, const double dz1, const double dx2,
-    const double dy2, const double dz2, const unsigned int nU,
-    const unsigned int nV) {
+    const double dy2, const double dz2, const std::size_t nU,
+    const std::size_t nV) {
   return IntegrateFluxParallelogram(x0, y0, z0, dx1, dy1, dz1, dx2, dy2, dz2,
                                     nU, nV, true, id);
 }
@@ -301,7 +301,7 @@ double Component::IntegrateWeightingFluxParallelogram(
 double Component::IntegrateFluxParallelogram(
     const double x0, const double y0, const double z0, const double dx1,
     const double dy1, const double dz1, const double dx2, const double dy2,
-    const double dz2, const unsigned int nU, const unsigned int nV,
+    const double dz2, const std::size_t nU, const std::size_t nV,
     const bool wfield, const std::string& label) {
   // FLDIN4, FCHK4, FCHK5
   if (nU <= 1 || nV <= 1)
@@ -341,14 +341,14 @@ double Component::IntegrateFluxParallelogram(
   int status = 0;
   // Perform the integration.
   double s2 = 0.;
-  for (size_t i = 0; i < nG; ++i) {
+  for (std::size_t i = 0; i < nG; ++i) {
     const double v0 = hv * (1. + tg[i]);
-    for (unsigned int k = 0; k < nV; ++k) {
+    for (std::size_t k = 0; k < nV; ++k) {
       const double v = v0 + k * dv;
       double s1 = 0.;
-      for (size_t ii = 0; ii < nG; ++ii) {
+      for (std::size_t ii = 0; ii < nG; ++ii) {
         const double u0 = hu * (1. + tg[ii]);
-        for (unsigned int kk = 0; kk < nU; ++kk) {
+        for (std::size_t kk = 0; kk < nU; ++kk) {
           const double u = u0 + kk * du;
           const double x = x0 + u * dx1 + v * dx2;
           const double y = y0 + u * dy1 + v * dy2;
@@ -371,7 +371,7 @@ double Component::IntegrateFluxLine(const double x0, const double y0,
                                     const double z0, const double x1,
                                     const double y1, const double z1,
                                     const double xp, const double yp,
-                                    const double zp, const unsigned int nI,
+                                    const double zp, const std::size_t nI,
                                     const int isign) {
   // FLDIN5
   // Normalise the norm vector.
@@ -419,9 +419,9 @@ double Component::IntegrateFluxLine(const double x0, const double y0,
   Medium* m = nullptr;
   int status = 0;
   double s = 0.;
-  for (size_t i = 0; i < nG; ++i) {
+  for (std::size_t i = 0; i < nG; ++i) {
     const double u0 = h * (1. + tg[i]);
-    for (unsigned int k = 0; k < nI; ++k) {
+    for (std::size_t k = 0; k < nI; ++k) {
       const double u = u0 + k * d;
       const double x = x0 + u * vx;
       const double y = y0 + u * vy;

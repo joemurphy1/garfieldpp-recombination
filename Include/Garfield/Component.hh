@@ -173,7 +173,7 @@ class Component {
    * \return charge enclosed in the circle [fC / cm]
    */
   double IntegrateFluxCircle(const double xc, const double yc, const double r,
-                             const unsigned int nI = 50);
+                             const std::size_t nI = 50);
   /** Integrate the normal component of the electric field over a sphere.
    * \param xc,yc,zc centre of the sphere [cm]
    * \param r radius of the sphere [cm]
@@ -182,7 +182,7 @@ class Component {
    * \return charge enclosed in the sphere [fC]
    */
   double IntegrateFluxSphere(const double xc, const double yc, const double zc,
-                             const double r, const unsigned int nI = 20);
+                             const double r, const std::size_t nI = 20);
 
   /** Integrate the normal component of the electric field over a parallelogram.
    * \param x0,y0,z0 coordinates of one of the corners [cm]
@@ -192,10 +192,12 @@ class Component {
    *
    * \return flux [V cm]
    */
-  double IntegrateFluxParallelogram(
-      const double x0, const double y0, const double z0, const double dx1,
-      const double dy1, const double dz1, const double dx2, const double dy2,
-      const double dz2, const unsigned int nU = 20, const unsigned int nV = 20);
+  double IntegrateFluxParallelogram(const double x0, const double y0,
+                                    const double z0, const double dx1,
+                                    const double dy1, const double dz1,
+                                    const double dx2, const double dy2,
+                                    const double dz2, const std::size_t nU = 20,
+                                    const std::size_t nV = 20);
 
   /// Integrate the normal component of the weighting field over a
   /// parallelogram.
@@ -203,7 +205,7 @@ class Component {
       const std::string& label, const double x0, const double y0,
       const double z0, const double dx1, const double dy1, const double dz1,
       const double dx2, const double dy2, const double dz2,
-      const unsigned int nU = 20, const unsigned int nV = 20);
+      const std::size_t nU = 20, const std::size_t nV = 20);
 
   /** Integrate the electric field flux through a line from
    * (x0,y0,z0) to (x1,y1,z1) along a direction (xp,yp,zp).
@@ -217,7 +219,7 @@ class Component {
   double IntegrateFluxLine(const double x0, const double y0, const double z0,
                            const double x1, const double y1, const double z1,
                            const double xp, const double yp, const double zp,
-                           const unsigned int nI, const int isign = 0);
+                           const std::size_t nI, const int isign = 0);
 
   /** Determine whether the line between two points crosses a wire.
    * \param x0,y0,z0 first point [cm].
@@ -505,8 +507,8 @@ class Component {
                                     const double z0, const double dx1,
                                     const double dy1, const double dz1,
                                     const double dx2, const double dy2,
-                                    const double dz2, const unsigned int nU,
-                                    const unsigned int nV, const bool wfield,
+                                    const double dz2, const std::size_t nU,
+                                    const std::size_t nV, const bool wfield,
                                     const std::string& label);
 };
 

@@ -8,7 +8,7 @@
 
 namespace Garfield {
 
-unsigned int Solid::s_id = 0;
+std::size_t Solid::s_id = 0;
 
 void Solid::SetDirection(const double dx, const double dy, const double dz) {
   const double d = sqrt(dx * dx + dy * dy + dz * dz);

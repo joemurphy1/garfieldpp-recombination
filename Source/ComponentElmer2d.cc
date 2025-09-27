@@ -143,7 +143,7 @@ bool ComponentElmer2d::Initialise(const std::string& header,
     fmplist.close();
     return false;
   }
-  const unsigned int nMaterials = ReadInteger(token, 0, readerror);
+  const std::size_t nMaterials = ReadInteger(token, 0, readerror);
   m_materials.resize(nMaterials);
   for (auto& material : m_materials) {
     material.ohm = -1;

@@ -17,14 +17,14 @@
 
 namespace {
 
-std::string FmtFloat(const double x, const unsigned int width = 15,
-                     const unsigned int precision = 8) {
+std::string FmtFloat(const double x, const int width = 15,
+                     const int precision = 8) {
   char buffer[256];
   std::snprintf(buffer, width + 1, "%*.*E", width, precision, x);
   return std::string(buffer);
 }
 
-std::string FmtInt(const int n, const unsigned int width) {
+std::string FmtInt(const int n, const int width) {
   char buffer[256];
   if (std::snprintf(buffer, width + 1, "%*d", width, n) < 0.) {
     std::cout << "    Warning: error formatting integer number " << n << "\n";
@@ -41,7 +41,7 @@ void PrintArray(const std::vector<double>& values, std::ofstream& outfile,
   }
 }
 
-void PrintExtrapolation(const std::pair<unsigned int, unsigned int>& extr) {
+void PrintExtrapolation(const std::pair<std::size_t, std::size_t>& extr) {
   std::cout << "        Low field extrapolation: ";
   if (extr.first == 0)
     std::cout << " constant\n";
@@ -146,7 +146,7 @@ bool MediumGas::SetComposition(const std::string& gas1, const double f1,
 
   // Make a backup copy of the gas composition.
   const std::array<std::string, m_nMaxGases> gasOld = m_gas;
-  const unsigned int nComponentsOld = m_nComponents;
+  const std::size_t nComponentsOld = m_nComponents;
 
   // Reset all transport parameters.
   ResetTables();
@@ -158,7 +158,7 @@ bool MediumGas::SetComposition(const std::string& gas1, const double f1,
   m_fraction.fill(0.);
   m_atWeight.fill(0.);
   m_atNum.fill(0.);
-  for (unsigned int i = 0; i < 6; ++i) {
+  for (std::size_t i = 0; i < 6; ++i) {
     if (fractions[i] < Small) continue;
     // Find the gas name corresponding to the input string.
     const std::string gasname = GetGasName(gases[i]);
@@ -182,20 +182,20 @@ bool MediumGas::SetComposition(const std::string& gas1, const double f1,
   // Establish the name.
   m_name = "";
   double sum = 0.;
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     if (i > 0) m_name += "/";
     m_name += m_gas[i];
     sum += m_fraction[i];
   }
   // Normalise the fractions to unity.
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     m_fraction[i] /= sum;
   }
 
   // Set the W value, Fano factor, and the atomic weight and number.
   m_w = 0.;
   m_fano = 0.;
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     double w = 0., f = 0.;
     GetGasInfo(m_gas[i], m_atWeight[i], m_atNum[i], w, f);
     m_w += w * m_fraction[i];
@@ -206,7 +206,7 @@ bool MediumGas::SetComposition(const std::string& gas1, const double f1,
   std::cout << m_className << "::SetComposition: " << m_name;
   if (m_nComponents > 1) {
     std::cout << " (" << m_fraction[0] * 100;
-    for (unsigned int i = 1; i < m_nComponents; ++i) {
+    for (std::size_t i = 1; i < m_nComponents; ++i) {
       std::cout << "/" << m_fraction[i] * 100;
     }
     std::cout << ")";
@@ -220,8 +220,8 @@ bool MediumGas::SetComposition(const std::string& gas1, const double f1,
   lambdaPenningGasOld.fill(0.);
   rPenningGasOld.swap(m_rPenningGas);
   lambdaPenningGasOld.swap(m_lambdaPenningGas);
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
-    for (unsigned int j = 0; j < nComponentsOld; ++j) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
+    for (std::size_t j = 0; j < nComponentsOld; ++j) {
       if (m_gas[i] != gasOld[j]) continue;
       if (rPenningGasOld[j] < Small) continue;
       m_rPenningGas[i] = rPenningGasOld[j];
@@ -255,7 +255,7 @@ void MediumGas::GetComposition(std::string& gas1, double& f1, std::string& gas2,
   f6 = m_fraction[5];
 }
 
-void MediumGas::GetComponent(const unsigned int i, std::string& label,
+void MediumGas::GetComponent(const std::size_t i, std::string& label,
                              double& f) {
   if (i >= m_nComponents) {
     std::cerr << m_className << "::GetComponent: Index out of range.\n";
@@ -295,7 +295,7 @@ void MediumGas::SetMassDensity(const double /*rho*/) {
 double MediumGas::GetAtomicWeight() const {
   // Effective A, weighted by the fractions of the components.
   double a = 0.;
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     a += m_atWeight[i] * m_fraction[i];
   }
   return a;
@@ -314,7 +314,7 @@ double MediumGas::GetMassDensity() const {
 double MediumGas::GetAtomicNumber() const {
   // Effective Z, weighted by the fractions of the components.
   double z = 0.;
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     z += m_atNum[i] * m_fraction[i];
   }
   return z;
@@ -368,7 +368,7 @@ bool MediumGas::LoadGasFile(const std::string& filename, const bool quiet) {
   m_nComponents = gasnames.size();
   m_w = 0.;
   m_fano = 0.;
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     if (i > 0) m_name += "/";
     m_name += gasnames[i];
     m_gas[i] = gasnames[i];
@@ -382,7 +382,7 @@ bool MediumGas::LoadGasFile(const std::string& filename, const bool quiet) {
     std::cout << "    Gas composition set to " << m_name;
     if (m_nComponents > 1) {
       std::cout << " (" << m_fraction[0] * 100;
-      for (unsigned int i = 1; i < m_nComponents; ++i) {
+      for (std::size_t i = 1; i < m_nComponents; ++i) {
         std::cout << "/" << m_fraction[i] * 100;
       }
       std::cout << ")";
@@ -467,9 +467,9 @@ bool MediumGas::LoadGasFile(const std::string& filename, const bool quiet) {
   // Diffusion tensor.
   std::array<double, 6> diff;
   // Excitation and ionization rates.
-  const unsigned int nexc = m_excLevels.size();
+  const std::size_t nexc = m_excLevels.size();
   std::vector<double> rexc(nexc, 0.);
-  const unsigned int nion = m_ionLevels.size();
+  const std::size_t nion = m_ionLevels.size();
   std::vector<double> rion(nion, 0.);
   for (int i = 0; i < nE; i++) {
     for (int j = 0; j < nA; j++) {
@@ -504,12 +504,12 @@ bool MediumGas::LoadGasFile(const std::string& filename, const bool quiet) {
           }
         }
         if (!m_excRates.empty()) {
-          for (unsigned int l = 0; l < nexc; ++l) {
+          for (std::size_t l = 0; l < nexc; ++l) {
             m_excRates[l][j][k][i] = rexc[l];
           }
         }
         if (!m_ionRates.empty()) {
-          for (unsigned int l = 0; l < nion; ++l) {
+          for (std::size_t l = 0; l < nion; ++l) {
             m_ionRates[l][j][k][i] = rion[l];
           }
         }
@@ -518,10 +518,10 @@ bool MediumGas::LoadGasFile(const std::string& filename, const bool quiet) {
   }
 
   // Extrapolation methods
-  std::array<unsigned int, 13> extrapH = {{0}};
-  std::array<unsigned int, 13> extrapL = {{1}};
+  std::array<std::size_t, 13> extrapH = {{0}};
+  std::array<std::size_t, 13> extrapL = {{1}};
   // Interpolation methods
-  std::array<unsigned int, 13> interp = {{2}};
+  std::array<std::size_t, 13> interp = {{2}};
   // Ion diffusion coefficients.
   double ionDiffL = 0.;
   double ionDiffT = 0.;
@@ -653,7 +653,7 @@ bool MediumGas::ReadHeader(
                     << ").\n";
           return false;
         }
-        for (unsigned int i = 0; i < 20; ++i) {
+        for (std::size_t i = 0; i < 20; ++i) {
           if (okstr[i] == 'T') gasok.set(i);
         }
       } else if (strcmp(token, "Identifier") == 0) {
@@ -730,8 +730,8 @@ bool MediumGas::ReadHeader(
           }
         }
       } else if (strcmp(token, "Mixture") == 0) {
-        const unsigned int nMagboltzGases = mixture.size();
-        for (unsigned int i = 0; i < nMagboltzGases; ++i) {
+        const std::size_t nMagboltzGases = mixture.size();
+        for (std::size_t i = 0; i < nMagboltzGases; ++i) {
           gasfile >> mixture[i];
         }
       } else if (strcmp(token, "Excitation") == 0) {
@@ -816,11 +816,11 @@ void MediumGas::ReadRecord3D(std::ifstream& gasfile, double& ve, double& vb,
   // Diffusion tensor
   for (int l = 0; l < 6; l++) gasfile >> dif[l];
   // Excitation rates
-  const unsigned int nexc = rexc.size();
-  for (unsigned int l = 0; l < nexc; ++l) gasfile >> rexc[l];
+  const std::size_t nexc = rexc.size();
+  for (std::size_t l = 0; l < nexc; ++l) gasfile >> rexc[l];
   // Ionization rates
-  const unsigned int nion = rion.size();
-  for (unsigned int l = 0; l < nion; ++l) gasfile >> rion[l];
+  const std::size_t nion = rion.size();
+  for (std::size_t l = 0; l < nion; ++l) gasfile >> rion[l];
   // check gasok: necessary to read previous gas files (version < 13)
   double wv = 0., wr = 0., riontof = 0., ratttof = 0.;
   if (gasok[16]) {
@@ -858,10 +858,10 @@ void MediumGas::ReadRecord1D(std::ifstream& gasfile, double& ve, double& vb,
   gasfile >> lor >> waste;
   gasfile >> dis >> waste;
   for (int j = 0; j < 6; j++) gasfile >> dif[j] >> waste;
-  const unsigned int nexc = rexc.size();
-  for (unsigned int j = 0; j < nexc; ++j) gasfile >> rexc[j] >> waste;
-  const unsigned int nion = rion.size();
-  for (unsigned int j = 0; j < nion; ++j) gasfile >> rion[j] >> waste;
+  const std::size_t nexc = rexc.size();
+  for (std::size_t j = 0; j < nexc; ++j) gasfile >> rexc[j] >> waste;
+  const std::size_t nion = rion.size();
+  for (std::size_t j = 0; j < nion; ++j) gasfile >> rion[j] >> waste;
   // check gasok: necessary to read previous gas files (version < 13)
   if (gasok[16]) {
     gasfile >> wv >> waste;
@@ -878,11 +878,11 @@ void MediumGas::ReadRecord1D(std::ifstream& gasfile, double& ve, double& vb,
 }
 
 void MediumGas::ReadFooter(std::ifstream& gasfile,
-                           std::array<unsigned int, 13>& extrapH,
-                           std::array<unsigned int, 13>& extrapL,
-                           std::array<unsigned int, 13>& interp,
-                           unsigned int& thrAlp, unsigned int& thrAtt,
-                           unsigned int& thrDis, double& ionDiffL,
+                           std::array<std::size_t, 13>& extrapH,
+                           std::array<std::size_t, 13>& extrapL,
+                           std::array<std::size_t, 13>& interp,
+                           std::size_t& thrAlp, std::size_t& thrAtt,
+                           std::size_t& thrDis, double& ionDiffL,
                            double& ionDiffT, double& pgas, double& tgas) {
   bool done = false;
   while (!done) {
@@ -964,8 +964,8 @@ bool MediumGas::GetMixture(const std::vector<double>& mixture,
                            std::vector<double>& percentages) const {
   gasnames.clear();
   percentages.clear();
-  const unsigned int nMagboltzGases = mixture.size();
-  for (unsigned int i = 0; i < nMagboltzGases; ++i) {
+  const std::size_t nMagboltzGases = mixture.size();
+  for (std::size_t i = 0; i < nMagboltzGases; ++i) {
     if (mixture[i] < Small) continue;
     const std::string gasname = GetGasName(i + 1, version);
     if (gasname.empty()) {
@@ -1052,7 +1052,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
     return false;
   }
 
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     const auto it = std::find(gasnames.begin(), gasnames.end(), m_gas[i]);
     if (it == gasnames.end()) {
       std::cerr << m_className << "::MergeGasFile:\n    "
@@ -1071,11 +1071,11 @@ bool MediumGas::MergeGasFile(const std::string& filename,
   }
 
   // Check that the excitations and ionisations match.
-  const unsigned int nexc = excLevels.size();
-  const unsigned int nion = ionLevels.size();
+  const std::size_t nexc = excLevels.size();
+  const std::size_t nion = ionLevels.size();
   bool excMatch = (m_excLevels.size() == nexc);
   if (excMatch) {
-    for (unsigned int i = 0; i < nexc; ++i) {
+    for (std::size_t i = 0; i < nexc; ++i) {
       if (m_excLevels[i].label == excLevels[i].label) continue;
       excMatch = false;
       break;
@@ -1083,7 +1083,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
   }
   bool ionMatch = (m_ionLevels.size() == nion);
   if (ionMatch) {
-    for (unsigned int i = 0; i < nion; ++i) {
+    for (std::size_t i = 0; i < nion; ++i) {
       if (m_ionLevels[i].label == ionLevels[i].label) continue;
       ionMatch = false;
       break;
@@ -1108,12 +1108,12 @@ bool MediumGas::MergeGasFile(const std::string& filename,
   std::vector<double> rexc(nexc, 0.);
   std::vector<double> rion(nion, 0.);
   // Loop through the gas tables to fast-forward to the footer.
-  const unsigned int nNewE = efields.size();
-  const unsigned int nNewB = bfields.size();
-  const unsigned int nNewA = angles.size();
-  for (unsigned int i = 0; i < nNewE; i++) {
-    for (unsigned int j = 0; j < nNewA; j++) {
-      for (unsigned int k = 0; k < nNewB; k++) {
+  const std::size_t nNewE = efields.size();
+  const std::size_t nNewB = bfields.size();
+  const std::size_t nNewA = angles.size();
+  for (std::size_t i = 0; i < nNewE; i++) {
+    for (std::size_t j = 0; j < nNewA; j++) {
+      for (std::size_t k = 0; k < nNewB; k++) {
         if (new3d) {
           ReadRecord3D(gasfile, ve, vb, vx, dl, dt, alpha, alpha0, eta, mu, lor,
                        dis, diff, rexc, rion, gasok);
@@ -1126,12 +1126,12 @@ bool MediumGas::MergeGasFile(const std::string& filename,
   }
 
   // Extrapolation methods
-  std::array<unsigned int, 13> extrapH = {{0}};
-  std::array<unsigned int, 13> extrapL = {{1}};
+  std::array<std::size_t, 13> extrapH = {{0}};
+  std::array<std::size_t, 13> extrapL = {{1}};
   // Interpolation methods
-  std::array<unsigned int, 13> interp = {{2}};
+  std::array<std::size_t, 13> interp = {{2}};
   // Thresholds.
-  unsigned int thrAlp = 0, thrAtt = 0, thrDis = 0;
+  std::size_t thrAlp = 0, thrAtt = 0, thrDis = 0;
   // Ion diffusion coefficients.
   double ionDiffL = 0., ionDiffT = 0.;
   // Gas pressure [Torr] and temperature [K].
@@ -1178,9 +1178,9 @@ bool MediumGas::MergeGasFile(const std::string& filename,
               << ", nIon = " << ionLevels.size() << "\n";
   }
 
-  unsigned int nE = m_eFields.size();
-  unsigned int nB = m_bFields.size();
-  unsigned int nA = m_bAngles.size();
+  std::size_t nE = m_eFields.size();
+  std::size_t nB = m_bFields.size();
+  std::size_t nA = m_bAngles.size();
   // Determine which mode we have to use for the E field.
   const int iemode = Equal(efields, m_eFields, eps);
   // Determine which mode we have to use for the angles.
@@ -1413,7 +1413,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
     for (const auto efield : efields) {
       // Loop over the old values.
       bool found = false;
-      for (unsigned int j = 0; j < nE; ++j) {
+      for (std::size_t j = 0; j < nE; ++j) {
         // If it overlaps with existing E, either keep old or new data.
         if (Similar(efield, m_eFields[j], eps)) {
           if (replaceOld) {
@@ -1461,7 +1461,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
     for (const auto bfield : bfields) {
       // Loop over the old values.
       bool found = false;
-      for (unsigned int j = 0; j < nB; ++j) {
+      for (std::size_t j = 0; j < nB; ++j) {
         // If it overlaps with existing B, either keep old or new data.
         if (Similar(bfield, m_bFields[j], eps)) {
           if (replaceOld) {
@@ -1509,7 +1509,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
     for (const auto angle : angles) {
       // Loop over the old values.
       bool found = false;
-      for (unsigned int j = 0; j < nA; ++j) {
+      for (std::size_t j = 0; j < nA; ++j) {
         // If it overlaps with an existing angle, either keep old or new data.
         if (Similar(angle, m_bAngles[j], eps)) {
           if (replaceOld) {
@@ -1614,7 +1614,7 @@ bool MediumGas::MergeGasFile(const std::string& filename,
           m_eVelX[inda][indb][inde] = vx;
         }
         if (gasok[10] && (update || !existing[10])) {
-          for (unsigned int l = 0; l < 6; ++l) {
+          for (std::size_t l = 0; l < 6; ++l) {
             m_eDifM[l][inda][indb][inde] = diff[l] / pgas;
           }
         }
@@ -1622,12 +1622,12 @@ bool MediumGas::MergeGasFile(const std::string& filename,
           m_iDis[inda][indb][inde] = dis + logp;
         }
         if (gasok[14] && (update || !existing[14])) {
-          for (unsigned int l = 0; l < nexc; ++l) {
+          for (std::size_t l = 0; l < nexc; ++l) {
             m_excRates[l][inda][indb][inde] = rexc[l];
           }
         }
         if (gasok[15] && (update || !existing[15])) {
-          for (unsigned int l = 0; l < nion; ++l) {
+          for (std::size_t l = 0; l < nion; ++l) {
             m_ionRates[l][inda][indb][inde] = rion[l];
           }
         }
@@ -1845,7 +1845,7 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
   // Set the gas mixture.
   constexpr int nMagboltzGases = 60;
   std::vector<double> mixture(nMagboltzGases, 0.);
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     const int ng = GetGasNumberGasFile(m_gas[i]);
     if (ng <= 0) {
       std::cerr << m_className << "::WriteGasFile:\n"
@@ -1872,7 +1872,7 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
   std::bitset<20> gasok;
   GetGasBits(gasok);
   std::string okstr(20, 'F');
-  for (unsigned int i = 0; i < 20; ++i) {
+  for (std::size_t i = 0; i < 20; ++i) {
     if (gasok[i]) okstr[i] = 'T';
   }
   if (m_debug) std::cout << "    GASOK bits: " << okstr << "\n";
@@ -1899,7 +1899,7 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
   outfile << " Version   : " << version << "\n";
   outfile << " GASOK bits: " << okstr << "\n";
   std::stringstream ids("");
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     ids << m_gas[i] << " " << 100. * m_fraction[i] << "%, ";
   }
   ids << "T=" << m_temperatureTable << " K, "
@@ -1913,9 +1913,9 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
     outfile << "F ";
   }
 
-  const unsigned int nE = m_eFields.size();
-  const unsigned int nB = m_bFields.size();
-  const unsigned int nA = m_bAngles.size();
+  const std::size_t nE = m_eFields.size();
+  const std::size_t nB = m_bFields.size();
+  const std::size_t nA = m_bAngles.size();
   if (m_debug) {
     std::cout << m_className << "::WriteGasFile:\n    "
               << "Dataset has the following dimensions:\n    "
@@ -1983,9 +1983,9 @@ bool MediumGas::WriteGasFile(const std::string& filename) {
   const double logp = log(m_pressureTable);
   outfile << " The gas tables follow:\n";
   cnt = 0;
-  for (unsigned int i = 0; i < nE; ++i) {
-    for (unsigned int j = 0; j < nA; ++j) {
-      for (unsigned int k = 0; k < nB; ++k) {
+  for (std::size_t i = 0; i < nE; ++i) {
+    for (std::size_t j = 0; j < nA; ++j) {
+      for (std::size_t k = 0; k < nB; ++k) {
         // Get the velocities.
         double ve = m_eVelE.empty() ? 0. : m_eVelE[j][k][i];
         double vb = m_eVelB.empty() ? 0. : m_eVelB[j][k][i];
@@ -2171,7 +2171,7 @@ void MediumGas::PrintGas() {
             << "    Gas composition: " << m_name;
   if (m_nComponents > 1) {
     std::cout << " (" << m_fraction[0] * 100;
-    for (unsigned int i = 1; i < m_nComponents; ++i) {
+    for (std::size_t i = 1; i < m_nComponents; ++i) {
       std::cout << "/" << m_fraction[i] * 100;
     }
     std::cout << ")";
@@ -2629,7 +2629,7 @@ bool MediumGas::EnablePenningTransfer(const double r, const double lambda) {
   }
 
   // Update the transfer probabilities of the excitation levels in the table.
-  unsigned int nLevelsFound = 0;
+  std::size_t nLevelsFound = 0;
   for (auto& exc : m_excLevels) {
     if (exc.energy < minIonPot) continue;
     exc.prob = m_rPenningGlobal;
@@ -2666,7 +2666,7 @@ bool MediumGas::EnablePenningTransfer(const double r, const double lambda,
 
   // Look for this gas in the present gas mixture.
   int iGas = -1;
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     if (m_gas[i] == gasname) {
       m_rPenningGas[i] = r;
       m_lambdaPenningGas[i] = lambda > Small ? lambda : 0.;
@@ -2698,7 +2698,7 @@ bool MediumGas::EnablePenningTransfer(const double r, const double lambda,
     }
   }
   // Update the transfer probabilities of the excitation levels in the table.
-  unsigned int nLevelsFound = 0;
+  std::size_t nLevelsFound = 0;
   for (auto& exc : m_excLevels) {
     if (exc.energy < minIonPot) continue;
     // Skip excitation levels of other components in the mixture.
@@ -2744,7 +2744,7 @@ bool MediumGas::GetPenningTransfer(const std::string& gasname, double& r,
     std::cerr << m_className << "::GetPenningTransfer: Unknown gas name.\n";
     return false;
   }
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     if (m_gas[i] == gas) {
       r = m_rPenningGas[i];
       lambda = m_lambdaPenningGas[i];
@@ -2808,7 +2808,7 @@ bool MediumGas::DisablePenningTransfer(std::string gasname) {
 
   // Look for this gas in the present gas mixture.
   int iGas = -1;
-  for (unsigned int i = 0; i < m_nComponents; ++i) {
+  for (std::size_t i = 0; i < m_nComponents; ++i) {
     if (m_gas[i] == gasname) {
       m_rPenningGas[i] = 0.;
       m_lambdaPenningGas[i] = 0.;
@@ -2858,16 +2858,16 @@ bool MediumGas::AdjustTownsendCoefficient() {
               << "Present gas table does not include ionisation rates.\n";
     return false;
   }
-  const unsigned int nE = m_eFields.size();
-  const unsigned int nB = m_bFields.size();
-  const unsigned int nA = m_bAngles.size();
+  const std::size_t nE = m_eFields.size();
+  const std::size_t nB = m_bFields.size();
+  const std::size_t nA = m_bAngles.size();
   if (m_debug) {
     std::cout << m_className << "::AdjustTownsendCoefficient:\n"
               << "   Entry         Exc.      Ion.\n";
   }
-  for (unsigned int i = 0; i < nE; ++i) {
-    for (unsigned int j = 0; j < nA; ++j) {
-      for (unsigned int k = 0; k < nB; ++k) {
+  for (std::size_t i = 0; i < nE; ++i) {
+    for (std::size_t j = 0; j < nA; ++j) {
+      for (std::size_t k = 0; k < nB; ++k) {
         // Compute total ionisation rate.
         double rion = 0.;
         for (const auto& ion : m_ionRates) {
@@ -2875,8 +2875,8 @@ bool MediumGas::AdjustTownsendCoefficient() {
         }
         // Compute rate of Penning ionisations.
         double rexc = 0.;
-        const unsigned int nexc = m_excLevels.size();
-        for (unsigned int ie = 0; ie < nexc; ++ie) {
+        const std::size_t nexc = m_excLevels.size();
+        for (std::size_t ie = 0; ie < nexc; ++ie) {
           rexc += m_excLevels[ie].prob * m_excRates[ie][j][k][i];
         }
         if (m_debug) {
@@ -3725,7 +3725,7 @@ int MediumGas::GetGasNumberGasFile(const std::string& input) {
 }
 
 bool MediumGas::GetPhotoAbsorptionCrossSection(const double e, double& sigma,
-                                               const unsigned int i) {
+                                               const std::size_t i) {
   if (i >= m_nMaxGases) {
     std::cerr << m_className
               << "::GetPhotoAbsorptionCrossSection: Index out of range.\n";

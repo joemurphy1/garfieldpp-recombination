@@ -687,8 +687,8 @@ The file can include comments (lines starting with \texttt{\#} or \texttt{//}).
 Prior to reading the electric field, the limits and spacing of the grid 
 can be set using the function
 \begin{lstlisting}
-void SetMesh(const unsigned int nx, const unsigned int ny,
-             const unsigned int nz, const double xmin, const double xmax,
+void SetMesh(const std::size_t nx, const std::size_t ny,
+             const std::size_t nz, const double xmin, const double xmax,
              const double ymin, const double ymax, const double zmin,
              const double zmax);
 \end{lstlisting}
@@ -778,8 +778,8 @@ An example illustrating the parameters of the mesh and the numbering of
 the voxels/cells is shown in Fig.~\ref{Fig:MeshComponentVoxel}.
 As a first step, the mesh needs to be defined using the function
 \begin{lstlisting}
-void SetMesh(const unsigned int nx, const unsigned int ny,
-             const unsigned int nz, const double xmin, const double xmax,
+void SetMesh(const std::size_t nx, const std::size_t ny,
+             const std::size_t nz, const double xmin, const double xmax,
              const double ymin, const double ymax, const double zmin,
              const double zmax);
 \end{lstlisting}
@@ -812,7 +812,7 @@ bool LoadElectricField(const std::string& filename, const std::string& format,
 \end{description}
 The medium to be associated with a given region can be set using
 \begin{lstlisting}
-void SetMedium(const unsigned int i, Medium* m);
+void SetMedium(const std::size_t i, Medium* m);
 \end{lstlisting}
 \begin{description}
   \item[i] index of the region
@@ -1240,10 +1240,10 @@ A, B1X, B1Y, B2X and B2Y.
 To investigate whether dipole and higher order terms are significant, 
 one can use the function
 \begin{lstlisting}
-bool MultipoleMoments(const unsigned int iw, const unsigned int order = 4,
+bool MultipoleMoments(const std::size_t iw, const std::size_t order = 4,
                       const bool print = false, const bool plot = false, 
                       const double rmult = 1.,
-                      const double eps = 1.e-4, const unsigned int nMaxIter = 20);
+                      const double eps = 1.e-4, const std::size_t nMaxIter = 20);
 \end{lstlisting} 
 \begin{description}
   \item[iw] index of the wire for which the multipole decomposition should be done,
@@ -1346,7 +1346,7 @@ being read out are surrounded by many other wires in the basic cell.
 
 This behaviour can be controlled using the function
 \begin{lstlisting}
-void SetNumberOfCellCopies(const unsigned int nfourier);
+void SetNumberOfCellCopies(const std::size_t nfourier);
 \end{lstlisting}
 The argument (\texttt{nfourier}) must be 0 or an integral power of 2.
 
@@ -1368,14 +1368,14 @@ which contain equipotential planes - convergence is poor otherwise.
 The forces acting on a wire and the wire displacement that results from 
 these forces can be computed using the methods
 \begin{lstlisting}
-bool ForcesOnWire(const unsigned int iw, 
+bool ForcesOnWire(const std::size_t iw, 
                   std::vector<double>& xMap, std::vector<double>& yMap,
                   std::vector<std::vector<double> >& fxMap,
                   std::vector<std::vector<double> >& fyMap);
 \end{lstlisting}
 and
 \begin{lstlisting}
-bool WireDisplacement(const unsigned int iw, const bool detailed,
+bool WireDisplacement(const std::size_t iw, const bool detailed,
                       std::vector<double>& csag, std::vector<double>& xsag,
                       std::vector<double>& ysag, double& stretch,
                       const bool print = true);
@@ -1421,7 +1421,7 @@ The electrostatic forces are computed by solving the capacitance equations for a
 and interpolating the resulting table of forces.
 The number of grid lines can be set using
 \begin{lstlisting}
-void SetScanningGrid(const unsigned int nX, const unsigned int nY);
+void SetScanningGrid(const std::size_t nX, const std::size_t nY);
 \end{lstlisting}
 The default is 11 lines in both $x$ and $y$.
 By default, the range of wire shifts for which the forces are computed, 
@@ -1468,8 +1468,8 @@ Broyden rank-1 updates of the derivative matrix.
 The number of shots and the number of integration steps within each shot 
 can be set by the user
 \begin{lstlisting}
-void SetNumberOfShots(const unsigned int n);
-void SetNumberOfSteps(const unsigned int n);
+void SetNumberOfShots(const std::size_t n);
+void SetNumberOfSteps(const std::size_t n);
 \end{lstlisting}
 
 The function \texttt{ForcesOnWire} fills the vectors \texttt{xMap}, 
@@ -1492,7 +1492,7 @@ The method
 bool OptimiseOnTrack(const std::vector<std::string>& groups,
     const std::string& field_function, const double target,
     const double x0, const double y0, const double x1, const double y1,
-    const unsigned int nP = 20, const bool print = true);
+    const std::size_t nP = 20, const bool print = true);
 \end{lstlisting}
 compares target and field function on \texttt{nP} sampling points 
 along a straight line between $\left(x_{0}, y_{0}\right)$ and 
@@ -1504,7 +1504,7 @@ drift electrode in a TPC to get the proper drift field.
 bool OptimiseOnGrid(const std::vector<std::string>& groups,
     const std::string& field_function, const double target,
     const double x0, const double y0, const double x1, const double y1,
-    const unsigned int nX = 10, const unsigned int nY = 10,
+    const std::size_t nX = 10, const std::size_t nY = 10,
     const bool print = true);
 \end{lstlisting}
 compares target and field function on a regular $x-y$ (or $r-\phi$) grid.
@@ -1516,7 +1516,7 @@ density is defined by \texttt{nX}, \texttt{nY}
 \begin{lstlisting}
 bool OptimiseOnWires(const std::vector<std::string>& groups,
     const std::string& field_function, const double target,
-    const std::vector<unsigned int>& wires, const bool print = true);
+    const std::vector<std::size_t>& wires, const bool print = true);
 \end{lstlisting}
 compares target and field function on the surfaces of a set of wires 
 (the vector \texttt{wires} contains the wire indices).
@@ -1564,7 +1564,7 @@ These parameters can be set using the method
 \begin{lstlisting} 
 void SetOptimisationParameters(const double dist = 1.,
                                const double eps = 1.e-4,
-                               const unsigned int nMaxIter = 10);
+                               const std::size_t nMaxIter = 10);
 \end{lstlisting}
 The parameter $\varepsilon$ is also used for computing the numerical 
 derivatives needed for the covariance matrix. A larger value (say 1) 
@@ -1624,7 +1624,7 @@ charge density on them be approximated as uniform.
 The size of the elements can be controlled using the functions
 \begin{lstlisting}
 void SetTargetElementSize(const double length);
-void SetMinMaxNumberOfElements(const unsigned int nmin, const unsigned int nmax);
+void SetMinMaxNumberOfElements(const std::size_t nmin, const std::size_t nmax);
 \end{lstlisting}
 \begin{description}
 \item[length] preferred linear size of the elements, measured along their edges.
@@ -1921,8 +1921,8 @@ void SetArea();
  
 The density of the plotting grid can be set using
 \begin{lstlisting}
-void SetNumberOfSamples1d(const unsigned int n);
-void SetNumberOfSamples2d(const unsigned int nx, const unsigned int ny);
+void SetNumberOfSamples1d(const std::size_t n);
+void SetNumberOfSamples2d(const std::size_t nx, const std::size_t ny);
 \end{lstlisting}
 \begin{description}
   \item[n, nx, ny]
@@ -1933,7 +1933,7 @@ void SetNumberOfSamples2d(const unsigned int nx, const unsigned int ny);
 
 The number of contour levels can be set using
 \begin{lstlisting}
-void SetNumberOfContours(const unsigned int n);
+void SetNumberOfContours(const std::size_t n);
 \end{lstlisting}
 
 \subsection{Field lines}
@@ -1957,7 +1957,7 @@ bool EqualFluxIntervals(const double x0, const double y0, const double z0,
                         const double x1, const double y1, const double z1,
                         std::vector<double>& xf, std::vector<double>& yf,
                         std::vector<double>& zf,
-                        const unsigned int nPoints = 20) const;
+                        const std::size_t nPoints = 20) const;
 \end{lstlisting} 
 which fills the vectors \texttt{xf}, \texttt{yf}, \texttt{zf} with 
 the coordinates of \texttt{nPoints} along the line 
@@ -1989,7 +1989,7 @@ The \texttt{Component} base class provides functions for inspecting the
 field, in particular for determining the electric flux over a surface.
 \begin{lstlisting}
 double IntegrateFluxSphere(const double xc, const double yc, const double zc,
-                           const double r, const unsigned int nI = 20);
+                           const double r, const std::size_t nI = 20);
 \end{lstlisting}
 calculates the charge (in fC) enclosed in a sphere of radius $r$ centred at 
 $\left(x_{c}, y_{c}, z_{c}\right)$ using Gauss's law, \ie by 
@@ -2001,7 +2001,7 @@ surface of the sphere,
 Similarly,
 \begin{lstlisting}
 double IntegrateFluxCircle(const double xc, const double yc, 
-                           const double r, const unsigned int nI = 50);
+                           const double r, const std::size_t nI = 50);
 \end{lstlisting}
 calculates the line charge (in fC\,/\,cm) contained in a circle of radius $r$ 
 centred at $\left(x_{c}, y_{c}\right)$.  
@@ -2014,7 +2014,7 @@ the function
 double IntegrateFluxParallelogram(const double x0, const double y0, const double z0,
                                   const double dx1, const double dy1, const double dz1,
                                   const double dx2, const double dy2, const double dz2,
-                                  const unsigned int nU = 20, const unsigned int nV = 20); 
+                                  const std::size_t nU = 20, const std::size_t nV = 20); 
 \end{lstlisting}
 \begin{description}
   \item[x0,y0,z0] coordinates of one of the corners of the parallelogram,
@@ -2050,13 +2050,13 @@ to be used for computing the corresponding signal.
 To deactivate (or activate) a component after having added it, the 
 function
 \begin{lstlisting}
-void EnableComponent(const unsigned int i, const bool on);
+void EnableComponent(const std::size_t i, const bool on);
 \end{lstlisting}
 can be used. Components that have been deactivated are not taken into 
 account when calculating the electric field but are not removed from the list.
 Similarly, 
 \begin{lstlisting}
-void EnableMagneticField(const unsigned int i, const bool on);
+void EnableMagneticField(const std::size_t i, const bool on);
 \end{lstlisting}
 can be used to deactivate (or activate) the magnetic field of a 
 given component. 

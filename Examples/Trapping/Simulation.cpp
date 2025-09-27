@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
   sensor.AddElectrode(&wfield, label);
 
   // Set the time bins.
-  const unsigned int nTimeBins = 1000;
+  const std::size_t nTimeBins = 1000;
   const double tmin = 0.;
   const double tmax = 10.;
   const double tstep = (tmax - tmin) / nTimeBins;
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
 
   std::ofstream outfile;
   outfile.open("signal.txt", std::ios::out);
-  for (unsigned int i = 0; i < nTimeBins; ++i) {
+  for (std::size_t i = 0; i < nTimeBins; ++i) {
     const double t = (i + 0.5) * tstep;
     const double f = sensor.GetSignal(label, i);
     const double fe = sensor.GetElectronSignal(label, i);

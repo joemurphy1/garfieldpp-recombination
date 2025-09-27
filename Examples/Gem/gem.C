@@ -85,10 +85,10 @@ int main(int argc, char* argv[]) {
   }
 
   // Count the total number of ions produced the back-flowing ions.
-  unsigned int nTotal = 0;
-  unsigned int nBF = 0;
-  constexpr unsigned int nEvents = 10;
-  for (unsigned int i = 0; i < nEvents; ++i) {
+  std::size_t nTotal = 0;
+  std::size_t nBF = 0;
+  constexpr std::size_t nEvents = 10;
+  for (std::size_t i = 0; i < nEvents; ++i) {
     std::cout << i << "/" << nEvents << "\n";
     // Randomize the initial position.
     const double x0 = -0.5 * pitch + RndmUniform() * pitch;

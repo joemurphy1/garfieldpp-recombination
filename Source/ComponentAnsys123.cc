@@ -31,7 +31,7 @@ bool ComponentAnsys123::Initialise(const std::string& elist,
 
   // Read the material list.
   long il = 0;
-  unsigned int icurrmat = 0;
+  std::size_t icurrmat = 0;
   bool readerror = false;
   while (fmplist.getline(line, size, '\n')) {
     il++;
@@ -473,7 +473,7 @@ bool ComponentAnsys123::LoadPotentials(const std::string prnsol,
   bool ok = true;
   long il = 0;
   bool readerror = false;
-  unsigned int nread = 0;
+  std::size_t nread = 0;
   while (fprnsol.getline(line, size, '\n')) {
     il++;
     // Skip page feed.

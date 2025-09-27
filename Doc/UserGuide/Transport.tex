@@ -436,7 +436,7 @@ By default, this feature is switched on.
 %It ensures that the path length integral does not depend on the step size.
 The function 
 \begin{lstlisting}
-void EnableAvalancheSizeLimit(const unsigned int size);
+void EnableAvalancheSizeLimit(const std::size_t size);
 \end{lstlisting}
 sets an upper limit to the number of electrons in an avalanche 
 can be imposed.
@@ -559,7 +559,7 @@ void SetRKNTolerance(const double sTol = 1.e-10,
 
 Using 
 \begin{lstlisting}
-void EnableAvalancheSizeLimit(const unsigned int size);
+void EnableAvalancheSizeLimit(const std::size_t size);
 \end{lstlisting}
 an upper limit to the size of an electron avalanche can be imposed.
 After the avalanche has reached the specified max. size, 

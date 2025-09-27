@@ -145,10 +145,10 @@ bool ViewCell::Plot(const bool twod) {
   const bool polar = m_component->IsPolar();
 
   // Get the number of wires.
-  const unsigned int nWires = m_component->GetNumberOfWires();
+  const std::size_t nWires = m_component->GetNumberOfWires();
   std::vector<std::string> wireTypes;
   // Loop over the wires.
-  for (unsigned int i = 0; i < nWires; ++i) {
+  for (std::size_t i = 0; i < nWires; ++i) {
     double xw = 0., yw = 0., dw = 0., vw = 0., lw = 0., qw = 0.;
     std::string lbl;
     int nTrap;
@@ -186,8 +186,8 @@ bool ViewCell::Plot(const bool twod) {
   }
 
   // Draw the x planes.
-  const unsigned int nPlanesX = m_component->GetNumberOfPlanesX();
-  for (unsigned int i = 0; i < nPlanesX; ++i) {
+  const std::size_t nPlanesX = m_component->GetNumberOfPlanesX();
+  for (std::size_t i = 0; i < nPlanesX; ++i) {
     double xp = 0., vp = 0.;
     std::string lbl;
     m_component->GetPlaneX(i, xp, vp, lbl);
@@ -204,8 +204,8 @@ bool ViewCell::Plot(const bool twod) {
   }
 
   // Draw the y planes.
-  const unsigned int nPlanesY = m_component->GetNumberOfPlanesY();
-  for (unsigned int i = 0; i < nPlanesY; ++i) {
+  const std::size_t nPlanesY = m_component->GetNumberOfPlanesY();
+  for (std::size_t i = 0; i < nPlanesY; ++i) {
     double yp = 0., vp = 0.;
     std::string lbl;
     m_component->GetPlaneY(i, yp, vp, lbl);
@@ -222,8 +222,8 @@ bool ViewCell::Plot(const bool twod) {
   }
 
   // Draw the r and phi planes.
-  const unsigned int nPlanesR = m_component->GetNumberOfPlanesR();
-  const unsigned int nPlanesPhi = m_component->GetNumberOfPlanesPhi();
+  const std::size_t nPlanesR = m_component->GetNumberOfPlanesR();
+  const std::size_t nPlanesPhi = m_component->GetNumberOfPlanesPhi();
   if (nPlanesR > 0 || nPlanesPhi > 0) {
     double vp = 0.;
     std::string lbl;
@@ -243,7 +243,7 @@ bool ViewCell::Plot(const bool twod) {
       m_component->GetPlaneR(1, r[1], vp, lbl);
       w = 0.01 * (r[1] - r[0]);
     }
-    for (unsigned int i = 0; i < nPlanesR; ++i) {
+    for (std::size_t i = 0; i < nPlanesR; ++i) {
       if (twod) {
         TEllipse circle;
         circle.SetDrawOption("same");
@@ -264,7 +264,7 @@ bool ViewCell::Plot(const bool twod) {
     } else if (nPlanesR == 0) {
       r[1] = std::max(dx, dy);
     }
-    for (unsigned int i = 0; i < nPlanesPhi; ++i) {
+    for (std::size_t i = 0; i < nPlanesPhi; ++i) {
       const double cp = cos(phi[i] * DegreeToRad);
       const double sp = sin(phi[i] * DegreeToRad);
       if (twod) {
@@ -310,15 +310,15 @@ bool ViewCell::PlotNeBem(const bool twod) {
   }
 
   // Draw the regions.
-  const unsigned int nRegions = m_nebem->GetNumberOfRegions();
-  for (unsigned int i = nRegions; i-- > 0;) {
+  const std::size_t nRegions = m_nebem->GetNumberOfRegions();
+  for (std::size_t i = nRegions; i-- > 0;) {
     std::vector<double> xv;
     std::vector<double> yv;
     Medium* medium = nullptr;
-    unsigned int bctype = 1;
+    std::size_t bctype = 1;
     double v = 0.;
     if (!m_nebem->GetRegion(i, xv, yv, medium, bctype, v)) continue;
-    const unsigned int n = xv.size();
+    const std::size_t n = xv.size();
     if (n < 3) continue;
     TLine line;
     line.SetDrawOption("same");
@@ -327,23 +327,23 @@ bool ViewCell::PlotNeBem(const bool twod) {
     } else {
       line.SetLineStyle(1);
     }
-    for (unsigned int j = 0; j < n; ++j) {
-      const unsigned int k = j < n - 1 ? j + 1 : 0;
+    for (std::size_t j = 0; j < n; ++j) {
+      const std::size_t k = j < n - 1 ? j + 1 : 0;
       line.DrawLine(xv[j], yv[j], xv[k], yv[k]);
     }
   }
 
   // Draw the wires.
-  const unsigned int nWires = m_nebem->GetNumberOfWires();
-  for (unsigned int i = 0; i < nWires; ++i) {
+  const std::size_t nWires = m_nebem->GetNumberOfWires();
+  for (std::size_t i = 0; i < nWires; ++i) {
     double x = 0., y = 0., d = 0., v = 0., q = 0.;
     if (!m_nebem->GetWire(i, x, y, d, v, q)) continue;
     PlotWire(x, y, d, 0);
   }
 
   // Draw the straight-line segments.
-  const unsigned int nSegments = m_nebem->GetNumberOfSegments();
-  for (unsigned int i = 0; i < nSegments; ++i) {
+  const std::size_t nSegments = m_nebem->GetNumberOfSegments();
+  for (std::size_t i = 0; i < nSegments; ++i) {
     double x0 = 0., y0 = 0., x1 = 0., y1 = 0., v = 0.;
     if (!m_nebem->GetSegment(i, x0, y0, x1, y1, v)) continue;
     PlotPlane(x0, y0, x1, y1);

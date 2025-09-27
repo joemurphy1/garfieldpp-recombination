@@ -39,7 +39,7 @@ class SolidSphere : public Solid {
   /// When calculating surface panels, the sphere is approximated by a set of
   /// parallelograms, much the same way maps are drawn ("UV sphere").
   /// N specifies the number of meridians and also the number of parallels.
-  void SetMeridians(const unsigned int n);
+  void SetMeridians(const std::size_t n);
 
   bool SolidPanels(std::vector<Panel>& panels) override;
   void SetDiscretisationLevel(const double dis) override { m_dis = dis; }
@@ -58,7 +58,7 @@ class SolidSphere : public Solid {
   double m_rMax{1.};
 
   /// Number of meridians.
-  unsigned int m_n{10};
+  std::size_t m_n{10};
 
   /// Discretisation level.
   double m_dis{-1.};

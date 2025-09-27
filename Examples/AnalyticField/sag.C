@@ -32,9 +32,9 @@ int main(int argc, char* argv[]) {
   std::vector<double> ysag;
   double stretch = 0.;
   cmp.WireDisplacement(0, true, csag, xsag, ysag, stretch);
-  const unsigned int nPoints = csag.size();
+  const std::size_t nPoints = csag.size();
   TGraph gSagY(nPoints);
-  for (unsigned int i = 0; i < nPoints; ++i) {
+  for (std::size_t i = 0; i < nPoints; ++i) {
     gSagY.SetPoint(i, csag[i], 1.e4 * ysag[i]);
   }
   TCanvas cSag("cSag", "", 600, 600);

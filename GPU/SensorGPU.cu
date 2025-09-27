@@ -186,7 +186,7 @@ __device__ void SensorGPU::AddSignal(
     double wx = 0., wy = 0., wz = 0.;
     // Calculate the weighting field for this electrode.
     if (integrateWeightingField) {
-      for (unsigned int j = 0; j < nG; ++j) {
+      for (std::size_t j = 0; j < nG; ++j) {
         const double x = x0 + sG[j] * dx;
         const double y = y0 + sG[j] * dy;
         const double z = z0 + sG[j] * dz;
@@ -212,7 +212,7 @@ __device__ void SensorGPU::AddSignal(
       FillBin(m_electrodes[i], bin, current * delta, electron, false,
               particle_idx);
       delta = dt - delta;
-      unsigned int j = 1;
+      std::size_t j = 1;
       while (delta > m_tStep && bin + j < m_nTimeBins) {
         FillBin(m_electrodes[i], bin + j, current * m_tStep, electron, false,
                 particle_idx);
@@ -239,7 +239,7 @@ __device__ void SensorGPU::AddSignal(
 }
 
 __device__ void SensorGPU::FillBin(ElectrodeGPU& electrode,
-                                   const unsigned int bin, const double signal,
+                                   const std::size_t bin, const double signal,
                                    const bool electron, const bool delayed,
                                    const int particle_idx) {
 #if __CUDA_ARCH__ < 600

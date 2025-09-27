@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
   // Set the signal time window.
   const double tstep = 0.5;
   const double tmin = -0.5 * tstep;
-  const unsigned int nbins = 1000;
+  const std::size_t nbins = 1000;
   sensor.SetTimeWindow(tmin, tstep, nbins);
   // Set the delta reponse function.
   if (!readTransferFunction(sensor)) return 0;

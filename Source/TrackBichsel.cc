@@ -49,7 +49,7 @@ bool TrackBichsel::Initialise() {
   m_conv = ElectronMass /
            (2 * Pi2 * FineStructureConstant * pow(HbarC, 3) * m_density);
   // Number of bins for each factor of 2 in energy
-  constexpr unsigned int n2 = 64;
+  constexpr std::size_t n2 = 64;
   const double u = log(2.) / n2;
   const double um = exp(u);
   constexpr double kEdge = 1839.;

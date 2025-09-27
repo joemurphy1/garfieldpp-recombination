@@ -37,7 +37,7 @@ bool ExtractFromBrackets(std::string& line) {
 }
 
 void PrintError(const std::string& fcn, const std::string& filename,
-                const unsigned int line) {
+                const std::size_t line) {
   std::cerr << fcn << ":\n"
             << "    Error reading file " << filename << " (line " << line
             << ").\n";
@@ -197,7 +197,7 @@ bool ComponentTcadBase<N>::Initialise(const std::string& gridfilename,
     std::array<double, N> xmin = m_vertices[element.vertex[0]];
     std::array<double, N> xmax = m_vertices[element.vertex[0]];
     const auto nV = ElementVertices(m_elements[i]);
-    for (unsigned int j = 0; j < nV; ++j) {
+    for (std::size_t j = 0; j < nV; ++j) {
       const auto& v = m_vertices[m_elements[i].vertex[j]];
       for (size_t k = 0; k < N; ++k) {
         xmin[k] = std::min(xmin[k], v[k]);
@@ -251,13 +251,13 @@ bool ComponentTcadBase<N>::Initialise(const std::string& gridfilename,
   std::vector<size_t> looseElements;
 
   // Count the different element shapes.
-  std::map<int, unsigned int> nElementsByShape;
+  std::map<int, std::size_t> nElementsByShape;
   if (N == 2) {
     nElementsByShape = {{0, 0}, {1, 0}, {2, 0}, {3, 0}};
   } else {
     nElementsByShape = {{0, 0}, {2, 0}, {5, 0}};
   }
-  unsigned int nElementsOther = 0;
+  std::size_t nElementsOther = 0;
 
   // Keep track of degenerate elements.
   std::vector<size_t> degenerateElements;
@@ -276,8 +276,8 @@ bool ComponentTcadBase<N>::Initialise(const std::string& gridfilename,
     nElementsByShape[element.type] += 1;
     bool degenerate = false;
     const auto nV = ElementVertices(m_elements[i]);
-    for (unsigned int j = 0; j < nV; ++j) {
-      for (unsigned int k = j + 1; k < nV; ++k) {
+    for (std::size_t j = 0; j < nV; ++j) {
+      for (std::size_t k = j + 1; k < nV; ++k) {
         if (element.vertex[j] == element.vertex[k]) {
           degenerate = true;
           break;
@@ -689,7 +689,7 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
   // Delete existing mesh information.
   Cleanup();
   // Count line numbers.
-  unsigned int iLine = 0;
+  std::size_t iLine = 0;
   // Get the number of regions.
   size_t nRegions = 0;
   // Read the file line by line.
@@ -841,8 +841,8 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
   // Get the "edges" (lines connecting two vertices).
   size_t nEdges = 0;
   // Temporary arrays for storing edge points.
-  std::vector<unsigned int> edgeP1;
-  std::vector<unsigned int> edgeP2;
+  std::vector<std::size_t> edgeP1;
+  std::vector<std::size_t> edgeP2;
   while (std::getline(gridfile, line)) {
     ++iLine;
     ltrim(line);
@@ -965,12 +965,12 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
     // Get type and constituting edges of each element.
     for (size_t j = 0; j < nElements; ++j) {
       ++iLine;
-      unsigned int type = 0;
+      std::size_t type = 0;
       gridfile >> type;
       if (N == 2) {
         if (type == 0) {
           // Point
-          unsigned int p = 0;
+          std::size_t p = 0;
           gridfile >> p;
           // Make sure the index is not out of range.
           if (p >= nVertices) {
@@ -1067,7 +1067,7 @@ bool ComponentTcadBase<N>::LoadGrid(const std::string& filename) {
       } else if (N == 3) {
         if (type == 0) {
           // Point
-          unsigned int p = 0;
+          std::size_t p = 0;
           gridfile >> p;
           // Make sure the index is not out of range.
           if (p >= nVertices) {
@@ -1268,7 +1268,7 @@ bool ComponentTcadBase<N>::LoadData(const std::string& filename) {
     return false;
   }
   const size_t nVertices = m_vertices.size();
-  std::vector<unsigned int> fillCount(nVertices, 0);
+  std::vector<std::size_t> fillCount(nVertices, 0);
 
   std::array<double, N> zeros;
   zeros.fill(0.);
@@ -1510,8 +1510,8 @@ bool ComponentTcadBase<N>::ReadDataset(std::ifstream& datafile,
   for (const auto& element : m_elements) {
     if (element.region != index) continue;
     ++nElementsInRegion;
-    const unsigned int nV = ElementVertices(element);
-    for (unsigned int k = 0; k < nV; ++k) {
+    const std::size_t nV = ElementVertices(element);
+    for (std::size_t k = 0; k < nV; ++k) {
       if (isInRegion[element.vertex[k]]) continue;
       isInRegion[element.vertex[k]] = true;
       ++nVerticesInRegion;
@@ -1521,7 +1521,7 @@ bool ComponentTcadBase<N>::ReadDataset(std::ifstream& datafile,
     std::cout << "    Region has " << nElementsInRegion << " elements and "
               << nVerticesInRegion << " vertices.\n";
   }
-  unsigned int ivertex = 0;
+  std::size_t ivertex = 0;
   for (int j = 0; j < nValues; ++j) {
     // Read the next value.
     std::array<long double, N> val;
@@ -1709,12 +1709,12 @@ bool ComponentTcadBase<N>::LoadWeightingField(
     const size_t nElements = m_elements.size();
     for (size_t j = 0; j < nElements; ++j) {
       if (m_elements[j].region != index) continue;
-      const unsigned int nV = ElementVertices(m_elements[j]);
-      for (unsigned int k = 0; k < nV; ++k) {
+      const std::size_t nV = ElementVertices(m_elements[j]);
+      for (std::size_t k = 0; k < nV; ++k) {
         isInRegion[m_elements[j].vertex[k]] = true;
       }
     }
-    unsigned int ivertex = 0;
+    std::size_t ivertex = 0;
     for (int j = 0; j < nValues; ++j) {
       // Read the next value.
       std::array<double, N> val;
@@ -1785,7 +1785,7 @@ void ComponentTcadBase<N>::PrintRegions() const {
 }
 
 template <size_t N>
-void ComponentTcadBase<N>::GetRegion(const size_t i, std::string& name,
+void ComponentTcadBase<N>::GetRegion(const std::size_t i, std::string& name,
                                      bool& active) const {
   if (i >= m_regions.size()) {
     std::cerr << m_className << "::GetRegion: Index out of range.\n";

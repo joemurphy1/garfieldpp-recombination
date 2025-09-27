@@ -90,7 +90,7 @@ double Medium::GetMassDensity() const {
   return m_density * AtomicMassUnit * m_a;
 }
 
-void Medium::GetComponent(const unsigned int i, std::string& label, double& f) {
+void Medium::GetComponent(const std::size_t i, std::string& label, double& f) {
   if (i >= m_nComponents) throw Exception("Index out of range");
   label = m_name;
   f = 1.;
@@ -414,8 +414,8 @@ bool Medium::Diffusion(
 bool Medium::Alpha(const double ex, const double ey, const double ez,
                    const double bx, const double by, const double bz,
                    const std::vector<std::vector<std::vector<double> > >& tab,
-                   unsigned int intp, const unsigned int thr,
-                   const std::pair<unsigned int, unsigned int>& extr,
+                   std::size_t intp, const std::size_t thr,
+                   const std::pair<std::size_t, std::size_t>& extr,
                    double& alpha) const {
   alpha = 0.;
   if (tab.empty()) return false;
@@ -709,7 +709,7 @@ double Medium::NegativeIonMobility() {
 }
 
 bool Medium::GetOpticalDataRange(double& emin, double& emax,
-                                 const unsigned int i) {
+                                 const std::size_t i) {
   if (i >= m_nComponents) {
     std::cerr << m_className << "::GetOpticalDataRange: Index out of range.\n";
     return false;
@@ -721,7 +721,7 @@ bool Medium::GetOpticalDataRange(double& emin, double& emax,
 }
 
 bool Medium::GetDielectricFunction(const double e, double& eps1, double& eps2,
-                                   const unsigned int i) {
+                                   const std::size_t i) {
   if (i >= m_nComponents) {
     std::cerr << m_className
               << "::GetDielectricFunction: Index out of range.\n";
@@ -741,7 +741,7 @@ bool Medium::GetDielectricFunction(const double e, double& eps1, double& eps2,
 }
 
 bool Medium::GetPhotoAbsorptionCrossSection(const double e, double& sigma,
-                                            const unsigned int i) {
+                                            const std::size_t i) {
   if (i >= m_nComponents) {
     std::cerr << m_className << "::GetPhotoAbsorptionCrossSection:\n";
     std::cerr << "    Component " << i << " does not exist.\n";
@@ -1018,8 +1018,8 @@ void Medium::ResetTables() {
 void Medium::Clone(std::vector<std::vector<std::vector<double> > >& tab,
                    const std::vector<double>& efields,
                    const std::vector<double>& bfields,
-                   const std::vector<double>& angles, const unsigned int intp,
-                   const std::pair<unsigned int, unsigned int>& extr,
+                   const std::vector<double>& angles, const std::size_t intp,
+                   const std::pair<std::size_t, std::size_t>& extr,
                    const double init, const std::string& lbl) {
   if (m_debug) {
     std::cout << m_className << "::Clone: Copying " << lbl << " to new grid.\n";
@@ -1065,7 +1065,7 @@ void Medium::Clone(
     std::vector<std::vector<std::vector<std::vector<double> > > >& tab,
     const size_t n, const std::vector<double>& efields,
     const std::vector<double>& bfields, const std::vector<double>& angles,
-    const unsigned int intp, const std::pair<unsigned int, unsigned int>& extr,
+    const std::size_t intp, const std::pair<std::size_t, std::size_t>& extr,
     const double init, const std::string& lbl) {
   // If the table does not exist, do nothing.
   if (tab.empty()) return;
@@ -1279,16 +1279,16 @@ void Medium::SetExtrapolationMethodIonDissociation(const std::string& low,
 
 void Medium::SetExtrapolationMethod(const std::string& low,
                                     const std::string& high,
-                                    std::pair<unsigned int, unsigned int>& extr,
+                                    std::pair<std::size_t, std::size_t>& extr,
                                     const std::string& fcn) {
-  unsigned int i = 0;
+  std::size_t i = 0;
   if (GetExtrapolationIndex(low, i)) {
     extr.first = i;
   } else {
     std::cerr << m_className << "::SetExtrapolationMethod" << fcn << ":\n"
               << "    Unknown extrapolation method (" << low << ")\n";
   }
-  unsigned int j = 0;
+  std::size_t j = 0;
   if (GetExtrapolationIndex(high, j)) {
     extr.second = j;
   } else {
@@ -1297,7 +1297,7 @@ void Medium::SetExtrapolationMethod(const std::string& low,
   }
 }
 
-bool Medium::GetExtrapolationIndex(std::string str, unsigned int& nb) const {
+bool Medium::GetExtrapolationIndex(std::string str, std::size_t& nb) const {
   // Convert to upper-case.
   std::transform(str.begin(), str.end(), str.begin(), toupper);
 
@@ -1337,27 +1337,27 @@ size_t Medium::SetThreshold(
   return nE - 1;
 }
 
-void Medium::SetInterpolationMethodVelocity(const unsigned int intrp) {
+void Medium::SetInterpolationMethodVelocity(const std::size_t intrp) {
   if (intrp > 0) m_intpVel = intrp;
 }
 
-void Medium::SetInterpolationMethodDiffusion(const unsigned int intrp) {
+void Medium::SetInterpolationMethodDiffusion(const std::size_t intrp) {
   if (intrp > 0) m_intpDif = intrp;
 }
 
-void Medium::SetInterpolationMethodTownsend(const unsigned int intrp) {
+void Medium::SetInterpolationMethodTownsend(const std::size_t intrp) {
   if (intrp > 0) m_intpAlp = intrp;
 }
 
-void Medium::SetInterpolationMethodAttachment(const unsigned int intrp) {
+void Medium::SetInterpolationMethodAttachment(const std::size_t intrp) {
   if (intrp > 0) m_intpAtt = intrp;
 }
 
-void Medium::SetInterpolationMethodIonMobility(const unsigned int intrp) {
+void Medium::SetInterpolationMethodIonMobility(const std::size_t intrp) {
   if (intrp > 0) m_intpMob = intrp;
 }
 
-void Medium::SetInterpolationMethodIonDissociation(const unsigned int intrp) {
+void Medium::SetInterpolationMethodIonDissociation(const std::size_t intrp) {
   if (intrp > 0) m_intpDis = intrp;
 }
 
@@ -1378,7 +1378,7 @@ double Medium::GetAngle(const double ex, const double ey, const double ez,
 bool Medium::Interpolate(
     const double e, const double b, const double a,
     const std::vector<std::vector<std::vector<double> > >& table, double& y,
-    const unsigned int intp, const std::pair<unsigned int, unsigned int>& extr,
+    const std::size_t intp, const std::pair<std::size_t, std::size_t>& extr,
     const bool logval) const {
   if (table.empty()) {
     y = 0.;
@@ -1397,8 +1397,8 @@ bool Medium::Interpolate(
 
 double Medium::Interpolate1D(const double x, const std::vector<double>& ytab,
                              const std::vector<double>& xtab,
-                             const unsigned int intpMeth,
-                             const std::pair<unsigned int, unsigned int>& extr,
+                             const std::size_t intpMeth,
+                             const std::pair<std::size_t, std::size_t>& extr,
                              const bool logval) const {
   // This function is a generalized version of the Fortran functions
   // GASVEL, GASVT1, GASVT2, GASLOR, GASMOB, GASDFT, and GASDFL

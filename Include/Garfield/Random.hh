@@ -86,16 +86,16 @@ inline double RndmVoigt(const double mu, const double sigma,
 }
 
 /// Draw a random number from a geometric distribution.
-inline unsigned int RndmYuleFurry(const double mean) {
+inline std::size_t RndmYuleFurry(const double mean) {
   if (mean <= 0.) return 0;
-  return 1 + static_cast<unsigned int>(std::log(RndmUniformPos()) /
-                                       std::log1p(-1. / mean));
+  return 1 + static_cast<std::size_t>(std::log(RndmUniformPos()) /
+                                      std::log1p(-1. / mean));
   /*
   const double u = RndmUniform();
   double p = 1. / mean;
   const double q = 1. - p;
   double sum = p;
-  unsigned int k = 1;
+  std::size_t k = 1;
   while (sum < u) {
     ++k;
     p *= q;

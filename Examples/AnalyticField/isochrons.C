@@ -50,8 +50,8 @@ int main(int argc, char* argv[]) {
   // Loop around the sense wire and make a list of
   // starting points of the drift lines.
   std::vector<std::array<double, 3> > points;
-  unsigned int nPoints = 40;
-  for (unsigned int i = 0; i < nPoints; ++i) {
+  std::size_t nPoints = 40;
+  for (std::size_t i = 0; i < nPoints; ++i) {
     const double phi = i * TwoPi / nPoints;
     const double r0 = 0.51 * ds;
     const double x0 = r0 * cos(phi);
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
   nPoints = 25;
   points.clear();
   // Make a list of starting points along a straight-line "track".
-  for (unsigned int i = 0; i < nPoints; ++i) {
+  for (std::size_t i = 0; i < nPoints; ++i) {
     const double x0 = 0.8 * h;
     const double y0 = ymin + i * (ymax - ymin) / nPoints;
     std::array<double, 3> p0 = {x0, y0, 0.};
