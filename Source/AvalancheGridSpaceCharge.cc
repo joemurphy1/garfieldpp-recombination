@@ -400,8 +400,7 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   if (!fZField.is_open()) throw Exception("Error opening E_z file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      int gap = m_grid[iz][ir].gap;
-      const double ez = m_grid[iz][ir].ez + m_ezBkg[gap];
+      const double ez = -m_grid[iz][ir].emag * m_grid[iz][ir].ctheta;
       fZField << std::round(ez) << " ";
     }
     fZField << "\n";
@@ -412,7 +411,7 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   if (!fRField.is_open()) throw Exception("Error opening E_r file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      const double er = m_grid[iz][ir].er;
+      const double er = -m_grid[iz][ir].emag * m_grid[iz][ir].stheta;
       fRField << std::round(er) << " ";
     }
     fRField << "\n";
@@ -423,9 +422,7 @@ void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
   if (!fMagField.is_open()) throw Exception("Error opening E_r file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      int gap = m_grid[iz][ir].gap;
-      const double emag = Mag(m_grid[iz][ir].ez + m_ezBkg[gap], m_grid[iz][ir].er);
-      fMagField << std::round(emag) << " ";
+      fMagField << std::round(m_grid[iz][ir].emag) << " ";
     }
     fMagField << "\n";
   }
@@ -685,6 +682,10 @@ bool AvalancheGridSpaceCharge::Prepare() {
       // Set gas gap index.
       m_grid[iz][ir].gap = k;
       m_grid[iz][ir].anode = false;
+      // Set the electric field.
+      m_grid[iz][ir].emag = std::abs(m_ezBkg[k]);
+      m_grid[iz][ir].ctheta = m_ezBkg[k] > 0. ? -1. : 1.;
+      m_grid[iz][ir].stheta = 0.; 
       // Continue if nodes are not in a gas gap.
       if (k < 0) continue;
       // Set swarm parameters.
@@ -869,26 +870,30 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 
     for (int iz = 0; iz <= m_zSteps; iz++) {
       double zi = m_zGrid[iz];
-      // continue if not in gas gap
+      // Continue if not in a gas gap.
       int gap = m_grid[iz][0].gap;
       if (gap == -1) continue;
       for (int ir = 0; ir <= m_rSteps; ir++) {
         double ri = m_rGrid[ir];
         auto &nd = m_grid[iz][ir];
 
-        // Reset the local fields at this node.
-        nd.ez = 0;
-        nd.er = 0;
-
+        // Reset the fields at this node.
+        nd.emag = m_ezBkg[gap];
+        nd.stheta = 0.;
+        nd.ctheta = m_ezBkg[gap] > 0. ? -1. : 1.;
         // Skip if there are no electrons or if we are at an anode.
         if (nd.nE < 1 || nd.anode) continue;
 
-        // Update the space charge field on this node.
-        m_rings[gap].ElectricField(ri, zi, 0., nd.er, nd.ez, dummy, m, stat);
-        
-        // check if local field reaches background field values.
-        const double emag = Mag(nd.ez + m_ezBkg[gap], nd.er);
-        if (emag >= m_ezThr[gap] && !m_bFieldK) {
+        // Get the space charge field on this node.
+        double erS = 0., ezS = 0.;
+        m_rings[gap].ElectricField(ri, zi, 0., erS, ezS, dummy, m, stat);
+        nd.emag = Mag(ezS + m_ezBkg[gap], erS); 
+        if (nd.emag > 1.e-8) {
+          const double einv = 1. / nd.emag;
+          nd.ctheta = -(ezS + m_ezBkg[gap]) * einv;
+          nd.stheta = -erS * einv;
+        }
+        if (nd.emag >= m_ezThr[gap] && !m_bFieldK) {
           std::cout << m_className << ":TransportTimeStep:\n"
                     << "    Space-charge field reached "
                     << std::to_string(int(m_fStreamerK * 100))
@@ -900,7 +905,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         }
 
         // Calculate the swarm parameters.
-        GetSwarmParameters(m_medium[gap], emag, nd.townsend, nd.attachment, nd.vd,
+        GetSwarmParameters(m_medium[gap], nd.emag, nd.townsend, nd.attachment, nd.vd,
                            nd.dSigmaL, nd.dSigmaT, nd.wv, nd.wr, nd.townsendPT,
                            nd.attachmentPT);
 
@@ -919,7 +924,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
                       << dtPrev << " to: " << m_dt << "\n"
                       << "      due to step size: " << step
                       << " bulk velocity: " << nd.wr << "\n"
-                      << "      electric field: " << emag
+                      << "      electric field: " << nd.emag
                       << " alpha: " << nd.townsendPT
                       << " eta: " << nd.attachmentPT << "\n"
                       << "      diffusion longitudinal/transversal: "
@@ -963,13 +968,12 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
       m_nPtot += std::round(nPOut);
 
       // calculate steps against electric field i.e. correct sign.
-      const double emag = Mag(nd.ez + m_ezBkg[gap], nd.er);
-      double stepZ = step * (-(nd.ez + m_ezBkg[gap]) / emag);
-      const double stepR = step * (-(nd.er) / emag);
+      double stepZ = step * nd.ctheta;
+      const double stepR = step * nd.stheta;
 
       if (m_bDiffusion) {
         // correct the stepping from diffusion + charge distribution
-        DiffuseTimeStep(step, emag, nEOut, std::round(nPOut), std::round(nNOut),
+        DiffuseTimeStep(step, nEOut, std::round(nPOut), std::round(nNOut),
                         iz, ir, gap);
       } else {
         // calculate steps and distribute charges (no diffusion)
@@ -1063,8 +1067,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 }
 
 void AvalancheGridSpaceCharge::DiffuseTimeStep(
-    const double dx, const double emag,
-    const long nE, const double nP, const double nN,
+    const double dx, const long nE, const double nP, const double nN,
     const int iz, const int ir, const int gap) {
   // Add diffusion onto the step dx
 
@@ -1093,20 +1096,11 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(
     rest = 0;
   }
 
-  // Calculate diffusion and add to transport step.
-  double sinTheta = 0.;
-  double cosTheta = 1.;
-  auto &nd = m_grid[iz][ir];
-  if (emag > 1.e-8) {
-    const double einv = 1. / emag;
-    cosTheta = (-(nd.ez + m_ezBkg[gap]) * einv);
-    sinTheta = (-(nd.er) * einv);
-  }
-
   double f = (double)groupSize / (double)nE;
+  // Calculate diffusion and add to transport step.
   const double r = m_rGrid[ir];
   const double sqrtdx = std::sqrt(dx);
-
+  auto &nd = m_grid[iz][ir];
   for (int group = 0; group < groups; group++) {
     // In the last loop we add the rest to the groupSize.
     if (group == groups - 1) {
@@ -1123,10 +1117,10 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(
 
     // Transform to avalanche coordinate system
     // (Z,R,Y) where R mimics an X axis and Y is perpendicular to R and Z
-    const double dX = cosTheta * dU + sinTheta * dW;
+    const double dX = nd.ctheta * dU + nd.stheta * dW;
     // dY = dV
     // Sign seems correct due to sign in cos- and sinTheta
-    const double dZ = cosTheta * dW - sinTheta * dU;  
+    const double dZ = nd.ctheta * dW - nd.stheta * dU;  
 
     // calculate the change of radius
     // sign correct and stepR >= -r

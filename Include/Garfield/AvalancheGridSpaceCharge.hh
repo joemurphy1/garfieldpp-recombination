@@ -149,10 +149,12 @@ class AvalancheGridSpaceCharge {
     double townsendPT{0.};
     /// Attachment rate from TOF experiment 1/ns -> 1/cm
     double attachmentPT{0.};
-    /// Space-charge electric field in R direction (can be negative)
-    double er{0.};
-    /// Space-charge electric field in Z direction (can be negative)
-    double ez{0.};
+
+    /// Magnitude of the electric field.
+    double emag{0.};
+    /// Direction vector.
+    double ctheta{1.};
+    double stheta{0.};
 
     bool anode{false};  ///< init the anode
     /// Gas gap index: -1 if not gas gap; starts with 0, 1, ...
@@ -177,7 +179,7 @@ class AvalancheGridSpaceCharge {
   bool TransportTimeStep();
 
   // Diffuses the electrons/nodes a timestep
-  void DiffuseTimeStep(const double dx, const double emag,
+  void DiffuseTimeStep(const double dx, 
                        const long nE, const double nP, const double nN,
                        const int iz, const int ir, const int gasGap);
 
