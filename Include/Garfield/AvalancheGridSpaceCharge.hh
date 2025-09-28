@@ -49,7 +49,7 @@ class AvalancheGridSpaceCharge {
   void EnableSpaceChargeEffect(const bool option = true) {
     m_bSpaceCharge = option;
     if (option) {
-      if (!m_isgridset) {
+      if (m_zGrid.empty() || m_rGrid.empty()) {
         throw std::runtime_error(m_className +
                                  "::EnableSpaceChargeEffect: use Set2dGrid() "
                                  "before enabling space charge.");
@@ -73,16 +73,12 @@ class AvalancheGridSpaceCharge {
   /// effect is turned off (default 1e8)
   void SetNCrit(const long NCrit = 1e8) { m_lNCrit = NCrit; }
 
-  /// Sets the different options to calculate the space charge field
-  ///   coulomb: free field approximation
-  ///   (relaxation: fdm-relaxation methode (with a condition to stop))
-  ///   mirror: symmetric 3 layer single gap rpc with metal - resistive layer -
-  ///   gas gap - r. l. - m.
+  /// Sets the method for calculating the space charge field.
+  ///   Coulomb: free field approximation.
+  ///   Mirror: symmetric three-layer single-gap RPC
+  ///           (metal - resistive layer - gas - resistive layer - metal).
   void SetFieldCalculation(const std::string &option = "coulomb",
-                           const int nof_approx = 1) {
-    m_sFieldOption = std::move(option);
-    m_iFieldApprox = nof_approx;
-  }
+                           const int nof_approx = 1);
 
   /// Set the streamer-inception criterion constant K in the interval (0,
   /// &infin;) s.t. 1 = 100%
@@ -144,42 +140,37 @@ class AvalancheGridSpaceCharge {
 
  private:
   struct GridNode {
-    long nElectron{0};   ///< electrons on node
-    double nPosIon{0.};  ///< pos ion on node (smeared values allowed)
-    double nNegIon{0.};  ///< neg ion on node (smeared values allowed)
-    // holder memories for stepping in time:
-    long nElectronHolder{0};   ///< at t+dt
-    double nPosIonHolder{0.};  ///< at t+dt
-    double nNegIonHolder{0.};  ///< at t+dt
+    long nE{0};     ///< number of electrons
+    double nP{0.};  ///< number of positive ions (smeared values allowed)
+    double nN{0.};  ///< number of negative ions (smeared values allowed)
+    // Electrons and ions at the next step in time:
+    long nEHolder{0};     ///< at t+dt
+    double nPHolder{0.};  ///< at t+dt
+    double nNHolder{0.};  ///< at t+dt
 
-    double townsend{0.};    ///< townsend at this node 1/cm
-    double attachment{0.};  ///< attachment at this node 1/cm
-    /// Magnitude of velocity of the node (not negative) cm/ns
-    double velocity{0.};
+    double townsend{0.};    ///< Townsend coefficient [1/cm]
+    double attachment{0.};  ///< Attachment coefficient [1/cm]
+    /// Magnitude of the drift velocity [cm/ns]
+    double vd{0.};
     /// Diffusion along E.
     double dSigmaL{0.};
     /// Diffusion transverse to E (radial, phi dir is net 0).
     double dSigmaT{0.};
 
-    double Wv{0.};  ///< flux drift cm/ns
-    double Wr{0.};  ///< bulk drift cm/ns
+    double wv{0.};  ///< flux drift velocity [cm/ns]
+    double wr{0.};  ///< bulk drift velocity [cm/ns]
     /// Ionization rate from TOF experiment 1/ns -> 1/cm
     double townsendPT{0.};
     /// Attachment rate from TOF experiment 1/ns -> 1/cm
     double attachmentPT{0.};
     /// Space-charge electric field in R direction (can be negative)
-    double eFieldR{0.};
+    double er{0.};
     /// Space-charge electric field in Z direction (can be negative)
-    double eFieldZ{0.};
-
-    double time{0.};  ///< Node clock.
+    double ez{0.};
 
     bool anode{false};  ///< init the anode
-    /// LayerIndex in ParallelPlate convention != gas gap index
-    int layerIndex{0};
     /// Gas gap index: -1 if not gas gap; starts with 0, 1, ...
     int gasGapIndex{0};
-    bool isGasGap{true};
   };
 
   struct Point {
@@ -187,8 +178,6 @@ class AvalancheGridSpaceCharge {
     double y{0.};
     double z{0.};  ///< coordinates
     double t{0.};  ///< time
-
-    int gasLayerIndex{0};
   };
 
   // Prepare grid and place stored electrons from AvalancheMicroscopic import
@@ -204,22 +193,20 @@ class AvalancheGridSpaceCharge {
   bool TransportTimeStep();
 
   // Diffuses the electrons/nodes a timestep
-  void DiffuseTimeStep(double dx, long nElectron, double nPosIon,
-                       double nNegIon, int iz, int ir, int gasGap);
+  void DiffuseTimeStep(const double dx, const double emag,
+                       const long nE, const double nP, const double nN,
+                       const int iz, const int ir, const int gasGap);
 
   // Redistributes the charges
   void DistributeCharges(long nElectron, double nPosIon, double nNegIon, int iz,
                          int ir, double stepZ, double stepR, int gasGap);
 
-  // Get swarm parameters at electric field magnitude
-  void GetSwarmParameters(double MagEField, double &alpha, double &eta,
-                          double &drift, double &dSigmaL, double &dSigmaT,
+  // Get swarm parameters.
+  void GetSwarmParameters(const double x, const double y, const double z, 
+                          const double emag, double &alpha, double &eta,
+                          double &vd, double &dSigmaL, double &dSigmaT,
                           double &wv, double &wr, double &alphaPT,
-                          double &etaPT, int gasGap);
-
-  // Change from 2dGrid to Global coordinates
-  void GetGlobalCoordinates(double r, double z, double phi, double &xg,
-                            double &yg, double &zg, int gasGap);
+                          double &etaPT) const;
 
   // Get from index the gas gap number, else -1
   int GetGasGapNumber(int layerIndex);
@@ -249,36 +236,30 @@ class AvalancheGridSpaceCharge {
   /// Flag if TOF parameters should be used, else Magboltz
   /// drift and SST spatial coefficients
   bool m_bUseTOF{true};
-  /// Flag if bulk drift velocity is available to the simulation
-  bool m_bWrAvailable{true};
-  /// Flag if temporal rates are available to the simulation
-  bool m_bRatesAvailable{true};
 
   bool m_bMC{true};
 
   int m_iFieldApprox{1};    //< order of approximation in Set(1,2,3,...)
-  double m_dMinGroups{50};  //< same values as lippmann
 
   ComponentParallelPlate *m_pp{nullptr};
   Sensor *m_sensor{nullptr};
 
   std::vector<double> m_zGrid;  ///< Grid points of z-coordinate.
   int m_zSteps{0};              ///< Number of grid points.
-  double m_zStepSize{0.};       /// Distance between the grid points.
+  double m_zStepSize{0.};       ///< Distance between the grid points.
+  double m_zInvStep{0.};        ///< Inverse of the grid spacing.
 
   std::vector<double> m_rGrid;  ///< Grid points of r-coordinate.
   int m_rSteps{0};              ///< Number of grid points
-  double m_rStepSize{0.};       /// Distance between the grid points.
+  double m_rStepSize{0.};       ///< Distance between the grid points.
+  double m_rInvStep{0.};        ///< Inverse of the grid spacing.
 
-  bool m_isgridset{false};  ///< Keeps track if the grid has been defined.
   long m_nTotElectron{0};   ///< Total amount of electrons at time step.
   long m_nTotPosIons{0};    ///< total amount of charge created
 
   double m_time{0.};   ///< Clock.
   double m_time0{0.};  ///< Initial time.
   double m_dt{0.};     ///< Time step.
-  /// Tracking if the charges are still in the drift gap.
-  bool m_run{true};
 
   std::vector<std::vector<int>>
       m_zGasGapBoundaries;  ///< [k] -> {izLeft, ..., izRight}
@@ -288,9 +269,6 @@ class AvalancheGridSpaceCharge {
   std::vector<std::vector<Point>> m_vElectrons;
 
   std::vector<std::pair<double, long>> m_vNElectronEvolution;
-  std::vector<long> m_vGroupSizes = {
-      1500, 800, 400, 200, 100,
-      50,   20,  10,  5,   2};  ///< same values as Lippmann & Riegler
   /// Which layer indices are gas layers
   std::vector<int> m_vIndexGasGaps = {0};
 
@@ -305,7 +283,11 @@ class AvalancheGridSpaceCharge {
   /// Which gas gaps are saturated if saturation is on
   std::vector<int> m_vSaturatedGaps;
 
-  std::string m_sFieldOption{"coulomb"};
+  enum class FieldOption {
+    Coulomb,
+    Mirror
+  };
+  FieldOption m_fieldOption{FieldOption::Coulomb};
 
   /// Vector of ComponentChargedRing objects
   /// We might need multiple ring systems, e.g. one per gas gap.

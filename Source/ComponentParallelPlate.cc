@@ -124,7 +124,7 @@ double ComponentParallelPlate::IntegratePromptPotential(const Electrode &el,
                                       z);  //(x,y,x0,y0,lx,ly,z)
       int im;
       double epsm = 0.;
-      getLayer(z, im, epsm);
+      GetLayer(z, im, epsm);
       if (!m_getPotentialInPlate && epsm != 1) return 0.;
       double upLim = m_upperBoundIntegration;
       if (z == 0 || m_upperBoundIntegration / z > 200) {
@@ -139,7 +139,7 @@ double ComponentParallelPlate::IntegratePromptPotential(const Electrode &el,
       m_wpStripIntegral.SetParameters(x, el.xpos, el.lx, z);  //(x,x0,lx,z)
       int im;
       double epsm = 0.;
-      getLayer(z, im, epsm);
+      GetLayer(z, im, epsm);
       if (!m_getPotentialInPlate && epsm != 1) return 0.;
       double upLim = m_upperBoundIntegration;
       if (z == 0 || m_upperBoundIntegration / z > 200) {
@@ -168,7 +168,7 @@ void ComponentParallelPlate::ElectricField(const double x, const double y,
 
   int im = -1;
   double epsM = -1;
-  if (!getLayer(y, im, epsM)) {
+  if (!GetLayer(y, im, epsM)) {
     if (m_debug)
       std::cout << m_className << "::ElectricField: Not inside geometry.\n";
     status = -6;
@@ -205,7 +205,7 @@ void ComponentParallelPlate::ElectricField(const double x, const double y,
 
   int im = -1;
   double epsM = -1;
-  if (!getLayer(y, im, epsM)) {
+  if (!GetLayer(y, im, epsM)) {
     if (m_debug)
       std::cout << m_className << "::ElectricField: Not inside geometry.\n";
     status = -6;
@@ -365,9 +365,8 @@ void ComponentParallelPlate::AddPlane(const std::string &label, bool anode) {
 Medium *ComponentParallelPlate::GetMedium(const double x, const double y,
                                           const double z) {
   Medium *medium = m_geometry ? m_geometry->GetMedium(x, y, z) : m_medium;
-  int i = -1;
-  double eps = 0.;
-  if (!getLayer(y, i, eps)) return nullptr;
+  const int i = GetLayer(y);
+  if (i < 0) return nullptr;
   return m_conductive[i] ? nullptr : medium;
 }
 
@@ -500,7 +499,7 @@ void ComponentParallelPlate::setHIntegrand() {
 
     int im = -1;
     double epsM = -1;
-    if (!getLayer(z, im, epsM)) return 0.;
+    if (!GetLayer(z, im, epsM)) return 0.;
     LayerUpdate(z, im, epsM);
 
     for (int i = 0; i < pow(2, m_N - im - 1); i++) {

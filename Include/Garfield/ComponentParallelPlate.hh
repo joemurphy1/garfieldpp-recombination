@@ -101,9 +101,16 @@ class ComponentParallelPlate : public Component {
   bool GetBoundingBox(double &xmin, double &ymin, double &zmin, double &xmax,
                       double &ymax, double &zmax) override;
 
-  // Obtain the index and permitivity of the layer at height z.
-  // TODO: getLayer -> GetLayer
-  bool getLayer(const double y, int &m, double &epsM) {
+  // Obtain the index of the layer at a given coordinate.
+  int GetLayer(const double y) const {
+    if (y < m_z[0]) return -1;
+    for (int i = 1; i < m_N; i++) {
+      if (y <= m_z[i]) return i;
+    }
+    return -1;
+  }
+  // Obtain the index and permittivity of the layer at a given coordinate.
+  bool GetLayer(const double y, int &m, double &epsM) const {
     m = -1;
     if (y < m_z[0]) return false;
     for (int i = 1; i < m_N; i++) {
@@ -116,9 +123,9 @@ class ComponentParallelPlate : public Component {
     epsM = m_epsHolder[m - 1];
     return true;
   }
-  // Obtain the relative permittivity from layer at index m
-  void getPermittivityFromLayer(int m, double &eps) {
-    eps = m_epsHolder.at(m - 1);
+  // Obtain the relative permittivity of the layer with index m.
+  double GetPermittivityFromLayer(int m) const {
+    return m_epsHolder.at(m - 1);
   }
   // Obtain the z-coordinate bounds of layer m
   void getZBoundFromLayer(int m, double &zbottom, double &ztop) {
@@ -253,7 +260,7 @@ class ComponentParallelPlate : public Component {
   double wpPlane(const double z) {
     int im = -1;
     double epsM = -1;
-    if (!getLayer(z, im, epsM)) return 0.;
+    if (!GetLayer(z, im, epsM)) return 0.;
     double v = 1 - (z - m_z[im - 1]) * constWEFieldLayer(im);
     for (int i = 1; i <= im - 1; i++) {
       v -= m_d[i - 1] * constWEFieldLayer(i);
