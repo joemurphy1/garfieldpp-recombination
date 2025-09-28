@@ -5,6 +5,8 @@
 #include "Garfield/ComponentNeBem3d.hh"
 #include "neBEM.h"
 
+#include <string.h>
+
 namespace neBEM {
 
 /// Assign default values to some of the important global variables.

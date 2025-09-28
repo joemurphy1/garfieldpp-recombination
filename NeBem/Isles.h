@@ -10,7 +10,6 @@
 #define ISLESGLOBAL extern
 #endif
 
-#include <math.h>
 #include <stdio.h>
 
 #include "Vector.h"

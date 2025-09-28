@@ -7,11 +7,14 @@
 include(CMakeFindDependencyMacro)
 
 find_dependency(ROOT 6.0 COMPONENTS Geom Gdml)
-find_dependency(GSL)
 find_dependency(Magboltz)
 
 if(@OpenMP_CXX_FOUND@)
   find_dependency(OpenMP)
+endif()
+
+if(@GARFIELD_WITH_GSL@)
+  find_dependency(GSL)
 endif()
 
 if(@GARFIELD_WITH_DEGRADE@)

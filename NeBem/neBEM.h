@@ -10,10 +10,7 @@
 #define neBEMGLOBAL extern
 #endif
 
-#include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "Vector.h"
 
@@ -167,7 +164,10 @@ neBEMGLOBAL int ModelCntr, MeshCntr, BCCntr, PPCntr;
 neBEMGLOBAL int NbConstraints;  // Arising of different physical considerations
 neBEMGLOBAL int NbEqns, NbUnknowns;  // rows and columns in [Inf]
 neBEMGLOBAL int DebugLevel;
-neBEMGLOBAL int OptSVD, OptLU, OptGSL;  // option SVD, LU and GSL decompositions
+neBEMGLOBAL int OptSVD, OptLU;
+#if !defined(WITHOUT_GSL)
+neBEMGLOBAL int OptGSL;  // option SVD, LU and GSL decompositions
+#endif
 neBEMGLOBAL double **Inf, **InvMat, *RHS, *Solution;
 neBEMGLOBAL double LengthScale;
 

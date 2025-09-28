@@ -44,24 +44,10 @@ build-alma9:
       
 # Docker image chosen to match build instructions at:
 # https://garfieldpp.web.cern.ch/garfieldpp/getting-started/
-#build-centos7-view97:
-#  stage: build
-#  image: rootproject/root:6.22.02-centos7
-#  before_script:
-#    - yum install libXmu-devel motif-devel -y
-#  script:
-#    - source /cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-centos7-gcc9-opt/setup.sh
-#    - rm -rf build
-#    - mkdir build
-#    - cd build
-#    - cmake  -DCMAKE_INSTALL_PREFIX=/usr/local ../
-#    - make -j4
-#    - make install
 
-build-ubuntu23:
+build-ubuntu25:
   stage: build
-  #image: rootproject/root:latest
-  image: rootproject/root:6.30.06-ubuntu23.10
+  image: rootproject/root:6.36.00-ubuntu25.04
   script:
     - rm -rf build
     - mkdir build
@@ -70,9 +56,9 @@ build-ubuntu23:
     - make -j4
     - make install
 
-build-ubuntu22:
+build-ubuntu24:
   stage: build
-  image: rootproject/root:6.30.04-ubuntu22.04
+  image: rootproject/root:6.34.00-ubuntu24.10
   script:
     - rm -rf build
     - mkdir build
@@ -81,10 +67,11 @@ build-ubuntu22:
     - make -j4
     - make install
 
-build-fedora32:
+build-fedora41:
   stage: build
-  image: rootproject/root:6.22.02-fedora32
+  image: fedora:41
   script:
+    - dnf --nodocs --assumeyes install cmake gcc gcc-fortran root root python3-distrdf python3-root root-cli root-fftw root-foam root-fumili root-gdml root-genetic root-genvector root-geom root-geom-builder root-geom-painter root-geom-webviewer root-graf-fitsio root-graf-gpadv7 root-graf-gviz root-graf-primitives root-graf-x11 root-graf3d-csg root-graf3d-eve root-graf3d-eve7 root-graf3d-gl root-graf3d-gviz3d root-graf3d-x3d root-gui-browsable root-gui-browsable-v7 root-gui-browserv7 root-gui-browserv7-v7 root-gui-builder root-gui-canvaspainter root-gui-fitpanel root-gui-fitpanelv7 root-gui-ged root-gui-html root-gui-recorder root-gui-webdisplay root-gui-webgui6 root-hist-factory root-io-dcache root-io-sql root-io-xml root-io-xmlparser root-mlp root-montecarlo-eg root-montecarlo-pythia8 root-net-auth root-net-davix root-net-http root-net-httpsniff root-netx root-quadp root-roofit root-roofit-batchcompute root-roofit-codegen root-roofit-core root-roofit-hs3 root-roofit-jsoninterface root-roofit-more root-roofit-multiprocess root-roofit-zmq root-roostats root-smatrix root-spectrum root-spectrum-painter root-splot root-sql-mysql root-sql-odbc root-sql-pgsql root-sql-sqlite root-testsupport root-tmva root-tmva-gui root-tmva-python root-tmva-sofie root-tmva-sofie-parser root-tmva-utils root-tpython root-tree-viewer root-tree-webviewer root-unfold root-unuran root-xroofit python3-jsmva root-fonts root-gui-qt5webdisplay root-hist-draw root-histv7 root-html root-cli root-cling root-core root-fftw root-foam root-fumili root-gdml root-genetic root-genvector root-geom root-geom-builder root-geom-painter root-geom-webviewer root-graf root-graf-asimage root-graf-fitsio root-graf-gpad root-graf-gpadv7 root-graf-gviz root-graf-postscript root-graf-primitives root-graf-x11 root-graf3d root-graf3d-csg root-hist root-mathcore root-matrix root-multiproc root-spectrum 
     - rm -rf build
     - mkdir build
     - cd build
@@ -92,10 +79,11 @@ build-fedora32:
     - make -j4
     - make install
     
-build-fedora33:
+build-fedora42:
   stage: build
-  image: rootproject/root:6.22.06-fedora33
+  image: fedora:42
   script:
+    - dnf --nodocs --assumeyes install cmake gcc gcc-fortran root root python3-distrdf python3-root root-cli root-fftw root-foam root-fumili root-gdml root-genetic root-genvector root-geom root-geom-builder root-geom-painter root-geom-webviewer root-graf-fitsio root-graf-gpadv7 root-graf-gviz root-graf-primitives root-graf-x11 root-graf3d-csg root-graf3d-eve root-graf3d-eve7 root-graf3d-gl root-graf3d-gviz3d root-graf3d-x3d root-gui-browsable root-gui-browsable-v7 root-gui-browserv7 root-gui-browserv7-v7 root-gui-builder root-gui-canvaspainter root-gui-fitpanel root-gui-fitpanelv7 root-gui-ged root-gui-html root-gui-recorder root-gui-webdisplay root-gui-webgui6 root-hist-factory root-io-dcache root-io-sql root-io-xml root-io-xmlparser root-mlp root-montecarlo-eg root-montecarlo-pythia8 root-net-auth root-net-davix root-net-http root-net-httpsniff root-netx root-quadp root-roofit root-roofit-batchcompute root-roofit-codegen root-roofit-core root-roofit-hs3 root-roofit-jsoninterface root-roofit-more root-roofit-multiprocess root-roofit-zmq root-roostats root-smatrix root-spectrum root-spectrum-painter root-splot root-sql-mysql root-sql-odbc root-sql-pgsql root-sql-sqlite root-testsupport root-tmva root-tmva-gui root-tmva-python root-tmva-sofie root-tmva-sofie-parser root-tmva-utils root-tpython root-tree-viewer root-tree-webviewer root-unfold root-unuran root-xroofit python3-jsmva root-fonts root-gui-qt5webdisplay root-hist-draw root-histv7 root-html root-cli root-cling root-core root-fftw root-foam root-fumili root-gdml root-genetic root-genvector root-geom root-geom-builder root-geom-painter root-geom-webviewer root-graf root-graf-asimage root-graf-fitsio root-graf-gpad root-graf-gpadv7 root-graf-gviz root-graf-postscript root-graf-primitives root-graf-x11 root-graf3d root-graf3d-csg root-hist root-mathcore root-matrix root-multiproc root-spectrum 
     - rm -rf build
     - mkdir build
     - cd build

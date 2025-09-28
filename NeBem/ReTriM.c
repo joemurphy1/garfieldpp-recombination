@@ -4,7 +4,9 @@
 
 #include <stdio.h>
 #include <time.h>
-#include <unistd.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
 
 #include "Isles.h"
 #include "NR.h"

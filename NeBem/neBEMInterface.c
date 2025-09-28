@@ -16,7 +16,9 @@
 #include <float.h>
 #include <stdio.h>
 #include <sys/stat.h>  // use of stat function
-#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
 
 #ifdef __cplusplus
 #include <vector>
@@ -290,8 +292,6 @@ int neBEMInitialize(void) {
   }  // if OptFastVol
 
   printf("neBEMInitialize: Initialization finished.\n");
-  sleep(3);  // wait for three seconds so that the user gets time to react
-
   neBEMState = 1;  // state 1 implied initialization of neBEM completed
 
   return (0);
