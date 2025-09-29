@@ -337,7 +337,7 @@ target_link_libraries(Garfield PUBLIC ROOT::Geom
                                       $<$<BOOL:${GARFIELD_WITH_DEGRADE}>:Degrade::Degrade>
                                       $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
                                       $<$<BOOL:${GARFIELD_WITH_CUDA}>:GarfieldGPU>)
-target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU> $<$<BOOL: NOT ${GARFIELD_WITH_GSL}>:WITHOUT_GSL>)
+target_compile_definitions(Garfield PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:USEGPU> $<$<NOT:$<BOOL:${GARFIELD_WITH_GSL}>>:WITHOUT_GSL>)
 target_include_directories(Garfield INTERFACE $<INSTALL_INTERFACE:include>
                                     PRIVATE $<$<BOOL:${GARFIELD_WITH_CUDA}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPU>> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/NeBem>
                                     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>)
