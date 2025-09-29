@@ -477,8 +477,8 @@ bool AvalancheGridSpaceCharge::SnapToGrid(const double x, const double y,
   // make step positive
   long nEOut;
   double nPOut, nNOut;
-  GetAvalancheSizeFromStep(std::abs(step), n, m_grid[iZ][iR].townsend,
-                           m_grid[iZ][iR].attachment, nEOut, nPOut, nNOut);
+  GetAvalancheSizeFromStep(std::abs(step), n, m_grid[iZ][iR].townsendPT,
+                           m_grid[iZ][iR].attachmentPT, nEOut, nPOut, nNOut);
   if (nEOut == 0) {
     if (m_bDebug)
       std::cerr << m_className << "::SnapToGrid: e- from " << n
