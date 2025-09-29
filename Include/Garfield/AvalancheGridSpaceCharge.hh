@@ -12,7 +12,6 @@
 namespace Garfield {
 class Sensor;
 class AvalancheMicroscopic;
-class ComponentParallelPlate;
 
 /// Propagates avalanches with the 2d (axi-symmetric) space-charge routine from
 /// Lippmann, Riegler (2004) in uniform background fields. Different options to
@@ -46,17 +45,7 @@ class AvalancheGridSpaceCharge {
   void EnableDiffusion(const bool option = true) { m_bDiffusion = option; }
 
   /// Enable space charge calculations (default on)
-  void EnableSpaceChargeEffect(const bool option = true) {
-    m_bSpaceCharge = option;
-    if (option) {
-      if (m_zGrid.empty() || m_rGrid.empty()) {
-        throw std::runtime_error(m_className +
-                                 "::EnableSpaceChargeEffect: use Set2dGrid() "
-                                 "before enabling space charge.");
-      }
-      SetRingSystems();
-    }
-  }
+  void EnableSpaceChargeEffect(const bool on = true) { m_bSpaceCharge = on; }
 
   /// Enable adaptive time stepping (default on)
   void EnableAdaptiveTimeStepping(const bool option = true) {
@@ -82,7 +71,7 @@ class AvalancheGridSpaceCharge {
 
   /// Set the streamer-inception criterion constant K in the interval (0,
   /// &infin;) s.t. 1 = 100%
-  void SetK(float option = 0.95) { m_fStreamerK = option; }
+  void SetK(const double k = 0.95) { m_fStreamerK = k; }
 
   /// Stop the avalanche if K % field is reached
   void SetStopAtK(bool option = true) { m_bStopAtK = option; }
@@ -102,18 +91,15 @@ class AvalancheGridSpaceCharge {
   void AddElectrons(AvalancheMicroscopic *avmc);
 
   /// Set n electrons onto the grid
-  void AddElectron(double x, double y, double z, double t = 0, int n = 1);
-
-  /// After calling AddElectron, add more electrons on the same
-  /// transversal line (y-freedom).
-  void AddExtraElectron(double y, int n = 1);
+  void AddElectron(const double x, const double y, const double z, 
+                   const double t = 0., const unsigned int n = 1);
 
   /// Starts the simulation with the imported electrons for a time step dt
   /// (dt = -1 until there are no electrons left in the gap).
   void StartGridAvalanche(double dtime = -1);
 
   /// Returns the total positive charge in the gap's
-  long GetAvalancheSize() const { return m_nTotPosIons; }
+  long GetAvalancheSize() const { return m_nPtot; }
 
   /// Return current mean distance of the electrons on the grid
   double GetMeanDistance();
@@ -129,7 +115,7 @@ class AvalancheGridSpaceCharge {
   /// Returns the total electron number evolution
   [[nodiscard]] const std::vector<std::pair<double, long>> &
   GetElectronEvolution() const {
-    return m_vNElectronEvolution;
+    return m_evolution;
   }
 
   /// Export the current grid to a txt file (electron, ions numbers and field
@@ -148,29 +134,29 @@ class AvalancheGridSpaceCharge {
     double nPHolder{0.};  ///< at t+dt
     double nNHolder{0.};  ///< at t+dt
 
-    double townsend{0.};    ///< Townsend coefficient [1/cm]
-    double attachment{0.};  ///< Attachment coefficient [1/cm]
     /// Magnitude of the drift velocity [cm/ns]
     double vd{0.};
     /// Diffusion along E.
-    double dSigmaL{0.};
+    double dL{0.};
     /// Diffusion transverse to E (radial, phi dir is net 0).
-    double dSigmaT{0.};
+    double dT{0.};
 
     double wv{0.};  ///< flux drift velocity [cm/ns]
     double wr{0.};  ///< bulk drift velocity [cm/ns]
-    /// Ionization rate from TOF experiment 1/ns -> 1/cm
-    double townsendPT{0.};
-    /// Attachment rate from TOF experiment 1/ns -> 1/cm
-    double attachmentPT{0.};
-    /// Space-charge electric field in R direction (can be negative)
-    double er{0.};
-    /// Space-charge electric field in Z direction (can be negative)
-    double ez{0.};
+    /// Townsend coefficient from TOF experiment.
+    double alpha{0.};
+    /// Attachment coefficient from TOF experiment.
+    double eta{0.};
+
+    /// Magnitude of the electric field.
+    double emag{0.};
+    /// Direction vector.
+    double ctheta{1.};
+    double stheta{0.};
 
     bool anode{false};  ///< init the anode
     /// Gas gap index: -1 if not gas gap; starts with 0, 1, ...
-    int gasGapIndex{0};
+    int gap{0};
   };
 
   struct Point {
@@ -178,22 +164,20 @@ class AvalancheGridSpaceCharge {
     double y{0.};
     double z{0.};  ///< coordinates
     double t{0.};  ///< time
+    size_t n{1};
   };
 
-  // Prepare grid and place stored electrons from AvalancheMicroscopic import
-  void PrepareElectronsFromMicroscopicAvalanche();
+  // Prepare grid and place stored electrons.
+  bool Prepare();
 
   // Assign electron to the closest grid point
-  bool SnapTo2dGrid(double x, double y, double z, long n = 1, int gasLayer = 0);
+  bool SnapToGrid(double x, double y, double z, long n = 1, int gasLayer = 0);
 
-  // Prepare the mesh with the ComponentParallelPlate
-  void Prepare2dMesh();
-
-  // Transports the electrons/nodes a timestep
-  bool TransportTimeStep();
+  // Propagate the electrons by one step.
+  bool Step();
 
   // Diffuses the electrons/nodes a timestep
-  void DiffuseTimeStep(const double dx, const double emag,
+  void DiffuseTimeStep(const double dx, 
                        const long nE, const double nP, const double nN,
                        const int iz, const int ir, const int gasGap);
 
@@ -202,28 +186,16 @@ class AvalancheGridSpaceCharge {
                          int ir, double stepZ, double stepR, int gasGap);
 
   // Get swarm parameters.
-  void GetSwarmParameters(const double x, const double y, const double z, 
-                          const double emag, double &alpha, double &eta,
-                          double &vd, double &dSigmaL, double &dSigmaT,
+  void GetSwarmParameters(Medium* medium, const double emag, 
+                          double &vd, double &dL, double &dT,
                           double &wv, double &wr, double &alphaPT,
                           double &etaPT) const;
 
-  // Get from index the gas gap number, else -1
-  int GetGasGapNumber(int layerIndex);
-
-  void SetRingSystems();
-
- private:
   std::string m_className{"AvalancheGridSpaceCharge"};
 
   bool m_bDebug{false};
   bool m_bDiffusion{false};
   bool m_bStick{true};
-  // boolean for AvalancheElectron
-  bool m_bDriftAvalanche{false};
-  // boolean for ImportElectronsFromAvalancheMicroscopic
-  bool m_bImportAvalanche{false};
-  bool m_bPreparedImportAvalanche{false};
   long m_lNCrit = {100000000};
   bool m_bSpaceCharge{true};
 
@@ -241,7 +213,6 @@ class AvalancheGridSpaceCharge {
 
   int m_iFieldApprox{1};    //< order of approximation in Set(1,2,3,...)
 
-  ComponentParallelPlate *m_pp{nullptr};
   Sensor *m_sensor{nullptr};
 
   std::vector<double> m_zGrid;  ///< Grid points of z-coordinate.
@@ -254,34 +225,39 @@ class AvalancheGridSpaceCharge {
   double m_rStepSize{0.};       ///< Distance between the grid points.
   double m_rInvStep{0.};        ///< Inverse of the grid spacing.
 
-  long m_nTotElectron{0};   ///< Total amount of electrons at time step.
-  long m_nTotPosIons{0};    ///< total amount of charge created
+  /// Total number of electrons.
+  long m_nEtot{0};   
+  /// Total amount of charge (number of positive ions) created.
+  long m_nPtot{0};   
 
   double m_time{0.};   ///< Clock.
-  double m_time0{0.};  ///< Initial time.
   double m_dt{0.};     ///< Time step.
 
-  std::vector<std::vector<int>>
-      m_zGasGapBoundaries;  ///< [k] -> {izLeft, ..., izRight}
+  /// Grid.
+  std::vector<std::vector<GridNode>> m_grid;  
+  /// Electrons to transfer onto the grid.
+  std::vector<Point> m_electrons;
 
-  std::vector<std::vector<GridNode>> m_grid;  ///< grid with nodes on it
-  /// Electrons to transfer onto grid
-  std::vector<std::vector<Point>> m_vElectrons;
+  std::vector<std::pair<double, long>> m_evolution;
 
-  std::vector<std::pair<double, long>> m_vNElectronEvolution;
-  /// Which layer indices are gas layers
-  std::vector<int> m_vIndexGasGaps = {0};
+  /// Axis centres of each gas gap.
+  std::vector<std::array<double, 3> > m_centre;
+  /// Boundaries of each gas gap.
+  std::vector<double> m_zBot;
+  std::vector<double> m_zTop;
+  /// Smallest and largest z-grid index of each gas gap.
+  std::vector<int> m_izMin;
+  std::vector<int> m_izMax; 
+  std::vector<double> m_alpha12;
 
-  /// Coordinates of center of electron number.
-  /// Required: y in [zmin, zmax]
-  std::vector<std::vector<double>> m_vCoNGasLayer;
-  /// Example point (y-coord) in each gas gap
-  std::vector<double> m_vYPointInGasGap;
-
+  /// Medium in each gas gap.
+  std::vector<Medium*> m_medium = {nullptr}; 
   /// Uniform background field in z direction, can be negative.
-  std::vector<double> m_ezBkg = {0};
-  /// Which gas gaps are saturated if saturation is on
-  std::vector<int> m_vSaturatedGaps;
+  std::vector<double> m_ezBkg = {0.};
+  /// Threshold field for streamer formation.
+  std::vector<double> m_ezThr = {0.};
+  /// Is the gas gap saturated?
+  std::vector<bool> m_saturated = {false};
 
   enum class FieldOption {
     Coulomb,
@@ -290,8 +266,8 @@ class AvalancheGridSpaceCharge {
   FieldOption m_fieldOption{FieldOption::Coulomb};
 
   /// Vector of ComponentChargedRing objects
-  /// We might need multiple ring systems, e.g. one per gas gap.
-  std::vector<ComponentChargedRing> m_vRingSystems;
+  /// We need one ring system per gas gap.
+  std::vector<ComponentChargedRing> m_rings;
 };
 
 }  // namespace Garfield

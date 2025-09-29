@@ -18,6 +18,12 @@ namespace {
 
 double Mag(const double x, const double y) { return std::sqrt(x * x + y * y); }
 
+// Get the gas gap number of a given layer, else -1.
+int GetGasGapNumber(const std::vector<int>& gasLayers, const int layer) {
+  auto it = std::find(gasLayers.begin(), gasLayers.end(), layer);
+  return (it != gasLayers.end()) ? std::distance(gasLayers.begin(), it) : -1;
+}
+
 // Get size of avalanche when going from x to x+dx in Monte Carlo fashion
 void GetAvalancheSizeFromStep(double dx, const long nEIn,
                               const double alpha, const double eta,
@@ -193,42 +199,23 @@ AvalancheGridSpaceCharge::AvalancheGridSpaceCharge(Sensor *sensor)
 void AvalancheGridSpaceCharge::SetSensor(Sensor *sensor) {
   if (!sensor) throw Exception("Sensor can't be nullptr");
   m_sensor = sensor;
-  // Determine if one of the components is a parallel-plate one.
-  m_pp = nullptr;
-  const size_t nCmp = m_sensor->GetNumberOfComponents();
-  for (size_t i = 0; i < nCmp; i++) {
-    m_pp = dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(i));
-    if (m_pp) break;
-  }
-}
-
-int AvalancheGridSpaceCharge::GetGasGapNumber(int layerIndex) {
-  auto it =
-      std::find(m_vIndexGasGaps.begin(), m_vIndexGasGaps.end(), layerIndex);
-  return (it != m_vIndexGasGaps.end())
-             ? std::distance(m_vIndexGasGaps.begin(), it)
-             : -1;
 }
 
 void AvalancheGridSpaceCharge::Reset() {
   m_time = 0.;
-  m_time0 = 0.;
   m_dt = 0.;
-  m_nTotElectron = 0;
-  m_nTotPosIons = 0;
+  m_nEtot = 0;
+  m_nPtot = 0;
 
-  m_vCoNGasLayer.resize(0);
-  m_vElectrons.resize(0);
-  m_vNElectronEvolution.resize(0);
+  m_centre.clear();
+  m_electrons.clear();
+  m_evolution.resize(0);
   m_grid.clear();
-  m_vYPointInGasGap.resize(0);
-  m_vIndexGasGaps = {0};
-  m_ezBkg = {0};
-  m_vSaturatedGaps.resize(0);
+  m_ezBkg = {0.};
+  m_ezThr = {0.};
+  m_medium = {nullptr};
+  m_saturated = {false};
 
-  m_bDriftAvalanche = false;
-  m_bImportAvalanche = false;
-  m_bPreparedImportAvalanche = false;
   m_bFieldK = false;
 
   std::cout << m_className << "::Reset: Instance reset, ready to use again.\n";
@@ -282,17 +269,10 @@ void AvalancheGridSpaceCharge::SetFieldCalculation(const std::string& option,
 void AvalancheGridSpaceCharge::AddElectrons(AvalancheMicroscopic *avmc) {
   if (!avmc) return;
 
-  if (!m_bImportAvalanche) {
-    m_bImportAvalanche = true;
-
-    // resize the electrons according to # gap
-    if (m_pp) m_pp->IndexOfGasGaps(m_vIndexGasGaps);
-    m_vElectrons.resize(m_vIndexGasGaps.size());
-  }
-
   if (m_bDebug) std::cout << m_className << "::AddElectrons:\n";
   for (const auto &electron : avmc->GetElectrons()) {
-    // Skip electrons that don't have status code "outside time window".
+    // Skip "inactive" electrons, i. e. electrons that don't have 
+    // status code "outside time window".
     if (electron.status != StatusOutsideTimeWindow) {
       if (m_bDebug) { 
         std::cout << "    Skipping electron with status " 
@@ -300,281 +280,186 @@ void AvalancheGridSpaceCharge::AddElectrons(AvalancheMicroscopic *avmc) {
       }
       continue;
     }
-    int k = 0;
-    if (m_pp) {
-      const int ind = m_pp->GetLayer(electron.path.back().y);
-      if (ind < 0) {
-        std::cerr << m_className
-                  << "::AddElectrons: Electron outside component.\n";
-        continue;
-      }
-      k = GetGasGapNumber(ind);
-      if (k == -1) {
-        std::cerr << m_className << "AddElectrons:\n"
-                  << "    Electron is not in a gas gap, continue.\n";
-        continue;
-      }
-    }
-    // Add the electron to a vector.
     Point pt{};
     pt.x = electron.path.back().x;
     pt.y = electron.path.back().y;
     pt.z = electron.path.back().z;
     pt.t = electron.path.back().t;
-    m_vElectrons[k].push_back(std::move(pt));
+    pt.n = electron.weight;
+    m_electrons.push_back(std::move(pt));
 
     if (m_bDebug)
       std::cout << m_className << "::AddElectrons: Electron added, y: "
-                << electron.path.back().y << " and gas gap: " << k + 1 << "\n";
+                << electron.path.back().y << ".\n";
   }
 }
 
 void AvalancheGridSpaceCharge::AddElectron(const double x, const double y,
                                            const double z, const double t,
-                                           const int n) {
-  int gasGap = 0;
-  // check if avalanche electron in a gas gap
-  if (m_pp) {
-    int ind;
-    double eps = -1;
-    if (!m_pp->GetLayer(y, ind, eps) && eps != 1.) {
-      std::cerr << m_className << "AddElectron: Electron is not in a gas gap.";
-      return;
-    }
-    // determine indices of gas gaps
-    m_pp->IndexOfGasGaps(m_vIndexGasGaps);
-    gasGap = GetGasGapNumber(ind);
-  } else {
-    // put the y-electron coord as reference
-    m_vYPointInGasGap.push_back(y);
-  }
-
-  if (!m_bDriftAvalanche) {
-    m_bDriftAvalanche = true;
-  }
-
-  if (m_time == 0 && m_time != t && m_bDebug)
-    std::cerr << m_className
-              << "::AddElectron: Overwriting start time of avalanche for t "
-                 "= 0 to "
-              << t << ".\n";
-
-  m_time = t;
-  m_time0 = t;
-
-  // prepare the CoN
-  for (int i = 0; i < (int)m_vIndexGasGaps.size(); i++) {
-    if (i != gasGap) {
-      // HS: not sure it's a good idea to initialize with NAN...
-      m_vCoNGasLayer.push_back({NAN, NAN, NAN});
-    } else if (i == gasGap) {
-      m_vCoNGasLayer.push_back({x, y, z});
-    }
-  }
-
-  if (m_vCoNGasLayer.size() == 0) {
-    std::cerr << m_className << "::AddElectron: Could not determine center.\n";
-  }
-  Prepare2dMesh();
-  if (SnapTo2dGrid(x, y, z, n, gasGap) && m_bDebug)
-    std::cerr << m_className
-              << "::AddElectron: Electron added at (t, x, y, z) =  (" << t
-              << ", " << x << ", " << y << ", " << z << ").\n";
-}
-
-void AvalancheGridSpaceCharge::AddExtraElectron(double y, int n) {
-  if (!m_bDriftAvalanche) {
-    std::cerr << m_className << "::AddExtraElectron: First use AddElectron.\n";
-    return;
-  }
-
-  // check if avalanche electron in a gas gap
-  int gasGap = 0;
-  if (m_pp) {
-    int ind;
-    double eps = -1;
-    if (!m_pp->GetLayer(y, ind, eps) && eps != 1.) {
-      std::cerr << m_className
-                << "AddExtraElectron: Electron is not in a gas gap.";
-      return;
-    }
-    gasGap = GetGasGapNumber(ind);
-  }
-
-  // nothing yet in this gas gap
-  if (std::isnan(m_vCoNGasLayer[gasGap][0])) {
-    m_vCoNGasLayer[gasGap] = {0, y, 0};
-  }
-  if (SnapTo2dGrid(m_vCoNGasLayer[gasGap][0], y, m_vCoNGasLayer[gasGap][2], n,
-                   gasGap) &&
-      m_bDebug)
-    std::cout << m_className << "::AddExtraElectron: "
-              << "Electron added at (t, x, y, z) =  (" << m_time << ", "
-              << m_vCoNGasLayer[gasGap][0] << ", " << y << ", "
-              << m_vCoNGasLayer[gasGap][2] << ").\n";
+                                           const unsigned int n) {
+  Point pt{};
+  pt.x = x;
+  pt.y = y;
+  pt.z = z;
+  pt.t = t;
+  pt.n = n;
+  m_electrons.push_back(std::move(pt));
 }
 
 void AvalancheGridSpaceCharge::StartGridAvalanche(double dtime) {
   // avalanche the electrons until a certain delta-time OR there are no
   // electrons left in the gap
-  if ((!m_bImportAvalanche && !m_bDriftAvalanche) || !m_sensor) return;
+  if (!m_sensor) return;
 
-  // prepare the imported avalanche
-  if (m_bImportAvalanche && !m_bPreparedImportAvalanche) {
-    PrepareElectronsFromMicroscopicAvalanche();
-    if (m_bDebug)
-      std::cerr << m_className
-                << "::StartGridAvalanche: Microscopic electrons successfully "
-                   "prepared.\n";
-    m_bPreparedImportAvalanche = true;
+  if (m_nEtot > 0) {
+    // There are still electrons on the mesh from a previous run. 
+    if (m_bDebug) {
+      std::cout << m_className 
+                << "::StartGridAvalanche: Resuming from previous run.\n";
+    }
+  } else {
+    if (!Prepare()) {
+      std::cerr << m_className << "::StartGridAvalanche: Preparation failed.\n";
+      return;
+    }
+    if (m_bDebug) {
+      std::cout << m_className << "::StartGridAvalanche: Preparation ok.\n";
+    }
+    m_electrons.clear();
   }
 
-  // check if electrons are on grid
-  if (m_nTotElectron <= 0) {
-    std::cerr << m_className << "::StartGridAvalanche: Cancelled "
-              << m_nTotElectron << " electrons on grid.\n";
+  // Make sure there are electrons on the grid.
+  if (m_nEtot <= 0) {
+    std::cerr << m_className << "::StartGridAvalanche:\n"
+              << "    There are no electrons on the grid. Cannot proceed.\n";
     return;
   }
 
-  if (dtime == -1) {
-    // transport until no electrons in gap or an error is reached
-    while (true) {
-      // Transport the nodes (returns false if 0 electrons in gap)
-      if (!TransportTimeStep()) {
-        break;
-      }
+  if (dtime > 0.) {
+    const double tMax = m_time + dtime;
+    while (m_time + m_dt < tMax) {
+      if (!Step()) break;
     }
   } else {
-    double tStart = m_time;
-
-    while (m_time + m_dt - tStart < dtime) {
-      // Transport the nodes (returns false if 0 electrons in gap)
-      if (!TransportTimeStep()) {
-        break;
-      }
+    // Transport until there are no electrons left in gap or an error occurs.
+    while (true) {
+      if (!Step()) break;
     }
   }
 
-  if (!m_vNElectronEvolution.empty()) {
+  if (!m_evolution.empty()) {
     // determine maximal size of electron maxSize at time maxTime.
-    auto maxSize = std::max_element(m_vNElectronEvolution.begin(),
-                                    m_vNElectronEvolution.end(),
+    auto maxSize = std::max_element(m_evolution.begin(),
+                                    m_evolution.end(),
                                     [](const std::pair<double, long> &p1,
                                        const std::pair<double, long> &p2) {
                                       return p1.second < p2.second;
                                     });
-    double maxTime =
-        m_time0 +
-        m_dt *
-            ((double)std::distance(m_vNElectronEvolution.begin(), maxSize) + 1);
 
-    std::cout << m_className
-              << "::StartGridAvalanche: Avalanche maximum size of "
-              << maxSize->second << " electrons reached at " << maxTime
-              << " ns.\n";
-
-    std::cout << m_className
-              << "::StartGridAvalanche: Final avalanche size (produced "
-                 "positive charge) = "
-              << m_nTotPosIons << " ended at t = " << m_time << " ns.\n";
+    std::cout << m_className << "::StartGridAvalanche:\n"
+              << "    Maximum avalanche (" << maxSize->second 
+              << " electrons) reached at " << maxSize->first << " ns.\n";
+    std::cout << "    Avalanche ended at " << m_time << " ns.\n";
+    std::cout << "    Final avalanche size (number of positive ions): "
+              << m_nPtot << ".\n";
   }
 }
 
 void AvalancheGridSpaceCharge::ExportGrid(const std::string &filename) {
-  std::ofstream exportElectrons(filename + "_electrons.csv");
-  if (!exportElectrons.is_open()) throw Exception("Error opening e- file");
+  std::ofstream fE(filename + "_electrons.csv");
+  if (!fE.is_open()) throw Exception("Error opening e- file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      exportElectrons << m_grid[iz][ir].nE << " ";
+      fE << m_grid[iz][ir].nE << " ";
     }
-    exportElectrons << "\n";
+    fE << "\n";
   }
-  exportElectrons.close();
+  fE.close();
 
-  std::ofstream exportPosIon(filename + "_posion.csv");
-  if (!exportPosIon.is_open()) throw Exception("Error opening p+ file");
+  std::ofstream fP(filename + "_posion.csv");
+  if (!fP.is_open()) throw Exception("Error opening p+ file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      exportPosIon << std::floor(m_grid[iz][ir].nP) << " ";
+      fP << std::floor(m_grid[iz][ir].nP) << " ";
     }
-    exportPosIon << "\n";
+    fP << "\n";
   }
-  exportPosIon.close();
+  fP.close();
 
-  std::ofstream exportNegIon(filename + "_negion.csv");
-  if (!exportNegIon.is_open()) throw Exception("Error opening n- file");
+  std::ofstream fN(filename + "_negion.csv");
+  if (!fN.is_open()) throw Exception("Error opening n- file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      exportNegIon << std::floor(m_grid[iz][ir].nN) << " ";
+      fN << std::floor(m_grid[iz][ir].nN) << " ";
     }
-    exportNegIon << "\n";
+    fN << "\n";
   }
-  exportNegIon.close();
+  fN.close();
 
-  std::ofstream exportZField(filename + "_eFieldZ.csv");
-  if (!exportZField.is_open()) throw Exception("Error opening E_z file");
+  std::ofstream fZField(filename + "_eFieldZ.csv");
+  if (!fZField.is_open()) throw Exception("Error opening E_z file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      int gasGap = m_grid[iz][ir].gasGapIndex;
-      const double ez = m_grid[iz][ir].ez + m_ezBkg[gasGap];
-      exportZField << std::round(ez) << " ";
+      const double ez = -m_grid[iz][ir].emag * m_grid[iz][ir].ctheta;
+      fZField << std::round(ez) << " ";
     }
-    exportZField << "\n";
+    fZField << "\n";
   }
-  exportZField.close();
+  fZField.close();
 
-  std::ofstream exportRField(filename + "_eFieldR.csv");
-  if (!exportRField.is_open()) throw Exception("Error opening E_r file");
+  std::ofstream fRField(filename + "_eFieldR.csv");
+  if (!fRField.is_open()) throw Exception("Error opening E_r file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      const double er = m_grid[iz][ir].er;
-      exportRField << std::round(er) << " ";
+      const double er = -m_grid[iz][ir].emag * m_grid[iz][ir].stheta;
+      fRField << std::round(er) << " ";
     }
-    exportRField << "\n";
+    fRField << "\n";
   }
-  exportRField.close();
+  fRField.close();
 
-  std::ofstream exportMagField(filename + "_MagField.csv");
-  if (!exportMagField.is_open()) throw Exception("Error opening E_r file");
+  std::ofstream fMagField(filename + "_MagField.csv");
+  if (!fMagField.is_open()) throw Exception("Error opening E_r file");
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      int gasGap = m_grid[iz][ir].gasGapIndex;
-      const double emag = Mag(m_grid[iz][ir].ez + m_ezBkg[gasGap], m_grid[iz][ir].er);
-      exportMagField << std::round(emag) << " ";
+      fMagField << std::round(m_grid[iz][ir].emag) << " ";
     }
-    exportMagField << "\n";
+    fMagField << "\n";
   }
-  exportMagField.close();
+  fMagField.close();
 
   if (m_bDebug) {
     std::cout << m_className << "::ExportGrid: Grids exported.\n";
   }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/// Private Section:
-bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
-                                            const double z, const long n,
-                                            const int gasLayer) {
-  // Snap electron from AvalancheMicroscopic to the predefined grid
+bool AvalancheGridSpaceCharge::SnapToGrid(const double x, const double y,
+                                          const double z, const long n,
+                                          const int gap) {
+  // Snap electron to the predefined grid
   if (m_grid.empty()) throw Exception("Grid is not defined");
 
-  // y in micro is z in grid space-charge
-  const double r = Mag(x - m_vCoNGasLayer[gasLayer][0], 
-                       z - m_vCoNGasLayer[gasLayer][2]);
+  // Compute the radius.
+  const double r = Mag(x - m_centre[gap][0], z - m_centre[gap][2]);
   int iZ = (int)std::round((y - m_zGrid.front()) * m_zInvStep);
   int iR = (int)std::round(r * m_rInvStep);
 
   if (m_bDebug) {
-    std::cout << m_className << "::SnapTo2dGrid: iz = " << iZ << ", ir = " << iR
-              << ".\n";
+    std::cout << m_className << "::SnapToGrid: Adding point (" 
+              << y << ", " << r << ") to the grid.\n"
+              << "    Nearest grid node is (" << iZ << ", " << iR << ").\n";
   }
 
   if (iZ < 0 || iZ > m_zSteps || iR < 0 || iR > m_rSteps) {
     if (m_bDebug) {
-      std::cerr << m_className
-                << "::SnapTo2dGrid: Point is outside the grid.\n";
+      std::cerr << m_className << "    Point is outside the grid.\n";
     }
+    return false;
+  }
+  // Sanity check.
+  if (m_grid[iZ][iR].gap != gap) {
+    std::cerr << m_className
+              << "::SnapToGrid: Gas layer index does not match.\n";
     return false;
   }
 
@@ -582,35 +467,26 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
   // When snapping the electron to the grid the distance traveled can yield
   // additional electrons or get attached. (depends on if against E field or
   // along ...). e-field is along y (micro)
-  double step = m_zGrid[iZ] - y;
+  const double step = m_zGrid[iZ] - y;
   // determine if against (ok) or with e field (not ok):
-  int against = (step > 0 && m_ezBkg[gasLayer] < 0) ||
-                (step < 0 && m_ezBkg[gasLayer] > 0);
-
-  // sanity check
-  if (m_grid[iZ][iR].gasGapIndex != gasLayer) {
-    std::cerr << m_className
-              << "::SnapTo2dGrid: Gas layer index does not match.\n";
-    return false;
-  }
+  int against = (step > 0 && m_ezBkg[gap] < 0) ||
+                (step < 0 && m_ezBkg[gap] > 0);
 
   if (!against) {
     m_grid[iZ][iR].nE += n;
-    m_nTotElectron += n;
-    if (m_bDebug)
-      std::cerr << m_className
-                << "::SnapTo2dGrid: snap along e-field, continue.\n";
+    m_nEtot += n;
+    if (m_bDebug) std::cout << "    Snap along E-field.\n";
     return true;
   }
 
   // make step positive
   long nEOut;
   double nPOut, nNOut;
-  GetAvalancheSizeFromStep(std::abs(step), n, m_grid[iZ][iR].townsend,
-                           m_grid[iZ][iR].attachment, nEOut, nPOut, nNOut);
+  GetAvalancheSizeFromStep(std::abs(step), n, m_grid[iZ][iR].alpha,
+                           m_grid[iZ][iR].eta, nEOut, nPOut, nNOut);
   if (nEOut == 0) {
     if (m_bDebug)
-      std::cerr << m_className << "::SnapTo2dGrid: e- from " << n
+      std::cerr << m_className << "::SnapToGrid: e- from " << n
                 << " to 0 -> cancel.\n";
     return false;
   }
@@ -618,11 +494,11 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
   m_grid[iZ][iR].nE += nEOut;
   m_grid[iZ][iR].nP += nPOut;
   m_grid[iZ][iR].nN += nNOut;
-  m_nTotElectron += nEOut;
-  m_nTotPosIons += (long)nPOut;
+  m_nEtot += nEOut;
+  m_nPtot += (long)nPOut;
 
   if (m_bDebug) {
-    std::cout << m_className << "::SnapTo2dGrid: e- from " << n << " to "
+    std::cout << m_className << "::SnapToGrid: e- from " << n << " to "
               << nEOut << " p+: " << nPOut << " n-: " << nNOut << ".\n"
               << "    Snapped to (z, r) = (" << y << " -> " << m_zGrid[iZ]
               << ", " << r << " -> " << m_rGrid[iR] << ").\n";
@@ -630,102 +506,198 @@ bool AvalancheGridSpaceCharge::SnapTo2dGrid(const double x, const double y,
   return true;
 }
 
-void AvalancheGridSpaceCharge::Prepare2dMesh() {
-  // check if sensor is defined
-  if (!m_sensor) {
-    std::cerr << m_className
-              << "::Prepare2dMesh: Sensor is not defined. Abort.\n";
+bool AvalancheGridSpaceCharge::Prepare() {
+
+  if (!m_sensor) return false;
+  // Determine if the sensor has a parallel-plate component.
+  ComponentParallelPlate* pp = nullptr;
+  const size_t nCmp = m_sensor->GetNumberOfComponents();
+  for (size_t i = 0; i < nCmp; i++) {
+    pp = dynamic_cast<ComponentParallelPlate *>(m_sensor->GetComponent(i));
+    if (pp) break;
   }
-
-  // get a point (Y global coordinate) in each gas gap
-  int n = m_vIndexGasGaps.size();
-  m_ezBkg.resize(n);
-
-  if (m_pp) {
-    m_vYPointInGasGap.resize(n);
-    for (int iz = 0; iz <= m_zSteps; iz++) {
-      // Determine layer and gas gap.
-      const int layerIndex = m_pp->GetLayer(m_zGrid[iz]);
-      const int k = GetGasGapNumber(layerIndex);
-      if (k != -1 && k < n) m_vYPointInGasGap[k] = m_zGrid[iz];
+  // Number of gas gaps.
+  unsigned int nG = 1;
+  std::vector<int> gasLayers; 
+  if (pp) {
+    pp->IndexOfGasGaps(gasLayers);
+    nG = gasLayers.size();
+  }
+  if (nG == 0) {
+    std::cerr << "AvalancheGridSpaceCharge::Prepare:\n"
+              << "    Geometry does not have any gas gaps.\n";
+    return false;
+  } 
+  // Assign the electrons to the respective gas gaps.
+  std::vector<std::vector<Point> > electronsPerGap(nG);
+  std::vector<std::size_t> nPerGap(nG, 0);
+  m_centre.assign(nG, {0., 0., 0.});
+  m_time = 0.;
+  std::size_t nOutside = 0;
+  for (const auto& pt : m_electrons) {
+    int gap = 0;
+    if (pp) {
+      const int layer = pp->GetLayer(pt.y);
+      if (layer < 0) {
+        ++nOutside;
+        continue;
+      }
+      gap = GetGasGapNumber(gasLayers, layer);
+      if (gap < 0) {
+        ++nOutside;
+        continue;
+      }
+    } else {
+      // TODO
+      // Check if the point is inside a valid medium?
     }
+    electronsPerGap[gap].push_back(pt);
+    m_centre[gap][0] += pt.n * pt.x;
+    m_centre[gap][1] += pt.n * pt.y;
+    m_centre[gap][2] += pt.n * pt.z;
+    m_time += pt.n * pt.t;
+    nPerGap[gap] += pt.n;
   }
 
-  std::vector<double> alpha(n), eta(n), vd(n), dSigmaL(n), dSigmaT(n), wv(n),
-      wr(n), alphaPT(n), etaPT(n);
-  double e[3];
-  int status;
-  Medium *m = nullptr;
-  // iterate through the gas gaps
-  for (int k = 0; k < n; k++) {
-    m_sensor->ElectricField(0, m_vYPointInGasGap[k], 0, e[0], e[1], e[2], m,
-                            status);
+  if (nOutside > 0) {
+    std::cerr << m_className << "::Prepare: Skipped " 
+              << nOutside << " electrons that are not in a gas gap.\n";
+  }
+  const size_t nTotal = std::accumulate(nPerGap.begin(), nPerGap.end(), 0);
+  if (nTotal == 0) {
+    std::cerr << m_className << "::Prepare: There are no active electrons.\n";
+    return false;
+  }
+  // Set the start time.
+  m_time = m_time / (double)nTotal;
+
+  m_medium.assign(nG, nullptr);
+  m_ezBkg.assign(nG, 0.);
+  m_zBot.assign(nG, 0.);
+  m_zTop.assign(nG, 0.);
+  m_alpha12.assign(nG, 0.);
+  m_saturated.assign(nG, false);
+  std::vector<double> vd(nG, 0.), dL(nG, 0.), dT(nG, 0.);
+  std::vector<double> wv(nG, 0.), wr(nG, 0.);
+  std::vector<double> alphaPT(nG, 0.), etaPT(nG, 0.);
+  // Iterate through the gas gaps.
+  for (unsigned int k = 0; k < nG; k++) {
+    if (electronsPerGap[k].empty()) continue;
+    // Compute the centre-of-gravity of the electrons in the gap.
+    const double s = 1. / nPerGap[k];
+    m_centre[k][0] *= s;
+    m_centre[k][1] *= s;
+    m_centre[k][2] *= s;
+    if (m_bDebug) {
+      std::cout
+          << m_className
+          << "::Prepare: Electrons in gas gap "
+          << k << " are centred at (" << m_centre[k][0] << ", "
+          << m_centre[k][1] << ", " << m_centre[k][2] << ").\n";
+    }
+    // Calculate the mid-point of the gap. 
+    double zGap = 0.;
+    if (pp) {
+      const int layer = gasLayers[k];
+      pp->getZBoundFromLayer(layer, m_zBot[k], m_zTop[k]);
+      zGap = 0.5 * (m_zBot[k] + m_zTop[k]);
+      // Get dielectric constant of the neighboring layer 
+      // (assume both layers have the same epsilon).
+      const double eps = pp->GetPermittivityFromLayer(layer + 1);
+      m_alpha12[k] = (1. - eps) / (1. + eps);
+    } else {
+      zGap = m_centre[k][1];
+      // TODO
+      // Get bounding box of the sensor.
+    }
+
+    // Get the medium and electric field.
+    m_medium[k] = m_sensor->GetMedium(0., zGap, 0.);
+    double e[3];
+    int status = 0;
+    Medium *m = nullptr;
+    m_sensor->ElectricField(0., zGap, 0., e[0], e[1], e[2], m, status);
 
     if (status != 0) {
-      std::cerr
-          << m_className
-          << "::Prepare2dMesh: Cannot estimate background field for gas gap "
-          << k + 1 << ".\n";
+      std::cerr << m_className
+          << "::Prepare: Cannot retrieve background field for gas gap "
+          << k << ".\n";
     }
 
-    // one expects (ComponentParallelPlate) that the electric field is pointing
-    // along y-axis
-    //  i.e. Z-axis in our coordinate system.
+    // In ComponentParallelPlate the electric field is along the y-axis
+    // which corresponds to the z-axis in our local (RZ) coordinate system.
     m_ezBkg[k] = e[1];
-    GetSwarmParameters(0., m_vYPointInGasGap[k], 0., std::abs(e[1]), 
-                       alpha[k], eta[k], vd[k], dSigmaL[k], dSigmaT[k], 
+    // Set the threshold field for streamer formation.
+    m_ezThr[k] = std::abs(m_ezBkg[k]) * (1. + m_fStreamerK);
+    const double emag = std::abs(e[1]);
+    GetSwarmParameters(m_medium[k], emag, vd[k], dL[k], dT[k], 
                        wv[k], wr[k], alphaPT[k], etaPT[k]);
 
     // print-out to double-check the swarm parameters
-    std::cout << m_className << "::Prepare2dMesh:\n"
-              << "  Gas gap " << k + 1 << "\n"
-              << "     Ez: " << m_ezBkg[k] << " (V/cm)\n"
-              << "     alphaSST: " << alpha[k] << " (1/cm)\n"
-              << "     alphaPT:  " << alphaPT[k] << " (1/cm)\n"
-              << "     etaSST: " << eta[k] << " (1/cm)\n"
-              << "     etaPT:  " << etaPT[k] << " (1/cm)\n"
-              << "     drift velocity (Wv): " << vd[k] << " (cm/ns)\n"
-              << "     Wr (!= Wv): " << wr[k] << " (cm/ns).\n";
+    std::cout << m_className << "::Prepare:\n Gas gap " << k + 1 << ":\n";
+    std::printf("     Electric field:              %15.6f V/cm\n", m_ezBkg[k]);
+    std::printf("     Townsend coefficient (PT):   %15.6f 1/cm\n", alphaPT[k]);
+    std::printf("     Attachment coefficient (PT): %15.6f 1/cm\n", etaPT[k]);
+    std::printf("     Flux velocity:               %15.6f cm/ns\n", vd[k]);
+    std::printf("     Bulk velocity:               %15.6f cm/ns\n", wr[k]);
   }
 
-  // Set up mesh
+  // Set up the components for computing the space-charge field.
+  const double hmax = m_rGrid.back();
+  const double hmin = -1. * hmax;
+  const double vmin = m_zGrid.front();
+  const double vmax = m_zGrid.back();
+  m_rings.clear();
+  for (unsigned int k = 0; k < nG; ++k) {
+    ComponentChargedRing rings;
+    rings.SetMedium(m_medium[k]);
+    rings.SetArea(hmin, vmin, hmin, hmax, vmax, hmax);
+    if (m_bDebug) rings.EnableDebugging();
+    m_rings.push_back(std::move(rings));
+  }
+
+  // Set up the mesh.
   m_grid.resize(m_zSteps + 1);
-  m_zGasGapBoundaries.resize(n);
+  m_izMin.assign(nG, m_zSteps);
+  m_izMax.assign(nG, 0);
   for (int iz = 0; iz <= m_zSteps; iz++) {
     m_grid[iz].resize(m_rSteps + 1);
     // Determine the gas gap.
     int k = 0;
-    if (m_pp) {
-      const int layerIndex = m_pp->GetLayer(m_zGrid[iz]);
-      if (layerIndex >= 0) k = GetGasGapNumber(layerIndex);
+    if (pp) {
+      const int layer = pp->GetLayer(m_zGrid[iz]);
+      if (layer >= 0) k = GetGasGapNumber(gasLayers, layer);
     }
     if (k != -1) {
-      // store z index for gap k
-      m_zGasGapBoundaries[k].push_back(iz);
+      if (iz < m_izMin[k]) m_izMin[k] = iz;
+      if (iz > m_izMax[k]) m_izMax[k] = iz;
     }
     for (int ir = 0; ir <= m_rSteps; ir++) {
       // Set gas gap index.
-      m_grid[iz][ir].gasGapIndex = k;
+      m_grid[iz][ir].gap = k;
+      m_grid[iz][ir].anode = false;
+      // Set the electric field.
+      m_grid[iz][ir].emag = std::abs(m_ezBkg[k]);
+      m_grid[iz][ir].ctheta = m_ezBkg[k] > 0. ? -1. : 1.;
+      m_grid[iz][ir].stheta = 0.; 
       // Continue if nodes are not in a gas gap.
-      if (k == -1) continue;
+      if (k < 0) continue;
       // Set swarm parameters.
-      m_grid[iz][ir].townsend = alpha[k];
-      m_grid[iz][ir].attachment = eta[k];
-      m_grid[iz][ir].vd = vd[k];  //< magnitude! direction against E field
-      m_grid[iz][ir].dSigmaL = dSigmaL[k];
-      m_grid[iz][ir].dSigmaT = dSigmaT[k];
+      // Magnitude of the drift velocity 
+      // (direction is antiparallel to the electric field).
+      m_grid[iz][ir].vd = vd[k];
+      m_grid[iz][ir].dL = dL[k];
+      m_grid[iz][ir].dT = dT[k];
       m_grid[iz][ir].wv = wv[k];
       m_grid[iz][ir].wr = wr[k];
-      m_grid[iz][ir].townsendPT = alphaPT[k];
-      m_grid[iz][ir].attachmentPT = etaPT[k];
+      m_grid[iz][ir].alpha = alphaPT[k];
+      m_grid[iz][ir].eta = etaPT[k];
     }
   }
 
-  // set anode in each gas gap
-  for (int k = 0; k < n; k++) {
-    int izMin = m_zGasGapBoundaries[k].front();
-    int izMax = m_zGasGapBoundaries[k].back();
-    int izAnode = (m_ezBkg[k] > 0) ? izMin : izMax;
+  // Set the anode flags.
+  for (unsigned int k = 0; k < nG; k++) {
+    const int izAnode = (m_ezBkg[k] > 0) ? m_izMin[k] : m_izMax[k];
     for (int ir = 0; ir <= m_rSteps; ir++) {
       m_grid[izAnode][ir].anode = true;
     }
@@ -735,72 +707,22 @@ void AvalancheGridSpaceCharge::Prepare2dMesh() {
   m_dt = m_zStepSize / *std::max_element(wr.begin(), wr.end());
 
   if (m_bDebug) {
-    std::cout << m_className << "::Prepare2dMesh: Time step per loop: " << m_dt
+    std::cout << m_className << "::Prepare: Time step per loop: " << m_dt
               << " ns.\n";
   }
-}
 
-void AvalancheGridSpaceCharge::PrepareElectronsFromMicroscopicAvalanche() {
-  double tMicro = 0;
-  long neTotal = 0;
-  for (int k = 0; k < (int)m_vIndexGasGaps.size(); k++) {
-    // calculate middle coord of electron cloud and add all electrons to the
-    // grid/mesh per gas gap.
-    auto neGasGap = m_vElectrons[k].size();
-
-    // continue if no electron in the gas gap
-    if (neGasGap <= 0) {
-      // HS: not sure it's a good idea to initialize with NAN.
-      m_vCoNGasLayer.push_back({NAN, NAN, NAN});
-      continue;
-    }
-    neTotal += neGasGap;
-    double xMicro = 0, yMicro = 0, zMicro = 0;
-
-    // set time and center of electron number
-    for (const auto &electron : m_vElectrons[k]) {
-      xMicro += electron.x;
-      yMicro += electron.y;
-      zMicro += electron.z;
-      tMicro += electron.t;
-    }
-    m_vCoNGasLayer.push_back({xMicro / (double)neGasGap,
-                              yMicro / (double)neGasGap,
-                              zMicro / (double)neGasGap});
-
-    if (m_bDebug) {
-      std::cout
-          << m_className
-          << "::PrepareElectronsFromMicroscopicAvalanche: mean center gas gap "
-          << k + 1 << " X = (" << m_vCoNGasLayer[k][0] << ", "
-          << m_vCoNGasLayer[k][1] << ", " << m_vCoNGasLayer[k][2] << ").\n";
+  // Place the electrons onto the grid.
+  for (unsigned int k = 0; k < nG; ++k) {
+    for (const auto& electron : electronsPerGap[k]) {
+      SnapToGrid(electron.x, electron.y, electron.z, electron.n, k);
     }
   }
-
-  // Set the start time.
-  m_time0 = tMicro / (double)neTotal;
-  m_time = m_time0;
-
-  // prepare the mesh (needs m_vCoN)
-  Prepare2dMesh();
-
-  // place all electrons onto the grid
-  for (int k = 0; k < (int)m_vIndexGasGaps.size(); k++)
-    for (auto &electron : m_vElectrons[k]) {  //< does not proceed if no
-                                              // electrons in respective gap
-      if (SnapTo2dGrid(electron.x, electron.y, electron.z, 1, k) && m_bDebug) {
-        std::cout << m_className
-                  << "::PrepareElectronsFromMicroscopicAvalanche: "
-                  << "Electron added in gas gap " << k + 1 << "\n"
-                  << "      at (x,y,z) =  (" << electron.x << "," << electron.y
-                  << "," << electron.z << ").\n";
-      }
-    }
+  return true;
 }
 
 void AvalancheGridSpaceCharge::GetSwarmParameters(
-    const double x, const double y, const double z, const double emag, 
-    double &alpha, double &eta, double &vd, double &dSigmaL, double &dSigmaT, 
+    Medium* m, const double emag, 
+    double &vd, double &dL, double &dT, 
     double &wv, double &wr, double &alphaPT, double &etaPT) const {
   if (m_bDebug && false)
     std::cerr << m_className
@@ -808,15 +730,12 @@ void AvalancheGridSpaceCharge::GetSwarmParameters(
                  "|E| = "
               << emag << ".\n";
 
-  // medium from sensor
-  Medium *m = m_sensor->GetMedium(x, y, z);
+  if (!m) return;
 
-  // alpha
-  m->ElectronTownsend(0., emag, 0., 0., 0., 0., alpha);
-  // eta
-  m->ElectronAttachment(0., emag, 0., 0., 0., 0., eta);
-
-  // mag of velocity
+  double alphaSST = 0.;
+  m->ElectronTownsend(0., emag, 0., 0., 0., 0., alphaSST);
+  double etaSST = 0.;
+  m->ElectronAttachment(0., emag, 0., 0., 0., 0., etaSST);
   double vx, vy, vz;
   m->ElectronVelocity(0., emag, 0., 0., 0., 0., vx, vy, vz);
   vd = std::sqrt(vx * vx + vy * vy + vz * vz);  //< Wv in Magboltz
@@ -831,54 +750,55 @@ void AvalancheGridSpaceCharge::GetSwarmParameters(
   // Rion/Ratt Rion-Ratt = Reff (tagashira eq.)
   //  -> Rion converged to a rate with Wr and DL (using the one equation),
   //  alphaSST is either from SST and if not converged from magboltz itself.
-  double rion = 0, ratt = 0;
-  if (!m_bUseTOF ||
-      !m->ElectronTOFIonisation(0., emag, 0., 0., 0., 0., rion) ||
-      !m->ElectronTOFAttachment(0., emag, 0., 0., 0., 0., ratt)) {
-    if (m_bDebug) {
-      std::cerr << m_className
-                << "::GetSwarmParameters: TOF Rates not available.\n";
+  alphaPT = alphaSST;
+  etaPT = etaSST;
+  if (m_bUseTOF) {
+    double rion = 0.;
+    if (m->ElectronTOFIonisation(0., emag, 0., 0., 0., 0., rion)) {
+      alphaPT = rion / wr;
+    } else if (m_bDebug) {
+      std::cerr << m_className << "::GetSwarmParameters: "
+                << "TOF ionization rate not available.\n";
     }
-
-    // Diffusionless approximation
-    rion = alpha * wr;
-    ratt = eta * wr;
+    double ratt = 0.;
+    if (m->ElectronTOFAttachment(0., emag, 0., 0., 0., 0., ratt)) {
+      etaPT = ratt / wr;
+    } else if (m_bDebug) {
+      std::cerr << m_className << "::GetSwarmParameters: "
+                << "TOF attachment rate not available.\n";
+    }
   }
-  // calculate alpha/eta PT
-  alphaPT = rion / wr;
-  etaPT = ratt / wr;
 
-  // diffusion coefficients
-  m->ElectronDiffusion(0., emag, 0., 0., 0., 0., dSigmaL, dSigmaT);
+  // Diffusion coefficients
+  m->ElectronDiffusion(0., emag, 0., 0., 0., 0., dL, dT);
 
   // print (and information about units!)
   if (m_bDebug && false) {
-    std::cout << m_className << "::GetSwarmParameters:\n"
-              << "  Townsend = " << alpha << " [1/cm], Attachment = " << eta
-              << " [1/cm], Flux Velocity = "
-              << vd
-              //                      << " [cm/ns], Wv = " << wv
-              << " [cm/ns], Bulk velocity = " << wr << " [cm/ns].\n"
-              << "  TOF Ionization rate = " << alphaPT
-              << " [1/ns], TOF Attachment rate = " << etaPT << "[1/ns].\n"
-              << "  Longitudinal Diffusion = " << dSigmaL << " [sqrt(cm)],"
-              << " Transversal Diffusion = " << dSigmaT << " [sqrt(cm)].\n";
+    std::cout << m_className << "::GetSwarmParameters:\n";
+    std::printf("     Townsend coefficient (SST):   %15.6f 1/cm\n", alphaSST);
+    std::printf("     Townsend coefficient (PT):    %15.6f 1/cm\n", alphaPT);
+    std::printf("     Attachment coefficient (SST): %15.6f 1/cm\n", etaSST);
+    std::printf("     Attachment coefficient (PT):  %15.6f 1/cm\n", etaPT);
+    std::printf("     Flux velocity:                %15.6f cm/ns\n", vd);
+    std::printf("     Bulk velocity:                %15.6f cm/ns\n", wr);
+    std::printf("     Longitudinal diffusion:       %15.6f sqrt(cm)\n", dL);
+    std::printf("     Transverse diffusion:         %15.6f sqrt(cm)\n", dT);
   }
 }
 
-bool AvalancheGridSpaceCharge::TransportTimeStep() {
+bool AvalancheGridSpaceCharge::Step() {
   // Propagate grid nodes by one time step with updated electric fields 
   // (Lippmann et al. approach).
-  if (m_nTotElectron <= 0) return false;
+  if (m_nEtot <= 0) return false;
 
   if (m_bDebug) {
-    std::cout << m_className << "::TransportTimeStep: Start time: " << m_time
-              << "\n";
+    std::cout << m_className << "::Step: Start time: " << m_time << " ns\n";
   }
-
-  if (m_bSpaceCharge && m_nTotElectron > 1e5) {
+  
+  const auto nG = m_ezBkg.size();
+  if (m_bSpaceCharge && m_nEtot > 1e5) {
     // Clear existing rings.
-    for (auto & ringsystem : m_vRingSystems) {
+    for (auto & ringsystem : m_rings) {
       ringsystem.ClearActiveRings();
       ringsystem.UpdateCentre(0., 0.);
     }
@@ -886,50 +806,36 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
     for (int iz = 0; iz <= m_zSteps; iz++) {
       for (int ir = 0; ir <= m_rSteps; ir++) {
         const double q = -m_grid[iz][ir].nE + m_grid[iz][ir].nP - m_grid[iz][ir].nN;
-        // If there is enough charge, count as an active node
+        // If there is enough charge, create a ring.
         if (std::abs(q) < 0.1) continue;
-        double zf = m_zGrid[iz];
-        double rf = m_rGrid[ir];
-
-        int gasGapIndex = m_grid[iz][ir].gasGapIndex;
-        // Add the ring to the correct system: need the index of the gasgap
+        const double zf = m_zGrid[iz];
+        const double rf = m_rGrid[ir];
+        const int gap = m_grid[iz][ir].gap;
+        // Add a ring to the gas gap.
         // Direct charge interaction
-        m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf, 0., q); 
+        m_rings[gap].AddChargedRing(rf, zf, 0., q); 
 
         if (m_fieldOption == FieldOption::Mirror) {
           // Assume symmetric single-layer RPC with resistive layers of
           // equal permittivity.
-          if (m_vIndexGasGaps.size() > 1) {
+          if (nG > 1) {
             throw std::runtime_error(
-                "::TransportTimeStep: Mirror charge option implemented but not tested for "
+                "::Step: Mirror charge option implemented but not tested for "
                 "MRPC.");
           }
-
-          // HS: this can be done at initialization time...
-          // get epsilon value from neighboring layer (assume both layers have same
-          // eps)
-          int IndexOfRightLayer = m_vIndexGasGaps[gasGapIndex] + 1;
-          // int IndexOfLeftLayer = m_vIndexGasGaps[gasGapIndex] - 1;
-          double eps = m_pp->GetPermittivityFromLayer(IndexOfRightLayer);
-          double alpha12 = (1. - eps) / (1. + eps);
-
-          // Obtain bounds of current gas gap
-          double zTop, zBottom;
-          m_pp->getZBoundFromLayer(m_vIndexGasGaps[gasGapIndex], zTop, zBottom);
 
           // mirror charge interaction
           for (int i = 0; i < m_iFieldApprox; i++) {
             if (i == 0) {
               // 2a, alpha12 = delta_Q
-              double zf0 = zf + 2. * (zTop - zf);
-              m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf0, 0., q * alpha12);
+              double zf0 = zf + 2. * (m_zTop[gap] - zf);
+              m_rings[gap].AddChargedRing(rf, zf0, 0., q * m_alpha12[gap]);
   
               // -2a', alpha12 = delta_Q
-              zf0 = zf + 2. * (zBottom - zf);
-              m_vRingSystems[gasGapIndex].AddChargedRing(rf, zf0, 0., q * alpha12);
-            } else if (i == 1) {
-              // TODO: higher order mirror charges
+              zf0 = zf + 2. * (m_zBot[gap] - zf);
+              m_rings[gap].AddChargedRing(rf, zf0, 0., q * m_alpha12[gap]);
             } else {
+              // TODO: higher order mirror charges
               continue;
             }
           }
@@ -942,59 +848,60 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
   std::function<void(double, const long, const double, const double, long &,
                      double &, double &)>
       AvalancheGain = GetAvalancheSizeFromStep;
-  if (!m_bMC && m_nTotElectron > 1e5) {
+  if (!m_bMC && m_nEtot > 1e5) {
     AvalancheGain = GetMeanAvalancheSizeFromStep;
     // TODO: Diffusion
   }
 
-  // update the nodes for the next run (SC-field and swarm parameters)
-  // MRPC: SC-effect only within each gas gap and option="coulomb"
-  if (m_bSpaceCharge && m_nTotElectron > 1e5) {
+  if (m_bSpaceCharge && m_nEtot > 1e5) {
+    // Update the space-charge field and the swarm parameters on the nodes.
+    // MRPC: SC-effect only within each gas gap and option="coulomb"
     double dummy;  // dummy E field component as we are using a 2d grid
     Medium *m = nullptr;
     int stat;
 
     for (int iz = 0; iz <= m_zSteps; iz++) {
       double zi = m_zGrid[iz];
-      // continue if not in gas gap
-      int gasGap = m_grid[iz][0].gasGapIndex;
-      if (gasGap == -1) continue;
+      // Continue if not in a gas gap.
+      int gap = m_grid[iz][0].gap;
+      if (gap == -1) continue;
       for (int ir = 0; ir <= m_rSteps; ir++) {
         double ri = m_rGrid[ir];
         auto &nd = m_grid[iz][ir];
 
-        // reset local fields at node
-        nd.ez = 0;
-        nd.er = 0;
-
+        // Reset the fields at this node.
+        nd.emag = m_ezBkg[gap];
+        nd.stheta = 0.;
+        nd.ctheta = m_ezBkg[gap] > 0. ? -1. : 1.;
         // Skip if there are no electrons or if we are at an anode.
         if (nd.nE < 1 || nd.anode) continue;
 
-        // update space charge field on each node
-        int gasGapIndex = m_grid[iz][ir].gasGapIndex;
-        m_vRingSystems[gasGapIndex].ElectricField(ri, zi, 0., nd.er, nd.ez, dummy, m, stat);
-        
-        // check if local field reaches background field values.
-        const double emag = Mag(nd.ez + m_ezBkg[gasGap], nd.er);
-        if (emag - std::abs(m_ezBkg[gasGap]) >=
-                m_fStreamerK * std::abs(m_ezBkg[gasGap]) &&
-            !m_bFieldK) {
-          std::cout << m_className << ":TransportTimeStep:\n"
+        // Get the space charge field on this node.
+        double erS = 0., ezS = 0.;
+        m_rings[gap].ElectricField(ri, zi, 0., erS, ezS, dummy, m, stat);
+        nd.emag = Mag(ezS + m_ezBkg[gap], erS); 
+        if (nd.emag > 1.e-8) {
+          const double einv = 1. / nd.emag;
+          nd.ctheta = -(ezS + m_ezBkg[gap]) * einv;
+          nd.stheta = -erS * einv;
+        }
+        if (nd.emag >= m_ezThr[gap] && !m_bFieldK) {
+          std::cout << m_className << ":Step:\n"
                     << "    Space-charge field reached "
                     << std::to_string(int(m_fStreamerK * 100))
-                    << "% of background field in gas gap " << gasGap + 1
+                    << "% of background field in gas gap " << gap + 1
                     << "\n";
-          // TODO: Total electrons in gas gap "gasGap"
-          m_lElectronsK = m_vNElectronEvolution.back().second;
+          // TODO: Total electrons in gas gap
+          m_lElectronsK = m_evolution.back().second;
           m_bFieldK = true;
         }
 
-        // calculate the swarm parameters
-        GetSwarmParameters(0., zi, 0., emag, nd.townsend, nd.attachment, nd.vd,
-                           nd.dSigmaL, nd.dSigmaT, nd.wv, nd.wr, nd.townsendPT,
-                           nd.attachmentPT);
+        // Calculate the swarm parameters.
+        GetSwarmParameters(m_medium[gap], nd.emag, nd.vd,
+                           nd.dL, nd.dT, nd.wv, nd.wr, nd.alpha,
+                           nd.eta);
 
-        // get new step distance
+        // Get the new step distance.
         double step = std::abs(nd.wr * m_dt);
 
         // adaptive time stepping (this routine takes the smallest dt needed for
@@ -1005,15 +912,15 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
           m_dt = m_zStepSize / nd.wr;
 
           if (m_bDebug) {
-            std::cout << m_className << "::TransportTimeStep: Changed dt from "
+            std::cout << m_className << "::Step: Changed dt from "
                       << dtPrev << " to: " << m_dt << "\n"
                       << "      due to step size: " << step
                       << " bulk velocity: " << nd.wr << "\n"
-                      << "      electric field: " << emag
-                      << " alpha: " << nd.townsendPT
-                      << " eta: " << nd.attachmentPT << "\n"
+                      << "      electric field: " << nd.emag
+                      << " alpha: " << nd.alpha
+                      << " eta: " << nd.eta << "\n"
                       << "      diffusion longitudinal/transversal: "
-                      << nd.dSigmaL << " " << nd.dSigmaT << "\n";
+                      << nd.dL << " " << nd.dT << "\n";
             ExportGrid("TIME_STEP_ADAPTION_" + std::to_string(m_dt));
           }
         }
@@ -1024,56 +931,46 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
   // finish if stop reached and set at 100 * K %
   if (m_bStopAtK && m_bFieldK) return false;
 
-  // transport the electrons with the update sc-field, swarm parameter and dt
+  // Propagate the electrons with the updated field, swarm parameters 
+  // and time step.
   for (int iz = 0; iz <= m_zSteps; iz++) {
     // continue if not in gas gap
-    const int gasGap = m_grid[iz][0].gasGapIndex;
-    if (gasGap == -1) continue;
-    bool saturated = false;
-    if (!m_bSpaceCharge &&
-        (std::find(m_vSaturatedGaps.begin(), m_vSaturatedGaps.end(),
-                   gasGap) != m_vSaturatedGaps.end())) {
-      saturated = true;
-    }
+    const int gap = m_grid[iz][0].gap;
+    if (gap == -1) continue;
     for (int ir = 0; ir <= m_rSteps; ir++) {
       auto &nd = m_grid[iz][ir];
-
       // Skip if we are at the anode or if there are no electrons.
       if (nd.anode || nd.nE < 1) continue;
-
-      // update step distance
+      // Calculate the step distance.
       double step = std::abs(nd.wr * m_dt);
-
-      // calculate new avalanche size at X + step
-      // HS: use a vector<bool> to keep track of which gaps are saturated?
+      // Calculate the avalanche size after the step.
       long nEOut = 0;
       double nPOut = 0.;
       double nNOut = 0.;
-      if (saturated) {
+      if (m_saturated[gap]) {
         // Saturated case, don't evolve electrons in size
         nEOut = nd.nE;
         nPOut = 0,
         nNOut = 0;  //< strictly this is completely wrong because
                     // SC-bremsung creates huge amounts of ions
       } else {
-        AvalancheGain(step, nd.nE, nd.townsendPT, nd.attachmentPT,
+        AvalancheGain(step, nd.nE, nd.alpha, nd.eta,
                       nEOut, nPOut, nNOut);
       }
-      m_nTotPosIons += std::round(nPOut);
+      m_nPtot += std::round(nPOut);
 
       // calculate steps against electric field i.e. correct sign.
-      const double emag = Mag(nd.ez + m_ezBkg[gasGap], nd.er);
-      double stepZ = step * (-(nd.ez + m_ezBkg[gasGap]) / emag);
-      const double stepR = step * (-(nd.er) / emag);
+      double stepZ = step * nd.ctheta;
+      const double stepR = step * nd.stheta;
 
       if (m_bDiffusion) {
         // correct the stepping from diffusion + charge distribution
-        DiffuseTimeStep(step, emag, nEOut, std::round(nPOut), std::round(nNOut),
-                        iz, ir, gasGap);
+        DiffuseTimeStep(step, nEOut, std::round(nPOut), std::round(nNOut),
+                        iz, ir, gap);
       } else {
         // calculate steps and distribute charges (no diffusion)
         DistributeCharges(nEOut, std::round(nPOut), std::round(nNOut), 
-                          iz, ir, stepZ, stepR, gasGap);
+                          iz, ir, stepZ, stepR, gap);
       }
 
       if (m_sensor->GetNumberOfElectrodes() > 0) {
@@ -1086,23 +983,23 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         constexpr double cphi = 1.;
         constexpr double sphi = 0.;
         const double r0 = m_rGrid[ir];
-        const double x0 = m_vCoNGasLayer[gasGap][0] + r0 * cphi;
+        const double x0 = m_centre[gap][0] + r0 * cphi;
         const double y0 = m_zGrid[iz];
-        const double z0 = m_vCoNGasLayer[gasGap][2] - r0 * sphi;
+        const double z0 = m_centre[gap][2] - r0 * sphi;
 
-        // z-step outside gasGap domain, resize to stepZ = Anode - Current
-        int izMin = m_zGasGapBoundaries[gasGap].front();
-        int izMax = m_zGasGapBoundaries[gasGap].back();
-        if (m_zGrid[iz] + stepZ < m_zGrid[izMin]) {
-          stepZ = (m_zGrid[izMin] - m_zGrid[iz]);
-        } else if (m_zGrid[iz] + stepZ > m_zGrid[izMax]) {
-          stepZ = (m_zGrid[izMax] - m_zGrid[iz]);
+        // z-step outside gap domain, resize to stepZ = Anode - Current
+        const double zMin = m_zGrid[m_izMin[gap]];
+        const double zMax = m_zGrid[m_izMax[gap]];
+        if (m_zGrid[iz] + stepZ < zMin) {
+          stepZ = zMin - m_zGrid[iz];
+        } else if (m_zGrid[iz] + stepZ > zMax) {
+          stepZ = zMax - m_zGrid[iz];
         }
 
         const double r1 = m_rGrid[ir] + stepR;
-        const double x1 = m_vCoNGasLayer[gasGap][0] + r1 * cphi;
+        const double x1 = m_centre[gap][0] + r1 * cphi;
         const double y1 = m_zGrid[iz] + stepZ;
-        const double z1 = m_vCoNGasLayer[gasGap][2] - r1 * sphi;
+        const double z1 = m_centre[gap][2] - r1 * sphi;
 
         // Induced current from flux drift velocity i.e. introduce weight factor
         //< 1 if (Wv = velocity): Wr = flux
@@ -1114,54 +1011,45 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
     }
   }
 
-  // propagate Grid time (after above for loops due to the adaptive time
-  // stepping)
+  // Update the clock.
   m_time += m_dt;
 
-  // sums electrons left in gap (count per gap)
-  std::vector<long> eOnGrid(m_vIndexGasGaps.size(), 0);
+  // Count the electrons in each gap.
+  std::vector<long> nEinGap(nG, 0);
 
-  // update nodes with transported electrons
+  // Update the nodes.
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      // Get node
       auto &nd = m_grid[iz][ir];
-      int gasGap = nd.gasGapIndex;
       if (nd.anode && m_bStick) {
-        // sticky anode: electron stay and holder electrons add it up
+        // Sticky anode: add electrons to the node.
         nd.nE += nd.nEHolder;
       } else {
-        // update node with electrons from holder
+        // Update node with the new number of electrons.
         nd.nE = nd.nEHolder;
+        nEinGap[nd.gap] += nd.nE;
       }
-      // ions add up, also at the anode
+      // Ions add up, also at the anode.
       nd.nP += nd.nPHolder;
       nd.nN += nd.nNHolder;
 
-      // reset node Holder
       nd.nEHolder = 0;
       nd.nPHolder = 0;
       nd.nNHolder = 0;
-
-      // add electrons if they are not stuck
-      if (!(nd.anode && m_bStick)) eOnGrid[gasGap] += nd.nE;
     }
   }
-  // add total electrons in gap to grid and to evolution vector
-  m_nTotElectron = std::accumulate(eOnGrid.begin(), eOnGrid.end(), 0.);
-  m_vNElectronEvolution.push_back(std::make_pair(m_time, m_nTotElectron));
+  // Get the total number of electrons.
+  m_nEtot = std::accumulate(nEinGap.begin(), nEinGap.end(), 0);
+  m_evolution.push_back(std::make_pair(m_time, m_nEtot));
 
-  // determine saturated gaps at each time step
-  // clear: anode-absorption activates avalanche to grow again
-  m_vSaturatedGaps.resize(0);
-  for (int k = 0; k < (int)eOnGrid.size(); k++) {
-    if (!m_bSpaceCharge && eOnGrid[k] > m_lNCrit) {
-      m_vSaturatedGaps.push_back(k);
+  // Determine which gaps are saturated.
+  m_saturated.assign(nG, false);
+  for (unsigned int k = 0; k < nG; ++k) {
+    if (!m_bSpaceCharge && nEinGap[k] > m_lNCrit) {
+      m_saturated[k] = true;
     }
     if (m_bDebug) {
-      std::cout << m_className
-                << "::TransportTimeStep: Electrons active on grid in gas gap "
-                << k + 1 << ": " << eOnGrid[k] << "\n";
+      std::printf("  %12ld active electrons in gas gap %3d\n", nEinGap[k], k);
     }
   }
 
@@ -1169,8 +1057,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
 }
 
 void AvalancheGridSpaceCharge::DiffuseTimeStep(
-    const double dx, const double emag,
-    const long nE, const double nP, const double nN,
+    const double dx, const long nE, const double nP, const double nN,
     const int iz, const int ir, const int gap) {
   // Add diffusion onto the step dx
 
@@ -1199,20 +1086,11 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(
     rest = 0;
   }
 
-  // Calculate diffusion and add to transport step.
-  double sinTheta = 0.;
-  double cosTheta = 1.;
-  auto &nd = m_grid[iz][ir];
-  if (emag > 1.e-8) {
-    const double einv = 1. / emag;
-    cosTheta = (-(nd.ez + m_ezBkg[gap]) * einv);
-    sinTheta = (-(nd.er) * einv);
-  }
-
   double f = (double)groupSize / (double)nE;
+  // Calculate diffusion and add to transport step.
   const double r = m_rGrid[ir];
   const double sqrtdx = std::sqrt(dx);
-
+  auto &nd = m_grid[iz][ir];
   for (int group = 0; group < groups; group++) {
     // In the last loop we add the rest to the groupSize.
     if (group == groups - 1) {
@@ -1223,16 +1101,16 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(
     // Calculate a diffusion step in a local coordinate system (U,V,W)
     // where W is along the E field, V is along e_phi,
     // and U is perpendicular to V and W.
-    const double dU = RndmGaussian(0, nd.dSigmaT * sqrtdx);
-    const double dV = RndmGaussian(0, nd.dSigmaT * sqrtdx);
-    const double dW = RndmGaussian(dx, nd.dSigmaL * sqrtdx);
+    const double dU = RndmGaussian(0, nd.dT * sqrtdx);
+    const double dV = RndmGaussian(0, nd.dT * sqrtdx);
+    const double dW = RndmGaussian(dx, nd.dL * sqrtdx);
 
     // Transform to avalanche coordinate system
     // (Z,R,Y) where R mimics an X axis and Y is perpendicular to R and Z
-    const double dX = cosTheta * dU + sinTheta * dW;
+    const double dX = nd.ctheta * dU + nd.stheta * dW;
     // dY = dV
     // Sign seems correct due to sign in cos- and sinTheta
-    const double dZ = cosTheta * dW - sinTheta * dU;  
+    const double dZ = nd.ctheta * dW - nd.stheta * dU;  
 
     // calculate the change of radius
     // sign correct and stepR >= -r
@@ -1247,7 +1125,7 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(
 void AvalancheGridSpaceCharge::DistributeCharges(long nE, double nP,
                                                  double nN, int iz, int ir,
                                                  double stepZ, double stepR,
-                                                 int gasGap) {
+                                                 int gap) {
   // distributes the charges from a movement in Z and R direction
   // Compute the effective step size in r-direction
   stepR = std::abs(m_rGrid[ir] + stepR) - m_rGrid[ir];
@@ -1301,12 +1179,10 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nE, double nP,
 
   // check if still in grid else place at boundaries (will be absorbed in next
   // step)?
-  int izMin = m_zGasGapBoundaries[gasGap].front();
-  int izMax = m_zGasGapBoundaries[gasGap].back();
-  if (iz1 < izMin) iz1 = izMin;
-  if (iz2 < izMin) iz2 = izMin;
-  if (iz1 > izMax) iz1 = izMax;
-  if (iz2 > izMax) iz2 = izMax;
+  if (iz1 < m_izMin[gap]) iz1 = m_izMin[gap];
+  if (iz2 < m_izMin[gap]) iz2 = m_izMin[gap];
+  if (iz1 > m_izMax[gap]) iz1 = m_izMax[gap];
+  if (iz2 > m_izMax[gap]) iz2 = m_izMax[gap];
 
   if (ir1 > m_rSteps) ir1 = m_rSteps;
   if (ir2 > m_rSteps) ir2 = m_rSteps;
@@ -1346,43 +1222,16 @@ void AvalancheGridSpaceCharge::DistributeCharges(long nE, double nP,
 double AvalancheGridSpaceCharge::GetMeanDistance() {
   // Returns mean distance of electrons on the whole grid (doesn't work for
   // MRPCs)
-  long nofElectrons = 0;
+  long nE = 0;
   double z = 0.;
   for (int iz = 0; iz <= m_zSteps; iz++) {
     for (int ir = 0; ir <= m_rSteps; ir++) {
-      const auto ne = m_grid[iz][ir].nE;
-      if (ne < 0.5) continue;
-      nofElectrons += ne;
-      z += m_zGrid[iz] * ne;
+      if (m_grid[iz][ir].nE < 1) continue;
+      nE += m_grid[iz][ir].nE;
+      z += m_zGrid[iz] * m_grid[iz][ir].nE;
     }
   }
-  return z / (double)nofElectrons;
-}
-
-void AvalancheGridSpaceCharge::SetRingSystems() {
-  // We add a charged ring system for each gas gap
-  if (!m_pp)
-    std::cerr << m_className
-              << "::SetRingSystems: Parallel plate improperly defined.\n";
-  m_pp->IndexOfGasGaps(m_vIndexGasGaps);
-  size_t n_gas_gaps = m_vIndexGasGaps.size();
-
-  double horizontal_max = m_rGrid.back();
-  double horizontal_min = -1. * horizontal_max;
-  double vertical_min = m_zGrid.front();
-  double vertical_max = m_zGrid.back();
-
-  for (size_t i = 0; i < n_gas_gaps; ++i) {
-    m_vRingSystems.emplace_back();
-    const int layer_index = m_vIndexGasGaps[i];
-    double y_bottom, y_top;
-    m_pp->getZBoundFromLayer(layer_index, y_bottom, y_top);
-    Medium *m = m_pp->GetMedium(0, 0.5 * (y_top - y_bottom) + y_bottom, 0);
-    m_vRingSystems[i].SetMedium(m);
-    m_vRingSystems[i].SetArea(horizontal_min, vertical_min, horizontal_min,
-                              horizontal_max, vertical_max, horizontal_max);
-    if (m_bDebug) m_vRingSystems[i].EnableDebugging();
-  }
+  return z / (double)nE;
 }
 
 }  // namespace Garfield
