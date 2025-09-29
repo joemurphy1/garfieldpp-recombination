@@ -361,7 +361,7 @@ void AvalancheGridSpaceCharge::StartGridAvalanche(double dtime) {
               << " electrons) reached at " << maxSize->first << " ns.\n";
     std::cout << "    Avalanche ended at " << m_time << " ns.\n";
     std::cout << "    Final avalanche size (number of positive ions): "
-              << m_nPtot << " ns.\n";
+              << m_nPtot << ".\n";
   }
 }
 
@@ -792,8 +792,7 @@ bool AvalancheGridSpaceCharge::Step() {
   if (m_nEtot <= 0) return false;
 
   if (m_bDebug) {
-    std::cout << m_className << "::Step: Start time: " << m_time
-              << "\n";
+    std::cout << m_className << "::Step: Start time: " << m_time << " ns\n";
   }
   
   const auto nG = m_ezBkg.size();
@@ -1050,9 +1049,7 @@ bool AvalancheGridSpaceCharge::Step() {
       m_saturated[k] = true;
     }
     if (m_bDebug) {
-      std::cout << m_className
-                << "::Step: Electrons active on grid in gas gap "
-                << k + 1 << ": " << nEinGap[k] << "\n";
+      std::printf("  %12ld active electrons in gas gap %3d\n", nEinGap[k], k);
     }
   }
 
