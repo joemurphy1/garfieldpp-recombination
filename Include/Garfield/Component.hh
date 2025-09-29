@@ -337,21 +337,21 @@ class Component {
   }
 
   /// Enable triangular periodicity in the \f$xy\f$ plane.
-  void EnableTriangleSymmetricXY(const bool on = true, const bool oct = 2) {
+  void EnableTriangleSymmetricXY(const bool on = true, const int oct = 2) {
     m_triangleSymmetric[0] = on;
     m_triangleSymmetricOct = oct;
     m_mirrorPeriodic[0] = on;
     m_mirrorPeriodic[1] = on;
   }
   /// Enable triangular periodicity in the \f$xz\f$ plane.
-  void EnableTriangleSymmetricXZ(const bool on = true, const bool oct = 2) {
+  void EnableTriangleSymmetricXZ(const bool on = true, const int oct = 2) {
     m_triangleSymmetric[1] = on;
     m_triangleSymmetricOct = oct;
     m_mirrorPeriodic[0] = on;
     m_mirrorPeriodic[2] = on;
   }
   /// Enable triangular periodicity in the \f$yz\f$ plane.
-  void EnableTriangleSymmetricYZ(const bool on = true, const bool oct = 2) {
+  void EnableTriangleSymmetricYZ(const bool on = true, const int oct = 2) {
     m_triangleSymmetric[2] = on;
     m_triangleSymmetricOct = oct;
     m_mirrorPeriodic[1] = on;
