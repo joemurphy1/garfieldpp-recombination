@@ -134,21 +134,19 @@ class AvalancheGridSpaceCharge {
     double nPHolder{0.};  ///< at t+dt
     double nNHolder{0.};  ///< at t+dt
 
-    double townsend{0.};    ///< Townsend coefficient [1/cm]
-    double attachment{0.};  ///< Attachment coefficient [1/cm]
     /// Magnitude of the drift velocity [cm/ns]
     double vd{0.};
     /// Diffusion along E.
-    double dSigmaL{0.};
+    double dL{0.};
     /// Diffusion transverse to E (radial, phi dir is net 0).
-    double dSigmaT{0.};
+    double dT{0.};
 
     double wv{0.};  ///< flux drift velocity [cm/ns]
     double wr{0.};  ///< bulk drift velocity [cm/ns]
-    /// Ionization rate from TOF experiment 1/ns -> 1/cm
-    double townsendPT{0.};
-    /// Attachment rate from TOF experiment 1/ns -> 1/cm
-    double attachmentPT{0.};
+    /// Townsend coefficient from TOF experiment.
+    double alpha{0.};
+    /// Attachment coefficient from TOF experiment.
+    double eta{0.};
 
     /// Magnitude of the electric field.
     double emag{0.};
@@ -176,7 +174,7 @@ class AvalancheGridSpaceCharge {
   bool SnapToGrid(double x, double y, double z, long n = 1, int gasLayer = 0);
 
   // Propagate the electrons by one step.
-  bool TransportTimeStep();
+  bool Step();
 
   // Diffuses the electrons/nodes a timestep
   void DiffuseTimeStep(const double dx, 
@@ -189,12 +187,10 @@ class AvalancheGridSpaceCharge {
 
   // Get swarm parameters.
   void GetSwarmParameters(Medium* medium, const double emag, 
-                          double &alpha, double &eta, double &vd, 
-                          double &dSigmaL, double &dSigmaT,
+                          double &vd, double &dL, double &dT,
                           double &wv, double &wr, double &alphaPT,
                           double &etaPT) const;
 
- private:
   std::string m_className{"AvalancheGridSpaceCharge"};
 
   bool m_bDebug{false};

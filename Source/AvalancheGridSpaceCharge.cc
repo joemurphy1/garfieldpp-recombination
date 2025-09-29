@@ -311,14 +311,22 @@ void AvalancheGridSpaceCharge::StartGridAvalanche(double dtime) {
   // electrons left in the gap
   if (!m_sensor) return;
 
-  if (!Prepare()) {
-    std::cerr << m_className << "::StartGridAvalanche: Preparation failed.\n";
-    return;
+  if (m_nEtot > 0) {
+    // There are still electrons on the mesh from a previous run. 
+    if (m_bDebug) {
+      std::cout << m_className 
+                << "::StartGridAvalanche: Resuming from previous run.\n";
+    }
+  } else {
+    if (!Prepare()) {
+      std::cerr << m_className << "::StartGridAvalanche: Preparation failed.\n";
+      return;
+    }
+    if (m_bDebug) {
+      std::cout << m_className << "::StartGridAvalanche: Preparation ok.\n";
+    }
+    m_electrons.clear();
   }
-  if (m_bDebug) {
-    std::cout << m_className << "::StartGridAvalanche: Preparation ok.\n";
-  }
-  m_electrons.clear();
 
   // Make sure there are electrons on the grid.
   if (m_nEtot <= 0) {
@@ -330,12 +338,12 @@ void AvalancheGridSpaceCharge::StartGridAvalanche(double dtime) {
   if (dtime > 0.) {
     const double tMax = m_time + dtime;
     while (m_time + m_dt < tMax) {
-      if (!TransportTimeStep()) break;
+      if (!Step()) break;
     }
   } else {
     // Transport until there are no electrons left in gap or an error occurs.
     while (true) {
-      if (!TransportTimeStep()) break;
+      if (!Step()) break;
     }
   }
 
@@ -348,15 +356,12 @@ void AvalancheGridSpaceCharge::StartGridAvalanche(double dtime) {
                                       return p1.second < p2.second;
                                     });
 
-    std::cout << m_className
-              << "::StartGridAvalanche: Avalanche maximum size of "
-              << maxSize->second << " electrons reached at " << maxSize->first
-              << " ns.\n";
-
-    std::cout << m_className
-              << "::StartGridAvalanche: Final avalanche size (produced "
-                 "positive charge) = "
-              << m_nPtot << " ended at t = " << m_time << " ns.\n";
+    std::cout << m_className << "::StartGridAvalanche:\n"
+              << "    Maximum avalanche (" << maxSize->second 
+              << " electrons) reached at " << maxSize->first << " ns.\n";
+    std::cout << "    Avalanche ended at " << m_time << " ns.\n";
+    std::cout << "    Final avalanche size (number of positive ions): "
+              << m_nPtot << " ns.\n";
   }
 }
 
@@ -477,8 +482,8 @@ bool AvalancheGridSpaceCharge::SnapToGrid(const double x, const double y,
   // make step positive
   long nEOut;
   double nPOut, nNOut;
-  GetAvalancheSizeFromStep(std::abs(step), n, m_grid[iZ][iR].townsendPT,
-                           m_grid[iZ][iR].attachmentPT, nEOut, nPOut, nNOut);
+  GetAvalancheSizeFromStep(std::abs(step), n, m_grid[iZ][iR].alpha,
+                           m_grid[iZ][iR].eta, nEOut, nPOut, nNOut);
   if (nEOut == 0) {
     if (m_bDebug)
       std::cerr << m_className << "::SnapToGrid: e- from " << n
@@ -572,8 +577,7 @@ bool AvalancheGridSpaceCharge::Prepare() {
   m_zTop.assign(nG, 0.);
   m_alpha12.assign(nG, 0.);
   m_saturated.assign(nG, false);
-  std::vector<double> alpha(nG, 0.), eta(nG, 0.);
-  std::vector<double> vd(nG, 0.), dSigmaL(nG, 0.), dSigmaT(nG, 0.);
+  std::vector<double> vd(nG, 0.), dL(nG, 0.), dT(nG, 0.);
   std::vector<double> wv(nG, 0.), wr(nG, 0.);
   std::vector<double> alphaPT(nG, 0.), etaPT(nG, 0.);
   // Iterate through the gas gaps.
@@ -626,20 +630,16 @@ bool AvalancheGridSpaceCharge::Prepare() {
     // Set the threshold field for streamer formation.
     m_ezThr[k] = std::abs(m_ezBkg[k]) * (1. + m_fStreamerK);
     const double emag = std::abs(e[1]);
-    GetSwarmParameters(m_medium[k], emag,
-                       alpha[k], eta[k], vd[k], dSigmaL[k], dSigmaT[k], 
+    GetSwarmParameters(m_medium[k], emag, vd[k], dL[k], dT[k], 
                        wv[k], wr[k], alphaPT[k], etaPT[k]);
 
     // print-out to double-check the swarm parameters
-    std::cout << m_className << "::Prepare:\n"
-              << "  Gas gap " << k + 1 << "\n"
-              << "     Ez: " << m_ezBkg[k] << " (V/cm)\n"
-              << "     alphaSST: " << alpha[k] << " (1/cm)\n"
-              << "     alphaPT:  " << alphaPT[k] << " (1/cm)\n"
-              << "     etaSST: " << eta[k] << " (1/cm)\n"
-              << "     etaPT:  " << etaPT[k] << " (1/cm)\n"
-              << "     drift velocity (Wv): " << vd[k] << " (cm/ns)\n"
-              << "     Wr (!= Wv): " << wr[k] << " (cm/ns).\n";
+    std::cout << m_className << "::Prepare:\n Gas gap " << k + 1 << ":\n";
+    std::printf("     Electric field:              %15.6f V/cm\n", m_ezBkg[k]);
+    std::printf("     Townsend coefficient (PT):   %15.6f 1/cm\n", alphaPT[k]);
+    std::printf("     Attachment coefficient (PT): %15.6f 1/cm\n", etaPT[k]);
+    std::printf("     Flux velocity:               %15.6f cm/ns\n", vd[k]);
+    std::printf("     Bulk velocity:               %15.6f cm/ns\n", wr[k]);
   }
 
   // Set up the components for computing the space-charge field.
@@ -683,15 +683,15 @@ bool AvalancheGridSpaceCharge::Prepare() {
       // Continue if nodes are not in a gas gap.
       if (k < 0) continue;
       // Set swarm parameters.
-      m_grid[iz][ir].townsend = alpha[k];
-      m_grid[iz][ir].attachment = eta[k];
-      m_grid[iz][ir].vd = vd[k];  //< magnitude! direction against E field
-      m_grid[iz][ir].dSigmaL = dSigmaL[k];
-      m_grid[iz][ir].dSigmaT = dSigmaT[k];
+      // Magnitude of the drift velocity 
+      // (direction is antiparallel to the electric field).
+      m_grid[iz][ir].vd = vd[k];
+      m_grid[iz][ir].dL = dL[k];
+      m_grid[iz][ir].dT = dT[k];
       m_grid[iz][ir].wv = wv[k];
       m_grid[iz][ir].wr = wr[k];
-      m_grid[iz][ir].townsendPT = alphaPT[k];
-      m_grid[iz][ir].attachmentPT = etaPT[k];
+      m_grid[iz][ir].alpha = alphaPT[k];
+      m_grid[iz][ir].eta = etaPT[k];
     }
   }
 
@@ -722,7 +722,7 @@ bool AvalancheGridSpaceCharge::Prepare() {
 
 void AvalancheGridSpaceCharge::GetSwarmParameters(
     Medium* m, const double emag, 
-    double &alpha, double &eta, double &vd, double &dSigmaL, double &dSigmaT, 
+    double &vd, double &dL, double &dT, 
     double &wv, double &wr, double &alphaPT, double &etaPT) const {
   if (m_bDebug && false)
     std::cerr << m_className
@@ -732,12 +732,10 @@ void AvalancheGridSpaceCharge::GetSwarmParameters(
 
   if (!m) return;
 
-  // alpha
-  m->ElectronTownsend(0., emag, 0., 0., 0., 0., alpha);
-  // eta
-  m->ElectronAttachment(0., emag, 0., 0., 0., 0., eta);
-
-  // mag of velocity
+  double alphaSST = 0.;
+  m->ElectronTownsend(0., emag, 0., 0., 0., 0., alphaSST);
+  double etaSST = 0.;
+  m->ElectronAttachment(0., emag, 0., 0., 0., 0., etaSST);
   double vx, vy, vz;
   m->ElectronVelocity(0., emag, 0., 0., 0., 0., vx, vy, vz);
   vd = std::sqrt(vx * vx + vy * vy + vz * vz);  //< Wv in Magboltz
@@ -752,48 +750,49 @@ void AvalancheGridSpaceCharge::GetSwarmParameters(
   // Rion/Ratt Rion-Ratt = Reff (tagashira eq.)
   //  -> Rion converged to a rate with Wr and DL (using the one equation),
   //  alphaSST is either from SST and if not converged from magboltz itself.
-  double rion = 0, ratt = 0;
-  if (!m_bUseTOF ||
-      !m->ElectronTOFIonisation(0., emag, 0., 0., 0., 0., rion) ||
-      !m->ElectronTOFAttachment(0., emag, 0., 0., 0., 0., ratt)) {
-    if (m_bDebug) {
-      std::cerr << m_className
-                << "::GetSwarmParameters: TOF Rates not available.\n";
+  alphaPT = alphaSST;
+  etaPT = etaSST;
+  if (m_bUseTOF) {
+    double rion = 0.;
+    if (m->ElectronTOFIonisation(0., emag, 0., 0., 0., 0., rion)) {
+      alphaPT = rion / wr;
+    } else if (m_bDebug) {
+      std::cerr << m_className << "::GetSwarmParameters: "
+                << "TOF ionization rate not available.\n";
     }
-
-    // Diffusionless approximation
-    rion = alpha * wr;
-    ratt = eta * wr;
+    double ratt = 0.;
+    if (m->ElectronTOFAttachment(0., emag, 0., 0., 0., 0., ratt)) {
+      etaPT = ratt / wr;
+    } else if (m_bDebug) {
+      std::cerr << m_className << "::GetSwarmParameters: "
+                << "TOF attachment rate not available.\n";
+    }
   }
-  // calculate alpha/eta PT
-  alphaPT = rion / wr;
-  etaPT = ratt / wr;
 
-  // diffusion coefficients
-  m->ElectronDiffusion(0., emag, 0., 0., 0., 0., dSigmaL, dSigmaT);
+  // Diffusion coefficients
+  m->ElectronDiffusion(0., emag, 0., 0., 0., 0., dL, dT);
 
   // print (and information about units!)
   if (m_bDebug && false) {
-    std::cout << m_className << "::GetSwarmParameters:\n"
-              << "  Townsend = " << alpha << " [1/cm], Attachment = " << eta
-              << " [1/cm], Flux Velocity = "
-              << vd
-              //                      << " [cm/ns], Wv = " << wv
-              << " [cm/ns], Bulk velocity = " << wr << " [cm/ns].\n"
-              << "  TOF Ionization rate = " << alphaPT
-              << " [1/ns], TOF Attachment rate = " << etaPT << "[1/ns].\n"
-              << "  Longitudinal Diffusion = " << dSigmaL << " [sqrt(cm)],"
-              << " Transversal Diffusion = " << dSigmaT << " [sqrt(cm)].\n";
+    std::cout << m_className << "::GetSwarmParameters:\n";
+    std::printf("     Townsend coefficient (SST):   %15.6f 1/cm\n", alphaSST);
+    std::printf("     Townsend coefficient (PT):    %15.6f 1/cm\n", alphaPT);
+    std::printf("     Attachment coefficient (SST): %15.6f 1/cm\n", etaSST);
+    std::printf("     Attachment coefficient (PT):  %15.6f 1/cm\n", etaPT);
+    std::printf("     Flux velocity:                %15.6f cm/ns\n", vd);
+    std::printf("     Bulk velocity:                %15.6f cm/ns\n", wr);
+    std::printf("     Longitudinal diffusion:       %15.6f sqrt(cm)\n", dL);
+    std::printf("     Transverse diffusion:         %15.6f sqrt(cm)\n", dT);
   }
 }
 
-bool AvalancheGridSpaceCharge::TransportTimeStep() {
+bool AvalancheGridSpaceCharge::Step() {
   // Propagate grid nodes by one time step with updated electric fields 
   // (Lippmann et al. approach).
   if (m_nEtot <= 0) return false;
 
   if (m_bDebug) {
-    std::cout << m_className << "::TransportTimeStep: Start time: " << m_time
+    std::cout << m_className << "::Step: Start time: " << m_time
               << "\n";
   }
   
@@ -822,7 +821,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
           // equal permittivity.
           if (nG > 1) {
             throw std::runtime_error(
-                "::TransportTimeStep: Mirror charge option implemented but not tested for "
+                "::Step: Mirror charge option implemented but not tested for "
                 "MRPC.");
           }
 
@@ -888,7 +887,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
           nd.stheta = -erS * einv;
         }
         if (nd.emag >= m_ezThr[gap] && !m_bFieldK) {
-          std::cout << m_className << ":TransportTimeStep:\n"
+          std::cout << m_className << ":Step:\n"
                     << "    Space-charge field reached "
                     << std::to_string(int(m_fStreamerK * 100))
                     << "% of background field in gas gap " << gap + 1
@@ -899,9 +898,9 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         }
 
         // Calculate the swarm parameters.
-        GetSwarmParameters(m_medium[gap], nd.emag, nd.townsend, nd.attachment, nd.vd,
-                           nd.dSigmaL, nd.dSigmaT, nd.wv, nd.wr, nd.townsendPT,
-                           nd.attachmentPT);
+        GetSwarmParameters(m_medium[gap], nd.emag, nd.vd,
+                           nd.dL, nd.dT, nd.wv, nd.wr, nd.alpha,
+                           nd.eta);
 
         // Get the new step distance.
         double step = std::abs(nd.wr * m_dt);
@@ -914,15 +913,15 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
           m_dt = m_zStepSize / nd.wr;
 
           if (m_bDebug) {
-            std::cout << m_className << "::TransportTimeStep: Changed dt from "
+            std::cout << m_className << "::Step: Changed dt from "
                       << dtPrev << " to: " << m_dt << "\n"
                       << "      due to step size: " << step
                       << " bulk velocity: " << nd.wr << "\n"
                       << "      electric field: " << nd.emag
-                      << " alpha: " << nd.townsendPT
-                      << " eta: " << nd.attachmentPT << "\n"
+                      << " alpha: " << nd.alpha
+                      << " eta: " << nd.eta << "\n"
                       << "      diffusion longitudinal/transversal: "
-                      << nd.dSigmaL << " " << nd.dSigmaT << "\n";
+                      << nd.dL << " " << nd.dT << "\n";
             ExportGrid("TIME_STEP_ADAPTION_" + std::to_string(m_dt));
           }
         }
@@ -956,7 +955,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
         nNOut = 0;  //< strictly this is completely wrong because
                     // SC-bremsung creates huge amounts of ions
       } else {
-        AvalancheGain(step, nd.nE, nd.townsendPT, nd.attachmentPT,
+        AvalancheGain(step, nd.nE, nd.alpha, nd.eta,
                       nEOut, nPOut, nNOut);
       }
       m_nPtot += std::round(nPOut);
@@ -1052,7 +1051,7 @@ bool AvalancheGridSpaceCharge::TransportTimeStep() {
     }
     if (m_bDebug) {
       std::cout << m_className
-                << "::TransportTimeStep: Electrons active on grid in gas gap "
+                << "::Step: Electrons active on grid in gas gap "
                 << k + 1 << ": " << nEinGap[k] << "\n";
     }
   }
@@ -1105,9 +1104,9 @@ void AvalancheGridSpaceCharge::DiffuseTimeStep(
     // Calculate a diffusion step in a local coordinate system (U,V,W)
     // where W is along the E field, V is along e_phi,
     // and U is perpendicular to V and W.
-    const double dU = RndmGaussian(0, nd.dSigmaT * sqrtdx);
-    const double dV = RndmGaussian(0, nd.dSigmaT * sqrtdx);
-    const double dW = RndmGaussian(dx, nd.dSigmaL * sqrtdx);
+    const double dU = RndmGaussian(0, nd.dT * sqrtdx);
+    const double dV = RndmGaussian(0, nd.dT * sqrtdx);
+    const double dW = RndmGaussian(dx, nd.dL * sqrtdx);
 
     // Transform to avalanche coordinate system
     // (Z,R,Y) where R mimics an X axis and Y is perpendicular to R and Z
