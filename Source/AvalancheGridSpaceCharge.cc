@@ -203,7 +203,6 @@ void AvalancheGridSpaceCharge::SetSensor(Sensor *sensor) {
 
 void AvalancheGridSpaceCharge::Reset() {
   m_time = 0.;
-  m_time0 = 0.;
   m_dt = 0.;
   m_nEtot = 0;
   m_nPtot = 0;
@@ -348,14 +347,10 @@ void AvalancheGridSpaceCharge::StartGridAvalanche(double dtime) {
                                        const std::pair<double, long> &p2) {
                                       return p1.second < p2.second;
                                     });
-    double maxTime =
-        m_time0 +
-        m_dt *
-            ((double)std::distance(m_evolution.begin(), maxSize) + 1);
 
     std::cout << m_className
               << "::StartGridAvalanche: Avalanche maximum size of "
-              << maxSize->second << " electrons reached at " << maxTime
+              << maxSize->second << " electrons reached at " << maxSize->first
               << " ns.\n";
 
     std::cout << m_className
@@ -570,7 +565,6 @@ bool AvalancheGridSpaceCharge::Prepare() {
   }
   // Set the start time.
   m_time = m_time / (double)nTotal;
-  m_time0 = m_time;
 
   m_medium.assign(nG, nullptr);
   m_ezBkg.assign(nG, 0.);

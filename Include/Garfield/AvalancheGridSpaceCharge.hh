@@ -235,7 +235,6 @@ class AvalancheGridSpaceCharge {
   long m_nPtot{0};   
 
   double m_time{0.};   ///< Clock.
-  double m_time0{0.};  ///< Initial time.
   double m_dt{0.};     ///< Time step.
 
   /// Grid.
