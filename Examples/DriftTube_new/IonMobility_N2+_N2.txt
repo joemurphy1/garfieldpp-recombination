@@ -1,0 +1,31 @@
+# ----------------------------------------------------------------- 
+# Mobility of N2+ ions in N2 measured for T=300 K                   
+# Accuracy: The total error in the experimental data is believed not to exceed + 3%                           
+# Data from H.W. Ellis; R.Y. Pai; E.W. McDaniel; E.A. Mason; L.A. Viehland (1976).
+# Transport properties of gaseous ions over a wide energy range. , 17(3), 177–210.
+# doi:10.1016/0092-640x(76)90001-2
+# Ratio of electric field to the number density og gas in Td
+# Mobility in cm^2 V^-1 s^-1
+# ----------------------------------------------------------------- 
+   6  1.90 
+   8  1.89 
+  10  1.88 
+  12  1.88 
+  15  1.87 
+  20  1.85 
+  25  1.84 
+  30  1.83 
+  40  1.80 
+  50  1.76 
+  60  1.72 
+  80  1.66 
+ 100  1.60 
+ 120  1.54 
+ 150  1.47 
+ 200  1.37 
+ 250  1.28 
+ 300  1.20 
+ 400  1.10 
+ 500  1.02 
+ 600  0.95 
+ 800  0.85 

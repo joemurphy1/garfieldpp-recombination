@@ -4,11 +4,11 @@
 using namespace Garfield;
 
 int main(int argc, char* argv[]) {
-  const double pressure = 3 * AtmosphericPressure;
+  const double pressure = 1 * AtmosphericPressure;
   const double temperature = 293.15;
 
   // Setup the gas.
-  MediumMagboltz gas("Ar", 93., "CO2", 7.);
+  MediumMagboltz gas("N2", 79., "O2", 21.);
   gas.SetTemperature(temperature);
   gas.SetPressure(pressure);
 
@@ -24,5 +24,5 @@ int main(int argc, char* argv[]) {
   // Run Magboltz to generate the gas table.
   gas.GenerateGasTable(ncoll);
   // Save the table.
-  gas.WriteGasFile("ar_93_co2_7.gas");
+  gas.WriteGasFile("n2_79_o2_21.gas");
 }

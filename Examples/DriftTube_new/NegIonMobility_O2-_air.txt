@@ -1,0 +1,30 @@
+# ----------------------------------------------------------------- 
+# Mobility of O2- ions in air measured for T=300 K                   
+# Accuracy: 5% below 50 Td 4% above 50 Td                          
+# Data from P84 of L.A. Viehland; E.A. Mason (1995). Transport Properties of
+# Gaseous Ions over a Wide Energy Range, IV. , 60(1), 37–95.
+# doi:10.1006/adnd.1995.1004
+# Ratio of electric field to the number density og gas in Td
+# Mobility in cm^2 V^-1 s^-1
+# ----------------------------------------------------------------- 
+   5  2.52 
+   6  2.52 
+   8  2.52 
+  10  2.52 
+  12  2.52 
+  15  2.53 
+  20  2.54 
+  25  2.55 
+  30  2.56 
+  35  2.58 
+  40  2.60 
+  50  2.64 
+  60  2.69 
+  70  2.75 
+  80  2.81 
+ 100  2.91 
+ 120  2.98 
+ 140  3.01 
+ 170  3.00 
+ 200  2.96 
+ 250  2.84 
