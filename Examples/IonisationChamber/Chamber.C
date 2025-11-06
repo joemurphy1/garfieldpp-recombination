@@ -116,11 +116,11 @@ Garfield::Random::SetEngine(randomEngine);
   Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "anode");
   // Set the signal time window.
-  const double tstep = 1; // monte-carlo step size (ns)
+  const double tstep = 5; // monte-carlo step size (ns)
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 2000;
-  const double dt = 10; //time between loops (dt > tstep)
-  const bool stop_at_max_time = true;
+  const std::size_t nbins = 400000;
+  const double dt = 20.; //time between loops (dt > tstep)
+  const bool stop_at_max_time = false;
   const size_t max_time = nbins*tstep;
   sensor.SetTimeWindow(tmin, tstep, nbins);
   // Set the delta reponse function.
@@ -164,7 +164,7 @@ Garfield::Random::SetEngine(randomEngine);
   const double z0 = 0;
   const std::size_t nTracks = 1;
   
-
+  
   
   sensor.ClearSignal();
   for (std::size_t j = 0; j < nTracks; ++j) {
@@ -187,7 +187,7 @@ Garfield::Random::SetEngine(randomEngine);
     std::cout <<"Initial Ions: " << drift.GetIons().size() << std::endl;
 
   //for (double t = 0; t < (nbins * tstep); t += dt) { original time based loop
-  size_t t = 0;
+  double t = 0;
   size_t particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
   while (particleNum > 0) {
     if (stop_at_max_time && t > max_time) {break;}
@@ -234,11 +234,20 @@ if (plotDrift) {
 }
   
 
-sensor.ConvoluteSignals();
+//sensor.ConvoluteSignals();
 int nt = 0;
 
-  // get all the data by looping through the bins.
+// option to display integrated signal
+bool integrateSignal = true;
+if (integrateSignal) {
+  sensor.IntegrateSignal("anode");
+  double total_charge = sensor.GetSignal("anode", nbins - 1);
+  std::cout << "Total collected charge: " << total_charge << " fC" << std::endl;
+  std::cout << "Corresponding number of electrons: " << total_charge / ElementaryCharge << std::endl;
+}
 
+
+// option to integrate signal with trapezoidal rule doesn't save over signal
 bool integrateSignalWithTrapz = false;
 if (integrateSignalWithTrapz) {
   double tstart_new, tstep_new;
@@ -257,10 +266,6 @@ if (integrateSignalWithTrapz) {
   double integral = integrateTrapezoid(signal.data(), time.data(), nsteps_new);
   std::cout << "Integrates to: " << integral << std::endl;
 }
-
-// option to display integrated signal
-bool display_integrated_signal = false;
-if (display_integrated_signal) sensor.IntegrateSignals();
 
 
   bool saveSignal = true;

@@ -9,8 +9,8 @@ endif()
 add_executable(mdt mdt.C)
 target_link_libraries(mdt Garfield::Garfield)
 
-add_executable(mdt_MC mdt_MC.C)
-target_link_libraries(mdt_MC Garfield::Garfield)
+add_executable(Chamber Chamber.C)
+target_link_libraries(Chamber Garfield::Garfield)
 
 add_executable(mdt_mt mdt_mt.C)
 target_link_libraries(mdt_mt Garfield::Garfield)

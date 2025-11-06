@@ -14020,7 +14020,7 @@ C-----------------------------------------------
       WRITE(6,22) 
    22 FORMAT(/,' SST TOWNSEND COEFICIENTS')
       WRITE(6,23) ALPHSST,ALPHERR,ATTSST,ATTERR
-   23 FORMAT(/,' ALPHA=',F9.2' +- ',F6.2,' %    ATT=',F9.2,' +- ',F6.2,
+   23 FORMAT(/,' ALPHA=',F9.2,' +- ',F6.2,' %    ATT=',F9.2,' +- ',F6.2,
      /' %')   
       CALL OUTPUT1
 C                                         
