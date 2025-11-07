@@ -19,6 +19,7 @@
 #include "Garfield/RandomEngineRoot.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/ComponentGrid.hh"
 
 
 using namespace Garfield;
@@ -102,7 +103,7 @@ Garfield::Random::SetEngine(randomEngine);
   // Width in beam direction
   const double yMin = -0.15, yMax = 0.15;
   // Length? Of the plates (vertically)
-  const double zMin = -15, zMax = 15;
+  const double zMin = -0.15, zMax = 0.15;
   // Voltages
   const double vAnode = 15.;
   const double vCathode = 0.;
@@ -112,15 +113,32 @@ Garfield::Random::SetEngine(randomEngine);
  cmp.AddPlaneX(xMin, vCathode);
  cmp.AddPlaneX(xMax, vAnode, "anode");
 
+   // Grid parameters.
+  const int Nx = 1000;
+  const int Ny = 1;
+  const int Nz = 1000;
+  const double spacing = 0.0001; //(cm)
+  const double xgrid = Nx * spacing;
+  const double zgrid = Nz * spacing;
+  const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
+
+
+  ComponentGrid grid;
+  grid.SetMedium(&gas);
+  grid.SetMesh(Nx, Ny, Nz, -xgrid/2, xgrid/2, -xgrid/2,
+                 xgrid/2, -zgrid/2, zgrid/2);
+  grid.SetUniformElectricField(0., 0., 0.); 
+
   // Make a sensor.
   Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "anode");
+  sensor.AddComponent(&grid);
   // Set the signal time window.
-  const double tstep = 5; // monte-carlo step size (ns)
+  const double tstep = 1; // monte-carlo step size (ns)
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 400000;
-  const double dt = 20.; //time between loops (dt > tstep)
-  const bool stop_at_max_time = false;
+  const std::size_t nbins = 10000;
+  const double dt = 5.; //time between loops (dt > tstep)
+  const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep;
   sensor.SetTimeWindow(tmin, tstep, nbins);
   // Set the delta reponse function.
@@ -138,6 +156,8 @@ Garfield::Random::SetEngine(randomEngine);
     drift.SetSensor(&sensor);
     drift.EnableSignalCalculation();
     drift.SetTimeSteps(tstep);
+    drift.EnableDensityMap();
+    drift.EnableRecombination(true, alpha);
 
   AvalancheMicroscopic aval;
     aval.SetSensor(&sensor);
@@ -162,13 +182,16 @@ Garfield::Random::SetEngine(randomEngine);
   const double x0 = 0;
   const double y0 = yMin;
   const double z0 = 0;
-  const std::size_t nTracks = 1;
+  const std::size_t nTracks = 1000;
+  double recombine_num = 0;
   
   
   
   sensor.ClearSignal();
   for (std::size_t j = 0; j < nTracks; ++j) {
-    track.NewTrack(x0, y0, z0, 0, 0, 1, 0);
+    double offset = randomEngine.Draw();
+    double x_proton = x0 + (offset - 0.5) * 0.01; //spread over 0.1 mm
+    track.NewTrack(x_proton, y0, z0, 0, 0, 1, 0);
     for (const auto& cluster : track.GetClusters()) {
       //remove clusters that are unphysically out of the detector
       if (cluster.y < yMin || cluster.y > yMax) {
@@ -189,23 +212,18 @@ Garfield::Random::SetEngine(randomEngine);
   //for (double t = 0; t < (nbins * tstep); t += dt) { original time based loop
   double t = 0;
   size_t particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
+  
   while (particleNum > 0) {
     if (stop_at_max_time && t > max_time) {break;}
+
+    // output positions and number of particles for checking
     std::cout << "Positive Ions: " << drift.GetIons().size() << std::endl;
-
-    // output an ion position
-    const int numberIonOutput = 1;
-    int counter = 0;
-    for (const auto& ion : drift.GetNegativeIons()) {
-      if (counter >= numberIonOutput) {break;}
-      counter++;
-      const auto& p1 = ion.path.back();
-      std::cout << "Negative Ion at (" << p1.x << "," << p1.y << "," << p1.z << ")" << std::endl;
-    }
-
-    std::cout << "Negative Ions: " << drift.GetNegativeIons().size() << std::endl;
-    drift.SetTimeWindow(t, t + dt);
-    drift.ResumeAvalanche(); // drift the ions
+    const auto& negions = drift.GetNegativeIons();
+    if (!negions.empty()) {
+      const auto& p1 = negions.front().path.back();
+      std::cout << "Negative Ion at (" 
+              << p1.x << ", " << p1.y << ", " << p1.z << ")\n";
+}
 
     if (!aval.GetElectrons().empty()) {
       aval.SetTimeWindow(t, t + dt);
@@ -214,14 +232,44 @@ Garfield::Random::SetEngine(randomEngine);
         for (const auto& electron : aval.GetElectrons()) {
             if (electron.status == -7) {
                 const auto& p1 = electron.path.back();
-                drift.AddNegativeIon(p1.x, p1.y, p1.z, t + dt, 1);
+                drift.AddNegativeIon(p1.x, p1.y, p1.z, p1.t, 1);
               }
             }
           }
+
+    std::cout << "Negative Ions: " << drift.GetNegativeIons().size() << std::endl;
+    drift.SetTimeWindow(t, t + dt);
+    drift.ResumeAvalanche(); // drift the ions
+
+    grid.ClearFields();  // clear old densities/fields
+    grid.SetUniformElectricField(0., 0., 0.);  // maintain applied field
+
+    const int multiplicity = 1;  // or however many charges per ion you want
+    for (const auto& ion : drift.GetIons()) {
+      if (!ion.path.empty()) {
+        const auto& p1 = ion.path.back();
+        grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
+      }
+    }
+
+    for (const auto& ion : drift.GetIons()) {
+                if (ion.status == -9) {
+                  std::cout << "Recombined Ion" << std::endl;
+                  recombine_num += 1;
+                }
+            }
+    for (const auto& negion : drift.GetNegativeIons()) {
+                if (negion.status == -9) {
+                  std::cout << "Recombined Negative Ion" << std::endl;
+                  recombine_num += 1;
+                }
+            }
+
     std::cout << t + dt << "ns simulated" << std::endl;
     t += dt;
     particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
   }
+  std::cout << "Recombined particles : " << recombine_num << std::endl;
 
 
 
