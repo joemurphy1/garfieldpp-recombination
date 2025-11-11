@@ -112,6 +112,7 @@ Garfield::Random::SetEngine(randomEngine);
 
  cmp.AddPlaneX(xMin, vCathode);
  cmp.AddPlaneX(xMax, vAnode, "anode");
+ cmp.AddStripOnPlaneX('z', xMax, yMin, yMax, "detector");
 
    // Grid parameters.
   const int Nx = 1000;
@@ -125,22 +126,22 @@ Garfield::Random::SetEngine(randomEngine);
 
   ComponentGrid grid;
   grid.SetMedium(&gas);
-  grid.SetMesh(Nx, Ny, Nz, -xgrid/2, xgrid/2, -xgrid/2,
-                 xgrid/2, -zgrid/2, zgrid/2);
+  grid.SetMesh(Nx, Ny, Nz, -xgrid/2, xgrid/2, yMin,
+                 yMax, -zgrid/2, zgrid/2);
   grid.SetUniformElectricField(-vAnode/(xMax-xMin), 0., 0.); 
 
   // Make a sensor.
   Sensor sensor(&cmp);
-  sensor.AddElectrode(&cmp, "anode");
+  sensor.AddElectrode(&cmp, "detector");
   sensor.AddComponent(&grid);
 
   // option to make strip sensors for positional resolution
-  const bool stripSensor = true;
+  const bool stripSensor = false;
   const int nStrips = 20;
   const double stripWidth = (yMax - yMin) / nStrips;
   std::vector<std::string> stripNames;
   if (stripSensor) {
-    for (double y_0 = yMin; (y_0 + stripWidth) < (yMin + nStrips * stripWidth); y_0 += stripWidth ) {
+    for (double y_0 = yMin; y_0 <= (yMin + (nStrips - 1) * stripWidth); y_0 += stripWidth ) {
       stripNames.push_back(std::to_string(y_0));
       cmp.AddStripOnPlaneX('z', xMax, y_0, y_0 + stripWidth, stripNames.back());
       sensor.AddElectrode(&cmp, stripNames.back());
@@ -148,10 +149,10 @@ Garfield::Random::SetEngine(randomEngine);
   }
 
   // Set the signal time window.
-  const double tstep = 50; // monte-carlo step size (ns)
+  const double tstep = 10; // monte-carlo step size (ns)
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 50000;
-  const double dt = 100.; //time between loops (dt > tstep)
+  const std::size_t nbins = 2500;
+  const double dt = 10.; //time between loops (dt > tstep)
   const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep;
   sensor.SetTimeWindow(tmin, tstep, nbins);
@@ -165,7 +166,6 @@ Garfield::Random::SetEngine(randomEngine);
   track.SetEnergy(250.e6 + ProtonMass);
 
 
-  // RKF integration.
   AvalancheMC drift;
     drift.SetSensor(&sensor);
     drift.EnableSignalCalculation();
@@ -239,6 +239,7 @@ Garfield::Random::SetEngine(randomEngine);
               << p1.x << ", " << p1.y << ", " << p1.z << ")\n";
     }
 
+    // handle electron drift and attachment
     if (!aval.GetElectrons().empty()) {
       aval.SetTimeWindow(t, t + dt);
       aval.ResumeAvalanche(); //drift the electrons only if there are some left
@@ -250,14 +251,8 @@ Garfield::Random::SetEngine(randomEngine);
           }
         }
       }
-
-    std::cout << "Negative Ions: " << drift.GetNegativeIons().size() << std::endl;
-    drift.SetTimeWindow(t, t + dt);
-    drift.ResumeAvalanche(); // drift the ions
-
-    grid.ClearFields();  // clear old densities/fields
-    grid.SetUniformElectricField(-vAnode/(xMax-xMin), 0., 0.);  // maintain applied field
-
+    
+    // add positive ions to the grid
     const int multiplicity = 1;  // or however many charges per ion you want
     for (const auto& ion : drift.GetIons()) {
       if (!ion.path.empty()) {
@@ -266,6 +261,23 @@ Garfield::Random::SetEngine(randomEngine);
       }
     }
 
+    // add negative ions to the grid
+    for (const auto& negion : drift.GetNegativeIons()) {
+      if (!negion.path.empty()) {
+        const auto& p1 = negion.path.back();
+        grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
+      }
+    }
+
+    // drift the positive and negative ions
+    std::cout << "Negative Ions: " << drift.GetNegativeIons().size() << std::endl;
+    drift.SetTimeWindow(t, t + dt);
+    drift.ResumeAvalanche(); // drift the ions
+
+    grid.ClearFields();  // clear old densities/fields
+    grid.SetUniformElectricField(0., 0., 0.);  // maintain applied field
+
+    // record recombined particles
     for (const auto& ion : drift.GetIons()) {
                 if (ion.status == -9) {
                   std::cout << "Recombined Ion" << std::endl;
@@ -301,8 +313,8 @@ if (plotDrift) {
 // option to display integrated signal
 bool integrateSignal = true;
 if (integrateSignal) {
-  sensor.IntegrateSignal("anode");
-  double total_charge = sensor.GetSignal("anode", nbins - 1);
+  sensor.IntegrateSignal("detector");
+  double total_charge = sensor.GetSignal("detector", nbins - 1);
   std::cout << "Total collected charge: " << total_charge << " fC" << std::endl;
   std::cout << "Corresponding number of electrons: " << total_charge / ElementaryCharge << std::endl;
 }
@@ -319,7 +331,7 @@ if (integrateSignalWithTrapz) {
   std::vector<double> time(nsteps_new);
 
   for (size_t step_number = 0; step_number < nsteps_new; ++step_number) {
-      signal[step_number] = sensor.GetSignal("anode", step_number);
+      signal[step_number] = sensor.GetSignal("detector", step_number);
       time[step_number] = tstart_new + (step_number * tstep_new);
   }
 
@@ -334,9 +346,9 @@ if (integrateSignalWithTrapz) {
     outfile.open("signal.txt", std::ios::out);
     for (unsigned int i = 0; i < nbins; ++i) {
     const double t = (i + 0.5) * tstep;
-    const double f = sensor.GetSignal("anode", i);
-    const double fe = sensor.GetElectronSignal("anode", i);
-    const double fh = sensor.GetIonSignal("anode", i);
+    const double f = sensor.GetSignal("detector", i);
+    const double fe = sensor.GetElectronSignal("detector", i);
+    const double fh = sensor.GetIonSignal("detector", i);
     outfile << t << " " << f << " " << fe << " " << fh << "\n";
     outfile.close();
     }
@@ -355,7 +367,7 @@ if (integrateSignalWithTrapz) {
 
   
   if (plotSignal) { 
-    sensor.PlotSignal("anode", cS);
+    sensor.PlotSignal("detector", cS);
   }
 
   // timer
