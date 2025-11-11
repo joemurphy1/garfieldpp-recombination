@@ -24,20 +24,6 @@
 
 using namespace Garfield;
 
-// my function to integrate a Trapezoid.
-double integrateTrapezoid(const double* signal, const double* time, size_t time_steps) {
-    if (time_steps < 2) return 0.0; // need at least 2 points
-
-    double integral = 0.0;
-
-    for (size_t i = 0; i < time_steps - 1; ++i) {
-        double dt = time[i + 1] - time[i];
-        integral += 0.5 * (signal[i] + signal[i + 1]) * dt;
-    }
-
-    return integral;
-}
-
 
 bool readTransferFunction(Sensor& sensor) {
   std::ifstream infile;
@@ -82,14 +68,7 @@ Garfield::Random::SetEngine(randomEngine);
 
   TApplication app("app", &argc, argv);
 
-  //Output test values
-  std::cout << "Seed: " << seed << std::endl;
-  std::cout << "First random number ROOT gRandom: " << gRandom->Rndm() << std::endl;
-  std::cout << "First random number Garfield " << Garfield::Random::Draw() << std::endl;
-
   // Make a gas medium.
-  
-
   MediumMagboltz gas;
   gas.LoadGasFile("n2_78.08_o2_20.95_ar_0.93_co2_0.04_1atm.gas");
   gas.LoadIonMobility("IonMobility_N2+_N2.txt");
@@ -114,21 +93,26 @@ Garfield::Random::SetEngine(randomEngine);
  cmp.AddPlaneX(xMax, vAnode, "anode");
  cmp.AddStripOnPlaneX('z', xMax, yMin, yMax, "detector");
 
-   // Grid parameters.
+  const double dt = 10.; //time between loops (dt > tstep)
+  const double tstep = 10.; //monte-carlo step size (ns)
+  const double v_drift = 220e-9; //cm/ns
+
+  // Grid parameters.
   const int Nx = 1000;
   const int Ny = 1;
   const int Nz = 1000;
-  const double spacing = 0.0001; //(cm)
+  const double spacing = v_drift * dt * 10; //(cm)
   const double xgrid = Nx * spacing;
   const double zgrid = Nz * spacing;
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
+  const bool RecordRecombinationPositions = true;
 
 
   ComponentGrid grid;
   grid.SetMedium(&gas);
   grid.SetMesh(Nx, Ny, Nz, -xgrid/2, xgrid/2, yMin,
                  yMax, -zgrid/2, zgrid/2);
-  grid.SetUniformElectricField(-vAnode/(xMax-xMin), 0., 0.); 
+  grid.SetUniformElectricField(0., 0., 0.); 
 
   // Make a sensor.
   Sensor sensor(&cmp);
@@ -149,10 +133,8 @@ Garfield::Random::SetEngine(randomEngine);
   }
 
   // Set the signal time window.
-  const double tstep = 10; // monte-carlo step size (ns)
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 2500;
-  const double dt = 10.; //time between loops (dt > tstep)
+  const std::size_t nbins = 1000;
   const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep;
   sensor.SetTimeWindow(tmin, tstep, nbins);
@@ -196,15 +178,17 @@ Garfield::Random::SetEngine(randomEngine);
   const double x0 = 0;
   const double y0 = yMin;
   const double z0 = 0;
-  const std::size_t nTracks = 1000;
+  const std::size_t nTracks = 10000;
   double recombine_num = 0;
+  std::vector<std::vector<double>> ion_recombination_positions;
+  std::vector<std::vector<double>> negion_recombination_positions;
   
   
   
   sensor.ClearSignal();
   for (std::size_t j = 0; j < nTracks; ++j) {
     double offset = randomEngine.Draw();
-    double x_proton = x0 + (offset - 0.5) * 0.01; //spread over 0.1 mm
+    double x_proton = x0 + (offset - 0.5) * 0.001; //spread over 0.01 mm
     track.NewTrack(x_proton, y0, z0, 0, 0, 1, 0);
     for (const auto& cluster : track.GetClusters()) {
       //remove clusters that are unphysically out of the detector
@@ -229,15 +213,6 @@ Garfield::Random::SetEngine(randomEngine);
   
   while (particleNum > 0) {
     if (stop_at_max_time && t > max_time) {break;}
-
-    // output positions and number of particles for checking
-    std::cout << "Positive Ions: " << drift.GetIons().size() << std::endl;
-    const auto& negions = drift.GetNegativeIons();
-    if (!negions.empty()) {
-      const auto& p1 = negions.front().path.back();
-      std::cout << "Negative Ion at (" 
-              << p1.x << ", " << p1.y << ", " << p1.z << ")\n";
-    }
 
     // handle electron drift and attachment
     if (!aval.GetElectrons().empty()) {
@@ -271,6 +246,7 @@ Garfield::Random::SetEngine(randomEngine);
 
     // drift the positive and negative ions
     std::cout << "Negative Ions: " << drift.GetNegativeIons().size() << std::endl;
+    std::cout << "Positive Ions: " << drift.GetIons().size() << std::endl;
     drift.SetTimeWindow(t, t + dt);
     drift.ResumeAvalanche(); // drift the ions
 
@@ -280,13 +256,15 @@ Garfield::Random::SetEngine(randomEngine);
     // record recombined particles
     for (const auto& ion : drift.GetIons()) {
                 if (ion.status == -9) {
-                  std::cout << "Recombined Ion" << std::endl;
+                  const auto& p1 = ion.path.back();
+                  ion_recombination_positions.push_back({p1.x, p1.y, p1.z});
                   recombine_num += 1;
                 }
             }
     for (const auto& negion : drift.GetNegativeIons()) {
                 if (negion.status == -9) {
-                  std::cout << "Recombined Negative Ion" << std::endl;
+                  const auto& p1 = negion.path.back();
+                  negion_recombination_positions.push_back({p1.x, p1.y, p1.z});
                   recombine_num += 1;
                 }
             }
@@ -319,29 +297,8 @@ if (integrateSignal) {
   std::cout << "Corresponding number of electrons: " << total_charge / ElementaryCharge << std::endl;
 }
 
-
-// option to integrate signal with trapezoidal rule doesn't save over signal
-bool integrateSignalWithTrapz = false;
-if (integrateSignalWithTrapz) {
-  double tstart_new, tstep_new;
-  size_t nsteps_new;
-
-  sensor.GetTimeWindow(tstart_new, tstep_new, nsteps_new);
-  std::vector<double> signal(nsteps_new);
-  std::vector<double> time(nsteps_new);
-
-  for (size_t step_number = 0; step_number < nsteps_new; ++step_number) {
-      signal[step_number] = sensor.GetSignal("detector", step_number);
-      time[step_number] = tstart_new + (step_number * tstep_new);
-  }
-
-
-  double integral = integrateTrapezoid(signal.data(), time.data(), nsteps_new);
-  std::cout << "Integrates to: " << integral << std::endl;
-}
-
-
-  bool saveSignal = true;
+// below here is all outputting data to files and plotting
+  bool saveSignal = false;
   if (saveSignal) { std::ofstream outfile;
     outfile.open("signal.txt", std::ios::out);
     for (unsigned int i = 0; i < nbins; ++i) {
@@ -352,19 +309,34 @@ if (integrateSignalWithTrapz) {
     outfile << t << " " << f << " " << fe << " " << fh << "\n";
     outfile.close();
     }
-    if (stripSensor) {
-      std::cout << "Saving strip signals to file." << std::endl;
-      sensor.IntegrateSignals();
-      outfile.open("strip_signals.txt", std::ios::out);
-      outfile << "Strip_y_position(cm) total_charge(fC)\n";
-      for (const auto& name : stripNames) {
-        const double strip_total_charge = sensor.GetSignal(name, nbins - 1);
-        outfile << name << " " << strip_total_charge <<"\n";
-      }
+  }
+
+  if (stripSensor) {
+    std::ofstream outfile;
+    sensor.IntegrateSignals();
+    outfile.open("strip_signals.txt", std::ios::out);
+    outfile << "Strip_y_position(cm) total_charge(fC)\n";
+    for (const auto& name : stripNames) {
+      const double strip_total_charge = sensor.GetSignal(name, nbins - 1);
+      outfile << name << " " << strip_total_charge <<"\n";
     }
   }
 
-
+  if (RecordRecombinationPositions) {
+    std::ofstream outfile;
+    outfile.open("recombination_positions.txt", std::ios::out);
+    outfile << "Ion Recombination Positions (cm):\n";
+    for (const auto& pos : ion_recombination_positions) {
+      outfile << pos[0] << " " << pos[1] << " " << pos[2] << "\n";
+    }
+    outfile.close();
+    outfile.open("negion_recombination_positions.txt", std::ios::out);
+    outfile << "Negative Ion Recombination Positions (cm):\n";
+    for (const auto& pos : negion_recombination_positions) {
+      outfile << pos[0] << " " << pos[1] << " " << pos[2] << "\n";
+    }
+    outfile.close();
+  }
   
   if (plotSignal) { 
     sensor.PlotSignal("detector", cS);
