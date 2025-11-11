@@ -98,7 +98,7 @@ Garfield::Random::SetEngine(randomEngine);
   // Make a component with analytic electric field.
   ComponentAnalyticField cmp;
   cmp.SetMedium(&gas);
-  // Plate Seperation (cm I think)
+  // Plate Seperation (cm)
   const double xMin = -0.15, xMax = 0.15;
   // Width in beam direction
   const double yMin = -0.15, yMax = 0.15;
@@ -127,17 +127,31 @@ Garfield::Random::SetEngine(randomEngine);
   grid.SetMedium(&gas);
   grid.SetMesh(Nx, Ny, Nz, -xgrid/2, xgrid/2, -xgrid/2,
                  xgrid/2, -zgrid/2, zgrid/2);
-  grid.SetUniformElectricField(0., 0., 0.); 
+  grid.SetUniformElectricField(-vAnode/(xMax-xMin), 0., 0.); 
 
   // Make a sensor.
   Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "anode");
   sensor.AddComponent(&grid);
+
+  // option to make strip sensors for positional resolution
+  const bool stripSensor = true;
+  const int nStrips = 20;
+  const double stripWidth = (yMax - yMin) / nStrips;
+  std::vector<std::string> stripNames;
+  if (stripSensor) {
+    for (double y_0 = yMin; (y_0 + stripWidth) < (yMin + nStrips * stripWidth); y_0 += stripWidth ) {
+      stripNames.push_back(std::to_string(y_0));
+      cmp.AddStripOnPlaneX('z', xMax, y_0, y_0 + stripWidth, stripNames.back());
+      sensor.AddElectrode(&cmp, stripNames.back());
+    }
+  }
+
   // Set the signal time window.
-  const double tstep = 1; // monte-carlo step size (ns)
+  const double tstep = 50; // monte-carlo step size (ns)
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 10000;
-  const double dt = 5.; //time between loops (dt > tstep)
+  const std::size_t nbins = 50000;
+  const double dt = 100.; //time between loops (dt > tstep)
   const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep;
   sensor.SetTimeWindow(tmin, tstep, nbins);
@@ -223,26 +237,26 @@ Garfield::Random::SetEngine(randomEngine);
       const auto& p1 = negions.front().path.back();
       std::cout << "Negative Ion at (" 
               << p1.x << ", " << p1.y << ", " << p1.z << ")\n";
-}
+    }
 
     if (!aval.GetElectrons().empty()) {
       aval.SetTimeWindow(t, t + dt);
       aval.ResumeAvalanche(); //drift the electrons only if there are some left
       // check for electron attachment and add negative ions.
-        for (const auto& electron : aval.GetElectrons()) {
-            if (electron.status == -7) {
-                const auto& p1 = electron.path.back();
-                drift.AddNegativeIon(p1.x, p1.y, p1.z, p1.t, 1);
-              }
-            }
+      for (const auto& electron : aval.GetElectrons()) {
+          if (electron.status == -7) {
+              const auto& p1 = electron.path.back();
+              drift.AddNegativeIon(p1.x, p1.y, p1.z, p1.t, 1);
           }
+        }
+      }
 
     std::cout << "Negative Ions: " << drift.GetNegativeIons().size() << std::endl;
     drift.SetTimeWindow(t, t + dt);
     drift.ResumeAvalanche(); // drift the ions
 
     grid.ClearFields();  // clear old densities/fields
-    grid.SetUniformElectricField(0., 0., 0.);  // maintain applied field
+    grid.SetUniformElectricField(-vAnode/(xMax-xMin), 0., 0.);  // maintain applied field
 
     const int multiplicity = 1;  // or however many charges per ion you want
     for (const auto& ion : drift.GetIons()) {
@@ -283,7 +297,6 @@ if (plotDrift) {
   
 
 //sensor.ConvoluteSignals();
-int nt = 0;
 
 // option to display integrated signal
 bool integrateSignal = true;
@@ -325,14 +338,24 @@ if (integrateSignalWithTrapz) {
     const double fe = sensor.GetElectronSignal("anode", i);
     const double fh = sensor.GetIonSignal("anode", i);
     outfile << t << " " << f << " " << fe << " " << fh << "\n";
+    outfile.close();
+    }
+    if (stripSensor) {
+      std::cout << "Saving strip signals to file." << std::endl;
+      sensor.IntegrateSignals();
+      outfile.open("strip_signals.txt", std::ios::out);
+      outfile << "Strip_y_position(cm) total_charge(fC)\n";
+      for (const auto& name : stripNames) {
+        const double strip_total_charge = sensor.GetSignal(name, nbins - 1);
+        outfile << name << " " << strip_total_charge <<"\n";
+      }
     }
   }
 
+
   
-  if (sensor.ComputeThresholdCrossings(-2., "anode", nt)) {
-    if (plotSignal) { 
-      sensor.PlotSignal("anode", cS);
-    }
+  if (plotSignal) { 
+    sensor.PlotSignal("anode", cS);
   }
 
   // timer
