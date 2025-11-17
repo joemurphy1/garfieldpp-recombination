@@ -7,6 +7,7 @@
 #include <TRandom3.h>
 #include <chrono>
 #include <numeric>
+#include <filesystem>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
@@ -45,12 +46,6 @@ bool readTransferFunction(Sensor& sensor) {
   sensor.SetTransferFunction(times, values);
   return true;
 }
-
-double GetStepDistance(double x,double y,double z) {
-  if (x > 0.015) {return 0.02;}
-  return 0.001;
-}
-
 
 int main(int argc, char* argv[]) {
 
@@ -96,11 +91,11 @@ Garfield::Random::SetEngine(randomEngine);
 
 
  cmp.AddPlaneX(xMin, vCathode);
- cmp.AddPlaneX(xMax, vAnode);
+ cmp.AddPlaneX(xMax, vAnode, "anode");
  cmp.AddStripOnPlaneX('z', xMax, yMin, yMax, "detector");
 
-  const double dt = 100.; //time between loops (dt > tstep)
-  const double tstep = 100.; //monte-carlo step size (ns)
+  const double dt = 10.; //time between loops (dt > tstep)
+  const double tstep = 10.; //monte-carlo step size (ns)
   const double v_drift = 220e-9; //cm/ns
 
   // Grid parameters.
@@ -110,6 +105,7 @@ Garfield::Random::SetEngine(randomEngine);
   const double spacing = v_drift * dt * 10; //(cm)
   const double xgrid = Nx * spacing;
   const double zgrid = Nz * spacing;
+  const double cell_volume = pow(spacing, 2) * (yMax - yMin); //cm^3
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
   const bool RecordRecombinationPositions = false;
 
@@ -140,13 +136,34 @@ Garfield::Random::SetEngine(randomEngine);
 
   // Set the signal time window.
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 30000;
+  const std::size_t nbins = 10000;
   const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep;
   sensor.SetTimeWindow(tmin, tstep, nbins);
   // Set the delta reponse function.
   if (!readTransferFunction(sensor)) return 0;
   sensor.ClearSignal();
+
+  bool generateVideo = true;
+  const int videoInterval = 100; //interval in number of dt steps
+  if (generateVideo) {
+    std::filesystem::path parent = "particle_positions";
+
+    try {
+        // Create the parent directory
+        std::filesystem::create_directories(parent);
+
+        // Create the subdirectories
+        std::filesystem::create_directories(parent / "electrons");
+        std::filesystem::create_directories(parent / "ions");
+        std::filesystem::create_directories(parent / "negions");
+
+        std::cout << "Directories created successfully.\n";
+
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Filesystem error: " << e.what() << "\n";
+    }
+  }
 
   // Set up Heed.
   TrackHeed track(&sensor);
@@ -160,7 +177,6 @@ Garfield::Random::SetEngine(randomEngine);
     drift.SetTimeSteps(tstep);
     drift.EnableDensityMap();
     drift.EnableRecombination(true, alpha);
-    drift.SetStepDistanceFunction(&GetStepDistance);
 
   AvalancheMicroscopic aval;
     aval.SetSensor(&sensor);
@@ -185,7 +201,7 @@ Garfield::Random::SetEngine(randomEngine);
   const double x0 = 0;
   const double y0 = yMin;
   const double z0 = 0;
-  const std::size_t nTracks = 100;
+  const std::size_t nTracks = 1000;
   double recombine_num = 0;
   std::vector<std::vector<double>> ion_recombination_positions;
   std::vector<std::vector<double>> negion_recombination_positions;
@@ -277,7 +293,46 @@ Garfield::Random::SetEngine(randomEngine);
                   recombine_num += 1;
                 }
             }
+    
+    if (generateVideo && (static_cast<int>(t/dt) % videoInterval == 0)) {
+      std::ostringstream ss;
+      ss << std::fixed << std::setprecision(1) << (t / 1000.0);
+      std::string t_str = ss.str();
+        // save particle positions
+        if (!aval.GetElectrons().empty()) {
+            std::ofstream outfile;
+            outfile.open("particle_positions/electrons/" + t_str + "us.txt", std::ios::out);
+            for (const auto& electron : aval.GetElectrons()) {
+                const auto& p1 = electron.path.back();
+                outfile << p1.x << " " << p1.y << " " << p1.z << "\n";
+            }
+          outfile.close();
+        }
+        if (!drift.GetIons().empty()) {
+            std::ofstream outfile;
+            outfile.open("particle_positions/ions/" + t_str + "us.txt", std::ios::out);
+            for (const auto& ion : drift.GetIons()) {
+                if (ion.status == -9) {std::cout << "adding recombined ion";}
+                const auto& p1 = ion.path.back();
+                outfile << p1.x << " " << p1.y << " " << p1.z << "\n";
+            }
+          outfile.close();
+        }
+        
+        if (!drift.GetNegativeIons().empty()) {
+            std::ofstream outfile;
+            outfile.open("particle_positions/negions/" + t_str + "us.txt", std::ios::out);
+            for (const auto& negion : drift.GetNegativeIons()) {
+                const auto& p1 = negion.path.back();
+                outfile << p1.x << " " << p1.y << " " << p1.z << "\n";
+            }
+        outfile.close();    
+        }
 
+    }
+
+
+    
     std::cout << t + dt << "ns simulated" << std::endl;
     t += dt;
     particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
@@ -351,7 +406,7 @@ if (integrateSignal) {
     sensor.PlotSignal("detector", cS);
   }
 
-  bool saveIonPositions = true;
+  bool saveIonPositions = false;
   if (saveIonPositions) {
     std::ofstream outfile;
     std::vector<std::vector<double>> ion_positions;

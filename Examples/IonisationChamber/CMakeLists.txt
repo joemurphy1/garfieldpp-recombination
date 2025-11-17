@@ -12,6 +12,9 @@ target_link_libraries(mdt Garfield::Garfield)
 add_executable(Chamber Chamber.C)
 target_link_libraries(Chamber Garfield::Garfield)
 
+add_executable(Chamber_vid Chamber_vid.C)
+target_link_libraries(Chamber_vid Garfield::Garfield)
+
 add_executable(mdt_mt mdt_mt.C)
 target_link_libraries(mdt_mt Garfield::Garfield)
 find_package(OpenMP)
