@@ -19,6 +19,7 @@
 #include "Garfield/RandomEngineRoot.hh"
 #include "Garfield/Random.hh"
 #include "Garfield/FundamentalConstants.hh"
+#include "Garfield/GarfieldConstants.hh"
 #include "Garfield/ComponentGrid.hh"
 
 
@@ -45,12 +46,6 @@ bool readTransferFunction(Sensor& sensor) {
   sensor.SetTransferFunction(times, values);
   return true;
 }
-
-double GetStepDistance(double x,double y,double z) {
-  if (x > 0.015) {return 0.02;}
-  return 0.001;
-}
-
 
 int main(int argc, char* argv[]) {
 
@@ -82,22 +77,6 @@ Garfield::Random::SetEngine(randomEngine);
  
   // Make a component with analytic electric field.
   ComponentAnalyticField cmp;
-  cmp.SetMedium(&gas);
-  // Plate Seperation (cm)
-  const double xMin = -0.15, xMax = 0.15;
-  // Width in beam direction
-  const double yMin = -0.15, yMax = 0.15;
-  // Length? Of the plates (vertically)
-  const double zMin = -0.15, zMax = 0.15;
-  // Voltages
-  const double vAnode = 15.;
-  const double vCathode = 0.;
- // add the cathode and anode plates
-
-
- cmp.AddPlaneX(xMin, vCathode);
- cmp.AddPlaneX(xMax, vAnode);
- cmp.AddStripOnPlaneX('z', xMax, yMin, yMax, "detector");
 
   const double dt = 100.; //time between loops (dt > tstep)
   const double tstep = 100.; //monte-carlo step size (ns)
@@ -113,12 +92,27 @@ Garfield::Random::SetEngine(randomEngine);
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
   const bool RecordRecombinationPositions = false;
 
+  // Plate Seperation (cm)
+  const double xMin = -0.15, xMax = 0.15;
+  // Width in beam direction
+  const double yMin = -0.15, yMax = 0.15;
+  // Length? Of the plates (vertically)
+  const double zMin = -0.15, zMax = 0.15;
+  
+  const double vAnode = 15.;
+  const double vCathode = 0.;
+  
+ cmp.AddPlaneX(xMax, vAnode); // plane that hosts our detector
+ cmp.AddPlaneX(xMin, vCathode);
+
+ cmp.AddStripOnPlaneX('z', xMax, yMin, yMax, "detector");
+ cmp.SetMedium(&gas);
 
   ComponentGrid grid;
-  grid.SetMedium(&gas);
   grid.SetMesh(Nx, Ny, Nz, -xgrid/2, xgrid/2, yMin,
-                 yMax, -zgrid/2, xgrid/2);;
+                 yMax, -zgrid/2, zgrid/2);
   grid.SetUniformElectricField(0., 0., 0.); 
+  grid.SetMedium(&gas);
 
   // Make a sensor.
   Sensor sensor(&cmp);
@@ -147,6 +141,7 @@ Garfield::Random::SetEngine(randomEngine);
   // Set the delta reponse function.
   if (!readTransferFunction(sensor)) return 0;
   sensor.ClearSignal();
+  sensor.SetArea(-xgrid/2, yMin, -zgrid/2, xgrid/2, yMax, zgrid/2);
 
   // Set up Heed.
   TrackHeed track(&sensor);
@@ -160,7 +155,6 @@ Garfield::Random::SetEngine(randomEngine);
     drift.SetTimeSteps(tstep);
     drift.EnableDensityMap();
     drift.EnableRecombination(true, alpha);
-    drift.SetStepDistanceFunction(&GetStepDistance);
 
   AvalancheMicroscopic aval;
     aval.SetSensor(&sensor);
@@ -185,10 +179,12 @@ Garfield::Random::SetEngine(randomEngine);
   const double x0 = 0;
   const double y0 = yMin;
   const double z0 = 0;
-  const std::size_t nTracks = 100;
+  const std::size_t nTracks = 10;
   double recombine_num = 0;
   std::vector<std::vector<double>> ion_recombination_positions;
   std::vector<std::vector<double>> negion_recombination_positions;
+  std::vector<AvalancheMC::EndPoint> IonsLeftGrid;
+  std::vector<AvalancheMC::EndPoint> NegativeIonsLeftGrid;
   
   
   
@@ -227,23 +223,22 @@ Garfield::Random::SetEngine(randomEngine);
       aval.ResumeAvalanche(); //drift the electrons only if there are some left
       // check for electron attachment and add negative ions.
       for (const auto& electron : aval.GetElectrons()) {
-          if (electron.status == -7) {
-              const auto& p1 = electron.path.back();
-              drift.AddNegativeIon(p1.x, p1.y, p1.z, p1.t, 1);
-          }
+        if (electron.status == -7) {
+            const auto& p1 = electron.path.back();
+            drift.AddNegativeIon(p1.x, p1.y, p1.z, p1.t, 1);
         }
       }
+    }
     
     grid.ClearFields();  // clear old densities/fields
     grid.SetUniformElectricField(0., 0., 0.);  // maintain applied field
 
-    // add positive ions to the grid
+    // add positive ions to the grid TODO stop the particles outside the grid running because we can check faster
     const int multiplicity = 1;  // or however many charges per ion you want
     for (const auto& ion : drift.GetIons()) {
       if (!ion.path.empty()) {
         const auto& p1 = ion.path.back();
         grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
-        //cmp.AddCharge(p1.x, p1.y, p1.z, ElementaryCharge);
       }
     }
 
@@ -252,7 +247,6 @@ Garfield::Random::SetEngine(randomEngine);
       if (!negion.path.empty()) {
         const auto& p1 = negion.path.back();
         grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
-        //cmp.AddCharge(p1.x, p1.y, p1.z, -ElementaryCharge);
       }
     }
 
@@ -263,18 +257,26 @@ Garfield::Random::SetEngine(randomEngine);
     drift.ResumeAvalanche(); // drift the ions
 
     // record recombined particles
-    for (const auto& ion : drift.GetIons()) {
+    // then add un-recombined particles that have escaped the recombination grid to the skip to plate vector.
+    // note had to take out the & before the name as I need to modify the status.
+    for (auto &ion : drift.GetIons()) {
                 if (ion.status == -9) {
                   const auto& p1 = ion.path.back();
                   ion_recombination_positions.push_back({p1.x, p1.y, p1.z});
                   recombine_num += 1;
                 }
+                else if (ion.status == StatusLeftDriftArea) {
+                  IonsLeftGrid.push_back(ion);
+                }
             }
-    for (const auto& negion : drift.GetNegativeIons()) {
+    for (auto &negion : drift.GetNegativeIons()) {
                 if (negion.status == -9) {
                   const auto& p1 = negion.path.back();
                   negion_recombination_positions.push_back({p1.x, p1.y, p1.z});
                   recombine_num += 1;
+                }
+                else if (negion.status == StatusLeftDriftArea) {
+                  NegativeIonsLeftGrid.push_back(negion);
                 }
             }
 
@@ -282,6 +284,54 @@ Garfield::Random::SetEngine(randomEngine);
     t += dt;
     particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
   }
+
+  
+  std::array<int, 3> DirectionsParticlesLeftCount = {0, 0, 0};
+  double difl, dift;
+  double vx_ion, vy_ion, vz_ion;
+  double vx_negion, vy_negion, vz_negion;
+  // TODO put the variable e field here not numbers 
+  double E_x = (vCathode- vAnode)/(xMax - xMin);
+  cmp.GetMedium(0,0,0) -> IonDiffusion(E_x, 0, 0, 0, 0, 0, difl, dift); //cm^1/2
+  cmp.GetMedium(0,0,0) -> IonVelocity(E_x, 0, 0, 0, 0, 0, vx_ion, vy_ion, vz_ion); //cm/ns
+  cmp.GetMedium(0,0,0) -> NegativeIonVelocity(E_x, 0, 0, 0, 0, 0, vx_negion, vy_negion, vz_negion); //cm/ns
+  double difl_ion = difl * difl * std::abs(vx_ion) / 2; // convert to a cm^2/ns diffusion coefficient
+  double difl_negion = difl * difl * std::abs(vx_negion) / 2; // convert to a cm^2/ns diffusion coefficient
+
+  for (auto &negion : NegativeIonsLeftGrid) {
+    const auto& p1 = negion.path.back();
+    // ions can leave the grid by hitting the walls in y, or leaving the grid in x and z.
+    if (std::abs(p1.x) == spacing * Nx) {DirectionsParticlesLeftCount[0] += 1;}
+    else if (std::abs(p1.y) == 0.15) {DirectionsParticlesLeftCount[1] += 1;}
+    else if (std::abs(p1.z) == spacing * Nz) {DirectionsParticlesLeftCount[2] += 1;}
+    
+    // Calculate the signal that would have occured for the particle moving to the plate
+    double x1 = xMax - 0.00000001;
+    double t1 = p1.t + RndmGaussian((xMax - p1.x)/vx_negion, std::sqrt(2*difl_negion*(xMax - p1.x)/std::pow(vx_negion,3)));
+    std::vector<double> ts = { p1.t, t1 };
+    std::vector<std::array<double, 3>> xs = { { p1.x, p1.y, p1.z }, { x1, p1.y, p1.z } };
+
+    sensor.AddSignalWeightingPotential(-1, ts, xs);
+  }
+  
+  for (auto &ion : IonsLeftGrid) {
+    const auto& p1 = ion.path.back();
+    // ions can leave the grid by hitting the walls in y, or leaving the grid in x and z.
+    if (std::abs(p1.x) == spacing * Nx) {DirectionsParticlesLeftCount[0] += 1;}
+    else if (std::abs(p1.y) == 0.15) {DirectionsParticlesLeftCount[1] += 1;}
+    else if (std::abs(p1.z) == spacing * Nz) {DirectionsParticlesLeftCount[2] += 1;}
+    
+    // Calculate the signal that would have occured for the particle moving to the plate
+    double x1 = xMin + 0.00000001;
+    double t1 = p1.t + RndmGaussian((xMin - p1.x)/vx_ion, std::sqrt(2*difl_ion*(xMin - p1.x)/std::pow(vx_ion,3)));
+    std::vector<double> ts = { p1.t, t1 };
+    std::vector<std::array<double, 3>> xs = { { p1.x, p1.y, p1.z }, { x1, p1.y, p1.z } };
+    std::cout << "t = " << t1 << "x = " << x1 << std::endl;
+
+    sensor.AddSignalWeightingPotential(1, ts, xs);
+  } 
+  
+
   std::cout << "Recombined particles : " << recombine_num << std::endl;
 
 
@@ -351,7 +401,7 @@ if (integrateSignal) {
     sensor.PlotSignal("detector", cS);
   }
 
-  bool saveIonPositions = true;
+  bool saveIonPositions = false;
   if (saveIonPositions) {
     std::ofstream outfile;
     std::vector<std::vector<double>> ion_positions;
