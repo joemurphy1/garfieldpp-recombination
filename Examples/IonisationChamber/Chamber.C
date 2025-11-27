@@ -7,9 +7,11 @@
 #include <TRandom3.h>
 #include <chrono>
 #include <numeric>
+#include <cmath>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
+#include "Garfield/AvalancheMicroscopicTypes.hh"
 #include "Garfield/AvalancheMC.hh"
 #include "Garfield/MediumMagboltz.hh"
 #include "Garfield/Sensor.hh"
@@ -46,7 +48,13 @@ bool readTransferFunction(Sensor& sensor) {
   sensor.SetTransferFunction(times, values);
   return true;
 }
-
+/*
+double firstPassageTime(double t0, double D, double a) {
+  double u = RndmUniform();
+  double z = std::erfinv(1-u);
+  return t0 + (a*a)/(4 * D * z*z);
+}
+*/
 int main(int argc, char* argv[]) {
 
 auto time_start = std::chrono::steady_clock::now();
@@ -81,18 +89,22 @@ Garfield::Random::SetEngine(randomEngine);
   const double dt = 100.; //time between loops (dt > tstep)
   const double tstep = 100.; //monte-carlo step size (ns)
   const double v_drift = 220e-9; //cm/ns
+  const double tmin = -0.5 * tstep; 
+  const std::size_t nbins = 30;
+  const bool stop_at_max_time = true;
+  const size_t max_time = nbins*tstep;
 
   // Grid parameters.
-  const int Nx = 1000;
+  const int Nx = 100;
   const int Ny = 1;
-  const int Nz = 1000;
-  const double spacing = v_drift * dt * 10; //(cm)
+  const int Nz = 100;
+  const double spacing = v_drift * tstep * 10; //(cm)
   const double xgrid = Nx * spacing;
   const double zgrid = Nz * spacing;
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
   const bool RecordRecombinationPositions = false;
 
-  // Plate Seperation (cm)
+  // Plate Separation (cm)
   const double xMin = -0.15, xMax = 0.15;
   // Width in beam direction
   const double yMin = -0.15, yMax = 0.15;
@@ -102,10 +114,10 @@ Garfield::Random::SetEngine(randomEngine);
   const double vAnode = 15.;
   const double vCathode = 0.;
   
- cmp.AddPlaneX(xMax, vAnode); // plane that hosts our detector
+ cmp.AddPlaneX(xMax, vAnode, "detector"); // plane that hosts our detector
  cmp.AddPlaneX(xMin, vCathode);
 
- cmp.AddStripOnPlaneX('z', xMax, yMin, yMax, "detector");
+ //cmp.AddStripOnPlaneX('z', xMax, yMin, yMax, "detector");
  cmp.SetMedium(&gas);
 
   ComponentGrid grid;
@@ -123,6 +135,7 @@ Garfield::Random::SetEngine(randomEngine);
   const bool stripSensor = false;
   const int nStrips = 20;
   const double stripWidth = (yMax - yMin) / nStrips;
+  sensor.SetTimeWindow(tmin, tstep, nbins);
   std::vector<std::string> stripNames;
   if (stripSensor) {
     for (double y_0 = yMin; y_0 <= (yMin + (nStrips - 1) * stripWidth); y_0 += stripWidth ) {
@@ -131,18 +144,13 @@ Garfield::Random::SetEngine(randomEngine);
       sensor.AddElectrode(&cmp, stripNames.back());
     }
   }
-
-  // Set the signal time window.
-  const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 30000;
-  const bool stop_at_max_time = true;
-  const size_t max_time = nbins*tstep;
-  sensor.SetTimeWindow(tmin, tstep, nbins);
   // Set the delta reponse function.
   if (!readTransferFunction(sensor)) return 0;
-  sensor.ClearSignal();
-  sensor.SetArea(-xgrid/2, yMin, -zgrid/2, xgrid/2, yMax, zgrid/2);
 
+  bool JumpIonsOutsideGridToPlate = false;
+  if (JumpIonsOutsideGridToPlate) {sensor.SetArea(-xgrid/2, yMin, -zgrid/2, xgrid/2, yMax, zgrid/2);}
+  else {sensor.SetArea(xMin, yMin, zMin, xMax, yMax, zMax);}
+    
   // Set up Heed.
   TrackHeed track(&sensor);
   track.SetParticle("proton");
@@ -155,6 +163,7 @@ Garfield::Random::SetEngine(randomEngine);
     drift.SetTimeSteps(tstep);
     drift.EnableDensityMap();
     drift.EnableRecombination(true, alpha);
+    const bool SpaceCharge = true;
 
   AvalancheMicroscopic aval;
     aval.SetSensor(&sensor);
@@ -179,12 +188,14 @@ Garfield::Random::SetEngine(randomEngine);
   const double x0 = 0;
   const double y0 = yMin;
   const double z0 = 0;
-  const std::size_t nTracks = 10;
+  const std::size_t nTracks = 1000;
+  const int multiplicity = 1;  // charges per ion/electron
   double recombine_num = 0;
   std::vector<std::vector<double>> ion_recombination_positions;
   std::vector<std::vector<double>> negion_recombination_positions;
   std::vector<AvalancheMC::EndPoint> IonsLeftGrid;
   std::vector<AvalancheMC::EndPoint> NegativeIonsLeftGrid;
+  int ElectronsLeftGridCount = 0;
   
   
   
@@ -200,10 +211,10 @@ Garfield::Random::SetEngine(randomEngine);
       }
        //adds the particles to our drifting functions 
       for (const auto& Ion : cluster.ions) {
-        drift.AddIon(Ion.x, Ion.y, Ion.z, Ion.t);
+        drift.AddIon(Ion.x, Ion.y, Ion.z, Ion.t, multiplicity);
       }
       for (const auto& electron : cluster.electrons) {
-        aval.AddElectron(electron.x, electron.y, electron.z, electron.t, 0., 0., 0., 0.); 
+        aval.AddElectron(electron.x, electron.y, electron.z, electron.t, 0., 0., 0., 0., multiplicity); 
       }
     }
   }
@@ -225,16 +236,22 @@ Garfield::Random::SetEngine(randomEngine);
       for (const auto& electron : aval.GetElectrons()) {
         if (electron.status == -7) {
             const auto& p1 = electron.path.back();
-            drift.AddNegativeIon(p1.x, p1.y, p1.z, p1.t, 1);
+            drift.AddNegativeIon(p1.x, p1.y, p1.z, p1.t, multiplicity);
+        }
+        if (electron.status == StatusLeftDriftArea && JumpIonsOutsideGridToPlate) {
+            ElectronsLeftGridCount += 1;
         }
       }
     }
     
     grid.ClearFields();  // clear old densities/fields
-    grid.SetUniformElectricField(0., 0., 0.);  // maintain applied field
+    if (t > 0 && SpaceCharge) {
+      bool loaded = grid.LoadElectricField("electric_field.xyz", "XYZ", false, false, 1.0, 1.0, 1.0);
+    } else {
+      grid.SetUniformElectricField(0., 0., 0.);
+    }
 
     // add positive ions to the grid TODO stop the particles outside the grid running because we can check faster
-    const int multiplicity = 1;  // or however many charges per ion you want
     for (const auto& ion : drift.GetIons()) {
       if (!ion.path.empty()) {
         const auto& p1 = ion.path.back();
@@ -249,6 +266,84 @@ Garfield::Random::SetEngine(randomEngine);
         grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
       }
     }
+
+    // -------------------- Space Charge -------------------------
+    if (SpaceCharge) {
+      std::vector<std::vector<double>> chargeDensity(Nx, std::vector<double>(Nz, 0.0));
+      double y = 0.;
+      double xGridMin = -xgrid/2 + spacing/2;
+      double zGridMin = -zgrid/2 + spacing/2;
+      double voxelVolume = spacing * (yMax - yMin) * spacing;
+
+      for (int ix = 0; ix < Nx; ++ix) {
+        double x = xGridMin + ix * (spacing);
+        for (int iz = 0; iz < Nz; ++iz) {
+          double z = -zGridMin + iz * spacing;
+          double rhoIon = 0.0, rhoNegIon = 0.0;
+          grid.IonDensity(x, y, z, rhoIon);
+          grid.NegativeIonDensity(x, y, z, rhoNegIon);
+
+          // Net charge density per voxel
+          chargeDensity[ix][iz] = ElementaryCharge * (rhoIon - rhoNegIon); // fC/cm^3
+        }
+      }
+
+      std::vector<std::vector<double>> Ex(Nx, std::vector<double>(Nz, 0.0));
+      std::vector<std::vector<double>> Ez(Nx, std::vector<double>(Nz, 0.0));
+      const double k = 1.0 / (FourPiEpsilon0); // [cm·fC^-1] in CGS-like units if rho in fC/cm^3
+      // for each grid cell
+      for (int ix = 0; ix < Nx; ++ix) {
+        double x_i = xGridMin + ix * spacing;
+        for (int iz = 0; iz < Nz; ++iz) {
+          double z_i = zGridMin + iz * spacing;
+          
+          double ex_sum = 0.0;
+          double ez_sum = 0.0;
+          // calculate the contribution from every other grid cell.
+          for (int mx = 0; mx < Nx; ++mx) {
+            for (int mz = 0; mz < Nz; ++mz) {
+
+              if (ix == mx && iz == mz) continue; // skip self-contribution
+
+              double dx = (ix - mx) * spacing;
+              double dz = (iz - mz) * spacing;
+              double r2 = dx*dx + dz*dz;
+
+              double Q = chargeDensity[mx][mz] * voxelVolume; // voxel charge fC
+
+              double r3 = std::pow(r2, 1.5);
+              ex_sum += k * Q * dx / r3;
+              ez_sum += k * Q * dz / r3;
+            }
+          }
+          Ex[ix][iz] = ex_sum;
+          Ez[ix][iz] = ez_sum;
+        }
+      }  
+
+      // Save Ex and Ez to a file in XYZ format
+      std::ofstream efieldFile("electric_field.xyz");
+      if (!efieldFile) {
+        std::cerr << "Cannot open file for writing electric field.\n";
+      } else {
+        efieldFile << std::scientific << std::setprecision(6);
+        const double y = 0.0; // single slice in y
+        for (int ix = 0; ix < Nx; ++ix) {
+          double x = -xgrid/2 + spacing/2 + ix * spacing;
+          for (int iz = 0; iz < Nz; ++iz) {
+              double z = -zgrid/2 + spacing/2 + iz * spacing;
+              double ex = Ex[ix][iz];
+              double ey = 0.0; // assume no Ey
+              double ez = Ez[ix][iz];
+              efieldFile << x << " " << y << " " << z << " "
+                        << ex << " " << ey << " " << ez << "\n";
+          }
+        }
+        efieldFile.close();
+        std::cout << "Electric field saved to electric_field.xyz\n";
+      } 
+    }
+    // ------------------------- End Space Charge ------------------------------------
 
     // drift the positive and negative ions
     std::cout << "Negative Ions: " << drift.GetNegativeIons().size() << std::endl;
@@ -265,7 +360,7 @@ Garfield::Random::SetEngine(randomEngine);
                   ion_recombination_positions.push_back({p1.x, p1.y, p1.z});
                   recombine_num += 1;
                 }
-                else if (ion.status == StatusLeftDriftArea) {
+                else if (ion.status == StatusLeftDriftArea && JumpIonsOutsideGridToPlate) {
                   IonsLeftGrid.push_back(ion);
                 }
             }
@@ -275,7 +370,7 @@ Garfield::Random::SetEngine(randomEngine);
                   negion_recombination_positions.push_back({p1.x, p1.y, p1.z});
                   recombine_num += 1;
                 }
-                else if (negion.status == StatusLeftDriftArea) {
+                else if (negion.status == StatusLeftDriftArea && JumpIonsOutsideGridToPlate) {
                   NegativeIonsLeftGrid.push_back(negion);
                 }
             }
@@ -285,57 +380,10 @@ Garfield::Random::SetEngine(randomEngine);
     particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
   }
 
-  
-  std::array<int, 3> DirectionsParticlesLeftCount = {0, 0, 0};
-  double difl, dift;
-  double vx_ion, vy_ion, vz_ion;
-  double vx_negion, vy_negion, vz_negion;
-  // TODO put the variable e field here not numbers 
-  double E_x = (vCathode- vAnode)/(xMax - xMin);
-  cmp.GetMedium(0,0,0) -> IonDiffusion(E_x, 0, 0, 0, 0, 0, difl, dift); //cm^1/2
-  cmp.GetMedium(0,0,0) -> IonVelocity(E_x, 0, 0, 0, 0, 0, vx_ion, vy_ion, vz_ion); //cm/ns
-  cmp.GetMedium(0,0,0) -> NegativeIonVelocity(E_x, 0, 0, 0, 0, 0, vx_negion, vy_negion, vz_negion); //cm/ns
-  double difl_ion = difl * difl * std::abs(vx_ion) / 2; // convert to a cm^2/ns diffusion coefficient
-  double difl_negion = difl * difl * std::abs(vx_negion) / 2; // convert to a cm^2/ns diffusion coefficient
-
-  for (auto &negion : NegativeIonsLeftGrid) {
-    const auto& p1 = negion.path.back();
-    // ions can leave the grid by hitting the walls in y, or leaving the grid in x and z.
-    if (std::abs(p1.x) == spacing * Nx) {DirectionsParticlesLeftCount[0] += 1;}
-    else if (std::abs(p1.y) == 0.15) {DirectionsParticlesLeftCount[1] += 1;}
-    else if (std::abs(p1.z) == spacing * Nz) {DirectionsParticlesLeftCount[2] += 1;}
-    
-    // Calculate the signal that would have occured for the particle moving to the plate
-    double x1 = xMax - 0.00000001;
-    double t1 = p1.t + RndmGaussian((xMax - p1.x)/vx_negion, std::sqrt(2*difl_negion*(xMax - p1.x)/std::pow(vx_negion,3)));
-    std::vector<double> ts = { p1.t, t1 };
-    std::vector<std::array<double, 3>> xs = { { p1.x, p1.y, p1.z }, { x1, p1.y, p1.z } };
-
-    sensor.AddSignalWeightingPotential(-1, ts, xs);
-  }
-  
-  for (auto &ion : IonsLeftGrid) {
-    const auto& p1 = ion.path.back();
-    // ions can leave the grid by hitting the walls in y, or leaving the grid in x and z.
-    if (std::abs(p1.x) == spacing * Nx) {DirectionsParticlesLeftCount[0] += 1;}
-    else if (std::abs(p1.y) == 0.15) {DirectionsParticlesLeftCount[1] += 1;}
-    else if (std::abs(p1.z) == spacing * Nz) {DirectionsParticlesLeftCount[2] += 1;}
-    
-    // Calculate the signal that would have occured for the particle moving to the plate
-    double x1 = xMin + 0.00000001;
-    double t1 = p1.t + RndmGaussian((xMin - p1.x)/vx_ion, std::sqrt(2*difl_ion*(xMin - p1.x)/std::pow(vx_ion,3)));
-    std::vector<double> ts = { p1.t, t1 };
-    std::vector<std::array<double, 3>> xs = { { p1.x, p1.y, p1.z }, { x1, p1.y, p1.z } };
-    std::cout << "t = " << t1 << "x = " << x1 << std::endl;
-
-    sensor.AddSignalWeightingPotential(1, ts, xs);
-  } 
-  
 
   std::cout << "Recombined particles : " << recombine_num << std::endl;
-
-
-
+  if (ElectronsLeftGridCount > 0) {std::cout << "WARNING " << ElectronsLeftGridCount << " electrons left the grid" << std::endl;}  
+  
 if (plotDrift) {
   cD->Clear();
   cmp.PlotCell(cD);
@@ -366,8 +414,8 @@ if (integrateSignal) {
     const double fe = sensor.GetElectronSignal("detector", i);
     const double fh = sensor.GetIonSignal("detector", i);
     outfile << t << " " << f << " " << fe << " " << fh << "\n";
-    outfile.close();
     }
+    outfile.close();
   }
 
   if (stripSensor) {
@@ -426,7 +474,7 @@ if (integrateSignal) {
   // timer
   auto time_end = std::chrono::steady_clock::now();
   auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(time_end - time_start).count();
-
+  std::cout << "Total Signal: " << sensor.GetSignal("detector", nbins - 1) << " Ion Signal: " << sensor.GetIonSignal("detector", nbins-1) << " Electron + Negion Signal: " << sensor.GetElectronSignal("detector", nbins-1) << std::endl;
   std::cout << "Elapsed time: " << elapsed_ms << " ms" << std::endl;
 
 

@@ -75,10 +75,12 @@ Garfield::Random::SetEngine(randomEngine);
   gas.LoadIonMobility("IonMobility_N2+_N2.txt");
   gas.LoadNegativeIonMobility("NegIonMobility_O2-_air.txt");
  
-  // Make a component with analytic electric field.
-  ComponentAnalyticField cmp;
-  cmp.SetMedium(&gas);
-  // Plate Seperation (cm)
+
+  const double dt = 100.; //time between loops (dt > tstep)
+  const double tstep = 100.; //monte-carlo step size (ns)
+  const double v_drift = 220e-9; //cm/ns
+
+    // Plate Seperation (cm)
   const double xMin = -0.15, xMax = 0.15;
   // Width in beam direction
   const double yMin = -0.15, yMax = 0.15;
@@ -87,25 +89,14 @@ Garfield::Random::SetEngine(randomEngine);
   // Voltages
   const double vAnode = 15.;
   const double vCathode = 0.;
- // add the cathode and anode plates
-
-
- cmp.AddPlaneX(xMin, vCathode);
- cmp.AddPlaneX(xMax, vAnode, "anode");
- cmp.AddStripOnPlaneX('z', xMax, yMin, yMax, "detector");
-
-  const double dt = 10.; //time between loops (dt > tstep)
-  const double tstep = 10.; //monte-carlo step size (ns)
-  const double v_drift = 220e-9; //cm/ns
 
   // Grid parameters.
-  const int Nx = 1000;
+  const int Nx = 100;
   const int Ny = 1;
-  const int Nz = 1000;
+  const int Nz = 100;
   const double spacing = v_drift * dt * 10; //(cm)
   const double xgrid = Nx * spacing;
   const double zgrid = Nz * spacing;
-  const double cell_volume = pow(spacing, 2) * (yMax - yMin); //cm^3
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
   const bool RecordRecombinationPositions = false;
 
@@ -113,9 +104,16 @@ Garfield::Random::SetEngine(randomEngine);
   ComponentGrid grid;
   grid.SetMedium(&gas);
   grid.SetMesh(Nx, Ny, Nz, -xgrid/2, xgrid/2, yMin,
-                 yMax, -zgrid/2, xgrid/2);;
+                 yMax, -zgrid/2, zgrid/2);
   grid.SetUniformElectricField(0., 0., 0.); 
+  grid.SetMedium(&gas);
 
+  // Make a component with analytic electric field.
+  ComponentAnalyticField cmp;
+  cmp.SetMedium(&gas);
+ cmp.AddPlaneX(xMin, vCathode);
+ cmp.AddPlaneX(xMax, vAnode, "anode");
+ cmp.AddStripOnPlaneX('z', xMax, yMin, yMax, "detector");
   // Make a sensor.
   Sensor sensor(&cmp);
   sensor.AddElectrode(&cmp, "detector");
@@ -145,7 +143,7 @@ Garfield::Random::SetEngine(randomEngine);
   sensor.ClearSignal();
 
   bool generateVideo = true;
-  const int videoInterval = 100; //interval in number of dt steps
+  const int videoInterval = 10; //interval in number of dt steps
   if (generateVideo) {
     std::filesystem::path parent = "particle_positions";
 
@@ -251,7 +249,11 @@ Garfield::Random::SetEngine(randomEngine);
       }
     
     grid.ClearFields();  // clear old densities/fields
-    grid.SetUniformElectricField(0., 0., 0.);  // maintain applied field
+    if (t > 0) {
+      bool loaded = grid.LoadElectricField("electric_field.xyz", "XYZ", false, false, 1.0, 1.0, 1.0);
+    } else {
+      grid.SetUniformElectricField(0., 0., 0.);
+    }
 
     // add positive ions to the grid
     const int multiplicity = 1;  // or however many charges per ion you want
@@ -259,8 +261,7 @@ Garfield::Random::SetEngine(randomEngine);
       if (!ion.path.empty()) {
         const auto& p1 = ion.path.back();
         grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
-        //cmp.AddCharge(p1.x, p1.y, p1.z, ElementaryCharge);
-      }
+      } 
     }
 
     // add negative ions to the grid
@@ -268,9 +269,82 @@ Garfield::Random::SetEngine(randomEngine);
       if (!negion.path.empty()) {
         const auto& p1 = negion.path.back();
         grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
-        //cmp.AddCharge(p1.x, p1.y, p1.z, -ElementaryCharge);
       }
     }
+    // -------------------- Space Charge -------------------------
+    std::vector<std::vector<double>> chargeDensity(Nx, std::vector<double>(Nz, 0.0));
+    double y = 0.;
+    for (int ix = 0; ix < Nx; ++ix) {
+      double x = -xgrid/2 + spacing/2 + ix * spacing;
+      for (int iz = 0; iz < Nz; ++iz) {
+        double z = -zgrid/2 + spacing/2 + iz * spacing;
+        double rhoIon = 0.0, rhoNegIon = 0.0;
+        grid.IonDensity(x, y, z, rhoIon);
+        grid.NegativeIonDensity(x, y, z, rhoNegIon);
+
+        // Net charge density per voxel
+        chargeDensity[ix][iz] = ElementaryCharge * (rhoIon - rhoNegIon); // fC/cm^3
+      }
+    }
+
+    std::vector<std::vector<double>> Ex(Nx, std::vector<double>(Nz, 0.0));
+    std::vector<std::vector<double>> Ez(Nx, std::vector<double>(Nz, 0.0));
+    const double k = 1.0 / (FourPiEpsilon0); // [cm·fC^-1] in CGS-like units if rho in fC/cm^3
+
+    for (int ix = 0; ix < Nx; ++ix) {
+      double x_i = -xgrid/2 + spacing/2 + ix * spacing;
+      for (int iz = 0; iz < Nz; ++iz) {
+        double z_i = -zgrid/2 + spacing/2 + iz * spacing;
+
+        double ex_sum = 0.0;
+        double ez_sum = 0.0;
+
+        for (int mx = 0; mx < Nx; ++mx) {
+          double x_m = -xgrid/2 + spacing/2 + mx * spacing;
+          for (int mz = 0; mz < Nz; ++mz) {
+            double z_m = -zgrid/2 + spacing/2 + mz * spacing;
+
+            if (ix == mx && iz == mz) continue; // skip self-contribution
+
+            double dx = x_i - x_m;
+            double dz = z_i - z_m;
+            double r2 = dx*dx + dz*dz;
+
+            double Q = chargeDensity[mx][mz] * spacing * (yMax - yMin) * spacing; // voxel charge fC
+
+            double r3 = std::pow(r2, 1.5);
+            ex_sum += k * Q * dx / r3;
+            ez_sum += k * Q * dz / r3;
+          }
+        }
+        Ex[ix][iz] = ex_sum;
+        Ez[ix][iz] = ez_sum;
+      }
+    }  
+
+    // Save Ex and Ez to a file in XYZ format
+    std::ofstream efieldFile("electric_field.xyz");
+    if (!efieldFile) {
+      std::cerr << "Cannot open file for writing electric field.\n";
+    } else {
+      efieldFile << std::scientific << std::setprecision(6);
+      const double y = 0.0; // single slice in y
+      for (int ix = 0; ix < Nx; ++ix) {
+        double x = -xgrid/2 + spacing/2 + ix * spacing;
+        for (int iz = 0; iz < Nz; ++iz) {
+            double z = -zgrid/2 + spacing/2 + iz * spacing;
+            double ex = Ex[ix][iz];
+            double ey = 0.0; // assume no Ey
+            double ez = Ez[ix][iz];
+            efieldFile << x << " " << y << " " << z << " "
+                       << ex << " " << ey << " " << ez << "\n";
+        }
+      }
+      efieldFile.close();
+      std::cout << "Electric field saved to electric_field.xyz\n";
+    } 
+
+    // ------------------------- End Space Charge ------------------------------------
 
     // drift the positive and negative ions
     std::cout << "Negative Ions: " << drift.GetNegativeIons().size() << std::endl;
