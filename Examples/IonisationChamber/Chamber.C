@@ -4,10 +4,14 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <functional>
+#include <algorithm>
 #include <TRandom3.h>
+#include <memory>
 #include <chrono>
 #include <numeric>
 #include <cmath>
+#include <thread>
 
 #include "Garfield/ComponentAnalyticField.hh"
 #include "Garfield/AvalancheMicroscopic.hh"
@@ -23,9 +27,167 @@
 #include "Garfield/FundamentalConstants.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/ComponentGrid.hh"
+// FFTW and threading for Poisson solver
+#include <fftw3.h>
+#include <mutex>
+#include <future>
 
 
 using namespace Garfield;
+
+// ----------------------------- PoissonFFT2D class ------------------------------
+// 2D Poisson solver using FFTW. Accepts a 2D charge density (x,z)
+// and returns Ex and Ez across the same Nx x Nz grid. The solver
+// uses zero-padding to reduce wrap-around and multi-threading
+// for per-k operations.
+class PoissonFFT2D {
+public:
+  PoissonFFT2D(int Nx_, int Nz_, double spacing_, int pad = 10, int nthreads = 0)
+      : Nx(Nx_), Nz(Nz_), spacing(spacing_), Npad(pad) {
+    // padded sizes
+    Nx_pad = Nx + 2 * Npad;
+    Nz_pad = Nz + 2 * Npad;
+    Nz_r2c = Nz_pad / 2 + 1;
+    if (nthreads > 0) {
+      nthreads_ = nthreads;
+    } else {
+      unsigned int hc = std::thread::hardware_concurrency();
+      nthreads_ = (hc > 0) ? static_cast<int>(hc) : 1;
+    }
+
+    // allocate arrays
+    rho_in = (double*)fftw_malloc(sizeof(double) * Nx_pad * Nz_pad);
+    rho_fft = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * Nx_pad * Nz_r2c);
+    phi_fft = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * Nx_pad * Nz_r2c);
+    Ex_fft  = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * Nx_pad * Nz_r2c);
+    Ez_fft  = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * Nx_pad * Nz_r2c);
+    Ex_real = (double*)fftw_malloc(sizeof(double) * Nx_pad * Nz_pad);
+    Ez_real = (double*)fftw_malloc(sizeof(double) * Nx_pad * Nz_pad);
+
+    // create plans
+    forward_plan = fftw_plan_dft_r2c_2d(Nx_pad, Nz_pad, rho_in, rho_fft, FFTW_MEASURE);
+    backward_plan_Ex = fftw_plan_dft_c2r_2d(Nx_pad, Nz_pad, Ex_fft, Ex_real, FFTW_MEASURE);
+    backward_plan_Ez = fftw_plan_dft_c2r_2d(Nx_pad, Nz_pad, Ez_fft, Ez_real, FFTW_MEASURE);
+  }
+  ~PoissonFFT2D() {
+    if (forward_plan) fftw_destroy_plan(forward_plan);
+    if (backward_plan_Ex) fftw_destroy_plan(backward_plan_Ex);
+    if (backward_plan_Ez) fftw_destroy_plan(backward_plan_Ez);
+    if (rho_in) fftw_free(rho_in);
+    if (rho_fft) fftw_free(rho_fft);
+    if (phi_fft) fftw_free(phi_fft);
+    if (Ex_fft) fftw_free(Ex_fft);
+    if (Ez_fft) fftw_free(Ez_fft);
+    if (Ex_real) fftw_free(Ex_real);
+    if (Ez_real) fftw_free(Ez_real);
+  }
+
+  // Solve Poisson and fill Ex and Ez (both Nx*Nz flattened vectors)
+  void Solve(const std::vector<double>& rho, std::vector<double>& Ex_out, std::vector<double>& Ez_out) {
+    if ((int)rho.size() != Nx * Nz) {
+      std::cerr << "PoissonFFT2D::Solve: rho size mismatch\n";
+      return;
+    }
+    // zero input
+    const int total_pad = Nx_pad * Nz_pad;
+    std::fill(rho_in, rho_in + total_pad, 0.0);
+
+    // copy to padded input (centered)
+    for (int ix = 0; ix < Nx; ++ix) {
+      for (int iz = 0; iz < Nz; ++iz) {
+        int ixp = ix + Npad;
+        int izp = iz + Npad;
+        rho_in[ixp * Nz_pad + izp] = rho[ix * Nz + iz];
+      }
+    }
+
+    // forward transform
+    fftw_execute(forward_plan);
+
+    // compute phi_fft = rho_fft / (eps0 * k2) in parallel and Ex/Ez in k domain
+    const double Lx = Nx_pad * spacing;
+    const double Lz = Nz_pad * spacing;
+
+    auto work = [&](int ix_start, int ix_end) {
+      for (int ix = ix_start; ix < ix_end; ++ix) {
+        int kx = (ix <= Nx_pad / 2) ? ix : ix - Nx_pad; // kx = ix for the pad, else its the actual value we want
+        double kx_val = 2.0 * Pi * kx / Lx;
+        for (int iz = 0; iz < Nz_r2c; ++iz) {
+          int kz = iz; // r2c output limited to positive side
+          double kz_val = 2.0 * Pi * kz / Lz;
+          int idx = ix * Nz_r2c + iz;
+          const double a = rho_fft[idx][0];
+          const double b = rho_fft[idx][1];
+          double k2 = kx_val * kx_val + kz_val * kz_val;
+          if (k2 < 1e-20) { // sets small values of k to 0 to minimise noise
+            phi_fft[idx][0] = 0.0; phi_fft[idx][1] = 0.0;
+            Ex_fft[idx][0] = 0.0; Ex_fft[idx][1] = 0.0;
+            Ez_fft[idx][0] = 0.0; Ez_fft[idx][1] = 0.0;
+          } else {
+            // phi = rho/(eps0*k2), complex division (rho is complex)
+            double denom = VacuumPermittivity * k2;
+            // phi_fft = (a + i b) / denom
+            double phi_re = a / denom;
+            double phi_im = b / denom;
+            phi_fft[idx][0] = phi_re;
+            phi_fft[idx][1] = phi_im;
+
+            // Ex_fft = -i kx * phi = -i kx*(phi_re + i phi_im) = kx*phi_im + i*(-kx*phi_re)
+            Ex_fft[idx][0] = kx_val * phi_im;
+            Ex_fft[idx][1] = -kx_val * phi_re;
+
+            // Ez_fft = -i kz * phi
+            Ez_fft[idx][0] = kz_val * phi_im;
+            Ez_fft[idx][1] = -kz_val * phi_re;
+          }
+        }
+      }
+    };
+
+    // Launch threads
+    std::vector<std::thread> threads;
+    int per_thread = Nx_pad / nthreads_;  // the number of x values each thread does
+    int start = 0;
+    for (int t = 0; t < nthreads_; ++t) {
+      int end = (t == nthreads_ - 1) ? Nx_pad : start + per_thread; // the last thread goes to the end
+      threads.emplace_back(work, start, end);
+      start = end;
+    }
+    for (auto &th : threads) th.join();
+
+    // inverse transforms back to real domain
+    fftw_execute(backward_plan_Ex);
+    fftw_execute(backward_plan_Ez);
+
+    // normalize and copy back central region
+    const double Ntotal = (double)(Nx_pad * Nz_pad);
+    Ex_out.assign(Nx * Nz, 0.0);
+    Ez_out.assign(Nx * Nz, 0.0);
+    for (int ix = 0; ix < Nx; ++ix) {
+      for (int iz = 0; iz < Nz; ++iz) {
+        int ixp = ix + Npad;
+        int izp = iz + Npad;
+        int idx_pad = ixp * Nz_pad + izp;  // flattened array indexing
+        // note backward produced scaled by Ntotal, so divide
+        Ex_out[ix * Nz + iz] = Ex_real[idx_pad] / Ntotal;
+        Ez_out[ix * Nz + iz] = Ez_real[idx_pad] / Ntotal;
+      }
+    }
+  }
+
+private:
+  int Nx, Nz;
+  int Nx_pad, Nz_pad, Nz_r2c, Npad;
+  double spacing;
+  int nthreads_;
+  double *rho_in; 
+  fftw_complex *rho_fft, *phi_fft, *Ex_fft, *Ez_fft;
+  double *Ex_real, *Ez_real;
+  fftw_plan forward_plan;
+  fftw_plan backward_plan_Ex;
+  fftw_plan backward_plan_Ez;
+};
+// ----------------------------- End PoissonFFT2D --------------------------------
 
 
 bool readTransferFunction(Sensor& sensor) {
@@ -90,7 +252,7 @@ Garfield::Random::SetEngine(randomEngine);
   const double tstep = 100.; //monte-carlo step size (ns)
   const double v_drift = 220e-9; //cm/ns
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 30;
+  const std::size_t nbins = 3000;
   const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep;
 
@@ -99,6 +261,7 @@ Garfield::Random::SetEngine(randomEngine);
   const int Ny = 1;
   const int Nz = 100;
   const double spacing = v_drift * tstep * 10; //(cm)
+  //const double spacing = 0.0001;
   const double xgrid = Nx * spacing;
   const double zgrid = Nz * spacing;
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
@@ -188,8 +351,8 @@ Garfield::Random::SetEngine(randomEngine);
   const double x0 = 0;
   const double y0 = yMin;
   const double z0 = 0;
-  const std::size_t nTracks = 1000;
-  const int multiplicity = 1;  // charges per ion/electron
+  const std::size_t nTracks = 500;
+  const int multiplicity = 10;  // charges per ion/electron
   double recombine_num = 0;
   std::vector<std::vector<double>> ion_recombination_positions;
   std::vector<std::vector<double>> negion_recombination_positions;
@@ -225,6 +388,22 @@ Garfield::Random::SetEngine(randomEngine);
   double t = 0;
   size_t particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
   
+  // Pre-allocate arrays and constants used by SpaceCharge computations
+  std::vector<double> chargeDensity;
+  std::function<int(int,int)> idx;
+  double xGridMin = -xgrid/2 + spacing/2; // centre of the first cell in x/z
+  double zGridMin = -zgrid/2 + spacing/2;
+  std::unique_ptr<PoissonFFT2D> poissonSolver;
+  if (SpaceCharge) {
+    chargeDensity.resize(Nx * Nz);
+    idx = [Nz](int ix, int iz) { return ix * Nz + iz; };
+    int Npad = 10;   // padding on each side for the FFT poisson solver
+    // initialize Poisson solver, 0 threads auto allocates
+    poissonSolver = std::make_unique<PoissonFFT2D>(Nx, Nz, spacing, /*pad=*/Npad, /*threads=*/0);
+  }
+
+  
+  // ----------------------------- main while loop -----------------------------------
   while (particleNum > 0) {
     if (stop_at_max_time && t > max_time) {break;}
 
@@ -269,59 +448,34 @@ Garfield::Random::SetEngine(randomEngine);
 
     // -------------------- Space Charge -------------------------
     if (SpaceCharge) {
-      std::vector<std::vector<double>> chargeDensity(Nx, std::vector<double>(Nz, 0.0));
-      double y = 0.;
-      double xGridMin = -xgrid/2 + spacing/2;
-      double zGridMin = -zgrid/2 + spacing/2;
-      double voxelVolume = spacing * (yMax - yMin) * spacing;
-
+      // reset pre-allocated arrays and reuse precomputed constants
+      std::fill(chargeDensity.begin(), chargeDensity.end(), 0.0);
+      
+      // make the charge density map (flattened array)
+      const double y = 0.0;
       for (int ix = 0; ix < Nx; ++ix) {
-        double x = xGridMin + ix * (spacing);
+        double x = xGridMin + ix * spacing;
         for (int iz = 0; iz < Nz; ++iz) {
-          double z = -zGridMin + iz * spacing;
+          double z = zGridMin + iz * spacing;
           double rhoIon = 0.0, rhoNegIon = 0.0;
           grid.IonDensity(x, y, z, rhoIon);
           grid.NegativeIonDensity(x, y, z, rhoNegIon);
 
           // Net charge density per voxel
-          chargeDensity[ix][iz] = ElementaryCharge * (rhoIon - rhoNegIon); // fC/cm^3
+          chargeDensity[idx(ix, iz)] = ElementaryCharge * (rhoIon - rhoNegIon); // fC/cm^3
         }
       }
 
-      std::vector<std::vector<double>> Ex(Nx, std::vector<double>(Nz, 0.0));
-      std::vector<std::vector<double>> Ez(Nx, std::vector<double>(Nz, 0.0));
-      const double k = 1.0 / (FourPiEpsilon0); // [cm·fC^-1] in CGS-like units if rho in fC/cm^3
-      // for each grid cell
-      for (int ix = 0; ix < Nx; ++ix) {
-        double x_i = xGridMin + ix * spacing;
-        for (int iz = 0; iz < Nz; ++iz) {
-          double z_i = zGridMin + iz * spacing;
-          
-          double ex_sum = 0.0;
-          double ez_sum = 0.0;
-          // calculate the contribution from every other grid cell.
-          for (int mx = 0; mx < Nx; ++mx) {
-            for (int mz = 0; mz < Nz; ++mz) {
+      // get the electric field from the charge density
+      std::vector<double> Ex(Nx * Nz, 0.0);
+      std::vector<double> Ez(Nx * Nz, 0.0);
+      if (poissonSolver) {
+        poissonSolver->Solve(chargeDensity, Ex, Ez);
+      } else {
+        // fall back to 0 field
+      }
 
-              if (ix == mx && iz == mz) continue; // skip self-contribution
-
-              double dx = (ix - mx) * spacing;
-              double dz = (iz - mz) * spacing;
-              double r2 = dx*dx + dz*dz;
-
-              double Q = chargeDensity[mx][mz] * voxelVolume; // voxel charge fC
-
-              double r3 = std::pow(r2, 1.5);
-              ex_sum += k * Q * dx / r3;
-              ez_sum += k * Q * dz / r3;
-            }
-          }
-          Ex[ix][iz] = ex_sum;
-          Ez[ix][iz] = ez_sum;
-        }
-      }  
-
-      // Save Ex and Ez to a file in XYZ format
+      // Save Ex and Ez to a file in XYZ format for ComponentGrid to read
       std::ofstream efieldFile("electric_field.xyz");
       if (!efieldFile) {
         std::cerr << "Cannot open file for writing electric field.\n";
@@ -329,12 +483,12 @@ Garfield::Random::SetEngine(randomEngine);
         efieldFile << std::scientific << std::setprecision(6);
         const double y = 0.0; // single slice in y
         for (int ix = 0; ix < Nx; ++ix) {
-          double x = -xgrid/2 + spacing/2 + ix * spacing;
+          double x = xGridMin + ix * spacing;
           for (int iz = 0; iz < Nz; ++iz) {
-              double z = -zgrid/2 + spacing/2 + iz * spacing;
-              double ex = Ex[ix][iz];
+              double z = zGridMin + iz * spacing;
+              double ex = Ex[idx(ix, iz)];
               double ey = 0.0; // assume no Ey
-              double ez = Ez[ix][iz];
+              double ez = Ez[idx(ix, iz)];
               efieldFile << x << " " << y << " " << z << " "
                         << ex << " " << ey << " " << ez << "\n";
           }
@@ -343,17 +497,14 @@ Garfield::Random::SetEngine(randomEngine);
         std::cout << "Electric field saved to electric_field.xyz\n";
       } 
     }
-    // ------------------------- End Space Charge ------------------------------------
-
+// ------------------------- End Space Charge ------------------------------------
+    drift.SetTimeWindow(t, t + dt);
     // drift the positive and negative ions
+    drift.ResumeAvalanche();
+
     std::cout << "Negative Ions: " << drift.GetNegativeIons().size() << std::endl;
     std::cout << "Positive Ions: " << drift.GetIons().size() << std::endl;
-    drift.SetTimeWindow(t, t + dt);
-    drift.ResumeAvalanche(); // drift the ions
-
     // record recombined particles
-    // then add un-recombined particles that have escaped the recombination grid to the skip to plate vector.
-    // note had to take out the & before the name as I need to modify the status.
     for (auto &ion : drift.GetIons()) {
                 if (ion.status == -9) {
                   const auto& p1 = ion.path.back();
