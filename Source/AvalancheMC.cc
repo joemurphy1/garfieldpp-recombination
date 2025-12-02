@@ -356,11 +356,11 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
       if (m_useRecombination) {
         double prec = 0.;
         if (ptype == Particle::NegativeIon) {
-          const double rho = GetNegativeIonDensity(x0);
+          const double rho = GetIonDensity(x0);
           prec = 1. - std::exp(-m_alphaRecombination * rho * (t1 - t0));
         }
         if (ptype == Particle::Ion) {
-          const double rho = GetIonDensity(x0);
+          const double rho = GetNegativeIonDensity(x0);
           prec = 1. - std::exp(-m_alphaRecombination * rho * (t1 - t0));
         }
         if (RndmUniform() < prec) {

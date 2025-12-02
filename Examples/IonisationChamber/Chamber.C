@@ -190,6 +190,17 @@ private:
 // ----------------------------- End PoissonFFT2D --------------------------------
 
 
+double erf_inv(double x)
+{ /*Inverse Error function implementation from
+   Winitzki, S. (2008). A handy approximation for the error function and its inverse. */
+  if (std::abs(x) > 1) {std::cout << "invalid erf_inv input" << std::endl; return false;}
+  const double a = 0.147;
+  const double b = std::log(1-(x*x));
+  const double c = 2/(Pi*a);
+  double y = std::sqrt(-c - b/2 + std::sqrt((c+b/2)*(c+b/2) - (1/a)*b));
+  return y;
+}
+
 bool readTransferFunction(Sensor& sensor) {
   std::ifstream infile;
   infile.open("mdt_elx_delta.txt", std::ios::in);
@@ -210,13 +221,22 @@ bool readTransferFunction(Sensor& sensor) {
   sensor.SetTransferFunction(times, values);
   return true;
 }
-/*
+
 double firstPassageTime(double t0, double D, double a) {
   double u = RndmUniform();
-  double z = std::erfinv(1-u);
+  double z = erf_inv(1-u);
   return t0 + (a*a)/(4 * D * z*z);
 }
-*/
+
+double SampleTruncatedNormal(double mu, double sigma,
+                                    double lo, double hi) {
+    double v;
+    do {
+        v = RndmGaussian(mu, sigma);
+    } while (v < lo || v > hi);
+    return v;
+}
+
 int main(int argc, char* argv[]) {
 
 auto time_start = std::chrono::steady_clock::now();
@@ -252,20 +272,21 @@ Garfield::Random::SetEngine(randomEngine);
   const double tstep = 100.; //monte-carlo step size (ns)
   const double v_drift = 220e-9; //cm/ns
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 3000;
+  const std::size_t nbins = 60000;
   const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep;
 
   // Grid parameters.
-  const int Nx = 100;
+  const int Nx = 200;
   const int Ny = 1;
-  const int Nz = 100;
+  const int Nz = 200;
   const double spacing = v_drift * tstep * 10; //(cm)
   //const double spacing = 0.0001;
   const double xgrid = Nx * spacing;
   const double zgrid = Nz * spacing;
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
   const bool RecordRecombinationPositions = false;
+  std::cout << "Grid spans: x=+-" << xgrid/2 << " z=+-" << zgrid/2 << std::endl;
 
   // Plate Separation (cm)
   const double xMin = -0.15, xMax = 0.15;
@@ -310,7 +331,7 @@ Garfield::Random::SetEngine(randomEngine);
   // Set the delta reponse function.
   if (!readTransferFunction(sensor)) return 0;
 
-  bool JumpIonsOutsideGridToPlate = false;
+  bool JumpIonsOutsideGridToPlate = true;
   if (JumpIonsOutsideGridToPlate) {sensor.SetArea(-xgrid/2, yMin, -zgrid/2, xgrid/2, yMax, zgrid/2);}
   else {sensor.SetArea(xMin, yMin, zMin, xMax, yMax, zMax);}
     
@@ -351,8 +372,8 @@ Garfield::Random::SetEngine(randomEngine);
   const double x0 = 0;
   const double y0 = yMin;
   const double z0 = 0;
-  const std::size_t nTracks = 500;
-  const int multiplicity = 10;  // charges per ion/electron
+  const std::size_t nTracks = 1000;
+  const int multiplicity = 1;  // charges per ion/electron
   double recombine_num = 0;
   std::vector<std::vector<double>> ion_recombination_positions;
   std::vector<std::vector<double>> negion_recombination_positions;
@@ -405,7 +426,7 @@ Garfield::Random::SetEngine(randomEngine);
   
   // ----------------------------- main while loop -----------------------------------
   while (particleNum > 0) {
-    if (stop_at_max_time && t > max_time) {break;}
+    if (stop_at_max_time && t >= max_time) {break;}
 
     // handle electron drift and attachment
     if (!aval.GetElectrons().empty()) {
@@ -446,7 +467,7 @@ Garfield::Random::SetEngine(randomEngine);
       }
     }
 
-    // -------------------- Space Charge -------------------------
+    // -------------------- Space Charge -----------------------------------------
     if (SpaceCharge) {
       // reset pre-allocated arrays and reuse precomputed constants
       std::fill(chargeDensity.begin(), chargeDensity.end(), 0.0);
@@ -460,7 +481,8 @@ Garfield::Random::SetEngine(randomEngine);
           double rhoIon = 0.0, rhoNegIon = 0.0;
           grid.IonDensity(x, y, z, rhoIon);
           grid.NegativeIonDensity(x, y, z, rhoNegIon);
-
+          if (rhoIon == false) {rhoIon = 0;}
+          if (rhoNegIon == false) {rhoNegIon = 0;}
           // Net charge density per voxel
           chargeDensity[idx(ix, iz)] = ElementaryCharge * (rhoIon - rhoNegIon); // fC/cm^3
         }
@@ -494,10 +516,10 @@ Garfield::Random::SetEngine(randomEngine);
           }
         }
         efieldFile.close();
-        std::cout << "Electric field saved to electric_field.xyz\n";
       } 
     }
 // ------------------------- End Space Charge ------------------------------------
+
     drift.SetTimeWindow(t, t + dt);
     // drift the positive and negative ions
     drift.ResumeAvalanche();
@@ -531,6 +553,122 @@ Garfield::Random::SetEngine(randomEngine);
     particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
   }
 
+
+  // -------------------------------------Jumping Code -----------------------------------------------------------------
+  if (JumpIonsOutsideGridToPlate) {
+    std::array<int, 3> DirectionsParticlesLeftCount = {0, 0, 0};
+    double difl, dift;
+    double vx_ion, vy_ion, vz_ion;
+    double vx_negion, vy_negion, vz_negion;
+    double E_x = (vCathode- vAnode)/(xMax - xMin);
+    cmp.GetMedium(0,0,0) -> IonDiffusion(E_x, 0, 0, 0, 0, 0, difl, dift); //cm^1/2
+    cmp.GetMedium(0,0,0) -> IonVelocity(E_x, 0, 0, 0, 0, 0, vx_ion, vy_ion, vz_ion); //cm/ns
+    cmp.GetMedium(0,0,0) -> NegativeIonVelocity(E_x, 0, 0, 0, 0, 0, vx_negion, vy_negion, vz_negion); //cm/ns
+    double difl_ion = difl * difl * std::abs(vx_ion) / 2; // convert to a cm^2/ns diffusion coefficient
+    double difl_negion = difl * difl * std::abs(vx_negion) / 2; // convert to a cm^2/ns diffusion coefficient
+    // difl and dift appear to be the same so we will ommit two lines here converting them and just use difl
+    
+    for (auto &negion : NegativeIonsLeftGrid) {
+      const auto& p1 = negion.path.back();
+      // ions can leave the grid by hitting the walls in y, or leaving the grid in x and z.
+      if (std::abs(p1.x) == spacing * Nx) {DirectionsParticlesLeftCount[0] += 1;}
+      else if (std::abs(p1.y) == 0.15) {DirectionsParticlesLeftCount[1] += 1;}
+      else if (std::abs(p1.z) == spacing * Nz) {DirectionsParticlesLeftCount[2] += 1;}
+      
+      // Calculate the signal that would have occured for the particle motion approximating as a straight line
+      double xa = xMax - 0.000001; //anode position (small number needed for the wp != 0)
+      double ta = p1.t + RndmGaussian((xa-p1.x)/vx_negion, std::sqrt(2*difl_negion*(xa-p1.x)/(vx_negion*vx_negion*vx_negion))); //time to hit the anode
+      double t_yu = firstPassageTime(p1.t, difl_negion, yMax - p1.y); // time to hit upper y wall
+      double t_yl = firstPassageTime(p1.t, difl_negion, yMin - p1.y); // time to hit lower y wall
+      double t_zu = firstPassageTime(p1.t, difl_negion, zMax - p1.z); // time to hit upper z wall
+      double t_zl = firstPassageTime(p1.t, difl_negion, zMin - p1.z); // time to hit lower z wall
+      double t1 = std::min({ta, t_yu, t_yl, t_zu, t_zl}); // find the final outcome of the particle
+      double sigma = std::sqrt(2 * difl_negion * (t1-p1.t)); // diffusion standard deviation
+
+      double x1, y1, z1;
+      if (t1 == ta) { // particle hits the anode
+        x1 = xa;
+        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
+        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
+      }
+      else if (t1 == t_yu) { // particle hits the upper y plate
+        y1 = yMax;
+        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
+        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
+      }
+      else if (t1 == t_yl) { // particle hits the lower y plate
+        y1 = yMin;
+        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
+        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
+      }
+      else if (t1 == t_zu) { // particle hits the upper z plate
+        z1 = zMax;
+        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
+        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
+      }
+      else { // particle hits the upper z plate
+        z1 = zMin;
+        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
+        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
+      }
+      
+      std::vector<double> ts = {p1.t, t1};
+      std::vector<std::array<double, 3>> xs = { { p1.x, p1.y, p1.z }, { x1, y1, z1} };
+
+      sensor.AddSignalWeightingPotential(-multiplicity, ts, xs);
+    }
+
+    for (auto &ion : IonsLeftGrid) {
+      const auto& p1 = ion.path.back();
+      // ions can leave the grid by hitting the walls in y, or leaving the grid in x and z.
+      if (std::abs(p1.x) == spacing * Nx) {DirectionsParticlesLeftCount[0] += 1;}
+      else if (std::abs(p1.y) == 0.15) {DirectionsParticlesLeftCount[1] += 1;}
+      else if (std::abs(p1.z) == spacing * Nz) {DirectionsParticlesLeftCount[2] += 1;}
+
+      // Calculate the signal that would have occured for the particle motion approximating as a straight line
+      double xc = xMin + 0.000001; //cathode position (small number needed for the wp != 0)
+      double tc = p1.t + RndmGaussian((xc-p1.x)/vx_ion, std::sqrt(2*difl_ion*(xc-p1.x)/(vx_ion*vx_ion*vx_ion))); //time to hit the cathode
+      double t_yu = firstPassageTime(p1.t, difl_ion, yMax - p1.y); // time to hit upper y wall
+      double t_yl = firstPassageTime(p1.t, difl_ion, yMin - p1.y); // time to hit lower y wall
+      double t_zu = firstPassageTime(p1.t, difl_ion, zMax - p1.z); // time to hit upper z wall
+      double t_zl = firstPassageTime(p1.t, difl_ion, zMin - p1.z); // time to hit lower z wall
+      double t1 = std::min({tc, t_yu, t_yl, t_zu, t_zl}); // find the final outcome of the particle
+      double sigma = std::sqrt(2 * difl_ion * (t1-p1.t)); // diffusion standard deviation
+
+      double x1, y1, z1;
+      if (t1 == tc) { // particle hits the cathode
+        x1 = xc;
+        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
+        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
+      }
+      else if (t1 == t_yu) { // particle hits the upper y plate
+        y1 = yMax;
+        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
+        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
+      }
+      else if (t1 == t_yl) { // particle hits the lower y plate
+        y1 = yMin;
+        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
+        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
+      }
+      else if (t1 == t_zu) { // particle hits the upper z plate
+        z1 = zMax;
+        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
+        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
+      }
+      else { // particle hits the lower z plate
+        z1 = zMin;
+        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
+        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
+      }
+      
+      std::vector<double> ts = {p1.t, t1};
+      std::vector<std::array<double, 3>> xs = { { p1.x, p1.y, p1.z }, { x1, y1, z1} };
+
+      sensor.AddSignalWeightingPotential(multiplicity, ts, xs);
+    } 
+  }
+// --------------------------------------End Jumping Code -----------------------------------------------------
 
   std::cout << "Recombined particles : " << recombine_num << std::endl;
   if (ElectronsLeftGridCount > 0) {std::cout << "WARNING " << ElectronsLeftGridCount << " electrons left the grid" << std::endl;}  
