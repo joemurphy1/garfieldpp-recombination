@@ -32,210 +32,165 @@
 #include <mutex>
 #include <future>
 
-
 using namespace Garfield;
 
-// ----------------------------- PoissonFFT2D class ------------------------------
-// 2D Poisson solver using FFTW. Accepts a 2D charge density (x,z)
-// and returns Ex and Ez across the same Nx x Nz grid. The solver
-// uses zero-padding to reduce wrap-around and multi-threading
-// for per-k operations.
-class PoissonFFT2D {
+class PoissonFFT3D {
 public:
-  PoissonFFT2D(int Nx_, int Nz_, double spacing_, int pad = 10, int nthreads = 0)
-      : Nx(Nx_), Nz(Nz_), spacing(spacing_), Npad(pad) {
-    // padded sizes
+  PoissonFFT3D(int Nx_, int Ny_, int Nz_, double sx_, double sy_, double sz_, int pad = 10, int nthreads = 0)
+      : Nx(Nx_), Ny(Ny_), Nz(Nz_), sx(sx_), sy(sy_), sz(sz_), Npad(pad) {
     Nx_pad = Nx + 2 * Npad;
+    Ny_pad = Ny + 2 * Npad;
     Nz_pad = Nz + 2 * Npad;
     Nz_r2c = Nz_pad / 2 + 1;
-    if (nthreads > 0) {
-      nthreads_ = nthreads;
-    } else {
-      unsigned int hc = std::thread::hardware_concurrency();
-      nthreads_ = (hc > 0) ? static_cast<int>(hc) : 1;
-    }
+    if (nthreads > 0) nthreads_ = nthreads;
+    else { unsigned int hc = std::thread::hardware_concurrency(); nthreads_ = (hc > 0) ? static_cast<int>(hc) : 1; }
 
-    // allocate arrays
-    rho_in = (double*)fftw_malloc(sizeof(double) * Nx_pad * Nz_pad);
-    rho_fft = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * Nx_pad * Nz_r2c);
-    phi_fft = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * Nx_pad * Nz_r2c);
-    Ex_fft  = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * Nx_pad * Nz_r2c);
-    Ez_fft  = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * Nx_pad * Nz_r2c);
-    Ex_real = (double*)fftw_malloc(sizeof(double) * Nx_pad * Nz_pad);
-    Ez_real = (double*)fftw_malloc(sizeof(double) * Nx_pad * Nz_pad);
+    const size_t in_size = static_cast<size_t>(Nx_pad) * Ny_pad * Nz_pad;
+    const size_t fftc_size = static_cast<size_t>(Nx_pad) * Ny_pad * Nz_r2c;
+    rho_in = (double*)fftw_malloc(sizeof(double) * in_size);
+    rho_fft = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * fftc_size);
+    phi_fft = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * fftc_size);
+    Ex_fft  = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * fftc_size);
+    Ey_fft  = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * fftc_size);
+    Ez_fft  = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * fftc_size);
+    Ex_real = (double*)fftw_malloc(sizeof(double) * in_size);
+    Ey_real = (double*)fftw_malloc(sizeof(double) * in_size);
+    Ez_real = (double*)fftw_malloc(sizeof(double) * in_size);
 
-    // create plans
-    forward_plan = fftw_plan_dft_r2c_2d(Nx_pad, Nz_pad, rho_in, rho_fft, FFTW_MEASURE);
-    backward_plan_Ex = fftw_plan_dft_c2r_2d(Nx_pad, Nz_pad, Ex_fft, Ex_real, FFTW_MEASURE);
-    backward_plan_Ez = fftw_plan_dft_c2r_2d(Nx_pad, Nz_pad, Ez_fft, Ez_real, FFTW_MEASURE);
+    fftw_init_threads();
+    fftw_plan_with_nthreads(nthreads_);
+    forward_plan = fftw_plan_dft_r2c_3d(Nx_pad, Ny_pad, Nz_pad, rho_in, rho_fft, FFTW_MEASURE);
+    backward_plan_Ex = fftw_plan_dft_c2r_3d(Nx_pad, Ny_pad, Nz_pad, Ex_fft, Ex_real, FFTW_MEASURE);
+    backward_plan_Ey = fftw_plan_dft_c2r_3d(Nx_pad, Ny_pad, Nz_pad, Ey_fft, Ey_real, FFTW_MEASURE);
+    backward_plan_Ez = fftw_plan_dft_c2r_3d(Nx_pad, Ny_pad, Nz_pad, Ez_fft, Ez_real, FFTW_MEASURE);
   }
-  ~PoissonFFT2D() {
+  ~PoissonFFT3D() {
     if (forward_plan) fftw_destroy_plan(forward_plan);
     if (backward_plan_Ex) fftw_destroy_plan(backward_plan_Ex);
+    if (backward_plan_Ey) fftw_destroy_plan(backward_plan_Ey);
     if (backward_plan_Ez) fftw_destroy_plan(backward_plan_Ez);
     if (rho_in) fftw_free(rho_in);
     if (rho_fft) fftw_free(rho_fft);
     if (phi_fft) fftw_free(phi_fft);
     if (Ex_fft) fftw_free(Ex_fft);
+    if (Ey_fft) fftw_free(Ey_fft);
     if (Ez_fft) fftw_free(Ez_fft);
     if (Ex_real) fftw_free(Ex_real);
+    if (Ey_real) fftw_free(Ey_real);
     if (Ez_real) fftw_free(Ez_real);
+    fftw_cleanup_threads();
   }
 
-  // Solve Poisson and fill Ex and Ez (both Nx*Nz flattened vectors)
-  void Solve(const std::vector<double>& rho, std::vector<double>& Ex_out, std::vector<double>& Ez_out) {
-    if ((int)rho.size() != Nx * Nz) {
-      std::cerr << "PoissonFFT2D::Solve: rho size mismatch\n";
+  void Solve(const std::vector<double>& rho, std::vector<double>& Ex_out, std::vector<double>& Ey_out, std::vector<double>& Ez_out) {
+    if ((int)rho.size() != Nx * Ny * Nz) {
+      std::cerr << "PoissonFFT3D::Solve: rho size mismatch\n";
       return;
     }
-    // zero input
-    const int total_pad = Nx_pad * Nz_pad;
+    const size_t total_pad = static_cast<size_t>(Nx_pad) * Ny_pad * Nz_pad;
     std::fill(rho_in, rho_in + total_pad, 0.0);
-
-    // copy to padded input (centered)
     for (int ix = 0; ix < Nx; ++ix) {
-      for (int iz = 0; iz < Nz; ++iz) {
-        int ixp = ix + Npad;
-        int izp = iz + Npad;
-        rho_in[ixp * Nz_pad + izp] = rho[ix * Nz + iz];
+      for (int iy = 0; iy < Ny; ++iy) {
+        for (int iz = 0; iz < Nz; ++iz) {
+          int ixp = ix + Npad;
+          int iyp = iy + Npad;
+          int izp = iz + Npad;
+          size_t idx_pad = static_cast<size_t>(ixp) * Ny_pad * Nz_pad + static_cast<size_t>(iyp) * Nz_pad + izp;
+          size_t idx_src = static_cast<size_t>(ix) * Ny * Nz + static_cast<size_t>(iy) * Nz + iz;
+          rho_in[idx_pad] = rho[idx_src];
+        }
       }
     }
 
-    // forward transform
     fftw_execute(forward_plan);
-
-    // compute phi_fft = rho_fft / (eps0 * k2) in parallel and Ex/Ez in k domain
-    const double Lx = Nx_pad * spacing;
-    const double Lz = Nz_pad * spacing;
-
+    const double eps0 = Garfield::VacuumPermittivity;
+    const double Lx = Nx_pad * sx;
+    const double Ly = Ny_pad * sy;
+    const double Lz = Nz_pad * sz;
     auto work = [&](int ix_start, int ix_end) {
       for (int ix = ix_start; ix < ix_end; ++ix) {
-        int kx = (ix <= Nx_pad / 2) ? ix : ix - Nx_pad; // kx = ix for the pad, else its the actual value we want
-        double kx_val = 2.0 * Pi * kx / Lx;
-        for (int iz = 0; iz < Nz_r2c; ++iz) {
-          int kz = iz; // r2c output limited to positive side
-          double kz_val = 2.0 * Pi * kz / Lz;
-          int idx = ix * Nz_r2c + iz;
-          const double a = rho_fft[idx][0];
-          const double b = rho_fft[idx][1];
-          double k2 = kx_val * kx_val + kz_val * kz_val;
-          if (k2 < 1e-20) { // sets small values of k to 0 to minimise noise
-            phi_fft[idx][0] = 0.0; phi_fft[idx][1] = 0.0;
-            Ex_fft[idx][0] = 0.0; Ex_fft[idx][1] = 0.0;
-            Ez_fft[idx][0] = 0.0; Ez_fft[idx][1] = 0.0;
-          } else {
-            // phi = rho/(eps0*k2), complex division (rho is complex)
-            double denom = VacuumPermittivity * k2;
-            // phi_fft = (a + i b) / denom
-            double phi_re = a / denom;
-            double phi_im = b / denom;
-            phi_fft[idx][0] = phi_re;
-            phi_fft[idx][1] = phi_im;
-
-            // Ex_fft = -i kx * phi = -i kx*(phi_re + i phi_im) = kx*phi_im + i*(-kx*phi_re)
-            Ex_fft[idx][0] = kx_val * phi_im;
-            Ex_fft[idx][1] = -kx_val * phi_re;
-
-            // Ez_fft = -i kz * phi
-            Ez_fft[idx][0] = kz_val * phi_im;
-            Ez_fft[idx][1] = -kz_val * phi_re;
+        int kx = (ix <= Nx_pad / 2) ? ix : ix - Nx_pad;
+        double kx_val = 2.0 * Garfield::Pi * kx / Lx;
+        for (int iy = 0; iy < Ny_pad; ++iy) {
+          int ky = (iy <= Ny_pad / 2) ? iy : iy - Ny_pad;
+          double ky_val = 2.0 * Garfield::Pi * ky / Ly;
+          for (int iz = 0; iz < Nz_r2c; ++iz) {
+            int kz = iz;
+            double kz_val = 2.0 * Garfield::Pi * kz / Lz;
+            size_t idx = static_cast<size_t>(ix) * Ny_pad * Nz_r2c + static_cast<size_t>(iy) * Nz_r2c + iz;
+            const double a = rho_fft[idx][0];
+            const double b = rho_fft[idx][1];
+            double k2 = kx_val * kx_val + ky_val * ky_val + kz_val * kz_val;
+            if (k2 < 1e-20) {
+              phi_fft[idx][0] = 0.0; phi_fft[idx][1] = 0.0;
+              Ex_fft[idx][0] = 0.0; Ex_fft[idx][1] = 0.0;
+              Ey_fft[idx][0] = 0.0; Ey_fft[idx][1] = 0.0;
+              Ez_fft[idx][0] = 0.0; Ez_fft[idx][1] = 0.0;
+            } else {
+              double denom = eps0 * k2;
+              double phi_re = a / denom;
+              double phi_im = b / denom;
+              phi_fft[idx][0] = phi_re;
+              phi_fft[idx][1] = phi_im;
+              Ex_fft[idx][0] = kx_val * phi_im;
+              Ex_fft[idx][1] = -kx_val * phi_re;
+              Ey_fft[idx][0] = ky_val * phi_im;
+              Ey_fft[idx][1] = -ky_val * phi_re;
+              Ez_fft[idx][0] = kz_val * phi_im;
+              Ez_fft[idx][1] = -kz_val * phi_re;
+            }
           }
         }
       }
     };
 
-    // Launch threads
     std::vector<std::thread> threads;
-    int per_thread = Nx_pad / nthreads_;  // the number of x values each thread does
+    int per_thread = Nx_pad / nthreads_;
     int start = 0;
     for (int t = 0; t < nthreads_; ++t) {
-      int end = (t == nthreads_ - 1) ? Nx_pad : start + per_thread; // the last thread goes to the end
+      int end = (t == nthreads_ - 1) ? Nx_pad : start + per_thread;
       threads.emplace_back(work, start, end);
       start = end;
     }
     for (auto &th : threads) th.join();
 
-    // inverse transforms back to real domain
     fftw_execute(backward_plan_Ex);
+    fftw_execute(backward_plan_Ey);
     fftw_execute(backward_plan_Ez);
 
-    // normalize and copy back central region
-    const double Ntotal = (double)(Nx_pad * Nz_pad);
-    Ex_out.assign(Nx * Nz, 0.0);
-    Ez_out.assign(Nx * Nz, 0.0);
+    const double Ntotal = static_cast<double>(Nx_pad) * Ny_pad * Nz_pad;
+    Ex_out.assign(Nx * Ny * Nz, 0.0);
+    Ey_out.assign(Nx * Ny * Nz, 0.0);
+    Ez_out.assign(Nx * Ny * Nz, 0.0);
     for (int ix = 0; ix < Nx; ++ix) {
-      for (int iz = 0; iz < Nz; ++iz) {
-        int ixp = ix + Npad;
-        int izp = iz + Npad;
-        int idx_pad = ixp * Nz_pad + izp;  // flattened array indexing
-        // note backward produced scaled by Ntotal, so divide
-        Ex_out[ix * Nz + iz] = Ex_real[idx_pad] / Ntotal;
-        Ez_out[ix * Nz + iz] = Ez_real[idx_pad] / Ntotal;
+      for (int iy = 0; iy < Ny; ++iy) {
+        for (int iz = 0; iz < Nz; ++iz) {
+          int ixp = ix + Npad;
+          int iyp = iy + Npad;
+          int izp = iz + Npad;
+          size_t idx_pad = static_cast<size_t>(ixp) * Ny_pad * Nz_pad + static_cast<size_t>(iyp) * Nz_pad + izp;
+          size_t idx_out = static_cast<size_t>(ix) * Ny * Nz + static_cast<size_t>(iy) * Nz + iz;
+          Ex_out[idx_out] = Ex_real[idx_pad] / Ntotal;
+          Ey_out[idx_out] = Ey_real[idx_pad] / Ntotal;
+          Ez_out[idx_out] = Ez_real[idx_pad] / Ntotal;
+        }
       }
     }
   }
 
 private:
-  int Nx, Nz;
-  int Nx_pad, Nz_pad, Nz_r2c, Npad;
-  double spacing;
+  int Nx, Ny, Nz;
+  int Nx_pad, Ny_pad, Nz_pad, Nz_r2c, Npad;
+  double sx, sy, sz;
   int nthreads_;
   double *rho_in; 
-  fftw_complex *rho_fft, *phi_fft, *Ex_fft, *Ez_fft;
-  double *Ex_real, *Ez_real;
+  fftw_complex *rho_fft, *phi_fft, *Ex_fft, *Ey_fft, *Ez_fft;
+  double *Ex_real, *Ey_real, *Ez_real;
   fftw_plan forward_plan;
   fftw_plan backward_plan_Ex;
+  fftw_plan backward_plan_Ey;
   fftw_plan backward_plan_Ez;
 };
-// ----------------------------- End PoissonFFT2D --------------------------------
-
-
-double erf_inv(double x)
-{ /*Inverse Error function implementation from
-   Winitzki, S. (2008). A handy approximation for the error function and its inverse. */
-  if (std::abs(x) > 1) {std::cout << "invalid erf_inv input" << std::endl; return false;}
-  const double a = 0.147;
-  const double b = std::log(1-(x*x));
-  const double c = 2/(Pi*a);
-  double y = std::sqrt(-c - b/2 + std::sqrt((c+b/2)*(c+b/2) - (1/a)*b));
-  return y;
-}
-
-bool readTransferFunction(Sensor& sensor) {
-  std::ifstream infile;
-  infile.open("mdt_elx_delta.txt", std::ios::in);
-  if (!infile) {
-    std::cerr << "Could not read delta response function.\n";
-    return false;
-  }
-  std::vector<double> times;
-  std::vector<double> values;
-  while (!infile.eof()) {
-    double t = 0., f = 0.;
-    infile >> t >> f;
-    if (infile.eof() || infile.fail()) break;
-    times.push_back(1.e3 * t);
-    values.push_back(f);
-  }
-  infile.close();
-  sensor.SetTransferFunction(times, values);
-  return true;
-}
-
-double firstPassageTime(double t0, double D, double a) {
-  double u = RndmUniform();
-  double z = erf_inv(1-u);
-  return t0 + (a*a)/(4 * D * z*z);
-}
-
-double SampleTruncatedNormal(double mu, double sigma,
-                                    double lo, double hi) {
-    double v;
-    do {
-        v = RndmGaussian(mu, sigma);
-    } while (v < lo || v > hi);
-    return v;
-}
+// ----------------------------- End PoissonFFT3D --------------------------------
 
 int main(int argc, char* argv[]) {
 
@@ -270,40 +225,46 @@ Garfield::Random::SetEngine(randomEngine);
 
   const double dt = 100.; //time between loops (dt > tstep)
   const double tstep = 100.; //monte-carlo step size (ns)
-  const double v_drift = 220e-9; //cm/ns
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 60000;
+  const std::size_t nbins = 100;
   const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep;
+ //-----------------------------------------Geometry-----------------------------------------------
+ // proton travels along the y axis.
+ // Plate Separation (cm)
+  const double xMin = -15., xMax = 15.;
+  // Width in beam direction
+  const double yMin = -0.25, yMax = 0.25;
+  // Length? Of the plates (vertically)
+  const double zMin = -20., zMax = 20.;
+  
+  const double vAnode = 0.;
+  const double vCathode = -1500.;
+  const double E_mag = std::abs(vCathode/(yMax-yMin));
 
+  cmp.SetMedium(&gas);
+  // cmp.AddPixelOnPlaneY(yMax ,-13.125 ,13.125 , -17.5, 17.5, "detector"); // define size of detector makes the program run really slowly???
+  cmp.AddPlaneY(yMax, vAnode, "detector"); // plane that hosts our detector
+  cmp.AddPlaneY(yMin, vCathode); // supposed to have two high voltage planes but analytic field only allows 2.
   // Grid parameters.
-  const int Nx = 200;
-  const int Ny = 1;
-  const int Nz = 200;
-  const double spacing = v_drift * tstep * 10; //(cm)
-  //const double spacing = 0.0001;
-  const double xgrid = Nx * spacing;
-  const double zgrid = Nz * spacing;
+  double vx_negion,vy_negion,vz_negion;
+  cmp.GetMedium(0,0,0)->NegativeIonVelocity(0,E_mag,0,0,0,0,vx_negion,vy_negion,vz_negion);
+  const double v_drift = 8.12176e-06; //cm/ns O2- drift velocity in air at 3000 V/cm
+  std::cout << vy_negion << std::endl;
+  const double guide_spacingy = -vy_negion * tstep * 5; //(cm) We define the spacing as 10 average drift lengths.
+  const double spacing_transverse = 0.001; //cm
+  const int Nx = 20; //number of grid spaces in y
+  const int Ny = std::round((yMax-yMin) / guide_spacingy);
+  const int Nz = 20;
+  const double spacingy = (yMax - yMin)/ Ny;
+  std::cout << spacingy << std::endl;
+  const double xgrid = Nx * spacing_transverse;
+  const double zgrid = Nz * spacing_transverse;
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
   const bool RecordRecombinationPositions = false;
-  std::cout << "Grid spans: x=+-" << xgrid/2 << " z=+-" << zgrid/2 << std::endl;
-
-  // Plate Separation (cm)
-  const double xMin = -0.15, xMax = 0.15;
-  // Width in beam direction
-  const double yMin = -0.15, yMax = 0.15;
-  // Length? Of the plates (vertically)
-  const double zMin = -0.15, zMax = 0.15;
+  std::cout << "Grid spans: x=+-" << xgrid/2 << " z=+-" << zgrid/2 << " and has Ny=" << Ny << std::endl;
   
-  const double vAnode = 15.;
-  const double vCathode = 0.;
-  
- cmp.AddPlaneX(xMax, vAnode, "detector"); // plane that hosts our detector
- cmp.AddPlaneX(xMin, vCathode);
-
- //cmp.AddStripOnPlaneX('z', xMax, yMin, yMax, "detector");
- cmp.SetMedium(&gas);
-
+// mesh
   ComponentGrid grid;
   grid.SetMesh(Nx, Ny, Nz, -xgrid/2, xgrid/2, yMin,
                  yMax, -zgrid/2, zgrid/2);
@@ -316,24 +277,21 @@ Garfield::Random::SetEngine(randomEngine);
   sensor.AddComponent(&grid);
 
   // option to make strip sensors for positional resolution
+  // NEEDS UPDATING FOR NEW DETECTOR GEOMETRY TODO
   const bool stripSensor = false;
   const int nStrips = 20;
   const double stripWidth = (yMax - yMin) / nStrips;
-  sensor.SetTimeWindow(tmin, tstep, nbins);
   std::vector<std::string> stripNames;
   if (stripSensor) {
     for (double y_0 = yMin; y_0 <= (yMin + (nStrips - 1) * stripWidth); y_0 += stripWidth ) {
       stripNames.push_back(std::to_string(y_0));
-      cmp.AddStripOnPlaneX('z', xMax, y_0, y_0 + stripWidth, stripNames.back());
+      cmp.AddStripOnPlaneY('z', xMax, y_0, y_0 + stripWidth, stripNames.back());
       sensor.AddElectrode(&cmp, stripNames.back());
     }
   }
-  // Set the delta reponse function.
-  if (!readTransferFunction(sensor)) return 0;
-
-  bool JumpIonsOutsideGridToPlate = true;
-  if (JumpIonsOutsideGridToPlate) {sensor.SetArea(-xgrid/2, yMin, -zgrid/2, xgrid/2, yMax, zgrid/2);}
-  else {sensor.SetArea(xMin, yMin, zMin, xMax, yMax, zMax);}
+  sensor.SetTimeWindow(tmin, tstep, nbins);
+  
+  sensor.SetArea(xMin, yMin, zMin, xMax, yMax, zMax); //particles that leave the area are removed from simulation
     
   // Set up Heed.
   TrackHeed track(&sensor);
@@ -355,7 +313,7 @@ Garfield::Random::SetEngine(randomEngine);
 
   TCanvas* cD = nullptr;
   ViewDrift driftView;
-  constexpr bool plotDrift = false;  //can cause massive memory gain over time
+  constexpr bool plotDrift = true;  //can cause massive memory gain over time
   if (plotDrift) {
     cD = new TCanvas("cD", "", 600, 600);
     driftView.SetCanvas(cD);
@@ -369,12 +327,12 @@ Garfield::Random::SetEngine(randomEngine);
     cS = new TCanvas("cS", "", 600, 600);
     }  // Two GUI Windows
 
-  const double x0 = 0;
+  const double x0 = 0; // centre of start of proton beam in x
   const double y0 = yMin;
   const double z0 = 0;
-  const std::size_t nTracks = 1000;
+  const std::size_t nTracks = 10; // number of protons
   const int multiplicity = 1;  // charges per ion/electron
-  double recombine_num = 0;
+  double recombine_num = 0; // number of recombinations so far (counter)
   std::vector<std::vector<double>> ion_recombination_positions;
   std::vector<std::vector<double>> negion_recombination_positions;
   std::vector<AvalancheMC::EndPoint> IonsLeftGrid;
@@ -409,18 +367,19 @@ Garfield::Random::SetEngine(randomEngine);
   double t = 0;
   size_t particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
   
-  // Pre-allocate arrays and constants used by SpaceCharge computations
+  // Pre-allocate arrays and constants used by SpaceCharge computations (3D)
   std::vector<double> chargeDensity;
-  std::function<int(int,int)> idx;
-  double xGridMin = -xgrid/2 + spacing/2; // centre of the first cell in x/z
-  double zGridMin = -zgrid/2 + spacing/2;
-  std::unique_ptr<PoissonFFT2D> poissonSolver;
+  std::function<int(int,int,int)> idx3d;
+  double xGridMin = -xgrid/2 + spacing_transverse/2; // centre of the first cell in x and z
+  double zGridMin = -zgrid/2 + spacing_transverse/2;
+  double yGridMin = yMin + spacingy/2;  // centre of first cell in y
+  std::unique_ptr<PoissonFFT3D> poissonSolver;
   if (SpaceCharge) {
-    chargeDensity.resize(Nx * Nz);
-    idx = [Nz](int ix, int iz) { return ix * Nz + iz; };
+    chargeDensity.resize(Nx * Ny * Nz);
+    idx3d = [Ny, Nz](int ix, int iy, int iz) { return (ix * Ny + iy) * Nz + iz; }; // indexes the 1D arrays as 3D.
     int Npad = 10;   // padding on each side for the FFT poisson solver
-    // initialize Poisson solver, 0 threads auto allocates
-    poissonSolver = std::make_unique<PoissonFFT2D>(Nx, Nz, spacing, /*pad=*/Npad, /*threads=*/0);
+    // initialize 3D Poisson solver, 0 threads auto allocates
+    poissonSolver = std::make_unique<PoissonFFT3D>(Nx, Ny, Nz, spacing_transverse, spacingy, spacing_transverse, /*pad=*/Npad, /*threads=*/0);
   }
 
   
@@ -431,14 +390,15 @@ Garfield::Random::SetEngine(randomEngine);
     // handle electron drift and attachment
     if (!aval.GetElectrons().empty()) {
       aval.SetTimeWindow(t, t + dt);
-      aval.ResumeAvalanche(); //drift the electrons only if there are some left
+      aval.ResumeAvalanche();
+      std::cout << "Yep!" << std::endl; //drift the electrons only if there are some left
       // check for electron attachment and add negative ions.
       for (const auto& electron : aval.GetElectrons()) {
         if (electron.status == -7) {
             const auto& p1 = electron.path.back();
             drift.AddNegativeIon(p1.x, p1.y, p1.z, p1.t, multiplicity);
         }
-        if (electron.status == StatusLeftDriftArea && JumpIonsOutsideGridToPlate) {
+        if (electron.status == StatusLeftDriftArea) {
             ElectronsLeftGridCount += 1;
         }
       }
@@ -472,27 +432,37 @@ Garfield::Random::SetEngine(randomEngine);
       // reset pre-allocated arrays and reuse precomputed constants
       std::fill(chargeDensity.begin(), chargeDensity.end(), 0.0);
       
-      // make the charge density map (flattened array)
-      const double y = 0.0;
+      // make the charge density map (flattened array) over x,y,z
+      size_t n_ions = drift.GetIons().size();
+      size_t n_negions = drift.GetNegativeIons().size();
       for (int ix = 0; ix < Nx; ++ix) {
-        double x = xGridMin + ix * spacing;
-        for (int iz = 0; iz < Nz; ++iz) {
-          double z = zGridMin + iz * spacing;
-          double rhoIon = 0.0, rhoNegIon = 0.0;
-          grid.IonDensity(x, y, z, rhoIon);
-          grid.NegativeIonDensity(x, y, z, rhoNegIon);
-          if (rhoIon == false) {rhoIon = 0;}
-          if (rhoNegIon == false) {rhoNegIon = 0;}
-          // Net charge density per voxel
-          chargeDensity[idx(ix, iz)] = ElementaryCharge * (rhoIon - rhoNegIon); // fC/cm^3
+        double x = xGridMin + ix * spacing_transverse;
+        for (int iy = 0; iy < Ny; ++iy) {
+          double y = yGridMin + iy * spacingy;
+          for (int iz = 0; iz < Nz; ++iz) {
+            double z = zGridMin + iz * spacing_transverse;
+            double rhoIon = 0.0, rhoNegIon = 0.0;
+            if (n_ions > 0) {
+              grid.IonDensity(x, y, z, rhoIon);
+            }
+            if (n_negions > 0) {
+              grid.NegativeIonDensity(x, y, z, rhoNegIon);
+            }
+            if (rhoIon == false) {rhoIon = 0;}
+            if (rhoNegIon == false) {rhoNegIon = 0;}
+            // Net charge density per voxel
+            chargeDensity[idx3d(ix, iy, iz)] = Garfield::ElementaryCharge * (rhoIon - rhoNegIon); // fC/cm^3
+          }
         }
       }
 
       // get the electric field from the charge density
-      std::vector<double> Ex(Nx * Nz, 0.0);
-      std::vector<double> Ez(Nx * Nz, 0.0);
+      std::vector<double> Ex(Nx * Ny * Nz, 0.0);
+      std::vector<double> Ey(Nx * Ny * Nz, 0.0);
+      std::vector<double> Ez(Nx * Ny * Nz, 0.0);
       if (poissonSolver) {
-        poissonSolver->Solve(chargeDensity, Ex, Ez);
+        bool hasCharge = std::any_of(chargeDensity.begin(), chargeDensity.end(), [](double v){ return std::abs(v) > 1e-30; });
+        if (hasCharge) poissonSolver->Solve(chargeDensity, Ex, Ey, Ez);
       } else {
         // fall back to 0 field
       }
@@ -503,16 +473,18 @@ Garfield::Random::SetEngine(randomEngine);
         std::cerr << "Cannot open file for writing electric field.\n";
       } else {
         efieldFile << std::scientific << std::setprecision(6);
-        const double y = 0.0; // single slice in y
         for (int ix = 0; ix < Nx; ++ix) {
-          double x = xGridMin + ix * spacing;
-          for (int iz = 0; iz < Nz; ++iz) {
-              double z = zGridMin + iz * spacing;
-              double ex = Ex[idx(ix, iz)];
-              double ey = 0.0; // assume no Ey
-              double ez = Ez[idx(ix, iz)];
+          double x = xGridMin + ix * spacing_transverse;
+          for (int iy = 0; iy < Ny; ++iy) {
+            double y = yGridMin + iy * spacingy;
+            for (int iz = 0; iz < Nz; ++iz) {
+              double z = zGridMin + iz * spacing_transverse;
+              double ex = Ex[idx3d(ix, iy, iz)];
+              double ey = Ey[idx3d(ix, iy, iz)];
+              double ez = Ez[idx3d(ix, iy, iz)];
               efieldFile << x << " " << y << " " << z << " "
                         << ex << " " << ey << " " << ez << "\n";
+            }
           }
         }
         efieldFile.close();
@@ -533,7 +505,7 @@ Garfield::Random::SetEngine(randomEngine);
                   ion_recombination_positions.push_back({p1.x, p1.y, p1.z});
                   recombine_num += 1;
                 }
-                else if (ion.status == StatusLeftDriftArea && JumpIonsOutsideGridToPlate) {
+                else if (ion.status == StatusLeftDriftArea) {
                   IonsLeftGrid.push_back(ion);
                 }
             }
@@ -543,7 +515,7 @@ Garfield::Random::SetEngine(randomEngine);
                   negion_recombination_positions.push_back({p1.x, p1.y, p1.z});
                   recombine_num += 1;
                 }
-                else if (negion.status == StatusLeftDriftArea && JumpIonsOutsideGridToPlate) {
+                else if (negion.status == StatusLeftDriftArea) {
                   NegativeIonsLeftGrid.push_back(negion);
                 }
             }
@@ -553,122 +525,6 @@ Garfield::Random::SetEngine(randomEngine);
     particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
   }
 
-
-  // -------------------------------------Jumping Code -----------------------------------------------------------------
-  if (JumpIonsOutsideGridToPlate) {
-    std::array<int, 3> DirectionsParticlesLeftCount = {0, 0, 0};
-    double difl, dift;
-    double vx_ion, vy_ion, vz_ion;
-    double vx_negion, vy_negion, vz_negion;
-    double E_x = (vCathode- vAnode)/(xMax - xMin);
-    cmp.GetMedium(0,0,0) -> IonDiffusion(E_x, 0, 0, 0, 0, 0, difl, dift); //cm^1/2
-    cmp.GetMedium(0,0,0) -> IonVelocity(E_x, 0, 0, 0, 0, 0, vx_ion, vy_ion, vz_ion); //cm/ns
-    cmp.GetMedium(0,0,0) -> NegativeIonVelocity(E_x, 0, 0, 0, 0, 0, vx_negion, vy_negion, vz_negion); //cm/ns
-    double difl_ion = difl * difl * std::abs(vx_ion) / 2; // convert to a cm^2/ns diffusion coefficient
-    double difl_negion = difl * difl * std::abs(vx_negion) / 2; // convert to a cm^2/ns diffusion coefficient
-    // difl and dift appear to be the same so we will ommit two lines here converting them and just use difl
-    
-    for (auto &negion : NegativeIonsLeftGrid) {
-      const auto& p1 = negion.path.back();
-      // ions can leave the grid by hitting the walls in y, or leaving the grid in x and z.
-      if (std::abs(p1.x) == spacing * Nx) {DirectionsParticlesLeftCount[0] += 1;}
-      else if (std::abs(p1.y) == 0.15) {DirectionsParticlesLeftCount[1] += 1;}
-      else if (std::abs(p1.z) == spacing * Nz) {DirectionsParticlesLeftCount[2] += 1;}
-      
-      // Calculate the signal that would have occured for the particle motion approximating as a straight line
-      double xa = xMax - 0.000001; //anode position (small number needed for the wp != 0)
-      double ta = p1.t + RndmGaussian((xa-p1.x)/vx_negion, std::sqrt(2*difl_negion*(xa-p1.x)/(vx_negion*vx_negion*vx_negion))); //time to hit the anode
-      double t_yu = firstPassageTime(p1.t, difl_negion, yMax - p1.y); // time to hit upper y wall
-      double t_yl = firstPassageTime(p1.t, difl_negion, yMin - p1.y); // time to hit lower y wall
-      double t_zu = firstPassageTime(p1.t, difl_negion, zMax - p1.z); // time to hit upper z wall
-      double t_zl = firstPassageTime(p1.t, difl_negion, zMin - p1.z); // time to hit lower z wall
-      double t1 = std::min({ta, t_yu, t_yl, t_zu, t_zl}); // find the final outcome of the particle
-      double sigma = std::sqrt(2 * difl_negion * (t1-p1.t)); // diffusion standard deviation
-
-      double x1, y1, z1;
-      if (t1 == ta) { // particle hits the anode
-        x1 = xa;
-        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
-        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
-      }
-      else if (t1 == t_yu) { // particle hits the upper y plate
-        y1 = yMax;
-        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
-        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
-      }
-      else if (t1 == t_yl) { // particle hits the lower y plate
-        y1 = yMin;
-        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
-        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
-      }
-      else if (t1 == t_zu) { // particle hits the upper z plate
-        z1 = zMax;
-        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
-        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
-      }
-      else { // particle hits the upper z plate
-        z1 = zMin;
-        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
-        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
-      }
-      
-      std::vector<double> ts = {p1.t, t1};
-      std::vector<std::array<double, 3>> xs = { { p1.x, p1.y, p1.z }, { x1, y1, z1} };
-
-      sensor.AddSignalWeightingPotential(-multiplicity, ts, xs);
-    }
-
-    for (auto &ion : IonsLeftGrid) {
-      const auto& p1 = ion.path.back();
-      // ions can leave the grid by hitting the walls in y, or leaving the grid in x and z.
-      if (std::abs(p1.x) == spacing * Nx) {DirectionsParticlesLeftCount[0] += 1;}
-      else if (std::abs(p1.y) == 0.15) {DirectionsParticlesLeftCount[1] += 1;}
-      else if (std::abs(p1.z) == spacing * Nz) {DirectionsParticlesLeftCount[2] += 1;}
-
-      // Calculate the signal that would have occured for the particle motion approximating as a straight line
-      double xc = xMin + 0.000001; //cathode position (small number needed for the wp != 0)
-      double tc = p1.t + RndmGaussian((xc-p1.x)/vx_ion, std::sqrt(2*difl_ion*(xc-p1.x)/(vx_ion*vx_ion*vx_ion))); //time to hit the cathode
-      double t_yu = firstPassageTime(p1.t, difl_ion, yMax - p1.y); // time to hit upper y wall
-      double t_yl = firstPassageTime(p1.t, difl_ion, yMin - p1.y); // time to hit lower y wall
-      double t_zu = firstPassageTime(p1.t, difl_ion, zMax - p1.z); // time to hit upper z wall
-      double t_zl = firstPassageTime(p1.t, difl_ion, zMin - p1.z); // time to hit lower z wall
-      double t1 = std::min({tc, t_yu, t_yl, t_zu, t_zl}); // find the final outcome of the particle
-      double sigma = std::sqrt(2 * difl_ion * (t1-p1.t)); // diffusion standard deviation
-
-      double x1, y1, z1;
-      if (t1 == tc) { // particle hits the cathode
-        x1 = xc;
-        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
-        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
-      }
-      else if (t1 == t_yu) { // particle hits the upper y plate
-        y1 = yMax;
-        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
-        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
-      }
-      else if (t1 == t_yl) { // particle hits the lower y plate
-        y1 = yMin;
-        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
-        z1 = SampleTruncatedNormal(p1.z, sigma, zMin, zMax);
-      }
-      else if (t1 == t_zu) { // particle hits the upper z plate
-        z1 = zMax;
-        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
-        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
-      }
-      else { // particle hits the lower z plate
-        z1 = zMin;
-        x1 = SampleTruncatedNormal(p1.x + (t1-p1.t)*vx_ion, sigma, xMin, xMax);
-        y1 = SampleTruncatedNormal(p1.y, sigma, yMin, yMax);
-      }
-      
-      std::vector<double> ts = {p1.t, t1};
-      std::vector<std::array<double, 3>> xs = { { p1.x, p1.y, p1.z }, { x1, y1, z1} };
-
-      sensor.AddSignalWeightingPotential(multiplicity, ts, xs);
-    } 
-  }
-// --------------------------------------End Jumping Code -----------------------------------------------------
 
   std::cout << "Recombined particles : " << recombine_num << std::endl;
   if (ElectronsLeftGridCount > 0) {std::cout << "WARNING " << ElectronsLeftGridCount << " electrons left the grid" << std::endl;}  
@@ -682,15 +538,13 @@ if (plotDrift) {
 }
   
 
-//sensor.ConvoluteSignals();
-
 // option to display integrated signal
 bool integrateSignal = true;
 if (integrateSignal) {
   sensor.IntegrateSignal("detector");
   double total_charge = sensor.GetSignal("detector", nbins - 1);
   std::cout << "Total collected charge: " << total_charge << " fC" << std::endl;
-  std::cout << "Corresponding number of electrons: " << total_charge / ElementaryCharge << std::endl;
+  std::cout << "Corresponding number of electrons: " << total_charge / Garfield::ElementaryCharge << std::endl;
 }
 
 // below here is all outputting data to files and plotting

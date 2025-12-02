@@ -9,6 +9,9 @@ endif()
 add_executable(mdt mdt.C)
 target_link_libraries(mdt PRIVATE Garfield::Garfield)
 
+add_executable(plots plots.C)
+target_link_libraries(plots PRIVATE Garfield::Garfield)
+
 add_executable(Chamber Chamber.C)
 target_link_libraries(Chamber PRIVATE Garfield::Garfield)
 
@@ -21,6 +24,10 @@ if(FFTW3_FOUND)
     # Try linking by name - often libfftw3 is available via -lfftw3
     target_link_libraries(Chamber PRIVATE fftw3)
   endif()
+  # Try linking fftw3_threads for threaded FFTW support; this is optional
+  find_package(Threads REQUIRED)
+  # Link fftw3_threads if available
+  target_link_libraries(Chamber PRIVATE fftw3_threads Threads::Threads)
 else()
   # Try the older/alternative FindFFTW
   find_package(FFTW)
