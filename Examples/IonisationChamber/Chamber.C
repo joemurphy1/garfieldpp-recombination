@@ -242,32 +242,36 @@ Garfield::Random::SetEngine(randomEngine);
   const double vCathode = -1500.;
   const double E_mag = std::abs(vCathode/(yMax-yMin));
 
-  cmp.SetMedium(&gas);
   // cmp.AddPixelOnPlaneY(yMax ,-13.125 ,13.125 , -17.5, 17.5, "detector"); // define size of detector makes the program run really slowly???
   cmp.AddPlaneY(yMax, vAnode, "detector"); // plane that hosts our detector
   cmp.AddPlaneY(yMin, vCathode); // supposed to have two high voltage planes but analytic field only allows 2.
-  // Grid parameters.
+  // Grid parameters
+  cmp.SetMedium(&gas);
   double vx_negion,vy_negion,vz_negion;
   cmp.GetMedium(0,0,0)->NegativeIonVelocity(0,E_mag,0,0,0,0,vx_negion,vy_negion,vz_negion);
   const double v_drift = 8.12176e-06; //cm/ns O2- drift velocity in air at 3000 V/cm
   const double guide_spacingy = -vy_negion * tstep * 5; //(cm) We define the spacing as 10 average drift lengths.
-  const double spacing_transverse = 0.001; //cm
-  const int Nx = 20; //number of grid spaces in y
+  const double spacing_transverse = 0.01; //cm
+  const int Nx = 30; //number of grid spaces in y
   const int Ny = std::round((yMax-yMin) / guide_spacingy);
-  const int Nz = 20;
+  const int Nz = 30;
   const double spacingy = (yMax - yMin)/ Ny;
   const double xgrid = Nx * spacing_transverse;
   const double zgrid = Nz * spacing_transverse;
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
   const bool RecordRecombinationPositions = false;
   std::cout << "Grid spans: x=+-" << xgrid/2 << " z=+-" << zgrid/2 << " and has Ny=" << Ny << std::endl;
+  std::cout << "Grid mesh: Nx="<<Nx<<", x=["<<-xgrid/2<<","<<xgrid/2<<"] spacing="<<spacing_transverse
+          <<"; Ny="<<Ny<<", y=["<<yMin<<","<<yMax<<"] spacing="<<spacingy
+          <<"; Nz="<<Nz<<", z=["<<-zgrid/2<<","<<zgrid/2<<"]\n";
+
   
 // mesh
   ComponentGrid grid;
   grid.SetMesh(Nx, Ny, Nz, -xgrid/2, xgrid/2, yMin,
-                 yMax, -zgrid/2, zgrid/2);
-  grid.SetUniformElectricField(0., 0., 0.); 
+                 yMax, -zgrid/2, zgrid/2); 
   grid.SetMedium(&gas);
+  grid.SetUniformElectricField(0., 0., 0.);
 
   // Make a sensor.
   Sensor sensor(&cmp);
@@ -293,8 +297,8 @@ Garfield::Random::SetEngine(randomEngine);
     
   // Set up Heed.
   TrackHeed track(&sensor);
-  track.SetParticle("proton");
-  track.SetEnergy(250.e6 + ProtonMass);
+    track.SetParticle("proton");
+    track.SetEnergy(250.e6 + ProtonMass);
 
 
   AvalancheMC drift;
@@ -311,7 +315,7 @@ Garfield::Random::SetEngine(randomEngine);
 
   TCanvas* cD = nullptr;
   ViewDrift driftView;
-  constexpr bool plotDrift = true;  //can cause massive memory gain over time
+  constexpr bool plotDrift = false;  //can cause massive memory gain over time
   if (plotDrift) {
     cD = new TCanvas("cD", "", 600, 600);
     driftView.SetCanvas(cD);
@@ -330,7 +334,11 @@ Garfield::Random::SetEngine(randomEngine);
   const double sigmaz = 0.66;
   const double y0 = yMin;
   const double z0 = 0; // centre of start of proton beam in z
-  const std::size_t nTracks = 500; // number of protons
+  double t0 = 0;
+  const double current = 0.005; //nA
+  const double time_between_protons = ElementaryCharge/(current * 1e-3); //ns-1
+  const std::size_t nTracks = (nbins*tstep)/time_between_protons; // number of protons
+  std::cout << "Simulating " << nTracks << " protons." << std::endl;
   const int multiplicity = 1;  // charges per ion/electron
   double recombine_num = 0; // number of recombinations so far (counter)
   std::vector<std::vector<double>> ion_recombination_positions;
@@ -345,7 +353,7 @@ Garfield::Random::SetEngine(randomEngine);
   for (std::size_t j = 0; j < nTracks; ++j) {
     double x_proton = RndmGaussian(x0, sigmax);
     double z_proton = RndmGaussian(z0, sigmaz);
-    track.NewTrack(x_proton, y0, z_proton, 0, 0, 1, 0);
+    track.NewTrack(x_proton, y0, z_proton, t0, 0, 1, 0);
     for (const auto& cluster : track.GetClusters()) {
       //remove clusters that are unphysically out of the detector
       if (cluster.y < yMin || cluster.y > yMax) {
@@ -359,6 +367,7 @@ Garfield::Random::SetEngine(randomEngine);
         aval.AddElectron(electron.x, electron.y, electron.z, electron.t, 0., 0., 0., 0., multiplicity); 
       }
     }
+    t0 += time_between_protons;
   }
     std::cout <<"Initial Electrons: " << aval.GetElectrons().size() << std::endl;
     std::cout <<"Initial Ions: " << drift.GetIons().size() << std::endl;
@@ -391,7 +400,7 @@ Garfield::Random::SetEngine(randomEngine);
     if (!aval.GetElectrons().empty()) {
       aval.SetTimeWindow(t, t + dt);
       aval.ResumeAvalanche();
-      std::cout << "Yep!" << std::endl; //drift the electrons only if there are some left
+     //drift the electrons only if there are some left
       // check for electron attachment and add negative ions.
       for (const auto& electron : aval.GetElectrons()) {
         if (electron.status == -7) {
@@ -412,18 +421,26 @@ Garfield::Random::SetEngine(randomEngine);
     }
 
     // add positive ions to the grid TODO stop the particles outside the grid running because we can check faster
+    double ionNumber = 0.;
     for (const auto& ion : drift.GetIons()) {
       if (!ion.path.empty()) {
         const auto& p1 = ion.path.back();
-        grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
+        if (p1.t >= t && p1.t < t+dt) {
+          ionNumber++;
+          grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
+        }
       }
     }
 
     // add negative ions to the grid
+    double negionNumber = 0.;
     for (const auto& negion : drift.GetNegativeIons()) {
       if (!negion.path.empty()) {
         const auto& p1 = negion.path.back();
-        grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
+        if (p1.t >= t && p1.t < t+dt) {
+          negionNumber++;
+          grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
+        }
       }
     }
 
@@ -448,8 +465,6 @@ Garfield::Random::SetEngine(randomEngine);
             if (n_negions > 0) {
               grid.NegativeIonDensity(x, y, z, rhoNegIon);
             }
-            if (rhoIon == false) {rhoIon = 0;}
-            if (rhoNegIon == false) {rhoNegIon = 0;}
             // Net charge density per voxel
             chargeDensity[idx3d(ix, iy, iz)] = Garfield::ElementaryCharge * (rhoIon - rhoNegIon); // fC/cm^3
           }
@@ -496,8 +511,8 @@ Garfield::Random::SetEngine(randomEngine);
     // drift the positive and negative ions
     drift.ResumeAvalanche();
 
-    std::cout << "Negative Ions: " << drift.GetNegativeIons().size() << std::endl;
-    std::cout << "Positive Ions: " << drift.GetIons().size() << std::endl;
+    std::cout << "Negative Ions: " << ionNumber << std::endl;
+    std::cout << "Positive Ions: " << negionNumber << std::endl;
     // record recombined particles
     for (auto &ion : drift.GetIons()) {
                 if (ion.status == -9) {
