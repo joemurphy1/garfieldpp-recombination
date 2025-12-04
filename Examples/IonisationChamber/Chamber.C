@@ -251,7 +251,7 @@ Garfield::Random::SetEngine(randomEngine);
   cmp.GetMedium(0,0,0)->NegativeIonVelocity(0,E_mag,0,0,0,0,vx_negion,vy_negion,vz_negion);
   const double v_drift = 8.12176e-06; //cm/ns O2- drift velocity in air at 3000 V/cm
   const double guide_spacingy = -vy_negion * tstep * 5; //(cm) We define the spacing as 10 average drift lengths.
-  const double spacing_transverse = 0.01; //cm
+  const double spacing_transverse = 0.1; //cm
   const int Nx = 30; //number of grid spaces in y
   const int Ny = std::round((yMax-yMin) / guide_spacingy);
   const int Nz = 30;
@@ -278,19 +278,6 @@ Garfield::Random::SetEngine(randomEngine);
   sensor.AddElectrode(&cmp, "detector");
   sensor.AddComponent(&grid);
 
-  // option to make strip sensors for positional resolution
-  // NEEDS UPDATING FOR NEW DETECTOR GEOMETRY TODO
-  const bool stripSensor = false;
-  const int nStrips = 20;
-  const double stripWidth = (yMax - yMin) / nStrips;
-  std::vector<std::string> stripNames;
-  if (stripSensor) {
-    for (double y_0 = yMin; y_0 <= (yMin + (nStrips - 1) * stripWidth); y_0 += stripWidth ) {
-      stripNames.push_back(std::to_string(y_0));
-      cmp.AddStripOnPlaneY('z', xMax, y_0, y_0 + stripWidth, stripNames.back());
-      sensor.AddElectrode(&cmp, stripNames.back());
-    }
-  }
   sensor.SetTimeWindow(tmin, tstep, nbins);
   
   sensor.SetArea(xMin, yMin, zMin, xMax, yMax, zMax); //particles that leave the area are removed from simulation
@@ -337,7 +324,7 @@ Garfield::Random::SetEngine(randomEngine);
   const double time_between_protons = ElementaryCharge/(current * 1e-3); //ns-1
   const std::size_t nTracks = (nbins*tstep)/time_between_protons; // number of protons
   std::cout << "Simulating " << nTracks << " protons." << std::endl;
-  const int multiplicity = 1;  // charges per ion/electron
+  const double multiplicity = 1.;  // charges per ion/electron
   double recombine_num = 0; // number of recombinations so far (counter)
   std::vector<std::vector<double>> ion_recombination_positions;
   std::vector<std::vector<double>> negion_recombination_positions;
@@ -405,13 +392,12 @@ Garfield::Random::SetEngine(randomEngine);
     int electronNumber = 0;
     for (const auto& electron : drift.GetElectrons()) {
       const auto& p1 = electron.path.back();
-      if (p1.t > t && p1.t <= t+dt) {
+      if (p1.t <= t+dt) {
           electronNumber++;
       }
       if (electron.status == StatusAttached) {
-          std::cout << "Attached" << std::endl;
           const auto& p1 = electron.path.back();
-          drift.AddNegativeIon(p1.x, p1.y, p1.z, t, multiplicity);
+          drift.AddNegativeIon(p1.x, p1.y, p1.z, p1.t, multiplicity);
       }
       if (electron.status == StatusLeftDriftArea) {
           ElectronsLeftGridCount += 1;
@@ -419,7 +405,7 @@ Garfield::Random::SetEngine(randomEngine);
   }
     
     grid.ClearFields();  // clear old densities/fields
-    if (t > 0 && SpaceCharge) {
+    if (t > dt && SpaceCharge) {
       bool loaded = grid.LoadElectricField("electric_field.xyz", "XYZ", false, false, 1.0, 1.0, 1.0);
     } else {
       grid.SetUniformElectricField(0., 0., 0.);
@@ -430,7 +416,7 @@ Garfield::Random::SetEngine(randomEngine);
     for (const auto& ion : drift.GetIons()) {
       if (!ion.path.empty()) {
         const auto& p1 = ion.path.back();
-        if (p1.t > t && p1.t <= t+dt) {
+        if (p1.t <= t+dt) {
           ionNumber++;
           grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
         }
@@ -442,7 +428,7 @@ Garfield::Random::SetEngine(randomEngine);
     for (const auto& negion : drift.GetNegativeIons()) {
       if (!negion.path.empty()) {
         const auto& p1 = negion.path.back();
-        if (p1.t > t && p1.t <= t+dt) {
+        if (p1.t <= t+dt) {
           negionNumber++;
           grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
         }
@@ -455,8 +441,6 @@ Garfield::Random::SetEngine(randomEngine);
       std::fill(chargeDensity.begin(), chargeDensity.end(), 0.0);
       
       // make the charge density map (flattened array) over x,y,z
-      size_t n_ions = drift.GetIons().size();
-      size_t n_negions = drift.GetNegativeIons().size();
       for (int ix = 0; ix < Nx; ++ix) {
         double x = xGridMin + ix * spacing_transverse;
         for (int iy = 0; iy < Ny; ++iy) {
@@ -464,11 +448,11 @@ Garfield::Random::SetEngine(randomEngine);
           for (int iz = 0; iz < Nz; ++iz) {
             double z = zGridMin + iz * spacing_transverse;
             double rhoIon = 0.0, rhoNegIon = 0.0;
-            if (n_ions > 0) {
+            if (ionNumber > 0) {
               grid.IonDensity(x, y, z, rhoIon);
             }
-            if (n_negions > 0) {
-              //grid.NegativeIonDensity(x, y, z, rhoNegIon);
+            if (negionNumber > 0) {
+              grid.NegativeIonDensity(x, y, z, rhoNegIon);
             }
             // Net charge density per voxel
             chargeDensity[idx3d(ix, iy, iz)] = Garfield::ElementaryCharge * (rhoIon - rhoNegIon); // fC/cm^3
@@ -575,17 +559,6 @@ if (integrateSignal) {
     outfile << t << " " << f << " " << fe << " " << fh << "\n";
     }
     outfile.close();
-  }
-
-  if (stripSensor) {
-    std::ofstream outfile;
-    sensor.IntegrateSignals();
-    outfile.open("strip_signals.txt", std::ios::out);
-    outfile << "Strip_y_position(cm) total_charge(fC)\n";
-    for (const auto& name : stripNames) {
-      const double strip_total_charge = sensor.GetSignal(name, nbins - 1);
-      outfile << name << " " << strip_total_charge <<"\n";
-    }
   }
 
   if (RecordRecombinationPositions) {
