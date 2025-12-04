@@ -250,14 +250,12 @@ Garfield::Random::SetEngine(randomEngine);
   double vx_negion,vy_negion,vz_negion;
   cmp.GetMedium(0,0,0)->NegativeIonVelocity(0,E_mag,0,0,0,0,vx_negion,vy_negion,vz_negion);
   const double v_drift = 8.12176e-06; //cm/ns O2- drift velocity in air at 3000 V/cm
-  std::cout << vy_negion << std::endl;
   const double guide_spacingy = -vy_negion * tstep * 5; //(cm) We define the spacing as 10 average drift lengths.
   const double spacing_transverse = 0.001; //cm
   const int Nx = 20; //number of grid spaces in y
   const int Ny = std::round((yMax-yMin) / guide_spacingy);
   const int Nz = 20;
   const double spacingy = (yMax - yMin)/ Ny;
-  std::cout << spacingy << std::endl;
   const double xgrid = Nx * spacing_transverse;
   const double zgrid = Nz * spacing_transverse;
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
@@ -328,9 +326,11 @@ Garfield::Random::SetEngine(randomEngine);
     }  // Two GUI Windows
 
   const double x0 = 0; // centre of start of proton beam in x
+  const double sigmax = 0.46;
+  const double sigmaz = 0.66;
   const double y0 = yMin;
-  const double z0 = 0;
-  const std::size_t nTracks = 10; // number of protons
+  const double z0 = 0; // centre of start of proton beam in z
+  const std::size_t nTracks = 500; // number of protons
   const int multiplicity = 1;  // charges per ion/electron
   double recombine_num = 0; // number of recombinations so far (counter)
   std::vector<std::vector<double>> ion_recombination_positions;
@@ -343,9 +343,9 @@ Garfield::Random::SetEngine(randomEngine);
   
   sensor.ClearSignal();
   for (std::size_t j = 0; j < nTracks; ++j) {
-    double offset = randomEngine.Draw();
-    double x_proton = x0 + (offset - 0.5) * 0.000; //spread over 0.01 mm
-    track.NewTrack(x_proton, y0, z0, 0, 0, 1, 0);
+    double x_proton = RndmGaussian(x0, sigmax);
+    double z_proton = RndmGaussian(z0, sigmaz);
+    track.NewTrack(x_proton, y0, z_proton, 0, 0, 1, 0);
     for (const auto& cluster : track.GetClusters()) {
       //remove clusters that are unphysically out of the detector
       if (cluster.y < yMin || cluster.y > yMax) {

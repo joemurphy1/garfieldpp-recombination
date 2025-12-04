@@ -73,3 +73,78 @@ events:
       The Fortran compiler identification is GNU, found in:
         /home/joe/garfieldpp/Examples/CMakeFiles/3.28.3/CompilerIdFortran/a.out
       
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake:233 (message)"
+      - "CMakeLists.txt:5 (project)"
+    message: |
+      The system is: Linux - 6.6.87.2-microsoft-standard-WSL2 - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineFortranCompiler.cmake:186 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:5 (project)"
+    message: |
+      Compiling the Fortran compiler identification source file "CMakeFortranCompilerId.F" succeeded.
+      Compiler: /home/joe/miniforge/envs/rootenv/bin/x86_64-conda-linux-gnu-gfortran 
+      Build flags: -march=nocona;-mtune=haswell;-ftree-vectorize;-fPIC;-fstack-protector-strong;-fno-plt;-O2;-ffunction-sections;-pipe;-isystem;/home/joe/miniforge/envs/rootenv/include;-I/home/joe/miniforge/envs/rootenv/include
+      Id flags: -v 
+      
+      The output was:
+      0
+      Driving: /home/joe/miniforge/envs/rootenv/bin/x86_64-conda-linux-gnu-gfortran -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/joe/miniforge/envs/rootenv/include -I/home/joe/miniforge/envs/rootenv/include -v CMakeFortranCompilerId.F -l gfortran -l m -shared-libgcc
+      Reading specs from /home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/specs
+      Reading specs from /home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/conda.specs
+      COLLECT_GCC=/home/joe/miniforge/envs/rootenv/bin/x86_64-conda-linux-gnu-gfortran
+      COLLECT_LTO_WRAPPER=/home/joe/miniforge/envs/rootenv/bin/../libexec/gcc/x86_64-conda-linux-gnu/14.3.0/lto-wrapper
+      Target: x86_64-conda-linux-gnu
+      Configured with: ../configure --prefix=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1757034136611/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho --with-slibdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1757034136611/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --libdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1757034136611/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --mandir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1757034136611/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/man --build=x86_64-conda-linux-gnu --host=x86_64-conda-linux-gnu --target=x86_64-conda-linux-gnu --enable-languages=c,c++,fortran,objc,obj-c++ --enable-__cxa_atexit --disable-libmudflap --enable-libgomp --disable-libssp --enable-libquadmath --enable-libquadmath-support --enable-lto --enable-target-optspace --enable-plugin --enable-gold --disable-nls --disable-bootstrap --disable-multilib --enable-long-long --with-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1757034136611/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/x86_64-conda-linux-gnu/sysroot --with-build-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1757034136611/work/cf-compilers/x86_64-conda-linux-gnu/sysroot --with-native-system-header-dir=/usr/include --with-gxx-include-dir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1757034136611/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib/gcc/x86_64-conda-linux-gnu/14.3.0/include/c++ --with-pkgversion='conda-forge gcc 14.3.0-5' --with-bugurl=https://github.com/conda-forge/ctng-compilers-feedstock/issues/new/choose --enable-libsanitizer --enable-default-pie --enable-threads=posix
+      Thread model: posix
+      Supported LTO compression algorithms: zlib
+      gcc version 14.3.0 (conda-forge gcc 14.3.0-5) 
+      COLLECT_GCC_OPTIONS='-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/joe/miniforge/envs/rootenv/include' '-I' '/home/joe/miniforge/envs/rootenv/include' '-v' '-shared-libgcc' '-dumpdir' 'a-'
+       /home/joe/miniforge/envs/rootenv/bin/../libexec/gcc/x86_64-conda-linux-gnu/14.3.0/f951 CMakeFortranCompilerId.F -ffixed-form -cpp=/tmp/cci05HqN.fi -quiet -v -I /home/joe/miniforge/envs/rootenv/include -iprefix /home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/ -isysroot /home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot -isystem /home/joe/miniforge/envs/rootenv/include CMakeFortranCompilerId.F -quiet -dumpdir a- -dumpbase CMakeFortranCompilerId.F -dumpbase-ext .F -march=nocona -mtune=haswell -O2 -version -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -ffunction-sections -idirafter /home/joe/miniforge/envs/rootenv/include -fintrinsic-modules-path /home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/finclude -o - |
+       /home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../../x86_64-conda-linux-gnu/bin/as -v -I /home/joe/miniforge/envs/rootenv/include --64 -o /tmp/ccxkmshM.o
+      GNU assembler version 2.44 (x86_64-conda-linux-gnu) using BFD version (GNU Binutils) 2.44
+      GNU Fortran (conda-forge gcc 14.3.0-5) version 14.3.0 (x86_64-conda-linux-gnu)
+      	compiled by GNU C version 15.1.0, GMP version 6.2.1, MPFR version 4.1.0, MPC version 1.2.1, isl version isl-0.24-GMP
+      
+      GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+      ignoring nonexistent directory "/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../../x86_64-conda-linux-gnu/include"
+      ignoring duplicate directory "/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/14.3.0/include"
+      ignoring nonexistent directory "/home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/usr/local/include"
+      ignoring duplicate directory "/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/14.3.0/include-fixed"
+      ignoring nonexistent directory "/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../../x86_64-conda-linux-gnu/include"
+      ignoring duplicate directory "/home/joe/miniforge/envs/rootenv/include"
+        as it is a non-system directory that duplicates a system directory
+      ignoring duplicate directory "/home/joe/miniforge/envs/rootenv/include"
+        as it is a non-system directory that duplicates a system directory
+      #include "..." search starts here:
+      #include <...> search starts here:
+       /home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/finclude
+       /home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/include
+       /home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/include-fixed
+       /home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/usr/include
+       /home/joe/miniforge/envs/rootenv/include
+      End of search list.
+      Reading specs from /home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/libgfortran.spec
+      rename spec lib to liborig
+      COLLECT_GCC_OPTIONS='-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/joe/miniforge/envs/rootenv/include' '-I' '/home/joe/miniforge/envs/rootenv/include' '-v' '-shared-libgcc' '-dumpdir' 'a-'
+      COMPILER_PATH=/home/joe/miniforge/envs/rootenv/bin/../libexec/gcc/x86_64-conda-linux-gnu/14.3.0/:/home/joe/miniforge/envs/rootenv/bin/../libexec/gcc/:/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../../x86_64-conda-linux-gnu/bin/
+      LIBRARY_PATH=/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/:/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/:/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/:/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../../lib/:/home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib/:/home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/:/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../../x86_64-conda-linux-gnu/lib/:/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../:/home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/lib/:/home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/
+      COLLECT_GCC_OPTIONS='-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/joe/miniforge/envs/rootenv/include' '-I' '/home/joe/miniforge/envs/rootenv/include' '-v' '-shared-libgcc' '-dumpdir' 'a.'
+       /home/joe/miniforge/envs/rootenv/bin/../libexec/gcc/x86_64-conda-linux-gnu/14.3.0/collect2 -disable-new-dtags -plugin /home/joe/miniforge/envs/rootenv/bin/../libexec/gcc/x86_64-conda-linux-gnu/14.3.0/liblto_plugin.so -plugin-opt=/home/joe/miniforge/envs/rootenv/bin/../libexec/gcc/x86_64-conda-linux-gnu/14.3.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccydX8px.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lquadmath -plugin-opt=-pass-through=-lm -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie /home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/Scrt1.o /home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crti.o /home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/crtbeginS.o -L/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0 -L/home/joe/miniforge/envs/rootenv/bin/../lib/gcc -L/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib -L/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../../lib -L/home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib -L/home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib -L/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../../../x86_64-conda-linux-gnu/lib -L/home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/../../.. -L/home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/lib -L/home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib /tmp/ccxkmshM.o -lgfortran -lm -lgcc_s -lgcc -lquadmath -lm -lc -lgcc_s -lgcc /home/joe/miniforge/envs/rootenv/bin/../lib/gcc/x86_64-conda-linux-gnu/14.3.0/crtendS.o /home/joe/miniforge/envs/rootenv/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crtn.o -rpath /home/joe/miniforge/envs/rootenv/lib -rpath-link /home/joe/miniforge/envs/rootenv/lib -L /home/joe/miniforge/envs/rootenv/lib/stubs -L /home/joe/miniforge/envs/rootenv/lib
+      COLLECT_GCC_OPTIONS='-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/joe/miniforge/envs/rootenv/include' '-I' '/home/joe/miniforge/envs/rootenv/include' '-v' '-shared-libgcc' '-dumpdir' 'a.'
+      
+      
+      Compilation of the Fortran compiler identification source "CMakeFortranCompilerId.F" produced "a.out"
+      
+      The Fortran compiler identification is GNU, found in:
+        /home/joe/garfieldpp/Examples/CMakeFiles/3.28.3/CompilerIdFortran/a.out
+      
