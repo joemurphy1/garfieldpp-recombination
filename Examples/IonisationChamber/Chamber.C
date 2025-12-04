@@ -307,10 +307,8 @@ Garfield::Random::SetEngine(randomEngine);
     drift.SetTimeSteps(tstep);
     drift.EnableDensityMap();
     drift.EnableRecombination(true, alpha);
+    drift.EnableAttachment();
     const bool SpaceCharge = true;
-
-  AvalancheMicroscopic aval;
-    aval.SetSensor(&sensor);
 
 
   TCanvas* cD = nullptr;
@@ -364,17 +362,17 @@ Garfield::Random::SetEngine(randomEngine);
         drift.AddIon(Ion.x, Ion.y, Ion.z, Ion.t, multiplicity);
       }
       for (const auto& electron : cluster.electrons) {
-        aval.AddElectron(electron.x, electron.y, electron.z, electron.t, 0., 0., 0., 0., multiplicity); 
+        drift.AddElectron(electron.x, electron.y, electron.z, electron.t, multiplicity); 
       }
     }
     t0 += time_between_protons;
   }
-    std::cout <<"Initial Electrons: " << aval.GetElectrons().size() << std::endl;
-    std::cout <<"Initial Ions: " << drift.GetIons().size() << std::endl;
+    std::cout <<"Total Electrons: " << drift.GetElectrons().size() << std::endl;
+    std::cout <<"Total Ions: " << drift.GetIons().size() << std::endl;
 
   //for (double t = 0; t < (nbins * tstep); t += dt) { original time based loop
   double t = 0;
-  size_t particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
+  size_t particleNum = drift.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
   
   // Pre-allocate arrays and constants used by SpaceCharge computations (3D)
   std::vector<double> chargeDensity;
@@ -396,22 +394,29 @@ Garfield::Random::SetEngine(randomEngine);
   while (particleNum > 0) {
     if (stop_at_max_time && t >= max_time) {break;}
 
+    drift.SetTimeWindow(t, t + dt);
+    // drift all particles
+    drift.ResumeAvalanche(true, true);
+    t += dt;
+    std::cout << t << "ns simulated" << std::endl;
+
     // handle electron drift and attachment
-    if (!aval.GetElectrons().empty()) {
-      aval.SetTimeWindow(t, t + dt);
-      aval.ResumeAvalanche();
-     //drift the electrons only if there are some left
-      // check for electron attachment and add negative ions.
-      for (const auto& electron : aval.GetElectrons()) {
-        if (electron.status == -7) {
-            const auto& p1 = electron.path.back();
-            drift.AddNegativeIon(p1.x, p1.y, p1.z, p1.t, multiplicity);
-        }
-        if (electron.status == StatusLeftDriftArea) {
-            ElectronsLeftGridCount += 1;
-        }
+    // check for electron attachment and add negative ions.
+    int electronNumber = 0;
+    for (const auto& electron : drift.GetElectrons()) {
+      const auto& p1 = electron.path.back();
+      if (p1.t > t && p1.t <= t+dt) {
+          electronNumber++;
       }
-    }
+      if (electron.status == StatusAttached) {
+          std::cout << "Attached" << std::endl;
+          const auto& p1 = electron.path.back();
+          drift.AddNegativeIon(p1.x, p1.y, p1.z, t, multiplicity);
+      }
+      if (electron.status == StatusLeftDriftArea) {
+          ElectronsLeftGridCount += 1;
+      }
+  }
     
     grid.ClearFields();  // clear old densities/fields
     if (t > 0 && SpaceCharge) {
@@ -421,11 +426,11 @@ Garfield::Random::SetEngine(randomEngine);
     }
 
     // add positive ions to the grid TODO stop the particles outside the grid running because we can check faster
-    double ionNumber = 0.;
+    int ionNumber = 0;
     for (const auto& ion : drift.GetIons()) {
       if (!ion.path.empty()) {
         const auto& p1 = ion.path.back();
-        if (p1.t >= t && p1.t < t+dt) {
+        if (p1.t > t && p1.t <= t+dt) {
           ionNumber++;
           grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
         }
@@ -433,11 +438,11 @@ Garfield::Random::SetEngine(randomEngine);
     }
 
     // add negative ions to the grid
-    double negionNumber = 0.;
+    int negionNumber = 0;
     for (const auto& negion : drift.GetNegativeIons()) {
       if (!negion.path.empty()) {
         const auto& p1 = negion.path.back();
-        if (p1.t >= t && p1.t < t+dt) {
+        if (p1.t > t && p1.t <= t+dt) {
           negionNumber++;
           grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
         }
@@ -463,7 +468,7 @@ Garfield::Random::SetEngine(randomEngine);
               grid.IonDensity(x, y, z, rhoIon);
             }
             if (n_negions > 0) {
-              grid.NegativeIonDensity(x, y, z, rhoNegIon);
+              //grid.NegativeIonDensity(x, y, z, rhoNegIon);
             }
             // Net charge density per voxel
             chargeDensity[idx3d(ix, iy, iz)] = Garfield::ElementaryCharge * (rhoIon - rhoNegIon); // fC/cm^3
@@ -507,12 +512,10 @@ Garfield::Random::SetEngine(randomEngine);
     }
 // ------------------------- End Space Charge ------------------------------------
 
-    drift.SetTimeWindow(t, t + dt);
-    // drift the positive and negative ions
-    drift.ResumeAvalanche();
 
-    std::cout << "Negative Ions: " << ionNumber << std::endl;
-    std::cout << "Positive Ions: " << negionNumber << std::endl;
+    std::cout << "Negative Ions: " << negionNumber << std::endl;
+    std::cout << "Positive Ions: " << ionNumber << std::endl;
+    std::cout << "Electrons: " << electronNumber << std::endl;
     // record recombined particles
     for (auto &ion : drift.GetIons()) {
                 if (ion.status == -9) {
@@ -535,11 +538,9 @@ Garfield::Random::SetEngine(randomEngine);
                 }
             }
 
-    std::cout << t + dt << "ns simulated" << std::endl;
-    t += dt;
-    particleNum = aval.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
+    particleNum = drift.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
   }
-
+//-------------------------------------------End While-------------------------------------------
 
   std::cout << "Recombined particles : " << recombine_num << std::endl;
   if (ElectronsLeftGridCount > 0) {std::cout << "WARNING " << ElectronsLeftGridCount << " electrons left the grid" << std::endl;}  
