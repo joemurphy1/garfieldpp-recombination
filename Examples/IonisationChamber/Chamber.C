@@ -254,15 +254,13 @@ Garfield::Random::SetEngine(randomEngine);
   const double sigmaz = 0.66;
   const double guide_spacing_x = sigmax / 10;
   const double guide_spacing_z = sigmaz / 10;
-  const double sigmax = 0.46;
-  const double sigmaz = 0.66;
   const int nsigma = 2; // number of spot sizes across the grid is resolved
   const int Nx = std::round((nsigma*sigmax)/(guide_spacing_x)); //number of grid spaces in x
   const int Ny = std::round((yMax-yMin) / guide_spacingy);
   const int Nz = std::round((nsigma*sigmaz)/(guide_spacing_z)); //number of grid spaces in z
   const double spacingy = (yMax - yMin)/ Ny;
-  const double spacing_transverse_x = ((nsigma*sigmax)/Nx)
-  const double spacing_transverse_z = ((nsigma*sigmaz)/Nz)
+  const double spacing_transverse_x = ((nsigma*sigmax)/Nx);
+  const double spacing_transverse_z = ((nsigma*sigmaz)/Nz);
   const double xgrid = Nx * spacing_transverse_x;
   const double zgrid = Nz * spacing_transverse_z;
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
