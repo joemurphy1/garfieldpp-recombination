@@ -249,20 +249,27 @@ Garfield::Random::SetEngine(randomEngine);
   cmp.SetMedium(&gas);
   double vx_negion,vy_negion,vz_negion;
   cmp.GetMedium(0,0,0)->NegativeIonVelocity(0,E_mag,0,0,0,0,vx_negion,vy_negion,vz_negion);
-  const double v_drift = 8.12176e-06; //cm/ns O2- drift velocity in air at 3000 V/cm
-  const double guide_spacingy = -vy_negion * tstep * 5; //(cm) We define the spacing as 5 average drift lengths.
-  const double spacing_transverse = 0.1; //cm
-  const int Nx = 30; //number of grid spaces in y
+  const double guide_spacingy = -vy_negion * dt; //(cm) We define the spacing as the average drift length.
+  const double sigmax = 0.46; // spot size of the proton beam cm
+  const double sigmaz = 0.66;
+  const double guide_spacing_x = sigmax / 10;
+  const double guide_spacing_z = sigmaz / 10;
+  const double sigmax = 0.46;
+  const double sigmaz = 0.66;
+  const int nsigma = 2; // number of spot sizes across the grid is resolved
+  const int Nx = std::round((nsigma*sigmax)/(guide_spacing_x)); //number of grid spaces in x
   const int Ny = std::round((yMax-yMin) / guide_spacingy);
-  const int Nz = 30;
+  const int Nz = std::round((nsigma*sigmaz)/(guide_spacing_z)); //number of grid spaces in z
   const double spacingy = (yMax - yMin)/ Ny;
-  const double xgrid = Nx * spacing_transverse;
-  const double zgrid = Nz * spacing_transverse;
+  const double spacing_transverse_x = ((nsigma*sigmax)/Nx)
+  const double spacing_transverse_z = ((nsigma*sigmaz)/Nz)
+  const double xgrid = Nx * spacing_transverse_x;
+  const double zgrid = Nz * spacing_transverse_z;
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
   std::cout << "Grid spans: x=+-" << xgrid/2 << " z=+-" << zgrid/2 << " and has Ny=" << Ny << std::endl;
-  std::cout << "Grid mesh: Nx="<<Nx<<", x=["<<-xgrid/2<<","<<xgrid/2<<"] spacing="<<spacing_transverse
+  std::cout << "Grid mesh: Nx="<<Nx<<", x=["<<-xgrid/2<<","<<xgrid/2<<"] spacing="<<spacing_transverse_x
           <<"; Ny="<<Ny<<", y=["<<yMin<<","<<yMax<<"] spacing="<<spacingy
-          <<"; Nz="<<Nz<<", z=["<<-zgrid/2<<","<<zgrid/2<<"]\n";
+          <<"; Nz="<<Nz<<", z=["<<-zgrid/2<<","<<zgrid/2<<"] spacing="<<spacing_transverse_x <<std::endl;
 
   
 // mesh
@@ -314,12 +321,10 @@ Garfield::Random::SetEngine(randomEngine);
     }  // Two GUI Windows
 
   const double x0 = 0; // centre of start of proton beam in x
-  const double sigmax = 0.46;
-  const double sigmaz = 0.66;
   const double y0 = yMin;
   const double z0 = 0; // centre of start of proton beam in z
   double t0 = 0; // time of first proton
-  const double current = 5.; //nA
+  const double current = 0.005; //nA
   const double time_between_protons = ElementaryCharge/(current * 1e-3); //ns
   const std::size_t nTracks = (nbins*tstep)/time_between_protons; // number of protons
   std::cout << "Simulating " << nTracks << " protons." << std::endl;
@@ -343,8 +348,8 @@ Garfield::Random::SetEngine(randomEngine);
   // Pre-allocate arrays and constants used by SpaceCharge computations (3D)
   std::vector<double> chargeDensity;
   std::function<int(int,int,int)> idx3d;
-  double xGridMin = -xgrid/2 + spacing_transverse/2; // centre of the first cell in x and z
-  double zGridMin = -zgrid/2 + spacing_transverse/2;
+  double xGridMin = -xgrid/2 + spacing_transverse_x/2; // centre of the first cell in x and z
+  double zGridMin = -zgrid/2 + spacing_transverse_z/2;
   double yGridMin = yMin + spacingy/2;  // centre of first cell in y
   std::unique_ptr<PoissonFFT3D> poissonSolver;
   if (SpaceCharge) {
@@ -352,7 +357,7 @@ Garfield::Random::SetEngine(randomEngine);
     idx3d = [Ny, Nz](int ix, int iy, int iz) { return (ix * Ny + iy) * Nz + iz; }; // indexes the 1D arrays as 3D.
     int Npad = 10;   // padding on each side for the FFT poisson solver
     // initialize 3D Poisson solver, 0 threads auto allocates
-    poissonSolver = std::make_unique<PoissonFFT3D>(Nx, Ny, Nz, spacing_transverse, spacingy, spacing_transverse, /*pad=*/Npad, /*threads=*/0);
+    poissonSolver = std::make_unique<PoissonFFT3D>(Nx, Ny, Nz, spacing_transverse_x, spacingy, spacing_transverse_z, /*pad=*/Npad, /*threads=*/0);
   }
 
   
@@ -442,11 +447,11 @@ Garfield::Random::SetEngine(randomEngine);
       
       // make the charge density map (flattened array) over x,y,z
       for (int ix = 0; ix < Nx; ++ix) {
-        double x = xGridMin + ix * spacing_transverse;
+        double x = xGridMin + ix * spacing_transverse_x;
         for (int iy = 0; iy < Ny; ++iy) {
           double y = yGridMin + iy * spacingy;
           for (int iz = 0; iz < Nz; ++iz) {
-            double z = zGridMin + iz * spacing_transverse;
+            double z = zGridMin + iz * spacing_transverse_z;
             double rhoIon = 0.0, rhoNegIon = 0.0;
             if (ionNumber > 0) {
               grid.IonDensity(x, y, z, rhoIon);
@@ -478,11 +483,11 @@ Garfield::Random::SetEngine(randomEngine);
       } else {
         efieldFile << std::scientific << std::setprecision(6);
         for (int ix = 0; ix < Nx; ++ix) {
-          double x = xGridMin + ix * spacing_transverse;
+          double x = xGridMin + ix * spacing_transverse_x;
           for (int iy = 0; iy < Ny; ++iy) {
             double y = yGridMin + iy * spacingy;
             for (int iz = 0; iz < Nz; ++iz) {
-              double z = zGridMin + iz * spacing_transverse;
+              double z = zGridMin + iz * spacing_transverse_z;
               double ex = Ex[idx3d(ix, iy, iz)];
               double ey = Ey[idx3d(ix, iy, iz)];
               double ez = Ez[idx3d(ix, iy, iz)];
@@ -575,7 +580,7 @@ if (integrateSignal) {
     sensor.PlotSignal("detector", cS);
   }
 
-  bool saveIonPositions = false;
+  bool saveIonPositions = true;
   if (saveIonPositions) {
     std::ofstream outfile;
     std::vector<std::vector<double>> ion_positions;
