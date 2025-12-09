@@ -36,11 +36,11 @@ using namespace Garfield;
 
 class PoissonFFT3D {
 public:
-  PoissonFFT3D(int Nx_, int Ny_, int Nz_, double sx_, double sy_, double sz_, int pad = 10, int nthreads = 0)
-      : Nx(Nx_), Ny(Ny_), Nz(Nz_), sx(sx_), sy(sy_), sz(sz_), Npad(pad) {
-    Nx_pad = Nx + 2 * Npad;
-    Ny_pad = Ny + 2 * Npad;
-    Nz_pad = Nz + 2 * Npad;
+  PoissonFFT3D(int Nx_, int Ny_, int Nz_, double sx_, double sy_, double sz_, int padx = 10, int pady=10, int padz=10,  int nthreads = 0)
+      : Nx(Nx_), Ny(Ny_), Nz(Nz_), sx(sx_), sy(sy_), sz(sz_), Npadx(padx), Npady(pady), Npadz(padz) {
+    Nx_pad = Nx + 2 * Npadx;
+    Ny_pad = Ny + 2 * Npady;
+    Nz_pad = Nz + 2 * Npadz;
     Nz_r2c = Nz_pad / 2 + 1;
     if (nthreads > 0) nthreads_ = nthreads;
     else { unsigned int hc = std::thread::hardware_concurrency(); nthreads_ = (hc > 0) ? static_cast<int>(hc) : 1; }
@@ -91,9 +91,9 @@ public:
     for (int ix = 0; ix < Nx; ++ix) {
       for (int iy = 0; iy < Ny; ++iy) {
         for (int iz = 0; iz < Nz; ++iz) {
-          int ixp = ix + Npad;
-          int iyp = iy + Npad;
-          int izp = iz + Npad;
+          int ixp = ix + Npadx;
+          int iyp = iy + Npady;
+          int izp = iz + Npadz;
           size_t idx_pad = static_cast<size_t>(ixp) * Ny_pad * Nz_pad + static_cast<size_t>(iyp) * Nz_pad + izp;
           size_t idx_src = static_cast<size_t>(ix) * Ny * Nz + static_cast<size_t>(iy) * Nz + iz;
           rho_in[idx_pad] = rho[idx_src];
@@ -164,9 +164,9 @@ public:
     for (int ix = 0; ix < Nx; ++ix) {
       for (int iy = 0; iy < Ny; ++iy) {
         for (int iz = 0; iz < Nz; ++iz) {
-          int ixp = ix + Npad;
-          int iyp = iy + Npad;
-          int izp = iz + Npad;
+          int ixp = ix + Npadx;
+          int iyp = iy + Npady;
+          int izp = iz + Npadz;
           size_t idx_pad = static_cast<size_t>(ixp) * Ny_pad * Nz_pad + static_cast<size_t>(iyp) * Nz_pad + izp;
           size_t idx_out = static_cast<size_t>(ix) * Ny * Nz + static_cast<size_t>(iy) * Nz + iz;
           Ex_out[idx_out] = Ex_real[idx_pad] / Ntotal;
@@ -179,7 +179,7 @@ public:
 
 private:
   int Nx, Ny, Nz;
-  int Nx_pad, Ny_pad, Nz_pad, Nz_r2c, Npad;
+  int Nx_pad, Ny_pad, Nz_pad, Nz_r2c, Npadx, Npady, Npadz;
   double sx, sy, sz;
   int nthreads_;
   double *rho_in; 
@@ -250,11 +250,11 @@ Garfield::Random::SetEngine(randomEngine);
   double vx_negion,vy_negion,vz_negion;
   cmp.GetMedium(0,0,0)->NegativeIonVelocity(0,E_mag,0,0,0,0,vx_negion,vy_negion,vz_negion);
   const double guide_spacingy = -vy_negion * dt; //(cm) We define the spacing as the average drift length.
-  const double sigmax = 0.46; // spot size of the proton beam cm
+  const double sigmax = 0.46; // half spot size of the proton beam cm
   const double sigmaz = 0.66;
   const double guide_spacing_x = sigmax / 10;
   const double guide_spacing_z = sigmaz / 10;
-  const int nsigma = 2; // number of spot sizes across the grid is resolved
+  const int nsigma = 4; // number of sigma across the grid is resolved (so 95% for 4)
   const int Nx = std::round((nsigma*sigmax)/(guide_spacing_x)); //number of grid spaces in x
   const int Ny = std::round((yMax-yMin) / guide_spacingy);
   const int Nz = std::round((nsigma*sigmaz)/(guide_spacing_z)); //number of grid spaces in z
@@ -322,7 +322,7 @@ Garfield::Random::SetEngine(randomEngine);
   const double y0 = yMin;
   const double z0 = 0; // centre of start of proton beam in z
   double t0 = 0; // time of first proton
-  const double current = 0.005; //nA
+  const double current = 0.05; //nA
   const double time_between_protons = ElementaryCharge/(current * 1e-3); //ns
   const std::size_t nTracks = (nbins*tstep)/time_between_protons; // number of protons
   std::cout << "Simulating " << nTracks << " protons." << std::endl;
@@ -353,9 +353,11 @@ Garfield::Random::SetEngine(randomEngine);
   if (SpaceCharge) {
     chargeDensity.resize(Nx * Ny * Nz);
     idx3d = [Ny, Nz](int ix, int iy, int iz) { return (ix * Ny + iy) * Nz + iz; }; // indexes the 1D arrays as 3D.
-    int Npad = 10;   // padding on each side for the FFT poisson solver
+    int Npadx = Nx;
+    int Npady = Ny;
+    int Npadz = Nz;   // padding on each side for the FFT poisson solver
     // initialize 3D Poisson solver, 0 threads auto allocates
-    poissonSolver = std::make_unique<PoissonFFT3D>(Nx, Ny, Nz, spacing_transverse_x, spacingy, spacing_transverse_z, /*pad=*/Npad, /*threads=*/0);
+    poissonSolver = std::make_unique<PoissonFFT3D>(Nx, Ny, Nz, spacing_transverse_x, spacingy, spacing_transverse_z, Npadx, Npady, Npadz, /*threads=*/0);
   }
 
   
@@ -578,7 +580,7 @@ if (integrateSignal) {
     sensor.PlotSignal("detector", cS);
   }
 
-  bool saveIonPositions = true;
+  bool saveIonPositions = false;
   if (saveIonPositions) {
     std::ofstream outfile;
     std::vector<std::vector<double>> ion_positions;
