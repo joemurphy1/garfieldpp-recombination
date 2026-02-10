@@ -265,14 +265,19 @@ Garfield::Random::SetEngine(randomEngine);
   const double guide_spacing_x = sigmax / 10;
   const double guide_spacing_z = sigmaz / 10;
   const int nsigma = 4; // number of sigma across the grid is resolved (so 95% for 4)
-  const int Nx = std::round((nsigma*sigmax)/(guide_spacing_x)); //number of grid spaces in x
-  const int Ny = std::round((yMax-yMin) / guide_spacingy);
-  const int Nz = std::round((nsigma*sigmaz)/(guide_spacing_z)); //number of grid spaces in z
-  const double spacingy = (yMax - yMin)/ Ny;
-  const double spacing_transverse_x = ((nsigma*sigmax)/Nx);
-  const double spacing_transverse_z = ((nsigma*sigmaz)/Nz);
-  const double xgrid = Nx * spacing_transverse_x;
-  const double zgrid = Nz * spacing_transverse_z;
+  const int Nx_cells = std::round((nsigma*sigmax)/(guide_spacing_x)); //number of grid spaces in x
+  const int Ny_cells = std::round((yMax-yMin) / guide_spacingy);
+  const int Nz_cells = std::round((nsigma*sigmaz)/(guide_spacing_z)); //number of grid spaces in z
+  const double spacingy = (yMax - yMin)/ Ny_cells;
+  const double spacing_transverse_x = ((nsigma*sigmax)/Nx_cells);
+  const double spacing_transverse_z = ((nsigma*sigmaz)/Nz_cells);
+  // Number of NODES = number of cells + 1
+  const int Nx = Nx_cells + 1;
+  const int Ny = Ny_cells + 1;
+  const int Nz = Nz_cells + 1;
+
+  const double xgrid = Nx_cells * spacing_transverse_x;
+  const double zgrid = Nz_cells * spacing_transverse_z;
   const double alpha = 1.72e-15; // recombination coefficient (cm^3/ns)
   std::cout << "Grid spans: x=+-" << xgrid/2 << " z=+-" << zgrid/2 << " and has Ny=" << Ny << std::endl;
   std::cout << "Grid mesh: Nx="<<Nx<<", x=["<<-xgrid/2<<","<<xgrid/2<<"] spacing="<<spacing_transverse_x
@@ -356,9 +361,9 @@ Garfield::Random::SetEngine(randomEngine);
   // Pre-allocate arrays and constants used by SpaceCharge computations (3D)
   std::vector<double> chargeDensity;
   std::function<int(int,int,int)> idx3d;
-  double xGridMin = -xgrid/2 + spacing_transverse_x/2; // centre of the first cell in x and z
-  double zGridMin = -zgrid/2 + spacing_transverse_z/2;
-  double yGridMin = yMin + spacingy/2;  // centre of first cell in y
+  double xGridMin = -xgrid/2; // first node position
+  double zGridMin = -zgrid/2;
+  double yGridMin = yMin;  // first y node position
   std::unique_ptr<PoissonFFT3D> poissonSolver;
   if (SpaceCharge) {
     chargeDensity.resize(Nx * Ny * Nz);
