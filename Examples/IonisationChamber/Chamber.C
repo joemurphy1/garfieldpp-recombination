@@ -224,9 +224,9 @@ Garfield::Random::SetEngine(randomEngine);
   ComponentAnalyticField cmp;
 
   const double dt = 500.; //time between loops (dt > tstep) should be a multiple of tstep
-  const double tstep = 100.; //monte-carlo step size (ns)
+  const double tstep = 500.; //monte-carlo step size (ns)
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 800;
+  const std::size_t nbins = 40;
   const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep;
  //-----------------------------------------Geometry-----------------------------------------------
@@ -248,8 +248,18 @@ Garfield::Random::SetEngine(randomEngine);
   // Grid parameters
   cmp.SetMedium(&gas);
   double vx_negion,vy_negion,vz_negion;
+  double vx_ion,vy_ion,vz_ion;
+  double vx_electron,vy_electron,vz_electron;
+  double eta;
+  cmp.GetMedium(0,0,0)->IonVelocity(0,E_mag,0,0,0,0,vx_ion,vy_ion,vz_ion);
   cmp.GetMedium(0,0,0)->NegativeIonVelocity(0,E_mag,0,0,0,0,vx_negion,vy_negion,vz_negion);
-  const double guide_spacingy = -vy_negion * dt; //(cm) We define the spacing as the average drift length.
+  cmp.GetMedium(0,0,0)->ElectronVelocity(0,E_mag,0,0,0,0,vx_electron,vy_electron,vz_electron);
+  cmp.GetMedium(0,0,0)->ElectronAttachment(0,E_mag,0,0,0,0,eta);
+  std::cout << "Negative Ion Mobility: " << vy_negion/E_mag << " cm^2/V/ns" << std::endl;
+  std::cout << "Positive Ion Mobility: " << vy_ion/E_mag << " cm^2/V/ns" << std::endl;
+  std::cout << "Electron velocity: " << vy_electron << " cm/ns" << std::endl;
+  std::cout << "Electron lifetime: " << 1/(eta * vy_electron) << " ns" << std::endl;
+  const double guide_spacingy = -1 * vy_negion * dt; //(cm) We define the spacing as the average drift length.
   const double sigmax = 0.46; // half spot size of the proton beam cm
   const double sigmaz = 0.66;
   const double guide_spacing_x = sigmax / 10;
@@ -322,13 +332,13 @@ Garfield::Random::SetEngine(randomEngine);
   const double y0 = yMin;
   const double z0 = 0; // centre of start of proton beam in z
   double t0 = 0; // time of first proton
-  const double current = 0.05; //nA
+  const double current = 0.1; //nA
   const double time_between_protons = ElementaryCharge/(current * 1e-3); //ns
   const std::size_t nTracks = (nbins*tstep)/time_between_protons; // number of protons
   std::cout << "Simulating " << nTracks << " protons." << std::endl;
-  const double multiplicity = 1.;  // charges per ion/electron
+  const double multiplicity = 1000.;  // charges per ion/electron
   double recombine_num = 0; // number of recombinations so far (counter)
-  const bool saveParticleNum = true;
+  const bool saveParticleNum = false;
   const bool RecordRecombinationPositions = false;
   std::vector<std::tuple<double, int, int, int>> particles_over_time;
   std::vector<std::vector<double>> ion_recombination_positions;
@@ -513,7 +523,7 @@ Garfield::Random::SetEngine(randomEngine);
                   ion_recombination_positions.push_back({p1.x, p1.y, p1.z});
                   recombine_num += 1;
                 }
-            }
+            }               
     for (auto &negion : drift.GetNegativeIons()) {
                 if (negion.status == -9) {
                   const auto& p1 = negion.path.back();
@@ -535,7 +545,6 @@ if (plotDrift) {
   constexpr bool drawaxis = false;
   driftView.Plot(twod, drawaxis);
 }
-  
 
 // option to display integrated signal
 bool integrateSignal = false;
