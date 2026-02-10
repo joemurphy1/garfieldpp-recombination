@@ -6,6 +6,7 @@
 #include <string>
 
 #include "Garfield/Component.hh"
+#include "Garfield/ComponentGrid.hh"
 #include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
@@ -353,25 +354,6 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
         }
       }
 
-      if (m_useRecombination) {
-        double prec = 0.;
-        if (ptype == Particle::NegativeIon) {
-          const double rho = GetIonDensity(x0);
-          prec = 1. - std::exp(-m_alphaRecombination * rho * (t1 - t0));
-        }
-        if (ptype == Particle::Ion) {
-          const double rho = GetNegativeIonDensity(x0);
-          prec = 1. - std::exp(-m_alphaRecombination * rho * (t1 - t0));
-        }
-        if (RndmUniform() < prec) {
-          x1 = MidPoint(x0, x1);
-          t1 = 0.5 * (t0 + t1);
-          path.emplace_back(MakePoint(x1, t1));
-          status = StatusRecombined;
-          if (m_debug) std::cout << "    Recombined.\n";
-          break;
-        }
-      }
 
     } else {
       // Drift and diffusion. Determine the time step.
@@ -468,25 +450,7 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
           break;
         }
       }
-      if (m_useRecombination) {
-        double prec = 0.;
-        if (ptype == Particle::NegativeIon) {
-          const double rho = GetIonDensity(x0);
-          prec = 1. - std::exp(-m_alphaRecombination * rho * dt);
-        }
-        if (ptype == Particle::Ion) {
-          const double rho = GetNegativeIonDensity(x0);
-          prec = 1. - std::exp(-m_alphaRecombination * rho * dt);
-        }
-        if (RndmUniform() < prec) {
-          x1 = MidPoint(x0, x1);
-          dt *= 0.5;
-          path.emplace_back(MakePoint(x1, t0 + dt));
-          status = StatusRecombined;
-          if (m_debug) std::cout << "    Recombined.\n";
-          break;
-        }
-      }
+      
       t1 += dt;
     }
     if (m_debug) std::cout << "    Next point: " << PrintVec(x1) + ".\n";
@@ -671,6 +635,93 @@ bool AvalancheMC::ResumeAvalanche(const bool electrons, const bool holes) {
   return TransportParticles(stack, electrons, holes, m_useMultiplication);
 }
 
+bool AvalancheMC::GetMeshParameters(std::size_t& nx, std::size_t& ny, std::size_t& nz,
+                                     double& x_min, double& x_max,
+                                     double& y_min, double& y_max,
+                                     double& z_min, double& z_max) {
+    if (!m_useDensityMap) return false;
+    
+    const auto nComponents = m_sensor->GetNumberOfComponents();
+    for (size_t i = 0; i < nComponents; ++i) {
+        auto cmp = m_sensor->GetComponent(i);
+        if (!cmp->HasIonDensityMap()) continue;
+
+        auto gridCmp = dynamic_cast<Garfield::ComponentGrid*>(cmp);
+        if (!gridCmp) continue;
+
+        if (gridCmp->GetMesh(nx, ny, nz, x_min, y_min, z_min, x_max, y_max, z_max)) {
+          // NOTE the nx, ny, nz are the number of nodes in the mesh not the number of cells
+            return true;
+        }
+    }
+    return false;
+}
+
+// Split a list of ions by the grid cell their positions correspond to
+bool AvalancheMC::SplitPositionsByGridSpace(std::vector<Seed>& stack,
+    std::vector<std::vector<std::size_t>>& split_positions) {
+
+  std::size_t nx, ny, nz;
+  double x_min, x_max, y_min, y_max, z_min, z_max;
+
+  // Get grid parameters using the helper function
+  if (!GetMeshParameters(nx, ny, nz, x_min, x_max, y_min, y_max, z_min, z_max)) {
+    std::cerr << "Error: Unable to get mesh parameters for splitting positions\n";
+    return false;
+  }
+
+  double s_x = (x_max - x_min) / nx;
+  double s_y = (y_max - y_min) / ny;
+  double s_z = (z_max - z_min) / nz;
+
+  // Create voxel container
+  split_positions.clear();
+  split_positions.resize(nx * ny * nz);
+
+  // Loop over original particle container using index
+  for (std::size_t idx = 0; idx < stack.size(); ++idx) {
+    const auto& particle = stack[idx];
+
+    // Compute voxel indices
+    const std::size_t i = std::min(nx - 1,
+      static_cast<std::size_t>(std::floor((particle.pt.x - x_min) / s_x)));
+    const std::size_t j = std::min(ny - 1,
+      static_cast<std::size_t>(std::floor((particle.pt.y - y_min) / s_y)));
+    const std::size_t k = std::min(nz - 1,
+      static_cast<std::size_t>(std::floor((particle.pt.z - z_min) / s_z)));
+
+    const std::size_t index = i + j * nx + k * (nx * ny);
+
+    split_positions[index].push_back(idx);
+  }
+
+  return true;
+}
+
+// returns the index in the flattened array of mesh cells that the point corresponds to
+size_t AvalancheMC::MeshCellIndex(Point position) {
+    std::size_t nx, ny, nz;
+    double x_min, x_max, y_min, y_max, z_min, z_max;
+
+    if (!GetMeshParameters(nx, ny, nz, x_min, x_max, y_min, y_max, z_min, z_max)) {
+        std::cerr << "Error: Unable to get mesh parameters\n";
+        return 0; // or throw an exception
+    }
+
+    double s_x = (x_max - x_min) / nx;
+    double s_y = (y_max - y_min) / ny;
+    double s_z = (z_max - z_min) / nz;
+
+    const std::size_t i = std::min(nx - 1,
+        static_cast<std::size_t>(std::floor((position.x - x_min) / s_x)));
+    const std::size_t j = std::min(ny - 1,
+        static_cast<std::size_t>(std::floor((position.y - y_min) / s_y)));
+    const std::size_t k = std::min(nz - 1,
+        static_cast<std::size_t>(std::floor((position.z - z_min) / s_z)));
+
+    return i + j * nx + k * (nx * ny);
+}
+
 bool AvalancheMC::TransportParticles(std::vector<Seed>& stack, const bool withE,
                                      const bool withH, const bool aval) {
   // -----------------------------------------------------------------------
@@ -701,6 +752,8 @@ bool AvalancheMC::TransportParticles(std::vector<Seed>& stack, const bool withE,
   const bool signal = m_doSignal && (m_sensor->GetNumberOfElectrodes() > 0);
   std::vector<Seed> secondaries;
   while (!stack.empty()) {
+    std::vector<std::vector<std::size_t>> stack_split_positions; // initialise
+    bool valid_grid = SplitPositionsByGridSpace(stack, stack_split_positions); // new method added for recombination model
     for (const auto& seed : stack) {
       const Particle ptype = seed.type;
       if (!withE && ptype == Particle::Electron) {
@@ -715,8 +768,58 @@ bool AvalancheMC::TransportParticles(std::vector<Seed>& stack, const bool withE,
         }
         continue;
       }
+      // new section for recombination model
+      int status = seed.status;
       std::vector<Point> path;
-      const int status = DriftLine(seed, path, secondaries, aval, signal);
+      if (seed.status == StatusRecombined && ptype == Particle::NegativeIon) {
+        // already recombined negions
+        status = StatusRecombined;
+        std::cout << "recombined negion" << std::endl;
+        DriftLine(seed, path, secondaries, aval, signal);
+        std::array<double, 3> x1 = {path.back().x, path.back().y, path.back().z};
+        std::array<double, 3> x0 = {path.front().x, path.front().y, path.front().z};
+        x1 = MidPoint(x0, x1);
+        double t1 = path.back().t - 0.5 * m_tMc;
+        path.emplace_back(MakePoint(x1, t1));
+        status = StatusRecombined;
+        /* May have to put in logic, if it recombines then the drift pushes it past the plate what happens*/
+      }
+      else {
+        // ions
+        status = DriftLine(seed, path, secondaries, aval, signal);
+        std::array<double, 3> x1 = {path.back().x, path.back().y, path.back().z};
+        std::array<double, 3> x0 = {path.front().x, path.front().y, path.front().z};
+        // perform the recombination check
+        if (m_useRecombination && ptype == Particle::Ion && valid_grid) {
+          double prec = 0.;
+          const double rho = GetNegativeIonDensity(x0);
+          std::vector<size_t> particles_in_cell_idx = stack_split_positions[MeshCellIndex(path.front())];
+  
+          prec = 1. - std::exp(-m_alphaRecombination * rho * (path.back().t - path.front().t));
+          if (RndmUniform() < prec) {
+            // check for negion nearby
+            bool successful_recombination = false;
+            for (size_t i = 0; i < particles_in_cell_idx.size(); ++i) {
+              Seed& particle_i = stack[particles_in_cell_idx[i]];
+              if (particle_i.type == Particle::NegativeIon && particle_i.status != StatusRecombined) {
+                particle_i.status = StatusRecombined;
+                successful_recombination = true;
+                break;
+              }
+            }
+            if (successful_recombination) {
+              // set final position
+              std::cout << "Successful recombination" << std::endl;
+              x1 = MidPoint(x0, x1);
+              double t1 = path.back().t - 0.5 * m_tMc;
+              path.emplace_back(MakePoint(x1, t1));
+              status = StatusRecombined;
+              if (m_debug) std::cout << "    Recombined.\n";
+            }
+            else {std::cout << "Unsuccessful recombination" << std::endl;}
+          }
+        }
+      }
       if (path.empty()) continue;
       EndPoint p;
       p.status = status;

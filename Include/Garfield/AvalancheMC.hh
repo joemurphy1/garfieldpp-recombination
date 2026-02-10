@@ -89,6 +89,7 @@ class AvalancheMC {
     Point pt;          ///< Starting point.
     Particle type;     ///< Particle type.
     std::size_t w{1};  ///< Multiplicity.
+    int status{0};     ///< ADDED FOR RECOMBINATION MODEL WE NEED THE STATUS IN THE SEED
   };
 
   const std::vector<EndPoint>& GetElectrons() const { return m_electrons; }
@@ -97,6 +98,17 @@ class AvalancheMC {
   const std::vector<EndPoint>& GetNegativeIons() const {
     return m_negativeIons;
   }
+
+  bool SplitPositionsByGridSpace(
+      std::vector<Seed>& stack,
+      std::vector<std::vector<std::size_t>>& positions);
+      
+  size_t MeshCellIndex(Point position);
+
+  bool GetMeshParameters(std::size_t& nx, std::size_t& ny, std::size_t& nz,
+                                     double& x_min, double& x_max,
+                                     double& y_min, double& y_max,
+                                     double& z_min, double& z_max);
 
   /** Return the number of electron trajectories in the last
    * simulated avalanche (including captured electrons). */
