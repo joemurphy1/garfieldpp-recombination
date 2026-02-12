@@ -231,6 +231,8 @@ class AvalancheMC {
   /// Switch debugging messages on/off (default: off).
   void EnableDebugging(const bool on = true) { m_debug = on; }
 
+  void UsePairRecombination(const bool on = true) {m_usePairRecombination = on; }
+
  private:
   std::string m_className{"AvalancheMC"};
 
@@ -297,6 +299,7 @@ class AvalancheMC {
   bool m_useAttachment{true};
   bool m_useRecombination{true};
   bool m_useMultiplication{true};
+  bool m_usePairRecombination{false};
   /// Scaling factor for electron signals.
   double m_scaleE{1.};
   /// Scaling factor for hole signals.

@@ -314,6 +314,7 @@ Garfield::Random::SetEngine(randomEngine);
     drift.EnableDensityMap();
     drift.EnableRecombination(true, alpha);
     drift.EnableAttachment();
+    drift.UsePairRecombination(false);
     const bool SpaceCharge = true;
 
 

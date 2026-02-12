@@ -354,6 +354,26 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
         }
       }
 
+      if (m_useRecombination && !m_usePairRecombination) {
+        double prec = 0.;
+        if (ptype == Particle::NegativeIon) {
+          const double rho = GetIonDensity(x0);
+          prec = 1. - std::exp(-m_alphaRecombination * rho * (t1 - t0));
+        }
+        if (ptype == Particle::Ion) {
+          const double rho = GetNegativeIonDensity(x0);
+          prec = 1. - std::exp(-m_alphaRecombination * rho * (t1 - t0));
+        }
+        if (RndmUniform() < prec) {
+          x1 = MidPoint(x0, x1);
+          t1 = 0.5 * (t0 + t1);
+          path.emplace_back(MakePoint(x1, t1));
+          status = StatusRecombined;
+          if (m_debug) std::cout << "    Recombined.\n";
+          break;
+        }
+      }
+
 
     } else {
       // Drift and diffusion. Determine the time step.
@@ -447,6 +467,26 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
           path.emplace_back(MakePoint(x1, t0 + dt));
           status = StatusAttached;
           if (m_debug) std::cout << "    Attached.\n";
+          break;
+        }
+      }
+
+      if (m_useRecombination && !m_usePairRecombination) {
+        double prec = 0.;
+        if (ptype == Particle::NegativeIon) {
+          const double rho = GetIonDensity(x0);
+          prec = 1. - std::exp(-m_alphaRecombination * rho * dt);
+        }
+        if (ptype == Particle::Ion) {
+          const double rho = GetNegativeIonDensity(x0);
+          prec = 1. - std::exp(-m_alphaRecombination * rho * dt);
+        }
+        if (RndmUniform() < prec) {
+          x1 = MidPoint(x0, x1);
+          dt *= 0.5;
+          path.emplace_back(MakePoint(x1, t0 + dt));
+          status = StatusRecombined;
+          if (m_debug) std::cout << "    Recombined.\n";
           break;
         }
       }
@@ -751,9 +791,12 @@ bool AvalancheMC::TransportParticles(std::vector<Seed>& stack, const bool withE,
 
   const bool signal = m_doSignal && (m_sensor->GetNumberOfElectrodes() > 0);
   std::vector<Seed> secondaries;
+  std::vector<std::vector<std::size_t>> stack_split_positions; // initialise
+  bool valid_grid = false;
   while (!stack.empty()) {
-    std::vector<std::vector<std::size_t>> stack_split_positions; // initialise
-    bool valid_grid = SplitPositionsByGridSpace(stack, stack_split_positions); // new method added for recombination model
+    if (m_usePairRecombination) {
+      valid_grid = SplitPositionsByGridSpace(stack, stack_split_positions); // new method added for recombination model
+    }
     for (const auto& seed : stack) {
       const Particle ptype = seed.type;
       if (!withE && ptype == Particle::Electron) {
@@ -768,57 +811,59 @@ bool AvalancheMC::TransportParticles(std::vector<Seed>& stack, const bool withE,
         }
         continue;
       }
-      // new section for recombination model
-      int status = seed.status;
       std::vector<Point> path;
-      if (seed.status == StatusRecombined && ptype == Particle::NegativeIon) {
-        // already recombined negions
-        status = StatusRecombined;
-        std::cout << "recombined negion" << std::endl;
-        DriftLine(seed, path, secondaries, aval, signal);
-        std::array<double, 3> x1 = {path.back().x, path.back().y, path.back().z};
-        std::array<double, 3> x0 = {path.front().x, path.front().y, path.front().z};
-        x1 = MidPoint(x0, x1);
-        double t1 = path.back().t - 0.5 * m_tMc;
-        path.emplace_back(MakePoint(x1, t1));
-        status = StatusRecombined;
-        /* May have to put in logic, if it recombines then the drift pushes it past the plate what happens*/
-      }
-      else {
-        // ions
-        status = DriftLine(seed, path, secondaries, aval, signal);
-        std::array<double, 3> x1 = {path.back().x, path.back().y, path.back().z};
-        std::array<double, 3> x0 = {path.front().x, path.front().y, path.front().z};
-        // perform the recombination check
-        if (m_useRecombination && ptype == Particle::Ion && valid_grid) {
-          double prec = 0.;
-          const double rho = GetNegativeIonDensity(x0);
-          std::vector<size_t> particles_in_cell_idx = stack_split_positions[MeshCellIndex(path.front())];
-  
-          prec = 1. - std::exp(-m_alphaRecombination * rho * (path.back().t - path.front().t));
-          if (RndmUniform() < prec) {
-            // check for negion nearby
-            bool successful_recombination = false;
-            for (size_t i = 0; i < particles_in_cell_idx.size(); ++i) {
-              Seed& particle_i = stack[particles_in_cell_idx[i]];
-              if (particle_i.type == Particle::NegativeIon && particle_i.status != StatusRecombined) {
-                particle_i.status = StatusRecombined;
-                successful_recombination = true;
-                break;
+      int status;
+      if (m_usePairRecombination && m_useRecombination) {
+        // new section for recombination model
+        if (seed.status == StatusRecombined && ptype == Particle::NegativeIon) {
+          // already recombined negions
+          DriftLine(seed, path, secondaries, aval, signal);
+          std::array<double, 3> x1 = {path.back().x, path.back().y, path.back().z};
+          std::array<double, 3> x0 = {path.front().x, path.front().y, path.front().z};
+          x1 = MidPoint(x0, x1);
+          double t1 = path.back().t - 0.5 * m_tMc;
+          path.emplace_back(MakePoint(x1, t1));
+          status = StatusRecombined;
+          /* May have to put in logic, if it recombines then the drift pushes it past the plate what happens*/
+        }
+        else {
+          // ions
+          status = DriftLine(seed, path, secondaries, aval, signal);
+          std::array<double, 3> x1 = {path.back().x, path.back().y, path.back().z};
+          std::array<double, 3> x0 = {path.front().x, path.front().y, path.front().z};
+          // perform the recombination check
+          if (ptype == Particle::Ion && valid_grid) {
+            double prec = 0.;
+            const double rho = GetNegativeIonDensity(x0);
+            std::vector<size_t> particles_in_cell_idx = stack_split_positions[MeshCellIndex(path.front())];
+    
+            prec = 1. - std::exp(-m_alphaRecombination * rho * (path.back().t - path.front().t));
+            if (RndmUniform() < prec) {
+              // check for negion nearby
+              bool successful_recombination = false;
+              for (size_t i = 0; i < particles_in_cell_idx.size(); ++i) {
+                Seed& particle_i = stack[particles_in_cell_idx[i]];
+                if (particle_i.type == Particle::NegativeIon && particle_i.status != StatusRecombined) {
+                  particle_i.status = StatusRecombined;
+                  successful_recombination = true;
+                  break;
+                }
+              }
+              if (successful_recombination) {
+                // set final position
+                x1 = MidPoint(x0, x1);
+                double t1 = path.back().t - 0.5 * m_tMc;
+                path.emplace_back(MakePoint(x1, t1));
+                status = StatusRecombined;
+                if (m_debug) std::cout << "    Recombined.\n";
               }
             }
-            if (successful_recombination) {
-              // set final position
-              std::cout << "Successful recombination" << std::endl;
-              x1 = MidPoint(x0, x1);
-              double t1 = path.back().t - 0.5 * m_tMc;
-              path.emplace_back(MakePoint(x1, t1));
-              status = StatusRecombined;
-              if (m_debug) std::cout << "    Recombined.\n";
-            }
-            else {std::cout << "Unsuccessful recombination" << std::endl;}
-          }
+          }  
         }
+      }
+      else {
+        // normal procedure without the pair recombination
+        status = DriftLine(seed, path, secondaries, aval, signal);
       }
       if (path.empty()) continue;
       EndPoint p;
