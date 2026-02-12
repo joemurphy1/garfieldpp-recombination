@@ -194,6 +194,21 @@ private:
 
 int main(int argc, char* argv[]) {
 
+bool quit_particle_loop = false;
+// handle quitting of the program
+std::atomic<bool> quit_requested(false);
+std::thread input_thread([&quit_particle_loop]() {
+    std::string input;
+    while (std::getline(std::cin, input)) {
+        if (input == "q" || input == "Q") {
+            std::cout << "Quit command received - will stop after current iteration" << std::endl;
+            quit_particle_loop = true;
+            break;
+        }
+    }
+});
+input_thread.detach(); // Let it run independently
+
 auto time_start = std::chrono::steady_clock::now();
 // Read seed before creating TApplication
 int seed = 123456;
@@ -226,7 +241,7 @@ Garfield::Random::SetEngine(randomEngine);
   const double dt = 500.; //time between loops (dt > tstep) should be a multiple of tstep
   const double tstep = 500.; //monte-carlo step size (ns)
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 40;
+  const std::size_t nbins = 30;
   const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep;
  //-----------------------------------------Geometry-----------------------------------------------
@@ -239,7 +254,7 @@ Garfield::Random::SetEngine(randomEngine);
   const double zMin = -20., zMax = 20.;
   
   const double vAnode = 0.;
-  const double vCathode = -1500.;
+  const double vCathode = -300.;
   const double E_mag = std::abs(vCathode/(yMax-yMin));
 
   // cmp.AddPixelOnPlaneY(yMax ,-13.125 ,13.125 , -17.5, 17.5, "detector"); // define size of detector makes the program run really slowly???
@@ -264,7 +279,7 @@ Garfield::Random::SetEngine(randomEngine);
   const double sigmaz = 0.66;
   const double guide_spacing_x = sigmax / 10;
   const double guide_spacing_z = sigmaz / 10;
-  const int nsigma = 4; // number of sigma across the grid is resolved (so 95% for 4)
+  const double nsigma = 4.1; // number of sigma across the grid is resolved (so 95% for 4)
   const int Nx_cells = std::round((nsigma*sigmax)/(guide_spacing_x)); //number of grid spaces in x
   const int Ny_cells = std::round((yMax-yMin) / guide_spacingy);
   const int Nz_cells = std::round((nsigma*sigmaz)/(guide_spacing_z)); //number of grid spaces in z
@@ -314,7 +329,7 @@ Garfield::Random::SetEngine(randomEngine);
     drift.EnableDensityMap();
     drift.EnableRecombination(true, alpha);
     drift.EnableAttachment();
-    drift.UsePairRecombination(false);
+    drift.UsePairRecombination(true);
     const bool SpaceCharge = true;
 
 
@@ -338,7 +353,7 @@ Garfield::Random::SetEngine(randomEngine);
   const double y0 = yMin;
   const double z0 = 0; // centre of start of proton beam in z
   double t0 = 0; // time of first proton
-  const double current = 0.1; //nA
+  const double current = 0.0624; //nA
   const double time_between_protons = ElementaryCharge/(current * 1e-3); //ns
   const std::size_t nTracks = (nbins*tstep)/time_between_protons; // number of protons
   std::cout << "Simulating " << nTracks << " protons." << std::endl;
@@ -376,9 +391,8 @@ Garfield::Random::SetEngine(randomEngine);
     poissonSolver = std::make_unique<PoissonFFT3D>(Nx, Ny, Nz, spacing_transverse_x, spacingy, spacing_transverse_z, Npadx, Npady, Npadz, /*threads=*/0);
   }
 
-  
   // ----------------------------- main while loop -----------------------------------
-  while (particleNum > 0) {
+  while (particleNum > 0 && !quit_particle_loop) {
     if (stop_at_max_time && t >= max_time) {break;}
 
     while (t+dt > t0 + time_between_protons) { // generate new protons until the next proton is beyond the window
@@ -400,7 +414,7 @@ Garfield::Random::SetEngine(randomEngine);
         }
       }
       t0 += time_between_protons;
-      }
+    }
 
     drift.SetTimeWindow(t, t + dt);
     // drift all particles
@@ -423,7 +437,7 @@ Garfield::Random::SetEngine(randomEngine);
       if (electron.status == StatusLeftDriftArea) {
           ElectronsLeftGridCount += 1;
       }
-  }
+    }
     
     grid.ClearFields();  // clear old densities/fields
     if (t > dt && SpaceCharge) {
@@ -515,7 +529,7 @@ Garfield::Random::SetEngine(randomEngine);
         efieldFile.close();
       } 
     }
-// ------------------------- End Space Charge ------------------------------------
+    // ------------------------- End Space Charge ------------------------------------
 
 
     std::cout << "Negative Ions: " << negionNumber << std::endl;
@@ -538,7 +552,6 @@ Garfield::Random::SetEngine(randomEngine);
                 }
             }
 
-    particleNum = drift.GetElectrons().size() + drift.GetIons().size() + drift.GetNegativeIons().size();
   }
 //-------------------------------------------End While-------------------------------------------
 
