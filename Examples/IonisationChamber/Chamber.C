@@ -238,10 +238,10 @@ Garfield::Random::SetEngine(randomEngine);
   // Make a component with analytic electric field.
   ComponentAnalyticField cmp;
 
-  const double dt = 500.; //time between loops (dt > tstep) should be a multiple of tstep
-  const double tstep = 500.; //monte-carlo step size (ns)
+  const double dt = 50.; //time between loops (dt > tstep) should be a multiple of tstep
+  const double tstep = 50.; //monte-carlo step size (ns)
   const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 30;
+  const std::size_t nbins = 5000;
   const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep;
  //-----------------------------------------Geometry-----------------------------------------------
@@ -274,7 +274,8 @@ Garfield::Random::SetEngine(randomEngine);
   std::cout << "Positive Ion Mobility: " << vy_ion/E_mag << " cm^2/V/ns" << std::endl;
   std::cout << "Electron velocity: " << vy_electron << " cm/ns" << std::endl;
   std::cout << "Electron lifetime: " << 1/(eta * vy_electron) << " ns" << std::endl;
-  const double guide_spacingy = -1 * vy_negion * dt; //(cm) We define the spacing as the average drift length.
+  //const double guide_spacingy = 0.25 * std::abs(vy_negion) * dt; //(cm) We define the spacing as the average drift length.
+  const double guide_spacingy = (yMax - yMin) / 123.0; // 124 cells
   const double sigmax = 0.46; // half spot size of the proton beam cm
   const double sigmaz = 0.66;
   const double guide_spacing_x = sigmax / 10;
@@ -297,7 +298,7 @@ Garfield::Random::SetEngine(randomEngine);
   std::cout << "Grid spans: x=+-" << xgrid/2 << " z=+-" << zgrid/2 << " and has Ny=" << Ny << std::endl;
   std::cout << "Grid mesh: Nx="<<Nx<<", x=["<<-xgrid/2<<","<<xgrid/2<<"] spacing="<<spacing_transverse_x
           <<"; Ny="<<Ny<<", y=["<<yMin<<","<<yMax<<"] spacing="<<spacingy
-          <<"; Nz="<<Nz<<", z=["<<-zgrid/2<<","<<zgrid/2<<"] spacing="<<spacing_transverse_x <<std::endl;
+          <<"; Nz="<<Nz<<", z=["<<-zgrid/2<<","<<zgrid/2<<"] spacing="<<spacing_transverse_z <<std::endl;
 
   
 // mesh
@@ -328,8 +329,8 @@ Garfield::Random::SetEngine(randomEngine);
     drift.SetTimeSteps(tstep);
     drift.EnableDensityMap();
     drift.EnableRecombination(true, alpha);
-    drift.EnableAttachment();
-    drift.UsePairRecombination(true);
+    drift.EnableAttachment(true);
+  //  drift.UsePairRecombination(false);
     const bool SpaceCharge = true;
 
 
@@ -349,17 +350,17 @@ Garfield::Random::SetEngine(randomEngine);
     cS = new TCanvas("cS", "", 600, 600);
     }  // Two GUI Windows
 
-  const double x0 = 0; // centre of start of proton beam in x
+  const double x0 = 0.; // centre of start of proton beam in x
   const double y0 = yMin;
-  const double z0 = 0; // centre of start of proton beam in z
-  double t0 = 0; // time of first proton
-  const double current = 0.0624; //nA
+  const double z0 = 0.; // centre of start of proton beam in z
+  double t0 = 0.; // time of first proton
+  const double current = 62.4/5000; //nA
   const double time_between_protons = ElementaryCharge/(current * 1e-3); //ns
   const std::size_t nTracks = (nbins*tstep)/time_between_protons; // number of protons
   std::cout << "Simulating " << nTracks << " protons." << std::endl;
-  const double multiplicity = 1000.;  // charges per ion/electron
+  const double multiplicity = 5000.;  // charges per ion/electron
   double recombine_num = 0; // number of recombinations so far (counter)
-  const bool saveParticleNum = false;
+  const bool saveParticleNum = true;
   const bool RecordRecombinationPositions = false;
   std::vector<std::tuple<double, int, int, int>> particles_over_time;
   std::vector<std::vector<double>> ion_recombination_positions;
@@ -390,12 +391,12 @@ Garfield::Random::SetEngine(randomEngine);
     // initialize 3D Poisson solver, 0 threads auto allocates
     poissonSolver = std::make_unique<PoissonFFT3D>(Nx, Ny, Nz, spacing_transverse_x, spacingy, spacing_transverse_z, Npadx, Npady, Npadz, /*threads=*/0);
   }
-
   // ----------------------------- main while loop -----------------------------------
   while (particleNum > 0 && !quit_particle_loop) {
+    // loops over the time dt
     if (stop_at_max_time && t >= max_time) {break;}
 
-    while (t+dt > t0 + time_between_protons) { // generate new protons until the next proton is beyond the window
+    while (t+dt > t0) { // generate new protons until the next proton is beyond the window
       double x_proton = RndmGaussian(x0, sigmax);
       double z_proton = RndmGaussian(z0, sigmaz);
       track.NewTrack(x_proton, y0, z_proton, t0, 0, 1, 0);
@@ -427,7 +428,7 @@ Garfield::Random::SetEngine(randomEngine);
     int electronNumber = 0;
     for (const auto& electron : drift.GetElectrons()) {
       const auto& p1 = electron.path.back();
-      if (p1.t <= t+dt) {
+      if (p1.t <= t+dt && electron.status != StatusAttached) {
           electronNumber++;
       }
       if (electron.status == StatusAttached) {
@@ -449,7 +450,7 @@ Garfield::Random::SetEngine(randomEngine);
     // add positive ions to the grid TODO stop the particles outside the grid running because we can check faster
     int ionNumber = 0;
     for (const auto& ion : drift.GetIons()) {
-      if (!ion.path.empty()) {
+      if (!ion.path.empty() && ion.status != StatusRecombined) {
         const auto& p1 = ion.path.back();
         if (p1.t <= t+dt) {
           ionNumber++;
@@ -461,7 +462,7 @@ Garfield::Random::SetEngine(randomEngine);
     // add negative ions to the grid
     int negionNumber = 0;
     for (const auto& negion : drift.GetNegativeIons()) {
-      if (!negion.path.empty()) {
+      if (!negion.path.empty() && negion.status != StatusRecombined) {
         const auto& p1 = negion.path.back();
         if (p1.t <= t+dt) {
           negionNumber++;
@@ -532,13 +533,14 @@ Garfield::Random::SetEngine(randomEngine);
     // ------------------------- End Space Charge ------------------------------------
 
 
-    std::cout << "Negative Ions: " << negionNumber << std::endl;
     std::cout << "Positive Ions: " << ionNumber << std::endl;
+    std::cout << "Negative Ions: " << negionNumber << std::endl;
     std::cout << "Electrons: " << electronNumber << std::endl;
     if (saveParticleNum) {particles_over_time.push_back({t, ionNumber, negionNumber, electronNumber});}
     // record recombined particles
     for (auto &ion : drift.GetIons()) {
                 if (ion.status == -9) {
+                  // TODO check not recording same ion multiple times
                   const auto& p1 = ion.path.back();
                   ion_recombination_positions.push_back({p1.x, p1.y, p1.z});
                   recombine_num += 1;
@@ -551,7 +553,6 @@ Garfield::Random::SetEngine(randomEngine);
                   recombine_num += 1;
                 }
             }
-
   }
 //-------------------------------------------End While-------------------------------------------
 

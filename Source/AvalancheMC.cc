@@ -6,7 +6,6 @@
 #include <string>
 
 #include "Garfield/Component.hh"
-#include "Garfield/ComponentGrid.hh"
 #include "Garfield/Exceptions.hh"
 #include "Garfield/GarfieldConstants.hh"
 #include "Garfield/Medium.hh"
@@ -14,6 +13,7 @@
 #include "Garfield/Random.hh"
 #include "Garfield/Sensor.hh"
 #include "Garfield/ViewDrift.hh"
+#include <thread>
 
 namespace {
 
@@ -354,7 +354,7 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
         }
       }
 
-      if (m_useRecombination && !m_usePairRecombination) {
+      if (m_useRecombination) {
         double prec = 0.;
         if (ptype == Particle::NegativeIon) {
           const double rho = GetIonDensity(x0);
@@ -373,7 +373,6 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
           break;
         }
       }
-
 
     } else {
       // Drift and diffusion. Determine the time step.
@@ -470,8 +469,7 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
           break;
         }
       }
-
-      if (m_useRecombination && !m_usePairRecombination) {
+      if (m_useRecombination) {
         double prec = 0.;
         if (ptype == Particle::NegativeIon) {
           const double rho = GetIonDensity(x0);
@@ -490,7 +488,6 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
           break;
         }
       }
-      
       t1 += dt;
     }
     if (m_debug) std::cout << "    Next point: " << PrintVec(x1) + ".\n";
@@ -675,93 +672,6 @@ bool AvalancheMC::ResumeAvalanche(const bool electrons, const bool holes) {
   return TransportParticles(stack, electrons, holes, m_useMultiplication);
 }
 
-bool AvalancheMC::GetMeshParameters(std::size_t& nx, std::size_t& ny, std::size_t& nz,
-                                     double& x_min, double& x_max,
-                                     double& y_min, double& y_max,
-                                     double& z_min, double& z_max) {
-    if (!m_useDensityMap) return false;
-    
-    const auto nComponents = m_sensor->GetNumberOfComponents();
-    for (size_t i = 0; i < nComponents; ++i) {
-        auto cmp = m_sensor->GetComponent(i);
-        if (!cmp->HasIonDensityMap()) continue;
-
-        auto gridCmp = dynamic_cast<Garfield::ComponentGrid*>(cmp);
-        if (!gridCmp) continue;
-
-        if (gridCmp->GetMesh(nx, ny, nz, x_min, y_min, z_min, x_max, y_max, z_max)) {
-          // NOTE the nx, ny, nz are the number of nodes in the mesh not the number of cells
-            return true;
-        }
-    }
-    return false;
-}
-
-// Split a list of ions by the grid cell their positions correspond to
-bool AvalancheMC::SplitPositionsByGridSpace(std::vector<Seed>& stack,
-    std::vector<std::vector<std::size_t>>& split_positions) {
-
-  std::size_t nx, ny, nz;
-  double x_min, x_max, y_min, y_max, z_min, z_max;
-
-  // Get grid parameters using the helper function
-  if (!GetMeshParameters(nx, ny, nz, x_min, x_max, y_min, y_max, z_min, z_max)) {
-    std::cerr << "Error: Unable to get mesh parameters for splitting positions\n";
-    return false;
-  }
-
-  double s_x = (x_max - x_min) / nx;
-  double s_y = (y_max - y_min) / ny;
-  double s_z = (z_max - z_min) / nz;
-
-  // Create voxel container
-  split_positions.clear();
-  split_positions.resize(nx * ny * nz);
-
-  // Loop over original particle container using index
-  for (std::size_t idx = 0; idx < stack.size(); ++idx) {
-    const auto& particle = stack[idx];
-
-    // Compute voxel indices
-    const std::size_t i = std::min(nx - 1,
-      static_cast<std::size_t>(std::floor((particle.pt.x - x_min) / s_x)));
-    const std::size_t j = std::min(ny - 1,
-      static_cast<std::size_t>(std::floor((particle.pt.y - y_min) / s_y)));
-    const std::size_t k = std::min(nz - 1,
-      static_cast<std::size_t>(std::floor((particle.pt.z - z_min) / s_z)));
-
-    const std::size_t index = i + j * nx + k * (nx * ny);
-
-    split_positions[index].push_back(idx);
-  }
-
-  return true;
-}
-
-// returns the index in the flattened array of mesh cells that the point corresponds to
-size_t AvalancheMC::MeshCellIndex(Point position) {
-    std::size_t nx, ny, nz;
-    double x_min, x_max, y_min, y_max, z_min, z_max;
-
-    if (!GetMeshParameters(nx, ny, nz, x_min, x_max, y_min, y_max, z_min, z_max)) {
-        std::cerr << "Error: Unable to get mesh parameters\n";
-        return 0; // or throw an exception
-    }
-
-    double s_x = (x_max - x_min) / nx;
-    double s_y = (y_max - y_min) / ny;
-    double s_z = (z_max - z_min) / nz;
-
-    const std::size_t i = std::min(nx - 1,
-        static_cast<std::size_t>(std::floor((position.x - x_min) / s_x)));
-    const std::size_t j = std::min(ny - 1,
-        static_cast<std::size_t>(std::floor((position.y - y_min) / s_y)));
-    const std::size_t k = std::min(nz - 1,
-        static_cast<std::size_t>(std::floor((position.z - z_min) / s_z)));
-
-    return i + j * nx + k * (nx * ny);
-}
-
 bool AvalancheMC::TransportParticles(std::vector<Seed>& stack, const bool withE,
                                      const bool withH, const bool aval) {
   // -----------------------------------------------------------------------
@@ -791,108 +701,104 @@ bool AvalancheMC::TransportParticles(std::vector<Seed>& stack, const bool withE,
 
   const bool signal = m_doSignal && (m_sensor->GetNumberOfElectrodes() > 0);
   std::vector<Seed> secondaries;
-  std::vector<std::vector<std::size_t>> stack_split_positions; // initialise
-  bool valid_grid = false;
   while (!stack.empty()) {
-    if (m_usePairRecombination) {
-      valid_grid = SplitPositionsByGridSpace(stack, stack_split_positions); // new method added for recombination model
-    }
-    for (const auto& seed : stack) {
-      const Particle ptype = seed.type;
-      if (!withE && ptype == Particle::Electron) {
-        m_nElectrons += seed.w;
-        continue;
-      }
-      if (!withH && ptype != Particle::Electron) {
-        if (ptype == Particle::Hole) {
-          m_nHoles += seed.w;
+    size_t nthreads = std::thread::hardware_concurrency();
+    if (nthreads == 0) nthreads = 2; // fallback
+    size_t n = stack.size();
+    std::vector<std::thread> threads(nthreads);
+    std::vector<std::vector<EndPoint>> electrons_local(nthreads);
+    std::vector<std::vector<EndPoint>> holes_local(nthreads);
+    std::vector<std::vector<EndPoint>> ions_local(nthreads);
+    std::vector<std::vector<EndPoint>> negions_local(nthreads);
+    std::vector<double> nElectrons_local(nthreads, 0.);
+    std::vector<double> nHoles_local(nthreads, 0.);
+    std::vector<double> nIons_local(nthreads, 0.);
+    std::vector<double> nNegIons_local(nthreads, 0.);
+    std::vector<Seed> secondaries_next;
+    std::mutex sec_mutex;
+
+    auto worker = [&](size_t tid, size_t begin, size_t end) {
+      std::vector<Seed> local_secondaries;
+      for (size_t i = begin; i < end; ++i) {
+        const auto& seed = stack[i];
+        const Particle ptype = seed.type;
+        if (!withE && ptype == Particle::Electron) {
+          nElectrons_local[tid] += seed.w;
+          continue;
+        }
+        if (!withH && ptype != Particle::Electron) {
+          if (ptype == Particle::Hole) {
+            nHoles_local[tid] += seed.w;
+          } else if (ptype == Particle::Ion) {
+            nIons_local[tid] += seed.w;
+          }
+          continue;
+        }
+        std::vector<Point> path;
+        // Use thread-local secondaries, merge after
+        const int status = DriftLine(seed, path, local_secondaries, aval, signal);
+        if (path.empty()) continue;
+        EndPoint p;
+        p.status = status;
+        if (m_storeDriftLines) {
+          p.path = std::move(path);
+        } else {
+          p.path = {path.front(), path.back()};
+        }
+        p.weight = seed.w;
+        if (ptype == Particle::Electron) {
+          electrons_local[tid].push_back(std::move(p));
+          if (status != StatusAttached) nElectrons_local[tid] += seed.w;
+        } else if (ptype == Particle::Hole) {
+          holes_local[tid].push_back(std::move(p));
+          if (status != StatusAttached) nHoles_local[tid] += seed.w;
         } else if (ptype == Particle::Ion) {
-          m_nIons += seed.w;
-        }
-        continue;
-      }
-      std::vector<Point> path;
-      int status;
-      if (m_usePairRecombination && m_useRecombination) {
-        // new section for recombination model
-        if (seed.status == StatusRecombined && ptype == Particle::NegativeIon) {
-          // already recombined negions
-          DriftLine(seed, path, secondaries, aval, signal);
-          std::array<double, 3> x1 = {path.back().x, path.back().y, path.back().z};
-          std::array<double, 3> x0 = {path.front().x, path.front().y, path.front().z};
-          x1 = MidPoint(x0, x1);
-          double t1 = path.back().t - 0.5 * m_tMc;
-          path.emplace_back(MakePoint(x1, t1));
-          status = StatusRecombined;
-          /* May have to put in logic, if it recombines then the drift pushes it past the plate what happens*/
-        }
-        else {
-          // ions
-          status = DriftLine(seed, path, secondaries, aval, signal);
-          std::array<double, 3> x1 = {path.back().x, path.back().y, path.back().z};
-          std::array<double, 3> x0 = {path.front().x, path.front().y, path.front().z};
-          // perform the recombination check
-          if (ptype == Particle::Ion && valid_grid) {
-            double prec = 0.;
-            const double rho = GetNegativeIonDensity(x0);
-            std::vector<size_t> particles_in_cell_idx = stack_split_positions[MeshCellIndex(path.front())];
-    
-            prec = 1. - std::exp(-m_alphaRecombination * rho * (path.back().t - path.front().t));
-            if (RndmUniform() < prec) {
-              // check for negion nearby
-              bool successful_recombination = false;
-              for (size_t i = 0; i < particles_in_cell_idx.size(); ++i) {
-                Seed& particle_i = stack[particles_in_cell_idx[i]];
-                if (particle_i.type == Particle::NegativeIon && particle_i.status != StatusRecombined) {
-                  particle_i.status = StatusRecombined;
-                  successful_recombination = true;
-                  break;
-                }
-              }
-              if (successful_recombination) {
-                // set final position
-                x1 = MidPoint(x0, x1);
-                double t1 = path.back().t - 0.5 * m_tMc;
-                path.emplace_back(MakePoint(x1, t1));
-                status = StatusRecombined;
-                if (m_debug) std::cout << "    Recombined.\n";
-              }
-            }
-          }  
+          ions_local[tid].push_back(std::move(p));
+          if (status != StatusAttached) nIons_local[tid] += seed.w;
+        } else if (ptype == Particle::NegativeIon) {
+          negions_local[tid].push_back(std::move(p));
+          if (status != StatusAttached) nNegIons_local[tid] += seed.w;
+        } else {
+          std::cerr << m_className << "::TransportParticles: Unexpected particle type.\n";
         }
       }
-      else {
-        // normal procedure without the pair recombination
-        status = DriftLine(seed, path, secondaries, aval, signal);
+      // Merge thread-local secondaries into global for next round
+      if (!local_secondaries.empty()) {
+        std::lock_guard<std::mutex> lock(sec_mutex);
+        secondaries_next.insert(secondaries_next.end(), local_secondaries.begin(), local_secondaries.end());
       }
-      if (path.empty()) continue;
-      EndPoint p;
-      p.status = status;
-      if (m_storeDriftLines) {
-        p.path = std::move(path);
-      } else {
-        p.path = {path.front(), path.back()};
-      }
-      p.weight = seed.w;
-      if (ptype == Particle::Electron) {
-        m_electrons.push_back(std::move(p));
-        if (status != StatusAttached) m_nElectrons += seed.w;
-      } else if (ptype == Particle::Hole) {
-        m_holes.push_back(std::move(p));
-        if (status != StatusAttached) m_nHoles += seed.w;
-      } else if (ptype == Particle::Ion) {
-        m_ions.push_back(std::move(p));
-        if (status != StatusAttached) m_nIons += seed.w;
-      } else if (ptype == Particle::NegativeIon) {
-        m_negativeIons.push_back(std::move(p));
-        if (status != StatusAttached) m_nNegativeIons += seed.w;
-      } else {
-        std::cerr << m_className
-                  << "::TransportParticles: Unexpected particle type.\n";
-      }
+    };
+
+    size_t chunk = n / nthreads;
+    for (size_t t = 0; t < nthreads; ++t) {
+      size_t begin = t * chunk;
+      size_t end = (t == nthreads - 1) ? n : begin + chunk;
+      threads[t] = std::thread(worker, t, begin, end);
     }
-    stack.swap(secondaries);
-    secondaries.clear();
+    for (auto& th : threads) th.join();
+
+    // Merge thread-local results
+    for (size_t t = 0; t < nthreads; ++t) {
+      m_electrons.insert(m_electrons.end(),
+                        std::make_move_iterator(electrons_local[t].begin()),
+                        std::make_move_iterator(electrons_local[t].end()));
+      m_holes.insert(m_holes.end(),
+                        std::make_move_iterator(holes_local[t].begin()),
+                        std::make_move_iterator(holes_local[t].end()));
+      m_ions.insert(m_ions.end(),
+                        std::make_move_iterator(ions_local[t].begin()),
+                        std::make_move_iterator(ions_local[t].end()));
+      m_negativeIons.insert(m_negativeIons.end(),
+                        std::make_move_iterator(negions_local[t].begin()),
+                        std::make_move_iterator(negions_local[t].end()));
+      m_nElectrons += nElectrons_local[t];
+      m_nHoles += nHoles_local[t];
+      m_nIons += nIons_local[t];
+      m_nNegativeIons += nNegIons_local[t];
+    }
+
+    stack.swap(secondaries_next);
+    secondaries_next.clear();
   }
   return true;
 }

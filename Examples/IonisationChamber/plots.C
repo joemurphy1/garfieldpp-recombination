@@ -46,25 +46,25 @@ int main(int argc, char** argv) {
     cmp.SetMedium(&gas);
 
     std::vector<double> Ex;
-    std::vector<double> v_ion;
-    std::vector<double> v_negion;
+    std::vector<double> v;
+    std::vector<double> t;
 
-    for (double E_x = 0; E_x < 50000; E_x += 100) {
-        double vx_ion, vy_ion, vz_ion;
-        double vx_negion, vy_negion, vz_negion;
+    for (double E_x = 0; E_x < 50000; E_x += 1) {
+        double vx, vy, vz;
+        double eta;
         // Query the medium directly for ion velocities at the given E-field
-        gas.IonVelocity(E_x, 0, 0, 0, 0, 0, vx_ion, vy_ion, vz_ion); // cm/ns
-        gas.NegativeIonVelocity(E_x, 0, 0, 0, 0, 0, vx_negion, vy_negion, vz_negion); // cm/ns
+        gas.ElectronVelocity(E_x, 0, 0, 0, 0, 0, vx, vy, vz); // cm/ns
+        gas.ElectronAttachment(E_x, 0, 0, 0, 0, 0, eta); // cm/ns
 
         Ex.push_back(E_x);
-        v_ion.push_back(vx_ion);
-        v_negion.push_back(vx_negion);
+        v.push_back(vx);
+        t.push_back(1/(eta*vx));
     }
 
     std::ofstream outfile("E_field_Ion_velocity.txt");
-    outfile << "Electric Field [V/cm] | N2+ Velocity [cm/ns] | O2- Velocity [cm/ns]\n";
+    outfile << "Electric Field [V/cm] | Electron Velocity [cm/ns] | Attachment lifetime [ns]\n";
     for (size_t i = 0; i < Ex.size(); ++i) {
-        outfile << Ex[i] << " " << v_ion[i] << " " << v_negion[i] << "\n";
+        outfile << Ex[i] << " " << v[i] << " " << t[i] << "\n";
     }
     outfile.close();
 
