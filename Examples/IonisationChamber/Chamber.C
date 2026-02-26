@@ -238,12 +238,13 @@ Garfield::Random::SetEngine(randomEngine);
   // Make a component with analytic electric field.
   ComponentAnalyticField cmp;
 
-  const double dt = 50.; //time between loops (dt > tstep) should be a multiple of tstep
-  const double tstep = 50.; //monte-carlo step size (ns)
-  const double tmin = -0.5 * tstep; 
-  const std::size_t nbins = 5000;
+  const double dt = 10000.; //time between loops (dt > tstep) should be a multiple of tstep
+  const double tstep_ion = 10000.; //monte-carlo step size (ns) (also functions as a min time_step so particles have to be added at time that is tstep multiples)
+  const double tstep_electron = 10.; //ideally should be a divisor of dt.
+  const double tmin = -0.5 * tstep_ion; 
+  const std::size_t nbins = 50;
   const bool stop_at_max_time = true;
-  const size_t max_time = nbins*tstep;
+  const size_t max_time = nbins*tstep_ion;
  //-----------------------------------------Geometry-----------------------------------------------
  // proton travels along the y axis.
  // Plate Separation (cm)
@@ -313,7 +314,7 @@ Garfield::Random::SetEngine(randomEngine);
   sensor.AddElectrode(&cmp, "detector");
   sensor.AddComponent(&grid);
 
-  sensor.SetTimeWindow(tmin, tstep, nbins);
+  sensor.SetTimeWindow(tmin, tstep_ion, nbins);
   
   sensor.SetArea(xMin, yMin, zMin, xMax, yMax, zMax); //particles that leave the area are removed from simulation
     
@@ -323,15 +324,22 @@ Garfield::Random::SetEngine(randomEngine);
     track.SetEnergy(245.e6 + ProtonMass);
 
 
-  AvalancheMC drift;
-    drift.SetSensor(&sensor);
-    drift.EnableSignalCalculation();
-    drift.SetTimeSteps(tstep);
-    drift.EnableDensityMap();
-    drift.EnableRecombination(true, alpha);
-    drift.EnableAttachment(true);
-  //  drift.UsePairRecombination(false);
+  AvalancheMC driftIon;
+    driftIon.SetSensor(&sensor);
+    driftIon.EnableSignalCalculation();
+    driftIon.SetTimeSteps(tstep_ion);
+    driftIon.EnableDensityMap();
+    driftIon.EnableRecombination(true, alpha);
+    driftIon.EnableAttachment(false);
+  //  driftIon.UsePairRecombination(false);
     const bool SpaceCharge = true;
+
+  AvalancheMC driftElectron;
+    driftElectron.SetSensor(&sensor);
+    driftElectron.EnableSignalCalculation();
+    driftElectron.SetTimeSteps(tstep_electron);
+    driftElectron.EnableAttachment(true);
+    driftElectron.EnableRecombination(false);
 
 
   TCanvas* cD = nullptr;
@@ -340,7 +348,7 @@ Garfield::Random::SetEngine(randomEngine);
   if (plotDrift) {
     cD = new TCanvas("cD", "", 600, 600);
     driftView.SetCanvas(cD);
-    drift.EnablePlotting(&driftView);
+    driftIon.EnablePlotting(&driftView);
     track.EnablePlotting(&driftView);
   }
 
@@ -354,26 +362,23 @@ Garfield::Random::SetEngine(randomEngine);
   const double y0 = yMin;
   const double z0 = 0.; // centre of start of proton beam in z
   double t0 = 0.; // time of first proton
-  const double current = 62.4/5000; //nA
+  const double current = 62.4/2000; //nA
   const double time_between_protons = ElementaryCharge/(current * 1e-3); //ns
-  const std::size_t nTracks = (nbins*tstep)/time_between_protons; // number of protons
+  const std::size_t nTracks = (nbins*tstep_ion)/time_between_protons + 1; // number of protons
   std::cout << "Simulating " << nTracks << " protons." << std::endl;
-  const double multiplicity = 5000.;  // charges per ion/electron
+  const double multiplicity = 2000.;  // charges per ion/electron
   double recombine_num = 0; // number of recombinations so far (counter)
   const bool saveParticleNum = true;
   const bool RecordRecombinationPositions = false;
   std::vector<std::tuple<double, int, int, int>> particles_over_time;
   std::vector<std::vector<double>> ion_recombination_positions;
   std::vector<std::vector<double>> negion_recombination_positions;
-  int ElectronsLeftGridCount = 0;
   
   
   
   sensor.ClearSignal();
 
-  //for (double t = 0; t < (nbins * tstep); t += dt) { original time based loop
-  double t = 0;
-  size_t particleNum = 1;
+  double t = 0.;
   
   // Pre-allocate arrays and constants used by SpaceCharge computations (3D)
   std::vector<double> chargeDensity;
@@ -392,7 +397,7 @@ Garfield::Random::SetEngine(randomEngine);
     poissonSolver = std::make_unique<PoissonFFT3D>(Nx, Ny, Nz, spacing_transverse_x, spacingy, spacing_transverse_z, Npadx, Npady, Npadz, /*threads=*/0);
   }
   // ----------------------------- main while loop -----------------------------------
-  while (particleNum > 0 && !quit_particle_loop) {
+  while (!quit_particle_loop) {
     // loops over the time dt
     if (stop_at_max_time && t >= max_time) {break;}
 
@@ -408,40 +413,43 @@ Garfield::Random::SetEngine(randomEngine);
         }
         //adds the particles to our drifting functions 
         for (const auto& Ion : cluster.ions) {
-          drift.AddIon(Ion.x, Ion.y, Ion.z, Ion.t, multiplicity);
+          driftIon.AddIon(Ion.x, Ion.y, Ion.z, t, multiplicity);
         }
         for (const auto& electron : cluster.electrons) {
-          drift.AddElectron(electron.x, electron.y, electron.z, electron.t, multiplicity); 
+          driftElectron.AddElectron(electron.x, electron.y, electron.z, t, multiplicity);
         }
       }
       t0 += time_between_protons;
     }
 
-    drift.SetTimeWindow(t, t + dt);
+    driftIon.SetTimeWindow(t, t+dt);
+    driftElectron.SetTimeWindow(t, t+dt);
+    
     // drift all particles
-    drift.ResumeAvalanche(true, true);
-    t += dt;
-    std::cout << t << "ns simulated" << std::endl;
+    driftElectron.ResumeAvalanche(true, true);
+    driftIon.ResumeAvalanche(true, true);
+    std::cout << t + dt << "ns simulated" << std::endl;
 
     // handle electron drift and attachment
     // check for electron attachment and add negative ions.
     int electronNumber = 0;
-    for (const auto& electron : drift.GetElectrons()) {
+    for (const auto& electron : driftElectron.GetElectrons()) {
       const auto& p1 = electron.path.back();
-      if (p1.t <= t+dt && electron.status != StatusAttached) {
+      //if (p1.t == t + dt && electron.status != StatusAttached) {
+      if (electron.status != StatusAttached && electron.status != StatusLeftDriftMedium) {
           electronNumber++;
       }
+      //if (p1.t < t + dt && p1.t > t && electron.status == StatusAttached) {
       if (electron.status == StatusAttached) {
           const auto& p1 = electron.path.back();
-          drift.AddNegativeIon(p1.x, p1.y, p1.z, t, multiplicity);
+          driftIon.AddNegativeIon(p1.x, p1.y, p1.z, t+dt, multiplicity);
       }
-      if (electron.status == StatusLeftDriftArea) {
-          ElectronsLeftGridCount += 1;
+      if (electron.status == StatusLeftDriftMedium ) {
       }
     }
     
     grid.ClearFields();  // clear old densities/fields
-    if (t > dt && SpaceCharge) {
+    if (t >= dt && SpaceCharge) {
       bool loaded = grid.LoadElectricField("electric_field.xyz", "XYZ", false, false, 1.0, 1.0, 1.0);
     } else {
       grid.SetUniformElectricField(0., 0., 0.);
@@ -449,25 +457,27 @@ Garfield::Random::SetEngine(randomEngine);
 
     // add positive ions to the grid TODO stop the particles outside the grid running because we can check faster
     int ionNumber = 0;
-    for (const auto& ion : drift.GetIons()) {
+    for (const auto& ion : driftIon.GetIons()) {
       if (!ion.path.empty() && ion.status != StatusRecombined) {
         const auto& p1 = ion.path.back();
-        if (p1.t <= t+dt) {
-          ionNumber++;
-          grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
-        }
+        //if (p1.t == t+dt) {
+        ionNumber++;
+        grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
+        //}
       }
     }
 
     // add negative ions to the grid
     int negionNumber = 0;
-    for (const auto& negion : drift.GetNegativeIons()) {
+    for (const auto& negion : driftIon.GetNegativeIons()) {
       if (!negion.path.empty() && negion.status != StatusRecombined) {
         const auto& p1 = negion.path.back();
-        if (p1.t <= t+dt) {
-          negionNumber++;
-          grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
-        }
+        //if (p1.t == t+dt) {
+        negionNumber++;
+        grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
+        //if (p1.t < t + 2*dt) {
+        //}
+        //}
       }
     }
 
@@ -536,28 +546,33 @@ Garfield::Random::SetEngine(randomEngine);
     std::cout << "Positive Ions: " << ionNumber << std::endl;
     std::cout << "Negative Ions: " << negionNumber << std::endl;
     std::cout << "Electrons: " << electronNumber << std::endl;
-    if (saveParticleNum) {particles_over_time.push_back({t, ionNumber, negionNumber, electronNumber});}
+    if (saveParticleNum) {particles_over_time.push_back({t+dt, ionNumber, negionNumber, electronNumber});}
     // record recombined particles
-    for (auto &ion : drift.GetIons()) {
+    for (auto &ion : driftIon.GetIons()) {
                 if (ion.status == -9) {
                   // TODO check not recording same ion multiple times
+                  recombine_num += 1;
+                  if (RecordRecombinationPositions) {
                   const auto& p1 = ion.path.back();
                   ion_recombination_positions.push_back({p1.x, p1.y, p1.z});
-                  recombine_num += 1;
+                  }
                 }
             }               
-    for (auto &negion : drift.GetNegativeIons()) {
+    for (auto &negion : driftIon.GetNegativeIons()) {
                 if (negion.status == -9) {
+                  recombine_num += 1;
+                  if (RecordRecombinationPositions) {
                   const auto& p1 = negion.path.back();
                   negion_recombination_positions.push_back({p1.x, p1.y, p1.z});
-                  recombine_num += 1;
+                  }
                 }
-            }
+              }
+    t += dt;
   }
 //-------------------------------------------End While-------------------------------------------
 
   std::cout << "Recombined particles : " << recombine_num << std::endl;  
-  
+
 if (plotDrift) {
   cD->Clear();
   cmp.PlotCell(cD);
@@ -580,7 +595,7 @@ if (integrateSignal) {
   if (saveSignal) { std::ofstream outfile;
     outfile.open("signal.txt", std::ios::out);
     for (unsigned int i = 0; i < nbins; ++i) {
-    const double t = (i + 0.5) * tstep;
+    const double t = (i + 0.5) * tstep_ion;
     const double f = sensor.GetSignal("detector", i);
     const double fe = sensor.GetElectronSignal("detector", i);
     const double fh = sensor.GetIonSignal("detector", i);
@@ -615,7 +630,7 @@ if (integrateSignal) {
     std::vector<std::vector<double>> ion_positions;
     outfile.open("ion_positions.txt", std::ios::out);
     outfile << "x(cm) y(cm) z(cm) t=" << t / 1000 << "\u03BCs\n";
-    for (const auto& ion : drift.GetIons()) {
+    for (const auto& ion : driftIon.GetIons()) {
       const auto& p1 = ion.path.back();
       ion_positions.push_back({p1.x, p1.y, p1.z});
       outfile << p1.x << " " << p1.y << " " << p1.z << "\n";
@@ -623,7 +638,7 @@ if (integrateSignal) {
     outfile.close();
     outfile.open("negion_positions.txt", std::ios::out);
     outfile << "x(cm) y(cm) z(cm) t=" << t / 1000 << "\u03BCs\n";
-    for (const auto& negion : drift.GetNegativeIons()) {
+    for (const auto& negion : driftIon.GetNegativeIons()) {
       const auto& p1 = negion.path.back();
       ion_positions.push_back({p1.x, p1.y, p1.z});
       outfile << p1.x << " " << p1.y << " " << p1.z << "\n";
