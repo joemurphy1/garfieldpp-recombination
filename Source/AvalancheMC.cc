@@ -404,6 +404,17 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
       }
       if (status != 0) break;
 
+      // time step always ends at window end. Added for our recombination.
+      if (m_hasTimeWindow) {
+        const double dtMax = m_tMax - t0;
+        if (dtMax <= 0.) {
+          status = StatusOutsideTimeWindow;
+          break;
+        }
+        if (dt > dtMax) dt = dtMax;
+      }
+
+
       double difl = 0., dift = 0.;
       if (m_useDiffusion) {
         // Get the diffusion coefficients.

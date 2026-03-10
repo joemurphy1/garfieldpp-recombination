@@ -212,6 +212,7 @@ input_thread.detach(); // Let it run independently
 auto time_start = std::chrono::steady_clock::now();
 // Read seed before creating TApplication
 int seed = 123456;
+seed = 308742;
 if (argc > 1) {
   seed = std::stoi(argv[1]);
   std::cout << "Using user-specified seed: " << seed << std::endl;
@@ -231,18 +232,18 @@ Garfield::Random::SetEngine(randomEngine);
 
   // Make a gas medium.
   MediumMagboltz gas;
-  gas.LoadGasFile("n2_78.08_o2_20.95_ar_0.93_co2_0.04_1atm.gas");
+  gas.LoadGasFile("gas_files/n2_78.08_o2_20.95_ar_0.93_co2_0.04_T10_1atm.gas");
   gas.LoadIonMobility("IonMobility_N2+_N2.txt");
   gas.LoadNegativeIonMobility("NegIonMobility_O2-_air.txt");
  
   // Make a component with analytic electric field.
   ComponentAnalyticField cmp;
 
-  const double dt = 10000.; //time between loops (dt > tstep) should be a multiple of tstep
-  const double tstep_ion = 10000.; //monte-carlo step size (ns) (also functions as a min time_step so particles have to be added at time that is tstep multiples)
+  const double dt = 2500.; //time between loops (dt > tstep) should be a multiple of tstep
+  const double tstep_ion = 2500.; //monte-carlo step size (ns) (also functions as a min time_step so particles have to be added at time that is tstep multiples)
   const double tstep_electron = 10.; //ideally should be a divisor of dt.
   const double tmin = -0.5 * tstep_ion; 
-  const std::size_t nbins = 50;
+  const std::size_t nbins = 400;
   const bool stop_at_max_time = true;
   const size_t max_time = nbins*tstep_ion;
  //-----------------------------------------Geometry-----------------------------------------------
@@ -331,7 +332,7 @@ Garfield::Random::SetEngine(randomEngine);
     driftIon.EnableDensityMap();
     driftIon.EnableRecombination(true, alpha);
     driftIon.EnableAttachment(false);
-  //  driftIon.UsePairRecombination(false);
+    //driftIon.UsePairRecombination(false);
     const bool SpaceCharge = true;
 
   AvalancheMC driftElectron;
@@ -412,11 +413,11 @@ Garfield::Random::SetEngine(randomEngine);
           continue;
         }
         //adds the particles to our drifting functions 
-        for (const auto& Ion : cluster.ions) {
-          driftIon.AddIon(Ion.x, Ion.y, Ion.z, t, multiplicity);
+        for (const auto& ion : cluster.ions) {
+          driftIon.AddIon(ion.x, ion.y, ion.z, ion.t, multiplicity);
         }
         for (const auto& electron : cluster.electrons) {
-          driftElectron.AddElectron(electron.x, electron.y, electron.z, t, multiplicity);
+          driftElectron.AddElectron(electron.x, electron.y, electron.z, electron.t, multiplicity);
         }
       }
       t0 += time_between_protons;
