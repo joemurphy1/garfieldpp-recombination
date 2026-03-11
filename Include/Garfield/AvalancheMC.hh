@@ -97,6 +97,13 @@ class AvalancheMC {
   const std::vector<EndPoint>& GetNegativeIons() const {
     return m_negativeIons;
   }
+  // non const one for recombination algorithm to set the status to left drift medium for a cylindrical chamber
+   std::vector<EndPoint>& GetElectrons()  { return m_electrons; }
+   std::vector<EndPoint>& GetHoles()  { return m_holes; }
+   std::vector<EndPoint>& GetIons()  { return m_ions; }
+   std::vector<EndPoint>& GetNegativeIons()  {
+    return m_negativeIons;
+  }
 
   /** Return the number of electron trajectories in the last
    * simulated avalanche (including captured electrons). */

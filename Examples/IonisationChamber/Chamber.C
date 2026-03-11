@@ -191,6 +191,11 @@ private:
   fftw_plan backward_plan_Ez;
 };
 // ----------------------------- End PoissonFFT3D --------------------------------
+bool leftChamber(double radius, auto& point) {
+  double r2 = std::sqrt(point.x*point.x + point.z*point.z);
+  return r2 > radius;
+}
+
 
 int main(int argc, char* argv[]) {
 
@@ -212,7 +217,6 @@ input_thread.detach(); // Let it run independently
 auto time_start = std::chrono::steady_clock::now();
 // Read seed before creating TApplication
 int seed = 123456;
-seed = 308742;
 if (argc > 1) {
   seed = std::stoi(argv[1]);
   std::cout << "Using user-specified seed: " << seed << std::endl;
@@ -232,15 +236,15 @@ Garfield::Random::SetEngine(randomEngine);
 
   // Make a gas medium.
   MediumMagboltz gas;
-  gas.LoadGasFile("gas_files/n2_78.08_o2_20.95_ar_0.93_co2_0.04_T10_1atm.gas");
+  gas.LoadGasFile("gas_files/n2_78.08_o2_20.95_ar_0.93_co2_0.04_T30_1atm.gas");
   gas.LoadIonMobility("IonMobility_N2+_N2.txt");
   gas.LoadNegativeIonMobility("NegIonMobility_O2-_air.txt");
  
   // Make a component with analytic electric field.
   ComponentAnalyticField cmp;
 
-  const double dt = 2500.; //time between loops (dt > tstep) should be a multiple of tstep
-  const double tstep_ion = 2500.; //monte-carlo step size (ns) (also functions as a min time_step so particles have to be added at time that is tstep multiples)
+  const double dt = 500.; //time between loops (dt > tstep) should be a multiple of tstep
+  const double tstep_ion = 500.; //monte-carlo step size (ns) (also functions as a min time_step so particles have to be added at time that is tstep multiples)
   const double tstep_electron = 10.; //ideally should be a divisor of dt.
   const double tmin = -0.5 * tstep_ion; 
   const std::size_t nbins = 400;
@@ -249,14 +253,15 @@ Garfield::Random::SetEngine(randomEngine);
  //-----------------------------------------Geometry-----------------------------------------------
  // proton travels along the y axis.
  // Plate Separation (cm)
-  const double xMin = -15., xMax = 15.;
+  const double radius = 0.78;
+  const double xMin = -radius, xMax = radius;
   // Width in beam direction
-  const double yMin = -0.25, yMax = 0.25;
+  const double yMin = -0.1, yMax = 0.1;
   // Length? Of the plates (vertically)
-  const double zMin = -20., zMax = 20.;
+  const double zMin = -radius, zMax = radius;
   
   const double vAnode = 0.;
-  const double vCathode = -300.;
+  const double vCathode = -200.;
   const double E_mag = std::abs(vCathode/(yMax-yMin));
 
   // cmp.AddPixelOnPlaneY(yMax ,-13.125 ,13.125 , -17.5, 17.5, "detector"); // define size of detector makes the program run really slowly???
@@ -276,13 +281,13 @@ Garfield::Random::SetEngine(randomEngine);
   std::cout << "Positive Ion Mobility: " << vy_ion/E_mag << " cm^2/V/ns" << std::endl;
   std::cout << "Electron velocity: " << vy_electron << " cm/ns" << std::endl;
   std::cout << "Electron lifetime: " << 1/(eta * vy_electron) << " ns" << std::endl;
-  //const double guide_spacingy = 0.25 * std::abs(vy_negion) * dt; //(cm) We define the spacing as the average drift length.
-  const double guide_spacingy = (yMax - yMin) / 123.0; // 124 cells
-  const double sigmax = 0.46; // half spot size of the proton beam cm
-  const double sigmaz = 0.66;
+  const double guide_spacingy = 1 * std::abs(vy_negion) * dt; //(cm) We define the spacing as the average drift length.
+  //const double guide_spacingy = (yMax - yMin) / 123.0; // 124 cells
+  const double sigmax = 0.435; // half diameter of the proton beam cm
+  const double sigmaz = 0.565;
   const double guide_spacing_x = sigmax / 10;
   const double guide_spacing_z = sigmaz / 10;
-  const double nsigma = 4.1; // number of sigma across the grid is resolved (so 95% for 4)
+  const double nsigma = 2; // number of sigma across the grid is resolved (so 95% for 4)
   const int Nx_cells = std::round((nsigma*sigmax)/(guide_spacing_x)); //number of grid spaces in x
   const int Ny_cells = std::round((yMax-yMin) / guide_spacingy);
   const int Nz_cells = std::round((nsigma*sigmaz)/(guide_spacing_z)); //number of grid spaces in z
@@ -318,6 +323,7 @@ Garfield::Random::SetEngine(randomEngine);
   sensor.SetTimeWindow(tmin, tstep_ion, nbins);
   
   sensor.SetArea(xMin, yMin, zMin, xMax, yMax, zMax); //particles that leave the area are removed from simulation
+  // note adding in an extra check
     
   // Set up Heed.
   TrackHeed track(&sensor);
@@ -363,11 +369,11 @@ Garfield::Random::SetEngine(randomEngine);
   const double y0 = yMin;
   const double z0 = 0.; // centre of start of proton beam in z
   double t0 = 0.; // time of first proton
-  const double current = 62.4/2000; //nA
+  const double current = 62.4/500; //nA
   const double time_between_protons = ElementaryCharge/(current * 1e-3); //ns
   const std::size_t nTracks = (nbins*tstep_ion)/time_between_protons + 1; // number of protons
   std::cout << "Simulating " << nTracks << " protons." << std::endl;
-  const double multiplicity = 2000.;  // charges per ion/electron
+  const double multiplicity = 500.;  // charges per ion/electron
   double recombine_num = 0; // number of recombinations so far (counter)
   const bool saveParticleNum = true;
   const bool RecordRecombinationPositions = false;
@@ -401,7 +407,7 @@ Garfield::Random::SetEngine(randomEngine);
   while (!quit_particle_loop) {
     // loops over the time dt
     if (stop_at_max_time && t >= max_time) {break;}
-
+    int proton_leaving = 0;
     while (t+dt > t0) { // generate new protons until the next proton is beyond the window
       double x_proton = RndmGaussian(x0, sigmax);
       double z_proton = RndmGaussian(z0, sigmaz);
@@ -410,6 +416,10 @@ Garfield::Random::SetEngine(randomEngine);
       for (const auto& cluster : track.GetClusters()) {
         //remove clusters that are unphysically out of the detector
         if (cluster.y < yMin || cluster.y > yMax) {
+          continue;
+        }
+        if (leftChamber(radius, cluster)) { // check if cluster in the cylindrical chamber
+          proton_leaving++;
           continue;
         }
         //adds the particles to our drifting functions 
@@ -434,18 +444,23 @@ Garfield::Random::SetEngine(randomEngine);
     // handle electron drift and attachment
     // check for electron attachment and add negative ions.
     int electronNumber = 0;
-    for (const auto& electron : driftElectron.GetElectrons()) {
+    int electron_leaving = 0;
+    int ion_leaving = 0;
+    int negion_leaving = 0;
+    for (auto& electron : driftElectron.GetElectrons()) {
       const auto& p1 = electron.path.back();
-      //if (p1.t == t + dt && electron.status != StatusAttached) {
+      if (leftChamber(radius, p1)) { // check if the electrons left the cyclindrical chamber
+        electron.status = StatusLeftDriftMedium;
+        electron_leaving++;
+        continue;
+      }
       if (electron.status != StatusAttached && electron.status != StatusLeftDriftMedium) {
           electronNumber++;
       }
-      //if (p1.t < t + dt && p1.t > t && electron.status == StatusAttached) {
+  
       if (electron.status == StatusAttached) {
           const auto& p1 = electron.path.back();
           driftIon.AddNegativeIon(p1.x, p1.y, p1.z, t+dt, multiplicity);
-      }
-      if (electron.status == StatusLeftDriftMedium ) {
       }
     }
     
@@ -458,27 +473,31 @@ Garfield::Random::SetEngine(randomEngine);
 
     // add positive ions to the grid TODO stop the particles outside the grid running because we can check faster
     int ionNumber = 0;
-    for (const auto& ion : driftIon.GetIons()) {
+    for (auto& ion : driftIon.GetIons()) {
       if (!ion.path.empty() && ion.status != StatusRecombined) {
         const auto& p1 = ion.path.back();
-        //if (p1.t == t+dt) {
+        if (leftChamber(radius, p1)) {
+          ion.status = StatusLeftDriftMedium;
+          ion_leaving++;
+          continue;
+        }
         ionNumber++;
         grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
-        //}
       }
     }
 
     // add negative ions to the grid
     int negionNumber = 0;
-    for (const auto& negion : driftIon.GetNegativeIons()) {
+    for (auto& negion : driftIon.GetNegativeIons()) {
       if (!negion.path.empty() && negion.status != StatusRecombined) {
         const auto& p1 = negion.path.back();
-        //if (p1.t == t+dt) {
+        if (leftChamber(radius, p1)) {
+          negion.status = StatusLeftDriftMedium;
+          negion_leaving++;
+          continue;
+        }
         negionNumber++;
         grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
-        //if (p1.t < t + 2*dt) {
-        //}
-        //}
       }
     }
 
@@ -547,6 +566,9 @@ Garfield::Random::SetEngine(randomEngine);
     std::cout << "Positive Ions: " << ionNumber << std::endl;
     std::cout << "Negative Ions: " << negionNumber << std::endl;
     std::cout << "Electrons: " << electronNumber << std::endl;
+    std::cout << "Electrons leaving the chamber: " << electron_leaving << std::endl;
+    std::cout << "Positive Ions leaving the chamber: " << ion_leaving << std::endl;
+    std::cout << "Negative Ions leaving the chamber: " << negion_leaving << std::endl;
     if (saveParticleNum) {particles_over_time.push_back({t+dt, ionNumber, negionNumber, electronNumber});}
     // record recombined particles
     for (auto &ion : driftIon.GetIons()) {
