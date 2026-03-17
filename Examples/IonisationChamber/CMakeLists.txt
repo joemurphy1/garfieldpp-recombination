@@ -53,6 +53,20 @@ add_executable(fast_ion_signal fast_ion_signal.C)
 target_link_libraries(fast_ion_signal PRIVATE Garfield::Garfield)
 
 # ---Copy all files locally to the build directory-------------------------------
-foreach(_file n2_78.08_o2_20.95_ar_0.93_co2_0.04_1atm.gas mdt_elx_delta.txt IonMobility_N2+_N2.txt NegIonMobility_O2-_air.txt)
+foreach(_file mdt_elx_delta.txt IonMobility_N2+_N2.txt NegIonMobility_O2-_air.txt)
   configure_file(${_file} ${CMAKE_CURRENT_BINARY_DIR}/${_file} COPYONLY)
+endforeach()
+
+# Copy all gas files from the gas folder
+file(GLOB _gas_files "${CMAKE_CURRENT_SOURCE_DIR}/gas_files/*.gas")
+foreach(_file ${_gas_files})
+  get_filename_component(_filename ${_file} NAME)
+  configure_file(${_file} ${CMAKE_CURRENT_BINARY_DIR}/gas_files/${_filename} COPYONLY)
+endforeach()
+
+# Copy all files from the Elmer folder
+file(GLOB _elmer_files "${CMAKE_CURRENT_SOURCE_DIR}/Elmer/*")
+foreach(_file ${_elmer_files})
+  get_filename_component(_filename ${_file} NAME)
+  configure_file(${_file} ${CMAKE_CURRENT_BINARY_DIR}/Elmer/${_filename} COPYONLY)
 endforeach()
