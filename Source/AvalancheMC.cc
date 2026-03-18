@@ -358,11 +358,11 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
         double prec = 0.;
         if (ptype == Particle::NegativeIon) {
           const double rho = GetIonDensity(x0);
-          prec = 1. - std::exp(-m_alphaRecombination * rho * (t1 - t0));
+          prec = 1. - std::exp(-m_alphaRecombination * rho * dt);
         }
         if (ptype == Particle::Ion) {
           const double rho = GetNegativeIonDensity(x0);
-          prec = 1. - std::exp(-m_alphaRecombination * rho * (t1 - t0));
+          prec = 1. - std::exp(-m_alphaRecombination * rho * dt);
         }
         if (RndmUniform() < prec) {
           x1 = MidPoint(x0, x1);
@@ -874,6 +874,7 @@ bool AvalancheMC::GetVelocity(const Particle ptype, Medium* medium,
     for (size_t i = 0; i < nComponents; ++i) {
       auto cmp = m_sensor->GetComponent(i);
       if (!cmp->HasVelocityMap()) continue;
+      std::cout << "Velocity Map" << std::endl;
       if (ptype == Particle::Electron) {
         ok = cmp->ElectronVelocity(x[0], x[1], x[2], v[0], v[1], v[2]);
       } else if (ptype == Particle::Hole) {
