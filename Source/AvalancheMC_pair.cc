@@ -44,6 +44,7 @@ Garfield::AvalancheMC::Seed MakeSeed(const Garfield::AvalancheMC::Point point,
   seed.pt = point;
   seed.type = particle;
   seed.w = w;
+  seed.status = StatusAlive;
   return seed;
 }
 
@@ -258,7 +259,7 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
               << PrintVec(x0) + ".\n";
   }
   // Make sure the starting time is within the requested window.
-  if (m_hasTimeWindow && (t0 < m_tMin || t0 > m_tMax)) {
+  if (m_hasTimeWindow && (t0 < m_tMin || t0 >= m_tMax)) {
     if (m_debug) std::cout << "    Outside the time window.\n";
     return StatusOutsideTimeWindow;
   }
@@ -533,7 +534,7 @@ int AvalancheMC::DriftLine(const Seed& seed, std::vector<Point>& path,
     }
 
     // Make sure the time is still within the specified interval.
-    if (m_hasTimeWindow && (t1 < m_tMin || t1 > m_tMax)) {
+    if (m_hasTimeWindow && (t1 < m_tMin || t1 >= m_tMax)) {
       status = StatusOutsideTimeWindow;
     }
     // Add the point to the drift line.
