@@ -327,7 +327,6 @@ Garfield::Random::SetEngine(randomEngine);
     track.SetParticle("proton");
     track.SetEnergy(245.e6 + ProtonMass);
 
-
   AvalancheMC driftIon;
     driftIon.SetSensor(&sensor);
     driftIon.EnableSignalCalculation();
@@ -401,15 +400,14 @@ Garfield::Random::SetEngine(randomEngine);
     }
 
     if (stop_at_max_time && t >= max_time) {break;}
-    int proton_leaving = 0;
     while (t+dt > t0) { // generate new protons until the next proton is beyond the window
       double x_proton = RndmGaussian(x0, sigmax);
       double z_proton = RndmGaussian(z0, sigmaz);
       track.NewTrack(x_proton, y0, z_proton, t0, 0, 1, 0);
       
       for (const auto& cluster : track.GetClusters()) {
-        //remove clusters that are unphysically out of the detector
-        if (cluster.y < yMin || cluster.y > yMax) {
+        //remove clusters that are out of the detector (unlikely for large chamber)
+        if (cluster.y < yMin || cluster.y > yMax || cluster.x < xMin || cluster.x > xMax || cluster.z < zMin || cluster.z > zMax) {
           continue;
         }
         //adds the particles to our drifting functions 
@@ -427,6 +425,7 @@ Garfield::Random::SetEngine(randomEngine);
     // electrons -----------------------------------------------------------------------
     int electronNumber = 0;
     double electron_time = t;
+    int electrons_before = total_electrons_left;
     while (electron_time < t + dt) {
 
       electronNumber = 0;
@@ -437,7 +436,6 @@ Garfield::Random::SetEngine(randomEngine);
         const auto& p1 = electron.path.back();
         if (electron.status == StatusLeftDriftMedium) { // count electrons leaving the chamber
           total_electrons_left++;
-          continue;
         }
         if (electron.status != StatusAttached && electron.status != StatusLeftDriftMedium) {
             electronNumber++;
@@ -456,21 +454,29 @@ Garfield::Random::SetEngine(randomEngine);
     driftIon.ResumeAvalanche(true, true);
     std::cout << t + dt << "ns simulated" << std::endl;
 
-    
+    int ion_leaving = 0;
+    int negion_leaving = 0;
+
     // add positive ions to the grid
     grid.ClearFields();
     int ionNumber = 0;
     for (const auto& ion : driftIon.GetIons()) {
+      const auto& p1 = ion.path.back();
       if (!ion.path.empty() && ion.status != StatusRecombined) {
-        const auto& p1 = ion.path.back();
-        ionNumber++;
-        grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
+        // don't count particles that leave the chamber
+        if (ion.status == StatusLeftDriftMedium) { // check if the ions left the chamber
+          ion_leaving++;
+        }
+        else {
+          ionNumber++;
+          grid.AddIon(p1.x, p1.y, p1.z, multiplicity);
+        }
       }
       // count recombined particles
       if (ion.status == StatusRecombined) {
+        // TODO check not recording same ion multiple times
         recombine_num += 1;
         if (RecordRecombinationPositions) {
-        const auto& p1 = ion.path.back();
         ion_recombination_positions.push_back({p1.x, p1.y, p1.z});
         }
       }
@@ -478,16 +484,20 @@ Garfield::Random::SetEngine(randomEngine);
 
     // add negative ions to the grid
     int negionNumber = 0;
-    for (const auto& negion : driftIon.GetNegativeIons()) {
+    for (auto& negion : driftIon.GetNegativeIons()) {
+      const auto& p1 = negion.path.back();
       if (!negion.path.empty() && negion.status != StatusRecombined) {
-        const auto& p1 = negion.path.back();
-        negionNumber++;
-        grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
+        if (negion.status == StatusLeftDriftMedium) { // check if the negative ions left the chamber
+          negion_leaving++;
+        }
+        else {
+          negionNumber++;
+          grid.AddNegativeIon(p1.x, p1.y, p1.z, multiplicity);
+        }
       }
       if (negion.status == StatusRecombined) {
         recombine_num += 1;
         if (RecordRecombinationPositions) {
-        const auto& p1 = negion.path.back();
         negion_recombination_positions.push_back({p1.x, p1.y, p1.z});
         }
       }
@@ -558,6 +568,9 @@ Garfield::Random::SetEngine(randomEngine);
     std::cout << "Positive Ions: " << ionNumber << std::endl;
     std::cout << "Negative Ions: " << negionNumber << std::endl;
     std::cout << "Electrons: " << electronNumber << std::endl;
+    std::cout << "Positive Ions leaving the chamber: " << ion_leaving << std::endl;
+    std::cout << "Negative Ions leaving the chamber: " << negion_leaving << std::endl;
+    std::cout << "Electrons leaving the chamber: " << total_electrons_left - electrons_before << std::endl;
     if (saveParticleNum) {particles_over_time.push_back({t+dt, ionNumber, negionNumber, electronNumber});}
 
     t += dt;
